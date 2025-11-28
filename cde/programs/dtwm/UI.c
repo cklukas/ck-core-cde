@@ -391,9 +391,6 @@ Initialize (DtPanelShellWidget panel_shell)
    Screen  * screen = XtScreen (panel_shell);
    Display * display = XtDisplay (panel_shell);
 
-   Pixmap busy_pixmap;
-   Pixmap busy_pixmap_mask;
-
    Pixel black_pixel = BlackPixelOfScreen (screen);
    Pixel white_pixel = WhitePixelOfScreen (screen);
 
@@ -408,7 +405,7 @@ Initialize (DtPanelShellWidget panel_shell)
 
    /*  Create busy cursor.  */
 
-  _DtGetHourGlassCursor(display);
+   panel.busy_cursor = _DtGetHourGlassCursor(display);
    
    panel.resolution = (int) (intptr_t) panel.element_values[PANEL_RESOLUTION].parsed_value;
 
