@@ -49,10 +49,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#if HAVE_SYS_POLL_H
-# include <sys/poll.h>
-#elif HAVE_POLL_H
+#if HAVE_POLL_H
 # include <poll.h>
+#elif HAVE_SYS_POLL_H
+# include <sys/poll.h>
 #endif
 #include <sys/stat.h>
 #include <fcntl.h>
