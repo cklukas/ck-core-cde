@@ -70,6 +70,8 @@
 #define CHARSET      13
 #define ONERROR      14
 
+#define POPFONT
+
 #if defined(FUTURE_FEATURE)
 #define GRAPHICS     15
 #define NOGRAPHICS   16
@@ -167,9 +169,7 @@ struct search {
   } ;
 EXTERN SEARCH *path INIT(NULL) ;
 EXTERN SEARCH **endpath INIT(&path) ;
-EXTERN char dirsep
-INIT('/')
-  ;
+EXTERN char dirsep INIT('/') ;
 
 #define CSEP '/'
 #define SSEP "/"
@@ -251,6 +251,7 @@ EXTERN int exTextSize;
    whether content found in the document */
 EXTERN long postpreamble INIT(0L) ;
 EXTERN long prebye INIT(0L) ;
+EXTERN LOGICAL fabbrev INIT(FALSE);
 EXTERN LOGICAL filefound INIT(FALSE) ;
 
 /* Chapter or appendix number */
@@ -507,8 +508,8 @@ EXTERN LOGICAL wsterm ;
 EXTERN int     lastTermId;
 
 EXTERN LOGICAL  firstAnnot;
-EXTERN int      exLineNum;
 EXTERN LOGICAL  tonumexlines;
+EXTERN int      exLineNum;
 EXTERN int      oldExLineNum;
 
 /* Saved document title */
@@ -672,6 +673,7 @@ EXTERN LIST outlist
   = {0, 0, 0, 0, DOTPUNCT, FALSE, FIRST, NULL, NULL}
 #endif
   ;
+EXTERN LOGICAL leaderok INIT(FALSE);
 EXTERN LIST *lastlist INIT(&outlist) ;
 EXTERN int bulcount INIT(0) ;
 

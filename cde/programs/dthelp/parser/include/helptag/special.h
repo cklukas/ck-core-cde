@@ -20,7 +20,7 @@
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
-/* $XConsortium: special.h /main/3 1995/11/08 09:32:44 rswiston $ */
+/* $XConsortium: special.h /main/3 1995/11/08 10:12:54 rswiston $ */
    0, "^@  NUL",                         SPECIAL, NULL, 0,
    1, "^A  SOH",                         SPECIAL, NULL, 0,
    2, "^B  STX",                         SPECIAL, NULL, 0,
@@ -49,13 +49,13 @@
   25, "^Y  EM",                          SPECIAL, NULL, 0,
   26, "^Z  SUB",                         SPECIAL, NULL, 0,
   27, "^[  ESC",                         SPECIAL, NULL, 0,
-  28, "^\\  FS",                          SPECIAL, NULL, 0,
+  28, "^\\  FS",                         SPECIAL, NULL, 0,
   29, "^]  GS",                          SPECIAL, NULL, 0,
   30, "^^  RS",                          SPECIAL, NULL, 0,
   31, "^_  US",                          SPECIAL, NULL, 0,
   32, "SP",                              SPECIAL, NULL, 0,
   33, "!",                               SPECIAL, NULL, 0,
-  34, "\"",                               SPECIAL, NULL, 0,
+  34, "\"",                              SPECIAL, NULL, 0,
   35, "#",                               SPECIAL, "\\\\#", 0,
   36, "$",                               SPECIAL, "\\\\dollar{}", 0,
   37, "%",                               SPECIAL, "\\\\%", 0,
@@ -77,7 +77,7 @@
   63, "?",                               SPECIAL, NULL, 0,
   64, "@",                               SPECIAL, NULL, 0,
   91, "[",                               SPECIAL, NULL, 0,
-  92, "\\\\",                               SPECIAL, "{\\\\bslash}", 0,
+  92, "\\\\",                            SPECIAL, "{\\\\bslash}", 0,
   93, "]",                               SPECIAL, NULL, 0,
   94, "^",                               SPECIAL, "\\\\string^", 0,
   95, "_",                               SPECIAL, "{\\\\under}", 0,

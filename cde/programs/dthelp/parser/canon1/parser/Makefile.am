@@ -16,8 +16,9 @@ HELPUTILSRC   = $(HELPTAG)/util
 HELPBUILDSRC  = $(HELPTAG)/build
 HELPUTILLIB   = $(HELPTAG)/util/libutil.a
 
-AM_CPPFLAGS = -I$(HELPUTILSRC) -I$(HELPTAGSRC) -I$(HELPBUILDSRC) \
-	   -I$(HELPELTDEFSRC)
+AM_CPPFLAGS = -DCANON1 -I../util -I../helptag -I../build -I../eltdef -I../../include/util \
+	      -I$(HELPTAGSRC) -I../../include/build-I../../include/eltdef \
+	      -I../../include/parser -I../../include/helptag
 
 dthelp_ctag1_SOURCES = parser.c actutil.c \
         closent.c code.c cyclent.c dcurelt.c \

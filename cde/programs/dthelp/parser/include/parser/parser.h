@@ -20,7 +20,7 @@
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
-/* $XConsortium: parser.h /main/3 1995/11/08 09:41:12 rswiston $ */
+/* $XConsortium: parser.h /main/3 1995/11/08 10:56:42 rswiston $ */
 /*
               Copyright 1986 Tandem Computers Incorporated.
 This product and information is proprietary of Tandem Computers Incorporated.
@@ -296,13 +296,15 @@ M_PAREXTERN M_WCHAR m_saveatt[M_NAMELEN + 1] ;
    value of m_curcon before last character was scanned; m_token is the token
    type returned by last call to scanner; and
    m_scanval is index of element name just read within tag delimiters */
-M_PAREXTERN int m_curcon M_PARINIT(PROLOG) ;
+#ifdef CANON1
+M_PAREXTERN int m_curcon M_PARINIT(PROLOG);
+#else
+M_PAREXTERN int m_curcon M_PARINIT(PREAMBLE);
+#endif
 M_PAREXTERN int m_prevcon ;
 M_PAREXTERN int m_token ;
 M_PAREXTERN int m_scanval ;
-
 extern char *user_defined_entities;
-
 /* Declarations for tentative list of omitted tags when checking for tag
    MINimization */
 typedef struct m_min M_MIN ;
@@ -442,7 +444,7 @@ M_PAREXTERN FILE *m_outfile;
 M_PAREXTERN FILE *m_errfile;
 #else
 M_PAREXTERN FILE *m_outfile M_PARINIT(stdout) ;
-M_PAREXTERN FILE *m_errfile M_PARINIT(stdout) ;
+M_PAREXTERN FILE *m_errfile M_PARINIT(stderr) ;
 #endif
 
 /* Save processing instruction */

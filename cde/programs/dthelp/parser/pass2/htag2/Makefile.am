@@ -15,9 +15,10 @@ SDLBUILDSRC  = $(HTAG2)/build
 SDLUTILLIB   = $(HTAG2)/util/libutil.a
 SDLIFFILE    = $(HTAG2SRC)/help.if
 
-AM_CPPFLAGS = -I$(SDLPARSERSRC) -I$(SDLUTILSRC) \
-	    -I$(SDLELTDEFSRC) $(DT_INCDIR)
+AM_CPPFLAGS = -DPASS2 -I../parser -I../util -I../eltdef \
+	      -I../../include/parser -I../../include/util \
+	      -I../../include/eltdef $(DT_INCDIR)
 
 # needed by parser/
 noinst_LIBRARIES = libhelptag.a
-libhelptag_a_SOURCES = custom.c sdl.c option.c out.c global.c ../parser/delim.h
+libhelptag_a_SOURCES = custom.c sdl.c option.c out.c global.c

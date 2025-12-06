@@ -23,10 +23,11 @@ XDONE:
 BUILT_SOURCES = XDONE
 CLEANFILES = $(BUILT_SOURCES)
 
-AM_CPPFLAGS = -I$(HELPPARSERSRC) -I$(HELPUTILSRC) \
-	    -I$(HELPELTDEFSRC) $(DT_INCDIR)
+AM_CPPFLAGS = -DCANON1 -I../parser -I../eltdef -I../../include/parser -I../../include/util \
+	      -I../../include/eltdef -I../../include/helptag \
+	      $(DT_INCDIR)
 
 # needed by parser/
 noinst_LIBRARIES = libhelptag.a
 libhelptag_a_SOURCES = custom.c default.c help.c option.c \
-		      special.c out.c xref.c global.c ../parser/delim.h
+		      special.c out.c xref.c global.c
