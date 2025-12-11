@@ -1243,11 +1243,30 @@ void CheckButtonPressBuiltin (XButtonEvent *buttonEvent, Context context, Contex
 	{
             /*
 	     * Title component:
-             * SELECT_BUTTON  or DMANIP_BUTTON Press - 
+             * SELECT_BUTTON  or DMANIP_BUTTON Press -
 	     *               start looking for a move.
              */
 
 	    PushGadgetIn (pCD, partContext);
+
+	    if (wmGD.clickData.doubleClickContext == F_SUBCONTEXT_W_TITLE &&
+	        (pCD->clientFunctions & MWM_FUNC_MAXIMIZE))
+	    {
+	        /*
+	         * Double-click on title: toggle maximize/normal.
+	         */
+	        if (pCD->clientState == NORMAL_STATE)
+	        {
+	            SetClientState (pCD, MAXIMIZED_STATE, buttonEvent->time);
+	        }
+	        else
+	        {
+	            SetClientState (pCD, NORMAL_STATE, buttonEvent->time);
+	        }
+	        wmGD.clickData.clickPending = False;
+	        wmGD.clickData.doubleClickPending = False;
+	        return;
+	    }
 
 /*
  * Fix for 5075 - Check to make sure that MWM_FUNC_MOVE is set in the
