@@ -1279,6 +1279,16 @@ void HandleWsButtonPress (XButtonEvent *buttonEvent)
     IdentifyEventContext (buttonEvent, pCD, &context, &partContext);
     subContext = (1L << partContext);
 
+    if (pCD == NULL &&
+        buttonEvent->button == 1 &&
+        NOLOCKMOD(buttonEvent->state) == 0 &&
+        !wmGD.menuActive &&
+        wmGD.keyboardFocus)
+    {
+        SetKeyboardFocus (NULL, REFRESH_LAST_FOCUS);
+        RepairFocus ();
+    }
+
     ProcessClickBPress (buttonEvent, pCD, context, subContext);
 
     if (CheckForButtonAction (buttonEvent, context, subContext, pCD) && pCD)
