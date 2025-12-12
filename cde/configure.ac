@@ -434,11 +434,20 @@ if test -z "$ac_cv_prog_GENCAT"; then
 fi
 AC_CHECK_PROGS(ONSGMLS, onsgmls)
 if test -z "$ac_cv_prog_ONSGMLS"; then
-   MISSING_PROGS="ONSGMLS ${MISSING_PROGS}"
+   MISSING_PROGS="onsgmls ${MISSING_PROGS}"
 fi
 AC_CHECK_PROGS(SESSREG, sessreg)
 if test -z "$ac_cv_prog_SESSREG"; then
-   MISSING_PROGS="SESSREG ${MISSING_PROGS}"
+   MISSING_PROGS="sessreg ${MISSING_PROGS}"
+fi
+dnl ancient compress program (ncompress pkg, usually)
+AC_CHECK_PROGS(COMPRESS, compress)
+if test -z "$ac_cv_prog_COMPRESS"; then
+   MISSING_PROGS="compress ${MISSING_PROGS}"
+fi
+AC_CHECK_PROGS(UNCOMPRESS, uncompress)
+if test -z "$ac_cv_prog_UNCOMPRESS"; then
+   MISSING_PROGS="uncompress ${MISSING_PROGS}"
 fi
 
 dnl Used to check if program 'tic' is available to install terminfo files
