@@ -46,6 +46,8 @@
 			 ButtonReleaseMask|PointerMotionMask)
 #define PGRAB_MASK (ButtonPressMask|ButtonReleaseMask|\
 		    PointerMotionMask|PointerMotionHintMask)
+#define MOVE_GRID_STEP 20
+#define MOVE_SIZE_STEP 20
 
 /* grab types */
 
@@ -126,6 +128,9 @@ static unsigned int moveWidth = 0;	/* size of frame */
 static unsigned int moveHeight = 0;
 static int moveLastPointerX = 0;	/* last pointer position */
 static int moveLastPointerY= 0;
+static int moveRealX = 0;		/* real (unsnapped) corner coords */
+static int moveRealY = 0;
+static Boolean resizeSnapActive = False;
 
 static Boolean anyMotion = FALSE;
 static Boolean configGrab = FALSE;
@@ -188,6 +193,74 @@ void GetClipDimensions (ClientData *pCD, Boolean fromRoot)
 } /* END OF FUNCTION GetClipDimensions */
 
 
+static Boolean
+ShiftHeldOnScreen (WmScreenData *pSD)
+{
+    Window root_return, child_return;
+    int root_x, root_y, win_x, win_y;
+    unsigned int mask_return;
+
+    if (!XQueryPointer (DISPLAY, pSD->rootWindow,
+		   &root_return, &child_return,
+		   &root_x, &root_y, &win_x, &win_y,
+		   &mask_return))
+    {
+	return False;
+    }
+
+    return ((mask_return & ShiftMask) != 0);
+}
+
+
+static int
+SnapCoordinate (int value)
+{
+    int remainder = value % MOVE_GRID_STEP;
+    int snapped = value - remainder;
+
+    if (remainder >= (MOVE_GRID_STEP / 2))
+    {
+        snapped += MOVE_GRID_STEP;
+    }
+    else if (remainder <= -(MOVE_GRID_STEP / 2))
+    {
+        snapped -= MOVE_GRID_STEP;
+    }
+
+    return snapped;
+}
+
+
+static unsigned int
+SnapResizeSize (unsigned int value)
+{
+    unsigned int step = MOVE_SIZE_STEP;
+
+    if (step == 0)
+    {
+        return value;
+    }
+
+    unsigned int half = step / 2;
+    unsigned int remainder = value % step;
+    unsigned int snapped = value - remainder;
+
+    if (remainder >= half)
+    {
+        snapped += step;
+    }
+
+    return snapped;
+}
+
+
+static Boolean
+MoveSnappingActive (XEvent *pev)
+{
+    return ShiftHeldOnScreen (ACTIVE_PSD);
+}
+
+
 
 /*************************************<->*************************************
  *
@@ -243,6 +316,9 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 	    return;
 	}
     }
+
+    moveRealX = moveX;
+    moveRealY = moveY;
 
     grab_win = GrabWin (pcd, pev);
 
@@ -338,6 +414,9 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 		    moveX += tmpX;
 		    moveY += tmpY;
 		}
+
+		moveRealX = moveX;
+		moveRealY = moveY;
 	    }
 	}
 	else if (pev->type == ButtonRelease) 
@@ -345,20 +424,60 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 	    /*
 	     *  Update (x,y) to the location of the button release
 	     */
-	    moveX += pev->xbutton.x_root - moveLastPointerX;
-	    moveY += pev->xbutton.y_root - moveLastPointerY;
+	    int prevMoveX = moveX;
+	    int prevMoveY = moveY;
+	    int deltaX = pev->xbutton.x_root - moveLastPointerX;
+	    int deltaY = pev->xbutton.y_root - moveLastPointerY;
+	    Boolean snapRequested = MoveSnappingActive (pev);
+
+	    moveRealX += deltaX;
+	    moveRealY += deltaY;
+
+	    if (snapRequested)
+	    {
+		moveX = SnapCoordinate (moveRealX);
+		moveY = SnapCoordinate (moveRealY);
+	    }
+	    else
+	    {
+		moveX = moveRealX;
+		moveY = moveRealY;
+	    }
+
+	    moveLastPointerX = pev->xbutton.x_root;
+	    moveLastPointerY = pev->xbutton.y_root;
+
+	    tmpX = moveX - prevMoveX;
+	    tmpY = moveY - prevMoveY;
 
 	    CompleteFrameConfig (pcd, pev);
 	    moveDone = True;
 	}
 	else if (pev->type == MotionNotify) 
 	{	
-	    tmpX = pev->xmotion.x_root - moveLastPointerX;
-	    tmpY = pev->xmotion.y_root - moveLastPointerY;
+	    int prevMoveX = moveX;
+	    int prevMoveY = moveY;
+	    int deltaX = pev->xmotion.x_root - moveLastPointerX;
+	    int deltaY = pev->xmotion.y_root - moveLastPointerY;
+	    moveRealX += deltaX;
+	    moveRealY += deltaY;
 	    moveLastPointerX = pev->xmotion.x_root;
 	    moveLastPointerY = pev->xmotion.y_root;
-	    moveX += tmpX;
-	    moveY += tmpY;
+	    Boolean snapRequested = MoveSnappingActive (pev);
+
+	    if (snapRequested)
+	    {
+		moveX = SnapCoordinate (moveRealX);
+		moveY = SnapCoordinate (moveRealY);
+	    }
+	    else
+	    {
+		moveX = moveRealX;
+		moveY = moveRealY;
+	    }
+
+	    tmpX = moveX - prevMoveX;
+	    tmpY = moveY - prevMoveY;
 	    anyMotion = True;
 	}
 
@@ -522,7 +641,64 @@ void UpdateAndDrawResize (ClientData *pcd)
 	resizeWidth = startWidth;
 	break;
     }
-    
+
+    if (resizeSnapActive)
+    {
+	int ulx = resizeX;
+	int uly = resizeY;
+	int lrx = resizeX + (int)resizeWidth - 1;
+	int lry = resizeY + (int)resizeHeight - 1;
+
+	switch (wmGD.configPart) {
+	case FRAME_RESIZE_NW:
+	    ulx = SnapCoordinate(ulx);
+	    uly = SnapCoordinate(uly);
+	    resizeX = ulx;
+	    resizeY = uly;
+	    resizeWidth = (unsigned int)(lrx - ulx + 1);
+	    resizeHeight = (unsigned int)(lry - uly + 1);
+	    break;
+	case FRAME_RESIZE_N:
+	    uly = SnapCoordinate(uly);
+	    resizeY = uly;
+	    resizeHeight = (unsigned int)(lry - uly + 1);
+	    break;
+	case FRAME_RESIZE_NE:
+	    uly = SnapCoordinate(uly);
+	    lrx = SnapCoordinate(lrx);
+	    resizeY = uly;
+	    resizeWidth = (unsigned int)(lrx - ulx + 1);
+	    resizeHeight = (unsigned int)(lry - uly + 1);
+	    break;
+	case FRAME_RESIZE_E:
+	    lrx = SnapCoordinate(lrx);
+	    resizeWidth = (unsigned int)(lrx - ulx + 1);
+	    break;
+	case FRAME_RESIZE_SE:
+	    lrx = SnapCoordinate(lrx);
+	    lry = SnapCoordinate(lry);
+	    resizeWidth = (unsigned int)(lrx - ulx + 1);
+	    resizeHeight = (unsigned int)(lry - uly + 1);
+	    break;
+	case FRAME_RESIZE_S:
+	    lry = SnapCoordinate(lry);
+	    resizeHeight = (unsigned int)(lry - uly + 1);
+	    break;
+	case FRAME_RESIZE_SW:
+	    ulx = SnapCoordinate(ulx);
+	    lry = SnapCoordinate(lry);
+	    resizeX = ulx;
+	    resizeWidth = (unsigned int)(lrx - ulx + 1);
+	    resizeHeight = (unsigned int)(lry - uly + 1);
+	    break;
+	case FRAME_RESIZE_W:
+	    ulx = SnapCoordinate(ulx);
+	    resizeX = ulx;
+	    resizeWidth = (unsigned int)(lrx - ulx + 1);
+	    break;
+	}
+    }
+
     FixFrameValues (pcd, &resizeX, &resizeY, &resizeWidth, 
 		    &resizeHeight, TRUE /* do size checks */);
     MoveOutline (resizeX, resizeY, resizeWidth, resizeHeight);
@@ -584,6 +760,7 @@ void HandleClientFrameResize (ClientData *pcd, XEvent *pev)
     grab_win = GrabWin (pcd, pev);
 
     resizeDone = False;
+    resizeSnapActive = False;
     while (!resizeDone) 
     {
 	if (!pev) 	/* first time through will already have event */
@@ -593,6 +770,11 @@ void HandleClientFrameResize (ClientData *pcd, XEvent *pev)
 	    GetConfigEvent(DISPLAY, grab_win, CONFIG_MASK, 
 		pointerX, pointerY, resizeX, resizeY,
 		resizeWidth, resizeHeight, &event);
+	}
+
+	if (pev)
+	{
+	    resizeSnapActive = MoveSnappingActive (pev);
 	}
 
 	if (pev->type == MotionNotify)
@@ -941,9 +1123,16 @@ void DoFeedback (ClientData *pcd, int x, int y, unsigned int width, unsigned int
     /* If resizing, make sure configuration is valid. */
     if (resizing)
     {
+        unsigned int useWidthInc = pcd->widthInc;
+        unsigned int useHeightInc = pcd->heightInc;
+        if (wmGD.configAction == RESIZE_CLIENT)
+        {
+            useWidthInc = 1;
+            useHeightInc = 1;
+        }
         FixWindowConfiguration (pcd, &width, &height,
-				 (unsigned int) pcd->widthInc, 
-				 (unsigned int) pcd->heightInc);
+				 useWidthInc, 
+				 useHeightInc);
     }
 
     /*
