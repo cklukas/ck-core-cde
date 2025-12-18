@@ -809,6 +809,7 @@ typedef struct {
    Widget              associatedWidget;
    int                 numPrompts;
    DialogPromptEntry * prompts;
+   Widget              runInTerminalToggle;
 } PromptDialog;
 
 

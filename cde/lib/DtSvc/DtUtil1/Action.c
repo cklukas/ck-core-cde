@@ -86,6 +86,7 @@
 #include <Xm/SeparatoG.h>
 #include <Xm/PushBG.h>
 #include <Xm/MessageB.h>
+#include <Xm/ToggleBG.h>
 #include <Xm/MwmUtil.h>
 #include <Xm/Protocols.h>
 
@@ -421,6 +422,7 @@ static void _DtActIndicatorCB( XtPointer clientData,
 static String PromptDialogTitle;
 static String ErrorPostfix;
 static String PromptDialogLabel;
+static String RunInTerminalToggleLabel;
 static String ContinueMessage;
 static String HostErrorMsg;
 static String HostErrorMsg2;
@@ -1244,6 +1246,8 @@ InitLocalizedStrings( void )
    ErrorPostfix = XtNewString(((char *)Dt11GETMESSAGE(2, 4, "   [Error]")));
    PromptDialogLabel = XtNewString(
          ((char *)Dt11GETMESSAGE(2, 5, "Please enter the following information:")));
+   RunInTerminalToggleLabel = XtNewString(
+         ((char *)Dt11GETMESSAGE(2, 25, "Run in Terminal")));
    ContinueMessage = XtNewString(
     ((char *)Dt11GETMESSAGE(2, 6, "You have supplied more parameters than the selected action requires.\n\nSelect 'Ok' to ignore extra parameters.\n\nSelect 'Cancel' to terminate the action.")));
    HostErrorMsg =XtNewString(((char *)Dt11GETMESSAGE(2, 7, "The following host was not accessible:\n\n        ")));
@@ -4005,9 +4009,13 @@ ProcessPromptDialog(
 {
    int i, j;
    String value;
+   Boolean runInTerminal = True;
 
    /* Unpost the dialog */
    XtUnmanageChild(dialog->topLevel);
+
+   if (dialog->runInTerminalToggle)
+      runInTerminal = XmToggleButtonGadgetGetState(dialog->runInTerminalToggle);
 
    /*
     * Given the set of strings supplied by the user, update the
@@ -4082,6 +4090,19 @@ ProcessPromptDialog(
    /* Destroy the dialog */
    XtDestroyWidget(XtParent(dialog->topLevel));
    XmUpdateDisplay(widget);
+
+   /*
+    * For "Run..." (Execute) we default to running in a terminal window, but
+    * allow the user to override this for the current invocation.
+    */
+   if (!runInTerminal && dialog->request && dialog->request->clonedAction)
+   {
+      ActionPtr action = dialog->request->clonedAction;
+
+      RESET_TERMINAL(action->mask);
+      RESET_PERM_TERM(action->mask);
+      SET_NO_STDIO(action->mask);
+   }
    
    /* 
     * Invoke the action using the information we've collected.
@@ -4260,6 +4281,35 @@ CreatePromptDialog(
 
       XmAddTabGroup(promptDes[count].promptWidget);
       topAttach = promptDes[count].promptWidget;
+   }
+
+   /*
+    * Add "Run in Terminal" toggle for the built-in "Run..." action.
+    * This dialog is generic, so keep the toggle scoped to that action.
+    */
+   dialog->runInTerminalToggle = NULL;
+   if (request && request->actionName && strcmp(request->actionName, "Run") == 0 &&
+       (IS_PERM_TERM(request->clonedAction->mask) || IS_TERMINAL(request->clonedAction->mask)))
+   {
+      XmString toggleLabel;
+
+      toggleLabel = XmStringCreateLocalized(RunInTerminalToggleLabel);
+      n = 0;
+      XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET);       n++;
+      XtSetArg(args[n], XmNtopWidget, topAttach);                 n++;
+      XtSetArg(args[n], XmNtopOffset, 12);                        n++;
+      XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM);        n++;
+      XtSetArg(args[n], XmNleftOffset, 30);                       n++;
+      XtSetArg(args[n], XmNlabelString, toggleLabel);             n++;
+      XtSetArg(args[n], XmNset, True);                            n++;
+      XtSetArg(args[n], XmNtraversalOn, True);                    n++;
+      dialog->runInTerminalToggle =
+            XmCreateToggleButtonGadget(form, "runInTerminal", args, n);
+      XtManageChild(dialog->runInTerminalToggle);
+      XmStringFree(toggleLabel);
+
+      XmAddTabGroup(dialog->runInTerminalToggle);
+      topAttach = dialog->runInTerminalToggle;
    }
 
 
