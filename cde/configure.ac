@@ -434,18 +434,27 @@ if test -z "$ac_cv_prog_GENCAT"; then
 fi
 AC_CHECK_PROGS(ONSGMLS, onsgmls)
 if test -z "$ac_cv_prog_ONSGMLS"; then
-   MISSING_PROGS="ONSGMLS ${MISSING_PROGS}"
+   MISSING_PROGS="onsgmls ${MISSING_PROGS}"
 fi
 AC_CHECK_PROGS(SESSREG, sessreg)
 if test -z "$ac_cv_prog_SESSREG"; then
-   MISSING_PROGS="SESSREG ${MISSING_PROGS}"
+   MISSING_PROGS="sessreg ${MISSING_PROGS}"
+fi
+dnl ancient compress program (ncompress pkg, usually)
+AC_CHECK_PROGS(COMPRESS, compress)
+if test -z "$ac_cv_prog_COMPRESS"; then
+   MISSING_PROGS="compress ${MISSING_PROGS}"
+fi
+AC_CHECK_PROGS(UNCOMPRESS, uncompress)
+if test -z "$ac_cv_prog_UNCOMPRESS"; then
+   MISSING_PROGS="uncompress ${MISSING_PROGS}"
 fi
 
 dnl Used to check if program 'tic' is available to install terminfo files
 AC_CHECK_PROGS(TIC, tic, :)
 
 dnl headers
-AC_CHECK_HEADERS([locale.h security/pam_appl.h utempter.h])
+AC_CHECK_HEADERS([locale.h poll.h sys/poll.h security/pam_appl.h utempter.h])
 
 dnl Xrender header
 AC_CHECK_HEADERS([X11/extensions/Xrender.h], [],

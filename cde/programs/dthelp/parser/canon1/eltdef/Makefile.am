@@ -17,7 +17,8 @@ HELPTSSFILE   = $(HELPTAGSRC)/htag.tss
 
 eltdef_LDADD = $(HELPUTILLIB)
 
-eltdef_CFLAGS = -I$(HELPUTILSRC) -I$(HELPBUILDSRC)
+eltdef_CFLAGS = -DCANON1 -I../util -I../build -I../../include/util \
+		-I../../include/build -I../../include/eltdef
 
 eltdef_SOURCES = eltdef.c eltutil.c entity.c scan.c
 

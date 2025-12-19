@@ -38,7 +38,11 @@ name, are the same for all programs.
 #define M_TAB '\t'
 
 /* Maximum length of a default parameter value */
+#ifdef PASS2
 #define M_LITLEN 1024
+#else
+#define M_LITLEN 240
+#endif
 
 /* Maximum length of an element name */
 #define M_NAMELEN 64

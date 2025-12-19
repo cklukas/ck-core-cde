@@ -13,7 +13,7 @@ HELPUTILSRC   = $(HELPTAG)/util
 HELPBUILDSRC  = $(HELPTAG)/build
 HELPUTILLIB   = $(HELPTAG)/util/libutil.a
 
-build_CFLAGS = -I$(HELPUTILSRC)
+build_CFLAGS = -DCANON1 -I$(HELPUTILSRC) -I../../include/util -I../../include/build
 
 build_LDADD = ../util/libutil.a
 

@@ -16,8 +16,9 @@ HELPUTILSRC   = $(HELPTAG)/util
 HELPBUILDSRC  = $(HELPTAG)/build
 HELPUTILLIB   = $(HELPTAG)/util/libutil.a
 
-AM_CPPFLAGS = -I. -I$(HELPUTILSRC) -I$(HELPTAGSRC) -I$(HELPBUILDSRC) \
-	   -I$(HELPELTDEFSRC)
+AM_CPPFLAGS = -DPASS1 -I../eltdef -I../helptag -I../util -I../build \
+	      -I../../include/helptag -I../../include/util -I../../include/build \
+	      -I../../include/eltdef -I../../include/parser
 
 dthelp_htag1_SOURCES = parser.c actutil.c \
         closent.c code.c cyclent.c dcurelt.c \

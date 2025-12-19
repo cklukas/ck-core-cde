@@ -20,7 +20,9 @@
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
-/* $XConsortium: proto.h /main/3 1995/11/08 10:57:56 rswiston $ */
+/* $XConsortium: proto.h /main/3 1995/11/08 09:42:21 rswiston $ */
+void chksnb(void);
+
 int m_actgetc(void);
 
 void m_adjuststate(void);
@@ -30,6 +32,8 @@ LOGICAL m_allwhite(const M_WCHAR *string);
 void m_attval(M_WCHAR *string);
 
 LOGICAL m_attvonly(M_WCHAR *string);
+
+void m_mberr1(const char *text, const char *arg);
 
 int m_checkstart(M_ELEMENT val);
 
@@ -170,8 +174,6 @@ LOGICAL m_lookent(M_WCHAR *name, unsigned char *type, M_WCHAR **content,
 
 void *m_malloc(int size, char *msg);
 
-void m_mberr1(const char *text, const char *arg);
-
 void m_missingtagc(int c, M_HOLDTYPE dchar, LOGICAL start);
 
 LOGICAL m_nextand(M_OPENFSA *thisfsa, M_ELEMENT label);
@@ -225,7 +227,11 @@ void m_readcomments(void);
 
 void *m_realloc(void *ptr, int size, char *msg);
 
+#ifdef CANON1
+int m_scan(LOGICAL prolog);
+#else
 int m_scan(void);
+#endif
 
 void m_setmap(int map, LOGICAL useoradd);
 

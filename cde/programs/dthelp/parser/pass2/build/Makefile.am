@@ -14,7 +14,7 @@ SDLBUILDSRC  = $(HTAG2)/build
 SDLUTILLIB   = $(HTAG2)/util/libutil.a
 SDLIFFILE    = $(HTAG2SRC)/help.if
 
-build_CFLAGS = -I$(SDLUTILSRC)
+build_CFLAGS = -DPASS2 -I../../include/util -I../../include/build -I$(SDLUTILSRC)
 
 build_LDADD = ../util/libutil.a
 
