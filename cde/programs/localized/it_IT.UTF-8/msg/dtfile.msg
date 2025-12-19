@@ -1925,6 +1925,13 @@ di collegare:\n\n\
 non esiste nel sistema di file.\n\
 Non effettuare alcun collegamento."
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$ Message 14 is the label for the total size row
+14 Dimensione totale dei file:
+$ Message 15 is the label for the storage used row
+15 Spazio di archiviazione dei file utilizzato:
+
 $set 99
 $ ****** Version Information ********
 $ DO NOT TRANSLATE THESE MESSAGES

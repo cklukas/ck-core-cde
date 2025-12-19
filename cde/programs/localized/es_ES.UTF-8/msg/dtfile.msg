@@ -2183,6 +2183,13 @@ no existe en el sistema de archivos.\n\
 No se enlazará ninguno de ellos."
 
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$ Message 14 is the label for the total size row
+14 Tamaño total de archivos:
+$ Message 15 is the label for the storage used row
+15 Espacio de almacenamiento de archivos usado:
+
 $set 99        Redefine set#
 
 $ ****** Version Information ********   

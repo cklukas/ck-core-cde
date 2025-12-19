@@ -2168,6 +2168,13 @@ ist im Dateisystem nicht vorhanden."
 ist im Dateisystem nicht vorhanden.\n\
 Auf keines der Objekte wird ein Verweis erstellt."
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$ Message 14 is the label for the total size row
+14 Gesamte Dateigröße:
+$ Message 15 is the label for the storage used row
+15 Von Dateien belegter Speicherplatz:
+
 $set 99        Redefine set#
 
 $ ****** Version Information ******** 

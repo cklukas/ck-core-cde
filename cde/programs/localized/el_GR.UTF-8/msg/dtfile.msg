@@ -1766,6 +1766,13 @@ $set 33
 17 Ένα από τα αντικείμενα στα οποία προσπαθείτε να δημιουργήσετε δεσμούς:\n\n   %s\n\n\
 δεν υπάρχει στο σύστημα αρχείων.\nΔεν δημιουργήθηκε κανένας δεσμός.
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$ Message 14 is the label for the total size row
+14 Συνολικό μέγεθος αρχείων:
+$ Message 15 is the label for the storage used row
+15 Χώρος αποθήκευσης αρχείων που χρησιμοποιείται:
+
 $set 99
 $ ****** Version Information ********
 $ DO NOT TRANSLATE THESE MESSAGES

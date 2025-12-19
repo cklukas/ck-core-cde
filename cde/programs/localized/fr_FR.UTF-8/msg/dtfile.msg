@@ -2153,6 +2153,13 @@ n'existe pas dans le système de fichiers."
 n'existe pas dans le système de fichiers.\n\
 Aucun objet ne sera lié."
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$ Message 14 is the label for the total size row
+14 Taille totale des fichiers:
+$ Message 15 is the label for the storage used row
+15 Espace de stockage des fichiers utilisé:
+
 $set 99        Redefine set#
 
 $ ****** Version Information ********  

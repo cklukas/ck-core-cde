@@ -1758,7 +1758,6 @@ does not exist in the file system.\nNot Linking any of them.
 
 $set 35
 $ ****** Module: StorageSize.c ****(developer comment only)********
-$
 $ Messages 1-2 are the text and mnemonic for the Storage Size menu option
 1 Storage Size...
 2 S
@@ -1766,13 +1765,6 @@ $ Message 3 is shown while scanning runs
 3 One moment...
 $ Message 4 is the dialog title format
 4 Storage size for %s
-$ Messages 5-8 are the labels for the detail rows
-5 Total size: %s
-6 Storage used: %s
-7 Files scanned: %lu
-8 Directories scanned: %lu
-$ Message 9 is shown when the calculation finishes
-9 Storage size calculation complete.
 $ Messages 10-11 are button labels
 10 Cancel
 11 OK
@@ -1780,6 +1772,31 @@ $ Message 12 explains that a cancel request is in progress
 12 Canceling...
 $ Message 13 is shown after a cancel completes
 13 Storage size scan canceled.
+
+$ Message 14 is the label for the total size row
+14 Total file size:
+$ Message 15 is the label for the storage used row
+15 File storage used:
+$ Message 16 is the label for the files row
+16 Files:
+$ Message 17 is the label for the directories row
+17 Directories:
+$ Message 18 is the suffix used for the exact byte count
+18 (%s bytes)
+$ Message 19 is the label for the symlinks row
+19 Symlinks:
+$ Message 20 is the label for the special files row
+20 Special files:
+$ Message 21 is appended to the symlink count to explain the omission
+21 (not followed)
+$ Message 22 is appended to the special file count to explain the omission
+22 (ignored in totals)
+$ Message 23 is the label for the permission denied directory count
+23 Permission denied directories:
+$ Message 24 is the label for the virtual filesystem entries count
+24 Virtual filesystem entries:
+$ Message 25 is the label for the metadata size row
+25 Metadata size (dirs/special/symlinks):
 
 $set 99
 $ ****** Version Information ********

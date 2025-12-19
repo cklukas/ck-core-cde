@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-void ShowStorageSizeDialog(FileViewData *file_view_data);
+void ShowStorageSizeDialog(Widget w, XtPointer client_data, XtPointer call_data);
 
 #ifdef __cplusplus
 }

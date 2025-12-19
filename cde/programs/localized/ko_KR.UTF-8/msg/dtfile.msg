@@ -1676,6 +1676,13 @@ $quote "
 이중 하나도 링크하지 않습니다."
 
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$ Message 14 is the label for the total size row
+14 파일 전체 크기:
+$ Message 15 is the label for the storage used row
+15 파일이 사용 중인 저장 공간:
+
 $set 99
 $ ****** Version Information ********
 $ DO NOT TRANSLATE THESE MESSAGES

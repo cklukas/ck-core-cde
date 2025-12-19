@@ -1735,6 +1735,13 @@ finns inte i filsystemet.\n\
 Länkar inget av dem."
 
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$ Message 14 is the label for the total size row
+14 Total filstorlek:
+$ Message 15 is the label for the storage used row
+15 Använt filutrymme:
+
 $set 99
 $ ****** Version Information ********
 $ DO NOT TRANSLATE THESE MESSAGES

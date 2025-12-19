@@ -1252,6 +1252,13 @@ $set 33
 1 多个对象
 2 当前文件夹
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$ Message 14 is the label for the total size row
+14 文件总大小:
+$ Message 15 is the label for the storage used row
+15 文件使用的存储空间:
+
 $set 99
 $ ****** Version Information ********
 $ DO NOT TRANSLATE THESE MESSAGES

@@ -1737,6 +1737,13 @@ $quote "
 不連結任何一個。"
 
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$ Message 14 is the label for the total size row
+14 檔案總大小:
+$ Message 15 is the label for the storage used row
+15 檔案使用的儲存空間:
+
 $set 99
 $ ****** Version Information ********
 $ DO NOT TRANSLATE THESE MESSAGES

@@ -1693,6 +1693,13 @@ $set 33
 17 リンクしようとしているオブジェクトの中の:\n\n   %s\n\n\
 はファイルシステム上に存在しません。オブジェクトのリンクはできません。
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$ Message 14 is the label for the total size row
+14 ファイルの合計サイズ:
+$ Message 15 is the label for the storage used row
+15 ファイルのストレージ使用量:
+
 $set 99
 $ ****** Version Information ********
 $ DO NOT TRANSLATE THESE MESSAGES
