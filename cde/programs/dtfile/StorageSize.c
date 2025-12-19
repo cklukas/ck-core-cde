@@ -42,6 +42,10 @@
 #include <sys/statfs.h>
 #include <dirent.h>
 
+#ifdef __linux__
+#include <linux/magic.h>
+#endif
+
 #include <Xm/Xm.h>
 #include <Xm/Form.h>
 #include <Xm/RowColumn.h>
