@@ -41,6 +41,8 @@
 #include <poll.h>
 #elif HAVE_SYS_POLL_H
 #include <sys/poll.h>
+#else
+#include <poll.h>
 #endif
 #include <sys/socket.h>
 #include <fcntl.h>
@@ -600,5 +602,4 @@ read_would_block()
 		return 0;
 	}
 }
-
 

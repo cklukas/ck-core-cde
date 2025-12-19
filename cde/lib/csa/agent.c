@@ -41,6 +41,8 @@
 # include <poll.h>
 #elif HAVE_SYS_POLL_H
 # include <sys/poll.h>
+#else
+# include <poll.h>
 #endif
 #if defined(SunOS)
 #include <netconfig.h>
@@ -825,5 +827,4 @@ _FreeCallbackInfo(_CallbackInfo *ptr)
 		free(ptr);
 	}
 }
-
 

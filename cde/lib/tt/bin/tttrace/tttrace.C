@@ -45,6 +45,8 @@
 # include <poll.h>
 #elif HAVE_SYS_POLL_H
 # include <sys/poll.h>
+#else
+# include <poll.h>
 #endif
 #include <sys/types.h>
 #include <sys/stat.h>
