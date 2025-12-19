@@ -135,7 +135,7 @@ am_dtfile_OBJECTS = dtfile-ChangeDir.$(OBJEXT) \
 	dtfile-PrefsP.$(OBJEXT) dtfile-SharedMsgs.$(OBJEXT) \
 	dtfile-SharedProcs.$(OBJEXT) dtfile-ToolTalk.$(OBJEXT) \
 	dtfile-Trash.$(OBJEXT) dtfile-Utils.$(OBJEXT) \
-	dtfile-fsDialog.$(OBJEXT)
+	dtfile-fsDialog.$(OBJEXT) dtfile-StorageSize.$(OBJEXT)
 dtfile_OBJECTS = $(am_dtfile_OBJECTS)
 am__DEPENDENCIES_1 =
 dtfile_DEPENDENCIES = dtcopy/sharedFuncs.o dtcopy/fsrtns.o \
@@ -205,6 +205,7 @@ am__depfiles_remade = ./$(DEPDIR)/dtfile-ChangeDir.Po \
 	./$(DEPDIR)/dtfile-OverWrite.Po ./$(DEPDIR)/dtfile-Prefs.Po \
 	./$(DEPDIR)/dtfile-PrefsP.Po ./$(DEPDIR)/dtfile-SharedMsgs.Po \
 	./$(DEPDIR)/dtfile-SharedProcs.Po \
+	./$(DEPDIR)/dtfile-StorageSize.Po \
 	./$(DEPDIR)/dtfile-ToolTalk.Po ./$(DEPDIR)/dtfile-Trash.Po \
 	./$(DEPDIR)/dtfile-Utils.Po ./$(DEPDIR)/dtfile-fsDialog.Po
 am__mv = mv -f
@@ -315,6 +316,7 @@ CDE_VERSION_MAJOR = 2
 CDE_VERSION_MICRO = 3
 CDE_VERSION_MINOR = 5
 CFLAGS = -g -O2 -DOPT_TIRPC -I/usr/include/tirpc -Wno-unused-result -Wno-write-strings -fno-strict-aliasing -Wno-format-truncation        -pthread
+COMPRESS = compress
 CP = cp -f
 CPP = cc -E
 CPPFLAGS =  -DANSICPP -DMULTIBYTE -DNLS16 -D_POSIX_SOURCE -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE -DUSE_XINERAMA -DUSE_XRENDER -DHAS_PAM_LIBRARY -DHAS_UTEMPTER_LIBRARY 
@@ -432,6 +434,7 @@ TCL_VERSION = 8.6
 TIC = tic
 TIRPCLIB = -ltirpc
 TT_INCDIR = -I$(top_builddir)/include/Tt
+UNCOMPRESS = uncompress
 UTMP_FILE = 
 VERSION = 2.5.3
 WTMP_FILE = 
@@ -491,7 +494,7 @@ mandir = ${datarootdir}/man
 mkdir_p = $(MKDIR_P)
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /usr/local/CDE
+prefix = /usr/dt
 program_transform_name = s,x,x,
 psdir = ${docdir}
 runstatedir = ${localstatedir}/run
@@ -688,6 +691,7 @@ include ./$(DEPDIR)/dtfile-Prefs.Po # am--include-marker
 include ./$(DEPDIR)/dtfile-PrefsP.Po # am--include-marker
 include ./$(DEPDIR)/dtfile-SharedMsgs.Po # am--include-marker
 include ./$(DEPDIR)/dtfile-SharedProcs.Po # am--include-marker
+include ./$(DEPDIR)/dtfile-StorageSize.Po # am--include-marker
 include ./$(DEPDIR)/dtfile-ToolTalk.Po # am--include-marker
 include ./$(DEPDIR)/dtfile-Trash.Po # am--include-marker
 include ./$(DEPDIR)/dtfile-Utils.Po # am--include-marker
@@ -1227,6 +1231,20 @@ dtfile-fsDialog.obj: fsDialog.c
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dtfile-fsDialog.obj `if test -f 'fsDialog.c'; then $(CYGPATH_W) 'fsDialog.c'; else $(CYGPATH_W) '$(srcdir)/fsDialog.c'; fi`
 
+dtfile-StorageSize.o: StorageSize.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dtfile-StorageSize.o -MD -MP -MF $(DEPDIR)/dtfile-StorageSize.Tpo -c -o dtfile-StorageSize.o `test -f 'StorageSize.c' || echo '$(srcdir)/'`StorageSize.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/dtfile-StorageSize.Tpo $(DEPDIR)/dtfile-StorageSize.Po
+#	$(AM_V_CC)source='StorageSize.c' object='dtfile-StorageSize.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dtfile-StorageSize.o `test -f 'StorageSize.c' || echo '$(srcdir)/'`StorageSize.c
+
+dtfile-StorageSize.obj: StorageSize.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dtfile-StorageSize.obj -MD -MP -MF $(DEPDIR)/dtfile-StorageSize.Tpo -c -o dtfile-StorageSize.obj `if test -f 'StorageSize.c'; then $(CYGPATH_W) 'StorageSize.c'; else $(CYGPATH_W) '$(srcdir)/StorageSize.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/dtfile-StorageSize.Tpo $(DEPDIR)/dtfile-StorageSize.Po
+#	$(AM_V_CC)source='StorageSize.c' object='dtfile-StorageSize.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dtfile-StorageSize.obj `if test -f 'StorageSize.c'; then $(CYGPATH_W) 'StorageSize.c'; else $(CYGPATH_W) '$(srcdir)/StorageSize.c'; fi`
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -1490,6 +1508,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/dtfile-PrefsP.Po
 	-rm -f ./$(DEPDIR)/dtfile-SharedMsgs.Po
 	-rm -f ./$(DEPDIR)/dtfile-SharedProcs.Po
+	-rm -f ./$(DEPDIR)/dtfile-StorageSize.Po
 	-rm -f ./$(DEPDIR)/dtfile-ToolTalk.Po
 	-rm -f ./$(DEPDIR)/dtfile-Trash.Po
 	-rm -f ./$(DEPDIR)/dtfile-Utils.Po
@@ -1571,6 +1590,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/dtfile-PrefsP.Po
 	-rm -f ./$(DEPDIR)/dtfile-SharedMsgs.Po
 	-rm -f ./$(DEPDIR)/dtfile-SharedProcs.Po
+	-rm -f ./$(DEPDIR)/dtfile-StorageSize.Po
 	-rm -f ./$(DEPDIR)/dtfile-ToolTalk.Po
 	-rm -f ./$(DEPDIR)/dtfile-Trash.Po
 	-rm -f ./$(DEPDIR)/dtfile-Utils.Po
