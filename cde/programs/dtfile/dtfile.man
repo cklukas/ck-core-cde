@@ -85,6 +85,10 @@ values for the additional parameter are:
 of the files type.
 .br
 .sp 1
+\fBextra_large_icon:\fP display the files with the extra large icon as its representation
+of the files type.
+.br
+.sp 1
 \fBsmall_icon:\fP display the files with the small icon as its representation 
 of the files type.
 .br
@@ -294,6 +298,10 @@ type.
 .br
 .sp 1
 \fBlarge_icon:\fP display the files with the large icon as its representation
+of the files type.
+.br
+.sp 1
+\fBextra_large_icon:\fP display the files with the extra large icon as its representation
 of the files type.
 .br
 .sp 1

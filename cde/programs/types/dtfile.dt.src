@@ -333,7 +333,7 @@ XCOMM ###########################################################
 
 DATA_ATTRIBUTES EXECUTABLE
 {
-	ACTIONS		Run,Open
+	ACTIONS		Run,RunNoPrompt,Open
         ICON		Dtexec
         IS_EXECUTABLE	true
         COPY_TO_ACTION  Execute
@@ -348,9 +348,17 @@ DATA_CRITERIA EXECUTABLE1
 	DATA_ATTRIBUTES_NAME EXECUTABLE
 	MODE		f&x
 }
-ACTION Run
+ACTION RunNoPrompt
 {
         LABEL           %|nls-3-#Run#|
+        ARG_TYPE        EXECUTABLE
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     "%(File)Arg_1%"
+}
+ACTION Run
+{
+        LABEL           %|nls-25-#Run...#|
         ARG_TYPE        EXECUTABLE
         TYPE            MAP
         MAP_ACTION      Execute

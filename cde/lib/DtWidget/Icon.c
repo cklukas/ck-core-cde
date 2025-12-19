@@ -47,6 +47,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <X11/Xatom.h>
 #include <Xm/XmP.h>
@@ -273,6 +274,30 @@ static XtPointer GetIconClassResBase(
 static Boolean LoadPixmap( 
                         DtIconGadget new,
                         String pixmap) ;
+static void ReleasePixmapAndMask(
+                        Screen *screen,
+                        Pixmap pixmap,
+                        Pixmap mask);
+static void MaybeScaleLoadedPixmap(
+                        DtIconGadget g,
+                        unsigned int *pix_w,
+                        unsigned int *pix_h,
+                        unsigned int depth);
+static Pixmap ScalePixmapNearest(
+                        Screen *s,
+                        Pixmap src,
+                        unsigned int src_w,
+                        unsigned int src_h,
+                        unsigned int dst_w,
+                        unsigned int dst_h,
+                        unsigned int depth);
+static Pixmap ScaleMaskNearest(
+                        Screen *s,
+                        Pixmap src_mask,
+                        unsigned int src_w,
+                        unsigned int src_h,
+                        unsigned int dst_w,
+                        unsigned int dst_h);
 static void ClassPartInitialize ( WidgetClass	wc);
 static void HighlightBorder( Widget w );
 static void UnhighlightBorder( Widget w );
@@ -1763,6 +1788,8 @@ Initialize(
 			XGetGeometry (XtDisplay (new), G_Pixmap (new),
 				&root, &int_x, &int_y, &int_w, &int_h,
 				&int_bw, &depth);
+
+			MaybeScaleLoadedPixmap(new, &int_w, &int_h, depth);
 		}
 		if (name)
 		{
@@ -1953,9 +1980,7 @@ Destroy(
 	if (G_ImageName (g) != NULL)
 	{
 		XtFree (G_ImageName (g));
-		if (G_Mask (g) != XmUNSPECIFIED_PIXMAP)
-		  XmDestroyPixmap (XtScreen(w),G_Mask (g));
-		XmDestroyPixmap (XtScreen(w),G_Pixmap (g));
+		ReleasePixmapAndMask(XtScreen(w), G_Pixmap(g), G_Mask(g));
 	}
 
 	XmFontListFree (G_FontList (g));
@@ -2203,16 +2228,22 @@ SetValues(
 		    (! new_image_name))
 		{
 			draw_pixmap = True;
-			if (G_Mask(new) != XmUNSPECIFIED_PIXMAP) 
-			  XmDestroyPixmap( XtScreen(new), G_Mask(current));
-			XmDestroyPixmap (XtScreen(new),G_Pixmap (current));
+			ReleasePixmapAndMask(XtScreen(new), G_Pixmap(current), G_Mask(current));
 			G_Pixmap (new) = 
 				XmGetPixmap (XtScreen (new), G_ImageName (new),
 					G_PixmapForeground (new),
 					G_PixmapBackground (new));
 			if (G_Pixmap(new) != XmUNSPECIFIED_PIXMAP) 
-			  G_Mask (new) = 
+			{
+			  G_Mask (new) =
 			    _DtGetMask(XtScreen (new), G_ImageName (new));
+			  XGetGeometry (XtDisplay (new), G_Pixmap (new),
+			                &root, &int_x, &int_y, &int_w, &int_h,
+			                &int_bw, &depth);
+			  MaybeScaleLoadedPixmap(new, &int_w, &int_h, depth);
+			  G_PixmapWidth(new) = Limit((Dimension) int_w, G_MaxPixmapWidth(new));
+			  G_PixmapHeight(new) = Limit((Dimension) int_h, G_MaxPixmapHeight(new));
+			}
 		}
 	}
 
@@ -2226,9 +2257,7 @@ SetValues(
 */
 		if (G_ImageName (current) != NULL) 
 		  {
-		      if (G_Mask(new) != XmUNSPECIFIED_PIXMAP)
-			XmDestroyPixmap (XtScreen(new),G_Mask(current));
-		      XmDestroyPixmap (XtScreen(new),G_Pixmap (current));
+		      ReleasePixmapAndMask(XtScreen(new), G_Pixmap(current), G_Mask(current));
 		  }
 		G_Pixmap (new) = 
 			XmGetPixmap (XtScreen (new), G_ImageName (new),
@@ -2241,6 +2270,8 @@ SetValues(
 		    XGetGeometry (XtDisplay (new), G_Pixmap (new),
 				  &root, &int_x, &int_y, &int_w, &int_h,
 				  &int_bw, &depth);
+
+		    MaybeScaleLoadedPixmap(new, &int_w, &int_h, depth);
 		    name = G_ImageName (new);
 		    w = Limit((Dimension) int_w, G_MaxPixmapWidth(new));
 		    h = Limit((Dimension) int_h, G_MaxPixmapHeight(new));
@@ -2297,9 +2328,7 @@ SetValues(
 		{
 			redraw_flag = True;
 			XtFree (G_ImageName (current));
-			if (G_Mask(new) != XmUNSPECIFIED_PIXMAP)
-			  XmDestroyPixmap (XtScreen(new),G_Mask (current));
-			XmDestroyPixmap (XtScreen(new),G_Pixmap (current));
+			ReleasePixmapAndMask(XtScreen(new), G_Pixmap(current), G_Mask(current));
 			G_Pixmap (new) = None;			
 			G_PixmapWidth (new) = 0;
 			G_PixmapHeight (new) = 0;
@@ -2323,9 +2352,7 @@ SetValues(
 			if (G_ImageName (current) != NULL)
 			{
 				XtFree (G_ImageName (current));
-				if (G_Mask(new) != XmUNSPECIFIED_PIXMAP)
-				  XmDestroyPixmap (XtScreen(new),G_Mask (current));
-				XmDestroyPixmap (XtScreen(new),G_Pixmap (current));
+				ReleasePixmapAndMask(XtScreen(new), G_Pixmap(current), G_Mask(current));
 				G_ImageName (new) = NULL;
 			}
 			w = h = 0;
@@ -2353,6 +2380,7 @@ SetValues(
                         XGetGeometry (XtDisplay (new), G_Pixmap (new), &root,
                                         &int_x, &int_y, &int_w, &int_h,
                                         &int_bw, &depth);
+                        MaybeScaleLoadedPixmap(new, &int_w, &int_h, depth);
                         w = Limit((Dimension) int_w, G_MaxPixmapWidth(new));
                         h = Limit((Dimension) int_h, G_MaxPixmapHeight(new));
                 }
@@ -2847,9 +2875,9 @@ VisualChange(
 	  
 	  if (G_ImageName (g) != NULL)
 	    {
-		if (G_Mask(g) != XmUNSPECIFIED_PIXMAP)
-		  XmDestroyPixmap (XtScreen(g),G_Mask(g));
-		XmDestroyPixmap (XtScreen(w),G_Pixmap (g));
+		ReleasePixmapAndMask(XtScreen(g), G_Pixmap(g), G_Mask(g));
+		G_Pixmap(g) = XmUNSPECIFIED_PIXMAP;
+		G_Mask(g) = XmUNSPECIFIED_PIXMAP;
 		G_Pixmap (g) = 
 		  XmGetPixmap (XtScreen (g), G_ImageName (g),
 			       G_PixmapForeground (g),
@@ -3629,8 +3657,83 @@ _DtIconDraw(
 }
 
 
-
+
 /***************************************************************************/
+
+typedef struct _DtScaledPixmapEntry {
+	Screen *screen;
+	Pixmap pixmap;
+	Pixmap mask;
+	struct _DtScaledPixmapEntry *next;
+} DtScaledPixmapEntry;
+
+static DtScaledPixmapEntry *dt_scaled_pixmaps = NULL;
+
+static DtScaledPixmapEntry *
+FindScaledPixmapEntryByPixmap(Pixmap pixmap)
+{
+	DtScaledPixmapEntry *e;
+	for (e = dt_scaled_pixmaps; e; e = e->next)
+	{
+		if (e->pixmap == pixmap)
+			return e;
+	}
+	return NULL;
+}
+
+static void
+RegisterScaledPixmap(
+	Screen *screen,
+	Pixmap pixmap,
+	Pixmap mask)
+{
+	DtScaledPixmapEntry *e;
+
+	if (!screen || pixmap == XmUNSPECIFIED_PIXMAP || pixmap == None)
+		return;
+
+	e = (DtScaledPixmapEntry *)XtMalloc(sizeof(DtScaledPixmapEntry));
+	if (!e)
+		return;
+
+	e->screen = screen;
+	e->pixmap = pixmap;
+	e->mask = mask;
+	e->next = dt_scaled_pixmaps;
+	dt_scaled_pixmaps = e;
+}
+
+static void
+ReleasePixmapAndMask(
+	Screen *screen,
+	Pixmap pixmap,
+	Pixmap mask)
+{
+	DtScaledPixmapEntry *e;
+
+	if (!screen || pixmap == XmUNSPECIFIED_PIXMAP || pixmap == None)
+		return;
+
+	e = FindScaledPixmapEntryByPixmap(pixmap);
+	if (e)
+	{
+		DtScaledPixmapEntry **pp = &dt_scaled_pixmaps;
+		while (*pp && *pp != e)
+			pp = &((*pp)->next);
+		if (*pp == e)
+			*pp = e->next;
+
+		XFreePixmap(DisplayOfScreen(e->screen), e->pixmap);
+		if (e->mask != XmUNSPECIFIED_PIXMAP && e->mask != None)
+			XFreePixmap(DisplayOfScreen(e->screen), e->mask);
+		XtFree((char *)e);
+		return;
+	}
+
+	if (mask != XmUNSPECIFIED_PIXMAP && mask != None)
+		XmDestroyPixmap(screen, mask);
+	XmDestroyPixmap(screen, pixmap);
+}
 
 
 /*
@@ -3648,6 +3751,10 @@ LoadPixmap(
    Pixmap pm = XmGetPixmap(s, pixmap, G_PixmapForeground(new),
                            G_PixmapBackground(new));
    Pixmap mask;
+   Window root;
+   int int_x, int_y;
+   unsigned int int_bw;
+   unsigned int depth;
 
    if (pm == XmUNSPECIFIED_PIXMAP)
       return(True);
@@ -3658,10 +3765,210 @@ LoadPixmap(
    G_Mask(new) = mask;
    G_ImageName(new) = XtNewString(pixmap);
 
-   XmeGetPixmapData(s, pm, NULL, NULL, NULL, NULL, NULL, NULL, &int_w, &int_h);
+   XGetGeometry(XtDisplay(new), pm, &root, &int_x, &int_y,
+                &int_w, &int_h, &int_bw, &depth);
+
+   MaybeScaleLoadedPixmap(new, &int_w, &int_h, depth);
+
    G_PixmapWidth(new) = Limit((Dimension)int_w, G_MaxPixmapWidth(new));
-   G_PixmapHeight(new) = Limit((Dimension)int_h, G_MaxPixmapWidth(new));
+   G_PixmapHeight(new) = Limit((Dimension)int_h, G_MaxPixmapHeight(new));
    return(False);
+}
+
+static Pixmap
+ScalePixmapNearest(
+        Screen *s,
+        Pixmap src,
+        unsigned int src_w,
+        unsigned int src_h,
+        unsigned int dst_w,
+        unsigned int dst_h,
+        unsigned int depth)
+{
+	Display *dpy;
+	Pixmap dst = XmUNSPECIFIED_PIXMAP;
+	XImage *src_img = NULL;
+	XImage *dst_img = NULL;
+	GC gc;
+	unsigned int x, y;
+
+	if (!s || src == XmUNSPECIFIED_PIXMAP || src == None)
+		return XmUNSPECIFIED_PIXMAP;
+	if (src_w == 0 || src_h == 0 || dst_w == 0 || dst_h == 0)
+		return XmUNSPECIFIED_PIXMAP;
+
+	dpy = DisplayOfScreen(s);
+
+	src_img = XGetImage(dpy, src, 0, 0, src_w, src_h, AllPlanes, ZPixmap);
+	if (!src_img)
+		goto done;
+
+	dst_img = XCreateImage(dpy, DefaultVisualOfScreen(s), depth, ZPixmap,
+	                       0, NULL, dst_w, dst_h, 32, 0);
+	if (!dst_img)
+		goto done;
+
+	dst_img->data = (char *)malloc((size_t)dst_img->bytes_per_line * dst_h);
+	if (!dst_img->data)
+		goto done;
+
+	for (y = 0; y < dst_h; y++)
+	{
+		unsigned int sy = (unsigned int)((unsigned long)y * src_h / dst_h);
+		for (x = 0; x < dst_w; x++)
+		{
+			unsigned int sx = (unsigned int)((unsigned long)x * src_w / dst_w);
+			unsigned long pixel = XGetPixel(src_img, (int)sx, (int)sy);
+			XPutPixel(dst_img, (int)x, (int)y, pixel);
+		}
+	}
+
+	dst = XCreatePixmap(dpy, RootWindowOfScreen(s), dst_w, dst_h, depth);
+	if (dst == None)
+	{
+		dst = XmUNSPECIFIED_PIXMAP;
+		goto done;
+	}
+
+	gc = XCreateGC(dpy, dst, 0, NULL);
+	XPutImage(dpy, dst, gc, dst_img, 0, 0, 0, 0, dst_w, dst_h);
+	XFreeGC(dpy, gc);
+
+done:
+	if (dst_img)
+		XDestroyImage(dst_img);
+	if (src_img)
+		XDestroyImage(src_img);
+	return dst;
+}
+
+static Pixmap
+ScaleMaskNearest(
+        Screen *s,
+        Pixmap src_mask,
+        unsigned int src_w,
+        unsigned int src_h,
+        unsigned int dst_w,
+        unsigned int dst_h)
+{
+	Display *dpy;
+	Pixmap dst_mask = XmUNSPECIFIED_PIXMAP;
+	XImage *src_img = NULL;
+	XImage *dst_img = NULL;
+	GC gc;
+	unsigned int x, y;
+
+	if (!s || src_mask == XmUNSPECIFIED_PIXMAP || src_mask == None)
+		return XmUNSPECIFIED_PIXMAP;
+	if (src_w == 0 || src_h == 0 || dst_w == 0 || dst_h == 0)
+		return XmUNSPECIFIED_PIXMAP;
+
+	dpy = DisplayOfScreen(s);
+
+	src_img = XGetImage(dpy, src_mask, 0, 0, src_w, src_h, AllPlanes, ZPixmap);
+	if (!src_img)
+		goto done;
+
+	dst_img = XCreateImage(dpy, DefaultVisualOfScreen(s), 1, ZPixmap,
+	                       0, NULL, dst_w, dst_h, 8, 0);
+	if (!dst_img)
+		goto done;
+
+	dst_img->data = (char *)malloc((size_t)dst_img->bytes_per_line * dst_h);
+	if (!dst_img->data)
+		goto done;
+
+	for (y = 0; y < dst_h; y++)
+	{
+		unsigned int sy = (unsigned int)((unsigned long)y * src_h / dst_h);
+		for (x = 0; x < dst_w; x++)
+		{
+			unsigned int sx = (unsigned int)((unsigned long)x * src_w / dst_w);
+			unsigned long pixel = XGetPixel(src_img, (int)sx, (int)sy);
+			XPutPixel(dst_img, (int)x, (int)y, pixel ? 1 : 0);
+		}
+	}
+
+	dst_mask = XCreatePixmap(dpy, RootWindowOfScreen(s), dst_w, dst_h, 1);
+	if (dst_mask == None)
+	{
+		dst_mask = XmUNSPECIFIED_PIXMAP;
+		goto done;
+	}
+
+	gc = XCreateGC(dpy, dst_mask, 0, NULL);
+	XPutImage(dpy, dst_mask, gc, dst_img, 0, 0, 0, 0, dst_w, dst_h);
+	XFreeGC(dpy, gc);
+
+done:
+	if (dst_img)
+		XDestroyImage(dst_img);
+	if (src_img)
+		XDestroyImage(src_img);
+	return dst_mask;
+}
+
+static void
+MaybeScaleLoadedPixmap(
+        DtIconGadget g,
+        unsigned int *pix_w,
+        unsigned int *pix_h,
+        unsigned int depth)
+{
+	unsigned int dst_w;
+	unsigned int dst_h;
+	Pixmap scaled_pm;
+	Pixmap scaled_mask = XmUNSPECIFIED_PIXMAP;
+	Pixmap orig_pm;
+	Pixmap orig_mask;
+	Screen *s;
+
+	if (!g || !pix_w || !pix_h)
+		return;
+
+	orig_pm = G_Pixmap(g);
+	orig_mask = G_Mask(g);
+	if (orig_pm == None || orig_pm == XmUNSPECIFIED_PIXMAP)
+		return;
+
+	s = XtScreen((Widget)g);
+	if (!s)
+		return;
+
+	/* Only upscale small UI icons (dtfile extra-large uses 48x48). */
+	if (G_MaxPixmapWidth(g) < 48 || G_MaxPixmapHeight(g) < 48)
+		return;
+	if (G_MaxPixmapWidth(g) > 64 || G_MaxPixmapHeight(g) > 64)
+		return;
+
+	if (*pix_w == 0 || *pix_h == 0)
+		return;
+
+	dst_w = (unsigned int)G_MaxPixmapWidth(g);
+	dst_h = (unsigned int)G_MaxPixmapHeight(g);
+
+	if (*pix_w >= dst_w && *pix_h >= dst_h)
+		return;
+
+	scaled_pm = ScalePixmapNearest(s, orig_pm, *pix_w, *pix_h,
+	                              dst_w, dst_h, depth);
+	if (scaled_pm == XmUNSPECIFIED_PIXMAP)
+		return;
+
+	if (orig_mask != XmUNSPECIFIED_PIXMAP && orig_mask != None)
+		scaled_mask = ScaleMaskNearest(s, orig_mask, *pix_w, *pix_h,
+		                               dst_w, dst_h);
+
+	/* release the original (Xm cache) pixmaps, then adopt the scaled ones */
+	if (orig_mask != XmUNSPECIFIED_PIXMAP && orig_mask != None)
+		XmDestroyPixmap(s, orig_mask);
+	XmDestroyPixmap(s, orig_pm);
+
+	G_Pixmap(g) = scaled_pm;
+	G_Mask(g) = scaled_mask;
+	RegisterScaledPixmap(s, scaled_pm, scaled_mask);
+	*pix_w = dst_w;
+	*pix_h = dst_h;
 }
 
 

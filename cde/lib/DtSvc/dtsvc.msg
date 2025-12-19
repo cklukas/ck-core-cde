@@ -96,6 +96,7 @@ $ **  MESSAGE NUMBER 20 IS OBSOLETE.
 22 Unable to create a temporary file in directory: "%s"\nfor the action named: "%s".
 23 Unable to open a temporary file: "%s"\nfor the action named: "%s".
 24 Unable to write a temporary file: "%s"\nfor the action named: "%s".
+25 Run in Terminal
 
 $set 3
 $ ****  Module: CmdMain.c ****
@@ -445,4 +446,3 @@ $    These messages are used for the version information.
 $quote "
 1 "@(#)version_goes_here"
 2 "\n@(#)_DtMessage catalog source $TOG: dtsvc.msg /main/5 1999/09/16 14:56:30 mgreess $"
-

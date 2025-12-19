@@ -68,6 +68,7 @@
 #define BY_NAME_AND_ICON	1
 #define BY_NAME_AND_SMALL_ICON	2
 #define BY_ATTRIBUTES		3
+#define BY_NAME_AND_EXTRA_LARGE_ICON 4
 
 #define ORDER_BY_FILE_TYPE	0
 #define ORDER_BY_ALPHABETICAL	1
@@ -129,6 +130,7 @@ typedef struct
    Widget random_off;
    Widget by_name;
    Widget by_name_and_icon;
+   Widget by_name_and_extra_large_icon;
    Widget by_name_and_small_icon;
    Widget by_attributes;
    Widget order_file_type;

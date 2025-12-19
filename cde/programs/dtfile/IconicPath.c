@@ -74,6 +74,7 @@
 #include <Xm/LabelG.h>
 #include <Xm/PushBG.h>
 #include <Xm/DragDrop.h>
+#include <string.h>
 #include <Dt/Icon.h>
 #include <Dt/IconP.h>
 #include <Dt/DtNlUtils.h>
@@ -136,6 +137,41 @@ static XmNavigability WidgetNavigable(
 
 /********    End Static Function Declarations    ********/
 
+/*--------------------------------------------------------------------
+ * Iconic path object popup support (Button3)
+ *------------------------------------------------------------------*/
+
+typedef struct
+{
+   FileViewData *file_view_data;
+   DirectorySet *directory_set;
+   FileData     *file_data;
+} IconicPathPopupData;
+
+static IconicPathPopupData iconicPathPopupData = { NULL, NULL, NULL };
+static Boolean iconicPathPopupUnmapInstalled = False;
+static XtIntervalId iconicPathPopupFreeTimer = (XtIntervalId)0;
+static FileMgrData *iconicPathPopupFileMgrData = NULL;
+
+static void IconicPathButtonPressHandler(
+                        Widget wid,
+                        XtPointer client_data,
+                        XEvent *event,
+                        Boolean *cont) ;
+static void IconicPathPopupMenuUnmapCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data) ;
+static void FreeIconicPathPopupDataTimeout(
+                        XtPointer client_data,
+                        XtIntervalId *id) ;
+static void FreeIconicPathPopupData( void ) ;
+static void EnsureIconicPathPopupUnmapInstalled( void ) ;
+static FileViewData * CreateIconicPathPopupFileViewData(
+                        FileMgrData *file_mgr_data,
+                        const char *directory_path,
+                        Widget posting_widget) ;
+
 
 /*--------------------------------------------------------------------
  * Convenience macros
@@ -144,10 +180,14 @@ static XmNavigability WidgetNavigable(
 #define MWD(ip)        ((ip)->iconic_path.margin_width)
 #define MHT(ip)        ((ip)->iconic_path.margin_height)
 #define SPC(ip)        ((ip)->iconic_path.spacing)
-#define MIN_WD(ip)     ((ip)->iconic_path.large_icons? \
-                            (ip)->iconic_path.large_min_width: \
-                            (ip)->iconic_path.small_min_width)
-#define ICON_HT(ip)    ((ip)->iconic_path.large_icons? 32: 16)
+#define ICON_SIZE(ip)  ((ip)->iconic_path.extra_large_icons? 2: \
+                        ((ip)->iconic_path.large_icons? 1: 0))
+#define MIN_WD(ip)     ((ICON_SIZE(ip) == 2)? (ip)->iconic_path.extra_large_min_width: \
+                        (ICON_SIZE(ip) == 1)? (ip)->iconic_path.large_min_width: \
+                                             (ip)->iconic_path.small_min_width)
+#define ICON_HT(ip)    ((ICON_SIZE(ip) == 2)? 48: (ICON_SIZE(ip) == 1)? 32: 16)
+#define ICON_DTSIZE(ip) ((ICON_SIZE(ip) == 2)? EXTRA_LARGE: \
+                         (ICON_SIZE(ip) == 1)? LARGE: SMALL)
 
 #define DESIRED_WIDTH(ip) \
    (MWD(ip) + (ip)->iconic_path.dotdot_button->core.width + MWD(ip) \
@@ -217,6 +257,13 @@ static XtResource resources[] =
 		XmRImmediate, (XtPointer) 45
 	},
 
+	{	DtNextraLargeMinWidth,
+		XmCMinWidth, XmRHorizontalDimension, sizeof (Dimension),
+		XtOffsetOf( struct _DtIconicPathRec,
+		            iconic_path.extra_large_min_width),
+		XmRImmediate, (XtPointer) 65
+	},
+
 	{	DtNforceSmallIcons,
 		DtCForceSmallIcons, XmRBoolean, sizeof (Boolean),
 		XtOffsetOf( struct _DtIconicPathRec,
@@ -228,6 +275,13 @@ static XtResource resources[] =
 		DtCForceLargeIcons, XmRBoolean, sizeof (Boolean),
 		XtOffsetOf( struct _DtIconicPathRec,
 		            iconic_path.force_large_icons),
+		XmRImmediate, (XtPointer) False
+	},
+
+	{	DtNforceExtraLargeIcons,
+		DtCForceExtraLargeIcons, XmRBoolean, sizeof (Boolean),
+		XtOffsetOf( struct _DtIconicPathRec,
+		            iconic_path.force_extra_large_icons),
 		XmRImmediate, (XtPointer) False
 	},
 
@@ -266,6 +320,13 @@ static XtResource resources[] =
 		DtCLargeIcons, XmRBoolean, sizeof (Boolean),
 		XtOffsetOf( struct _DtIconicPathRec, iconic_path.large_icons),
 		XmRImmediate, (XtPointer) True
+	},
+
+	{	DtNextraLargeIcons,
+		DtCExtraLargeIcons, XmRBoolean, sizeof (Boolean),
+		XtOffsetOf( struct _DtIconicPathRec,
+		            iconic_path.extra_large_icons),
+		XmRImmediate, (XtPointer) False
 	},
 
 	{	DtNiconsChanged,
@@ -486,9 +547,20 @@ Update(
 
    /* enforce the forceSmallIconsor forceLargeIcons resources */
    if (ip->iconic_path.force_small_icons)
+   {
       ip->iconic_path.large_icons = False;
+      ip->iconic_path.extra_large_icons = False;
+   }
+   else if (ip->iconic_path.force_extra_large_icons)
+   {
+      ip->iconic_path.large_icons = False;
+      ip->iconic_path.extra_large_icons = True;
+   }
    else if (ip->iconic_path.force_large_icons)
+   {
       ip->iconic_path.large_icons = True;
+      ip->iconic_path.extra_large_icons = False;
+   }
 
    /* create "..." button, if necessary */
    if (ip->iconic_path.dotdot_button == NULL)
@@ -523,7 +595,7 @@ Update(
 			    ip->iconic_path.dotdot_button->core.height, 0);
       }
    }
-   else if (ip->iconic_path.large_shown != ip->iconic_path.large_icons)
+   else if (ip->iconic_path.icon_size_shown != ICON_SIZE(ip))
    {
       xm_string = XmStringCreateLocalized("...");
       XtSetArg (args[0], XmNlabelString, xm_string);
@@ -588,7 +660,7 @@ Update(
        (ip->iconic_path.directory_shown == NULL ||
         strcmp(ip->iconic_path.directory_shown,
                ip->iconic_path.current_directory) != 0 ||
-        ip->iconic_path.large_shown != ip->iconic_path.large_icons ||
+        ip->iconic_path.icon_size_shown != ICON_SIZE(ip) ||
         ip->iconic_path.icons_changed))
    {
       /* store the new directory */
@@ -648,10 +720,10 @@ Update(
                          (i + 1)*sizeof(struct _IconicPathComponent));
 
             ip->iconic_path.components[i].path = XtNewString(path);
-            pixmapData = GetPixmapData(file_mgr_rec, 
+            pixmapData = GetPixmapData(file_mgr_rec,
                                        file_mgr_data,
                                        path,
-                                       ip->iconic_path.large_icons);
+                                       ICON_DTSIZE(ip));
 
             n = 0;
             XtSetArg (args[n], XmNstring, NULL);                      n++;
@@ -690,6 +762,8 @@ Update(
             XtSetArg (args[n], XmNhighlightThickness, 0);             n++;
             XtSetArg (args[n], XmNmarginHeight, 0);                   n++;
             XtSetArg (args[n], XmNmarginWidth, 0);                    n++;
+            XtSetArg (args[n], XmNmaxPixmapWidth, ICON_HT(ip));       n++;
+            XtSetArg (args[n], XmNmaxPixmapHeight, ICON_HT(ip));      n++;
             XtSetArg (args[n], XmNtraversalOn, False);                n++;
             ip->iconic_path.components[i].icon =
                _DtCreateIcon ((Widget)ip, "iconic_path_icon", args, n);
@@ -746,7 +820,7 @@ Update(
 
             /* check if the path has changed */
             if (strcmp(ip->iconic_path.components[i].path, path) != 0 ||
-                ip->iconic_path.large_shown != ip->iconic_path.large_icons)
+                ip->iconic_path.icon_size_shown != ICON_SIZE(ip))
             {
                INC_N_CHANGES();
 
@@ -772,10 +846,15 @@ Update(
             XmStringFree(xm_string);
 
             /* check if the icon has changed */
+            /* ensure max pixmap size matches current icon size */
+            XtSetArg (args[0], XmNmaxPixmapWidth, ICON_HT(ip));
+            XtSetArg (args[1], XmNmaxPixmapHeight, ICON_HT(ip));
+            XtSetValues(ip->iconic_path.components[i].icon, args, 2);
+
             pixmapData = GetPixmapData(file_mgr_rec,
                                        file_mgr_data,
                                        path,
-                                       ip->iconic_path.large_icons);
+                                       ICON_DTSIZE(ip));
 
             if (pixmapData)
             {
@@ -841,7 +920,7 @@ next_component:
       }
 
       ip->iconic_path.num_components = i;
-      ip->iconic_path.large_shown = ip->iconic_path.large_icons;
+      ip->iconic_path.icon_size_shown = ICON_SIZE(ip);
    }
 
    /* update component widths */
@@ -1143,7 +1222,7 @@ Initialize(
     new_w->iconic_path.msg_text = NULL;
     new_w->iconic_path.current_directory = NULL;
     new_w->iconic_path.directory_shown = NULL;
-    new_w->iconic_path.large_shown = False;
+    new_w->iconic_path.icon_size_shown = -1;
     new_w->iconic_path.status_label = NULL;
     new_w->iconic_path.dotdot_button = NULL;
     new_w->iconic_path.dropzone_icon = NULL;
@@ -1151,6 +1230,9 @@ Initialize(
     new_w->iconic_path.components = NULL;
     new_w->iconic_path.left_component = 0;
     new_w->iconic_path.gc = None;
+
+    XtAddEventHandler((Widget)new_w, ButtonReleaseMask, False,
+                      (XtEventHandler)IconicPathButtonPressHandler, NULL);
 
     Update(new_w, file_mgr_rec, NULL);
 
@@ -1188,6 +1270,266 @@ Destroy(
     ip->iconic_path.components = NULL;
 
     return;
+}
+
+/*--------------------------------------------------------------------
+ * Popup menu support for iconic path components (Button3)
+ *------------------------------------------------------------------*/
+
+static void
+FreeIconicPathPopupData( void )
+{
+   if (iconicPathPopupData.directory_set)
+   {
+      if (iconicPathPopupData.directory_set->name)
+         XtFree(iconicPathPopupData.directory_set->name);
+
+      if (iconicPathPopupData.directory_set->file_view_data)
+         XtFree((char *)iconicPathPopupData.directory_set->file_view_data);
+
+      if (iconicPathPopupData.directory_set->order_list)
+         XtFree((char *)iconicPathPopupData.directory_set->order_list);
+
+      XtFree((char *)iconicPathPopupData.directory_set);
+   }
+
+   if (iconicPathPopupData.file_data)
+      FreeFileData(iconicPathPopupData.file_data, True);
+
+   if (iconicPathPopupData.file_view_data)
+      XtFree((char *)iconicPathPopupData.file_view_data);
+
+   iconicPathPopupData.file_view_data = NULL;
+   iconicPathPopupData.directory_set = NULL;
+   iconicPathPopupData.file_data = NULL;
+}
+
+
+static void
+FreeIconicPathPopupDataTimeout(
+        XtPointer client_data,
+        XtIntervalId *id)
+{
+   (void)client_data;
+   (void)id;
+
+   iconicPathPopupFreeTimer = (XtIntervalId)0;
+   if (iconicPathPopupFileMgrData &&
+       iconicPathPopupFileMgrData->popup_menu_icon ==
+          iconicPathPopupData.file_view_data)
+      iconicPathPopupFileMgrData->popup_menu_icon = NULL;
+   iconicPathPopupFileMgrData = NULL;
+   FreeIconicPathPopupData();
+}
+
+
+static void
+IconicPathPopupMenuUnmapCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+   FileMgrRec *file_mgr_rec = NULL;
+   DialogData *dialog_data;
+   FileMgrData *file_mgr_data;
+   Arg args[1];
+
+   (void)client_data;
+   (void)call_data;
+
+   XtSetArg(args[0], XmNuserData, &file_mgr_rec);
+   XtGetValues(w, args, 1);
+   if (file_mgr_rec &&
+       (dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec)) != NULL)
+      iconicPathPopupFileMgrData = (FileMgrData *)dialog_data->data;
+
+   /*
+    * The shared File Manager popup menu can unmap before the selected
+    * action callback runs; defer freeing our synthetic FileViewData until
+    * the current dispatch completes to avoid use-after-free crashes.
+    */
+   if (iconicPathPopupFreeTimer == (XtIntervalId)0)
+      iconicPathPopupFreeTimer =
+         XtAppAddTimeOut(XtWidgetToApplicationContext(w), 0,
+                         FreeIconicPathPopupDataTimeout, NULL);
+}
+
+
+static void
+EnsureIconicPathPopupUnmapInstalled( void )
+{
+   if (iconicPathPopupUnmapInstalled)
+      return;
+
+   if (fileMgrPopup.menu == NULL)
+      return;
+
+   XtAddCallback(fileMgrPopup.menu, XmNunmapCallback,
+                 IconicPathPopupMenuUnmapCB, NULL);
+   iconicPathPopupUnmapInstalled = True;
+}
+
+
+static FileViewData *
+CreateIconicPathPopupFileViewData(
+        FileMgrData *file_mgr_data,
+        const char *directory_path,
+        Widget posting_widget )
+{
+   DirectorySet *ds;
+   FileViewData *fvd;
+   FileData *fd;
+   char parent[MAX_PATH];
+   const char *base;
+   const char *slash;
+
+   if (directory_path == NULL || directory_path[0] != '/')
+      return NULL;
+
+   if (strcmp(directory_path, "/") == 0)
+   {
+      strcpy(parent, "/");
+      base = NULL;
+   }
+   else
+   {
+      slash = strrchr(directory_path, '/');
+      if (slash == NULL)
+         return NULL;
+      if (slash == directory_path)
+      {
+         strcpy(parent, "/");
+         base = slash + 1;
+      }
+      else
+      {
+         size_t len = (size_t)(slash - directory_path);
+         if (len >= sizeof(parent))
+            return NULL;
+         memcpy(parent, directory_path, len);
+         parent[len] = '\0';
+         base = slash + 1;
+      }
+   }
+
+   fd = ReadFileData(parent, (char *)base);
+   if (fd == NULL)
+      return NULL;
+
+   if (strcmp(directory_path, "/") == 0)
+   {
+      XtFree(fd->action_name);
+      fd->action_name = XtNewString("/");
+      fd->is_subdir = True;
+   }
+
+   ds = (DirectorySet *)XtMalloc(sizeof(DirectorySet));
+   memset(ds, 0, sizeof(DirectorySet));
+   ds->name = XtNewString(parent);
+   ds->file_count = 1;
+   ds->file_view_data = (FileViewData **)XtMalloc(sizeof(FileViewData *));
+   ds->order_list = (FileViewData **)XtMalloc(sizeof(FileViewData *));
+   ds->filtered_file_count = 1;
+   ds->invisible_file_count = 0;
+   ds->file_mgr_data = (XtPointer)file_mgr_data;
+
+   fvd = (FileViewData *)XtMalloc(sizeof(FileViewData));
+   memset(fvd, 0, sizeof(FileViewData));
+   fvd->directory_set = (XtPointer)ds;
+   fvd->file_data = fd;
+   fvd->displayed = True;
+   fvd->widget = posting_widget;
+
+   ds->file_view_data[0] = fvd;
+   ds->order_list[0] = fvd;
+
+   iconicPathPopupData.file_view_data = fvd;
+   iconicPathPopupData.directory_set = ds;
+   iconicPathPopupData.file_data = fd;
+
+   return fvd;
+}
+
+
+static void
+IconicPathButtonPressHandler(
+        Widget wid,
+        XtPointer client_data,
+        XEvent *event,
+        Boolean *cont )
+{
+   DtIconicPathWidget ip;
+   FileMgrRec *file_mgr_rec;
+   DialogData  *dialog_data;
+   FileMgrData *file_mgr_data;
+   Widget child;
+   int i = -1;
+   XButtonEvent *be;
+
+   (void)client_data;
+   (void)cont;
+
+   ip = (DtIconicPathWidget)wid;
+
+   if (event == NULL || event->type != ButtonRelease)
+      return;
+
+   be = (XButtonEvent *)event;
+   if (be->button != bMenuButton)
+      return;
+
+   child = XmObjectAtPoint((Widget)ip, (Position)be->x, (Position)be->y);
+   if (child == NULL)
+      return;
+
+   if (child == ip->iconic_path.dotdot_button)
+   {
+      i = ip->iconic_path.left_component - 1;
+   }
+   else
+   {
+      int k;
+      for (k = 0; k < ip->iconic_path.num_components; k++)
+      {
+         if (child == ip->iconic_path.components[k].button ||
+             child == ip->iconic_path.components[k].icon)
+         {
+            i = k;
+            break;
+         }
+      }
+   }
+
+   if (i < 0 || i >= ip->iconic_path.num_components)
+      return;
+
+   if (!XtIsSensitive(child))
+      return;
+
+   file_mgr_rec = (FileMgrRec *) ip->iconic_path.file_mgr_rec;
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+      return;
+   file_mgr_data = (FileMgrData *) dialog_data->data;
+
+   UnpostTextField(file_mgr_data);
+
+   EnsureIconicPathPopupUnmapInstalled();
+
+   if (iconicPathPopupFreeTimer != (XtIntervalId)0)
+   {
+      XtRemoveTimeOut(iconicPathPopupFreeTimer);
+      iconicPathPopupFreeTimer = (XtIntervalId)0;
+   }
+
+   if (fileMgrPopup.menu == NULL || !XtIsManaged(fileMgrPopup.menu))
+      FreeIconicPathPopupData();
+
+   if (CreateIconicPathPopupFileViewData(file_mgr_data,
+         ip->iconic_path.components[i].path, child) == NULL)
+      return;
+
+   FmPopup(child, (XtPointer)iconicPathPopupData.file_view_data, event,
+           file_mgr_data);
 }
 
 
@@ -1406,8 +1748,9 @@ DtUpdateIconicPath(
    XtSetArg (args[0], DtNfileMgrRec, file_mgr_rec);
    XtSetArg (args[1], DtNcurrentDirectory, file_mgr_data->current_directory);
    XtSetArg (args[2], DtNlargeIcons, file_mgr_data->view == BY_NAME_AND_ICON);
-   XtSetArg (args[3], DtNiconsChanged, icons_changed);
-   XtSetArg (args[4], "statusMsg", !file_mgr_data->show_status_line);
-   XtSetValues(file_mgr_rec->iconic_path_da, args, 5);
+   XtSetArg (args[3], DtNextraLargeIcons,
+             file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON);
+   XtSetArg (args[4], DtNiconsChanged, icons_changed);
+   XtSetArg (args[5], "statusMsg", !file_mgr_data->show_status_line);
+   XtSetValues(file_mgr_rec->iconic_path_da, args, 6);
 }
-

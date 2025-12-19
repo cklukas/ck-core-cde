@@ -164,6 +164,7 @@ static char * Order_by_date = "order_by_date";
 static char * Order_by_size = "order_by_size";
 static char * By_name = "by_name";
 static char * By_name_and_icon = "by_name_and_icon";
+static char * By_name_and_extra_large_icon = "by_name_and_extra_large_icon";
 static char * By_name_and_small_icon = "by_name_and_small_icon";
 static char * By_attributes = "by_attributes";
 static char * Direction_descending = "direction_descending";
@@ -616,6 +617,25 @@ Create(
    XtSetArg (args[n], XmNindicatorType, XmONE_OF_MANY);         n++;
    preferences_rec->by_name_and_icon = temp =
       XmCreateToggleButtonGadget (group_form, "by_name_and_icon", args, n);
+   XtManageChild (temp);
+   XmStringFree (label_string);
+   XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
+                  (XtPointer) preferences_rec);
+   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+                 HELP_PREFERENCES_VIEW_STR);
+
+
+   label_string = XmStringCreateLocalized (((char *)GETMESSAGE(23,38, "By Extra Large Icons")));
+   n = 0;
+   XtSetArg (args[n], XmNlabelString, label_string);            n++;
+   XtSetArg (args[n], XmNtopAttachment, XmATTACH_WIDGET);       n++;
+   XtSetArg (args[n], XmNtopWidget, temp);                      n++;
+   XtSetArg (args[n], XmNtopOffset, offset);                    n++;
+   XtSetArg (args[n], XmNleftAttachment, XmATTACH_FORM);        n++;
+   XtSetArg (args[n], XmNindicatorType, XmONE_OF_MANY);         n++;
+   preferences_rec->by_name_and_extra_large_icon = temp =
+      XmCreateToggleButtonGadget (group_form,
+                                  "by_name_and_extra_large_icon", args, n);
    XtManageChild (temp);
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
@@ -1219,6 +1239,7 @@ SetValues(
    {
       XtSetValues (preferences_rec->by_name, true_args, 1);
       XtSetValues (preferences_rec->by_name_and_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_extra_large_icon, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_small_icon, false_args, 1);
       XtSetValues (preferences_rec->by_attributes, false_args, 1);
    }
@@ -1226,6 +1247,15 @@ SetValues(
    {
       XtSetValues (preferences_rec->by_name, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_icon, true_args, 1);
+      XtSetValues (preferences_rec->by_name_and_extra_large_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_small_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_attributes, false_args, 1);
+   }
+   else if (*viewP == BY_NAME_AND_EXTRA_LARGE_ICON)
+   {
+      XtSetValues (preferences_rec->by_name, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_extra_large_icon, true_args, 1);
       XtSetValues (preferences_rec->by_name_and_small_icon, false_args, 1);
       XtSetValues (preferences_rec->by_attributes, false_args, 1);
    }
@@ -1233,6 +1263,7 @@ SetValues(
    {
       XtSetValues (preferences_rec->by_name, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_extra_large_icon, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_small_icon, true_args, 1);
       XtSetValues (preferences_rec->by_attributes, false_args, 1);
    }
@@ -1240,6 +1271,7 @@ SetValues(
    {
       XtSetValues (preferences_rec->by_name, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_extra_large_icon, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_small_icon, false_args, 1);
       XtSetValues (preferences_rec->by_attributes, true_args, 1);
    }
@@ -1478,6 +1510,8 @@ ToggleCallback(
          w = preferences_rec->by_name;
       else if (preferences_rec->view_single == BY_NAME_AND_ICON)
          w = preferences_rec->by_name_and_icon;
+      else if (preferences_rec->view_single == BY_NAME_AND_EXTRA_LARGE_ICON)
+         w = preferences_rec->by_name_and_extra_large_icon;
       else if (preferences_rec->view_single == BY_NAME_AND_SMALL_ICON)
          w = preferences_rec->by_name_and_small_icon;
       else
@@ -1502,6 +1536,8 @@ ToggleCallback(
          w = preferences_rec->by_name;
       else if (preferences_rec->view_tree == BY_NAME_AND_ICON)
          w = preferences_rec->by_name_and_icon;
+      else if (preferences_rec->view_tree == BY_NAME_AND_EXTRA_LARGE_ICON)
+         w = preferences_rec->by_name_and_extra_large_icon;
       else if (preferences_rec->view_tree == BY_NAME_AND_SMALL_ICON)
          w = preferences_rec->by_name_and_small_icon;
       else
@@ -1533,6 +1569,7 @@ ToggleCallback(
       if (showType == SINGLE_DIRECTORY)
          XtSetSensitive (XtParent (preferences_rec->random_on), True);
       XtSetValues (preferences_rec->by_name_and_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_extra_large_icon, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_small_icon, false_args, 1);
       XtSetValues (preferences_rec->by_attributes, false_args, 1);
       XtSetValues (preferences_rec->by_name, true_args, 1);
@@ -1543,10 +1580,22 @@ ToggleCallback(
       if (showType == SINGLE_DIRECTORY)
          XtSetSensitive (XtParent (preferences_rec->random_on), True);
       XtSetValues (preferences_rec->by_name, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_extra_large_icon, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_small_icon, false_args, 1);
       XtSetValues (preferences_rec->by_attributes, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_icon, true_args, 1);
       *viewP = BY_NAME_AND_ICON;
+   }
+   else if (w == preferences_rec->by_name_and_extra_large_icon)
+   {
+      if (showType == SINGLE_DIRECTORY)
+         XtSetSensitive (XtParent (preferences_rec->random_on), True);
+      XtSetValues (preferences_rec->by_name, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_small_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_attributes, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_extra_large_icon, true_args, 1);
+      *viewP = BY_NAME_AND_EXTRA_LARGE_ICON;
    }
    else if (w == preferences_rec->by_name_and_small_icon)
    {
@@ -1555,6 +1604,7 @@ ToggleCallback(
       XtSetValues (preferences_rec->by_name, false_args, 1);
       XtSetValues (preferences_rec->by_attributes, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_extra_large_icon, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_small_icon, true_args, 1);
       *viewP = BY_NAME_AND_SMALL_ICON;
    }
@@ -1563,6 +1613,7 @@ ToggleCallback(
       XtSetSensitive (XtParent (preferences_rec->random_on), False);
       XtSetValues (preferences_rec->by_name, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_icon, false_args, 1);
+      XtSetValues (preferences_rec->by_name_and_extra_large_icon, false_args, 1);
       XtSetValues (preferences_rec->by_name_and_small_icon, false_args, 1);
       XtSetValues (preferences_rec->by_attributes, true_args, 1);
       *viewP = BY_ATTRIBUTES;
@@ -1875,6 +1926,8 @@ ViewToString(
       buf = By_name;
    else if (*value == BY_NAME_AND_ICON)
       buf = By_name_and_icon;
+   else if (*value == BY_NAME_AND_EXTRA_LARGE_ICON)
+      buf = By_name_and_extra_large_icon;
    else if (*value == BY_NAME_AND_SMALL_ICON)
       buf = By_name_and_small_icon;
    else if (*value == BY_ATTRIBUTES)
@@ -1910,6 +1963,8 @@ StringToView(
       i = BY_NAME;
    else if (_DtStringsAreEquivalent (in_str, By_name_and_icon)) 
       i = BY_NAME_AND_ICON;
+   else if (_DtStringsAreEquivalent (in_str, By_name_and_extra_large_icon))
+      i = BY_NAME_AND_EXTRA_LARGE_ICON;
    else if (_DtStringsAreEquivalent (in_str, By_name_and_small_icon)) 
       i = BY_NAME_AND_SMALL_ICON;
    else if (_DtStringsAreEquivalent (in_str, By_attributes)) 

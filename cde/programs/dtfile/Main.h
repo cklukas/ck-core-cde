@@ -188,6 +188,7 @@
 #define DEFAULT 0
 #define LARGE   1
 #define SMALL   2
+#define EXTRA_LARGE 3
 
 /* defines for whether to open New or use current */
 #define CURRENT 0
@@ -324,6 +325,8 @@ extern int smallIconWidth;
 extern int smallIconHeight;
 extern int largeIconWidth;
 extern int largeIconHeight;
+extern int extraLargeIconWidth;
+extern int extraLargeIconHeight;
 extern Boolean emptyTrashOnExit;
 extern String openInPlace;
 extern String openNewView;
@@ -979,7 +982,7 @@ extern PixmapData * GetPixmapData(
                         FileMgrRec *file_mgr_rec,
                         FileMgrData *file_mgr_data,
                         char *path,
-                        Boolean large) ;
+                        int icon_size) ;
 extern void SetSpecialMsg(
                         FileMgrRec *file_mgr_rec,
                         FileMgrData *file_mgr_data,

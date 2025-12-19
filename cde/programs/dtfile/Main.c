@@ -274,6 +274,8 @@ typedef struct
    int smallIconHeight;
    int largeIconWidth;
    int largeIconHeight;
+   int extraLargeIconWidth;
+   int extraLargeIconHeight;
    Boolean emptyTrashOnExit;
 } ApplicationArgs, *ApplicationArgsPtr;
 
@@ -620,6 +622,8 @@ int smallIconWidth;
 int smallIconHeight;
 int largeIconWidth;
 int largeIconHeight;
+int extraLargeIconWidth;
+int extraLargeIconHeight;
 
 Boolean emptyTrashOnExit;
 
@@ -687,6 +691,8 @@ static XrmOptionDescRec option_list[] =
    {  "-small_icon_height", "smallIconHeight", XrmoptionSepArg,  NULL  },
    {  "-large_icon_width",  "largeIconWidth",  XrmoptionSepArg,  NULL  },
    {  "-large_icon_height", "largeIconHeight", XrmoptionSepArg,  NULL  },
+   {  "-extra_large_icon_width",  "extraLargeIconWidth",  XrmoptionSepArg,  NULL  },
+   {  "-extra_large_icon_height", "extraLargeIconHeight", XrmoptionSepArg,  NULL  },
 };
 
 
@@ -941,6 +947,18 @@ static XtResource resources[] =
      "largeIconHeight", "LargeIconHeight", XmRInt, sizeof (int),
      XtOffset (ApplicationArgsPtr, largeIconHeight), XmRImmediate,
      (XtPointer) 38,
+   },
+
+   {
+     "extraLargeIconWidth", "ExtraLargeIconWidth", XmRInt, sizeof (int),
+     XtOffset (ApplicationArgsPtr, extraLargeIconWidth), XmRImmediate,
+     (XtPointer) 48,
+   },
+
+   {
+     "extraLargeIconHeight", "ExtraLargeIconHeight", XmRInt, sizeof (int),
+     XtOffset (ApplicationArgsPtr, extraLargeIconHeight), XmRImmediate,
+     (XtPointer) 48,
    },
 
    {
@@ -1441,6 +1459,8 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    smallIconHeight = application_args.smallIconHeight;
    largeIconWidth = application_args.largeIconWidth;
    largeIconHeight = application_args.largeIconHeight;
+   extraLargeIconWidth = application_args.extraLargeIconWidth;
+   extraLargeIconHeight = application_args.extraLargeIconHeight;
    user_font = application_args.user_font;
    dragThreshold = application_args.dragThreshold;
    rereadTime = application_args.rereadTime;
@@ -1917,19 +1937,21 @@ Usage(
                          "   -order alphabetical/file_type/date/size\n\n\t"
                          "Files are displayed in the specified order: alphabetical, by file\n\t"
                          "type, by date, or by size.\n\n"
-                         "   -view no_icon/large_icon/small_icon/attributes\n\n\t"
+                         "   -view no_icon/large_icon/extra_large_icon/small_icon/attributes\n\n\t"
                          "Files are displayed in the specified format: text only, text and\n\t"
-                         "large icons, text and small icons, with attributes.\n\n"
+                         "large icons, text and extra large icons, text and small icons, with attributes.\n\n"
                          "   -direction ascending/descending\n\n\t"
                          "Files are displayed in the specified direction: ascending or\n\t"
                          "descending.\n\n"
                          "   -large_icon_width  <size>\n\n"
                          "   -large_icon_height <size>\n\n"
+                         "   -extra_large_icon_width  <size>\n\n"
+                         "   -extra_large_icon_height <size>\n\n"
                          "   -small_icon_width  <size>\n\n"
                          "   -small_icon_height <size>\n\n"
                          "        The display area size for the icon images in File Manager\n"
                          "        Icon images larger than this size will be clipped to this size\n"
-                         "        The default display area size for large is 38 and small is 24\n\n"
+                         "        The default display area size for large is 38, extra large is 48, and small is 24\n\n"
                          "\n"
 ;
 
@@ -5058,7 +5080,9 @@ CheckForOpenDirectory(
    int icon_size;
    PixmapData *pixmapData = NULL;
 
-   if (file_mgr_data->view == BY_NAME_AND_ICON)
+   if (file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
+     icon_size = EXTRA_LARGE;
+   else if (file_mgr_data->view == BY_NAME_AND_ICON)
      icon_size = LARGE;
    else
      icon_size = SMALL;
@@ -5752,6 +5776,9 @@ DtfileStringToView(
    else if (_DtStringsAreEquivalent (str, "large_icon") ||
                             _DtStringsAreEquivalent (str, "large_icons"))
       *type = BY_NAME_AND_ICON;
+   else if (_DtStringsAreEquivalent (str, "extra_large_icon") ||
+                            _DtStringsAreEquivalent (str, "extra_large_icons"))
+      *type = BY_NAME_AND_EXTRA_LARGE_ICON;
    else if (_DtStringsAreEquivalent (str, "small_icon") ||
                             _DtStringsAreEquivalent (str, "small_icons"))
       *type = BY_NAME_AND_SMALL_ICON;
@@ -5827,6 +5854,9 @@ SetupSendRequestArgs(
            break;
        case BY_NAME_AND_ICON:
 	   tt_message_arg_add( msg, TT_IN, vtype, "large_icon" );
+           break;
+       case BY_NAME_AND_EXTRA_LARGE_ICON:
+	   tt_message_arg_add( msg, TT_IN, vtype, "extra_large_icon" );
            break;
        case BY_NAME_AND_SMALL_ICON:
 	   tt_message_arg_add( msg, TT_IN, vtype, "small_icon" );
@@ -5945,18 +5975,35 @@ BuildAndShowIconName(
                                          strlen(ICON_OPEN_PREFIX) + 1);
    sprintf(new_file_type_name, "%s%s", ICON_OPEN_PREFIX, file_type_name);
 
-   if (view == BY_NAME_AND_ICON && show_type != MULTIPLE_DIRECTORY)
-     pixmapData = _DtRetrievePixmapData(new_file_type_name,
-                                        NULL,
-                                        NULL,
-                                        widget,
-                                        LARGE);
+   if (show_type != MULTIPLE_DIRECTORY)
+   {
+      if (view == BY_NAME_AND_EXTRA_LARGE_ICON)
+         pixmapData = _DtRetrievePixmapData(new_file_type_name,
+                                            NULL,
+                                            NULL,
+                                            widget,
+                                            EXTRA_LARGE);
+      else if (view == BY_NAME_AND_ICON)
+         pixmapData = _DtRetrievePixmapData(new_file_type_name,
+                                            NULL,
+                                            NULL,
+                                            widget,
+                                            LARGE);
+      else
+         pixmapData = _DtRetrievePixmapData(new_file_type_name,
+                                            NULL,
+                                            NULL,
+                                            widget,
+                                            SMALL);
+   }
    else
-     pixmapData = _DtRetrievePixmapData(new_file_type_name,
-                                        NULL,
-                                        NULL,
-                                        widget,
-                                        SMALL);
+   {
+      pixmapData = _DtRetrievePixmapData(new_file_type_name,
+                                         NULL,
+                                         NULL,
+                                         widget,
+                                         SMALL);
+   }
 
    if(pixmapData && pixmapData->iconFileName)
    {
@@ -6037,21 +6084,39 @@ ForceMyIconClosed (
 
    if( (file_view_data) && (file_mgr_data->view != BY_NAME) )
    {
-      if (file_mgr_data->view == BY_NAME_AND_ICON  &&
-                       file_mgr_data->show_type != MULTIPLE_DIRECTORY)
-         pixmapData = _DtRetrievePixmapData(
-                                 file_view_data->file_data->logical_type,
-                                 fname,
-                                 parent,
-                                 file_view_data->widget,
-                                 LARGE);
+      if (file_mgr_data->show_type != MULTIPLE_DIRECTORY)
+      {
+         if (file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
+            pixmapData = _DtRetrievePixmapData(
+                                    file_view_data->file_data->logical_type,
+                                    fname,
+                                    parent,
+                                    file_view_data->widget,
+                                    EXTRA_LARGE);
+         else if (file_mgr_data->view == BY_NAME_AND_ICON)
+            pixmapData = _DtRetrievePixmapData(
+                                    file_view_data->file_data->logical_type,
+                                    fname,
+                                    parent,
+                                    file_view_data->widget,
+                                    LARGE);
+         else
+            pixmapData = _DtRetrievePixmapData(
+                                    file_view_data->file_data->logical_type,
+                                    fname,
+                                    parent,
+                                    file_view_data->widget,
+                                    SMALL);
+      }
       else
+      {
          pixmapData = _DtRetrievePixmapData(
                                  file_view_data->file_data->logical_type,
                                  fname,
                                  parent,
                                  file_view_data->widget,
                                  SMALL);
+      }
 
       if (pixmapData)
         XtSetArg (args[0], XmNimageName, pixmapData->iconFileName);

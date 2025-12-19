@@ -80,20 +80,23 @@ typedef struct
 	Dimension		spacing;
 	Dimension		small_min_width;
 	Dimension		large_min_width;
+	Dimension		extra_large_min_width;
 	Boolean			force_small_icons;
 	Boolean			buttons;
 	Boolean			dropzone;
 	Boolean			status_msg;
 	Boolean			force_large_icons;
+	Boolean			force_extra_large_icons;
 	Boolean			icons_changed;
 
 	char * file_mgr_rec;
 	char * current_directory;
 	Boolean large_icons;
+	Boolean extra_large_icons;
 	char *msg_text;
 	
 	char * directory_shown;
-	Boolean large_shown;
+	int icon_size_shown;
 	Widget dotdot_button;
 	Widget dropzone_icon;
 	Widget status_label;

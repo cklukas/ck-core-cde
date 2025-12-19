@@ -145,7 +145,7 @@ DATA_CRITERIA DTKSH_SCRIPT3
 }
 ACTION Run
 {
-        LABEL           %|nls-3-Run|
+        LABEL           %|nls-25-#Run...#|
         ARG_TYPE        DTKSH_SCRIPT
         TYPE            MAP
         MAP_ACTION      Execute

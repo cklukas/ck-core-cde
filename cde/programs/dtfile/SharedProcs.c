@@ -710,18 +710,42 @@ _DtRetrievePixmapData(
   }
 
   /* retrieve icon file name */
-  if (pixmapData->size == LARGE)
+  if (pixmapData->size == EXTRA_LARGE)
+  {
+     pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
+                                               pixmapData->instanceIconName,
+                                               pixmapData->iconName,
+                                               pixmapData->hostPrefix,
+                                               DtLARGE);
+     if (pixmapData->iconFileName == NULL)
+        pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
+                                               pixmapData->instanceIconName,
+                                               pixmapData->iconName,
+                                               pixmapData->hostPrefix,
+                                               DtMEDIUM);
+     if (pixmapData->iconFileName == NULL)
+        pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
+                                               pixmapData->instanceIconName,
+                                               pixmapData->iconName,
+                                               pixmapData->hostPrefix,
+                                               DtTINY);
+  }
+  else if (pixmapData->size == LARGE)
+  {
      pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                                pixmapData->instanceIconName,
                                                pixmapData->iconName,
                                                pixmapData->hostPrefix,
                                                DtMEDIUM);
+  }
   else
+  {
      pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                                pixmapData->instanceIconName,
                                                pixmapData->iconName,
                                                pixmapData->hostPrefix,
                                                DtTINY);
+  }
 
   /* return pixmap data */
   return(pixmapData);
@@ -766,18 +790,42 @@ _DtCheckAndFreePixmapData(
 
       if (pixmapData->iconFileName != NULL)
          XtFree(pixmapData->iconFileName);
-      if (pixmapData->size == LARGE)
+      if (pixmapData->size == EXTRA_LARGE)
+      {
+        pixmapData->iconFileName = _DtGetIconFileName( XtScreen(shell),
+                                              pixmapData->instanceIconName,
+                                              NULL,
+                                              pixmapData->hostPrefix,
+                                              DtLARGE );
+        if (pixmapData->iconFileName == NULL)
+          pixmapData->iconFileName = _DtGetIconFileName( XtScreen(shell),
+                                                pixmapData->instanceIconName,
+                                                NULL,
+                                                pixmapData->hostPrefix,
+                                                DtMEDIUM );
+        if (pixmapData->iconFileName == NULL)
+          pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
+                                                pixmapData->instanceIconName,
+                                                NULL,
+                                                pixmapData->hostPrefix,
+                                                DtTINY);
+      }
+      else if (pixmapData->size == LARGE)
+      {
         pixmapData->iconFileName = _DtGetIconFileName( XtScreen(shell),
                                               pixmapData->instanceIconName,
                                               NULL,
                                               pixmapData->hostPrefix,
                                               DtMEDIUM );
+      }
       else
+      {
         pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                               pixmapData->instanceIconName,
                                               NULL,
                                               pixmapData->hostPrefix,
                                               DtTINY);
+      }
 
 
 
@@ -810,18 +858,42 @@ _DtCheckAndFreePixmapData(
          pixmapData->iconFileName = NULL;
       }
 
-      if (pixmapData->size == LARGE)
+      if (pixmapData->size == EXTRA_LARGE)
+      {
+            pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
+                                             pixmapData->instanceIconName,
+                                             pixmapData->iconName,
+                                             pixmapData->hostPrefix,
+                                             DtLARGE);
+            if (pixmapData->iconFileName == NULL)
+               pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
+                                             pixmapData->instanceIconName,
+                                             pixmapData->iconName,
+                                             pixmapData->hostPrefix,
+                                             DtMEDIUM);
+            if (pixmapData->iconFileName == NULL)
+               pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
+                                             pixmapData->instanceIconName,
+                                             pixmapData->iconName,
+                                             pixmapData->hostPrefix,
+                                             DtTINY);
+      }
+      else if (pixmapData->size == LARGE)
+      {
             pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                              pixmapData->instanceIconName,
                                              pixmapData->iconName,
                                              pixmapData->hostPrefix,
                                              DtMEDIUM);
+      }
       else
+      {
             pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                              pixmapData->instanceIconName,
                                              pixmapData->iconName,
                                              pixmapData->hostPrefix,
                                              DtTINY);
+      }
 
 
 

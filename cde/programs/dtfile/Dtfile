@@ -159,6 +159,8 @@ Dtfile*deselectAll.accelerator:                       %|nls-22-#Ctrl<Key>backsla
 !#   Dtfile*smallIconHeight:    24
 !#   Dtfile*largeIconWidth:     38
 !#   Dtfile*largeIconHeight:    38
+!#   Dtfile*extraLargeIconWidth:  48
+!#   Dtfile*extraLargeIconHeight: 48
 !# To empty trash upon exiting the desktop. Set this resource to True
 !#   Dtfile*emptyTrashOnExit:   False
 

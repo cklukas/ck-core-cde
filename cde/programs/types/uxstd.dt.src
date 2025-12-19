@@ -201,7 +201,7 @@ DATA_CRITERIA SHELL3
 }
 ACTION Run
 {
-        LABEL           %|nls-3-#Run#|
+        LABEL           %|nls-25-#Run...#|
         ARG_TYPE        SHELL
         TYPE            MAP
         MAP_ACTION      Execute
@@ -241,7 +241,7 @@ DATA_CRITERIA CSHELL3
 }
 ACTION Run
 {
-        LABEL           %|nls-3-#Run#|
+        LABEL           %|nls-25-#Run...#|
         ARG_TYPE        CSHELL
         TYPE            MAP
         MAP_ACTION      Execute
@@ -292,7 +292,7 @@ DATA_CRITERIA KSHELL5
 }
 ACTION Run
 {
-        LABEL           %|nls-3-#Run#|
+        LABEL           %|nls-25-#Run...#|
         ARG_TYPE        KSHELL
         TYPE            MAP
         MAP_ACTION      Execute
