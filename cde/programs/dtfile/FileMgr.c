@@ -1803,7 +1803,7 @@ SetValues(
       pixmapData = GetPixmapData(file_mgr_rec,
                                  file_mgr_data,
                                  file_mgr_data->current_directory,
-                                 False);
+                                 SMALL);
       if (pixmapData)
         XtSetArg (args[0], XmNimageName, pixmapData->iconFileName);
       else
@@ -2471,7 +2471,7 @@ GetPixmapData(
         FileMgrRec *file_mgr_rec,
         FileMgrData *file_mgr_data,
         char *path,
-        Boolean large)
+        int icon_size)
 {
    char * full_name;
    char * short_name;
@@ -2506,18 +2506,14 @@ GetPixmapData(
    else
       *short_name++ = '\0';
 
-   if (large)
-     pixmapData = _DtRetrievePixmapData(ftype,
-                                        short_name,
-                                        full_name,
-                                        file_mgr_rec->shell,
-                                        LARGE);
-   else
-     pixmapData = _DtRetrievePixmapData(ftype,
-                                        short_name,
-                                        full_name,
-                                        file_mgr_rec->shell,
-                                        SMALL);
+   if (icon_size != LARGE && icon_size != SMALL && icon_size != EXTRA_LARGE)
+      icon_size = SMALL;
+
+   pixmapData = _DtRetrievePixmapData(ftype,
+                                      short_name,
+                                      full_name,
+                                      file_mgr_rec->shell,
+                                      icon_size);
 
    XtFree(full_name);
    return pixmapData;
@@ -3073,7 +3069,7 @@ UpdateHeaders(
          pixmapData = GetPixmapData(file_mgr_rec,
                                     file_mgr_data,
                                     file_mgr_data->current_directory,
-                                    FALSE);
+                                    SMALL);
          XtSetArg (args[0], XmNallowShellResize, False);
          XtSetValues(file_mgr_rec->shell, args, 1);
 
@@ -6147,6 +6143,21 @@ CreateFmPopup (Widget w)
 
    fileMgrPopup.objPopup[BTN_PROPERTIES] = popupBtns[i] =
           XmCreatePushButtonGadget (fileMgrPopup.menu, "permissions", args, 2);
+   XtAddCallback (popupBtns[i++], XmNhelpCallback,
+                                  (XtCallbackProc)HelpRequestCB,
+                                  HELP_POPUP_MENU_STR);
+
+   XmStringFree (label_string);
+
+
+   /* Create 'Storage Size' option -- object popup */
+   label_string = XmStringCreateLocalized ((GETMESSAGE(35, 1, "Storage Size...")));
+   XtSetArg (args[0], XmNlabelString, label_string);
+   mnemonic = ((char *)GETMESSAGE(35, 2, "S"));
+   XtSetArg (args[1], XmNmnemonic, mnemonic[0]);
+
+   fileMgrPopup.objPopup[BTN_STORAGE_SIZE] = popupBtns[i] =
+          XmCreatePushButtonGadget (fileMgrPopup.menu, "storageSize", args, 2);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
                                   (XtCallbackProc)HelpRequestCB,
                                   HELP_POPUP_MENU_STR);

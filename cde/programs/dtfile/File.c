@@ -216,6 +216,7 @@
 #include "Filter.h"
 #include "Help.h"
 #include "SharedMsgs.h"
+#include "StorageSize.h"
 
 
 extern Widget _DtDuplicateIcon ( Widget, Widget, XmString, String, XtPointer, Boolean );
@@ -4693,7 +4694,10 @@ FmPopup (
          XtManageChildren(fileMgrPopup.objPopup, obj_btns);
          XtUnmanageChildren(fileMgrPopup.trash_objPopup, TRASH_OBJ_BTNS);
          if( file_mgr_data->toolbox )
+         {
            XtUnmanageChild(fileMgrPopup.objPopup[BTN_PROPERTIES]);
+           XtUnmanageChild(fileMgrPopup.objPopup[BTN_STORAGE_SIZE]);
+         }
 
          if(file_mgr_data->selected_file_count > 1
             && InMultipleObjectRegion(file_mgr_data, fileViewData))
@@ -4706,8 +4710,12 @@ FmPopup (
 
            /* adjust callbacks */
            if( ! file_mgr_data->toolbox )
+           {
              XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_PROPERTIES],
                                   XmNactivateCallback);
+             XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_STORAGE_SIZE],
+                                  XmNactivateCallback);
+           }
 
            XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_PUTON],
                                 XmNactivateCallback);
@@ -4727,6 +4735,8 @@ FmPopup (
            /* sensitize buttons */
            if( !file_mgr_data->toolbox )
              XtSetSensitive(fileMgrPopup.objPopup[BTN_PROPERTIES], False);
+
+           XtSetSensitive(fileMgrPopup.objPopup[BTN_STORAGE_SIZE], False);
 
            XtSetSensitive(fileMgrPopup.objPopup[BTN_HELP], False);
 
@@ -4757,11 +4767,26 @@ FmPopup (
            /* adjust callbacks */
            if( ! file_mgr_data->toolbox )
            {
-             XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_PROPERTIES],
-                                  XmNactivateCallback);
-             XtAddCallback(fileMgrPopup.objPopup[BTN_PROPERTIES],
-                           XmNactivateCallback, ShowModAttrDialog, (XtPointer) fileViewData);
-           }
+           XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_PROPERTIES],
+                                XmNactivateCallback);
+           XtAddCallback(fileMgrPopup.objPopup[BTN_PROPERTIES],
+                         XmNactivateCallback, ShowModAttrDialog, (XtPointer) fileViewData);
+         }
+
+         XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_STORAGE_SIZE],
+                              XmNactivateCallback);
+         if( ! file_mgr_data->toolbox &&
+             fileViewData->file_data->physical_type == DtDIRECTORY )
+         {
+            XtAddCallback(fileMgrPopup.objPopup[BTN_STORAGE_SIZE],
+                          XmNactivateCallback, ShowStorageSizeDialog,
+                          (XtPointer) fileViewData);
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_STORAGE_SIZE], True);
+         }
+         else
+         {
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_STORAGE_SIZE], False);
+         }
 
             XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_PUTON],
                                  XmNactivateCallback);
@@ -5607,7 +5632,14 @@ UpdateOneFileIcon(
    }
    else
    {
-      if (file_mgr_data->view == BY_NAME_AND_ICON)
+      if (file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
+         pixmapData = _DtRetrievePixmapData(
+                         logical_type,
+                         file_view_data->file_data->file_name,
+                         directory_set->name,
+                         (Widget) file_window,
+                         EXTRA_LARGE);
+      else if (file_mgr_data->view == BY_NAME_AND_ICON)
          pixmapData = _DtRetrievePixmapData(
                          logical_type,
                          file_view_data->file_data->file_name,
@@ -5718,7 +5750,8 @@ UpdateOneFileIcon(
    XtSetArg (args[n], XmNuserData, directory_set);                     n++;
    XtSetArg (args[n], XmNunderline, False);                            n++;
    XtSetArg (args[n], XmNfillMode, XmFILL_TRANSPARENT);                n++;
-   if (file_mgr_data->view == BY_NAME_AND_ICON &&
+   if ((file_mgr_data->view == BY_NAME_AND_ICON ||
+        file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON) &&
        file_mgr_data->show_type != MULTIPLE_DIRECTORY)
       XtSetArg (args[n], XmNpixmapPosition, XmPIXMAP_TOP);
    else
@@ -5843,7 +5876,8 @@ UpdateOneFileIcon(
     * If viewing by attributes, adjust spacing between the icon pixmap and
     * the file name so that all file names are aligned.
     */
-   if (file_mgr_data->view != BY_NAME_AND_ICON ||
+   if ((file_mgr_data->view != BY_NAME_AND_ICON &&
+        file_mgr_data->view != BY_NAME_AND_EXTRA_LARGE_ICON) ||
        file_mgr_data->show_type == MULTIPLE_DIRECTORY)
    {
      Dimension pixmap_width = ((DtIconGadget)icon_widget)->icon.pixmap_width;
@@ -6199,7 +6233,8 @@ Pixmap GetTreebtnPixmap(
 
    if (file_mgr_data->view == BY_NAME)
      return TreePxTab[pxid].px[0];   /* small pixmap */
-   else if (file_mgr_data->view == BY_NAME_AND_ICON)
+   else if (file_mgr_data->view == BY_NAME_AND_ICON ||
+            file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
      return TreePxTab[pxid].px[2];   /* large pixmap */
    else
      return TreePxTab[pxid].px[1];   /* medium  pixmap */
@@ -6243,6 +6278,12 @@ GetIconLayoutParms(
       ld->pixmap_width = largeIconWidth;
       ld->pixmap_height = largeIconHeight;
    }
+   else if (file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
+   {
+      /* extra large pixmap */
+      ld->pixmap_width = extraLargeIconWidth;
+      ld->pixmap_height = extraLargeIconHeight;
+   }
    else
    {
       /* small pixmap */
@@ -6276,6 +6317,8 @@ GetIconLayoutParms(
       XtSetArg(args[5], XmNpixmapPosition, &ld->pixmap_position);
       XtGetValues((Widget)g, args, 6);
 
+      ld->margin = ld->highlight + shadowThickness + marginWidth;
+
       if (g->icon.pixmap_width < maxWidth)
          ld->spacing = ld->spacing - (maxWidth - g->icon.pixmap_width);
 
@@ -6284,10 +6327,34 @@ GetIconLayoutParms(
       ld->height = ((Widget)g)->core.height +
                                      ld->pixmap_height - g->icon.pixmap_height;
 
+      if (ld->pixmap_position == XmPIXMAP_TOP)
+      {
+         Dimension string_height = 0;
+         Dimension desired_height;
+
+         if (Icon_Cache(g))
+            string_height = Icon_Cache(g)->string_height;
+
+         desired_height = 2 * ld->margin + ld->pixmap_height + ld->spacing +
+            string_height;
+         if (ld->height < desired_height)
+            ld->height = desired_height;
+      }
+      else
+      {
+         Dimension content_height = ld->pixmap_height;
+         Dimension desired_height;
+
+         if (Icon_Cache(g) && Icon_Cache(g)->string_height > content_height)
+            content_height = Icon_Cache(g)->string_height;
+         desired_height = 2 * ld->margin + content_height;
+         if (ld->height < desired_height)
+            ld->height = desired_height;
+      }
+
       ld->char_width = (g->icon.string_width)/strlen(file_list[i]->label);
       if (ld->pixmap_position != XmPIXMAP_TOP)
          ld->width -= g->icon.string_width;
-      ld->margin = ld->highlight + shadowThickness + marginWidth;
    }
    else
    {
@@ -6297,7 +6364,8 @@ GetIconLayoutParms(
       ld->spacing = 2;
       ld->highlight = (keybdFocusPolicy == XmEXPLICIT)? 2: 0;
       ld->alignment = XmALIGNMENT_END;
-      if (file_mgr_data->view == BY_NAME_AND_ICON &&
+      if ((file_mgr_data->view == BY_NAME_AND_ICON ||
+           file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON) &&
           file_mgr_data->show_type != MULTIPLE_DIRECTORY)
       {
          ld->pixmap_position = XmPIXMAP_TOP;
@@ -6318,7 +6386,8 @@ GetIconLayoutParms(
       ld->treebtn_size = 0;   /* no tree buttons needed */
    else if (file_mgr_data->view == BY_NAME)
       ld->treebtn_size = 0;   /* small size */
-   else if (file_mgr_data->view == BY_NAME_AND_ICON)
+   else if (file_mgr_data->view == BY_NAME_AND_ICON ||
+            file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
       ld->treebtn_size = 2;   /* large size */
    else
       ld->treebtn_size = 1;   /* medium size */
@@ -6852,7 +6921,8 @@ do_this_entry:
           * between estimated size and actual size.
           */
          if (layout_data->alignment == XmALIGNMENT_CENTER &&
-             file_mgr_data->view == BY_NAME_AND_ICON)
+             (file_mgr_data->view == BY_NAME_AND_ICON ||
+              file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON))
          {
             EstimateIconSize(file_mgr_rec, file_mgr_data, layout_data,
                              file_view_data, &icon_width, &icon_height);
@@ -7718,7 +7788,8 @@ LayoutFileIcons(
            break;
 
          if (layout_data->alignment == XmALIGNMENT_CENTER &&
-             file_mgr_data->view == BY_NAME_AND_ICON)
+             (file_mgr_data->view == BY_NAME_AND_ICON ||
+              file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON))
          {
            EstimateIconSize(file_mgr_rec, file_mgr_data, layout_data,
                             order_list[k], &icon_width, &icon_height);

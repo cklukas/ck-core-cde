@@ -39,7 +39,8 @@ dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 IconicPath.c    Main.c          Menu.c          MkDir.c \
 		 ModAttr.c       ModAttrP.c      MultiView.c     OverWrite.c \
 		 Prefs.c         PrefsP.c        SharedMsgs.c    SharedProcs.c \
-		 ToolTalk.c      Trash.c         Utils.c         fsDialog.c
+		 ToolTalk.c      Trash.c         Utils.c         fsDialog.c \
+		 StorageSize.c
 
 # Mind the quoting here...
 SCRIPTFLAGS = -DSHAPE -D_ILS_MACROS -DSUN_PERF \

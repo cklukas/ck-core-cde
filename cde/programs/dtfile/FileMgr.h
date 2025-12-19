@@ -461,11 +461,11 @@ typedef struct
 
 
 #define FM_POPUP_CHILDREN    17
-#define FM_POPUP_CHILDREN_NA 15
+#define FM_POPUP_CHILDREN_NA 16
 
 #define WS_BTNS              6
 #define OBJ_BTNS             6
-#define OBJ_BTNS_NA          4
+#define OBJ_BTNS_NA          5
 #define TRASH_OBJ_BTNS       2
 
 #define BTN_PROPERTIES       0
@@ -478,9 +478,10 @@ typedef struct
 #define BTN_SHOWHIDDEN       5
 
 /* object buttons */
-#define BTN_PUTON            1
-#define BTN_TRASH            2
-#define BTN_HELP             3
+#define BTN_STORAGE_SIZE     1
+#define BTN_PUTON            2
+#define BTN_TRASH            3
+#define BTN_HELP             4
 
 /* trash object buttons */
 #define BTN_RESTORE          0

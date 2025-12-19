@@ -923,19 +923,21 @@ does not exist.
    -order alphabetical/file_type/date/size\n\n\
 \tFiles are displayed in the specified order: alphabetical, by file\n\
 \ttype, by date, or by size.\n\n\
-   -view no_icon/large_icon/small_icon/attributes\n\n\
+   -view no_icon/large_icon/extra_large_icon/small_icon/attributes\n\n\
 \tFiles are displayed in the specified format: text only, text and\n\
-\tlarge icons, text and small icons, with attributes.\n\n\
+\tlarge icons, text and extra large icons, text and small icons, with attributes.\n\n\
    -direction ascending/descending\n\n\
 \tFiles are displayed in the specified direction: ascending or\n\
 \tdescending.\n\n\
    -large_icon_width <size>\n\n\
    -large_icon_height <size>\n\n\
+   -extra_large_icon_width <size>\n\n\
+   -extra_large_icon_height <size>\n\n\
    -small_icon_width  <size>\n\n\
    -small_icon_height <size>\n\n\
        The display area size for the icon images in File Manager\n\
        Icon images larger than this size will be clipped to this size\n\
-       The default display area size for large is 38 and small is 24\n\n
+       The default display area size for large is 38, extra large is 48, and small is 24\n\n
 26 \nRestricted Mode Usage: %s...\n\n\
    -folder Folder[,Folder,Folder]\n\
    -dir Folder[,Folder,Folder]\n\n\
@@ -1333,6 +1335,7 @@ $ Messages 2-20 and 23-29 are labels for the Set Preferences dialog
 35 Rows and Columns
 36 Text Path
 37 Message Line
+38 By Extra Large Icons
 
 
 $set 24
@@ -1753,6 +1756,31 @@ does not exist in the file system.
 17 One of the objects you are trying to Link:\n\n   %s\n\n\
 does not exist in the file system.\nNot Linking any of them.
 
+$set 35
+$ ****** Module: StorageSize.c ****(developer comment only)********
+$
+$ Messages 1-2 are the text and mnemonic for the Storage Size menu option
+1 Storage Size...
+2 S
+$ Message 3 is shown while scanning runs
+3 One moment...
+$ Message 4 is the dialog title format
+4 Storage size for %s
+$ Messages 5-8 are the labels for the detail rows
+5 Total size: %s
+6 Storage used: %s
+7 Files scanned: %lu
+8 Directories scanned: %lu
+$ Message 9 is shown when the calculation finishes
+9 Storage size calculation complete.
+$ Messages 10-11 are button labels
+10 Cancel
+11 OK
+$ Message 12 explains that a cancel request is in progress
+12 Canceling...
+$ Message 13 is shown after a cancel completes
+13 Storage size scan canceled.
+
 $set 99
 $ ****** Version Information ********
 $ DO NOT TRANSLATE THESE MESSAGES
@@ -1762,4 +1790,3 @@ $ These messages are used for the version information.
 $quote "
 1 "@(#)version_goes_here"
 2 "\n@(#)_DtMessage catalog source $TOG: dtfile.msg /main/10 1999/09/16 09:42:03 mgreess $"
-
