@@ -778,6 +778,7 @@ ReloadResources(void)
                    "-load",
                    "-system",
                    "-xdefaults",
+                   "-xresources",
                    NULL);
 
  /*
