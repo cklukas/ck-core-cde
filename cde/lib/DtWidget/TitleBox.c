@@ -53,6 +53,7 @@
 #endif /* RiversVersion == _31 */
 #include <Xm/DrawP.h>
 #include <Xm/XmP.h>
+#include <X11/Xutil.h>
 #include <Dt/TitleBoxP.h>
 #include <Dt/MacrosP.h>
 #include <Dt/DtMsgsP.h>
@@ -760,20 +761,61 @@ Redisplay(
 	Position	x = 0,
 			y = title_height / 2 - s_t / 2;
 
-/*	Redisplay work area.
-*/
-	if (XmIsGadget (work_area) && XtIsManaged (work_area))
+	/*	Redisplay work area.
+	*/
+	if (work_area && XmIsGadget (work_area) && XtIsManaged (work_area))
 	{
 		XtExposeProc expose;
+		XEvent local_event;
+		XEvent *use_event = event;
+		Region use_region = region;
+		Boolean free_region = False;
+
 		_DtProcessLock();
 		expose = XtCoreProc(work_area, expose);
 		_DtProcessUnlock();
 
-		(*expose) (work_area, event, region);
+		if (!use_event)
+		{
+			memset(&local_event, 0, sizeof(local_event));
+			local_event.xexpose.type = Expose;
+			local_event.xexpose.display = d;
+			/*
+			 * Never use XtWindow(work_area) here: work_area may be a gadget
+			 * (no window). Always use the TitleBox window.
+			 */
+			local_event.xexpose.window = XtWindow((Widget)manager);
+			local_event.xexpose.x = 0;
+			local_event.xexpose.y = 0;
+			local_event.xexpose.width = w;
+			local_event.xexpose.height = h;
+			local_event.xexpose.count = 0;
+			use_event = &local_event;
+		}
+
+		if (expose)
+		{
+			if (!use_region)
+			{
+				XRectangle rect;
+				rect.x = 0;
+				rect.y = 0;
+				rect.width = w;
+				rect.height = h;
+				use_region = XCreateRegion();
+				XUnionRectWithRegion(&rect, use_region, use_region);
+				free_region = True;
+			}
+
+			(*expose) (work_area, use_event, use_region);
+
+			if (free_region)
+				XDestroyRegion(use_region);
+		}
 	}
 
-/*	Draw shadow.
-*/
+	/*	Draw shadow.
+	*/
 	if (M_ShadowThickness (manager) > 0)
 	{
 		h -= y;
@@ -785,8 +827,8 @@ Redisplay(
 			       x, y, w, h, s_t, M_ShadowType(manager));
 	}
 
-/*	Redisplay title area.
-*/	
+	/*	Redisplay title area.
+	*/	
 	if (title_area && XtIsManaged (title_area))
 	{		
 		XClearArea (d, XtWindow (manager), title_x, title_y,
@@ -794,11 +836,47 @@ Redisplay(
 		if (XmIsGadget (title_area))
 		{
 			XtExposeProc expose;
+			XEvent local_event;
+			XEvent *use_event = event;
+			Region use_region = region;
+			Boolean free_region = False;
 			_DtProcessLock();
 			expose = XtCoreProc(title_area, expose);
 			_DtProcessUnlock();
 
-			(*expose) (title_area, event, region);
+			if (!use_event)
+			{
+				memset(&local_event, 0, sizeof(local_event));
+				local_event.xexpose.type = Expose;
+				local_event.xexpose.display = d;
+				local_event.xexpose.window = XtWindow((Widget)manager);
+				local_event.xexpose.x = 0;
+				local_event.xexpose.y = 0;
+				local_event.xexpose.width = w;
+				local_event.xexpose.height = title_height;
+				local_event.xexpose.count = 0;
+				use_event = &local_event;
+			}
+
+			if (expose)
+			{
+				if (!use_region)
+				{
+					XRectangle rect;
+					rect.x = 0;
+					rect.y = 0;
+					rect.width = w;
+					rect.height = title_height;
+					use_region = XCreateRegion();
+					XUnionRectWithRegion(&rect, use_region, use_region);
+					free_region = True;
+				}
+
+				(*expose) (title_area, use_event, use_region);
+
+				if (free_region)
+					XDestroyRegion(use_region);
+			}
 		}
 	}
 
