@@ -32,6 +32,44 @@
 #include "TermPrimDebug.h"
 #include "TermPrimRenderP.h"
 #include "TermPrimRenderFontSet.h"
+#include <wchar.h>
+
+static int
+MeasureFontSetCellWidth(
+        XFontSet fontSet)
+{
+    if (!fontSet)
+        return 0;
+
+    int num_fonts = 0;
+    XFontStruct **fonts = NULL;
+    char **fontNames = NULL;
+    int width = 0;
+
+    num_fonts = XFontsOfFontSet(fontSet, &fonts, &fontNames);
+    if (num_fonts > 0 && fonts) {
+        int i;
+        for (i = 0; i < num_fonts; i++) {
+            if ((fonts[i]->min_byte1 == 0) && (fonts[i]->max_byte1 == 0) &&
+                (fonts[i]->min_char_or_byte2 <= 'A') &&
+                (fonts[i]->max_char_or_byte2 >= 'Z')) {
+                break;
+            }
+        }
+        if (i >= num_fonts) {
+            for (i = 0; i < num_fonts; i++) {
+                if (fonts[i]->min_byte1 == 0) {
+                    break;
+                }
+            }
+        }
+        if (i >= num_fonts)
+            i = 0;
+        width = fonts[i]->max_bounds.width;
+    }
+
+    return width > 0 ? width : 1;
+}
 
 typedef struct _TermFontSetRec {
     XFontSet fontSet;
@@ -268,7 +306,9 @@ _DtTermPrimRenderFontSetCreate(
     termFontSet = (TermFontSet) XtMalloc(sizeof(TermFontSetRec));
     termFontSet->fontSet = fontSet;
     fontSetExtents = XExtentsOfFontSet(fontSet);
-    termFontSet->width = fontSetExtents->max_logical_extent.width;
+    termFontSet->width = MeasureFontSetCellWidth(fontSet);
+    if (termFontSet->width <= 0)
+        termFontSet->width = fontSetExtents->max_logical_extent.width;
     termFontSet->height = fontSetExtents->max_logical_extent.height;
     termFontSet->ascent = -fontSetExtents->max_logical_extent.y;
     termFont->fontInfo = (XtPointer) termFontSet;

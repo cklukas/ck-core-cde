@@ -135,6 +135,8 @@ typedef struct _DtTermPrimitivePart
 					 * the boldFontList or the boldFont
 					 * above
 					 */
+    Boolean fontIsOwned;		/* true == dtterm loaded font	*/
+    Boolean fontSetIsOwned;		/* true == dtterm created fontSet */
     Boolean haveFontSet;		/* true == we have a valid fontSet
 					 */
     char *saveLines;			/* save lines or screens	*/

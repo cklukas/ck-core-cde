@@ -732,21 +732,105 @@ _DtTermPrimGetFontSet
     (void) XmFontListFreeFontContext(fontContext);
 }
 
+static Boolean
+IsMonospacedFontStruct(
+		XFontStruct *fontStruct)
+{
+    if (!fontStruct)
+	return False;
+
+    if (fontStruct->min_bounds.width != fontStruct->max_bounds.width)
+	return False;
+
+    int direction, ascent, descent;
+    XCharStruct overallI, overallW;
+    XTextExtents(fontStruct, "i", 1, &direction, &ascent, &descent, &overallI);
+    XTextExtents(fontStruct, "W", 1, &direction, &ascent, &descent, &overallW);
+    return overallI.width == overallW.width;
+}
+
 static TermFont
 CreateRenderFont
 (
     Widget		  w,
     XmFontList		  fontList,
     XFontSet		 *retFontSet,
-    XFontStruct		**retFont
+    XFontStruct		**retFont,
+    Boolean		 *retFontSetOwned,
+    Boolean		 *retFontOwned
 )
 {
     TermFont		  termFont;
     XFontSet		  fontSet = (XFontSet) 0;
     XFontStruct		 *font = (XFontStruct *) 0;
+    Boolean		  fontSetOwned = False;
+    Boolean		  fontOwned = False;
+    static Boolean	  warnedProportional = False;
+
+    if (retFontSetOwned)
+	*retFontSetOwned = False;
+    if (retFontOwned)
+	*retFontOwned = False;
 
     /* get our fontset from the fontlist...  */
     (void) _DtTermPrimGetFontSet(w, fontList, &fontSet, &font);
+
+    /* dtterm only supports monospaced fonts; fall back if needed. */
+    if (fontSet) {
+	int num_fonts = 0;
+	XFontStruct **fonts = NULL;
+	char **fontNames = NULL;
+	num_fonts = XFontsOfFontSet(fontSet, &fonts, &fontNames);
+	if (num_fonts > 0 && fonts) {
+	    int i;
+	    for (i = 0; i < num_fonts; i++) {
+		if ((fonts[i]->min_byte1 == 0) && (fonts[i]->max_byte1 == 0) &&
+			(fonts[i]->min_char_or_byte2 <= 'A') &&
+			(fonts[i]->max_char_or_byte2 >= 'Z')) {
+		    break;
+		}
+	    }
+	    if (i >= num_fonts)
+		i = 0;
+	    if (!IsMonospacedFontStruct(fonts[i])) {
+		if (!warnedProportional) {
+		    (void) fprintf(stderr,
+			    "dtterm: proportional font selected; falling back to \"fixed\".\n");
+		    warnedProportional = True;
+		}
+		char **missing = NULL;
+		int missingCount = 0;
+		XFontSet fixedSet = XCreateFontSet(XtDisplay(w), "fixed",
+			&missing, &missingCount, (char **)0);
+		if (missing)
+		    XFreeStringList(missing);
+		if (fixedSet && missingCount == 0) {
+		    fontSet = fixedSet;
+		    font = NULL;
+		    fontSetOwned = True;
+		} else {
+		    if (fixedSet)
+			XFreeFontSet(XtDisplay(w), fixedSet);
+		    font = XLoadQueryFont(XtDisplay(w), "fixed");
+		    fontOwned = font != NULL;
+		    fontSet = NULL;
+		}
+	    }
+	}
+    } else if (font) {
+	if (!IsMonospacedFontStruct(font)) {
+	    if (!warnedProportional) {
+		(void) fprintf(stderr,
+			"dtterm: proportional font selected; falling back to \"fixed\".\n");
+		warnedProportional = True;
+	    }
+	    XFontStruct *fixed = XLoadQueryFont(XtDisplay(w), "fixed");
+	    if (fixed) {
+		font = fixed;
+		fontOwned = True;
+	    }
+	}
+    }
 
     /* generate a TermFont from either the fontset or the font... */
     if (fontSet) {
@@ -760,9 +844,69 @@ CreateRenderFont
 	*retFontSet = fontSet;
     if (retFont)
 	*retFont = font;
+    if (retFontSetOwned)
+	*retFontSetOwned = fontSetOwned;
+    if (retFontOwned)
+	*retFontOwned = fontOwned;
 
     /* return the generated font... */
     return(termFont);
+}
+
+static int
+MeasureFontStructCellWidth(
+		XFontStruct *fontStruct)
+{
+    if (!fontStruct)
+	return 0;
+
+    int direction, ascent, descent;
+    XCharStruct overall;
+    XTextExtents(fontStruct, "W", 1, &direction,
+		 &ascent, &descent, &overall);
+
+    int width = overall.width;
+    if (fontStruct->max_bounds.width > width)
+	width = fontStruct->max_bounds.width;
+
+    return width > 0 ? width : 1;
+}
+
+static int
+MeasureFontSetCellWidth(
+		XFontSet fontSet)
+{
+    if (!fontSet)
+	return 0;
+
+    int num_fonts = 0;
+    XFontStruct **fonts = NULL;
+    char **fontNames = NULL;
+    int width = 0;
+
+    num_fonts = XFontsOfFontSet(fontSet, &fonts, &fontNames);
+    if (num_fonts > 0 && fonts) {
+	int i;
+	for (i = 0; i < num_fonts; i++) {
+	    if ((fonts[i]->min_byte1 == 0) && (fonts[i]->max_byte1 == 0) &&
+		    (fonts[i]->min_char_or_byte2 <= 'A') &&
+		    (fonts[i]->max_char_or_byte2 >= 'Z')) {
+		break;
+	    }
+	}
+	if (i >= num_fonts) {
+	    for (i = 0; i < num_fonts; i++) {
+		if (fonts[i]->min_byte1 == 0) {
+		    break;
+		}
+	    }
+	}
+	if (i >= num_fonts)
+	    i = 0;
+	width = MeasureFontStructCellWidth(fonts[i]);
+    }
+
+    return width > 0 ? width : 1;
 }
 
 static void
@@ -810,7 +954,7 @@ AdjustWindowUnits
 	fontSetExtents = XExtentsOfFontSet(tw->term.fontSet);
 
 	/* build termFont for this fontset... */
-	tw->term.widthInc = fonts[i]->max_bounds.width;
+	tw->term.widthInc = MeasureFontStructCellWidth(fonts[i]);
 	tw->term.heightInc = fontSetExtents->max_logical_extent.height;
         /* why are there two "ascents"?  TMH */
 	tw->term.ascent = -fontSetExtents->max_logical_extent.y;
@@ -819,7 +963,7 @@ AdjustWindowUnits
 	tw->term.tpd->cellWidth = tw->term.widthInc;
 	tw->term.tpd->cellHeight = tw->term.heightInc;
     } else {
-	tw->term.widthInc = tw->term.font->max_bounds.width;
+	tw->term.widthInc = MeasureFontStructCellWidth(tw->term.font);
 	tw->term.heightInc = tw->term.font->ascent + tw->term.font->descent;
         /* why are there two "ascents"? TMH   */
 	tw->term.ascent = tw->term.font->ascent;
@@ -1084,11 +1228,13 @@ Initialize(Widget ref_w, Widget w, Arg *args, Cardinal *num_args)
     }
 
     tpd->termFont = CreateRenderFont(w, tw->term.fontList,
-	    &tw->term.fontSet, &tw->term.font);
+	    &tw->term.fontSet, &tw->term.font,
+	    &tw->term.fontSetIsOwned, &tw->term.fontIsOwned);
 
     if (tw->term.boldFontList) {
 	tpd->boldTermFont = CreateRenderFont(w, tw->term.boldFontList,
-		&tw->term.boldFontSet, &tw->term.boldFont);
+		&tw->term.boldFontSet, &tw->term.boldFont,
+		NULL, NULL);
     } else {
 	/* let's try and build a bold fontlist off of the base fontlist... */
 	int num_fonts;
@@ -2162,7 +2308,8 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
 	 * recompute our width and height increment values...
 	 */
 	tw->term.tpd->termFont = CreateRenderFont(w, tw->term.fontList,
-		&tw->term.fontSet, &tw->term.font);
+		&tw->term.fontSet, &tw->term.font,
+		&tw->term.fontSetIsOwned, &tw->term.fontIsOwned);
 
 	/* look through our XFontSet or XFontStruct and adjust our
 	 * width and height increments...
@@ -2191,7 +2338,7 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
     if (cur_tw->term.boldFontList != tw->term.boldFontList) {
 	/* Our bold font has been changed... */
 	tw->term.tpd->boldTermFont = CreateRenderFont(w, tw->term.boldFontList,
-		(XFontSet *) 0, (XFontStruct **) 0);
+		(XFontSet *) 0, (XFontStruct **) 0, NULL, NULL);
     }
 
     if (cur_tw->term.charCursorStyle != tw->term.charCursorStyle) {
@@ -2684,6 +2831,16 @@ Destroy(Widget w)
     if (tw->term.boldFontSet) {
        (void) XFreeFontSet(XtDisplay(w), tw->term.boldFontSet);
      }
+    if (tw->term.fontIsOwned && tw->term.font) {
+       (void) XFreeFont(XtDisplay(w), tw->term.font);
+       tw->term.font = (XFontStruct *) 0;
+       tw->term.fontIsOwned = False;
+    }
+    if (tw->term.fontSetIsOwned && tw->term.fontSet) {
+       (void) XFreeFontSet(XtDisplay(w), tw->term.fontSet);
+       tw->term.fontSet = (XFontSet) 0;
+       tw->term.fontSetIsOwned = False;
+    }
 
     /* remove the termData structure contents, followed by the structure...
      */

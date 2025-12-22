@@ -160,10 +160,11 @@ FontExtentsFunction(
     int			 *ascentReturn
 )
 {
+    DtTermPrimitiveWidget tw = (DtTermPrimitiveWidget) w;
     XFontStruct *fontStruct = (XFontStruct *) font->fontInfo;
 
     if (widthReturn) {
-	*widthReturn = len * fontStruct->max_bounds.width;
+	*widthReturn = len * tw->term.widthInc;
     }
     if (heightReturn) {
 	*heightReturn = fontStruct->ascent + fontStruct->descent;
