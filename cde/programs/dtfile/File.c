@@ -6252,7 +6252,8 @@ static void
 GetIconLayoutParms(
         FileMgrRec *file_mgr_rec,
         FileMgrData *file_mgr_data,
-        IconLayoutData *ld)
+        IconLayoutData *ld,
+        DtIconGadget *sample_icon)
 {
    DirectorySet *directory_set;
    int file_count;
@@ -6309,6 +6310,8 @@ GetIconLayoutParms(
    /* get layout parameters from "." */
    if (g)
    {
+      if (sample_icon)
+         *sample_icon = g;
       XtSetArg(args[0], XmNhighlightThickness, &ld->highlight);
       XtSetArg(args[1], XmNshadowThickness, &shadowThickness);
       XtSetArg(args[2], XmNmarginWidth, &marginWidth);
@@ -6394,6 +6397,49 @@ GetIconLayoutParms(
 }
 
 
+static Dimension
+ComputeLabelExtent(
+        FileViewData *file_view_data,
+        IconLayoutData *layout_data,
+        XmFontList measureFont )
+{
+   Dimension label_extent = 0;
+   char *label = NULL;
+
+   if (file_view_data)
+   {
+      label = file_view_data->label ?
+              file_view_data->label :
+              file_view_data->file_data->file_name;
+      if (file_view_data->widget)
+      {
+         DtIconGadget icon = (DtIconGadget)file_view_data->widget;
+         if (icon && G_StringWidth(icon) > 0)
+            label_extent = G_StringWidth(icon);
+      }
+   }
+
+   if (label_extent == 0 && label && measureFont)
+   {
+      XmString text = XmStringCreateLocalized(label);
+      if (text)
+      {
+         Dimension h;
+         XmStringExtent(measureFont, text, &label_extent, &h);
+         XmStringFree(text);
+      }
+   }
+
+   if (label_extent == 0)
+   {
+      int len = label ? DtCharCount(label) : 1;
+      Dimension fallback = layout_data->char_width ? layout_data->char_width : 8;
+      label_extent = len * fallback;
+   }
+
+   return label_extent;
+}
+
 static void
 EstimateIconSize(
         FileMgrRec *file_mgr_rec,
@@ -6401,28 +6447,22 @@ EstimateIconSize(
         IconLayoutData *layout_data,
         FileViewData *file_view_data,
         Dimension *width,
-        Dimension *height)
+        Dimension *height,
+        XmFontList measureFont )
 {
-   int label_len;
+   Dimension label_extent = ComputeLabelExtent(file_view_data, layout_data, measureFont);
    int label_width;
-
-   if (file_view_data == NULL) {
-      label_len = 1;
-   } else {
-      label_len = DtCharCount(file_view_data->label == NULL ?
-			file_view_data->file_data->file_name : file_view_data->label);
-   }
 
    if (layout_data->pixmap_position == XmPIXMAP_TOP)
    {
-      label_width = 2*layout_data->margin + label_len*layout_data->char_width;
+      label_width = 2*layout_data->margin + label_extent;
       if ((Dimension)label_width > layout_data->width)
          *width = label_width;
       else
          *width = layout_data->width;
    }
    else
-        *width = layout_data->width + (label_len) * layout_data->char_width;
+        *width = layout_data->width + label_extent;
    *height = layout_data->height;
 }
 
@@ -6925,7 +6965,7 @@ do_this_entry:
               file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON))
          {
             EstimateIconSize(file_mgr_rec, file_mgr_data, layout_data,
-                             file_view_data, &icon_width, &icon_height);
+                             file_view_data, &icon_width, &icon_height, NULL);
 
             if (child->core.width != icon_width)
             {
@@ -7592,9 +7632,11 @@ LayoutFileIcons(
    }
 
    /* get the size of the icon with the longest label */
-   GetIconLayoutParms(file_mgr_rec, file_mgr_data, layout_data);
+   DtIconGadget sample_icon = NULL;
+   GetIconLayoutParms(file_mgr_rec, file_mgr_data, layout_data, &sample_icon);
+   XmFontList sample_font = sample_icon ? G_FontList(sample_icon) : NULL;
    EstimateIconSize(file_mgr_rec, file_mgr_data, layout_data, file_view_data,
-                    &grid_width, &grid_height);
+                    &grid_width, &grid_height, sample_font);
 
    /* for tree view add space for tree lines and buttons */
    max_level = 0;
@@ -7792,7 +7834,7 @@ LayoutFileIcons(
               file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON))
          {
            EstimateIconSize(file_mgr_rec, file_mgr_data, layout_data,
-                            order_list[k], &icon_width, &icon_height);
+                            order_list[k], &icon_width, &icon_height, NULL);
            order_list[k]->x = x +
              (Dimension)(grid_width - icon_width)/(Dimension)2;
          }
