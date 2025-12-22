@@ -460,6 +460,22 @@ dnl Xrender header
 AC_CHECK_HEADERS([X11/extensions/Xrender.h], [],
     [ disable_xrender="yes"], [#include <X11/Xlib.h>])
 
+dnl Xcursor (optional): enables themed/scaled cursors in dtwm and friends
+have_xcursor=no
+AC_CHECK_HEADERS([X11/Xcursor/Xcursor.h], [have_xcursor_hdr=yes], [have_xcursor_hdr=no])
+if test "x$have_xcursor_hdr" = "xyes" ; then
+   AC_CHECK_LIB(Xcursor, XcursorLibraryLoadCursor,
+                         [have_xcursor=yes
+                          XCURSORLIB="-lXcursor"
+                          AC_DEFINE([HAVE_XCURSOR], [1], [Define to 1 if libXcursor is available])],
+                         [have_xcursor=no
+                          XCURSORLIB=""],
+                         [${EXTRA_LIBS}])
+else
+   XCURSORLIB=""
+fi
+AC_SUBST([XCURSORLIB])
+
 dnl libraries
 AC_CHECK_LIB(m, cosf)
 AC_SEARCH_LIBS(dlopen, [dl dld], [], [])

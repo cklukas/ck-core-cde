@@ -438,6 +438,7 @@ UNCOMPRESS = uncompress
 UTMP_FILE = 
 VERSION = 2.5.3
 WTMP_FILE = 
+XCURSORLIB = -lXcursor
 XDMCPLIB = -lXdmcp
 XMKMF = 
 XM_INCDIR = -I$(top_builddir)/include/Xm
