@@ -38,6 +38,23 @@
 #include "WmGlobal.h"
 #include "WmICCC.h"
 #include "WmResNames.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <limits.h>
+#include <Dt/DtsDb.h>
+#include <Dt/ActionDb.h>
+#include <errno.h>
+
+#include <string.h>
+#include <ctype.h>
+#include <Dt/DtsDb.h>
+#include <Dt/ActionDb.h>
+
+#include <string.h>
 
 #define MWM_NEED_ICONBOX
 #include "WmIBitmap.h"
@@ -70,9 +87,19 @@
 #include "WmPresence.h"
 #include "WmXSMP.h"
 #include "WmMultiHead.h"
+#include "ActionIconCache.h"
 
 static void AdjustSlideOutGeometry (ClientData *pCD);
 static void FixSubpanelEmbeddedClientGeometry (ClientData *pCD);
+static Boolean SetClientIconFromName(ClientData *pCD, const char *iconName);
+static Boolean TrySetActionIconFromProcessHierarchy(ClientData *pCD);
+static pid_t GetWindowPid(ClientData *pCD);
+static pid_t GetParentPid(pid_t pid);
+static Boolean ReadProcCmdline(pid_t pid, char *buffer, size_t size);
+static Boolean TrySetActionIconFromCommandString(ClientData *pCD,
+                                                const char *command);
+static char *GetClientCommand(ClientData *pCD);
+static Boolean TrySetActionIcon(ClientData *pCD);
 
 #ifndef NO_MESSAGE_CATALOG
 # define LOCALE_MSG GETMESSAGE(70, 7, "[XmbTextPropertyToTextList]:\n     Locale (%.100s) not supported. (Check $LANG).")
@@ -868,6 +895,184 @@ ProcessSmClientID (ClientData *pCD)
 
 } /* END OF FUNCTION ProcessSmClientID */
 
+static char *
+GetClientCommand(ClientData *pCD)
+{
+    int argc;
+    char **argv = NULL;
+    char *command = NULL;
+
+    if (XGetCommand(DISPLAY, pCD->client, &argv, &argc) &&
+        argv && argc > 0 && argv[0])
+    {
+        command = XtNewString(argv[0]);
+    }
+
+    if (argv)
+        XFreeStringList(argv);
+
+    return command;
+}
+
+static Boolean
+SetClientIconFromName(ClientData *pCD, const char *iconName)
+{
+    if (!iconName)
+        return False;
+
+    Pixmap pixmap = MakeNamedIconPixmap(pCD, iconName);
+    if (pixmap == XmUNSPECIFIED_PIXMAP || pixmap == (Pixmap)None)
+        return False;
+
+    pCD->iconPixmap = pixmap;
+    pCD->iconFlags |= ICON_HINTS_PIXMAP;
+    return True;
+}
+
+static Boolean
+TrySetActionIcon(ClientData *pCD)
+{
+    Boolean success = False;
+    char *command = GetClientCommand(pCD);
+
+    if (command)
+    {
+        const char *iconName = ActionIconFind(command);
+        success = SetClientIconFromName(pCD, iconName);
+        XtFree(command);
+    }
+
+    if (!success)
+        success = TrySetActionIconFromProcessHierarchy(pCD);
+
+    return success;
+}
+
+static Boolean
+TrySetActionIconFromProcessHierarchy(ClientData *pCD)
+{
+    pid_t pid = GetWindowPid(pCD);
+    if (pid <= 0)
+        return False;
+
+    char cmdline[PATH_MAX];
+
+    while (pid > 1)
+    {
+        if (!ReadProcCmdline(pid, cmdline, sizeof(cmdline)))
+            break;
+
+        if (cmdline[0] && TrySetActionIconFromCommandString(pCD, cmdline))
+            return True;
+
+        const char *executable = cmdline;
+        const char *base = strrchr(executable, '/');
+        const char *name = base ? base + 1 : executable;
+
+        if (strcmp(name, "dtexec") == 0)
+        {
+            char *lastArg = NULL;
+            char *cur = cmdline;
+
+            while (*cur)
+            {
+                if (*cur)
+                    lastArg = cur;
+                cur += strlen(cur) + 1;
+            }
+
+            if (lastArg && lastArg[0] &&
+                TrySetActionIconFromCommandString(pCD, lastArg))
+            {
+                return True;
+            }
+
+            break;
+        }
+
+        pid = GetParentPid(pid);
+    }
+
+    return False;
+}
+
+static Boolean
+TrySetActionIconFromCommandString(ClientData *pCD, const char *command)
+{
+    if (!command || !command[0])
+        return False;
+
+    const char *iconName = ActionIconFind(command);
+    return SetClientIconFromName(pCD, iconName);
+}
+
+static pid_t
+GetWindowPid(ClientData *pCD)
+{
+    if (!HasProperty(pCD, wmGD.xa__NET_WM_PID))
+        return 0;
+
+    Atom actualType;
+    int actualFormat;
+    unsigned long nitems;
+    unsigned long leftover;
+    unsigned char *data = NULL;
+    pid_t pid = 0;
+
+    if (XGetWindowProperty(DISPLAY, pCD->client, wmGD.xa__NET_WM_PID, 0L, 1L,
+			   False, XA_CARDINAL, &actualType, &actualFormat,
+			   &nitems, &leftover, &data) == Success)
+    {
+        if (data && actualType == XA_CARDINAL && actualFormat == 32 && nitems >= 1)
+        {
+            unsigned long *value = (unsigned long *)data;
+            pid = (pid_t)(value[0]);
+        }
+        XFree(data);
+    }
+
+    return pid;
+}
+
+static pid_t
+GetParentPid(pid_t pid)
+{
+    char path[64];
+    snprintf(path, sizeof(path), "/proc/%d/stat", pid);
+    FILE *fp = fopen(path, "r");
+    if (!fp)
+        return 0;
+
+    pid_t ppid = 0;
+    if (fscanf(fp, "%*d %*s %*c %d", &ppid) != 1)
+        ppid = 0;
+
+    fclose(fp);
+    return ppid;
+}
+
+static Boolean
+ReadProcCmdline(pid_t pid, char *buffer, size_t size)
+{
+    if (!buffer || size == 0)
+        return False;
+
+    char path[64];
+    snprintf(path, sizeof(path), "/proc/%d/cmdline", pid);
+    int fd = open(path, O_RDONLY);
+    if (fd < 0)
+        return False;
+
+    ssize_t len = read(fd, buffer, (ssize_t)(size - 1));
+    close(fd);
+
+    if (len <= 0)
+        return False;
+
+    buffer[len] = '\0';
+    return True;
+}
+
 
 
 /*************************************<->*************************************
@@ -1158,25 +1363,29 @@ ProcessWmHints (ClientData *pCD, Boolean firstTime)
 	         * default icon image.
 	         */
 
-	        if (pCD->iconImage)
-	        {
+		if (pCD->iconImage)
+		{
 		    /*
 		     * Try to make a user specified icon image.
 		     */
 
-		    pCD->iconPixmap = 
+		    pCD->iconPixmap =
 			MakeNamedIconPixmap (pCD, pCD->iconImage);
-	        }
+		}
 
-	        if (!pCD->iconPixmap)
-	        {
+		if (!pCD->iconPixmap)
+		{
 		    /*
 		     * The icon image was not provided or not available.
-		     * Use the default icon image.
+		     * Try to use an action-defined icon before falling back
+		     * to the generic default bitmap.
 		     */
 
-		    pCD->iconPixmap = MakeNamedIconPixmap (pCD, NULL);
-	        }
+		    if (!TrySetActionIcon(pCD))
+		    {
+			pCD->iconPixmap = MakeNamedIconPixmap (pCD, NULL);
+		    }
+		}
 	    }
     
 

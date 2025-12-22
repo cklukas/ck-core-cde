@@ -66,6 +66,7 @@
 #define WmNcppCommand			"cppCommand"
 #define WmNdeiconifyKeyFocus		"deiconifyKeyFocus"
 #define WmNdoubleClickTime		"doubleClickTime"
+#define WmNdoubleIconSize		"doubleIconSize"
 #define WmNenableWarp			"enableWarp"
 #define WmNenforceKeyFocus		"enforceKeyFocus"
 #define WmNfadeNormalIcon		"fadeNormalIcon"
@@ -229,6 +230,7 @@
 #define WmCCppCommand			"CppCommand"
 #define WmCDeiconifyKeyFocus		"DeiconifyKeyFocus"
 #define WmCDoubleClickTime		"DoubleClickTime"
+#define WmCDoubleIconSize		"DoubleIconSize"
 #define WmCEnableWarp			"EnableWarp"
 #define WmCEnforceKeyFocus		"EnforceKeyFocus"
 #define WmCFadeNormalIcon		"FadeNormalIcon"
@@ -428,4 +430,3 @@
 #define WmCHelpDirectory		     "HelpDirectory"
 
 /**************************    eof  ************************/
-

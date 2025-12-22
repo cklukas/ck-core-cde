@@ -39,6 +39,7 @@
  */
 
 #include "WmGlobal.h"
+#include <cde_config.h>
 #include "WmResNames.h"
 #include "WmHelp.h"
 #include "WmICCC.h"
@@ -47,6 +48,9 @@
 #include "WmOL.h"
 #include <X11/Xos.h>
 #include <X11/cursorfont.h>
+#ifdef HAVE_XCURSOR
+#include <X11/Xcursor/Xcursor.h>
+#endif
 #include <Xm/Xm.h>
 #include <Xm/AtomMgr.h>
 #include <X11/Shell.h>
@@ -117,6 +121,7 @@ typedef struct
 #include "WmInitWs.h"
 
 static void InsureDefaultBackdropDir(char **ppchBackdropDirs);
+static void SetRootWindowCursor(void);
 void InitWmDisplayEnv (void);
 #ifndef NO_MESSAGE_CATALOG
 void InitNlsStrings (void);
@@ -153,6 +158,47 @@ InitMouseBinding(void)
         wmGD.bMenuButton = Button2;
     } else {
         wmGD.bMenuButton = Button3;
+    }
+}
+
+static Cursor
+LoadXcursorOrFontCursor(const char *xcursorName, unsigned int fontShape)
+{
+#ifdef HAVE_XCURSOR
+    if (xcursorName && xcursorName[0])
+    {
+	Cursor cursor = XcursorLibraryLoadCursor(DISPLAY, xcursorName);
+	if (cursor != None)
+	{
+	    return cursor;
+	}
+    }
+#endif
+
+    return XCreateFontCursor(DISPLAY, fontShape);
+}
+
+static void
+SetRootWindowCursor(void)
+{
+    int scr;
+    Cursor cursor;
+
+    /*
+     * Ensure the desktop background cursor honors the Xcursor theme/size when
+     * available. Without this, the root window may retain the server default
+     * core cursor (often 16x16).
+     */
+    cursor = LoadXcursorOrFontCursor("X_cursor", XC_X_cursor);
+
+    for (scr = 0; scr < wmGD.numScreens; scr++)
+    {
+	WmScreenData *pSD = &(wmGD.Screens[scr]);
+
+	if (pSD->managed)
+	{
+	    XDefineCursor(DISPLAY, pSD->rootWindow, cursor);
+	}
     }
 }
 
@@ -907,6 +953,9 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
 
     /* make the cursors that the window manager uses */
     MakeWorkspaceCursors ();
+
+    /* set a themed/scaled cursor on the root window (desktop background) */
+    SetRootWindowCursor ();
 
 
     /* Sync the table used by Mwm's modifier parser to actual modMasks used */
@@ -1778,29 +1827,29 @@ void SetupWmWorkspaceWindows (void)
 
 void MakeWorkspaceCursors (void)
 {
-    wmGD.workspaceCursor = XCreateFontCursor (DISPLAY, XC_left_ptr);
+    wmGD.workspaceCursor = LoadXcursorOrFontCursor("left_ptr", XC_left_ptr);
 
     wmGD.stretchCursors[STRETCH_NORTH_WEST] =
-	XCreateFontCursor (DISPLAY, XC_top_left_corner);
+	LoadXcursorOrFontCursor("top_left_corner", XC_top_left_corner);
     wmGD.stretchCursors[STRETCH_NORTH] =
-	XCreateFontCursor (DISPLAY, XC_top_side);
+	LoadXcursorOrFontCursor("top_side", XC_top_side);
     wmGD.stretchCursors[STRETCH_NORTH_EAST] =
-	XCreateFontCursor (DISPLAY, XC_top_right_corner);
+	LoadXcursorOrFontCursor("top_right_corner", XC_top_right_corner);
     wmGD.stretchCursors[STRETCH_EAST] =
-	XCreateFontCursor (DISPLAY, XC_right_side);
+	LoadXcursorOrFontCursor("right_side", XC_right_side);
     wmGD.stretchCursors[STRETCH_SOUTH_EAST] =
-	XCreateFontCursor (DISPLAY, XC_bottom_right_corner);
+	LoadXcursorOrFontCursor("bottom_right_corner", XC_bottom_right_corner);
     wmGD.stretchCursors[STRETCH_SOUTH] =
-	XCreateFontCursor (DISPLAY, XC_bottom_side);
+	LoadXcursorOrFontCursor("bottom_side", XC_bottom_side);
     wmGD.stretchCursors[STRETCH_SOUTH_WEST] =
-	XCreateFontCursor (DISPLAY, XC_bottom_left_corner);
+	LoadXcursorOrFontCursor("bottom_left_corner", XC_bottom_left_corner);
     wmGD.stretchCursors[STRETCH_WEST] =
-	XCreateFontCursor (DISPLAY, XC_left_side);
+	LoadXcursorOrFontCursor("left_side", XC_left_side);
 
-    wmGD.configCursor = XCreateFontCursor (DISPLAY, XC_fleur);
+    wmGD.configCursor = LoadXcursorOrFontCursor("fleur", XC_fleur);
 
-    wmGD.movePlacementCursor = XCreateFontCursor (DISPLAY, XC_ul_angle);
-    wmGD.sizePlacementCursor = XCreateFontCursor (DISPLAY, XC_lr_angle);
+    wmGD.movePlacementCursor = LoadXcursorOrFontCursor("ul_angle", XC_ul_angle);
+    wmGD.sizePlacementCursor = LoadXcursorOrFontCursor("lr_angle", XC_lr_angle);
 
 
 } /* END OF FUNCTION MakeWorkspaceCursors */

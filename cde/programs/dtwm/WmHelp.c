@@ -59,7 +59,28 @@
 
 #include <Dt/DtNlUtils.h>
 
+#include <cde_config.h>
 #include <X11/cursorfont.h>
+#ifdef HAVE_XCURSOR
+#include <X11/Xcursor/Xcursor.h>
+#endif
+
+static Cursor
+LoadXcursorOrFontCursorHelp(const char *xcursorName, unsigned int fontShape)
+{
+#ifdef HAVE_XCURSOR
+    if (xcursorName && xcursorName[0])
+    {
+	Cursor cursor = XcursorLibraryLoadCursor(wmGD.display, xcursorName);
+	if (cursor != None)
+	{
+	    return cursor;
+	}
+    }
+#endif
+
+    return XCreateFontCursor(wmGD.display, fontShape);
+}
 
 
 /****************************************************************
@@ -224,7 +245,7 @@ LocateTheControl(
 
 
     /* Make the target cursor */
-    cursor = XCreateFontCursor (wmGD.display, XC_question_arrow);
+    cursor = LoadXcursorOrFontCursorHelp("question_arrow", XC_question_arrow);
     
     /* Grab the pointer using target cursor, letting it roam all over */
     status = XGrabPointer (wmGD.display, RootWindow(wmGD.display, screen), 
@@ -2966,7 +2987,6 @@ wmDtErrorDialogPopupCB(
 } /* END OF FUNCTION wmDtErrorDialogPopupCB */
 
 /****************************   eof    ***************************/
-
 
 
 

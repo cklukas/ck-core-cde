@@ -50,6 +50,7 @@
 #include "WmXSMP.h"
 #include "WmPanelP.h"
 #include "DataBaseLoad.h"
+#include "ActionIconCache.h"
 
 
 /*
@@ -270,6 +271,11 @@ dtInitializeMessaging(Widget toplevel)
 	return;
     }
     status = tt_pattern_op_add(notice_pattern, "DtTypes_Reloaded");
+    if (status != TT_OK) {
+        ToolTalkError(toplevel, errfmt, status);
+	return;
+    }
+    status = tt_pattern_op_add(notice_pattern, "DtActionIconCache_Update");
     if (status != TT_OK) {
         ToolTalkError(toplevel, errfmt, status);
 	return;
@@ -665,6 +671,21 @@ NoticeMsgCB(Tt_message m, Tt_pattern p)
 	WmFrontPanelSetBusy (False);
 
 	/* CDExc21081 */
+	tt_message_destroy(m);
+    }
+    else if (!strcmp(op, "DtActionIconCache_Update")) {
+	char *actionCommand = tt_message_arg_val(m, 0);
+	char *childList = tt_message_arg_val(m, 1);
+
+	if (actionCommand && childList) {
+	    ActionIconCacheUpdate(actionCommand, childList);
+	}
+
+	if (actionCommand)
+	    tt_free(actionCommand);
+	if (childList)
+	    tt_free(childList);
+
 	tt_message_destroy(m);
     }
 

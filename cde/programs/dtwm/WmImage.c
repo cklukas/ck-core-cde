@@ -350,6 +350,74 @@ Pixmap MakeCachedIconPixmap (ClientData *pCD, int bitmapIndex, Pixmap mask)
 
 } /* END OF FUNCTION MakeCachedIconPixmap */
 
+static Pixmap
+ScalePixmap(Display *display, Window root, Pixmap pixmap,
+            unsigned int width, unsigned int height,
+            unsigned int depth, unsigned int scale)
+{
+    Pixmap scaledPixmap;
+    XImage *image;
+    GC gc;
+    XGCValues gcv;
+    unsigned int scaledWidth;
+    unsigned int scaledHeight;
+    unsigned int x;
+    unsigned int y;
+
+    if (!pixmap || scale <= 1 || width == 0 || height == 0)
+    {
+        return (Pixmap)NULL;
+    }
+
+    scaledWidth = width * scale;
+    scaledHeight = height * scale;
+    scaledPixmap = XCreatePixmap(display, root, scaledWidth, scaledHeight, depth);
+    if (!scaledPixmap)
+    {
+        return (Pixmap)NULL;
+    }
+
+    image = XGetImage(display, pixmap, 0, 0, width, height, AllPlanes, ZPixmap);
+    if (!image)
+    {
+        XFreePixmap(display, scaledPixmap);
+        return (Pixmap)NULL;
+    }
+
+    gcv.foreground = 0;
+    gcv.background = 0;
+    gcv.graphics_exposures = False;
+    gc = XCreateGC(display, scaledPixmap,
+                   GCForeground | GCBackground | GCGraphicsExposures, &gcv);
+    if (!gc)
+    {
+        XDestroyImage(image);
+        XFreePixmap(display, scaledPixmap);
+        return (Pixmap)NULL;
+    }
+
+    XFillRectangle(display, scaledPixmap, gc, 0, 0, scaledWidth, scaledHeight);
+
+    for (y = 0; y < height; y++)
+    {
+        for (x = 0; x < width; x++)
+        {
+            Pixel pixel = XGetPixel(image, x, y);
+
+            if (pixel)
+            {
+                XSetForeground(display, gc, pixel);
+                XFillRectangle(display, scaledPixmap, gc,
+                               x * scale, y * scale, scale, scale);
+            }
+        }
+    }
+
+    XFreeGC(display, gc);
+    XDestroyImage(image);
+
+    return scaledPixmap;
+}
 
 
 /*************************************<->*************************************
@@ -401,6 +469,17 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
     static RList *top_rects = NULL;
     static RList *bot_rects = NULL;
     WmScreenData	*pSD;
+    Pixmap       scaledBitmap = (Pixmap)NULL;
+    Pixmap       scaledMask = (Pixmap)NULL;
+    Pixmap       bitmapToUse = bitmap;
+    Pixmap       maskToUse = mask;
+    unsigned int iconWidth = width;
+    unsigned int iconHeight = height;
+    unsigned int drawWidth = width;
+    unsigned int drawHeight = height;
+    unsigned int copyWidth = width;
+    unsigned int copyHeight = height;
+    unsigned int scale = 1;
 
     if ((top_rects == NULL) && 
 	(top_rects = AllocateRList 
@@ -429,28 +508,62 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
 	pSD = wmGD.pActiveSD;
     }
 
+    scale = (pSD->doubleIconSize) ? 2 : 1;
+
     /* don't make icon pixmap if bitmap is too small */
 
-    if ((width < pSD->iconImageMinimum.width) ||
-	(height < pSD->iconImageMinimum.height))
+    if ((iconWidth < pSD->iconImageMinimum.width) ||
+	(iconHeight < pSD->iconImageMinimum.height))
     {
 	/* bitmap is too small */
 	return ((Pixmap)NULL);
     }
+
+    if (scale > 1)
+    {
+	Pixmap tmpBitmap = ScalePixmap(DISPLAY, pSD->rootWindow, bitmap,
+				       iconWidth, iconHeight, depth, scale);
+	Pixmap tmpMask = (Pixmap)NULL;
+
+	if (mask)
+	{
+	    tmpMask = ScalePixmap(DISPLAY, pSD->rootWindow, mask,
+				  iconWidth, iconHeight, 1, scale);
+	}
+
+	if (tmpBitmap && (!mask || tmpMask))
+	{
+	    scaledBitmap = tmpBitmap;
+	    scaledMask = tmpMask;
+	    bitmapToUse = scaledBitmap;
+	    maskToUse = mask ? scaledMask : (Pixmap)NULL;
+	    drawWidth = iconWidth * scale;
+	    drawHeight = iconHeight * scale;
+	    copyWidth = drawWidth;
+	    copyHeight = drawHeight;
+	}
+	else
+	{
+	    if (tmpBitmap)
+		XFreePixmap(DISPLAY, tmpBitmap);
+	    if (tmpMask)
+		XFreePixmap(DISPLAY, tmpMask);
+	}
+    }
 #ifndef NO_CLIP_CENTER
     
     /* copy the center of the icon if too big */
-    if (width > pSD->iconImageMaximum.width)
+    if (drawWidth > pSD->iconImageMaximum.width)
     {
-	src_x = (width - pSD->iconImageMaximum.width)/2;
+	src_x = (drawWidth - pSD->iconImageMaximum.width)/2;
     }
     else
     {
 	src_x = 0;
     }
-    if (height > pSD->iconImageMaximum.height)
+    if (drawHeight > pSD->iconImageMaximum.height)
     {
-	src_y = (height - pSD->iconImageMaximum.height)/2;
+	src_y = (drawHeight - pSD->iconImageMaximum.height)/2;
     }
     else
     {
@@ -529,18 +642,18 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
 
     /* center the image */
 
-    if (width > pSD->iconImageMaximum.width)
+    if (copyWidth > pSD->iconImageMaximum.width)
     {
-	width = pSD->iconImageMaximum.width;
+	copyWidth = pSD->iconImageMaximum.width;
     }
-    if (height > pSD->iconImageMaximum.height)
+    if (copyHeight > pSD->iconImageMaximum.height)
     {
-	height = pSD->iconImageMaximum.height;
+	copyHeight = pSD->iconImageMaximum.height;
     }
     /* center the image */
 
-    dest_x = (imageWidth - width) / 2;
-    dest_y = (imageHeight - height) / 2;
+    dest_x = (imageWidth - copyWidth) / 2;
+    dest_y = (imageHeight - copyHeight) / 2;
 
     if (mask)
     {
@@ -560,7 +673,7 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
     gc_mask = GCForeground;
     if (mask)
     {
-	gcv.clip_mask = mask;
+	gcv.clip_mask = maskToUse;
 #ifndef NO_CLIP_CENTER
 	gcv.clip_x_origin = dest_x - src_x;
 	gcv.clip_y_origin = dest_y - src_y;
@@ -578,24 +691,29 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
         (depth == DefaultDepth(DISPLAY, pSD->screen)))
     {
 #ifndef NO_CLIP_CENTER
-        XCopyArea (DISPLAY, bitmap, iconPixmap, imageGC, src_x, src_y,
-                width, height, dest_x, dest_y);
+        XCopyArea (DISPLAY, bitmapToUse, iconPixmap, imageGC, src_x, src_y,
+                copyWidth, copyHeight, dest_x, dest_y);
 #else /* NO_CLIP_CENTER */
-        XCopyArea (DISPLAY, bitmap, iconPixmap, imageGC, 0, 0,
-                width, height, dest_x, dest_y);
+        XCopyArea (DISPLAY, bitmapToUse, iconPixmap, imageGC, 0, 0,
+                copyWidth, copyHeight, dest_x, dest_y);
 #endif /* NO_CLIP_CENTER */
     }
     else
 #ifndef NO_CLIP_CENTER
-    XCopyPlane (DISPLAY, bitmap, iconPixmap, imageGC, src_x, src_y, width, 
-		height, dest_x, dest_y, 1L);
+    XCopyPlane (DISPLAY, bitmapToUse, iconPixmap, imageGC, src_x, src_y, copyWidth, 
+		copyHeight, dest_x, dest_y, 1L);
 #else /* NO_CLIP_CENTER */
-    XCopyPlane (DISPLAY, bitmap, iconPixmap, imageGC, 0, 0, width, height, 
+    XCopyPlane (DISPLAY, bitmapToUse, iconPixmap, imageGC, 0, 0, copyWidth, copyHeight, 
 		dest_x, dest_y, 1L);
 #endif /* NO_CLIP_CENTER */
 
     /* free resources */
     XFreeGC (DISPLAY, imageGC);
+
+    if (scaledBitmap)
+	XFreePixmap (DISPLAY, scaledBitmap);
+    if (scaledMask)
+	XFreePixmap (DISPLAY, scaledMask);
 
     if (pCD)
     {

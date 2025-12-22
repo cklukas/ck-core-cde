@@ -62,6 +62,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
+#include <time.h>
+#include <Tt/tttk.h>
+
+#define ACTION_ICON_CACHE_UPDATE_OP "DtActionIconCache_Update"
+#define ACTION_ICON_CACHE_DELAY_SECONDS 5
+#define DTEXEC_ACTION_ICON_LOG_ENV "DTEXEC_ACTION_ICON_CACHE_LOG"
 
 #include <Dt/MsgLog.h>
 
@@ -120,6 +127,10 @@ extern char     *getenv();
  * Local func protos
  */
 void DoneRequest(int doneCode);
+static void DtexecLog(const char *fmt, ...);
+static void MaybeSendActionIconCacheUpdate(void);
+static char *CollectChildCommandList(pid_t pid, int *count);
+static Boolean ReadProcCmdline(pid_t pid, char *buffer, size_t size);
 
 /*
  * Global variables.
@@ -141,6 +152,10 @@ int    rediscoverUrgentSigG;	/* if a SIGTERM, SIGHUP or SIGQUIT goes off */
 int    shutdownPhaseG;		/* shutdown progress state variable */
 int    ttfdG;			/* tooltalk fildes */
 int    errorpipeG[2];		/* dtexec <--< child   stderr pipe */
+static char *actionCommandG = NULL;
+static Boolean actionIconCacheNotified = False;
+static struct timeval actionIconCacheDeadlineG;
+static Boolean actionIconCacheDeadlineSet = False;
 
 
 /******************************************************************************
@@ -1145,6 +1160,390 @@ void DoneRequest(int doneCode)
     }
 }
 
+static void
+DtexecLog(const char *fmt, ...)
+{
+    if (!fmt)
+        return;
+
+    const char *logPath = getenv(DTEXEC_ACTION_ICON_LOG_ENV);
+    if (!logPath || logPath[0] == '\0')
+        return;
+
+    FILE *fp = fopen(logPath, "a");
+    if (!fp)
+        return;
+
+    time_t now = time(NULL);
+    struct tm tm;
+    localtime_r(&now, &tm);
+    char timestr[32];
+    strftime(timestr, sizeof(timestr), "%Y-%m-%d %H:%M:%S", &tm);
+
+    fprintf(fp, "%s ", timestr);
+
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(fp, fmt, ap);
+    va_end(ap);
+
+    fputc('\n', fp);
+    fclose(fp);
+}
+
+typedef struct {
+    char **items;
+    int count;
+    int capacity;
+} CommandList;
+
+typedef struct {
+    pid_t *items;
+    int count;
+    int capacity;
+} PidSet;
+
+static void
+CommandListInit(CommandList *list)
+{
+    if (!list)
+        return;
+    list->items = NULL;
+    list->count = 0;
+    list->capacity = 0;
+}
+
+static void
+CommandListFree(CommandList *list)
+{
+    if (!list)
+        return;
+
+    for (int i = 0; i < list->count; ++i)
+        free(list->items[i]);
+
+    free(list->items);
+    list->items = NULL;
+    list->count = 0;
+    list->capacity = 0;
+}
+
+static Boolean
+CommandListAdd(CommandList *list, const char *value)
+{
+    if (!list || !value || *value == '\0')
+        return False;
+
+    for (int i = 0; i < list->count; ++i)
+    {
+        if (strcmp(list->items[i], value) == 0)
+            return False;
+    }
+
+    if (list->count >= list->capacity)
+    {
+        int newCap = list->capacity ? list->capacity * 2 : 8;
+        char **newItems = (char **)realloc(list->items,
+                                           newCap * sizeof(char *));
+        if (!newItems)
+            return False;
+        list->items = newItems;
+        list->capacity = newCap;
+    }
+
+    list->items[list->count] = strdup(value);
+    if (!list->items[list->count])
+        return False;
+
+    list->count++;
+    return True;
+}
+
+static char *
+CommandListJoin(const CommandList *list)
+{
+    if (!list || list->count == 0)
+        return NULL;
+
+    size_t total = 0;
+    for (int i = 0; i < list->count; ++i)
+        total += strlen(list->items[i]) + 1;
+
+    char *result = (char *)malloc(total);
+    if (!result)
+        return NULL;
+
+    char *ptr = result;
+    for (int i = 0; i < list->count; ++i)
+    {
+        size_t len = strlen(list->items[i]);
+        memcpy(ptr, list->items[i], len);
+        ptr += len;
+        if (i + 1 < list->count)
+            *ptr++ = '\n';
+    }
+
+    *ptr = '\0';
+    return result;
+}
+
+static void
+PidSetInit(PidSet *set)
+{
+    if (!set)
+        return;
+    set->items = NULL;
+    set->count = 0;
+    set->capacity = 0;
+}
+
+static void
+PidSetFree(PidSet *set)
+{
+    if (!set)
+        return;
+    free(set->items);
+    set->items = NULL;
+    set->count = 0;
+    set->capacity = 0;
+}
+
+static Boolean
+PidSetAdd(PidSet *set, pid_t pid)
+{
+    if (!set || pid <= 0)
+        return False;
+
+    for (int i = 0; i < set->count; ++i)
+    {
+        if (set->items[i] == pid)
+            return False;
+    }
+
+    if (set->count >= set->capacity)
+    {
+        int newCap = set->capacity ? set->capacity * 2 : 8;
+        pid_t *newItems = (pid_t *)realloc(set->items,
+                                           newCap * sizeof(pid_t));
+        if (!newItems)
+            return False;
+        set->items = newItems;
+        set->capacity = newCap;
+    }
+
+    set->items[set->count++] = pid;
+    return True;
+}
+
+static Boolean
+ReadProcCmdline(pid_t pid, char *buffer, size_t size)
+{
+    if (!buffer || size == 0)
+        return False;
+
+    char path[64];
+    snprintf(path, sizeof(path), "/proc/%d/cmdline", pid);
+    int fd = open(path, O_RDONLY);
+    if (fd < 0)
+        return False;
+
+    ssize_t len = read(fd, buffer, (ssize_t)(size - 1));
+    close(fd);
+
+    if (len <= 0)
+        return False;
+
+    buffer[len] = '\0';
+    return True;
+}
+
+static void
+GatherChildExecutables(pid_t pid, CommandList *commands, PidSet *visited)
+{
+    if (!commands || !visited || pid <= 0 || !PidSetAdd(visited, pid))
+        return;
+
+    char cmdline[PATH_MAX];
+    if (ReadProcCmdline(pid, cmdline, sizeof(cmdline)) && cmdline[0])
+        CommandListAdd(commands, cmdline);
+
+    char path[128];
+    snprintf(path, sizeof(path), "/proc/%d/task/%d/children", pid, pid);
+    FILE *fp = fopen(path, "r");
+    if (!fp)
+        return;
+
+    char buffer[4096];
+    while (fgets(buffer, sizeof(buffer), fp))
+    {
+        char *token = strtok(buffer, " \t\n");
+        while (token)
+        {
+            pid_t child = (pid_t)strtol(token, NULL, 10);
+            if (child > 0)
+                GatherChildExecutables(child, commands, visited);
+            token = strtok(NULL, " \t\n");
+        }
+    }
+
+    fclose(fp);
+}
+
+static char *
+CollectChildCommandList(pid_t pid, int *count)
+{
+    CommandList commands;
+    PidSet visited;
+
+    CommandListInit(&commands);
+    PidSetInit(&visited);
+
+    GatherChildExecutables(pid, &commands, &visited);
+
+    char *result = CommandListJoin(&commands);
+
+    if (count)
+        *count = commands.count;
+
+    CommandListFree(&commands);
+    PidSetFree(&visited);
+
+    return result;
+}
+
+static void
+DescribeChildListForLog(const char *childList, char *snippet, size_t snippetSize,
+                        int *count)
+{
+    if (count)
+        *count = 0;
+
+    if (!snippet || snippetSize == 0)
+        return;
+
+    snippet[0] = '\0';
+
+    if (!childList || childList[0] == '\0')
+        return;
+
+    const char *cur = childList;
+    int idx = 0;
+
+    while (*cur)
+    {
+        const char *end = cur;
+        while (*end && *end != '\n')
+            ++end;
+
+        if (idx == 0)
+        {
+            size_t len = (size_t)(end - cur);
+            size_t copy = len < snippetSize - 1 ? len : snippetSize - 1;
+            memcpy(snippet, cur, copy);
+            snippet[copy] = '\0';
+        }
+
+        ++idx;
+
+        if (*end == '\0')
+            break;
+
+        cur = end + 1;
+    }
+
+    if (count)
+        *count = idx;
+}
+
+static void
+SendActionIconCacheUpdateNotice(const char *childList)
+{
+    if (!actionCommandG || !childList)
+        return;
+
+    char snippet[128];
+    int childCount = 0;
+    DescribeChildListForLog(childList, snippet, sizeof(snippet), &childCount);
+
+    DtexecLog("Preparing notice action=%s children=%d first=%s childListLen=%zu",
+              actionCommandG ? actionCommandG : "(null)",
+              childCount,
+              snippet[0] ? snippet : "(none)",
+              strlen(childList));
+    DtexecLog("Child list for action=%s:\n%s",
+              actionCommandG ? actionCommandG : "(null)",
+              childList);
+
+    Tt_message msg = dtexec_tttk_message_create((Tt_message)NULL,
+                                                TT_NOTICE,
+                                                TT_SESSION,
+                                                (const char *)NULL,
+                                                ACTION_ICON_CACHE_UPDATE_OP,
+                                                (Tt_message_callback)NULL);
+    if (tt_ptr_error(msg) != TT_OK)
+        return;
+
+    if (tt_message_arg_add(msg, TT_IN, Tttk_string, actionCommandG) != TT_OK ||
+        tt_message_arg_add(msg, TT_IN, Tttk_string, childList) != TT_OK)
+    {
+        DtexecLog("Notice argument add failed for action=%s", actionCommandG);
+        tt_message_destroy(msg);
+        return;
+    }
+
+    if (tt_message_send(msg) != TT_OK)
+    {
+        DtexecLog("Notice send failed for action=%s", actionCommandG);
+    }
+    else
+    {
+        DtexecLog("Notice sent for action=%s", actionCommandG);
+    }
+    tt_message_destroy(msg);
+}
+
+static void
+MaybeSendActionIconCacheUpdate(void)
+{
+    if (actionIconCacheNotified || childPidG <= 0 || !actionCommandG ||
+        !actionIconCacheDeadlineSet)
+        return;
+
+    struct timeval now;
+    (void) gettimeofday(&now, NULL);
+
+    if (now.tv_sec < actionIconCacheDeadlineG.tv_sec ||
+        (now.tv_sec == actionIconCacheDeadlineG.tv_sec &&
+         now.tv_usec < actionIconCacheDeadlineG.tv_usec))
+    {
+        return;
+    }
+
+    DtexecLog("Cache update triggered action=%s pid=%d",
+              actionCommandG ? actionCommandG : "(null)",
+              childPidG);
+
+    int childCount = 0;
+    char *childList = CollectChildCommandList(childPidG, &childCount);
+    if (childList)
+    {
+        char snippet[128];
+        DescribeChildListForLog(childList, snippet, sizeof(snippet), NULL);
+        DtexecLog("Collected %d child commands for pid=%d first=%s",
+                  childCount, childPidG,
+                  snippet[0] ? snippet : "(none)");
+    }
+    else
+        DtexecLog("No child commands found for pid=%d", childPidG);
+    if (childList)
+    {
+        SendActionIconCacheUpdateNotice(childList);
+        free(childList);
+    }
+
+    actionIconCacheNotified = True;
+}
+
 /******************************************************************************
  *
  * main
@@ -1195,6 +1594,9 @@ main (
 
     cmdLine = ParseCommandLine (argc, argv);
 
+    if (cmdLine && cmdLine[0])
+        actionCommandG = strdup(cmdLine[0]);
+
     /*
      * If a signal goes off *outside* the upcoming select, we'll need to
      * rediscover the signal by letting select() timeout.
@@ -1243,6 +1645,9 @@ main (
     * Note when we started so we can compare times when we finish.
     */
    (void) gettimeofday (&startTimeG, &zoneG);
+   actionIconCacheDeadlineG.tv_sec = startTimeG.tv_sec + ACTION_ICON_CACHE_DELAY_SECONDS;
+   actionIconCacheDeadlineG.tv_usec = startTimeG.tv_usec;
+   actionIconCacheDeadlineSet = True;
 
     if (dtSvcProcIdG) {
 	if ( !InitializeTooltalk() ) {
@@ -1500,6 +1905,8 @@ main (
 	    nfound = 0;
 	}
 
+	MaybeSendActionIconCacheUpdate();
+
 	if (nfound == 0) {
 	    /*
 	     * Timeout.  We are probably rediscovering and have entered
@@ -1652,4 +2059,3 @@ main (
 	}
     }
 }
-

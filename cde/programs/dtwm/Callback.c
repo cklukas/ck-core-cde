@@ -736,19 +736,20 @@ WorkspaceModifyCB (Widget    w,
       /*  them with the new atom.  When a match is found, reset the    */
       /*  the switch name to the new one and update the button label.  */
 
-      case DtWSM_REASON_TITLE:
-      {
-         XmString toggle_string;
+	      case DtWSM_REASON_TITLE:
+	      {
+	         XmString toggle_string;
 
-	 Arg al[2];
-         int i;
+		 Arg al[2];
+	         int i;
 
-	 for (i = 0; i < switch_data->switch_count; i++)
-         {
-            if (atom_name == switch_data->atom_names[i])
-	    {
-	       switch_data->switch_names[i] = 
-	          XtNewString (workspace_info->pchTitle);
+		 for (i = 0; i < switch_data->switch_count; i++)
+	         {
+	            if (atom_name == switch_data->atom_names[i])
+		    {
+		       XtFree (switch_data->switch_names[i]);
+		       switch_data->switch_names[i] = 
+		          XtNewString (workspace_info->pchTitle);
 
                toggle_string =
                   XmStringCreateLocalized (workspace_info->pchTitle);
@@ -758,13 +759,15 @@ WorkspaceModifyCB (Widget    w,
                XmStringFree (toggle_string);
 
                XtSetArg (al[0], XmNiconName, workspace_info->pchTitle);
-               XtSetArg (al[1], XmNtitle, workspace_info->pchTitle);
-               XtSetValues (panel.shell, al, 2);
+	               XtSetArg (al[1], XmNtitle, workspace_info->pchTitle);
+	               XtSetValues (panel.shell, al, 2);
 
-               break;
-	    }
-         }
-      }
+	               UpdateSwitchGeometry (box_data);
+
+	               break;
+		    }
+	         }
+	      }
       break;
 
 
@@ -1173,12 +1176,27 @@ SwitchRenameLabel (Widget    switch_button,
 
       XtFree(edit_string);
 
-      ac = 0;
-      XtSetArg (al[ac], XmNcursorPosition, 
-                XmTextFieldGetLastPosition (switch_edit));   ac++;
-      XtSetArg (al[ac], XmNwidth, toggle_width);   ac++;
-      XtSetArg (al[ac], XmNheight, toggle_height);   ac++;
-      XtSetValues (switch_edit, al, ac);
+	      ac = 0;
+	      XtSetArg (al[ac], XmNcursorPosition, 
+	                XmTextFieldGetLastPosition (switch_edit));   ac++;
+	      /* Keep the edit field compact for short labels. */
+	      {
+	         Dimension text_width = 0, text_height = 0;
+	         Dimension pad = 12;
+	         Dimension desired_width = toggle_width;
+	         if (toggle_string && toggle_font_list)
+		 {
+		    XmStringExtent(toggle_font_list, toggle_string, &text_width, &text_height);
+		    desired_width = text_width + pad;
+		    if (desired_width > toggle_width)
+		       desired_width = toggle_width;
+		    if (desired_width < 20)
+		       desired_width = 20;
+		 }
+	         XtSetArg (al[ac], XmNwidth, desired_width);   ac++;
+	      }
+	      XtSetArg (al[ac], XmNheight, toggle_height);   ac++;
+	      XtSetValues (switch_edit, al, ac);
 
 
       /*  Add the callbacks for the text input processing  */

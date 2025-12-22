@@ -29,7 +29,7 @@ dtwm_SOURCES = WmCDInfo.c      WmCDecor.c      WmCEvent.c \
                WmManage.c      WmMenu.c        WmProperty.c \
                WmProtocol.c    WmResCvt.c      WmResParse.c \
                WmResource.c    WmSignal.c      WmWinConf.c \
-               WmWinInfo.c     WmWinList.c     WmWinState.c \
+               ActionIconCache.c WmWinInfo.c     WmWinList.c     WmWinState.c \
                WmMultiHead.c   Button.c        Callback.c \
                Clock.c         DataBaseLoad.c  PanelS.c \
                Parse.c         PopupMenu.c     Session.c \
@@ -50,4 +50,3 @@ Dtwm.defs: Dtwm.defs.src
 sys.dtwmrc: sys.dtwmrc.src
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=# $(SCRIPTFLAGS) $< > $@
-

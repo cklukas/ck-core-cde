@@ -132,6 +132,7 @@ extern Pixel		FPselectcolor;
 #define _XA__NET_WM_ICON_NAME "_NET_WM_ICON_NAME"
 #define _XA__NET_WM_VISIBLE_NAME "_NET_WM_VISIBLE_NAME"
 #define _XA__NET_WM_VISIBLE_ICON_NAME "_NET_WM_VISIBLE_ICON_NAME"
+#define _XA__NET_WM_PID "_NET_WM_PID"
 #define _XA__NET_WM_FULLSCREEN_MONITORS "_NET_WM_FULLSCREEN_MONITORS"
 #define _XA__NET_WM_STATE "_NET_WM_STATE"
 #define _XA__NET_WM_STATE_MAXIMIZED_VERT "_NET_WM_STATE_MAXIMIZED_VERT"
@@ -1205,6 +1206,7 @@ typedef struct _WmScreenData
     int		iconDecoration;			/* resource */
     WHSize	iconImageMaximum;		/* resource */
     WHSize	iconImageMinimum;		/* resource */
+    Boolean	doubleIconSize;		/* resource */
     Pixmap	builtinIconPixmap;
     int		iconWidth;
     int		iconHeight;
@@ -1987,6 +1989,7 @@ typedef struct _WmGlobalData
     Atom	xa__NET_WM_ICON_NAME;
     Atom	xa__NET_WM_VISIBLE_NAME;
     Atom	xa__NET_WM_VISIBLE_ICON_NAME;
+    Atom	xa__NET_WM_PID;
     Atom	xa__NET_WM_FULLSCREEN_MONITORS;
     Atom	xa__NET_WM_STATE;
     Atom	xa__NET_WM_STATE_MAXIMIZED_VERT;

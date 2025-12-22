@@ -1204,6 +1204,16 @@ XtResource wmScreenResources[] =
     },
 
     {
+	WmNdoubleIconSize,
+	WmCDoubleIconSize,
+	XtRBoolean,
+	sizeof (Boolean),
+	XtOffsetOf (WmScreenData, doubleIconSize),
+	XtRImmediate,
+	(XtPointer)False
+    },
+
+    {
 	WmNiconPlacement,
 	WmCIconPlacement,
 	WmRIconPlacement,

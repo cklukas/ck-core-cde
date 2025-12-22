@@ -160,6 +160,88 @@ Pixmap menu_selected_pixmap;
 
 static int _ws_high_color_map[] = { 3, 5, 6, 7 };
 static	Dimension	switch_height = 0;
+static XmFontList date_icon_font_list = NULL;
+
+static XmFontList
+GetDateIconFontList(
+        Widget widget)
+{
+    XmFontListEntry entry;
+
+    if (date_icon_font_list)
+        return date_icon_font_list;
+
+    /* Prefer a reliable fixed-size font for the date icon overlay. */
+    entry = XmFontListEntryLoad(XtDisplay(widget), "fixed", XmFONT_IS_FONT,
+                                XmFONTLIST_DEFAULT_TAG);
+    if (entry)
+    {
+        date_icon_font_list = XmFontListAppendEntry(NULL, entry);
+        XmFontListEntryFree(&entry);
+    }
+
+    return date_icon_font_list;
+}
+static Dimension
+ComputeSwitchButtonWidth(
+        SwitchData *switch_data)
+{
+    Dimension max_text_width = 0;
+    Dimension padding = 0;
+    Dimension min_width =
+        (panel.resolution == HIGH || panel.resolution == MEDIUM) ?
+        SWITCH_HIGH_BUTTON_WIDTH : SWITCH_LOW_BUTTON_WIDTH;
+    int columns = panel.switch_row_count;
+    int i;
+
+    if (!switch_data || !switch_data->switch_names || switch_data->switch_count <= 0)
+        return min_width;
+
+    for (i = 0; i < switch_data->switch_count; i++)
+    {
+        XmString label_string;
+        Dimension w = 0, h = 0;
+        if (!switch_data->switch_names[i])
+            continue;
+        label_string = XmStringCreateLocalized (switch_data->switch_names[i]);
+        XmStringExtent(panel.font_list, label_string, &w, &h);
+        XmStringFree(label_string);
+        if (w > max_text_width)
+            max_text_width = w;
+    }
+
+    if (panel.resolution == HIGH || panel.resolution == MEDIUM)
+    {
+        /* margin(4) + shadow(3) + highlight(1) + extra breathing room */
+        padding = (Dimension)(2 * 4 + 2 * 3 + 2 * 1 + 12);
+    }
+    else
+    {
+        /* margin(2) + shadow(2) + highlight(1) + extra breathing room */
+        padding = (Dimension)(2 * 2 + 2 * 2 + 2 * 1 + 10);
+    }
+
+    Dimension desired = max_text_width + padding;
+    if (desired < min_width)
+        desired = min_width;
+
+    /*
+     * Avoid clamping to the current RowColumn width: when workspace names
+     * grow, we want the switcher to request a wider geometry (and allow the
+     * panel to grow/reflow) rather than silently keeping the old width.
+     */
+    if (columns > 0)
+    {
+        Dimension screen_width = (Dimension)DisplayWidth(XtDisplay(panel.shell),
+                                                        DefaultScreen(XtDisplay(panel.shell)));
+        Dimension max_per_button = (screen_width > 50) ?
+            (Dimension)(screen_width / (columns > 0 ? (columns + 1) : 2)) : desired;
+        if (max_per_button > 50 && desired > max_per_button)
+            desired = max_per_button;
+    }
+
+    return desired;
+}
 
 /************************************************************************
  *
@@ -1770,9 +1852,9 @@ ControlSetBehavior (ControlData * control_data,
       }
       break;
 
-      case CONTROL_DATE:
-      {
-         int size;
+	      case CONTROL_DATE:
+	      {
+	         int size;
 	 
          XtSetArg (al[*ac], XmNcontrolType, XmCONTROL_DATE);         (*ac)++;
          XtSetArg (al[*ac], XmNshadowThickness, shadow_thickness);   (*ac)++;
@@ -1790,18 +1872,19 @@ ControlSetBehavior (ControlData * control_data,
          }
 
 
-         if (!in_subpanel)
-         {
-            XtSetArg (al[*ac], XmNpixmapPosition, XmPIXMAP_MIDDLE);  (*ac)++;
-            XtSetArg (al[*ac], XmNfontList, panel.date_font_list);  (*ac)++;
-            XtSetArg (al[*ac], XmNuseEmbossedText, False);	    (*ac)++;
-            XtSetArg (al[*ac], XmNforeground,
-                      BlackPixelOfScreen (XtScreen (panel.form)));  (*ac)++;
-         }
-         else
-         {
-            XtSetArg (al[*ac], XmNuseEmbossedText, True);	     (*ac)++;
-         }
+	         if (!in_subpanel)
+	         {
+	            XtSetArg (al[*ac], XmNpixmapPosition, XmPIXMAP_MIDDLE);  (*ac)++;
+	            XtSetArg (al[*ac], XmNfontList,
+	                      GetDateIconFontList(panel.form));  (*ac)++;
+	            XtSetArg (al[*ac], XmNuseEmbossedText, False);	    (*ac)++;
+	            XtSetArg (al[*ac], XmNforeground,
+	                      BlackPixelOfScreen (XtScreen (panel.form)));  (*ac)++;
+	         }
+	         else
+	         {
+	            XtSetArg (al[*ac], XmNuseEmbossedText, True);	     (*ac)++;
+	         }
       }
       break;
    }
@@ -2277,19 +2360,18 @@ SwitchButtonCreate (SwitchData * switch_data,
 
    XtSetArg (al[ac], XmNfillOnArm, False);			ac++;
 
+   Dimension switch_button_width = ComputeSwitchButtonWidth(switch_data);
    if (panel.resolution == HIGH || panel.resolution == MEDIUM)
    {
-      XtSetArg (al[ac], XmNwidth, SWITCH_HIGH_BUTTON_WIDTH);	ac++;
+      XtSetArg (al[ac], XmNwidth, switch_button_width);		ac++;
       XtSetArg (al[ac], XmNshadowThickness, 3);			ac++;
       XtSetArg (al[ac], XmNmarginWidth, 4);			ac++;
-	 
    }
    else
    {
-      XtSetArg (al[ac], XmNwidth, SWITCH_LOW_BUTTON_WIDTH);	ac++;
+      XtSetArg (al[ac], XmNwidth, switch_button_width);		ac++;
       XtSetArg (al[ac], XmNshadowThickness, 2);			ac++;
       XtSetArg (al[ac], XmNmarginWidth, 2);			ac++;
-
    }
 
    XtSetArg (al[ac], XmNheight, switch_height);  ac++;
@@ -3119,7 +3201,11 @@ UpdateSwitchGeometry (BoxData * box_data)
 {
    int new_margin;
    Dimension switch_rc_height, switch_button_height;
+   Dimension switch_button_width;
+   Dimension cur_width;
+   Boolean need_relayout = False;
    Arg al[2];
+   int i;
 
    if (box_data->switch_data == NULL) return;
 
@@ -3138,6 +3224,33 @@ UpdateSwitchGeometry (BoxData * box_data)
    XtSetArg (al[0], XmNmarginHeight, new_margin);
    XtSetArg (al[1], XmNspacing, new_margin);
    XtSetValues (box_data->switch_data->rc, al, 2);
+
+   /* Keep switch buttons wide enough for their labels (esp. scalable fonts). */
+   switch_button_width = ComputeSwitchButtonWidth(box_data->switch_data);
+   cur_width = 0;
+   if (box_data->switch_data->buttons && box_data->switch_data->buttons[0])
+      XtVaGetValues (box_data->switch_data->buttons[0], XmNwidth, &cur_width, NULL);
+   if (cur_width > 0 && switch_button_width + 2 < cur_width)
+      need_relayout = True;
+
+   for (i = 0; i < box_data->switch_data->switch_count; i++)
+   {
+      if (box_data->switch_data->buttons[i])
+      {
+         XtSetArg (al[0], XmNwidth, switch_button_width);
+         XtSetValues (box_data->switch_data->buttons[i], al, 1);
+      }
+   }
+
+   /*
+    * Motif RowColumn can keep a previously-expanded geometry when packing by
+    * columns. If widths shrink, force a relayout so the switcher can contract.
+    */
+   if (need_relayout && box_data->switch_data->rc)
+   {
+      XtUnmanageChild (box_data->switch_data->rc);
+      XtManageChild (box_data->switch_data->rc);
+   }
 }
 
 
