@@ -49,6 +49,8 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
+#include <X11/Xlib.h>
 #include <Xm/Xm.h>
 #include <Xm/XmP.h>
 #include <Xm/AtomMgr.h>
@@ -201,6 +203,48 @@ static String	    DrawnBTransTable = "\
 ";
 
 static	XtTranslations	DrawnBTrans = NULL;
+
+static unsigned short
+DetectHelpMediaResolution(Display *display)
+{
+    if (display == NULL)
+        return 100;
+
+    int screen = DefaultScreen(display);
+    int widthPx = DisplayWidth(display, screen);
+    int heightPx = DisplayHeight(display, screen);
+    int widthMm = DisplayWidthMM(display, screen);
+    int heightMm = DisplayHeightMM(display, screen);
+
+    double dpiX = 0.0;
+    double dpiY = 0.0;
+    if (widthMm > 0)
+        dpiX = (double) widthPx * 25.4 / (double) widthMm;
+    if (heightMm > 0)
+        dpiY = (double) heightPx * 25.4 / (double) heightMm;
+
+    double dpi = 0.0;
+    if (dpiX > 0.0 && dpiY > 0.0)
+        dpi = (dpiX + dpiY) * 0.5;
+    else if (dpiX > 0.0)
+        dpi = dpiX;
+    else if (dpiY > 0.0)
+        dpi = dpiY;
+
+    if (dpi <= 0.0)
+        return 100;
+
+    double scale = dpi / 100.0;
+    if (scale <= 1.2)
+        return 100;
+
+    unsigned int result = (unsigned int)(dpi + 0.5);
+    if (result < 100)
+        result = 100;
+    if (result > USHRT_MAX)
+        result = USHRT_MAX;
+    return (unsigned short) result;
+}
 
 /*********************************************************************
  *		Private Functions
@@ -378,6 +422,7 @@ HelpCreateDA(
 
     Widget form;
     Display *dpy = XtDisplay(parent);
+    unsigned short displayResolution = DetectHelpMediaResolution(dpy);
     Screen      *retScr = XtScreen(parent);
     int          screen = XScreenNumberOfScreen(retScr);
 
@@ -455,6 +500,8 @@ HelpCreateDA(
     pDAS->render_type = render_type;
     pDAS->dtinfo = 0;
     pDAS->stipple = None;
+    pDAS->link_cursor = None;
+    pDAS->link_cursor_active = False;
 
     /*
      * locale dependant information
@@ -730,6 +777,8 @@ HelpCreateDA(
 
     XtAddEventHandler (pDAS->dispWid, Button1MotionMask, True,
 			(XtEventHandler)_DtHelpMouseMoveCB, (XtPointer) pDAS);
+    XtAddEventHandler (pDAS->dispWid, PointerMotionMask, True,
+			(XtEventHandler)_DtHelpLinkCursorCB, (XtPointer) pDAS);
 
     /*
      * add my actions
@@ -997,11 +1046,12 @@ _DtHelpCreateDisplayArea(
     XtPointer	 client_data,
     XmFontList	 default_list )
 {
+    unsigned short media_resolution = DetectHelpMediaResolution(XtDisplay(parent));
     return HelpCreateDA(parent, name,
 			vert_flag, horz_flag,
 			traversal_flag,
 			_DtCvIGNORE_BOUNDARY, _DtCvRENDER_PARTIAL,
-			rows, columns, 100,
+			rows, columns, media_resolution,
 			hyperTextCB, resizeCB, exec_ok_routine,
 			client_data, default_list);
 }
@@ -1033,10 +1083,14 @@ _DtHelpCreateOutputArea(
 {
     DtHelpDispAreaStruct *pDAS;
 
+    unsigned short actual_resolution = media_resolution;
+    if (actual_resolution == 0)
+        actual_resolution = DetectHelpMediaResolution(XtDisplay(parent));
+
     pDAS = HelpCreateDA(parent, name,
 			vert_flag, horz_flag,
 			traversal_flag, honor_size, render_type,
-			1, 1, media_resolution,
+			1, 1, actual_resolution,
 			hyperTextCB, resizeCB, exec_ok_routine,
 			client_data, default_list);
     /* if area created successfully, then resize it to the given size */

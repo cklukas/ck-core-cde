@@ -170,6 +170,9 @@ _DtHelpDisplayAreaDestroyCB (
         XtFree((char *) pDAS->context);
     }
 
+    if (pDAS->link_cursor != None)
+        XFreeCursor(dpy, pDAS->link_cursor);
+
     /*
      * destroy the widgets.
      */

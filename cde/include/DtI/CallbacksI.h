@@ -104,6 +104,10 @@ extern	void	_DtHelpMouseMoveCB (
 			Widget		widget,
 			XtPointer	client_data,
 			XEvent		*event );
+extern	void	_DtHelpLinkCursorCB (
+			Widget		widget,
+			XtPointer	client_data,
+			XEvent		*event );
 extern	void	_DtHelpResizeCB (
 			Widget		widget,
 			XtPointer	client_data,

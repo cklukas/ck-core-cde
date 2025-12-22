@@ -42,11 +42,16 @@
 
 #include <stdio.h>
 #include <signal.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>  /* R_OK */
 
 #include <X11/Intrinsic.h>
 #include <X11/Shell.h>
 #include <X11/Xatom.h>
+#include <X11/Xlib.h>
+#include <X11/Xlocale.h>
 
 /* These includes work in R4 and R5 */
 #include <Xm/MwmUtil.h>
@@ -139,6 +144,10 @@ extern XmGeoMatrix _XmGeoMatrixAlloc(
 #define HDMessage8	_DtHelpMsg_0008
 #define HDMessage9	_DtHelpMsg_0009
 
+static Boolean HelpFontDebugEnabled(void);
+static void HelpFontDebugLog(const char *fmt, ...);
+static const char *HelpFontTypeName(XmFontType type);
+static void HelpLogFontList(const char *label, XmFontList fontList);
 
 /********    Static Function Declarations    ********/
 
@@ -319,6 +328,12 @@ static XtResource resources[] = {
 	XtOffset (DtHelpDialogWidget, help_dialog.display.helpVolume), 
 	XmRImmediate, (XtPointer) NULL
       }, 
+
+     {   DtNoverrideFontList,
+        DtCOverrideFontList, XmRBoolean, sizeof(Boolean),
+        XtOffset (DtHelpDialogWidget, help_dialog.display.overrideFontList),
+        XmRImmediate, (XtPointer) True
+      },
 
       {	DtNmanPage, 
 	DtCManPage, XmRString, sizeof (char*), 
@@ -532,6 +547,80 @@ NavigationTypeDefault(
       
 }
 
+
+
+static Boolean HelpFontDebugEnabled(void)
+{
+    static int cached = -1;
+    if (cached >= 0)
+        return cached ? True : False;
+    const char *env = getenv("DTHELP_FONT_DEBUG");
+    cached = (env && *env && strcmp(env, "0") != 0) ? 1 : 0;
+    return cached ? True : False;
+}
+
+static void HelpFontDebugLog(const char *fmt, ...)
+{
+    if (!HelpFontDebugEnabled())
+        return;
+    va_list ap;
+    va_start(ap, fmt);
+    fprintf(stderr, "dthelp: " );
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+    va_end(ap);
+}
+
+static const char *HelpFontTypeName(XmFontType type)
+{
+    if (type == XmFONT_IS_FONTSET)
+        return "fontset";
+    if (type == XmFONT_IS_FONT)
+        return "font";
+    return "unknown";
+}
+
+static void HelpLogFontList(const char *label, XmFontList fontList)
+{
+    if (!HelpFontDebugEnabled())
+        return;
+    if (!fontList) {
+        HelpFontDebugLog("%s fontList=NULL", label);
+        return;
+    }
+    XmFontContext context;
+    if (!XmFontListInitFontContext(&context, fontList)) {
+        HelpFontDebugLog("%s fontList has no entries", label);
+        return;
+    }
+    HelpFontDebugLog("%s fontList entries:", label);
+    XmFontListEntry entry;
+    int entryIndex = 0;
+    while ((entry = XmFontListNextEntry(context)) != NULL) {
+        XmFontType type;
+        XtPointer raw = XmFontListEntryGetFont(entry, &type);
+        const char *typeName = HelpFontTypeName(type);
+        if (type == XmFONT_IS_FONTSET) {
+            XFontSet fs = (XFontSet) raw;
+            char *fontListName = XBaseFontNameListOfFontSet(fs);
+            HelpFontDebugLog("  %s[%d] fontset base names=%s",
+                             label, entryIndex,
+                             fontListName ? fontListName : "<null>");
+            if (fontListName)
+                XFree(fontListName);
+        } else if (raw) {
+            XFontStruct *fontStruct = (XFontStruct *) raw;
+            HelpFontDebugLog("  %s[%d] %s ascent=%d descent=%d",
+                             label, entryIndex, typeName,
+                             fontStruct->ascent, fontStruct->descent);
+        } else {
+            HelpFontDebugLog("  %s[%d] %s has no font data",
+                             label, entryIndex, typeName);
+        }
+        entryIndex++;
+    }
+    XmFontListFreeFontContext(context);
+}
 
 /*****************************************************************************
  * Function:	    static void ClassInitialize (
@@ -1657,6 +1746,7 @@ static void BuildDisplayArea(
   n = 0;
   XtSetArg (args[n], XmNfontList, &(defaultList));  ++n;
   XtGetValues (hw->help_dialog.menu.topBtn, args, n);
+  HelpLogFontList("DisplayArea defaultList", defaultList);
 
 
   /* Build the Display Area */
@@ -2160,16 +2250,17 @@ void _DtHelpUpdateDisplayArea(
     if (status == 0)  /* success */
     {
         if (hw->help_dialog.ghelp.volumeFlag == FALSE)
-        {
-	   XmFontList  fontList;
-	   Boolean     mod = False;
+       {
+          XmFontList  fontList;
+          Boolean     mod = False;
 
-	   XtSetArg(args[0], XmNfontList, &fontList);
-	   XtGetValues(hw->help_dialog.browser.volumeLabel, args, 1);
+          XtSetArg(args[0], XmNfontList, &fontList);
+          XtGetValues(hw->help_dialog.browser.volumeLabel, args, 1);
+          HelpLogFontList("volumeLabel pre-format", fontList);
 
            /* We have a new volume, so update the volume title */
-        
-	   _DtHelpFormatVolumeTitle(hw->help_dialog.help.pDisplayArea,
+
+          _DtHelpFormatVolumeTitle(hw->help_dialog.help.pDisplayArea,
 					hw->help_dialog.display.volumeHandle,
 					&labelString, &fontList, &mod);
         
@@ -2177,18 +2268,19 @@ void _DtHelpUpdateDisplayArea(
         	labelString = XmStringCreateLocalized(
 					hw->help_dialog.display.helpVolume);
         
-	   if (NULL != labelString)
-	     {
-	       n = 0;
+            if (NULL != labelString)
+              {
+                n = 0;
                XtSetArg (args[n], XmNlabelString, labelString);	n++;
-	       if (mod == True)
-	         { XtSetArg (args[n], XmNfontList, fontList);	n++; }
+               if (mod == True)
+                 { XtSetArg (args[n], XmNfontList, fontList);	n++; }
                XtSetValues (hw->help_dialog.browser.volumeLabel, args, n);
                XmStringFree(labelString); 
-	     }
+               }
 
-	   if (True == mod)
-	       XmFontListFree(fontList);
+            HelpLogFontList("volumeLabel post-format", fontList);
+            if (True == mod)
+                XmFontListFree(fontList);
 
            /* Update our volumeFlag because we know that its we have just,
             * opened a new volume. It will get set to false when we need 

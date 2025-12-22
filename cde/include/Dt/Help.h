@@ -68,6 +68,12 @@ extern "C" {
 #ifndef DtNhelpVolume
 #define DtNhelpVolume              "helpVolume"
 #endif
+#ifndef DtNoverrideFontList
+#define DtNoverrideFontList        "overrideFontList"
+#endif
+#ifndef DtCOverrideFontList
+#define DtCOverrideFontList        "OverrideFontList"
+#endif
 #ifndef DtNhyperLinkCallback
 #define DtNhyperLinkCallback       "hyperLinkCallback"
 #endif

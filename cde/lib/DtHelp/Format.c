@@ -215,7 +215,17 @@ FormatChunksToXmString(
      * See the _DtHelpFormatxxx() routines and the ones that
      * create the title_chunk arrays in FormatSDL.c and FormatCCDF.c
      */
-    myIdx = __DtHelpDefaultFontIndexGet(pDAS);
+    /*
+     * Start with the default font resolved via the display-area resolver so
+     * any runtime overrides (dtstyle) are applied consistently.
+     */
+    _DtHelpCeCopyDefFontAttrList(&fontSpecs);
+    _DtHelpDAResolveFont((_DtCvPointer) pDAS,
+                         _DtHelpFontHintsLang(fontSpecs),
+                         _DtHelpFontHintsCharSet(fontSpecs),
+                         fontSpecs,
+                         &fontPtr);
+    myIdx = (long) fontPtr;
     _DtHelpCopyDefaultList(xrmName);
     for (i = 0; result == 0 && title_chunks[i] != DT_HELP_CE_END; i++)
       {
@@ -268,13 +278,10 @@ FormatChunksToXmString(
 	else if (chunkType & DT_HELP_CE_FONT_PTR)
 	  {
 	    /*
-	     * get the default font for the language and code set.
+	     * The chunk already carries a resolved font index; use it directly
+	     * so any exact fonts (e.g. dtstyle override) are preserved.
 	     */
-	    (void) __DtHelpFontCharSetQuarkGet(pDAS, (long)title_chunks[i],
-					&xrmName[_DT_HELP_FONT_CHAR_SET]);
-	    (void) __DtHelpFontLangQuarkGet(pDAS, (long)title_chunks[i],
-					&xrmName[_DT_HELP_FONT_LANG_TER]);
-	    (void) __DtHelpFontIndexGet(pDAS, xrmName, &myIdx);
+	    myIdx = (long) title_chunks[i];
 
 	    /*
 	     * move the i to point to the string.
@@ -290,15 +297,7 @@ FormatChunksToXmString(
 	    j        = (long) title_chunks[i];
 	    strChunk = _DtHelpDAGetSpcString(pDAS->spc_chars[j].spc_idx);
 	    fontPtr  = pDAS->spc_chars[j].font_ptr;
-
-	    /*
-	     * get the default font for the language and code set.
-	     */
-	    (void) __DtHelpFontCharSetQuarkGet(pDAS, (long)fontPtr,
-					&xrmName[_DT_HELP_FONT_CHAR_SET]);
-	    (void) __DtHelpFontLangQuarkGet(pDAS, (long)fontPtr,
-					&xrmName[_DT_HELP_FONT_LANG_TER]);
-	    (void) __DtHelpFontIndexGet(pDAS, xrmName, &myIdx);
+	    myIdx    = (long) fontPtr;
 	  }
 	else /* if (chunkType & _DT_HELP_CE_STRING) */
 	    strChunk = (char *) title_chunks[i];
@@ -791,9 +790,10 @@ _DtHelpFormatTopicTitle(
         result = _DtHelpCeGetCcdfTitleChunks( volume_handle, location_id,
 				&myUiInfo, &titleChunks);
     _DtHelpProcessUnlock();
-    if (result != -1)
+    if (result != -1) {
         result = FormatChunksToXmString(pDAS, True, titleChunks,
 						ret_title, ret_list, ret_mod);
+    }
     _DtHelpCeUnlockVolume(lockInfo);
     return result;
 
@@ -885,9 +885,10 @@ _DtHelpFormatVolumeTitle(
 				&myUiInfo,
 				&titleChunks);
     _DtHelpProcessUnlock();
-    if (result != -1)
+    if (result != -1) {
         result = FormatChunksToXmString(pDAS, True, titleChunks,
 						ret_title, ret_list, ret_mod);
+    }
     _DtHelpCeUnlockVolume(lockInfo);
     return result;
 

@@ -259,6 +259,10 @@ typedef	struct _dtHelpDispAreaStruct {
 	_DtCvRenderType render_type; 	/* Render type performed on expose */
 	unsigned short media_resolution; 	/* used for scaling images */
 
+	/* Hover cursor for hyperlink targets. */
+	Cursor	link_cursor;
+	Boolean link_cursor_active;
+
 } DtHelpDispAreaStruct;
 
 #endif /* _DtHelpDisplayAreaP_h */

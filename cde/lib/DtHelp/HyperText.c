@@ -200,6 +200,7 @@ _DtHelpExecProcedure (
     Boolean	 childFlag = False;
     pid_t	 childPid;
     DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
+    EventMask restoreMask;
 
     /*
      * Turn on the wait cursor.
@@ -215,6 +216,12 @@ _DtHelpExecProcedure (
      */
     XGetWindowAttributes (XtDisplay(pDAS->dispWid), XtWindow (pDAS->dispWid),
 								&attr);
+    /*
+     * Use Xt's computed mask when restoring later, otherwise the direct
+     * XSelectInput() below can permanently drop masks required by event
+     * handlers (e.g. link-hover cursor changes).
+     */
+    restoreMask = XtBuildEventMask(pDAS->dispWid);
     XSelectInput (XtDisplay(pDAS->dispWid), XtWindow (pDAS->dispWid),
 								ExposureMask);
 
@@ -263,7 +270,7 @@ _DtHelpExecProcedure (
      * reset the input mask
      */
     XSelectInput (XtDisplay(pDAS->dispWid), XtWindow (pDAS->dispWid),
-						(attr.your_event_mask));
+						restoreMask ? restoreMask : (attr.your_event_mask));
     /*
      * turn off the wait cursor
      */
@@ -345,4 +352,3 @@ _DtHelpProcessHyperSelection (
 					NULL, NULL, NULL, NULL, NULL);
 
 }  /* End _DtHelpProcessHyperSelection */
-

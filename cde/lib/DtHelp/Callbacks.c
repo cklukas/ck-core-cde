@@ -52,6 +52,7 @@
 #include <limits.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
+#include <X11/cursorfont.h>
 #include <X11/Intrinsic.h>
 #include <Xm/Xm.h>
 #include <Xm/AtomMgr.h>
@@ -96,6 +97,13 @@ static	void	 ScrollTimerCB (
 static	void	 StartSelection (
 			Widget		widget,
 			XtPointer	client_data );
+static void      SetLinkCursor(
+                        Widget widget,
+                        DtHelpDispAreaStruct *pDAS,
+                        Boolean on);
+static void      UpdateLinkCursorFromPointer(
+                        Widget widget,
+                        DtHelpDispAreaStruct *pDAS);
 /********    End Private Function Declarations    ********/
 
 /********    Private Defines                 ********/
@@ -528,6 +536,7 @@ _DtHelpCleanAndDrawWholeCanvas(
 				pDAS->dispUseHeight,
 				False);
     DrawWholeCanvas (pDAS);
+    UpdateLinkCursorFromPointer(pDAS->dispWid, pDAS);
 
 }
 
@@ -664,6 +673,7 @@ _DtHelpExposeCB(
      * re-draw the information in the display area
      */
     DrawWholeCanvas (pDAS);
+    UpdateLinkCursorFromPointer(widget, pDAS);
 
 }  /* End _DtHelpExposeCB */
 
@@ -1092,6 +1102,13 @@ _DtHelpEndSelectionCB (
                 _DtHelpProcessHyperSelection (client_data,
 						pDAS->timerX, pDAS->timerY,
 						callback->event);
+	    /*
+	     * Navigation can redraw the display area before this callback
+	     * returns; ensure the hover cursor reflects the newly rendered
+	     * page even if the pointer doesn't move.
+	     */
+	    pDAS->select_state = _DtHelpNothingDoing;
+	    UpdateLinkCursorFromPointer(w, pDAS);
 	  }
 	else
 	    StartSelection (w, client_data);
@@ -1113,6 +1130,7 @@ _DtHelpEndSelectionCB (
       }
 
     pDAS->select_state = _DtHelpNothingDoing;
+    UpdateLinkCursorFromPointer(w, pDAS);
     return;
 
 }  /* End _DtHelpEndSelectionCB */
@@ -1206,6 +1224,120 @@ _DtHelpMouseMoveCB(
     _DtCanvasProcessSelection(pDAS->canvas, newX, newY, _DtCvSELECTION_UPDATE);
 
 } /* End _DtHelpMouseMoveCB */
+
+static void
+SetLinkCursor(
+        Widget widget,
+        DtHelpDispAreaStruct *pDAS,
+        Boolean on )
+{
+    if (!pDAS || !widget)
+        return;
+
+    if (!XtIsRealized(widget)) {
+        pDAS->link_cursor_active = False;
+        return;
+    }
+
+    Display *dpy = XtDisplay(widget);
+    Window win = XtWindow(widget);
+    if (!dpy || !win)
+        return;
+
+    if (on) {
+        if (pDAS->link_cursor == None)
+            pDAS->link_cursor = XCreateFontCursor(dpy, XC_hand2);
+        if (pDAS->link_cursor != None && !pDAS->link_cursor_active) {
+            XDefineCursor(dpy, win, pDAS->link_cursor);
+            pDAS->link_cursor_active = True;
+        }
+    } else {
+        if (pDAS->link_cursor_active) {
+            XUndefineCursor(dpy, win);
+            pDAS->link_cursor_active = False;
+        }
+    }
+}
+
+static void
+UpdateLinkCursorFromPointer(
+        Widget widget,
+        DtHelpDispAreaStruct *pDAS )
+{
+    if (!pDAS || !widget)
+        return;
+    if (!XtIsRealized(widget) || pDAS->canvas == NULL || pDAS->hyperCall == NULL)
+      {
+        SetLinkCursor(widget, pDAS, False);
+        return;
+      }
+    if (pDAS->select_state != _DtHelpNothingDoing)
+        return;
+
+    Display *dpy = XtDisplay(widget);
+    Window win = XtWindow(widget);
+    if (!dpy || !win)
+        return;
+
+    Window root = None;
+    Window child = None;
+    int rootX = 0, rootY = 0, winX = 0, winY = 0;
+    unsigned int mask = 0;
+    if (!XQueryPointer(dpy, win, &root, &child, &rootX, &rootY, &winX, &winY, &mask))
+      {
+        SetLinkCursor(widget, pDAS, False);
+        return;
+      }
+
+    _DtCvUnit x = winX + pDAS->virtualX - pDAS->decorThickness;
+    _DtCvUnit y = winY + pDAS->firstVisible - pDAS->decorThickness;
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+
+    _DtCvLinkInfo linkInfo;
+    if (_DtCanvasGetPosLink(pDAS->canvas, x, y, x, y, &linkInfo) == _DtCvSTATUS_OK)
+        SetLinkCursor(widget, pDAS, True);
+    else
+        SetLinkCursor(widget, pDAS, False);
+}
+
+/***************************************************************************
+ * Function:  _DtHelpLinkCursorCB
+ *
+ * Updates the mouse cursor when hovering hyperlink regions.
+ *
+ **************************************************************************/
+void
+_DtHelpLinkCursorCB(
+        Widget     widget,
+        XtPointer  client_data,
+        XEvent    *event )
+{
+    DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
+    if (!pDAS || event == NULL)
+        return;
+
+    if (event->type != MotionNotify)
+        return;
+
+    if (pDAS->hyperCall == NULL || pDAS->canvas == NULL ||
+        pDAS->select_state != _DtHelpNothingDoing)
+      {
+        SetLinkCursor(widget, pDAS, False);
+        return;
+      }
+
+    _DtCvUnit x = event->xmotion.x + pDAS->virtualX - pDAS->decorThickness;
+    _DtCvUnit y = event->xmotion.y + pDAS->firstVisible - pDAS->decorThickness;
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+
+    _DtCvLinkInfo linkInfo;
+    if (_DtCanvasGetPosLink(pDAS->canvas, x, y, x, y, &linkInfo) == _DtCvSTATUS_OK)
+        SetLinkCursor(widget, pDAS, True);
+    else
+        SetLinkCursor(widget, pDAS, False);
+}
 
 /*****************************************************************************
  * Function: StartSelection
@@ -1367,6 +1499,9 @@ _DtHelpEnterLeaveCB(
                 (event->type != EnterNotify && event->type != LeaveNotify))
         return;
 
+    if (event->type == LeaveNotify)
+        SetLinkCursor(widget, pDAS, False);
+
     /*
      * get the old flag
      */
@@ -1375,7 +1510,7 @@ _DtHelpEnterLeaveCB(
     /*
      * get the new flag
      */
-    if (event->type == FocusIn)
+    if (event->type == EnterNotify)
 	newFlag = True;
 
     if (oldFlag != newFlag)

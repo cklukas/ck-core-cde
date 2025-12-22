@@ -50,7 +50,14 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <errno.h>
+#include <ctype.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
+#include <stdarg.h>
 #include <X11/Xlib.h>
+#include <X11/Xresource.h>
 
 #include <X11/Xos.h>
 #ifdef X_NOT_STDC_ENV
@@ -786,6 +793,306 @@ MyDrawString (
       }
 }
 
+/* -------- dtstyle Help font override (XLFD synthesis) -------- */
+static int
+DtHelpOverrideParseIntOrZero(const char *s)
+{
+    if (!s || !*s || *s == '*')
+        return 0;
+    return atoi(s);
+}
+
+static int
+DtHelpOverrideComputeScreenDpi(Display *dpy)
+{
+    if (!dpy)
+        return 0;
+    int screen = DefaultScreen(dpy);
+    int wpx = DisplayWidth(dpy, screen);
+    int hpx = DisplayHeight(dpy, screen);
+    int wmm = DisplayWidthMM(dpy, screen);
+    int hmm = DisplayHeightMM(dpy, screen);
+    if (wmm <= 0 || hmm <= 0)
+        return 0;
+    double dpix = (double)wpx * 25.4 / (double)wmm;
+    double dpiy = (double)hpx * 25.4 / (double)hmm;
+    int dpi = (int)lrint((dpix + dpiy) / 2.0);
+    return (dpi > 0) ? dpi : 0;
+}
+
+static int
+DtHelpOverrideXrmGetBoolean(XrmDatabase db, const char *name, const char *clazz, int defaultValue)
+{
+    if (!db || !name || !clazz)
+        return defaultValue;
+    char *type = NULL;
+    XrmValue value;
+    if (!XrmGetResource(db, name, clazz, &type, &value) || !value.addr)
+        return defaultValue;
+    const char *s = (const char *)value.addr;
+    while (*s && isspace((unsigned char)*s))
+        s++;
+    if (*s == '\0')
+        return defaultValue;
+    if (strcasecmp(s, "true") == 0 || strcmp(s, "1") == 0 || strcasecmp(s, "yes") == 0)
+        return True;
+    if (strcasecmp(s, "false") == 0 || strcmp(s, "0") == 0 || strcasecmp(s, "no") == 0)
+        return False;
+    return defaultValue;
+}
+
+static char *
+DtHelpOverrideXrmGetStringCopy(XrmDatabase db, const char *name, const char *clazz)
+{
+    if (!db || !name || !clazz)
+        return NULL;
+    char *type = NULL;
+    XrmValue value;
+    if (!XrmGetResource(db, name, clazz, &type, &value) || !value.addr)
+        return NULL;
+    const char *s = (const char *)value.addr;
+    if (!s || !*s)
+        return NULL;
+    return strdup(s);
+}
+
+static int
+DtHelpOverrideSplitCharset(const char *cs, char **outReg, char **outEnc)
+{
+    *outReg = NULL;
+    *outEnc = NULL;
+    if (!cs || !*cs)
+        return -1;
+    if (strncasecmp(cs, "iso8859-", 8) == 0) {
+        *outReg = strdup("iso8859");
+        *outEnc = strdup(cs + 8);
+        return (*outReg && *outEnc) ? 0 : -1;
+    }
+    if (strncasecmp(cs, "ISO-8859-", 9) == 0) {
+        *outReg = strdup("iso8859");
+        *outEnc = strdup(cs + 9);
+        return (*outReg && *outEnc) ? 0 : -1;
+    }
+    const char *dash = strrchr(cs, '-');
+    if (!dash || dash == cs || !dash[1])
+        return -1;
+    size_t regLen = (size_t)(dash - cs);
+    *outReg = (char *)malloc(regLen + 1);
+    if (*outReg) {
+        memcpy(*outReg, cs, regLen);
+        (*outReg)[regLen] = '\0';
+    }
+    *outEnc = strdup(dash + 1);
+    if (!*outReg || !*outEnc) {
+        free(*outReg);
+        free(*outEnc);
+        *outReg = NULL;
+        *outEnc = NULL;
+        return -1;
+    }
+    return 0;
+}
+
+static int
+DtHelpOverrideParseXLFDFields(char *xlfd, char **fields, int fieldCount)
+{
+    if (!xlfd || !fields || fieldCount <= 0 || xlfd[0] != '-')
+        return -1;
+    int idx = 0;
+    char *p = xlfd + 1;
+    fields[idx++] = p;
+    while (*p && idx < fieldCount) {
+        if (*p == '-') {
+            *p = '\0';
+            fields[idx++] = p + 1;
+        }
+        p++;
+    }
+    return (idx == fieldCount) ? 0 : -1;
+}
+
+static char *
+DtHelpOverrideBuildXLFDFromFields(const char **fields, int fieldCount)
+{
+    size_t len = 1;
+    for (int i = 0; i < fieldCount; i++)
+        len += (fields[i] ? strlen(fields[i]) : 0) + 1;
+    char *out = (char *)malloc(len + 1);
+    if (!out)
+        return NULL;
+    char *w = out;
+    *w++ = '-';
+    for (int i = 0; i < fieldCount; i++) {
+        const char *f = fields[i] ? fields[i] : "";
+        size_t fl = strlen(f);
+        memcpy(w, f, fl);
+        w += fl;
+        if (i != fieldCount - 1)
+            *w++ = '-';
+    }
+    *w = '\0';
+    return out;
+}
+
+static int
+DtHelpOverrideIsWildcardOrZero(const char *s)
+{
+    if (!s || !*s)
+        return 1;
+    return (*s == '*' || (s[0] == '0' && s[1] == '\0')) ? 1 : 0;
+}
+
+static int
+DtHelpOverrideScoreScalability(const char *xlfd)
+{
+    if (!xlfd || xlfd[0] != '-')
+        return 999;
+
+    char *tmp = strdup(xlfd);
+    if (!tmp)
+        return 999;
+
+    char *f[14];
+    int score = 999;
+    if (DtHelpOverrideParseXLFDFields(tmp, f, 14) == 0) {
+        score = 0;
+        /* prefer scalable-ish entries: pixel/point/res wildcard/0 */
+        score += DtHelpOverrideIsWildcardOrZero(f[6]) ? 0 : 5;
+        score += DtHelpOverrideIsWildcardOrZero(f[7]) ? 0 : 5;
+        score += DtHelpOverrideIsWildcardOrZero(f[8]) ? 0 : 2;
+        score += DtHelpOverrideIsWildcardOrZero(f[9]) ? 0 : 2;
+    }
+    free(tmp);
+    return score;
+}
+
+static char *
+DtHelpOverrideFindVariantBase(
+        Display *dpy,
+        const char *foundry,
+        const char *family,
+        const char *registry,
+        const char *encoding,
+        const char *wantWeight,
+        const char *wantSlant,
+        const char *wantSpacing)
+{
+    if (!dpy || !family || !*family)
+        return NULL;
+
+    /* Simple process-wide cache: key -> strdup(xlfd) */
+    typedef struct {
+        char *key;
+        char *xlfd;
+    } CacheEntry;
+    static CacheEntry cache[64];
+    static size_t cacheCount = 0;
+
+    char key[512];
+    snprintf(key, sizeof(key), "%s|%s|%s|%s|%s|%s|%s",
+             foundry ? foundry : "*",
+             family,
+             wantWeight ? wantWeight : "*",
+             wantSlant ? wantSlant : "*",
+             wantSpacing ? wantSpacing : "*",
+             registry ? registry : "*",
+             encoding ? encoding : "*");
+
+    for (size_t i = 0; i < cacheCount; i++) {
+        if (cache[i].key && strcmp(cache[i].key, key) == 0)
+            return cache[i].xlfd ? strdup(cache[i].xlfd) : NULL;
+    }
+
+    char pattern[512];
+    snprintf(pattern, sizeof(pattern),
+             "-%s-%s-%s-%s-*-*-*-*-*-*-%s-*-%s-%s",
+             (foundry && *foundry) ? foundry : "*",
+             family,
+             (wantWeight && *wantWeight) ? wantWeight : "*",
+             (wantSlant && *wantSlant) ? wantSlant : "*",
+             (wantSpacing && *wantSpacing) ? wantSpacing : "*",
+             (registry && *registry) ? registry : "*",
+             (encoding && *encoding) ? encoding : "*");
+
+    int count = 0;
+    char **names = XListFonts(dpy, pattern, 2048, &count);
+    char *best = NULL;
+    int bestScore = 999;
+    if (names && count > 0) {
+        for (int i = 0; i < count; i++) {
+            int score = DtHelpOverrideScoreScalability(names[i]);
+            if (score < bestScore) {
+                bestScore = score;
+                free(best);
+                best = strdup(names[i]);
+                if (bestScore == 0)
+                    break;
+            }
+        }
+    }
+    if (names)
+        XFreeFontNames(names);
+
+    if (cacheCount < (sizeof(cache) / sizeof(cache[0]))) {
+        cache[cacheCount].key = strdup(key);
+        cache[cacheCount].xlfd = best ? strdup(best) : NULL;
+        cacheCount++;
+    }
+
+    return best;
+}
+
+static char *
+DtHelpOverrideFindMonoFallbackBase(
+        Display *dpy,
+        const char *registry,
+        const char *encoding)
+{
+    static const char *families[] = {
+        "dejavu sans mono",
+        "liberation mono",
+        "nimbus mono l",
+        "courier",
+        "fixed",
+        NULL
+    };
+
+    for (int i = 0; families[i]; i++) {
+        char *xlfd = DtHelpOverrideFindVariantBase(dpy,
+                                                   "*",
+                                                   families[i],
+                                                   registry, encoding,
+                                                   "*", "*", "m");
+        if (xlfd)
+            return xlfd;
+    }
+    return NULL;
+}
+
+static int
+DtHelpOverrideDebugEnabled(void)
+{
+    static int cached = -1;
+    if (cached >= 0)
+        return cached;
+    const char *env = getenv("DTHELP_FONT_DEBUG");
+    cached = (env && *env && strcmp(env, "0") != 0) ? 1 : 0;
+    return cached;
+}
+
+static void
+DtHelpOverrideDebugLog(const char *fmt, ...)
+{
+    if (!DtHelpOverrideDebugEnabled())
+        return;
+    va_list ap;
+    va_start(ap, fmt);
+    fprintf(stderr, "dthelp: ");
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+    va_end(ap);
+}
+
 /*****************************************************************************
  * Function:	void ResolveFont ();
  *
@@ -848,6 +1155,274 @@ ResolveFont (
 
     if (charset != NULL)
         xrmList[_DT_HELP_FONT_CHAR_SET] = XrmStringToQuark(charset);
+
+    /*
+     * If the document didn't specify an explicit XLFD, prefer the user-selected
+     * Help base XLFD (set by dtstyle) and derive the concrete XLFD for this
+     * chunk based on the hint's pt size and style.
+     */
+    if (NULL == font_attr.xlfd &&
+        NULL == font_attr.xlfdb &&
+        NULL == font_attr.xlfdi &&
+        NULL == font_attr.xlfdib)
+      {
+        Display *dpy = pDAS ? XtDisplay(pDAS->dispWid) : NULL;
+        XrmDatabase db = dpy ? XrmGetDatabase(dpy) : NULL;
+        int enabled = db ? DtHelpOverrideXrmGetBoolean(db,
+                                         "DtHelpDialog.overrideFontList",
+                                         "DtHelpDialog.OverrideFontList",
+                                         False) : False;
+        if (!enabled && db)
+            enabled = DtHelpOverrideXrmGetBoolean(db,
+                                    "DtHelpQuickDialog.overrideFontList",
+                                    "DtHelpQuickDialog.OverrideFontList",
+                                    False);
+
+        if (enabled && db) {
+            char *base = DtHelpOverrideXrmGetStringCopy(db,
+                                          "DtHelpDialog.DisplayArea.userFont",
+                                          "DtHelpDialog.DisplayArea.UserFont");
+            if (!base)
+                base = DtHelpOverrideXrmGetStringCopy(db,
+                                        "DtHelpDialog.userFont",
+                                        "DtHelpDialog.UserFont");
+
+            if (base) {
+                char *variantBase = NULL;
+                char *variantFields[14];
+                char *monoBase = NULL;
+                char *monoFields[14];
+
+                char *fields[14];
+                if (DtHelpOverrideParseXLFDFields(base, fields, 14) == 0) {
+                    const int wantBold = (font_attr.weight == _DtHelpFontWeightBold);
+                    const int wantItalic = (font_attr.slant != _DtHelpFontSlantRoman);
+                    const int wantMono = (font_attr.spacing != _DtHelpFontSpacingProp);
+
+                    /*
+                     * The document's font hints use point sizes relative to
+                     * the default body size (10pt). When a user selects a
+                     * larger Help font in dtstyle, scale all hinted sizes by
+                     * (basePt / 10) so headings keep their relative sizes
+                     * but the whole document becomes readable.
+                     */
+                    int hintedPt = font_attr.pointsz;
+                    if (hintedPt <= 0)
+                        hintedPt = 10;
+                    int baseDeciPt = DtHelpOverrideParseIntOrZero(fields[7]);
+                    int basePt = baseDeciPt / 10;
+                    if (basePt <= 0)
+                        basePt = 10;
+
+                    double scale = (double)basePt / 10.0;
+                    int pt = (int)lrint((double)hintedPt * scale);
+                    if (pt <= 0)
+                        pt = 1;
+                    int deciPt = pt * 10;
+
+                    char pointBuf[16];
+                    snprintf(pointBuf, sizeof(pointBuf), "%d", deciPt);
+
+                    /*
+                     * Try a few variants, because servers differ in how they
+                     * match scalable fonts (some require pixel/res filled in,
+                     * some match best with wildcards).
+                     */
+                    int dpi = DtHelpOverrideComputeScreenDpi(dpy);
+                    if (dpi <= 0)
+                        dpi = 100;
+                    int px = (int)lrint(((double)pt * (double)dpi) / 72.0);
+                    if (px <= 0)
+                        px = 1;
+
+                    char pixelBuf[16];
+                    char resBuf[16];
+                    snprintf(pixelBuf, sizeof(pixelBuf), "%d", px);
+                    snprintf(resBuf, sizeof(resBuf), "%d", dpi);
+
+                    /*
+                     * Base candidates:
+                     * - the dtstyle-selected base XLFD
+                     * - (optional) a family-variant XLFD discovered via XListFonts
+                     *   for bold/italic/mono requests
+                     * - (optional) a fallback monospaced scalable font when the
+                     *   base family cannot satisfy monospace.
+                     */
+                    const char *baseFoundry = fields[0];
+                    const char *baseFamily = fields[1];
+                    const char *baseRegistry = fields[12];
+                    const char *baseEncoding = fields[13];
+
+                    if ((wantBold || wantItalic || wantMono) && baseFamily && *baseFamily) {
+                        static const char *boldWeights[] = { "bold", "demibold", "semibold", "black", "heavy", NULL };
+                        static const char *italicSlants[] = { "i", "o", NULL };
+
+                        const char *weightCand = wantBold ? boldWeights[0] : fields[2];
+                        const char *slantCand = wantItalic ? italicSlants[0] : fields[3];
+                        const char *spacingCand = wantMono ? "m" : fields[10];
+
+                        /* Try to find a better matching base face within the same family. */
+                        if (wantBold || wantItalic || wantMono) {
+                            for (int wi = 0; !variantBase && wi == 0; wi++) {
+                                /* We only start with the strictest request here;
+                                 * relaxed searches happen later in styleTries. */
+                                variantBase = DtHelpOverrideFindVariantBase(dpy,
+                                                                           baseFoundry,
+                                                                           baseFamily,
+                                                                           baseRegistry,
+                                                                           baseEncoding,
+                                                                           weightCand,
+                                                                           slantCand,
+                                                                           spacingCand);
+                            }
+                        }
+                        if (variantBase && DtHelpOverrideParseXLFDFields(variantBase, variantFields, 14) != 0) {
+                            free(variantBase);
+                            variantBase = NULL;
+                        }
+
+                        if (wantMono && !variantBase) {
+                            monoBase = DtHelpOverrideFindMonoFallbackBase(dpy, baseRegistry, baseEncoding);
+                            if (monoBase && DtHelpOverrideParseXLFDFields(monoBase, monoFields, 14) != 0) {
+                                free(monoBase);
+                                monoBase = NULL;
+                            }
+                        }
+                    }
+
+                    const struct {
+                        const char *pixel;
+                        const char *resx;
+                        const char *resy;
+                        const char *label;
+                    } tries[] = {
+                        { pixelBuf, resBuf, resBuf, "exact px/res" },
+                        { "*",      "*",    "*",    "wildcard px/res" },
+                        { NULL,     NULL,   NULL,   "base px/res" },
+                    };
+
+                    int loaded = 0;
+                    const struct {
+                        char **fields;
+                        const char *label;
+                    } baseCandidates[] = {
+                        { fields,        "dtstyle base" },
+                        { variantBase ? variantFields : NULL, "family variant" },
+                        { monoBase ? monoFields : NULL, "mono fallback" },
+                    };
+
+                    for (size_t b = 0; b < sizeof(baseCandidates)/sizeof(baseCandidates[0]) && !loaded; b++) {
+                        if (!baseCandidates[b].fields)
+                            continue;
+
+                        const char *baseW = baseCandidates[b].fields[2];
+                        const char *baseS = baseCandidates[b].fields[3];
+                        const char *baseSp = baseCandidates[b].fields[10];
+
+                        const char *requestedWeight = wantBold ? "bold" : baseW;
+                        const char *requestedSlant = wantItalic ? "i" : baseS;
+                        const char *requestedSpacing = wantMono ? "m" : baseSp;
+
+                        const struct {
+                            const char *weight;
+                            const char *slant;
+                            const char *spacing;
+                            const char *label;
+                        } styleTries[] = {
+                            { requestedWeight, requestedSlant, requestedSpacing, "requested" },
+                            { requestedWeight, requestedSlant, baseSp,          "relax spacing" },
+                            { baseW,           requestedSlant, baseSp,          "relax weight+spacing" },
+                            { baseW,           baseS,          baseSp,          "relax slant+weight+spacing" },
+                        };
+
+                        for (size_t s = 0; s < sizeof(styleTries)/sizeof(styleTries[0]) && !loaded; s++) {
+                            const char *candidateFields[14];
+                            for (int i = 0; i < 14; i++)
+                                candidateFields[i] = baseCandidates[b].fields[i];
+                            candidateFields[2] = styleTries[s].weight;
+                            candidateFields[3] = styleTries[s].slant;
+                            candidateFields[7] = pointBuf;
+                            candidateFields[10] = styleTries[s].spacing;
+
+                            for (size_t t = 0; t < sizeof(tries)/sizeof(tries[0]) && !loaded; t++) {
+                                const char *tryFields[14];
+                                for (int i = 0; i < 14; i++)
+                                    tryFields[i] = candidateFields[i];
+                                if (tries[t].pixel) {
+                                    tryFields[6] = tries[t].pixel;
+                                    tryFields[8] = tries[t].resx;
+                                    tryFields[9] = tries[t].resy;
+                                }
+
+                                /* Build both a fontset (trailing ':') and a plain font. */
+                                char *overrideXLFDNoSet = DtHelpOverrideBuildXLFDFromFields(tryFields, 14);
+                                char *overrideXLFDSet = NULL;
+                                if (overrideXLFDNoSet) {
+                                    size_t baseLen = strlen(overrideXLFDNoSet);
+                                    overrideXLFDSet = (char *)malloc(baseLen + 2);
+                                    if (overrideXLFDSet) {
+                                        memcpy(overrideXLFDSet, overrideXLFDNoSet, baseLen);
+                                        overrideXLFDSet[baseLen] = ':';
+                                        overrideXLFDSet[baseLen + 1] = '\0';
+                                    }
+                                }
+
+                                if (overrideXLFDSet) {
+                                    DtHelpOverrideDebugLog(
+                                        "ResolveFont override: hintPt=%d basePt=%d scale=%.2f -> pt=%d (%s, %s, %s, fontset) xlfd=%s",
+                                        hintedPt, basePt, scale, pt,
+                                        baseCandidates[b].label, styleTries[s].label, tries[t].label,
+                                        overrideXLFDSet);
+                                    result = _DtHelpGetExactFontIndex(pDAS,
+                                                                      (lang ? lang : "C"),
+                                                                      (charset ? charset : font_attr.char_set),
+                                                                      overrideXLFDSet,
+                                                                      ret_idx);
+                                    if (result == 0) {
+                                        DtHelpOverrideDebugLog("ResolveFont override: loaded exact font index=%ld", *ret_idx);
+                                        loaded = 1;
+                                    }
+                                }
+                                if (!loaded && overrideXLFDNoSet) {
+                                    DtHelpOverrideDebugLog(
+                                        "ResolveFont override: hintPt=%d basePt=%d scale=%.2f -> pt=%d (%s, %s, %s, font) xlfd=%s",
+                                        hintedPt, basePt, scale, pt,
+                                        baseCandidates[b].label, styleTries[s].label, tries[t].label,
+                                        overrideXLFDNoSet);
+                                    result = _DtHelpGetExactFontIndex(pDAS,
+                                                                      (lang ? lang : "C"),
+                                                                      (charset ? charset : font_attr.char_set),
+                                                                      overrideXLFDNoSet,
+                                                                      ret_idx);
+                                    if (result == 0) {
+                                        DtHelpOverrideDebugLog("ResolveFont override: loaded exact font index=%ld", *ret_idx);
+                                        loaded = 1;
+                                    }
+                                }
+
+                                free(overrideXLFDSet);
+                                free(overrideXLFDNoSet);
+                            }
+                        }
+                    }
+
+                    if (loaded) {
+                        free(variantBase);
+                        variantBase = NULL;
+                        free(monoBase);
+                        monoBase = NULL;
+                        free(base);
+                        return 0;
+                    }
+
+                    DtHelpOverrideDebugLog("ResolveFont override: all attempts failed, falling back to resource lookup");
+                }
+                free(variantBase);
+                free(monoBase);
+                free(base);
+            }
+        }
+      }
 
     if (NULL != xlfdSpec)
 	result = _DtHelpGetExactFontIndex(pDAS,lang,charset,xlfdSpec,ret_idx);

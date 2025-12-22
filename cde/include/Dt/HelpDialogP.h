@@ -160,6 +160,7 @@ typedef struct _DtHelpDisplayWidgetStuff
         XtCallbackList	hyperLinkCallback;	/* Hypertext Callback resource */
         _DtHelpVolumeHdl volumeHandle;        	/* handle of current volume */
         unsigned char	helpType;		/* Current displayed file type resource */
+        Boolean         overrideFontList;        /* dtstyle override flag */
         char *          topicTitleStr;		/* title of topic */
 	int             count;                  /* Nonexistent topic title count */        
 	XmString        topicTitleLbl;		/* XmString title of topic */
@@ -389,4 +390,3 @@ extern Boolean _DtHelpDialogWidgetNoGeoRequest(
 
 #endif /* _XmTemplateBP_h */
 /* DON'T ADD ANYTHING AFTER THIS #endif */
-
