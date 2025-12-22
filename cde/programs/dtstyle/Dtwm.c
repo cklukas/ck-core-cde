@@ -43,6 +43,8 @@
 
 #include <X11/Xlib.h>
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
 #include <Xm/MwmUtil.h>
 
 #include <Xm/XmP.h>
@@ -58,6 +60,7 @@
 
 #include <Dt/DialogBox.h>
 #include <Dt/Icon.h>
+#include <Dt/GetDispRes.h>
 #include <Dt/TitleBox.h>
 
 #include <Dt/Message.h>
@@ -116,6 +119,8 @@ static void getDtwmValues ( ) ;
 static void _DtWmParseToLower (unsigned char  *string) ;
 static void okWarnCB ( Widget, XtPointer, XtPointer ) ;
 static void cancelWarnCB ( Widget, XtPointer, XtPointer ) ;
+static void ReadIconImageMaximum(XrmDatabase db, const char *name,
+                                 const char *class, int *width, int *height);
 
 /*+++++++++++++++++++++++++++++++++++++++*/
 /* Internal Variables                    */
@@ -136,19 +141,23 @@ typedef struct {
     Widget      explicitTG;
     Widget      iconBoxTG;
     Widget	desktopTG;
+    Widget      increaseIconSizeTG;
     Boolean     systemDefaultFlag;
     int         origKeyboardFocusPolicy;
     int         origFocusAutoRaise;
     int         origSecStack;
     int         origMoveOpaque;
     int         origUseIconBox;
+    Boolean     origIncreaseIconSize;
+    int         iconImageBaseWidth;
+    int         iconImageBaseHeight;
     Widget      warnDialog;
 } Dtwm, *DtwmPtr;
 
 static Dtwm dtwm;
 static saveRestore save = {FALSE, 0, };
 
-static char dtwmRes[150]="";
+static char dtwmRes[256]="";
 
 static char *icon[] = {
     "iconTL",
@@ -198,6 +207,40 @@ popup_dtwmBB(
 /*+++++++++++++++++++++++++++++++++++++++*/
 /* getDtwmValues                        */
 /*+++++++++++++++++++++++++++++++++++++++*/
+
+static void
+ReadIconImageMaximum(XrmDatabase db, const char *name,
+                     const char *class, int *width, int *height)
+{
+    char *type_return;
+    XrmValue value_return;
+
+    if (!db || !name || !class || !width || !height)
+        return;
+
+    if (!XrmGetResource(db, name, class, &type_return, &value_return))
+        return;
+
+    if (!value_return.addr)
+        return;
+
+    if (value_return.size >= (int)(sizeof(int) * 2))
+    {
+        int *ints = (int *) value_return.addr;
+        *width = ints[0];
+        *height = ints[1];
+        return;
+    }
+
+    char buffer[64];
+    int len = (int) value_return.size;
+    if (len >= (int) sizeof(buffer))
+        len = sizeof(buffer) - 1;
+    memcpy(buffer, value_return.addr, len);
+    buffer[len] = '\0';
+
+    sscanf(buffer, "%dx%d", width, height);
+}
 
 static void 
 getDtwmValues(void)
@@ -358,6 +401,54 @@ getDtwmValues(void)
         dtwm.origMoveOpaque =  False; 
         XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, 
                 dtwm.origMoveOpaque, True);
+    }
+
+    /* Determine icon image maximum and double state */
+    {
+        int iconWidth;
+        int iconHeight;
+        int resolution = _DtGetDisplayResolution(style.display, style.screenNum);
+        int defaultSize =
+            ((resolution == LOW_RES_DISPLAY) || (resolution == VGA_RES_DISPLAY)) ? 32 : 48;
+
+        iconWidth = defaultSize;
+        iconHeight = defaultSize;
+        ReadIconImageMaximum(db, "dtwm.iconImageMaximum",
+                             "Dtwm.IconImageMaximum",
+                             &iconWidth, &iconHeight);
+
+        if (iconWidth <= 0)
+            iconWidth = defaultSize;
+        if (iconHeight <= 0)
+            iconHeight = defaultSize;
+
+        dtwm.iconImageBaseWidth = iconWidth;
+        dtwm.iconImageBaseHeight = iconHeight;
+
+        dtwm.origIncreaseIconSize = False;
+        if (status = XrmGetResource(db, "dtwm.doubleIconSize",
+                                     "Dtwm.DoubleIconSize",
+                                     &str_type_return, &value_return))
+        {
+            int size = (int)value_return.size;
+            string = (char *)XtMalloc(size + 1);
+            memcpy(string, value_return.addr, size);
+            string[size] = '\0';
+            _DtWmParseToLower((unsigned char *)string);
+            dtwm.origIncreaseIconSize = (strcmp(string, "true") == 0);
+            XtFree(string);
+        }
+
+        if (dtwm.origIncreaseIconSize)
+        {
+            if (dtwm.iconImageBaseWidth > 1)
+                dtwm.iconImageBaseWidth = (dtwm.iconImageBaseWidth + 1) / 2;
+            if (dtwm.iconImageBaseHeight > 1)
+                dtwm.iconImageBaseHeight = (dtwm.iconImageBaseHeight + 1) / 2;
+        }
+
+        XmToggleButtonGadgetSetState(dtwm.increaseIconSizeTG,
+                                     dtwm.origIncreaseIconSize, True);
     }
 
 }
@@ -541,6 +632,15 @@ build_dtwmDlg(
         XmCreateToggleButtonGadget(dtwm.useIconBoxRC, "desktopTG", args, n);
     XmStringFree(string);
 
+    n = 0;
+    string = CMPSTR((char *)GETMESSAGE(18, 17, "Increase Icon Size"));
+    XtSetArg(args[n], XmNnavigationType, XmTAB_GROUP); n++;
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    dtwm.increaseIconSizeTG =
+        XmCreateToggleButtonGadget(iconPlacementForm, "increaseIconSizeTG", args, n);
+    XmStringFree(string);
+
     XtAddCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, NULL);
     XtAddCallback(style.dtwmDialog, XmNmapCallback, _DtmapCB_dtwmDlg, shell);
     XtAddCallback(style.dtwmDialog, XmNcallback, ButtonCB, NULL);
@@ -564,6 +664,7 @@ build_dtwmDlg(
     XtManageChild(dtwm.useIconBoxRC);
     XtManageChild(dtwm.iconBoxTG);
     XtManageChild(dtwm.desktopTG);
+    XtManageChild(dtwm.increaseIconSizeTG);
 
     return(style.dtwmDialog);
 }
@@ -692,13 +793,24 @@ formLayoutCB(
     n=0;
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_FORM);       n++;
     XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing);    n++;
-    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);       n++;
-    XtSetArg(args[n], XmNbottomOffset,       0);    n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);       n++;
     XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);       n++;
     XtSetArg(args[n], XmNleftOffset,         0);  n++;
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);       n++;
     XtSetArg(args[n], XmNrightOffset,        0);  n++;
     XtSetValues (dtwm.useIconBoxRC, args, n);
+
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
+    XtSetArg(args[n], XmNtopWidget,          dtwm.useIconBoxRC);     n++;
+    XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNleftOffset,         0);  n++;
+    XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNrightOffset,        0);  n++;
+    XtSetValues (dtwm.increaseIconSizeTG, args, n);
 
     XtRemoveCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, NULL);
 }
@@ -757,6 +869,8 @@ systemDefaultCB(
 
     /* PlaceOnDesktop:  True */
     XmToggleButtonGadgetSetState (dtwm.desktopTG, True, True); 
+
+    XmToggleButtonGadgetSetState(dtwm.increaseIconSizeTG, False, True);
 
 }
 
@@ -833,6 +947,26 @@ ButtonCB(
 		  ? "True" : "False");
 	  changeFlag = 1;
 	}
+
+      state = XmToggleButtonGadgetGetState (dtwm.increaseIconSizeTG);
+      if (state != dtwm.origIncreaseIconSize)
+	{
+	  int baseWidth = (dtwm.iconImageBaseWidth > 0) ? dtwm.iconImageBaseWidth : 32;
+	  int baseHeight = (dtwm.iconImageBaseHeight > 0) ? dtwm.iconImageBaseHeight : 32;
+	  int width = state ? baseWidth * 2 : baseWidth;
+	  int height = state ? baseHeight * 2 : baseHeight;
+
+	  if (width <= 0)
+	    width = baseWidth;
+	  if (height <= 0)
+	    height = baseHeight;
+
+	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*iconImageMaximum: %dx%d\n",
+		  width, height);
+	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*doubleIconSize: %s\n",
+		  state ? "True" : "False");
+	  changeFlag = 1;
+	}
       
       if (changeFlag)
 	{
@@ -886,6 +1020,9 @@ ButtonCB(
       
       XmToggleButtonGadgetSetState (dtwm.desktopTG, 
 				    dtwm.origUseIconBox ? False : True , True); 
+
+      XmToggleButtonGadgetSetState (dtwm.increaseIconSizeTG,
+				    dtwm.origIncreaseIconSize ? True : False , True); 
       
       break;
     
@@ -995,7 +1132,6 @@ saveDtwm(
     }
 }
 
-
 /*************************************<->*************************************
  *
  *  _DtWmParseToLower (string)
@@ -1113,9 +1249,3 @@ okWarnCB(
   /* force the workspace manager to restart */
   _DtWmRestartNoConfirm(style.display, style.root);
 }
-
-
-
-
-
-

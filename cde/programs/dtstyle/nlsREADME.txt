@@ -77,6 +77,15 @@ App-defaults file:
 	from the list specified in the Dtstyle app-defaults file and the
 	font strings must be identical.
 
+	Style Manager now parses these strings to show friendly family/weight
+labels and to populate the font dialog’s size control. The dialog now
+exposes a font family selector that enumerates available XLFD entries,
+so maintaining full fourteen-field definitions lets the selector
+describe each weight/style accurately and allows the attached size
+control/scale to honor scalable point sizes. When a new family/size
+combination is applied, the dialog writes the derived XLFD into
+`systemFont`/`userFont` so the selection is remembered across sessions.
+
 
     Example:  localize fonts for Japanese using four font sizes.  
         (There are probably the actual fonts that will be used - its just
@@ -99,5 +108,3 @@ App-defaults file:
 	Dtstyle*UserFont2: -hp-gothic-medium-r-normal--18-180-75-75-c-80-hp-japanese15
 	Dtstyle*UserFont3: -hp-mincho-medium-r-normal--24-240-75-75-c-120-hp-japanese15
 	Dtstyle*UserFont4: -hp-mincho-medium-r-normal--32-320-75-75-c-160-hp-japanese15
-
-

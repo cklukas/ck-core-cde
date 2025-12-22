@@ -678,6 +678,8 @@ ToolkitErrorHandler(
         char *message )
 
 {
+    if (message)
+        _DtSimpleError(progName, DtError, NULL, message, NULL);
     _DtSimpleError (progName, DtError, NULL, 
         GETMESSAGE(2, 6, "An X Toolkit error occurred... Exiting.\n"));
     exit (1);

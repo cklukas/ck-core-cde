@@ -40,6 +40,11 @@
 
 #include <X11/Xlib.h>
 #include <errno.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
 #include <Xm/Xm.h>
 #include <Xm/Form.h>
@@ -51,8 +56,12 @@
 #include <Xm/PushBG.h>
 #include <Xm/RowColumn.h>
 #include <Xm/Scale.h>
+#include <Xm/DrawingA.h>
+#include <Xm/ToggleB.h>
 #include <Xm/ToggleBG.h>
 #include <Xm/VendorSEP.h>
+#include <X11/Xutil.h>
+#include <stdint.h>
 
 #include <Dt/DialogBox.h>
 #include <Dt/Message.h>
@@ -61,6 +70,13 @@
 #include <Dt/UserMsg.h>
 #include <Dt/Wsm.h>
 #include <Dt/Session.h>
+#include <Dt/DtP.h>
+
+#include <cde_config.h>
+#include <X11/cursorfont.h>
+#ifdef HAVE_XCURSOR
+#include <X11/Xcursor/Xcursor.h>
+#endif
 
 #include "Help.h"
 #include "Main.h"
@@ -71,6 +87,8 @@
 /*+++++++++++++++++++++++++++++++++++++++*/
 #include "Mouse.h"
 #include "Protocol.h"
+
+int _DtWmRestartNoConfirm (Display *display, Window root);
 
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -90,6 +108,29 @@
 #define LEFT_HANDED      1
 #define TRANSFER         0
 #define ADJUST           1
+
+
+#define CURSOR_PREVIEW_COUNT 6
+#define CURSOR_SIZE_CHOICE_COUNT 5
+#define CURSOR_THEME_PREVIEW_ICON_SIZE 16
+
+typedef struct {
+    const char *name;
+    unsigned int fontShape;
+    int labelMsg;
+    const char *labelDefault;
+} CursorPreviewInfo;
+
+static const CursorPreviewInfo cursorPreviewInfo[CURSOR_PREVIEW_COUNT] = {
+    { "left_ptr", XC_left_ptr, 26, "Pointer" },
+    { "hand2", XC_hand2, 27, "Hand" },
+    { "xterm", XC_xterm, 28, "Text" },
+    { "watch", XC_watch, 29, "Hourglass" },
+    { "question_arrow", XC_question_arrow, 30, "Help" },
+    { "X_cursor", XC_X_cursor, 31, "X Cursor" },
+};
+
+static const int cursorSizeChoices[CURSOR_SIZE_CHOICE_COUNT] = {16, 24, 32, 48, 64};
 
 
 #define LEFTMSG ((char *)GETMESSAGE(9, 1, "Left"))
@@ -116,6 +157,11 @@ be used to adjust text and list selections.\n\
 Transfer actions (drag) on text and lists will\n\
 require the use of Button 1."))
 #define MENUMSG ((char *)GETMESSAGE(9, 20, "Menu"))
+#define CURSOR_SIZE_MSG ((char *)GETMESSAGE(9, 21, "Cursor Size"))
+#define CURSOR_THEME_MSG ((char *)GETMESSAGE(9, 22, "Cursor Theme"))
+#define CURSOR_PREVIEW_MSG ((char *)GETMESSAGE(9, 23, "Preview"))
+#define CURSOR_PREVIEW_HINT_MSG ((char *)GETMESSAGE(9, 24, "Move pointer here to preview"))
+#define RESTART_WM_MSG ((char *)GETMESSAGE(9, 25, "Restart Window Manager now (recommended)"))
 
 #define B2	        "Dtms2B.bm"
 #define B2_REV	        "Dtms2BR.bm"
@@ -187,6 +233,23 @@ static void ButtonCB(
                         XtPointer client_data,
                         XtPointer call_data) ;
 
+static void cursorSizeChangedCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data) ;
+static void cursorThemeSelectCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data) ;
+static void cursorPreviewMapCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data) ;
+static void cursorPreviewExposeCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data) ;
+
 
 /*+++++++++++++++++++++++++++++++++++++++*/
 /* Internal Variables                    */
@@ -210,6 +273,22 @@ typedef struct {
     Widget  	accelScale;
     Widget  	threshScale;
     Widget  	dclickScale;
+    Widget      cursorSizeLabGad;
+    Widget      cursorSizeRC;
+    Widget      cursorSizeToggles[CURSOR_SIZE_CHOICE_COUNT];
+    int         cursorSizeChoiceCount;
+    int         cursorSizeChoiceValues[CURSOR_SIZE_CHOICE_COUNT];
+    Widget      cursorThemeLabGad;
+    Widget      cursorThemeOM;
+    Widget      cursorThemeMenu;
+    Widget      cursorPreviewFrame;
+    Widget      cursorPreviewForm;
+    Widget      cursorPreviewHint;
+    Widget      cursorPreviewGrid;
+    Widget      cursorPreviewCell[CURSOR_PREVIEW_COUNT];
+    Widget      cursorPreviewArea[CURSOR_PREVIEW_COUNT];
+    Widget      cursorPreviewLabel[CURSOR_PREVIEW_COUNT];
+    Widget      dtwmRestartTG;
     Pixmap      pixmap;
     Pixmap      b3; 
     Pixmap      b3_rev; 
@@ -236,6 +315,20 @@ typedef struct {
     Boolean     handed;
     Boolean     function;
     Boolean     origFunction;
+    Boolean     cursorChanged;
+    int         origCursorSize;
+    int         cursorSize;
+    char       *origCursorTheme;
+    char       *cursorTheme;
+    char      **cursorThemes;
+    Widget     *cursorThemeItems;
+    Pixmap      *cursorThemePreviewPixmaps;
+    int         cursorThemeCount;
+    int         maxCursorSize;
+    Cursor      cursorPreviewCursors[CURSOR_PREVIEW_COUNT];
+    Pixmap      cursorPreviewPixmaps[CURSOR_PREVIEW_COUNT];
+    int         cursorPreviewPixmapW[CURSOR_PREVIEW_COUNT];
+    int         cursorPreviewPixmapH[CURSOR_PREVIEW_COUNT];
 } Mouse;
 
 static Widget warnDialog;
@@ -243,6 +336,784 @@ static Widget midwarnDialog;
 
 static Mouse mouse;
 static saveRestore save = {FALSE, 0, };
+
+static void
+EnsureXcursorPath(void)
+{
+    static Boolean pathSet = False;
+    if (pathSet)
+	return;
+
+    char buf[4096];
+    size_t pos = 0;
+    const char *existing = getenv("XCURSOR_PATH");
+
+    if (existing && *existing)
+    {
+	strncpy(buf, existing, sizeof(buf) - 1);
+	buf[sizeof(buf) - 1] = '\0';
+	pos = strlen(buf);
+    }
+    else
+    {
+	buf[0] = '\0';
+	pos = 0;
+    }
+
+    const char *home = getenv("HOME");
+    char temp[PATH_MAX];
+    const char *candidates[3];
+    int candCount = 0;
+
+    if (home && *home)
+    {
+	snprintf(temp, sizeof(temp), "%s/.icons", home);
+	candidates[candCount++] = XtNewString(temp);
+	snprintf(temp, sizeof(temp), "%s/.local/share/icons", home);
+	candidates[candCount++] = XtNewString(temp);
+    }
+
+    candidates[candCount++] = "/usr/share/icons";
+
+    for (int i = 0; i < candCount; i++)
+    {
+	const char *dir = candidates[i];
+	if (!dir || !*dir)
+	    continue;
+
+	if (pos != 0 && buf[pos - 1] != ':')
+	{
+	    if (pos < sizeof(buf) - 1)
+		buf[pos++] = ':';
+	    buf[pos] = '\0';
+	}
+
+	size_t len = strlen(dir);
+	if (pos + len >= sizeof(buf))
+	    break;
+	memcpy(buf + pos, dir, len);
+	pos += len;
+	buf[pos] = '\0';
+    }
+
+    for (int i = 0; i < candCount; i++)
+    {
+	if (candidates[i] && candidates[i] != "/usr/share/icons")
+	    XtFree((char *)candidates[i]);
+    }
+
+    if (pos > 0)
+	setenv("XCURSOR_PATH", buf, 1);
+
+    pathSet = True;
+}
+
+static Boolean
+DirectoryExists(const char *path)
+{
+    struct stat st;
+    return (path && stat(path, &st) == 0 && S_ISDIR(st.st_mode));
+}
+
+static Boolean
+ThemeAlreadyListed(const char *theme, char **themes, int count)
+{
+    int i;
+    if (!theme)
+	return True;
+    for (i = 0; i < count; i++)
+    {
+	if (themes[i] && strcmp(themes[i], theme) == 0)
+	    return True;
+    }
+    return False;
+}
+
+static void
+AddTheme(char ***themes, Widget **items, int *count, int *capacity, const char *theme)
+{
+    if (!theme || !theme[0] || ThemeAlreadyListed(theme, *themes, *count))
+	return;
+
+    if (*count >= *capacity)
+    {
+	int newCap = (*capacity <= 0) ? 16 : (*capacity * 2);
+	*themes = (char **)XtRealloc((char *)*themes, (Cardinal)(newCap * sizeof(char *)));
+	*items = (Widget *)XtRealloc((char *)*items, (Cardinal)(newCap * sizeof(Widget)));
+	*capacity = newCap;
+    }
+
+    (*themes)[*count] = XtNewString(theme);
+    (*items)[*count] = (Widget)NULL;
+    (*count)++;
+}
+
+static void
+ScanThemeDir(const char *baseDir, char ***themes, Widget **items, int *count, int *capacity)
+{
+    DIR *dir;
+    struct dirent *entry;
+
+    if (!DirectoryExists(baseDir))
+	return;
+
+    dir = opendir(baseDir);
+    if (!dir)
+	return;
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+	char path[1024];
+	char cursorsPath[1060];
+
+	if (!entry->d_name || entry->d_name[0] == '.')
+	    continue;
+
+	snprintf(path, sizeof(path), "%s/%s", baseDir, entry->d_name);
+	snprintf(cursorsPath, sizeof(cursorsPath), "%s/%s/cursors", baseDir, entry->d_name);
+
+	if (DirectoryExists(path) && DirectoryExists(cursorsPath))
+	{
+	    AddTheme(themes, items, count, capacity, entry->d_name);
+	}
+    }
+
+    closedir(dir);
+}
+
+static void
+RefreshXrmDatabaseFromRoot(void)
+{
+    const char *rmString;
+    XrmDatabase newDb;
+    XrmDatabase oldDb;
+
+    rmString = XResourceManagerString(style.display);
+    if (!rmString || !rmString[0])
+	return;
+
+    newDb = XrmGetStringDatabase(rmString);
+    if (!newDb)
+	return;
+
+    oldDb = XrmGetDatabase(style.display);
+    XrmSetDatabase(style.display, newDb);
+    if (oldDb)
+	XrmDestroyDatabase(oldDb);
+}
+
+static void
+ApplyDialogBgFg(Widget reference, Widget target)
+{
+    Pixel bg;
+    Arg args[1];
+
+    if (!reference || !target)
+	return;
+
+    XtVaGetValues(reference, XmNbackground, &bg, NULL);
+    XtSetArg(args[0], XmNbackground, bg);
+    XtSetValues(target, args, 1);
+}
+
+static void
+ApplyOptionMenuBackground(Widget reference, Widget optionMenu)
+{
+    Pixel bg;
+    Widget label;
+    Widget button;
+
+    if (!reference || !optionMenu)
+	return;
+
+    XtVaGetValues(reference, XmNbackground, &bg, NULL);
+
+    XtVaSetValues(optionMenu, XmNbackground, bg, NULL);
+
+    label = XtNameToWidget(optionMenu, "*OptionLabel");
+    if (label)
+	XtVaSetValues(label, XmNbackground, bg, NULL);
+
+    button = XtNameToWidget(optionMenu, "*OptionButton");
+    if (button)
+	XtVaSetValues(button, XmNbackground, bg, XmNarmColor, bg, NULL);
+}
+
+static Pixel
+GetCursorPreviewBgPixel(void)
+{
+    Pixel bg = style.secBgCol;
+
+    if (mouse.cursorPreviewArea[0])
+	XtVaGetValues(mouse.cursorPreviewArea[0], XmNbackground, &bg, NULL);
+    else if (mouse.cursorPreviewForm)
+	XtVaGetValues(mouse.cursorPreviewForm, XmNbackground, &bg, NULL);
+
+    return bg;
+}
+
+static void
+GetMaskInfo(unsigned long mask, int *shift, int *bits)
+{
+    int s = 0;
+    int b = 0;
+
+    if (!shift || !bits)
+	return;
+
+    if (mask == 0)
+    {
+	*shift = 0;
+	*bits = 0;
+	return;
+    }
+
+    while ((mask & 1UL) == 0)
+    {
+	mask >>= 1;
+	s++;
+    }
+
+    while ((mask & 1UL) != 0)
+    {
+	mask >>= 1;
+	b++;
+    }
+
+    *shift = s;
+    *bits = b;
+}
+
+static unsigned long
+PackComponent(unsigned char component, unsigned long mask, int shift, int bits)
+{
+    unsigned long max;
+    unsigned long value;
+
+    if (!mask || bits <= 0)
+	return 0;
+
+    if (bits >= (int)(8 * sizeof(unsigned long)))
+	max = ~0UL;
+    else
+	max = (1UL << bits) - 1;
+
+    value = (unsigned long)((component * max + 127) / 255);
+    return (value << shift) & mask;
+}
+
+static Pixmap
+CreateCursorPreviewPixmap(int index, const char *theme,
+                          int previewSize, int *width, int *height)
+{
+#ifdef HAVE_XCURSOR
+    XColor bgColor;
+    unsigned char bgR = 0;
+    unsigned char bgG = 0;
+    unsigned char bgB = 0;
+    XcursorImage *image;
+    Pixmap pixmap;
+    Visual *visual;
+    int depth;
+    GC gc;
+    XImage *ximage;
+    unsigned char *data;
+    int redShift = 0;
+    int greenShift = 0;
+    int blueShift = 0;
+    int redBits = 0;
+    int greenBits = 0;
+    int blueBits = 0;
+    int x;
+    int y;
+    int offsetX = 0;
+    int offsetY = 0;
+    const char *effectiveTheme =
+	(theme && theme[0]) ? theme :
+	(mouse.cursorTheme && mouse.cursorTheme[0]) ?
+	mouse.cursorTheme : XcursorGetTheme(style.display);
+    unsigned int effectiveSize = (previewSize > 0) ? (unsigned int)previewSize :
+	(mouse.cursorSize > 0) ? (unsigned int)mouse.cursorSize :
+	CURSOR_THEME_PREVIEW_ICON_SIZE;
+    int previewW = (previewSize > 0) ? previewSize : (int)effectiveSize;
+    int previewH = previewW;
+
+    if (previewW <= 0)
+	previewW = CURSOR_THEME_PREVIEW_ICON_SIZE;
+    if (previewH <= 0)
+	previewH = previewW;
+
+    if (width) *width = 0;
+    if (height) *height = 0;
+
+    bgColor.pixel = GetCursorPreviewBgPixel();
+    if (XQueryColor(style.display, style.colormap, &bgColor))
+    {
+	bgR = (unsigned char)(bgColor.red >> 8);
+	bgG = (unsigned char)(bgColor.green >> 8);
+	bgB = (unsigned char)(bgColor.blue >> 8);
+    }
+
+    image = XcursorShapeLoadImage(cursorPreviewInfo[index].fontShape,
+				  effectiveTheme,
+				  effectiveSize);
+    if (!image)
+    {
+	return None;
+    }
+
+    visual = DefaultVisual(style.display, DefaultScreen(style.display));
+    depth = DefaultDepth(style.display, DefaultScreen(style.display));
+    pixmap = XCreatePixmap(style.display, style.root,
+			   (unsigned int)previewW, (unsigned int)previewH, depth);
+    if (pixmap == None)
+    {
+	XcursorImageDestroy(image);
+	return None;
+    }
+
+    gc = XCreateGC(style.display, pixmap, 0, NULL);
+    if (!gc)
+    {
+	XFreePixmap(style.display, pixmap);
+	XcursorImageDestroy(image);
+	return None;
+    }
+
+    ximage = XCreateImage(style.display, visual, depth, ZPixmap, 0,
+			  NULL, previewW, previewH, 32, 0);
+    if (!ximage)
+    {
+	XFreeGC(style.display, gc);
+	XFreePixmap(style.display, pixmap);
+	XcursorImageDestroy(image);
+	return None;
+    }
+
+    data = (unsigned char *)calloc(1, (size_t)ximage->bytes_per_line * previewH);
+    if (!data)
+    {
+	XFreeGC(style.display, gc);
+	XFreePixmap(style.display, pixmap);
+	XcursorImageDestroy(image);
+	XDestroyImage(ximage);
+	return None;
+    }
+    ximage->data = (char *)data;
+
+    GetMaskInfo(visual->red_mask, &redShift, &redBits);
+    GetMaskInfo(visual->green_mask, &greenShift, &greenBits);
+    GetMaskInfo(visual->blue_mask, &blueShift, &blueBits);
+
+    unsigned long bgPixel =
+	PackComponent(bgR, visual->red_mask, redShift, redBits) |
+	PackComponent(bgG, visual->green_mask, greenShift, greenBits) |
+	PackComponent(bgB, visual->blue_mask, blueShift, blueBits);
+
+    for (y = 0; y < previewH; y++)
+    {
+	for (x = 0; x < previewW; x++)
+	    XPutPixel(ximage, x, y, bgPixel);
+    }
+
+    offsetX = (previewW - (int)image->width) / 2;
+    offsetY = (previewH - (int)image->height) / 2;
+    for (y = 0; y < (int)image->height; y++)
+    {
+	for (x = 0; x < (int)image->width; x++)
+	{
+	    unsigned long pixel = image->pixels[y * image->width + x];
+	    unsigned char a = (pixel >> 24) & 0xff;
+	    unsigned char r = (pixel >> 16) & 0xff;
+	    unsigned char g = (pixel >> 8) & 0xff;
+	    unsigned char b = pixel & 0xff;
+	    unsigned char outR;
+	    unsigned char outG;
+	    unsigned char outB;
+	    unsigned long outPixel;
+
+	    if (a == 255)
+	    {
+		outR = r;
+		outG = g;
+		outB = b;
+	    }
+	    else if (a == 0)
+	    {
+		outR = bgR;
+		outG = bgG;
+		outB = bgB;
+	    }
+	    else
+	    {
+		outR = (unsigned char)((r * a + bgR * (255 - a) + 127) / 255);
+		outG = (unsigned char)((g * a + bgG * (255 - a) + 127) / 255);
+		outB = (unsigned char)((b * a + bgB * (255 - a) + 127) / 255);
+	    }
+
+	    outPixel = PackComponent(outR, visual->red_mask, redShift, redBits) |
+		       PackComponent(outG, visual->green_mask, greenShift, greenBits) |
+		       PackComponent(outB, visual->blue_mask, blueShift, blueBits);
+
+	    int dstX = offsetX + x;
+	    int dstY = offsetY + y;
+	    if (dstX < 0 || dstX >= previewW ||
+		dstY < 0 || dstY >= previewH)
+		continue;
+
+	    XPutPixel(ximage, dstX, dstY, outPixel);
+	}
+    }
+
+    XPutImage(style.display, pixmap, gc, ximage, 0, 0, 0, 0,
+	      previewW, previewH);
+
+    XFreeGC(style.display, gc);
+    XDestroyImage(ximage);
+    if (width) *width = previewW;
+    if (height) *height = previewH;
+    XcursorImageDestroy(image);
+    return pixmap;
+#else
+    if (width) *width = 0;
+    if (height) *height = 0;
+    (void)index;
+    return None;
+#endif
+}
+
+static Pixmap
+CreateCursorThemePreviewPixmap(const char *theme)
+{
+#ifdef HAVE_XCURSOR
+    Visual *visual = DefaultVisual(style.display, DefaultScreen(style.display));
+    int depth = DefaultDepth(style.display, DefaultScreen(style.display));
+    const int iconSize = CURSOR_THEME_PREVIEW_ICON_SIZE;
+    const int stripWidth = iconSize * CURSOR_PREVIEW_COUNT;
+    const int stripHeight = iconSize;
+    Pixmap strip = XCreatePixmap(style.display, style.root,
+				 (unsigned int)stripWidth,
+				 (unsigned int)stripHeight,
+				 depth);
+    if (strip == None)
+	return None;
+
+    GC gc = XCreateGC(style.display, strip, 0, NULL);
+    if (!gc)
+    {
+	XFreePixmap(style.display, strip);
+	return None;
+    }
+
+    Pixel bgPixel = GetCursorPreviewBgPixel();
+    XSetForeground(style.display, gc, bgPixel);
+    XFillRectangle(style.display, strip, gc, 0, 0,
+		   (unsigned int)stripWidth, (unsigned int)stripHeight);
+
+    int i;
+    for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
+    {
+	int iconW = 0;
+	int iconH = 0;
+	Pixmap icon = CreateCursorPreviewPixmap(i, theme, iconSize, &iconW, &iconH);
+	if (icon == None)
+	    continue;
+
+	int yOffset = (stripHeight - iconH) / 2;
+	if (yOffset < 0)
+	    yOffset = 0;
+
+	XCopyArea(style.display, icon, strip, gc,
+		  0, 0, (unsigned int)iconW, (unsigned int)iconH,
+		  i * iconSize, yOffset);
+	XFreePixmap(style.display, icon);
+    }
+
+    XFreeGC(style.display, gc);
+    return strip;
+#else
+    (void)theme;
+    return None;
+#endif
+}
+
+static char *
+DupPrefResourceString(const char *resName, const char *resClass)
+{
+    char *type;
+    char *result = NULL;
+    XrmDatabase db;
+    XrmValue value;
+    char *prefString;
+
+    prefString = _DtGetResString(style.display, _DT_ATR_PREFS);
+    if (!prefString)
+	return NULL;
+    if (!prefString[0])
+    {
+	XtFree(prefString);
+	return NULL;
+    }
+
+    db = XrmGetStringDatabase(prefString);
+    XtFree(prefString);
+    if (!db)
+	return NULL;
+
+    if (XrmGetResource(db, resName, resClass, &type, &value))
+    {
+	if (value.addr && value.size > 0)
+	    result = XtNewString((const char *)value.addr);
+    }
+
+    XrmDestroyDatabase(db);
+    return result;
+}
+
+static char *
+DupXrmResourceString(const char *resName, const char *resClass)
+{
+    XrmDatabase db;
+    XrmValue value;
+    char *type;
+
+    RefreshXrmDatabaseFromRoot();
+
+    db = XrmGetDatabase(style.display);
+    if (db && XrmGetResource(db, resName, resClass, &type, &value))
+    {
+	if (value.addr && value.size > 0)
+	    return XtNewString((const char *)value.addr);
+    }
+
+    return DupPrefResourceString(resName, resClass);
+}
+
+static int
+SnapCursorSize(int requestedSize, int maxSize)
+{
+    static const int sizes[] = {16, 24, 32, 48, 64};
+    int best = 16;
+    int bestDist = 0x7fffffff;
+    int i;
+
+    if (maxSize < 16)
+	maxSize = 16;
+
+    if (requestedSize < 1)
+	requestedSize = 24;
+
+    for (i = 0; i < (int)(sizeof(sizes) / sizeof(sizes[0])); i++)
+    {
+	int s = sizes[i];
+	int d;
+
+	if (s > maxSize)
+	    continue;
+
+	d = requestedSize - s;
+	if (d < 0)
+	    d = -d;
+
+	if (d < bestDist)
+	{
+	    best = s;
+	    bestDist = d;
+	}
+    }
+
+    if (best > maxSize)
+	best = maxSize;
+
+    return best;
+}
+
+static int
+GetEffectiveCursorSize(void)
+{
+    const char *env = getenv("XCURSOR_SIZE");
+    int size = 0;
+    char *res;
+
+    RefreshXrmDatabaseFromRoot();
+
+    if (env && *env)
+    {
+	size = atoi(env);
+	if (size > 0)
+	    return size;
+    }
+
+    res = DupXrmResourceString("Xcursor.size", "Xcursor.Size");
+    if (res)
+    {
+	size = atoi(res);
+	XtFree(res);
+	if (size > 0)
+	    return size;
+    }
+
+    return 24;
+}
+
+static char *
+GetEffectiveCursorTheme(void)
+{
+    const char *env = getenv("XCURSOR_THEME");
+    char *res;
+
+    RefreshXrmDatabaseFromRoot();
+
+    if (env && *env)
+	return XtNewString(env);
+
+    res = DupXrmResourceString("Xcursor.theme", "Xcursor.Theme");
+    if (res && *res)
+	return res;
+
+    if (res)
+	XtFree(res);
+
+    return XtNewString("default");
+}
+
+static int
+QueryMaxCursorSize(void)
+{
+    unsigned int bestW = 0, bestH = 0;
+
+    if (XQueryBestCursor(style.display, style.root, 128, 128, &bestW, &bestH))
+    {
+	if (bestW > 0)
+	    return (int)bestW;
+    }
+
+    return 64;
+}
+
+static Cursor
+LoadXcursorOrFontCursor(const char *xcursorName, unsigned int fontShape)
+{
+#ifdef HAVE_XCURSOR
+    if (xcursorName && xcursorName[0])
+    {
+	Cursor cursor = XcursorLibraryLoadCursor(style.display, xcursorName);
+	if (cursor != None)
+	{
+	    return cursor;
+	}
+    }
+#endif
+    return XCreateFontCursor(style.display, fontShape);
+}
+
+static void
+SetRootCursorNow(void)
+{
+    Cursor cursor = LoadXcursorOrFontCursor("X_cursor", XC_X_cursor);
+    if (cursor != None)
+    {
+	XDefineCursor(style.display, style.root, cursor);
+	XFlush(style.display);
+	XFreeCursor(style.display, cursor);
+    }
+}
+
+static void
+UpdateCursorPreview(void)
+{
+    int i;
+
+#ifdef HAVE_XCURSOR
+    if (mouse.cursorTheme && mouse.cursorTheme[0])
+	XcursorSetTheme(style.display, mouse.cursorTheme);
+    XcursorSetDefaultSize(style.display, (unsigned int)mouse.cursorSize);
+#endif
+
+    for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
+    {
+	if (mouse.cursorPreviewCursors[i] != None)
+	{
+	    XFreeCursor(style.display, mouse.cursorPreviewCursors[i]);
+	    mouse.cursorPreviewCursors[i] = None;
+	}
+	if (mouse.cursorPreviewPixmaps[i] != None)
+	{
+	    XFreePixmap(style.display, mouse.cursorPreviewPixmaps[i]);
+	    mouse.cursorPreviewPixmaps[i] = None;
+	}
+	mouse.cursorPreviewPixmapW[i] = 0;
+	mouse.cursorPreviewPixmapH[i] = 0;
+    }
+
+    for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
+    {
+	if (!mouse.cursorPreviewArea[i])
+	    continue;
+
+	if (!XtIsRealized(mouse.cursorPreviewArea[i]))
+	    continue;
+
+	mouse.cursorPreviewCursors[i] =
+	    LoadXcursorOrFontCursor(cursorPreviewInfo[i].name,
+				    cursorPreviewInfo[i].fontShape);
+
+	if (mouse.cursorPreviewCursors[i] != None)
+	{
+	    XDefineCursor(style.display,
+			  XtWindow(mouse.cursorPreviewArea[i]),
+			  mouse.cursorPreviewCursors[i]);
+	}
+
+	mouse.cursorPreviewPixmaps[i] =
+	    CreateCursorPreviewPixmap(i,
+				      mouse.cursorTheme,
+				      mouse.cursorSize,
+				      &mouse.cursorPreviewPixmapW[i],
+				      &mouse.cursorPreviewPixmapH[i]);
+	XClearArea(style.display, XtWindow(mouse.cursorPreviewArea[i]),
+		   0, 0, 0, 0, True);
+    }
+
+    {
+	int maxW = 0;
+	int maxH = 0;
+	int pad = 12;
+	Dimension curW = 0;
+	Dimension curH = 0;
+
+	for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
+	{
+	    if (mouse.cursorPreviewPixmapW[i] > maxW)
+		maxW = mouse.cursorPreviewPixmapW[i];
+	    if (mouse.cursorPreviewPixmapH[i] > maxH)
+		maxH = mouse.cursorPreviewPixmapH[i];
+	}
+
+	if (mouse.cursorPreviewArea[0])
+	{
+	    XtVaGetValues(mouse.cursorPreviewArea[0],
+			  XmNwidth, &curW,
+			  XmNheight, &curH,
+			  NULL);
+	}
+
+	if (maxW + pad > (int)curW || maxH + pad > (int)curH)
+	{
+	    for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
+	    {
+		if (!mouse.cursorPreviewArea[i])
+		    continue;
+		XtVaSetValues(mouse.cursorPreviewArea[i],
+			      XmNwidth, (Dimension)(maxW + pad),
+			      XmNheight, (Dimension)(maxH + pad),
+			      NULL);
+	    }
+	}
+    }
+
+    XFlush(style.display);
+}
 
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -280,7 +1151,7 @@ build_mouseDialog( Widget shell )
     XmString         button_string[NUM_LABELS]; 
     Widget           form;
     int              count = 0;
-    Widget           widget_list[15]; 
+    Widget           widget_list[25]; 
     XmString         string;
     
     Dimension        MaxLabelWidth1;
@@ -313,6 +1184,7 @@ build_mouseDialog( Widget shell )
     /* take into account the behavior of the new      */
     /* server.                                        */ 
     
+    EnsureXcursorPath();
     nmap = 256;
     mouse.numButtons = XGetPointerMapping(style.display, mouse.map_return, 
 					   nmap);
@@ -599,6 +1471,274 @@ build_mouseDialog( Widget shell )
     widget_list[count++] = 
     mouse.threshScale= XmCreateScale(form,"threshScale", args, n);
 
+    /* Xcursor theme/size controls */
+    int oldCursorThemeCount = mouse.cursorThemeCount;
+    Pixmap *oldCursorThemePreviewPixmaps = mouse.cursorThemePreviewPixmaps;
+    mouse.cursorThemes = NULL;
+    mouse.cursorThemeItems = NULL;
+    mouse.cursorThemeCount = 0;
+    mouse.cursorChanged = False;
+
+    mouse.maxCursorSize = QueryMaxCursorSize();
+    mouse.cursorSize = GetEffectiveCursorSize();
+    mouse.cursorSize = SnapCursorSize(mouse.cursorSize, mouse.maxCursorSize);
+    mouse.origCursorSize = mouse.cursorSize;
+
+    mouse.cursorTheme = GetEffectiveCursorTheme();
+    mouse.origCursorTheme = XtNewString(mouse.cursorTheme);
+
+    n = 0;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_END); n++;
+    XtSetArg(args[n], XmNmarginHeight, 0); n++;
+    string = CMPSTR(CURSOR_SIZE_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    widget_list[count++] =
+    mouse.cursorSizeLabGad = XmCreateLabelGadget(form, "cursorSizeLabGad", args, n);
+    XmStringFree(string);
+
+    n = 0;
+    XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
+    XtSetArg(args[n], XmNpacking, XmPACK_TIGHT); n++;
+    XtSetArg(args[n], XmNspacing, style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNradioBehavior, True); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    widget_list[count++] =
+    mouse.cursorSizeRC = XmCreateRowColumn(form, "cursorSizeRC", args, n);
+
+    mouse.cursorSizeChoiceCount = 0;
+    for (i = 0; i < CURSOR_SIZE_CHOICE_COUNT; i++)
+    {
+	XmString sizeLabel;
+	char sizeBuf[16];
+	int sizeValue = cursorSizeChoices[i];
+
+	if (sizeValue > mouse.maxCursorSize)
+	    continue;
+
+	snprintf(sizeBuf, sizeof(sizeBuf), "%d", sizeValue);
+	sizeLabel = XmStringCreateLocalized(sizeBuf);
+
+	n = 0;
+	XtSetArg(args[n], XmNlabelString, sizeLabel); n++;
+	XtSetArg(args[n], XmNindicatorType, XmONE_OF_MANY); n++;
+	XtSetArg(args[n], XmNset, sizeValue == mouse.cursorSize); n++;
+	mouse.cursorSizeToggles[mouse.cursorSizeChoiceCount] =
+	    XmCreateToggleButtonGadget(mouse.cursorSizeRC, "cursorSizeToggle", args, n);
+	mouse.cursorSizeChoiceValues[mouse.cursorSizeChoiceCount] = sizeValue;
+	XmStringFree(sizeLabel);
+	XtAddCallback(mouse.cursorSizeToggles[mouse.cursorSizeChoiceCount],
+		      XmNvalueChangedCallback,
+		      cursorSizeChangedCB, (XtPointer)(intptr_t)sizeValue);
+	XtManageChild(mouse.cursorSizeToggles[mouse.cursorSizeChoiceCount]);
+	mouse.cursorSizeChoiceCount++;
+    }
+
+    n = 0;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_END); n++;
+    XtSetArg(args[n], XmNmarginHeight, 0); n++;
+    string = CMPSTR(CURSOR_THEME_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    widget_list[count++] =
+    mouse.cursorThemeLabGad = XmCreateLabelGadget(form, "cursorThemeLabGad", args, n);
+    XmStringFree(string);
+
+    n = 0;
+    mouse.cursorThemeMenu = XmCreatePulldownMenu(form, "cursorThemeMenu", args, n);
+
+    {
+	int cap = 0;
+	char iconsDir[1024];
+	const char *home = getenv("HOME");
+	int i;
+	Widget history = (Widget)NULL;
+
+	AddTheme(&mouse.cursorThemes, &mouse.cursorThemeItems,
+		 &mouse.cursorThemeCount, &cap, "default");
+
+	if (home && *home)
+	{
+	    snprintf(iconsDir, sizeof(iconsDir), "%s/.icons", home);
+	    ScanThemeDir(iconsDir, &mouse.cursorThemes, &mouse.cursorThemeItems,
+			 &mouse.cursorThemeCount, &cap);
+	    snprintf(iconsDir, sizeof(iconsDir), "%s/.local/share/icons", home);
+	    ScanThemeDir(iconsDir, &mouse.cursorThemes, &mouse.cursorThemeItems,
+			 &mouse.cursorThemeCount, &cap);
+	}
+	ScanThemeDir("/usr/share/icons", &mouse.cursorThemes, &mouse.cursorThemeItems,
+		     &mouse.cursorThemeCount, &cap);
+
+	if (oldCursorThemePreviewPixmaps)
+	{
+	    for (i = 0; i < oldCursorThemeCount; i++)
+	    {
+		if (oldCursorThemePreviewPixmaps[i] != None)
+		    XFreePixmap(style.display,
+				oldCursorThemePreviewPixmaps[i]);
+	    }
+	    XtFree((char *)oldCursorThemePreviewPixmaps);
+	}
+	if (mouse.cursorThemeCount > 0)
+	    mouse.cursorThemePreviewPixmaps =
+		(Pixmap *)XtCalloc((Cardinal)mouse.cursorThemeCount,
+				  (Cardinal)sizeof(Pixmap));
+	else
+	    mouse.cursorThemePreviewPixmaps = NULL;
+
+	for (i = 0; i < mouse.cursorThemeCount; i++)
+	{
+	    Pixmap preview = CreateCursorThemePreviewPixmap(mouse.cursorThemes[i]);
+	    XmString t = XmStringCreateLocalized(mouse.cursorThemes[i]);
+	    n = 0;
+	    XtSetArg(args[n], XmNlabelString, t); n++;
+	    if (preview != None)
+	    {
+		XtSetArg(args[n], XmNlabelPixmap, preview); n++;
+		mouse.cursorThemePreviewPixmaps[i] = preview;
+	    }
+	    mouse.cursorThemeItems[i] =
+		XmCreatePushButtonGadget(mouse.cursorThemeMenu, "cursorThemeItem", args, n);
+	    XmStringFree(t);
+	    XtAddCallback(mouse.cursorThemeItems[i], XmNactivateCallback,
+			  cursorThemeSelectCB, (XtPointer)mouse.cursorThemes[i]);
+	    XtManageChild(mouse.cursorThemeItems[i]);
+
+	    if (!history && mouse.cursorTheme &&
+		strcmp(mouse.cursorThemes[i], mouse.cursorTheme) == 0)
+	    {
+		history = mouse.cursorThemeItems[i];
+	    }
+	}
+
+	if (!history && mouse.cursorThemeCount > 0)
+	    history = mouse.cursorThemeItems[0];
+
+	n = 0;
+	XtSetArg(args[n], XmNsubMenuId, mouse.cursorThemeMenu); n++;
+	if (history)
+	    XtSetArg(args[n], XmNmenuHistory, history), n++;
+	widget_list[count++] =
+	mouse.cursorThemeOM = XmCreateOptionMenu(form, "cursorThemeOM", args, n);
+    }
+
+    n = 0;
+    string = CMPSTR(CURSOR_PREVIEW_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    widget_list[count++] =
+    mouse.cursorPreviewFrame = XmCreateFrame(form, "cursorPreviewFrame", args, n);
+    XmStringFree(string);
+
+    n = 0;
+    mouse.cursorPreviewForm = XmCreateForm(mouse.cursorPreviewFrame, "cursorPreviewForm", args, n);
+    XtManageChild(mouse.cursorPreviewForm);
+
+    n = 0;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    string = CMPSTR(CURSOR_PREVIEW_HINT_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    mouse.cursorPreviewHint = XmCreateLabelGadget(mouse.cursorPreviewForm, "cursorPreviewHint", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.cursorPreviewHint);
+
+    n = 0;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, mouse.cursorPreviewHint); n++;
+    XtSetArg(args[n], XmNtopOffset, style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNbottomOffset, style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNleftOffset, style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightOffset, style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
+    XtSetArg(args[n], XmNpacking, XmPACK_TIGHT); n++;
+    XtSetArg(args[n], XmNnumColumns, CURSOR_PREVIEW_COUNT); n++;
+    XtSetArg(args[n], XmNspacing, style.verticalSpacing); n++;
+    mouse.cursorPreviewGrid = XmCreateRowColumn(mouse.cursorPreviewForm, "cursorPreviewGrid", args, n);
+    XtManageChild(mouse.cursorPreviewGrid);
+
+    {
+	int previewSize = mouse.maxCursorSize + 16;
+	if (previewSize < 64)
+	    previewSize = 64;
+
+    for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
+    {
+        Widget cell;
+	    Widget previewLabel;
+	    XmString label;
+
+	    n = 0;
+	    XtSetArg(args[n], XmNorientation, XmVERTICAL); n++;
+	    XtSetArg(args[n], XmNpacking, XmPACK_TIGHT); n++;
+	    XtSetArg(args[n], XmNentryAlignment, XmALIGNMENT_CENTER); n++;
+	    XtSetArg(args[n], XmNmarginHeight, style.verticalSpacing); n++;
+	    XtSetArg(args[n], XmNmarginWidth, style.horizontalSpacing); n++;
+	    cell = XmCreateRowColumn(mouse.cursorPreviewGrid, "cursorPreviewCell", args, n);
+	    mouse.cursorPreviewCell[i] = cell;
+	    XtManageChild(cell);
+
+	    n = 0;
+	    XtSetArg(args[n], XmNwidth, previewSize); n++;
+	    XtSetArg(args[n], XmNheight, previewSize); n++;
+	    XtSetArg(args[n], XmNshadowThickness, 1); n++;
+	    XtSetArg(args[n], XmNborderWidth, 1); n++;
+	    XtSetArg(args[n], XmNhighlightThickness, 1); n++;
+            mouse.cursorPreviewArea[i] = XmCreateDrawingArea(cell, "cursorPreviewArea", args, n);
+            XtManageChild(mouse.cursorPreviewArea[i]);
+            XtAddCallback(mouse.cursorPreviewArea[i], XmNmapCallback,
+			  cursorPreviewMapCB, NULL);
+            XtAddCallback(mouse.cursorPreviewArea[i], XmNexposeCallback,
+			  cursorPreviewExposeCB, (XtPointer)(intptr_t)i);
+
+	    n = 0;
+	    label = CMPSTR((char *)GETMESSAGE(9,
+			 cursorPreviewInfo[i].labelMsg,
+			 cursorPreviewInfo[i].labelDefault));
+	    XtSetArg(args[n], XmNlabelString, label); n++;
+	    XtSetArg(args[n], XmNalignment, XmALIGNMENT_CENTER); n++;
+	    previewLabel = XmCreateLabelGadget(cell, "cursorPreviewLabel", args, n);
+	    mouse.cursorPreviewLabel[i] = previewLabel;
+	    XmStringFree(label);
+	    XtManageChild(previewLabel);
+	}
+    }
+
+    n = 0;
+    string = CMPSTR(RESTART_WM_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    widget_list[count++] =
+    mouse.dtwmRestartTG = XmCreateToggleButtonGadget(form, "dtwmRestartTG", args, n);
+    XmStringFree(string);
+    XmToggleButtonGadgetSetState(mouse.dtwmRestartTG, True, False);
+
+    {
+	Widget colorRef = mouse.threshScale ? mouse.threshScale : form;
+
+	ApplyDialogBgFg(colorRef, mouse.cursorSizeLabGad);
+	ApplyDialogBgFg(colorRef, mouse.cursorThemeLabGad);
+	ApplyDialogBgFg(colorRef, mouse.cursorSizeRC);
+	for (i = 0; i < mouse.cursorSizeChoiceCount; i++)
+	    ApplyDialogBgFg(colorRef, mouse.cursorSizeToggles[i]);
+	ApplyOptionMenuBackground(colorRef, mouse.cursorThemeOM);
+	ApplyDialogBgFg(colorRef, mouse.cursorThemeMenu);
+	ApplyDialogBgFg(colorRef, mouse.cursorPreviewFrame);
+	ApplyDialogBgFg(colorRef, mouse.cursorPreviewForm);
+	ApplyDialogBgFg(colorRef, mouse.cursorPreviewGrid);
+	ApplyDialogBgFg(colorRef, mouse.cursorPreviewHint);
+	ApplyDialogBgFg(colorRef, mouse.dtwmRestartTG);
+	for (i = 0; i < mouse.cursorThemeCount; i++)
+	    ApplyDialogBgFg(colorRef, mouse.cursorThemeItems[i]);
+	for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
+	{
+	    ApplyDialogBgFg(colorRef, mouse.cursorPreviewCell[i]);
+	    ApplyDialogBgFg(colorRef, mouse.cursorPreviewLabel[i]);
+	    ApplyDialogBgFg(colorRef, mouse.cursorPreviewArea[i]);
+	}
+    }
+
     XtAddCallback(style.mouseDialog, XmNmapCallback, formLayoutCB, NULL);
     XtAddCallback(style.mouseDialog, XmNmapCallback, _DtmapCB_mouseDialog, shell);
     XtAddCallback(mouse.systemDefault, XmNactivateCallback, 
@@ -658,6 +1798,8 @@ build_mouseDialog( Widget shell )
                   valueChangedCB, NULL);
     XtAddCallback(mouse.dclickScale, XmNvalueChangedCallback, 
                   dclickVCCB, (caddr_t)mouse.pictButton);
+    XtAddCallback(mouse.cursorPreviewForm, XmNmapCallback,
+                  cursorPreviewMapCB, NULL);
     XtAddCallback(mouse.pictButton, XmNactivateCallback, 
                   dclickTestCB, NULL);  
 
@@ -707,6 +1849,8 @@ formLayoutCB(
     Dimension        AccelLabelWidth;
     Dimension        ThreshLabelWidth;
     Dimension        DclickLabelWidth;
+    Dimension        CursorSizeLabelWidth;
+    Dimension        CursorThemeLabelWidth;
     Dimension        ScaleHeight;
     Dimension        LabelHeight;
     int              TopOffset;
@@ -729,6 +1873,18 @@ formLayoutCB(
     if (DclickLabelWidth > MaxLabelWidth) 
     {
 	MaxLabelWidth = DclickLabelWidth;
+    }
+
+    CursorSizeLabelWidth = XtWidth(mouse.cursorSizeLabGad);
+    if (CursorSizeLabelWidth > MaxLabelWidth)
+    {
+	MaxLabelWidth = CursorSizeLabelWidth;
+    }
+
+    CursorThemeLabelWidth = XtWidth(mouse.cursorThemeLabGad);
+    if (CursorThemeLabelWidth > MaxLabelWidth)
+    {
+	MaxLabelWidth = CursorThemeLabelWidth;
     }
    
     /* Mouse Picture PushButton */
@@ -884,8 +2040,7 @@ formLayoutCB(
     XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
     XtSetArg(args[n], XmNtopWidget,        mouse.accelScale);   n++;
     XtSetArg(args[n], XmNtopOffset,        TopOffset);          n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM);      n++;
-    XtSetArg(args[n], XmNbottomOffset,     style.verticalSpacing);   n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
     XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
     LeftOffset =  MaxLabelWidth + style.horizontalSpacing - ThreshLabelWidth;
     XtSetArg(args[n], XmNleftOffset,       LeftOffset);         n++;
@@ -903,6 +2058,86 @@ formLayoutCB(
     XtSetArg(args[n], XmNleftOffset,       2*style.horizontalSpacing); n++;
     XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
     XtSetValues (mouse.threshScale, args, n);
+
+    /* Cursor Size Label */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.threshScale);  n++;
+    XtSetArg(args[n], XmNtopOffset,        TopOffset);          n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
+    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - CursorSizeLabelWidth;
+    XtSetArg(args[n], XmNleftOffset,       LeftOffset);         n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);      n++;
+    XtSetValues (mouse.cursorSizeLabGad, args, n);
+
+    /* Cursor Size Scale */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_NONE);      n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
+    XtSetArg(args[n], XmNbottomWidget,     mouse.cursorSizeLabGad); n++;
+    XtSetArg(args[n], XmNbottomOffset,     0);                  n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);    n++;
+    XtSetArg(args[n], XmNleftWidget,       mouse.cursorSizeLabGad); n++;
+    XtSetArg(args[n], XmNleftOffset,       2*style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+    XtSetValues (mouse.cursorSizeRC, args, n);
+
+    /* Cursor Theme Label */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.cursorSizeRC); n++;
+    XtSetArg(args[n], XmNtopOffset,        TopOffset);          n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
+    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - CursorThemeLabelWidth;
+    XtSetArg(args[n], XmNleftOffset,       LeftOffset);         n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);      n++;
+    XtSetValues (mouse.cursorThemeLabGad, args, n);
+
+    /* Cursor Theme Option Menu */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_NONE);      n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
+    XtSetArg(args[n], XmNbottomWidget,     mouse.cursorThemeLabGad); n++;
+    XtSetArg(args[n], XmNbottomOffset,     0);                  n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);    n++;
+    XtSetArg(args[n], XmNleftWidget,       mouse.cursorThemeLabGad); n++;
+    XtSetArg(args[n], XmNleftOffset,       2*style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+    XtSetValues (mouse.cursorThemeOM, args, n);
+
+    /* Cursor Preview Frame */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.cursorThemeOM); n++;
+    XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNleftOffset,       style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNrightOffset,      style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
+    XtSetValues (mouse.cursorPreviewFrame, args, n);
+
+    /* Cursor Preview Form (inside frame) */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    XtSetValues (mouse.cursorPreviewForm, args, n);
+
+    /* Restart toggle */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.cursorPreviewFrame); n++;
+    XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNleftOffset,       style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNbottomOffset,     style.verticalSpacing); n++;
+    XtSetValues (mouse.dtwmRestartTG, args, n);
 
     XtRemoveCallback(style.mouseDialog, XmNmapCallback, formLayoutCB, NULL);
 
@@ -976,6 +2211,79 @@ _DtmapCB_mouseDialog(
     XtSetArg(args[n], XmNvalue,mouse.threshold); n++;
     XtSetValues(mouse.threshScale, args, n);
 
+    /* Xcursor controls */
+    {
+	int i;
+	Widget history = (Widget)NULL;
+	int effectiveSize = GetEffectiveCursorSize();
+	char *effectiveTheme = GetEffectiveCursorTheme();
+
+	effectiveSize = SnapCursorSize(effectiveSize, mouse.maxCursorSize);
+
+	mouse.cursorSize = effectiveSize;
+	for (i = 0; i < mouse.cursorSizeChoiceCount; i++)
+	{
+	    Boolean set = (mouse.cursorSizeChoiceValues[i] == mouse.cursorSize);
+	    XmToggleButtonGadgetSetState(mouse.cursorSizeToggles[i], set, False);
+	}
+
+	for (i = 0; i < mouse.cursorThemeCount; i++)
+	{
+	    if (mouse.cursorThemes[i] &&
+		strcmp(mouse.cursorThemes[i], effectiveTheme) == 0)
+	    {
+		history = mouse.cursorThemeItems[i];
+		break;
+	    }
+	}
+	if (!history && mouse.cursorThemeCount > 0)
+	    history = mouse.cursorThemeItems[0];
+
+	if (history)
+	    XtVaSetValues(mouse.cursorThemeOM, XmNmenuHistory, history, NULL);
+
+	if (mouse.cursorTheme)
+	    XtFree(mouse.cursorTheme);
+	mouse.cursorTheme = effectiveTheme;
+
+	mouse.origCursorSize = mouse.cursorSize;
+	if (mouse.origCursorTheme)
+	    XtFree(mouse.origCursorTheme);
+	mouse.origCursorTheme = XtNewString(mouse.cursorTheme);
+	mouse.cursorChanged = False;
+
+	{
+	    Boolean hasXcursor =
+#ifdef HAVE_XCURSOR
+		True
+#else
+		False
+#endif
+		;
+	    Boolean canRestart = hasXcursor && style.xrdb.writeXrdbImmediate;
+	    int previewIndex;
+
+	    if (mouse.cursorSizeRC)
+		XtSetSensitive(mouse.cursorSizeRC, hasXcursor);
+	    for (previewIndex = 0; previewIndex < mouse.cursorSizeChoiceCount; previewIndex++)
+		if (mouse.cursorSizeToggles[previewIndex])
+		    XtSetSensitive(mouse.cursorSizeToggles[previewIndex], hasXcursor);
+	    XtSetSensitive(mouse.cursorThemeOM, hasXcursor);
+	    XtSetSensitive(mouse.cursorPreviewFrame, hasXcursor);
+	    if (mouse.cursorPreviewGrid)
+		XtSetSensitive(mouse.cursorPreviewGrid, hasXcursor);
+	    for (previewIndex = 0; previewIndex < CURSOR_PREVIEW_COUNT; previewIndex++)
+		if (mouse.cursorPreviewArea[previewIndex])
+		    XtSetSensitive(mouse.cursorPreviewArea[previewIndex], hasXcursor);
+
+	    XtSetSensitive(mouse.dtwmRestartTG, canRestart);
+	    if (!canRestart)
+		XmToggleButtonGadgetSetState(mouse.dtwmRestartTG, False, False);
+	}
+
+	UpdateCursorPreview();
+    }
+    
     
 }
 
@@ -1015,6 +2323,105 @@ valueChangedCB(
 
      mouse.systemDefaultFlag = False;
 
+}
+
+static void
+cursorPreviewMapCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+    (void)w;
+    (void)client_data;
+    (void)call_data;
+
+    UpdateCursorPreview();
+}
+
+static void
+cursorPreviewExposeCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+    XmDrawingAreaCallbackStruct *cb = (XmDrawingAreaCallbackStruct *)call_data;
+    int index;
+
+    if (!cb || cb->reason != XmCR_EXPOSE)
+        return;
+
+    index = (int)(intptr_t)client_data;
+    if (index < 0 || index >= CURSOR_PREVIEW_COUNT)
+        return;
+
+    if (mouse.cursorPreviewPixmaps[index] == None)
+        return;
+
+    Display *dpy = style.display;
+    Window win = XtWindow(w);
+    GC gc = XCreateGC(dpy, win, 0, NULL);
+    int width = mouse.cursorPreviewPixmapW[index];
+    int height = mouse.cursorPreviewPixmapH[index];
+    int wWidth = XtWidth(w);
+    int wHeight = XtHeight(w);
+    int dstX = (wWidth - width) / 2;
+    int dstY = (wHeight - height) / 2;
+
+    if (width <= 0 || height <= 0)
+        goto done;
+
+    if (dstX < 0)
+        dstX = 0;
+    if (dstY < 0)
+        dstY = 0;
+
+    XCopyArea(dpy, mouse.cursorPreviewPixmaps[index], win, gc,
+              0, 0, width, height, dstX, dstY);
+
+done:
+    XFreeGC(dpy, gc);
+}
+
+static void
+cursorSizeChangedCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+    XmToggleButtonCallbackStruct *cb = (XmToggleButtonCallbackStruct *)call_data;
+    int sizeValue = (int)(intptr_t)client_data;
+
+    if (!cb || !cb->set)
+	return;
+
+    mouse.cursorSize = sizeValue;
+    mouse.cursorChanged = True;
+    UpdateCursorPreview();
+}
+
+static void
+cursorThemeSelectCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+    (void)call_data;
+
+    if (mouse.cursorTheme)
+    {
+	XtFree(mouse.cursorTheme);
+	mouse.cursorTheme = NULL;
+    }
+
+    if (client_data)
+	mouse.cursorTheme = XtNewString((const char *)client_data);
+    else
+	mouse.cursorTheme = XtNewString("default");
+
+    mouse.cursorChanged = True;
+    if (mouse.cursorThemeOM && w)
+	XtVaSetValues(mouse.cursorThemeOM, XmNmenuHistory, w, NULL);
+    UpdateCursorPreview();
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -1475,6 +2882,60 @@ systemDefaultCB(
       XmToggleButtonGadgetSetState(mouse.transferToggle, True, True);
       XmToggleButtonGadgetSetState(mouse.adjustToggle, False, False);
     }
+
+  /* reset cursor theme/size to defaults */
+  {
+      int i;
+      Widget history = (Widget)NULL;
+      char cursorRes[256];
+
+      mouse.cursorSize = 24;
+      if (mouse.cursorSize > mouse.maxCursorSize)
+	  mouse.cursorSize = mouse.maxCursorSize;
+
+      for (i = 0; i < mouse.cursorSizeChoiceCount; i++)
+      {
+	  Boolean set = (mouse.cursorSizeChoiceValues[i] == mouse.cursorSize);
+	  XmToggleButtonGadgetSetState(mouse.cursorSizeToggles[i], set, False);
+      }
+
+      if (mouse.cursorTheme)
+	  XtFree(mouse.cursorTheme);
+      mouse.cursorTheme = XtNewString("default");
+
+      for (i = 0; i < mouse.cursorThemeCount; i++)
+      {
+	  if (mouse.cursorThemes[i] &&
+	      strcmp(mouse.cursorThemes[i], mouse.cursorTheme) == 0)
+	  {
+	      history = mouse.cursorThemeItems[i];
+	      break;
+	  }
+      }
+      if (!history && mouse.cursorThemeCount > 0)
+	  history = mouse.cursorThemeItems[0];
+      if (history)
+	  XtVaSetValues(mouse.cursorThemeOM, XmNmenuHistory, history, NULL);
+
+      snprintf(cursorRes, sizeof(cursorRes),
+	       "Xcursor.theme: %s\nXcursor.size: %d\n",
+	       mouse.cursorTheme, mouse.cursorSize);
+      if (style.xrdb.writeXrdbImmediate)
+      {
+	  _DtAddResString(style.display, cursorRes, _DT_ATR_RESMGR|_DT_ATR_PREFS);
+	  XSync(style.display, False);
+	  RefreshXrmDatabaseFromRoot();
+      }
+      else
+      {
+	  _DtAddResString(style.display, cursorRes, _DT_ATR_PREFS);
+	  XSync(style.display, False);
+	  RefreshXrmDatabaseFromRoot();
+      }
+
+      mouse.cursorChanged = True;
+      UpdateCursorPreview();
+  }
   
   mouse.systemDefaultFlag = True;
 }
@@ -1572,6 +3033,71 @@ ButtonCB(
 	   else
 	     sprintf(enableBtn1Res, enableBtn1TransferString, "True");
 	   _DtAddToResource(style.display,enableBtn1Res);
+
+	 /* Cursor theme/size */
+	 {
+	     Boolean hasXcursor =
+#ifdef HAVE_XCURSOR
+		 True
+#else
+		 False
+#endif
+		 ;
+	     if (hasXcursor)
+	     {
+			 int newSize = mouse.cursorSize;
+			 mouse.cursorSize = SnapCursorSize(newSize, mouse.maxCursorSize);
+
+		 if (mouse.cursorTheme == NULL)
+		     mouse.cursorTheme = XtNewString("default");
+
+		 {
+		     Boolean themeChanged;
+		     themeChanged = (mouse.cursorTheme == NULL) ?
+			 (mouse.origCursorTheme != NULL) :
+			 (mouse.origCursorTheme == NULL ||
+			  strcmp(mouse.cursorTheme, mouse.origCursorTheme) != 0);
+
+		     if ((mouse.cursorSize != mouse.origCursorSize) || themeChanged)
+		 {
+		     char cursorRes[256];
+
+		     snprintf(cursorRes, sizeof(cursorRes),
+			      "Xcursor.theme: %s\nXcursor.size: %d\n",
+			      mouse.cursorTheme, mouse.cursorSize);
+
+		     if (style.xrdb.writeXrdbImmediate)
+		     {
+			 InfoDialog(IMMEDIATE_MSG, style.shell, False);
+			 _DtAddResString(style.display, cursorRes,
+					 _DT_ATR_RESMGR|_DT_ATR_PREFS);
+			 XSync(style.display, False);
+			 RefreshXrmDatabaseFromRoot();
+			 SetRootCursorNow();
+
+			 if (mouse.dtwmRestartTG &&
+			     XmToggleButtonGadgetGetState(mouse.dtwmRestartTG))
+			 {
+			     _DtWmRestartNoConfirm(style.display, style.root);
+			 }
+		     }
+		     else
+		     {
+			 InfoDialog(LATER_MSG, style.shell, False);
+			 _DtAddResString(style.display, cursorRes, _DT_ATR_PREFS);
+			 XSync(style.display, False);
+			 RefreshXrmDatabaseFromRoot();
+		     }
+
+		     mouse.origCursorSize = mouse.cursorSize;
+		     if (mouse.origCursorTheme)
+			 XtFree(mouse.origCursorTheme);
+		     mouse.origCursorTheme = XtNewString(mouse.cursorTheme);
+		     mouse.cursorChanged = False;
+		 }
+		 }
+	     }
+	 }
 
 	 break;
 	 
@@ -1775,4 +3301,3 @@ saveMouse(
         WRITE_STR2FD(fd, bufr);
     }
 }
-

@@ -43,12 +43,20 @@
 
 /* typedef statements */
 
+#include "FontParser.h"
+#include <X11/Xlib.h>
+
 typedef struct {
   XmFontList sysFont;
   XmFontList userFont;
   String     sysStr;
   String     userStr;
   XmString   pointSize;
+  FontDescriptor *descriptor;
+  XFontSet   sysFontSet;
+  XFontSet   userFontSet;
+  XFontStruct *sysFontStruct;
+  XFontStruct *userFontStruct;
 } Fontset;
 
 /* External Interface */

@@ -148,7 +148,7 @@ The numbering represents window dump numbers for localization.
 
 3. Font dialog 
    Screendump file: style-3
-   _DtMessage numbers: set 5 (17,22,23)
+   _DtMessage numbers: set 5 (17,22,23,25)
    Instructions:
 	- Click on the Fonts icon in the Style Manager main window
 
@@ -207,7 +207,7 @@ The numbering represents window dump numbers for localization.
 
 6. Mouse dialog 
    Screendump file: style-6
-   _DtMessage numbers: set 9 (1,2,5,6,8,9,17,18)
+   _DtMessage numbers: set 9 (1,2,5,6,8,9,17,18,26-31)
    Instructions:
 	- Click on the Mouse icon in the Style Manager main window
 
@@ -241,7 +241,7 @@ The numbering represents window dump numbers for localization.
 
 9. Window dialog 
    Screendump file: style-9
-   _DtMessage numbers: set 18 (1-10)
+   _DtMessage numbers: set 18 (1-10,17)
    Instructions:
 	- Click on the Window icon in the Style Manager main window
 
@@ -264,5 +264,3 @@ The numbering represents window dump numbers for localization.
      compatibility mode
 	- See dtsession man page for how to set -norestore option.
 	Will have to set this mode for session manager logout dialog also.
-
-

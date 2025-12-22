@@ -53,9 +53,15 @@
 #include <Xm/LabelG.h>
 #include <Xm/List.h>
 #include <Xm/Scale.h>
+#include <Xm/ToggleBG.h>
+#include <Xm/PanedW.h>
+#include <Xm/ComboBox.h>
 #include <Xm/Text.h>
 #include <Xm/TextF.h>
 #include <Xm/VendorSEP.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
 
 #include <Dt/DialogBox.h>
 #include <Dt/Icon.h>
@@ -73,6 +79,11 @@
 #include "Resource.h"
 #include "Protocol.h"
 #include "SaveRestore.h"
+#include "FontFaceCatalog.h"
+
+#ifndef XmFONT_IS_FONTLIST
+#define XmFONT_IS_FONTLIST XmFONT_IS_FONTSET
+#endif
 
 /*+++++++++++++++++++++++++++++++++++++++*/
 /* Local #defines                        */
@@ -82,11 +93,12 @@
 #define PREVIEW    ((char *)GETMESSAGE(5, 17, "Preview"))
 #define IMMEDIATE  ((char *)GETMESSAGE(5, 18, "The changes to fonts will show up in some\napplications the next time they are started.\nOther applications, such as file manager and\napplication manager, will not show the font\nchanges until you Exit the desktop and then log\nback in.")) 
 #define LATER      ((char *)GETMESSAGE(5, 19, "The selected font will be used when\n you restart this session."))
-#define INFO_MSG   ((char *)GETMESSAGE(5, 24, "The font that is currently used for your desktop is not\navailable in the Size list. If a new font is selected and\napplied, you will not be able to return to the current font\nusing the Style Manager - Font dialog."))
+#define INFO_MSG   ((char *)GETMESSAGE(5, 24, "The font that is currently used for your desktop is not\navailable in the font list. If a new font is selected and\napplied, you will not be able to return to the current font\nusing the Style Manager - Font dialog."))
 #define SYSTEM_MSG ((char *)GETMESSAGE(5, 20, "AaBbCcDdEeFfGg0123456789"))
 #define USER_MSG   ((char *)GETMESSAGE(5, 21, "AaBbCcDdEeFfGg0123456789"))
 #define BLANK_MSG  "                          "
-#define SIZE       ((char *)GETMESSAGE(5, 22, "Size"))
+#define FONT_SELECTION ((char *)GETMESSAGE(5, 25, "Font selection"))
+#define FONT_LIST_TAG "dtstyle-font-dialog"
 
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -101,13 +113,135 @@ typedef struct {
     Widget systemLabel;
     Widget userText;
     Widget sizeTB;
+    Widget catalogForm;
+    Widget familyList;
+    Widget variantList;
+    Widget charsetList;
     Widget sizeList;
+    Widget fontTypeLabel;
+    Widget dtwmApplyTG;
+    Widget dtwmIconTG;
+    Widget dtwmGlobalTG;
+    Widget dtwmPanelTG;
+    Widget dtwmRestartTG;
+    Widget dtHelpApplyTG;
     int    originalFontIndex;
     int    selectedFontIndex;
+    int    selectedFamilyIndex;
+    int    selectedVariantIndex;
+    int    selectedCharsetIndex;
     String selectedFontStr;
     Boolean userTextChanged;
+    Boolean dirty;
+    FontDescriptor *descriptorBackup;
+    int             backupIndex;
 } FontData;
 static FontData font;
+static FontFaceCatalog *faceCatalog = NULL;
+
+int _DtWmRestartNoConfirm (Display *display, Window root);
+
+static void
+UpdateDtwmToggleSensitivity(
+        void )
+{
+    Boolean enabled = False;
+    if (font.dtwmApplyTG)
+        enabled = XmToggleButtonGadgetGetState(font.dtwmApplyTG);
+
+    if (font.dtwmIconTG)
+        XtSetSensitive(font.dtwmIconTG, enabled);
+    if (font.dtwmGlobalTG)
+        XtSetSensitive(font.dtwmGlobalTG, enabled);
+    if (font.dtwmPanelTG)
+        XtSetSensitive(font.dtwmPanelTG, enabled);
+
+    if (font.dtwmRestartTG) {
+        Boolean canRestart = enabled && style.xrdb.writeXrdbImmediate;
+        XtSetSensitive(font.dtwmRestartTG, canRestart);
+        if (!canRestart)
+            XmToggleButtonGadgetSetState(font.dtwmRestartTG, False, False);
+    }
+}
+
+static void
+dtwmApplyToggleCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+    (void)w;
+    (void)client_data;
+    (void)call_data;
+    UpdateDtwmToggleSensitivity();
+}
+
+static void
+AppendResourceLine(
+        char *buffer,
+        size_t bufferSize,
+        const char *fmt, ... )
+{
+    size_t used;
+    va_list ap;
+
+    if (!buffer || bufferSize == 0)
+        return;
+
+    used = strlen(buffer);
+    if (used >= bufferSize - 1)
+        return;
+
+    va_start(ap, fmt);
+    (void)vsnprintf(buffer + used, bufferSize - used, fmt, ap);
+    va_end(ap);
+}
+
+static const char *
+GetFontChoiceString(
+        int index )
+{
+    FontDescriptor *desc = NULL;
+    if (index >= 0 && index < style.xrdb.numFonts)
+        desc = style.xrdb.fontChoice[index].descriptor;
+
+    if (desc && desc->raw && *desc->raw)
+        return desc->raw;
+
+    if (index >= 0 && index < style.xrdb.numFonts) {
+        if (style.xrdb.fontChoice[index].sysStr)
+            return style.xrdb.fontChoice[index].sysStr;
+        if (style.xrdb.fontChoice[index].userStr)
+            return style.xrdb.fontChoice[index].userStr;
+    }
+
+    return NULL;
+}
+
+static void
+ClearDescriptorBackup(
+        void )
+{
+    if (font.descriptorBackup) {
+        FreeFontDescriptor(font.descriptorBackup);
+        font.descriptorBackup = NULL;
+    }
+    font.backupIndex = -1;
+}
+
+static void
+RestoreDescriptorBackup(
+        void )
+{
+    if (!font.descriptorBackup || font.backupIndex < 0)
+        return;
+
+    int idx = font.backupIndex;
+    FreeFontDescriptor(style.xrdb.fontChoice[idx].descriptor);
+    style.xrdb.fontChoice[idx].descriptor =
+        DuplicateFontDescriptor(font.descriptorBackup);
+    ClearDescriptorBackup();
+}
 
 static saveRestore save = {FALSE, 0, };
 
@@ -126,14 +260,162 @@ static void ButtonCB(
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data) ;
-static void changeSampleFontCB( 
+static const char *GetFontChoiceString( int index );
+static void RestoreDescriptorBackup( void );
+static void ClearDescriptorBackup( void );
+static void fontFaceSelectedCB(
                         Widget w,
                         XtPointer client_data,
-                        XtPointer call_data) ;
+                        XtPointer call_data ) ;
+static void fontSizeSelectedCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data ) ;
+static void fontFamilySelectedCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data ) ;
+static void fontVariantSelectedCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data ) ;
+static void fontCharsetSelectedCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data ) ;
+static void PopulateCharsetList(
+                        int familyIndex,
+                        int variantIndex );
 static void valueChangedCB( 
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data) ;
+static void ClearSizeList( void );
+static void PopulateFamilyList( void );
+static void PopulateVariantList( int familyIndex );
+static void PopulateVariantSizeList(
+                        int familyIndex,
+                        int variantIndex,
+                        int charsetIndex,
+                        int selectedSize );
+static void ApplyVariantAndCharset(
+                        int familyIndex,
+                        int variantIndex,
+                        int charsetIndex,
+                        int desiredSize );
+static void UpdateFontTypeLabel(
+                        int index );
+static FontFaceCatalog *EnsureFaceCatalog( void );
+static void UpdatePreviewFonts(
+                        int index );
+static void RebuildFontListsForIndex(
+                        int index );
+static void RefreshFontDialogState( void );
+
+typedef struct {
+    XmFontList sysFont;
+    XmFontList userFont;
+    XFontSet sysFontSet;
+    XFontSet userFontSet;
+    XFontStruct *sysFontStruct;
+    XFontStruct *userFontStruct;
+    Boolean pending;
+} FontResourceTrash;
+
+static FontResourceTrash fontTrash[10];
+
+static void
+FontResourceFreeTimeout(
+        XtPointer client_data,
+        XtIntervalId *id )
+{
+    FontResourceTrash *trash = (FontResourceTrash *)client_data;
+    if (!trash)
+        return;
+    if (trash->sysFont)
+        XmFontListFree(trash->sysFont);
+    if (trash->userFont)
+        XmFontListFree(trash->userFont);
+    if (trash->sysFontSet)
+        XFreeFontSet(style.display, trash->sysFontSet);
+    if (trash->userFontSet)
+        XFreeFontSet(style.display, trash->userFontSet);
+    if (trash->sysFontStruct)
+        XFreeFont(style.display, trash->sysFontStruct);
+    if (trash->userFontStruct)
+        XFreeFont(style.display, trash->userFontStruct);
+    memset(trash, 0, sizeof(*trash));
+    trash->pending = False;
+}
+
+static Boolean
+FontDebugEnabled(void)
+{
+    static int cached = -1;
+    if (cached >= 0)
+        return cached ? True : False;
+    const char *env = getenv("DTSTYLE_FONT_DEBUG");
+    cached = (env && *env && strcmp(env, "0") != 0) ? 1 : 0;
+    return cached ? True : False;
+}
+
+static void
+FontDebugLog(const char *fmt, ...)
+{
+    if (!FontDebugEnabled())
+        return;
+    va_list ap;
+    va_start(ap, fmt);
+    fprintf(stderr, "dtstyle: ");
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+    va_end(ap);
+}
+
+static void
+ComputeScreenDpi(
+        int *outDpiX,
+        int *outDpiY )
+{
+    if (outDpiX)
+        *outDpiX = 96;
+    if (outDpiY)
+        *outDpiY = 96;
+
+    if (!style.display)
+        return;
+
+    int screen = style.screenNum;
+    int widthPx = DisplayWidth(style.display, screen);
+    int heightPx = DisplayHeight(style.display, screen);
+    int widthMm = DisplayWidthMM(style.display, screen);
+    int heightMm = DisplayHeightMM(style.display, screen);
+
+    if (widthPx > 0 && widthMm > 0) {
+        double dpiX = (double)widthPx * 25.4 / (double)widthMm;
+        if (dpiX > 1.0 && dpiX < 1000.0 && outDpiX)
+            *outDpiX = (int)(dpiX + 0.5);
+    }
+    if (heightPx > 0 && heightMm > 0) {
+        double dpiY = (double)heightPx * 25.4 / (double)heightMm;
+        if (dpiY > 1.0 && dpiY < 1000.0 && outDpiY)
+            *outDpiY = (int)(dpiY + 0.5);
+    }
+}
+
+static int
+PointToPixel(
+        int pointSize,
+        int dpi )
+{
+    if (pointSize <= 0 || dpi <= 0)
+        return 0;
+    double px = (double)pointSize * (double)dpi / 72.0;
+    int rounded = (int)(px + 0.5);
+    if (rounded < 1)
+        rounded = 1;
+    return rounded;
+}
 
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -153,10 +435,7 @@ popup_fontBB(
     raiseWindow(XtWindow(XtParent(style.fontDialog)));
   }
 
-  /* If no font is found to match current Desktop
-     font, pop up informative message */
-  if (font.selectedFontIndex < 0)
-     InfoDialog(INFO_MSG, style.shell, False);
+  RefreshFontDialogState();
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -186,6 +465,8 @@ CreateFontDlg(
 
     /* Assume nothing is selected */
     font.selectedFontIndex = -1;
+    font.selectedFamilyIndex = -1;
+    font.selectedVariantIndex = -1;
 
     /* 
      * The following flag is used to determine if the user has 
@@ -197,28 +478,51 @@ CreateFontDlg(
      * font.sizeList widget.
      */
     font.userTextChanged = FALSE;
+    ClearDescriptorBackup();
 
     /* 
      * Look for the selectedFont in the fontChoice array and set 
      * selectedFontIndex to that entry
      */
-    for (i=0; i<style.xrdb.numFonts; i++)
-        if (strcmp (font.selectedFontStr, 
-                    style.xrdb.fontChoice[i].sysStr) == 0)
-        {
-            font.selectedFontIndex = i;        
-            if (!style.xrdb.fontChoice[i].userFont)
-                GetUserFontResource(i);
-            if (!style.xrdb.fontChoice[i].sysFont)
-                GetSysFontResource(i);
-            break;    
-        }            
+    /* Prefer the current *systemFont value even if it does not match the
+     * limited application-default presets.  We store a working descriptor in
+     * fontChoice[0] so the rest of the dialog can preview and apply it. */
+    if (font.selectedFontStr && *font.selectedFontStr) {
+        FontDescriptor *parsed = ParseXLFD(font.selectedFontStr);
+        if (parsed) {
+            font.selectedFontIndex = 0;
+            if (style.xrdb.fontChoice[0].descriptor)
+                FreeFontDescriptor(style.xrdb.fontChoice[0].descriptor);
+            style.xrdb.fontChoice[0].descriptor = parsed;
+            RebuildFontListsForIndex(0);
+        }
+    }
+    if (font.selectedFontIndex < 0) {
+        for (i=0; i<style.xrdb.numFonts; i++) {
+            const char *candidate = GetFontChoiceString(i);
+            if (candidate && font.selectedFontStr &&
+                strcmp(font.selectedFontStr, candidate) == 0)
+            {
+                font.selectedFontIndex = i;
+                if (!style.xrdb.fontChoice[i].userFont)
+                    GetUserFontResource(i);
+                if (!style.xrdb.fontChoice[i].sysFont)
+                    GetSysFontResource(i);
+                break;
+            }
+        }
+    }
+    if (font.selectedFontIndex < 0 && style.xrdb.numFonts > 0) {
+        font.selectedFontIndex = 0;
+        RebuildFontListsForIndex(0);
+    }
 
     /* 
      * Save the index of the originally selected font.  If no
      * font is selected, this value will remain -1.
      */
     font.originalFontIndex = font.selectedFontIndex;
+    font.dirty = FALSE;
 
     /* Set up button labels. */
     button_string[0] = CMPSTR((String) _DtOkString);
@@ -285,10 +589,10 @@ CreateFontDlg(
     widget_list[count++] = font.fontpictLabel = 
         _DtCreateIcon(font.fontWkarea, "fontpictLabel", args, n);
 
-    /* Create a TitleBox and Scale/List to choose the font size */
+    /* Create a TitleBox to host the font catalog. */
 
     n = 0;
-    string = CMPSTR(SIZE);
+    string = CMPSTR(FONT_SELECTION);
     XtSetArg(args[n], XmNtitleString, string);  n++;
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);     n++;
     XtSetArg(args[n], XmNtopWidget,          font.fontpictLabel);  n++;
@@ -296,47 +600,94 @@ CreateFontDlg(
     XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);       n++;
     XtSetArg(args[n], XmNleftOffset,         style.horizontalSpacing);  n++;
     XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);       n++;
+    XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing);    n++;
     widget_list[count++] = font.sizeTB =
         _DtCreateTitleBox(font.fontWkarea, "sizeTB", args, n); 
     XmStringFree(string);
 
-    /* calculate size for each of the fonts based on system font size */
-
-    sizeItems = (XmString *) XtMalloc(sizeof(XmString) * style.xrdb.numFonts);
-    for (n=0; n<style.xrdb.numFonts; n++)
-      {
-	sprintf(sizeStr, "%d", (int)(n+1));
-	sizeItems[n] = CMPSTR(sizeStr);
-	style.xrdb.fontChoice[n].pointSize = CMPSTR(sizeStr); 
-      }
-  
-
-    n=0;
-    XtSetArg (args[n], XmNselectionPolicy, XmBROWSE_SELECT); n++;
-    XtSetArg (args[n], XmNautomaticSelection, True); n++;
-    XtSetArg (args[n], XmNvisibleItemCount, 7); n++;
-    XtSetArg (args[n], XmNitemCount, style.xrdb.numFonts); n++;
-    XtSetArg (args[n], XmNitems, sizeItems); n++;
-
-    /* 
-     * If matching font was found for current selection,
-     * display it as selected.  Otherwise, don't select
-     * anything.
-     */
-    if (font.selectedFontIndex >=0) {
-      selectedSize = &(style.xrdb.fontChoice[font.selectedFontIndex].pointSize);
-      XtSetArg (args[n], XmNselectedItems, selectedSize); n++; 
-      XtSetArg (args[n], XmNselectedItemCount, 1); n++;
+    /* Build the catalog selection UI inside the TitleBox work area. */
+    Widget catalogWorkArea = _DtTitleBoxGetWorkArea(font.sizeTB);
+    if (!catalogWorkArea) {
+        int waArgs = 0;
+        XtSetArg(args[waArgs], XmNchildType, XmWORK_AREA);  waArgs++;
+        catalogWorkArea = XmCreateForm(font.sizeTB, "catalogWorkArea", args, waArgs);
+        XtManageChild(catalogWorkArea);
     }
-    font.sizeList = XmCreateScrolledList(font.sizeTB,"sizeList",args,n);
-    XtAddCallback(font.sizeList, XmNbrowseSelectionCallback,
-                                         changeSampleFontCB, NULL);
 
-    /* If a font match was found and selected, then set it's point size. */
-    if (font.selectedFontIndex >=0)
-      XmListSetItem(font.sizeList,
-        style.xrdb.fontChoice[font.selectedFontIndex].pointSize);
-    XtFree((char *)sizeItems);
+    n = 0;
+    XtSetArg(args[n], XmNfractionBase, 100); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    font.catalogForm = XmCreateForm(catalogWorkArea, "catalogForm", args, n);
+    XtManageChild(font.catalogForm);
+
+    n = 0;
+    XtSetArg(args[n], XmNselectionPolicy, XmBROWSE_SELECT); n++;
+    XtSetArg(args[n], XmNautomaticSelection, True); n++;
+    XtSetArg(args[n], XmNvisibleItemCount, 12); n++;
+    font.familyList = XmCreateScrolledList(font.catalogForm, "familyList", args, n);
+    XtVaSetValues(XtParent(font.familyList),
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_POSITION,
+                  XmNrightPosition, 25,
+                  NULL);
+    XtAddCallback(font.familyList, XmNbrowseSelectionCallback,
+                  fontFamilySelectedCB, NULL);
+    XtManageChild(font.familyList);
+
+    n = 0;
+    XtSetArg(args[n], XmNselectionPolicy, XmBROWSE_SELECT); n++;
+    XtSetArg(args[n], XmNautomaticSelection, True); n++;
+    XtSetArg(args[n], XmNvisibleItemCount, 12); n++;
+    font.variantList = XmCreateScrolledList(font.catalogForm, "variantList", args, n);
+    XtVaSetValues(XtParent(font.variantList),
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_POSITION,
+                  XmNleftPosition, 25,
+                  XmNrightAttachment, XmATTACH_POSITION,
+                  XmNrightPosition, 50,
+                  NULL);
+    XtAddCallback(font.variantList, XmNbrowseSelectionCallback,
+                  fontVariantSelectedCB, NULL);
+    XtManageChild(font.variantList);
+
+    n = 0;
+    XtSetArg(args[n], XmNselectionPolicy, XmBROWSE_SELECT); n++;
+    XtSetArg(args[n], XmNautomaticSelection, True); n++;
+    XtSetArg(args[n], XmNvisibleItemCount, 12); n++;
+    font.charsetList = XmCreateScrolledList(font.catalogForm, "charsetList", args, n);
+    XtVaSetValues(XtParent(font.charsetList),
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_POSITION,
+                  XmNleftPosition, 50,
+                  XmNrightAttachment, XmATTACH_POSITION,
+                  XmNrightPosition, 75,
+                  NULL);
+    XtAddCallback(font.charsetList, XmNbrowseSelectionCallback,
+                  fontCharsetSelectedCB, NULL);
+    XtManageChild(font.charsetList);
+
+    n = 0;
+    XtSetArg(args[n], XmNselectionPolicy, XmBROWSE_SELECT); n++;
+    XtSetArg(args[n], XmNautomaticSelection, True); n++;
+    XtSetArg(args[n], XmNvisibleItemCount, 12); n++;
+    font.sizeList = XmCreateScrolledList(font.catalogForm, "sizeList", args, n);
+    XtVaSetValues(XtParent(font.sizeList),
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_POSITION,
+                  XmNleftPosition, 75,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  NULL);
+    XtAddCallback(font.sizeList, XmNbrowseSelectionCallback,
+                  fontSizeSelectedCB, NULL);
+    XtManageChild(font.sizeList);
 
     /* preview TitleBox */
     n = 0;
@@ -412,13 +763,211 @@ CreateFontDlg(
     /* Add callback to determine if user changes text in sample field */
     XtAddCallback(font.userText, XmNvalueChangedCallback, valueChangedCB, NULL);
 
+    n = 0;
+    string = CMPSTR("Type:");
+    XtSetArg(args[n], XmNlabelString, string);  n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING);  n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET);  n++;
+    XtSetArg(args[n], XmNtopWidget, font.userText);  n++;
+    XtSetArg(args[n], XmNtopOffset, style.verticalSpacing);  n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM);  n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM);  n++;
+    font.fontTypeLabel =
+        XmCreateLabelGadget(font.previewForm, "fontTypeLabel", args, n);
+    XmStringFree(string);
+
+    n = 0;
+    string = XmStringCreateLocalized("Apply to Window Manager titles");
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, font.fontTypeLabel); n++;
+    XtSetArg(args[n], XmNtopOffset, style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    font.dtwmApplyTG =
+        XmCreateToggleButtonGadget(font.previewForm, "dtwmApplyTG", args, n);
+    XmStringFree(string);
+    XtAddCallback(font.dtwmApplyTG, XmNvalueChangedCallback, dtwmApplyToggleCB, NULL);
+    XmToggleButtonGadgetSetState(font.dtwmApplyTG, True, False);
+
+    n = 0;
+    string = XmStringCreateLocalized("Apply to Window Manager icon labels");
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, font.dtwmApplyTG); n++;
+    XtSetArg(args[n], XmNtopOffset, 0); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    font.dtwmIconTG =
+        XmCreateToggleButtonGadget(font.previewForm, "dtwmIconTG", args, n);
+    XmStringFree(string);
+    XmToggleButtonGadgetSetState(font.dtwmIconTG, False, False);
+
+    n = 0;
+    string = XmStringCreateLocalized("Apply as Window Manager default font");
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, font.dtwmIconTG); n++;
+    XtSetArg(args[n], XmNtopOffset, 0); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    font.dtwmGlobalTG =
+        XmCreateToggleButtonGadget(font.previewForm, "dtwmGlobalTG", args, n);
+    XmStringFree(string);
+    XmToggleButtonGadgetSetState(font.dtwmGlobalTG, False, False);
+
+    n = 0;
+    string = XmStringCreateLocalized("Apply to Front Panel");
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, font.dtwmGlobalTG); n++;
+    XtSetArg(args[n], XmNtopOffset, 0); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    font.dtwmPanelTG =
+        XmCreateToggleButtonGadget(font.previewForm, "dtwmPanelTG", args, n);
+    XmStringFree(string);
+    XmToggleButtonGadgetSetState(font.dtwmPanelTG, False, False);
+
+    n = 0;
+    string = XmStringCreateLocalized("Restart Window Manager now (recommended)");
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, font.dtwmPanelTG); n++;
+    XtSetArg(args[n], XmNtopOffset, 0); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    font.dtwmRestartTG =
+        XmCreateToggleButtonGadget(font.previewForm, "dtwmRestartTG", args, n);
+    XmStringFree(string);
+    XmToggleButtonGadgetSetState(font.dtwmRestartTG, True, False);
+
+    n = 0;
+    string = XmStringCreateLocalized("Override Help document fonts");
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, font.dtwmRestartTG); n++;
+    XtSetArg(args[n], XmNtopOffset, 0); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    font.dtHelpApplyTG =
+        XmCreateToggleButtonGadget(font.previewForm, "dtHelpApplyTG", args, n);
+    XmStringFree(string);
+    XmToggleButtonGadgetSetState(font.dtHelpApplyTG, True, False);
+
     XtManageChild(font.systemLabel);
     XtManageChild(font.userText);
+    XtManageChild(font.fontTypeLabel);
+    XtManageChild(font.dtwmApplyTG);
+    XtManageChild(font.dtwmIconTG);
+    XtManageChild(font.dtwmGlobalTG);
+    XtManageChild(font.dtwmPanelTG);
+    XtManageChild(font.dtwmRestartTG);
+    XtManageChild(font.dtHelpApplyTG);
     XtManageChild(font.previewForm);
-    XtManageChild(font.sizeList);
+
     XtManageChildren(widget_list,count);
     XtManageChild(font.fontWkarea);
 
+    UpdateDtwmToggleSensitivity();
+}
+
+static void
+RefreshFontDialogState( void )
+{
+    if (style.xrdb.numFonts <= 0)
+        return;
+
+    font.selectedFontIndex = 0;
+    font.selectedFontStr = style.xrdb.systemFontStr;
+
+    if (font.selectedFontStr && *font.selectedFontStr) {
+        FontDescriptor *parsed = ParseXLFD(font.selectedFontStr);
+        if (parsed) {
+            if (style.xrdb.fontChoice[0].descriptor)
+                FreeFontDescriptor(style.xrdb.fontChoice[0].descriptor);
+            style.xrdb.fontChoice[0].descriptor = parsed;
+            RebuildFontListsForIndex(0);
+        }
+    }
+
+    if (!style.xrdb.fontChoice[0].sysFont || !style.xrdb.fontChoice[0].userFont)
+        RebuildFontListsForIndex(0);
+
+    UpdatePreviewFonts(0);
+    UpdateFontTypeLabel(0);
+
+    FontDescriptor *desc = style.xrdb.fontChoice[0].descriptor;
+    FontFaceCatalog *catalog = EnsureFaceCatalog();
+    PopulateFamilyList();
+
+    int familyIndex = -1;
+    int variantIndex = -1;
+    int charsetIndex = -1;
+    if (catalog && desc)
+        FontFaceCatalogFindVariantForDescriptor(catalog, desc,
+                                               &familyIndex,
+                                               &variantIndex,
+                                               &charsetIndex);
+
+    if (familyIndex < 0 && catalog)
+        familyIndex = FontFaceCatalogFamilyCount(catalog) > 0 ? 0 : -1;
+
+    if (familyIndex >= 0) {
+        font.selectedFamilyIndex = familyIndex;
+        if (font.familyList)
+            XmListSelectPos(font.familyList, familyIndex + 1, False);
+        PopulateVariantList(familyIndex);
+    } else {
+        ClearSizeList();
+    }
+
+    if (variantIndex < 0 && catalog && familyIndex >= 0)
+        variantIndex = FontFaceCatalogVariantCount(catalog, familyIndex) > 0 ? 0 : -1;
+
+    if (variantIndex >= 0) {
+        font.selectedVariantIndex = variantIndex;
+        if (font.variantList)
+            XmListSelectPos(font.variantList, variantIndex + 1, False);
+        PopulateCharsetList(familyIndex, variantIndex);
+        int charsetCount =
+            FontFaceCatalogVariantCharsetCount(catalog, familyIndex, variantIndex);
+        if (charsetIndex < 0 && charsetCount > 0)
+            charsetIndex = 0;
+        if (charsetIndex >= 0 && charsetCount > 0) {
+            font.selectedCharsetIndex = charsetIndex;
+            if (font.charsetList)
+                XmListSelectPos(font.charsetList, charsetIndex + 1, False);
+            int currentSize = 0;
+            if (desc) {
+                if (desc->scalable && desc->pointSize > 0)
+                    currentSize = desc->pointSize / 10;
+                else if (!desc->scalable)
+                    currentSize = desc->pixelSize;
+            }
+            PopulateVariantSizeList(familyIndex, variantIndex, charsetIndex, currentSize);
+        } else {
+            font.selectedCharsetIndex = -1;
+            ClearSizeList();
+        }
+    } else {
+        ClearSizeList();
+    }
+
+    ClearDescriptorBackup();
+    if (desc) {
+        font.descriptorBackup = DuplicateFontDescriptor(desc);
+        font.backupIndex = 0;
+    }
+
+    font.originalFontIndex = 0;
+    font.dirty = FALSE;
 }
 
 
@@ -457,7 +1006,6 @@ ButtonCB(
   DtDialogBoxCallbackStruct *cb     
            = (DtDialogBoxCallbackStruct *) call_data;
   int      n, len;
-  XtArgVal items;
   char	   *str, *fntstr, *fntsetstr;
   Arg      args[MAX_ARGS];
   char     fontres[8192];
@@ -466,16 +1014,8 @@ ButtonCB(
     {
         /* Set the xrdb or pass to dtsession and close the window */
       case OK_BUTTON:
-         /* 
-	  * Need to test for the case where the Font dialog maps without 
-	  * any fonts selected, and the user presses OK.  Do this by 
-	  * checking for number of items selected before changing 
-	  * anything.
-	  */
-         XtVaGetValues (font.sizeList, XmNselectedItemCount, &items, NULL);
-
          /*   Post an info dialog explaining when the new fonts will appear */
-         if ((font.selectedFontIndex != font.originalFontIndex) && (items > 0))
+         if (font.dirty && (font.selectedFontIndex >= 0))
          {
             XtUnmanageChild(style.fontDialog);  
 
@@ -488,16 +1028,17 @@ ButtonCB(
               InfoDialog(LATER, style.shell, False); 
             }
 
-	    /* 
-	       for *FontSet resource: find first font entry delimited by a ":" 
-	       or an "=". 
-	    */ 
-            len =strcspn(style.xrdb.fontChoice[font.selectedFontIndex].userStr,
-			 ":=");
+            const char *chosenStr = GetFontChoiceString(font.selectedFontIndex);
+            if (!chosenStr)
+                chosenStr = style.xrdb.fontChoice[font.selectedFontIndex].userStr;
+
+            /* 
+               for *FontSet resource: find first font entry delimited by a ":" 
+               or an "=". 
+            */ 
+            len = strcspn(chosenStr, ":=");
             fntsetstr = (char *) XtCalloc(1, len + 1);
-            memcpy(fntsetstr, 
-		   style.xrdb.fontChoice[font.selectedFontIndex].userStr,
-		   len);
+            memcpy(fntsetstr, chosenStr, len);
 
             /* 
 	       Since the *Font and *FontSet resources may be used by old
@@ -518,8 +1059,8 @@ ButtonCB(
             len = strcspn(fntsetstr,",:=");
             fntstr = (char *) XtCalloc(1, len + 1);
             memcpy(fntstr, 
-		   style.xrdb.fontChoice[font.selectedFontIndex].userStr,
-		   len);
+		   chosenStr,
+			   len);
 
 	    /*
 	      for *FontSet resource: if we got a font (instead of a font set)
@@ -535,31 +1076,96 @@ ButtonCB(
 		    strcpy(str + 1, "*-*");
 	    }
 
-           /* create the font resource specs with the selected font for xrdb */
-            sprintf(fontres,
-		 "*systemFont: %s\n*userFont: %s\n*FontList: %s\n*buttonFontList: %s\n*labelFontList: %s\n*textFontList: %s\n*XmText*FontList: %s\n*XmTextField*FontList: %s\n*DtEditor*textFontList: %s\n*Font: %s\n*FontSet: %s\n",
-                 style.xrdb.fontChoice[font.selectedFontIndex].sysStr,
-                 style.xrdb.fontChoice[font.selectedFontIndex].userStr,
-                 style.xrdb.fontChoice[font.selectedFontIndex].sysStr,
-                 style.xrdb.fontChoice[font.selectedFontIndex].sysStr,
-                 style.xrdb.fontChoice[font.selectedFontIndex].sysStr,
-                 style.xrdb.fontChoice[font.selectedFontIndex].userStr,
-                 style.xrdb.fontChoice[font.selectedFontIndex].userStr,
-                 style.xrdb.fontChoice[font.selectedFontIndex].userStr,
-	         style.xrdb.fontChoice[font.selectedFontIndex].userStr,
+	           /* create the font resource specs with the selected font for xrdb */
+	            const char *sysStr = GetFontChoiceString(font.selectedFontIndex);
+	            if (!sysStr)
+	                sysStr = style.xrdb.fontChoice[font.selectedFontIndex].sysStr;
+	            const char *userStr = chosenStr;
+	            if (!userStr)
+	                userStr = style.xrdb.fontChoice[font.selectedFontIndex].userStr;
+	
+            int resLen = snprintf(fontres, sizeof(fontres),
+                "*systemFont: %s\n*userFont: %s\n*FontList: %s\n*buttonFontList: %s\n*labelFontList: %s\n*textFontList: %s\n*XmText*FontList: %s\n*XmTextField*FontList: %s\n*DtEditor*textFontList: %s\n*Font: %s\n*FontSet: %s\n",
+                 sysStr,
+                 userStr,
+                 sysStr,
+                 sysStr,
+                 sysStr,
+                 userStr,
+                 userStr,
+                 userStr,
+	         userStr,
                  fntstr, fntsetstr);
+            if (resLen < 0 || resLen >= (int)sizeof(fontres))
+                fontres[sizeof(fontres) - 1] = '\0';
 
-	    XtFree(fntstr);
-	    XtFree(fntsetstr);
+	            if (!font.dtHelpApplyTG ||
+	                XmToggleButtonGadgetGetState(font.dtHelpApplyTG))
+	            {
+	                /*
+	                 * Ensure the Help display area inherits the Style Manager font
+	                 * by writing both the generic fontList resources and the
+	                 * specific menu buttons that back the topic/display area.
+	                 */
+                const char *helpFont = (userStr && *userStr) ? userStr : sysStr;
+                const char *helpFontList = (userStr && *userStr) ? userStr : helpFont;
+                AppendResourceLine(fontres, sizeof(fontres),
+                                   "DtHelpDialog*fontList: %s\n"
+                                   "DtHelpQuickDialog*fontList: %s\n"
+                                   "DtHelpDialog*homeTopic.fontList: %s\n"
+                                   "DtHelpDialog*navigateMenu.homeTopic.fontList: %s\n"
+                                   "DtHelpDialog*menuBar.navigateMenu.homeTopic.fontList: %s\n"
+                                   "DtHelpQuickDialog*closeButton.fontList: %s\n"
+                                   "DtHelpDialog*DisplayArea.userFont: %s\n"
+                                   "DtHelpDialog*DisplayArea.fontList: %s\n"
+                                   "DtHelpDialog*volumeLabel.fontList: %s\n"
+                                   "DtHelpDialog*pathLabel.fontList: %s\n"
+                                   "DtHelpDialog*overrideFontList: True\n",
+                                   helpFont, helpFont,
+                                   helpFont, helpFont, helpFont, helpFont,
+                                   helpFont, helpFontList, helpFontList, helpFontList);
+	            }
 
-            /* if writeXrdbImmediate true write to Xrdb else send to session mgr */
-    	    if(style.xrdb.writeXrdbImmediate)
-	        _DtAddToResource(style.display,fontres);
+	            if (font.dtwmApplyTG && XmToggleButtonGadgetGetState(font.dtwmApplyTG))
+	            {
+	                AppendResourceLine(fontres, sizeof(fontres),
+	                                   "Dtwm*client*fontList: %s\n"
+	                                   "Dtwm*feedback*fontList: %s\n",
+	                                   sysStr, sysStr);
+	                if (font.dtwmIconTG && XmToggleButtonGadgetGetState(font.dtwmIconTG))
+	                    AppendResourceLine(fontres, sizeof(fontres),
+	                                       "Dtwm*icon*fontList: %s\n", sysStr);
+	                if (font.dtwmGlobalTG && XmToggleButtonGadgetGetState(font.dtwmGlobalTG))
+	                    AppendResourceLine(fontres, sizeof(fontres),
+	                                       "Dtwm*fontList: %s\n", sysStr);
+	                if (font.dtwmPanelTG && XmToggleButtonGadgetGetState(font.dtwmPanelTG))
+	                    AppendResourceLine(fontres, sizeof(fontres),
+	                                       "Dtwm*FrontPanel*highResFontList: %s\n"
+	                                       "Dtwm*FrontPanel*mediumResFontList: %s\n"
+	                                       "Dtwm*FrontPanel*lowResFontList: %s\n",
+	                                       sysStr, sysStr, sysStr);
+	            }
+	
+		    XtFree(fntstr);
+		    XtFree(fntsetstr);
+	
+	            /* if writeXrdbImmediate true write to Xrdb else send to session mgr */
+	    	    if(style.xrdb.writeXrdbImmediate)
+		        _DtAddToResource(style.display,fontres);
 
-            SmNewFontSettings(fontres);
+	            SmNewFontSettings(fontres);
 
-            font.originalFontIndex = font.selectedFontIndex;
-            style.xrdb.systemFontStr = font.selectedFontStr;
+	            if (style.xrdb.writeXrdbImmediate &&
+	                font.dtwmApplyTG && XmToggleButtonGadgetGetState(font.dtwmApplyTG) &&
+	                font.dtwmRestartTG && XmToggleButtonGadgetGetState(font.dtwmRestartTG))
+	            {
+	                _DtWmRestartNoConfirm(style.display, style.root);
+	            }
+	
+	            font.originalFontIndex = font.selectedFontIndex;
+	            style.xrdb.systemFontStr = font.selectedFontStr;
+	            ClearDescriptorBackup();
+	            font.dirty = FALSE;
          }
 
          else 
@@ -573,25 +1179,31 @@ ButtonCB(
 
       XtUnmanageChild(style.fontDialog);
 
-      if (font.originalFontIndex >= 0)
-        XmListSelectPos(font.sizeList, font.originalFontIndex+1, True);
-      else { 
+      RestoreDescriptorBackup();
+
+      if (font.originalFontIndex >= 0) {
+        font.selectedFontIndex = font.originalFontIndex;
+        RebuildFontListsForIndex(font.originalFontIndex);
+        UpdatePreviewFonts(font.originalFontIndex);
+        UpdateFontTypeLabel(font.originalFontIndex);
+      } else { 
 	/* 
 	 * if no font was originally selected, need to undo any results
 	 * from selections that were made by user before pressing Cancel.
 	 */
-	XtVaSetValues (font.sizeList, XmNselectedItemCount, 0, NULL);
         XtVaSetValues (font.userText, 
 		       XmNvalue, BLANK_MSG, 
-	    	       XmNfontList, style.xrdb.userFont,
+		       XmNfontList, style.xrdb.userFont,
 		       NULL);
-        XtVaSetValues (font.systemLabel, 
+	XtVaSetValues (font.systemLabel, 
 		       XmNlabelString, CMPSTR(BLANK_MSG), 
-	    	       XmNfontList, style.xrdb.systemFont,
+		       XmNfontList, style.xrdb.systemFont,
 		       NULL);
 	font.userTextChanged = FALSE;
 	font.selectedFontIndex = -1;
+        UpdateFontTypeLabel(-1);
       }
+      font.dirty = FALSE;
       break;
 
     case HELP_BUTTON:
@@ -603,60 +1215,6 @@ ButtonCB(
     }
 }
 
-
-/*+++++++++++++++++++++++++++++++++++++++*/
-/* changSampleFontCB                     */
-/*  Change the font in the sample areas  */
-/*+++++++++++++++++++++++++++++++++++++++*/
-static void 
-changeSampleFontCB(
-        Widget w,
-        XtPointer client_data,
-        XtPointer call_data )
-{
-    int       n;
-    int       pos;
-    int       hourGlassOn;
-    Arg       args[MAX_ARGS];
-    XmListCallbackStruct *cb = (XmListCallbackStruct *) call_data;
-
-    pos = cb->item_position-1;
-
-    font.selectedFontIndex = pos;
-    font.selectedFontStr = style.xrdb.fontChoice[pos].sysStr;
-
-    hourGlassOn = !style.xrdb.fontChoice[pos].userFont ||
-                !style.xrdb.fontChoice[pos].sysFont;
-
-    if (hourGlassOn)
-      _DtTurnOnHourGlass(style.fontDialog);
-
-    if (!style.xrdb.fontChoice[pos].userFont)
-      GetUserFontResource(pos);
-    if (!style.xrdb.fontChoice[pos].sysFont)
-      GetSysFontResource(pos);
-
-    if (hourGlassOn)
-      _DtTurnOffHourGlass(style.fontDialog);
-
-    /* Set the sample System Font string to different Font */
-    n = 0;
-    XtSetArg(args[n], XmNfontList, style.xrdb.fontChoice[pos].sysFont); n++;
-    /* string_val = CMPSTR(SYSTEM_MSG);*/
-    XtSetArg (args[n], XmNlabelString, CMPSTR(SYSTEM_MSG));  n++;
-    XtSetValues (font.systemLabel, args, n); 
-
-    /* 
-     * If the user didn't change the text field, output standard user 
-     * text message.
-     */
-    n = 0;
-    if (!font.userTextChanged) 
-      XtSetArg (args[n], XmNvalue, USER_MSG);  n++;
-    XtSetArg(args[n], XmNfontList, style.xrdb.fontChoice[pos].userFont); n++;
-    XtSetValues (font.userText, args, n);
-    XmTextShowPosition(font.userText, 0);
-}
 
 /*+++++++++++++++++++++++++++++++++++++++*/
 /* valueChangedCB                        */
@@ -671,6 +1229,529 @@ valueChangedCB(
 
 { 
   font.userTextChanged = TRUE; 
+}
+
+static void 
+UpdateFontTypeLabel(
+        int index )
+{
+    char labelText[96];
+    FontDescriptor *desc = NULL;
+    Arg args[1];
+
+    if (index >= 0 && index < style.xrdb.numFonts)
+        desc = style.xrdb.fontChoice[index].descriptor;
+
+    if (index >= 0)
+        font.selectedFontStr = (String)GetFontChoiceString(index);
+
+    if (desc) {
+        if (desc->scalable) {
+            snprintf(labelText, sizeof(labelText), "Type: scalable (pt sizes)");
+        } else {
+            snprintf(labelText, sizeof(labelText), "Type: bitmap (px sizes)");
+        }
+    } else {
+        snprintf(labelText, sizeof(labelText), "Type: (none)");
+    }
+
+    XmString label = CMPSTR(labelText);
+    XtSetArg(args[0], XmNlabelString, label);
+    XtSetValues(font.fontTypeLabel, args, 1);
+    XmStringFree(label);
+}
+
+static void
+ClearSizeList( void )
+{
+    if (!font.sizeList)
+        return;
+    XmListDeleteAllItems(font.sizeList);
+}
+
+static void
+PopulateFamilyList( void )
+{
+    if (!font.familyList)
+        return;
+    XmListDeleteAllItems(font.familyList);
+    FontFaceCatalog *catalog = EnsureFaceCatalog();
+    if (!catalog)
+        return;
+    int familyCount = FontFaceCatalogFamilyCount(catalog);
+    for (int i = 0; i < familyCount; i++)
+        XmListAddItem(font.familyList, FontFaceCatalogFamilyLabel(catalog, i), 0);
+}
+
+static void
+PopulateVariantList(
+        int familyIndex )
+{
+    if (!font.variantList)
+        return;
+    XmListDeleteAllItems(font.variantList);
+    FontFaceCatalog *catalog = EnsureFaceCatalog();
+    if (!catalog || familyIndex < 0)
+        return;
+    int variantCount = FontFaceCatalogVariantCount(catalog, familyIndex);
+    for (int i = 0; i < variantCount; i++)
+        XmListAddItem(font.variantList,
+                      FontFaceCatalogVariantLabel(catalog, familyIndex, i),
+                      0);
+}
+
+static void
+PopulateCharsetList(
+        int familyIndex,
+        int variantIndex )
+{
+    if (!font.charsetList)
+        return;
+    XmListDeleteAllItems(font.charsetList);
+    FontFaceCatalog *catalog = EnsureFaceCatalog();
+    if (!catalog || familyIndex < 0 || variantIndex < 0)
+        return;
+    int charsetCount =
+        FontFaceCatalogVariantCharsetCount(catalog, familyIndex, variantIndex);
+    for (int i = 0; i < charsetCount; i++)
+        XmListAddItem(font.charsetList,
+                      FontFaceCatalogVariantCharsetLabel(catalog, familyIndex, variantIndex, i),
+                      0);
+}
+
+static void
+PopulateVariantSizeList(
+        int familyIndex,
+        int variantIndex,
+        int charsetIndex,
+        int selectedSize )
+{
+    if (!font.sizeList)
+        return;
+    XmListDeleteAllItems(font.sizeList);
+    FontFaceCatalog *catalog = EnsureFaceCatalog();
+    if (!catalog || familyIndex < 0 || variantIndex < 0 || charsetIndex < 0)
+        return;
+
+    Boolean scalable =
+        FontFaceCatalogVariantIsScalable(catalog, familyIndex, variantIndex);
+    FontDebugLog("size list: family=%d variant=%d charset=%d scalable=%d selected=%d",
+                 familyIndex, variantIndex, charsetIndex, scalable ? 1 : 0, selectedSize);
+    if (scalable) {
+        static const int common_pt_sizes[] = {
+            6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72
+        };
+        const int count = (int)(sizeof(common_pt_sizes) / sizeof(common_pt_sizes[0]));
+        for (int i = 0; i < count; i++) {
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%d", common_pt_sizes[i]);
+            XmString item = CMPSTR(buf);
+            XmListAddItem(font.sizeList, item, 0);
+            XmStringFree(item);
+        }
+        if (selectedSize > 0) {
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%d", selectedSize);
+            XmString select = CMPSTR(buf);
+            XmListSelectItem(font.sizeList, select, False);
+            XmStringFree(select);
+        } else {
+            XmListSelectPos(font.sizeList, 1, False);
+        }
+        return;
+    }
+
+    int sizeCount =
+        FontFaceCatalogVariantCharsetSizeCount(catalog, familyIndex, variantIndex, charsetIndex);
+    FontDebugLog("size list: bitmap sizes=%d", sizeCount);
+    for (int i = 0; i < sizeCount; i++) {
+        int size = FontFaceCatalogVariantCharsetSizeAt(
+                catalog, familyIndex, variantIndex, charsetIndex, i);
+        if (size <= 0)
+            continue;
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%d", size);
+        XmString item = CMPSTR(buf);
+        XmListAddItem(font.sizeList, item, 0);
+        XmStringFree(item);
+    }
+
+    if (sizeCount <= 0)
+        return;
+
+    if (selectedSize > 0) {
+        int nearest = FontFaceCatalogVariantCharsetNearestSize(
+                catalog, familyIndex, variantIndex, charsetIndex, selectedSize);
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%d", nearest);
+        XmString select = CMPSTR(buf);
+        XmListSelectItem(font.sizeList, select, False);
+        XmStringFree(select);
+    } else {
+        XmListSelectPos(font.sizeList, 1, False);
+    }
+}
+
+static void
+ApplyVariantAndCharset(
+        int familyIndex,
+        int variantIndex,
+        int charsetIndex,
+        int desiredSize )
+{
+    if (familyIndex < 0 || variantIndex < 0 || charsetIndex < 0 ||
+        font.selectedFontIndex < 0)
+        return;
+
+    FontFaceCatalog *catalog = EnsureFaceCatalog();
+    if (!catalog)
+        return;
+
+    FontDescriptor *current =
+        style.xrdb.fontChoice[font.selectedFontIndex].descriptor;
+    int savedSize = desiredSize;
+    if (savedSize <= 0 && current) {
+        if (current->scalable && current->pointSize > 0)
+            savedSize = current->pointSize / 10;
+        else if (!current->scalable)
+            savedSize = current->pixelSize;
+    }
+    if (savedSize <= 0)
+        savedSize = 12;
+
+    FontDebugLog("apply: family=%d variant=%d charset=%d desired=%d resolved=%d",
+                 familyIndex, variantIndex, charsetIndex, desiredSize, savedSize);
+
+    FontDescriptor *newDesc =
+        FontFaceCatalogCreateDescriptorForVariant(
+                catalog,
+                familyIndex,
+                variantIndex,
+                charsetIndex,
+                savedSize);
+    if (!newDesc)
+        return;
+
+    if (newDesc->scalable) {
+        int dpiX = 96;
+        int dpiY = 96;
+        ComputeScreenDpi(&dpiX, &dpiY);
+        FontDescriptorSetResolution(newDesc, dpiX, dpiY);
+        int pixelSize = PointToPixel(savedSize, dpiY);
+        if (pixelSize > 0)
+            FontDescriptorSetPixelSize(newDesc, pixelSize);
+        FontDebugLog("apply: scalable dpi=%d/%d pt=%d px=%d raw=%s",
+                     dpiX, dpiY, savedSize, pixelSize,
+                     newDesc->raw ? newDesc->raw : "(null)");
+    } else {
+        FontDebugLog("apply: bitmap px=%d raw=%s",
+                     newDesc->pixelSize,
+                     newDesc->raw ? newDesc->raw : "(null)");
+    }
+
+    FreeFontDescriptor(current);
+    style.xrdb.fontChoice[font.selectedFontIndex].descriptor = newDesc;
+    font.selectedFontStr = newDesc->raw;
+    font.selectedFamilyIndex = familyIndex;
+    font.selectedVariantIndex = variantIndex;
+    font.selectedCharsetIndex = charsetIndex;
+    RebuildFontListsForIndex(font.selectedFontIndex);
+    UpdatePreviewFonts(font.selectedFontIndex);
+    UpdateFontTypeLabel(font.selectedFontIndex);
+    int newSize = newDesc->scalable ? (newDesc->pointSize / 10) : newDesc->pixelSize;
+    PopulateVariantSizeList(familyIndex, variantIndex, charsetIndex, newSize);
+    font.dirty = TRUE;
+}
+
+static void
+fontFamilySelectedCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+    XmListCallbackStruct *cb = (XmListCallbackStruct *)call_data;
+    if (!cb || font.selectedFontIndex < 0)
+        return;
+
+    int familyIndex = cb->item_position - 1;
+    FontFaceCatalog *catalog = EnsureFaceCatalog();
+    if (!catalog || familyIndex < 0 ||
+        familyIndex >= FontFaceCatalogFamilyCount(catalog))
+    {
+        return;
+    }
+
+    font.selectedFamilyIndex = familyIndex;
+    PopulateVariantList(familyIndex);
+    int variantCount = FontFaceCatalogVariantCount(catalog, familyIndex);
+    if (variantCount > 0) {
+        XmListSelectPos(font.variantList, 1, False);
+        XmListCallbackStruct variantCB = {
+            .reason = XmCR_BROWSE_SELECT,
+            .item_position = 1
+        };
+        fontVariantSelectedCB(font.variantList, NULL, &variantCB);
+    } else {
+        font.selectedVariantIndex = -1;
+        font.selectedCharsetIndex = -1;
+        ClearSizeList();
+    }
+}
+
+static void
+fontVariantSelectedCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+    XmListCallbackStruct *cb = (XmListCallbackStruct *)call_data;
+    if (!cb || font.selectedFontIndex < 0 || font.selectedFamilyIndex < 0)
+        return;
+
+    int variantIndex = cb->item_position - 1;
+    FontFaceCatalog *catalog = EnsureFaceCatalog();
+    if (!catalog)
+        return;
+    int variantCount = FontFaceCatalogVariantCount(catalog, font.selectedFamilyIndex);
+    if (variantIndex < 0 || variantIndex >= variantCount)
+        return;
+
+    font.selectedVariantIndex = variantIndex;
+    PopulateCharsetList(font.selectedFamilyIndex, variantIndex);
+    int charsetCount = FontFaceCatalogVariantCharsetCount(
+            catalog, font.selectedFamilyIndex, variantIndex);
+    if (charsetCount > 0) {
+        XmListSelectPos(font.charsetList, 1, False);
+        XmListCallbackStruct charsetCB = {
+            .reason = XmCR_BROWSE_SELECT,
+            .item_position = 1
+        };
+        fontCharsetSelectedCB(font.charsetList, NULL, &charsetCB);
+    } else {
+        font.selectedCharsetIndex = -1;
+        ClearSizeList();
+    }
+}
+
+static void
+fontCharsetSelectedCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+    XmListCallbackStruct *cb = (XmListCallbackStruct *)call_data;
+    if (!cb || font.selectedFontIndex < 0 ||
+        font.selectedFamilyIndex < 0 || font.selectedVariantIndex < 0)
+        return;
+
+    int charsetIndex = cb->item_position - 1;
+    FontFaceCatalog *catalog = EnsureFaceCatalog();
+    if (!catalog)
+        return;
+    int charsetCount = FontFaceCatalogVariantCharsetCount(
+            catalog, font.selectedFamilyIndex, font.selectedVariantIndex);
+    if (charsetIndex < 0 || charsetIndex >= charsetCount)
+        return;
+
+    ApplyVariantAndCharset(font.selectedFamilyIndex,
+                           font.selectedVariantIndex,
+                           charsetIndex,
+                           0);
+}
+
+static void
+fontSizeSelectedCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+    XmListCallbackStruct *cb = (XmListCallbackStruct *)call_data;
+    if (!cb || font.selectedFontIndex < 0 ||
+        font.selectedFamilyIndex < 0 || font.selectedVariantIndex < 0)
+        return;
+
+    char *text = NULL;
+    if (!XmStringGetLtoR(cb->item, XmFONTLIST_DEFAULT_TAG, &text) || !text)
+        return;
+
+    int size = atoi(text);
+    XtFree(text);
+    if (size <= 0)
+        return;
+
+    ApplyVariantAndCharset(font.selectedFamilyIndex,
+                           font.selectedVariantIndex,
+                           font.selectedCharsetIndex,
+                           size);
+}
+
+static FontFaceCatalog *
+EnsureFaceCatalog( void )
+{
+    if (!faceCatalog)
+        faceCatalog = FontFaceCatalogLoad(style.display);
+    return faceCatalog;
+}
+
+static XmFontList
+BuildFontListFromDescriptor(
+        const FontDescriptor *descriptor,
+        XFontSet *outFontSet,
+        XFontStruct **outFontStruct )
+{
+    if (outFontSet)
+        *outFontSet = NULL;
+    if (outFontStruct)
+        *outFontStruct = NULL;
+    if (!descriptor || !descriptor->raw)
+        return NULL;
+
+    const char *raw = descriptor->raw;
+    FontDebugLog("preview: raw=%s scalable=%d px=%d pt=%d resx=%s resy=%s",
+                 raw,
+                 descriptor->scalable ? 1 : 0,
+                 descriptor->pixelSize,
+                 descriptor->pointSize,
+                 descriptor->fields[8] ? descriptor->fields[8] : "?",
+                 descriptor->fields[9] ? descriptor->fields[9] : "?");
+    Boolean looksLikeFontSet = (strchr(raw, ';') != NULL) || (strchr(raw, ':') != NULL);
+    if (looksLikeFontSet) {
+        char **missing_list = NULL;
+        int missing_count = 0;
+        char *def_string = NULL;
+        XFontSet font_set = XCreateFontSet(style.display, raw,
+                                           &missing_list, &missing_count, &def_string);
+        if (FontDebugEnabled() && missing_count > 0 && missing_list) {
+            FontDebugLog("preview: fontset missing %d charset(s) for %s",
+                         missing_count, raw);
+        }
+        if (missing_list)
+            XFreeStringList(missing_list);
+        if (!font_set) {
+            FontDebugLog("preview: failed to create fontset for %s", raw);
+            return NULL;
+        }
+        if (outFontSet)
+            *outFontSet = font_set;
+        XmFontListEntry entry =
+            XmFontListEntryCreate(FONT_LIST_TAG, XmFONT_IS_FONTSET, (XtPointer)font_set);
+        if (!entry)
+            return NULL;
+        XmFontList fontList = XmFontListAppendEntry(NULL, entry);
+        XmFontListEntryFree(&entry);
+        return fontList;
+    }
+
+    XFontStruct *font = XLoadQueryFont(style.display, raw);
+    if (font) {
+        if (outFontStruct)
+            *outFontStruct = font;
+        XmFontListEntry entry =
+            XmFontListEntryCreate(FONT_LIST_TAG, XmFONT_IS_FONT, (XtPointer)font);
+        if (!entry)
+            return NULL;
+        XmFontList fontList = XmFontListAppendEntry(NULL, entry);
+        XmFontListEntryFree(&entry);
+        return fontList;
+    }
+
+    char **missing_list = NULL;
+    int missing_count = 0;
+    char *def_string = NULL;
+    XFontSet font_set = XCreateFontSet(style.display, raw,
+                                       &missing_list, &missing_count, &def_string);
+    if (FontDebugEnabled() && missing_count > 0 && missing_list) {
+        FontDebugLog("preview: fontset missing %d charset(s) for %s",
+                     missing_count, raw);
+    }
+    if (missing_list)
+        XFreeStringList(missing_list);
+    if (!font_set) {
+        FontDebugLog("preview: failed to create fontset for %s", raw);
+        return NULL;
+    }
+    if (outFontSet)
+        *outFontSet = font_set;
+    XmFontListEntry entry =
+        XmFontListEntryCreate(FONT_LIST_TAG, XmFONT_IS_FONTSET, (XtPointer)font_set);
+    if (!entry)
+        return NULL;
+
+    XmFontList fontList = XmFontListAppendEntry(NULL, entry);
+    XmFontListEntryFree(&entry);
+    return fontList;
+}
+
+static void
+UpdatePreviewFonts(
+        int index )
+{
+    if (index < 0 || index >= style.xrdb.numFonts)
+        return;
+
+    Arg args[MAX_ARGS];
+    int n = 0;
+
+    if (style.xrdb.fontChoice[index].sysFont)
+        XtSetArg(args[n], XmNfontList, style.xrdb.fontChoice[index].sysFont), n++;
+    XmString systemSample = CMPSTR(SYSTEM_MSG);
+    XtSetArg(args[n], XmNlabelString, systemSample); n++;
+    XtSetValues(font.systemLabel, args, n);
+    XmStringFree(systemSample);
+
+    n = 0;
+    if (!font.userTextChanged)
+        XtSetArg(args[n], XmNvalue, USER_MSG), n++;
+    if (style.xrdb.fontChoice[index].userFont)
+        XtSetArg(args[n], XmNfontList, style.xrdb.fontChoice[index].userFont), n++;
+    XtSetValues(font.userText, args, n);
+    XmTextShowPosition(font.userText, 0);
+}
+
+static void
+RebuildFontListsForIndex(
+        int index )
+{
+    if (index < 0 || index >= style.xrdb.numFonts)
+        return;
+
+    FontDescriptor *desc = style.xrdb.fontChoice[index].descriptor;
+    if (!desc)
+        return;
+
+    XFontSet newSysFontSet = NULL;
+    XFontStruct *newSysFontStruct = NULL;
+    XmFontList newSysFont = BuildFontListFromDescriptor(desc, &newSysFontSet, &newSysFontStruct);
+    if (newSysFont) {
+        fontTrash[index].sysFont = style.xrdb.fontChoice[index].sysFont;
+        fontTrash[index].sysFontSet = style.xrdb.fontChoice[index].sysFontSet;
+        fontTrash[index].sysFontStruct = style.xrdb.fontChoice[index].sysFontStruct;
+        style.xrdb.fontChoice[index].sysFont = newSysFont;
+        style.xrdb.fontChoice[index].sysFontSet = newSysFontSet;
+        style.xrdb.fontChoice[index].sysFontStruct = newSysFontStruct;
+    }
+
+    XFontSet newUserFontSet = NULL;
+    XFontStruct *newUserFontStruct = NULL;
+    XmFontList newUserFont = BuildFontListFromDescriptor(desc, &newUserFontSet, &newUserFontStruct);
+    if (newUserFont) {
+        fontTrash[index].userFont = style.xrdb.fontChoice[index].userFont;
+        fontTrash[index].userFontSet = style.xrdb.fontChoice[index].userFontSet;
+        fontTrash[index].userFontStruct = style.xrdb.fontChoice[index].userFontStruct;
+        style.xrdb.fontChoice[index].userFont = newUserFont;
+        style.xrdb.fontChoice[index].userFontSet = newUserFontSet;
+        style.xrdb.fontChoice[index].userFontStruct = newUserFontStruct;
+    }
+
+    if ((fontTrash[index].sysFont || fontTrash[index].userFont ||
+         fontTrash[index].sysFontSet || fontTrash[index].userFontSet ||
+         fontTrash[index].sysFontStruct || fontTrash[index].userFontStruct) &&
+        !fontTrash[index].pending)
+    {
+        XtAppAddTimeOut(XtDisplayToApplicationContext(style.display),
+                        0, FontResourceFreeTimeout, &fontTrash[index]);
+        fontTrash[index].pending = True;
+    }
 }
 
 /************************************************************************
@@ -762,6 +1843,3 @@ saveFonts(
         WRITE_STR2FD(fd, bufr);
     }
 }
-
-
-

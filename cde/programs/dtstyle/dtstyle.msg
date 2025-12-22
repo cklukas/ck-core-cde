@@ -219,6 +219,9 @@ $ _DtMessage 22 is the label of the titlebox containing the list of font sizes
 $ _DtMessage 23 is the title of the Fonts dialog
 23 Style Manager - Font
 
+$ _DtMessage 25 is the title of the font family selector in the Font dialog
+25 Font selection
+
 $ _DtMessage 24 is an informative message used by the Fonts dialog
 24 The font that is currently used for your desktop is not\n\
 available in the Size list. If a new font is selected and\n\
@@ -353,6 +356,21 @@ require the use of Button 1.
 $ _DtMessage 20 is the label used for the "Button 2" toggle on
 $ a two button mouse (ignored on a three button mouse)
 20 Menu
+
+$ Messages 21-25 are labels for the Xcursor controls.
+21 Cursor Size
+22 Cursor Theme
+23 Preview
+24 Preview the selected cursor
+25 Restart Window Manager now (recommended)
+
+$ Messages 26-31 describe the cursors rendered in the preview.
+26 Pointer
+27 Hand
+28 Text
+29 Hourglass
+30 Help
+31 X Cursor
 
 $set 10
 $ _DtMessage set 10 is for the SaveRestore functionality
@@ -609,6 +627,7 @@ $ Messages 13-16 are replacements for messages 5-8
 14 Click In Window To Make Active
 15 Raise Window When Made Active
 16 Show Contents During Move
+17 Increase Icon Size
 
 $set 19
 $ The set 19 contains messages for the I18N dialog
@@ -711,4 +730,3 @@ $    These messages are used for the version information.
 $quote "
 1 "@(#)version_goes_here"
 2 "\n@(#)_DtMessage catalog source $XConsortium: dtstyle.msg /main/6 1996/08/16 17:02:45 pascale $"
-

@@ -51,6 +51,7 @@
 #include <Xm/XmP.h>
 
 #include "Main.h"
+#include "FontParser.h"
 
 /*+++++++++++++++++++++++++++++++++++++++*/
 /* include extern functions              */
@@ -311,6 +312,17 @@ GetFontStrResources( void )
     for (i=0; i<style.xrdb.numFonts; i++) {
       style.xrdb.fontChoice[i].userFont = NULL;
       style.xrdb.fontChoice[i].sysFont = NULL;
+      style.xrdb.fontChoice[i].userFontSet = NULL;
+      style.xrdb.fontChoice[i].sysFontSet = NULL;
+      style.xrdb.fontChoice[i].userFontStruct = NULL;
+      style.xrdb.fontChoice[i].sysFontStruct = NULL;
+      if (style.xrdb.fontChoice[i].descriptor) {
+        FreeFontDescriptor(style.xrdb.fontChoice[i].descriptor);
+        style.xrdb.fontChoice[i].descriptor = NULL;
+      }
+      if (style.xrdb.fontChoice[i].sysStr)
+        style.xrdb.fontChoice[i].descriptor =
+            ParseXLFD(style.xrdb.fontChoice[i].sysStr);
     }
 }
 
@@ -330,6 +342,3 @@ GetApplicationResources( void )
     GetFontStrResources();
 
 }
-
-
-
