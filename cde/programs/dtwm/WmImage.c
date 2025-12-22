@@ -508,7 +508,23 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
 	pSD = wmGD.pActiveSD;
     }
 
-    scale = (pSD->doubleIconSize) ? 2 : 1;
+    /*
+     * Optional upscaling to make small client icons more visible in the icon
+     * frame. Avoid upscaling icons that are already large enough: if doubling
+     * would exceed the configured maximum icon image size, keep the source
+     * unscaled to prevent a "zoomed/cropped" look.
+     */
+    scale = 1;
+    if (pSD->doubleIconSize)
+    {
+	unsigned int maxW = pSD->iconImageMaximum.width;
+	unsigned int maxH = pSD->iconImageMaximum.height;
+
+	if ((iconWidth * 2) <= maxW && (iconHeight * 2) <= maxH)
+	{
+	    scale = 2;
+	}
+    }
 
     /* don't make icon pixmap if bitmap is too small */
 
