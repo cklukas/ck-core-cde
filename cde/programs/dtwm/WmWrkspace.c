@@ -198,6 +198,13 @@ ChangeToWorkspace(
 	    XMoveWindow (DISPLAY, ICON_FRAME_WIN(pCD), 
 			ICON_X(pCD), ICON_Y(pCD));
 	}
+	else if (pSD->showOpenWindowIcons &&
+		 ((pCD->clientState & ~UNSEEN_STATE) == NORMAL_STATE ||
+		  (pCD->clientState & ~UNSEEN_STATE) == MAXIMIZED_STATE) &&
+		 !(pCD->clientState & UNSEEN_STATE))
+	{
+	    ShowIconForOpenClient (pNewWS, pCD);
+	}
 
 	if (pCD->iconWindow)
 	{
@@ -3887,4 +3894,3 @@ int PrintWorkspaceList (pSD)
     }
 } /* END OF FUNCTION PrintWorkspaceList */
 #endif /* DEBUG */
-

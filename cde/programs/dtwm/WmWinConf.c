@@ -4099,9 +4099,13 @@ Window GrabWin (ClientData *pcd, XEvent *pev)
      */
 
     if ((pcd->clientState == MINIMIZED_STATE) ||
+        (pcd->pSD->showOpenWindowIcons &&
+         (wmGD.clickData.context & (F_CONTEXT_ICON | F_CONTEXT_ICONBOX))) ||
         (pcd->pSD->useIconBox && pev &&
          ((pev->xany.window == ICON_FRAME_WIN(pcd)) ||
-          (pev->xany.window == ACTIVE_ICON_TEXT_WIN))))
+          (pev->xany.window == ACTIVE_ICON_TEXT_WIN))) ||
+        (pcd->pSD->showOpenWindowIcons && pev &&
+         (pev->xany.window == ICON_FRAME_WIN(pcd))))
     {
         grab_win = ICON_FRAME_WIN(pcd);
     }

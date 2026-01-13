@@ -1916,11 +1916,11 @@ Boolean InsertIconIntoBox (IconBoxData *pIBD, ClientData *pCD)
 	    
 	    if (ICON_DECORATION(pCD) & ICON_ACTIVE_LABEL_PART)
 	    {
-		XtAddEventHandler(iconWidget, 
-				  FocusChangeMask, 
-				  False, 
-				  (XtEventHandler)ChangeActiveIconboxIconText, 
-				  (XtPointer)NULL);
+	    XtAddEventHandler(iconWidget, 
+			      FocusChangeMask, 
+			      False, 
+			      (XtEventHandler)ChangeActiveIconboxIconText, 
+			      (XtPointer)NULL);
 
 		if (pCD->pSD->activeLabelParent != pCD->pSD->rootWindow)
 		{
@@ -1932,6 +1932,12 @@ Boolean InsertIconIntoBox (IconBoxData *pIBD, ClientData *pCD)
 				pWsc->pIconBox->bBoardWidget);
 
 	    ResetArrowButtonIncrements (pWsc->pIconBox->pCD_iconBox);
+
+	    if (!pCD->pSD->showOpenWindowIcons &&
+		((pCD->clientState & ~UNSEEN_STATE) != MINIMIZED_STATE))
+	    {
+		XtUnmanageChild (iconWidget);
+	    }
 
 	    rval = True;
 	}
@@ -3079,6 +3085,37 @@ void ShowClientIconState (ClientData *pCD, int newState)
      * reflect the client's state
      */
 
+    if (pCD->pSD->useIconBox && P_ICON_BOX(pCD) && ICON_FRAME_WIN(pCD))
+    {
+	Widget iconWidget = XtWindowToWidget (DISPLAY, ICON_FRAME_WIN(pCD));
+	if (!pCD->pSD->showOpenWindowIcons &&
+	    (newState != MINIMIZED_STATE))
+	{
+	    if (iconWidget && XtIsManaged (iconWidget))
+	    {
+		XtUnmanageChild (iconWidget);
+	    }
+	}
+	else
+	{
+	    if (iconWidget && !XtIsManaged (iconWidget))
+	    {
+		XtManageChild (iconWidget);
+	    }
+	}
+
+	if (iconWidget)
+	{
+	    Arg args[2];
+	    int n = 0;
+	    Dimension newWidth = (Dimension)
+		((newState == MINIMIZED_STATE) ? ICON_WIDTH(pCD)
+					       : ICON_OPEN_WIDTH(pCD));
+	    XtSetArg (args[n], XmNwidth, (XtArgVal) newWidth); n++;
+	    XtSetValues (iconWidget, args, n);
+	}
+    }
+
     if ((newState == MINIMIZED_STATE) && (pCD->iconWindow))
 	XMapRaised (DISPLAY, pCD->iconWindow);
 
@@ -3086,6 +3123,12 @@ void ShowClientIconState (ClientData *pCD, int newState)
 						&& (pCD->iconWindow))
     {
 	XUnmapWindow (DISPLAY, pCD->iconWindow);
+    }
+
+    if (ICON_FRAME_WIN(pCD) &&
+	(newState == MINIMIZED_STATE || pCD->pSD->showOpenWindowIcons))
+    {
+	IconExposureProc (pCD, True);
     }
 
 } /* END FUNCTION ShowClientIconState */

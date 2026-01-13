@@ -37,4 +37,6 @@ extern void SetClientWMState (ClientData *pCD, int wmState, int mwmState);
 extern void MapClientWindows (ClientData *pCD);
 extern void ShowIconForMinimizedClient (WmWorkspaceData *pWS, ClientData *pCD);
 extern void ShowAllIconsForMinimizedClient (ClientData *pCD);
+extern void ShowIconForOpenClient (WmWorkspaceData *pWS, ClientData *pCD);
+extern void ShowAllIconsForOpenClient (ClientData *pCD);
 extern void SlideSubpanelBackIn (ClientData *pCD, Widget wSubpanel);

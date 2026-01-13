@@ -700,6 +700,14 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
 	pCD, True /*on top*/);
     SetClientState (pCD, initialState, GetTimestamp());
 
+    if (pSD->showOpenWindowIcons &&
+	((initialState & ~UNSEEN_STATE) == NORMAL_STATE ||
+	 (initialState & ~UNSEEN_STATE) == MAXIMIZED_STATE) &&
+	!(initialState & UNSEEN_STATE))
+    {
+	ShowAllIconsForOpenClient (pCD);
+    }
+
     /*
      * Set the keyboard input focus to the newly managed window if appropriate:
      * - focus is automatically set only if the focus policy is explicit
@@ -2904,5 +2912,4 @@ RegisterIconBoxControl (Widget wPanelist)
 #endif /* DEBUG */
 
 } /* END OF FUNCTION RegisterIconBoxControl */
-
 

@@ -1616,7 +1616,8 @@ void IdentifyEventContext (XButtonEvent *event, ClientData *pCD, Context *pConte
 	     (pCD->clientState != NORMAL_STATE) &&
 	     (pCD->clientState != MAXIMIZED_STATE)) ||
 	    ((*pContext & F_CONTEXT_ICON) &&
-	     (pCD->clientState != MINIMIZED_STATE)))
+	     (pCD->clientState != MINIMIZED_STATE) &&
+	     !pCD->pSD->showOpenWindowIcons))
 	{
 	    *pContext = F_CONTEXT_NONE;
 	}

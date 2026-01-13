@@ -1948,7 +1948,8 @@ void GetSystemMenuPosition (ClientData *pcd, int *px, int *py,
 
     if ((pcd->clientState == MINIMIZED_STATE) ||
         ((pcd->clientState != MINIMIZED_STATE) &&
-         (context == F_SUBCONTEXT_IB_WICON)))
+         ((context == F_SUBCONTEXT_IB_WICON) ||
+	  ((context & F_CONTEXT_ICON) && pcd->pSD->showOpenWindowIcons))))
     {
 	/* 
 	 * Try to put the menu directly above the icon.
@@ -2929,5 +2930,4 @@ void SetFrameShape (ClientData *pcd)
 				   None, ShapeSet);
     }
 } /* END OF FUNCTION  SetFrameShape  */
-
 

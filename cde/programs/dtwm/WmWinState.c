@@ -455,37 +455,49 @@ static void SetupWindowStateWithEventMask (ClientData *pCD, int newState,
 	    }
 	    else 
 	    {
-		Boolean doGrab = False;
-    		if (event_mask)
-		doGrab = (Success == XGrabPointer 
-			(DISPLAY, DefaultRootWindow(DISPLAY),
-			False, event_mask, GrabModeAsync, GrabModeAsync,
-			None, None, CurrentTime));
-	        XUnmapWindow (DISPLAY, ICON_FRAME_WIN(pCD));
-	        if (pCD->iconWindow)
-	        {
-		    XUnmapWindow (DISPLAY, pCD->iconWindow);
-	        }
-    		if (event_mask && doGrab)
+		if (!pSD->showOpenWindowIcons)
 		{
-			XEvent event;
-			XMaskEvent(DISPLAY, event_mask, &event);
-			XUngrabPointer(DISPLAY,CurrentTime);
-		}
-	        if (wmGD.iconAutoPlace) 
-	        {
-                    for (wsI = 0; wsI < pCD->numInhabited; wsI++)
+		    Boolean doGrab = False;
+    		    if (event_mask)
+			doGrab = (Success == XGrabPointer 
+				(DISPLAY, DefaultRootWindow(DISPLAY),
+				False, event_mask, GrabModeAsync, GrabModeAsync,
+				None, None, CurrentTime));
+	            XUnmapWindow (DISPLAY, ICON_FRAME_WIN(pCD));
+	            if (pCD->iconWindow)
+	            {
+		        XUnmapWindow (DISPLAY, pCD->iconWindow);
+	            }
+    		    if (event_mask && doGrab)
 		    {
-			iplace = pCD->pWsList[wsI].iconPlace;
-			if (iplace != NO_ICON_PLACE)
-			{
-			    pWS_i = GetWorkspaceData (pCD->pSD,
-						pCD->pWsList[wsI].wsID);
-			    pWS_i->IPData.placeList[iplace].pCD = 
-				    NULL;
-			}
+			    XEvent event;
+			    XMaskEvent(DISPLAY, event_mask, &event);
+			    XUngrabPointer(DISPLAY,CurrentTime);
 		    }
-	        }
+	            if (wmGD.iconAutoPlace) 
+	            {
+                        for (wsI = 0; wsI < pCD->numInhabited; wsI++)
+		        {
+			    iplace = pCD->pWsList[wsI].iconPlace;
+			    if (iplace != NO_ICON_PLACE)
+			    {
+			        pWS_i = GetWorkspaceData (pCD->pSD,
+						    pCD->pWsList[wsI].wsID);
+			        pWS_i->IPData.placeList[iplace].pCD = 
+				        NULL;
+			    }
+		        }
+	            }
+		}
+		else
+		{
+		    XMapWindow (DISPLAY, ICON_FRAME_WIN(pCD));
+		    if (pCD->iconWindow)
+		    {
+			XMapWindow (DISPLAY, pCD->iconWindow);
+		    }
+		    IconExposureProc (pCD, True);
+		}
 	    }
 
 	    if (clearIconFocus)
@@ -571,6 +583,20 @@ static void SetupWindowStateWithEventMask (ClientData *pCD, int newState,
 	 */
 
 	IconExposureProc (pCD, True);
+    }
+    else if (ICON_FRAME_WIN(pCD) && !(newState & UNSEEN_STATE) &&
+	     pSD->showOpenWindowIcons)
+    {
+	/* force icon appearance change for root icons on state transitions */
+	IconExposureProc (pCD, True);
+    }
+
+    if (pSD->showOpenWindowIcons &&
+	((newState & ~UNSEEN_STATE) == NORMAL_STATE ||
+	 (newState & ~UNSEEN_STATE) == MAXIMIZED_STATE) &&
+	!(newState & UNSEEN_STATE))
+    {
+	ShowAllIconsForOpenClient (pCD);
     }
 
 } /* END OF FUNCTION SetupWindowStateWithEventMask */
@@ -1380,6 +1406,9 @@ void ShowIconForMinimizedClient (WmWorkspaceData *pWS, ClientData *pCD)
      */
     if ((pWS == pSD->pActiveWS) && !P_ICON_BOX(pCD))
     {
+	XResizeWindow (DISPLAY, ICON_FRAME_WIN(pCD),
+	    (unsigned int) ICON_WIDTH(pCD),
+	    (unsigned int) ICON_HEIGHT(pCD));
 	XMoveWindow (DISPLAY, ICON_FRAME_WIN(pCD), 
 	    ICON_X(pCD), ICON_Y(pCD));
     }
@@ -1437,6 +1466,7 @@ void ShowIconForMinimizedClient (WmWorkspaceData *pWS, ClientData *pCD)
         if (pWS == pSD->pActiveWS)
 	{
 	    XMapWindow (DISPLAY, ICON_FRAME_WIN(pCD));
+	    IconExposureProc (pCD, True);
 	}
     }
 
@@ -1484,3 +1514,97 @@ void ShowAllIconsForMinimizedClient (ClientData *pCD)
     pCD->currentWsc = saveWsc;
 
 } /* END OF FUNCTION ShowAllIconsForMinimizedClient */
+
+
+/*************************************<->*************************************
+ *
+ *  ShowIconForOpenClient (pWS, pCD)
+ *
+ *  Description:
+ *  -----------
+ *  This function shows the icon for a non-minimized client when the
+ *  showOpenWindowIcons resource is enabled. It shares placement with
+ *  the minimized icon so iconify simply restyles the same icon.
+ *
+ *************************************<->***********************************/
+
+void ShowIconForOpenClient (WmWorkspaceData *pWS, ClientData *pCD)
+{
+    WmScreenData *pSD = PSD_FOR_CLIENT(pCD);
+
+    if (!pSD->showOpenWindowIcons || (pCD->clientState & UNSEEN_STATE))
+    {
+	return;
+    }
+
+    if (pSD->useIconBox && P_ICON_BOX(pCD))
+    {
+        ShowClientIconState (pCD, (pCD->clientState & ~UNSEEN_STATE));
+	return;
+    }
+
+    if (wmGD.iconAutoPlace && !P_ICON_BOX(pCD))
+    {
+        if ((ICON_PLACE(pCD) == NO_ICON_PLACE) ||
+	    ((pWS->IPData.placeList[ICON_PLACE(pCD)].pCD) &&
+	     (pWS->IPData.placeList[ICON_PLACE(pCD)].pCD != pCD)))
+        {
+	    if ((ICON_PLACE(pCD) = GetNextIconPlace (&pWS->IPData))
+		== NO_ICON_PLACE)
+	    {
+		ICON_PLACE(pCD) =
+		    CvtIconPositionToPlace (&pWS->IPData,
+					    pCD->clientX,
+					    pCD->clientY);
+	    }
+	    CvtIconPlaceToPosition (&pWS->IPData, ICON_PLACE(pCD),
+				    &ICON_X(pCD), &ICON_Y(pCD));
+        }
+
+        pWS->IPData.placeList[ICON_PLACE(pCD)].pCD = pCD;
+    }
+
+    if ((pWS == pSD->pActiveWS) && ICON_FRAME_WIN(pCD))
+    {
+	XResizeWindow (DISPLAY, ICON_FRAME_WIN(pCD),
+	    (unsigned int) ICON_OPEN_WIDTH(pCD),
+	    (unsigned int) ICON_HEIGHT(pCD));
+	XMoveWindow (DISPLAY, ICON_FRAME_WIN(pCD),
+	    ICON_X(pCD), ICON_Y(pCD));
+	XMapWindow (DISPLAY, ICON_FRAME_WIN(pCD));
+	if (pCD->iconWindow)
+	{
+	    XMapWindow (DISPLAY, pCD->iconWindow);
+	}
+	IconExposureProc (pCD, True);
+    }
+}
+
+
+/*************************************<->*************************************
+ *
+ *  ShowAllIconsForOpenClient (pCD)
+ *
+ *  Description:
+ *  -----------
+ *  Places icons for non-minimized clients across all inhabited
+ *  workspaces when showOpenWindowIcons is enabled.
+ *
+ *************************************<->***********************************/
+
+void ShowAllIconsForOpenClient (ClientData *pCD)
+{
+    int saveWsc = pCD->currentWsc;
+    int tmpWsc;
+    WmWorkspaceData *pWS;
+
+    for (tmpWsc = 0; tmpWsc < pCD->numInhabited; tmpWsc++)
+    {
+	pCD->currentWsc = tmpWsc;
+	pWS = GetWorkspaceData (PSD_FOR_CLIENT(pCD),
+				    pCD->pWsList[tmpWsc].wsID);
+	ShowIconForOpenClient (pWS, pCD);
+    }
+
+    pCD->currentWsc = saveWsc;
+}
