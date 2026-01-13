@@ -628,6 +628,7 @@ $ Messages 13-16 are replacements for messages 5-8
 15 Raise Window When Made Active
 16 Show Contents During Move
 17 Increase Icon Size
+18 Show Icons for Open Windows
 
 $set 19
 $ The set 19 contains messages for the I18N dialog

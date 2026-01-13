@@ -1209,12 +1209,20 @@ typedef struct _WmScreenData
     Boolean	doubleIconSize;		/* resource */
     Pixmap	builtinIconPixmap;
     int		iconWidth;
+    int		iconContentWidth;
     int		iconHeight;
     int		iconImageHeight;
     int		iconLabelHeight;
     GC		shrinkWrapGC;
     GC		fadeIconGC;
     GC		fadeIconTextGC;
+    GC		openIconFillGC;
+    Pixel	openIconFillColor;
+    Pixmap	openIconFillPixmap;
+    GC		openIconBarActiveGC;
+    GC		openIconBarInactiveGC;
+    Pixel	openIconBarActiveColor;
+    Pixel	openIconBarInactiveColor;
 
     /* per screen configuration outline windows */
     Window	woN;		/* North outline window */
@@ -1273,6 +1281,7 @@ typedef struct _WmScreenData
     int		transientDecoration;		/* resource */
     int		transientFunctions;		/* resource */
     Boolean	useIconBox;			/* resource */
+    Boolean     showOpenWindowIcons;            /* resource */
     int		subpanelDecoration;		/* resource */
     String      subpanelResources;              /*to restore subpanels */
     Boolean	iconBoxControl;			/* FP control for icon box */
@@ -1357,6 +1366,10 @@ typedef struct _WmScreenData *PtrScreenData;
 #define ICON_DECORATION(pcd) ((pcd)->pSD->iconDecoration)
 #define ICON_HEIGHT(pcd) ((pcd)->pSD->iconHeight)
 #define ICON_WIDTH(pcd) ((pcd)->pSD->iconWidth)
+#define ICON_OPEN_EXTRA(pcd) \
+    (((pcd)->pSD->showOpenWindowIcons && ((pcd)->clientState != MINIMIZED_STATE)) \
+        ? (OPEN_ICON_BAR_WIDTH + OPEN_ICON_BAR_GAP) : 0)
+#define ICON_OPEN_WIDTH(pcd) (ICON_WIDTH(pcd) + ICON_OPEN_EXTRA(pcd))
 #define ICON_IMAGE_HEIGHT(pcd) ((pcd)->pSD->iconImageHeight)
 #define ICON_LABEL_HEIGHT(pcd) ((pcd)->pSD->iconLabelHeight)
 #define ICON_IMAGE_MAXIMUM(pcd) ((pcd)->pSD->iconImageMaximum)
@@ -2173,6 +2186,8 @@ typedef struct _WmGlobalData
 #define ICON_IMAGE_MAX_HEIGHT		128
 #define ICON_IMAGE_MIN_WIDTH		16
 #define ICON_IMAGE_MIN_HEIGHT		16
+#define OPEN_ICON_BAR_WIDTH		8
+#define OPEN_ICON_BAR_GAP		5
 
 /*default client window title: */
 #define DEFAULT_CLIENT_TITLE	"*****"

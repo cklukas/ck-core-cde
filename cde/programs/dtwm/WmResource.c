@@ -1384,6 +1384,16 @@ XtResource wmScreenResources[] =
     },
 
     {
+	WmNshowOpenWindowIcons,
+	WmCShowOpenWindowIcons,
+	XtRBoolean,
+	sizeof (Boolean),
+	XtOffsetOf (WmScreenData, showOpenWindowIcons),
+	XtRImmediate,
+	(XtPointer)True
+    },
+
+    {
 	WmNmoveOpaque,
 	WmCMoveOpaque,
 	XtRBoolean,

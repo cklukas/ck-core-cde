@@ -142,6 +142,7 @@ typedef struct {
     Widget      iconBoxTG;
     Widget	desktopTG;
     Widget      increaseIconSizeTG;
+    Widget      showOpenIconsTG;
     Boolean     systemDefaultFlag;
     int         origKeyboardFocusPolicy;
     int         origFocusAutoRaise;
@@ -149,6 +150,7 @@ typedef struct {
     int         origMoveOpaque;
     int         origUseIconBox;
     Boolean     origIncreaseIconSize;
+    Boolean     origShowOpenIcons;
     int         iconImageBaseWidth;
     int         iconImageBaseHeight;
     Widget      warnDialog;
@@ -157,7 +159,7 @@ typedef struct {
 static Dtwm dtwm;
 static saveRestore save = {FALSE, 0, };
 
-static char dtwmRes[256]="";
+static char dtwmRes[512]="";
 
 static char *icon[] = {
     "iconTL",
@@ -451,6 +453,30 @@ getDtwmValues(void)
                                      dtwm.origIncreaseIconSize, True);
     }
 
+    /* Get ShowIconsForOpenWindows value */
+    {
+        dtwm.origShowOpenIcons = True;
+        if (status = XrmGetResource (db, "dtwm.showOpenWindowIcons",
+                                     "Dtwm.ShowOpenWindowIcons",
+                                     &str_type_return, &value_return))
+        {
+            /* make local copy of string */
+            string = (char *) XtMalloc( value_return.size );
+            strcpy (string, value_return.addr);
+
+            /* convert to lower case */
+            _DtWmParseToLower((unsigned char *)string);
+
+            dtwm.origShowOpenIcons =
+                (strcmp(string, "true") ? False : True);
+
+            XtFree (string);
+        }
+
+        XmToggleButtonGadgetSetState(dtwm.showOpenIconsTG,
+                                     dtwm.origShowOpenIcons, True);
+    }
+
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -641,6 +667,15 @@ build_dtwmDlg(
         XmCreateToggleButtonGadget(iconPlacementForm, "increaseIconSizeTG", args, n);
     XmStringFree(string);
 
+    n = 0;
+    string = CMPSTR((char *)GETMESSAGE(18, 18, "Show Icons for Open Windows"));
+    XtSetArg(args[n], XmNnavigationType, XmTAB_GROUP); n++;
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    dtwm.showOpenIconsTG =
+        XmCreateToggleButtonGadget(iconPlacementForm, "showOpenIconsTG", args, n);
+    XmStringFree(string);
+
     XtAddCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, NULL);
     XtAddCallback(style.dtwmDialog, XmNmapCallback, _DtmapCB_dtwmDlg, shell);
     XtAddCallback(style.dtwmDialog, XmNcallback, ButtonCB, NULL);
@@ -665,6 +700,7 @@ build_dtwmDlg(
     XtManageChild(dtwm.iconBoxTG);
     XtManageChild(dtwm.desktopTG);
     XtManageChild(dtwm.increaseIconSizeTG);
+    XtManageChild(dtwm.showOpenIconsTG);
 
     return(style.dtwmDialog);
 }
@@ -781,7 +817,7 @@ formLayoutCB(
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
     XtSetArg(args[n], XmNtopWidget,          dtwm.secStackTG);     n++;
     XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
-    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);         n++;
     XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
     XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNleftOffset,         0);  n++;
@@ -804,13 +840,25 @@ formLayoutCB(
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
     XtSetArg(args[n], XmNtopWidget,          dtwm.useIconBoxRC);     n++;
     XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);         n++;
+    XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNleftOffset,         0);  n++;
+    XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNrightOffset,        0);  n++;
+    XtSetValues (dtwm.increaseIconSizeTG, args, n);
+
+    /* Show open icons TG */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
+    XtSetArg(args[n], XmNtopWidget,          dtwm.increaseIconSizeTG); n++;
+    XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
     XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
     XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNleftOffset,         0);  n++;
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNrightOffset,        0);  n++;
-    XtSetValues (dtwm.increaseIconSizeTG, args, n);
+    XtSetValues (dtwm.showOpenIconsTG, args, n);
 
     XtRemoveCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, NULL);
 }
@@ -871,6 +919,7 @@ systemDefaultCB(
     XmToggleButtonGadgetSetState (dtwm.desktopTG, True, True); 
 
     XmToggleButtonGadgetSetState(dtwm.increaseIconSizeTG, False, True);
+    XmToggleButtonGadgetSetState(dtwm.showOpenIconsTG, True, True);
 
 }
 
@@ -967,6 +1016,14 @@ ButtonCB(
 		  state ? "True" : "False");
 	  changeFlag = 1;
 	}
+
+      state = XmToggleButtonGadgetGetState (dtwm.showOpenIconsTG);
+      if (state != dtwm.origShowOpenIcons)
+	{
+	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*showOpenWindowIcons: %s\n",
+		  state ? "True" : "False");
+	  changeFlag = 1;
+	}
       
       if (changeFlag)
 	{
@@ -1023,6 +1080,9 @@ ButtonCB(
 
       XmToggleButtonGadgetSetState (dtwm.increaseIconSizeTG,
 				    dtwm.origIncreaseIconSize ? True : False , True); 
+
+      XmToggleButtonGadgetSetState (dtwm.showOpenIconsTG,
+				    dtwm.origShowOpenIcons ? True : False , True); 
       
       break;
     
