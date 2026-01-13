@@ -1278,6 +1278,13 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->lastClient = NULL;
     pSD->lastInstalledColormap = (Colormap)NULL;
     pSD->shrinkWrapGC = NULL;
+    pSD->openIconFillGC = NULL;
+    pSD->openIconFillColor = 0;
+    pSD->openIconFillPixmap = (Pixmap)None;
+    pSD->openIconBarActiveGC = NULL;
+    pSD->openIconBarInactiveGC = NULL;
+    pSD->openIconBarActiveColor = 0;
+    pSD->openIconBarInactiveColor = 0;
     pSD->bitmapCache = NULL;
     pSD->bitmapCacheSize = 0;
     pSD->bitmapCacheCount = 0;

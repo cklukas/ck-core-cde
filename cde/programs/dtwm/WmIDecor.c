@@ -59,10 +59,155 @@ static unsigned int activeIconTextHeight = 1;
 static RList *pActiveIconTopRects = NULL;
 static RList *pActiveIconBotRects = NULL;
 
-static int  iconShrinkX; 
-static int  iconShrinkY;
-static unsigned int iconShrinkWidth;
-static unsigned int iconShrinkHeight;
+
+static GC GetOpenIconFillGC (ClientData *pcd)
+{
+    WmScreenData *pSD = pcd->pSD;
+    Pixel color = ICON_APPEARANCE(pcd).activeBackground;
+    Pixmap pixmap = ICON_APPEARANCE(pcd).activeBackgroundPixmap;
+
+    /* Prefer palette highlight/select color when available. */
+    if (pSD->pSecondaryPixelSet)
+    {
+	color = pSD->pSecondaryPixelSet->sc;
+	pixmap = (Pixmap)NULL;
+    }
+
+    if (!pSD->openIconFillGC ||
+	pSD->openIconFillColor != color ||
+	pSD->openIconFillPixmap != pixmap)
+    {
+	XGCValues values;
+	XtGCMask mask = GCForeground | GCBackground;
+
+	if (pSD->openIconFillGC)
+	{
+	    XFreeGC (DISPLAY, pSD->openIconFillGC);
+	    pSD->openIconFillGC = NULL;
+	}
+
+	values.foreground = color;
+	values.background = ICON_APPEARANCE(pcd).background;
+	pSD->openIconFillGC = XCreateGC (DISPLAY, pSD->rootWindow, mask, &values);
+
+	if (pixmap != (Pixmap)NULL)
+	{
+	    XSetTile (DISPLAY, pSD->openIconFillGC, pixmap);
+	    XSetFillStyle (DISPLAY, pSD->openIconFillGC, FillTiled);
+	}
+	else
+	{
+	    XSetFillStyle (DISPLAY, pSD->openIconFillGC, FillSolid);
+	}
+
+	pSD->openIconFillColor = color;
+	pSD->openIconFillPixmap = pixmap;
+    }
+
+    return pSD->openIconFillGC;
+}
+
+static GC GetOpenIconBarGC (ClientData *pcd, Boolean active)
+{
+    WmScreenData *pSD = pcd->pSD;
+    Pixel color = active ? pSD->clientAppearance.activeBackground
+			 : pSD->clientAppearance.background;
+    GC *gcPtr = active ? &pSD->openIconBarActiveGC
+		       : &pSD->openIconBarInactiveGC;
+    Pixel *colorPtr = active ? &pSD->openIconBarActiveColor
+			     : &pSD->openIconBarInactiveColor;
+
+    if (!(*gcPtr) || (*colorPtr != color))
+    {
+	XGCValues values;
+	XtGCMask mask = GCForeground | GCBackground;
+
+	if (*gcPtr)
+	{
+	    XFreeGC (DISPLAY, *gcPtr);
+	    *gcPtr = NULL;
+	}
+
+	values.foreground = color;
+	values.background = ICON_APPEARANCE(pcd).background;
+	*gcPtr = XCreateGC (DISPLAY, pSD->rootWindow, mask, &values);
+	*colorPtr = color;
+    }
+
+    return *gcPtr;
+}
+
+static int OpenIconExtraWidth (ClientData *pcd)
+{
+    return ICON_OPEN_EXTRA(pcd);
+}
+
+static int IconContentWidth (ClientData *pcd)
+{
+    return ICON_WIDTH(pcd);
+}
+
+static void DrawOpenIconBar (ClientData *pcd, int xOffset, int yOffset)
+{
+    GC barGC;
+    GC topGC;
+    GC botGC;
+    int barX;
+    int barY;
+    unsigned int barH;
+    int gapX;
+    int barW;
+    int barRight;
+    int barBottom;
+    Boolean isActive;
+
+    if (!pcd->pSD->showOpenWindowIcons ||
+	(pcd->clientState == MINIMIZED_STATE))
+    {
+	return;
+    }
+
+    isActive = (wmGD.keyboardFocus == pcd);
+    barGC = GetOpenIconBarGC(pcd, isActive);
+    if (!barGC)
+    {
+	return;
+    }
+
+    barW = OPEN_ICON_BAR_WIDTH;
+    barX = xOffset + ICON_OPEN_WIDTH(pcd) - barW;
+    barY = yOffset + (ICON_HEIGHT(pcd) / 4);
+    barH = (unsigned int) (ICON_HEIGHT(pcd) / 2);
+    gapX = barX - OPEN_ICON_BAR_GAP;
+
+    if (gapX > xOffset)
+    {
+	XClearArea (DISPLAY, ICON_FRAME_WIN(pcd),
+		    gapX, barY,
+		    (unsigned int) OPEN_ICON_BAR_GAP, barH,
+		    False);
+    }
+
+    XFillRectangle (DISPLAY, ICON_FRAME_WIN(pcd), barGC,
+		    barX, barY, (unsigned int) barW, barH);
+
+    topGC = isActive ? ICON_APPEARANCE(pcd).activeTopShadowGC
+		     : ICON_APPEARANCE(pcd).inactiveTopShadowGC;
+    botGC = isActive ? ICON_APPEARANCE(pcd).activeBottomShadowGC
+		     : ICON_APPEARANCE(pcd).inactiveBottomShadowGC;
+
+    barRight = barX + barW - 1;
+    barBottom = barY + (int)barH - 1;
+
+    XDrawLine (DISPLAY, ICON_FRAME_WIN(pcd), topGC,
+	       barX, barY, barRight, barY);
+    XDrawLine (DISPLAY, ICON_FRAME_WIN(pcd), topGC,
+	       barX, barY, barX, barBottom);
+    XDrawLine (DISPLAY, ICON_FRAME_WIN(pcd), botGC,
+	       barX, barBottom, barRight, barBottom);
+    XDrawLine (DISPLAY, ICON_FRAME_WIN(pcd), botGC,
+	       barRight, barY, barRight, barBottom);
+}
 
 
 /*************************************<->*************************************
@@ -256,7 +401,7 @@ void MakeIconShadows (ClientData *pcd, int xOffset, int yOffset)
 	    BevelRectangle (pcd->piconTopShadows, 	/* label */
 			    pcd->piconBottomShadows, 
 			    0 + xOffset, (int)ICON_IMAGE_HEIGHT(pcd) + yOffset,
-			    (unsigned int) ICON_WIDTH(pcd), 
+			    (unsigned int) IconContentWidth(pcd), 
 			    (unsigned int) ICON_LABEL_HEIGHT(pcd),
 			    ICON_EXTERNAL_SHADOW_WIDTH,
 			    ICON_EXTERNAL_SHADOW_WIDTH,
@@ -268,7 +413,7 @@ void MakeIconShadows (ClientData *pcd, int xOffset, int yOffset)
 	    BevelRectangle (pcd->piconTopShadows, 	/* image outside */
 			    pcd->piconBottomShadows, 
 			    0 + xOffset, 0 + yOffset,
-			    (unsigned int) ICON_WIDTH(pcd), 
+			    (unsigned int) IconContentWidth(pcd), 
 			    (unsigned int) ICON_IMAGE_HEIGHT(pcd),
 			    ICON_EXTERNAL_SHADOW_WIDTH,
 			    ICON_EXTERNAL_SHADOW_WIDTH,
@@ -297,7 +442,7 @@ void MakeIconShadows (ClientData *pcd, int xOffset, int yOffset)
 		BevelRectangle (pcd->piconTopShadows, 	/* image outside */
 			    pcd->piconBottomShadows, 
 			    0 + xOffset, 0 + yOffset,
-			    (unsigned int) ICON_WIDTH(pcd), 
+			    (unsigned int) IconContentWidth(pcd), 
 			    (unsigned int) (ICON_IMAGE_HEIGHT(pcd) +
 					    ICON_LABEL_HEIGHT(pcd)),
 			    ICON_EXTERNAL_SHADOW_WIDTH,
@@ -310,7 +455,7 @@ void MakeIconShadows (ClientData *pcd, int xOffset, int yOffset)
 		BevelRectangle (pcd->piconTopShadows, 	/* image outside */
 			    pcd->piconBottomShadows, 
 			    0 + xOffset, 0 + yOffset, 
-			    (unsigned int) ICON_WIDTH(pcd), 
+			    (unsigned int) IconContentWidth(pcd), 
 			    (unsigned int) ICON_IMAGE_HEIGHT(pcd),
 			    ICON_EXTERNAL_SHADOW_WIDTH,
 			    ICON_EXTERNAL_SHADOW_WIDTH,
@@ -336,7 +481,7 @@ void MakeIconShadows (ClientData *pcd, int xOffset, int yOffset)
 		BevelRectangle (pcd->piconTopShadows, 	/* label */
 			    pcd->piconBottomShadows, 
 			    0 + xOffset, (int)ICON_IMAGE_HEIGHT(pcd) + yOffset,
-			    (unsigned int) ICON_WIDTH(pcd), 
+			    (unsigned int) IconContentWidth(pcd), 
 			    (unsigned int) ICON_LABEL_HEIGHT(pcd),
 			    ICON_INTERNAL_SHADOW_WIDTH,
 			    ICON_EXTERNAL_SHADOW_WIDTH,
@@ -385,7 +530,6 @@ void IconExposureProc (ClientData *pcd, Boolean expose)
     int yOffset;
     unsigned int width, height;
     GC iconGC, topGC, botGC;
-    static XRectangle	shrinkRects[4];
 
 
 
@@ -404,6 +548,24 @@ void IconExposureProc (ClientData *pcd, Boolean expose)
         yOffset = 0;
     }
     
+    /* adjust icon window background to allow transparent gap for open icons */
+    if (pcd->pSD->showOpenWindowIcons &&
+	(pcd->clientState != MINIMIZED_STATE))
+    {
+	XSetWindowBackgroundPixmap (DISPLAY, ICON_FRAME_WIN(pcd),
+				    ParentRelative);
+    }
+    else if (ICON_APPEARANCE(pcd).backgroundPixmap)
+    {
+	XSetWindowBackgroundPixmap (DISPLAY, ICON_FRAME_WIN(pcd),
+				    ICON_APPEARANCE(pcd).backgroundPixmap);
+    }
+    else
+    {
+	XSetWindowBackground (DISPLAY, ICON_FRAME_WIN(pcd),
+			      ICON_APPEARANCE(pcd).background);
+    }
+
     /* get appropriate GCs */
 
     if ((wmGD.keyboardFocus == pcd) && (pcd->clientState == MINIMIZED_STATE))
@@ -460,30 +622,34 @@ void IconExposureProc (ClientData *pcd, Boolean expose)
 	}
 	else 
 	{
-	    shrinkRects[0].x = IB_MARGIN_WIDTH;
-	    shrinkRects[0].y = IB_MARGIN_HEIGHT;
-	    shrinkRects[0].width = (unsigned int) ICON_WIDTH(pcd);
-	    shrinkRects[0].height = iconShrinkY - IB_MARGIN_HEIGHT;
+	    GC fillGC = GetOpenIconFillGC(pcd);
+	    if (fillGC)
+	    {
+		XFillRectangle (DISPLAY,
+				ICON_FRAME_WIN(pcd),
+				fillGC,
+				xOffset, yOffset,
+				(unsigned int) IconContentWidth(pcd),
+				(unsigned int) ICON_HEIGHT(pcd));
+	    }
 
-	    shrinkRects[1].x = IB_MARGIN_WIDTH;
-	    shrinkRects[1].y = iconShrinkY;
-	    shrinkRects[1].width = iconShrinkX - IB_MARGIN_WIDTH;
-	    shrinkRects[1].height = iconShrinkHeight;
+	    if (pcd->piconTopShadows)
+	    {
+		XFillRectangles (DISPLAY,
+				 ICON_FRAME_WIN(pcd),
+				 botGC,
+				 pcd->piconTopShadows->prect,
+				 pcd->piconTopShadows->used);
+	    }
 
-	    shrinkRects[2].x = iconShrinkX + iconShrinkWidth;
-	    shrinkRects[2].y = iconShrinkY;
-	    shrinkRects[2].width = iconShrinkX - IB_MARGIN_WIDTH;
-	    shrinkRects[2].height = iconShrinkHeight;
-
-	    shrinkRects[3].x = IB_MARGIN_WIDTH;
-	    shrinkRects[3].y = iconShrinkY + iconShrinkHeight;
-	    shrinkRects[3].width = (unsigned int) ICON_WIDTH(pcd);
-	    shrinkRects[3].height = iconShrinkY - IB_MARGIN_HEIGHT;
-
-	    XFillRectangles (DISPLAY, 
-			    ICON_FRAME_WIN(pcd), 
-			    SHRINK_WRAP_GC(pcd),
-			    &shrinkRects[0], 4);
+	    if (pcd->piconBottomShadows)
+	    {
+		XFillRectangles (DISPLAY,
+				 ICON_FRAME_WIN(pcd),
+				 topGC,
+				 pcd->piconBottomShadows->prect,
+				 pcd->piconBottomShadows->used);
+	    }
 			    
 	}
 
@@ -517,6 +683,37 @@ void IconExposureProc (ClientData *pcd, Boolean expose)
 				pcd->piconBottomShadows->used);
 	    }
 
+	}
+	else
+	{
+	    GC fillGC = GetOpenIconFillGC(pcd);
+	    if (fillGC)
+	    {
+		XFillRectangle (DISPLAY,
+				ICON_FRAME_WIN(pcd),
+				fillGC,
+				0, 0,
+				(unsigned int) IconContentWidth(pcd),
+				(unsigned int) ICON_HEIGHT(pcd));
+	    }
+
+	    if (pcd->piconTopShadows->prect)
+	    {
+		XFillRectangles (DISPLAY,
+				ICON_FRAME_WIN(pcd),
+				botGC,
+				pcd->piconTopShadows->prect,
+				pcd->piconTopShadows->used);
+	    }
+
+	    if (pcd->piconBottomShadows->prect)
+	    {
+		XFillRectangles (DISPLAY,
+				ICON_FRAME_WIN(pcd),
+				topGC,
+				pcd->piconBottomShadows->prect,
+				pcd->piconBottomShadows->used);
+	    }
 	}
     }
 
@@ -663,6 +860,7 @@ void IconExposureProc (ClientData *pcd, Boolean expose)
 	}
     }
 
+    DrawOpenIconBar (pcd, xOffset, yOffset);
 
 } /* END OF FUNCTION IconExposureProc */
 
@@ -803,6 +1001,14 @@ void GetIconTitleBox (ClientData *pcd, XRectangle *pBox)
 
     }
 
+    if (pcd->pSD->showOpenWindowIcons &&
+	(pcd->clientState != MINIMIZED_STATE))
+    {
+	if ((int)pBox->width > ICON_OPEN_EXTRA(pcd))
+	{
+	    pBox->width -= ICON_OPEN_EXTRA(pcd);
+	}
+    }
 
 } /* END OF FUNCTION GetIconTitleBox */
 
@@ -834,42 +1040,84 @@ void DrawIconTitle (ClientData *pcd)
 {
     XRectangle textBox;
     GC iconGC;
+    Boolean useOpenFill = False;
     
     
     GetIconTitleBox (pcd, &textBox);
 
-    /* get appropriate GCs */
-    if ((ACTIVE_PSD->useIconBox && 
-	!((pcd->dtwmBehaviors & (DtWM_BEHAVIOR_PANEL)) ||
-          (pcd->clientFlags & CLIENT_WM_CLIENTS))) ||
-	!(wmGD.keyboardFocus == pcd)) 
-    {
-	iconGC = ICON_APPEARANCE(pcd).inactiveGC;
-    }
-    else 
-    {
-	iconGC = ICON_APPEARANCE(pcd).activeGC;
-    }
+    /* use a consistent icon text color */
+    iconGC = ICON_APPEARANCE(pcd).inactiveGC;
 
     /* 
      * Dim text if this is in the icon box and the client is mapped 
      */
 
-    if ((ACTIVE_PSD->useIconBox) && 
+    if ((ACTIVE_PSD->useIconBox) &&
 	(P_ICON_BOX(pcd)) &&
-	(FADE_NORMAL_ICON(pcd)) && 
+	(FADE_NORMAL_ICON(pcd)) &&
 	(!(pcd->clientState == MINIMIZED_STATE)))
     {
-	    iconGC = FADE_ICON_TEXT_GC(pcd);
+	iconGC = FADE_ICON_TEXT_GC(pcd);
     }
 
 
 
 
-    /* paint the text */
-    WmDrawXmString(DISPLAY, ICON_FRAME_WIN(pcd), ICON_APPEARANCE(pcd).fontList,
-		   ICON_DISPLAY_TITLE(pcd), iconGC,
-		   textBox.x, textBox.y, textBox.width, &textBox, True);
+    if (pcd->pSD->showOpenWindowIcons &&
+	(pcd->clientState != MINIMIZED_STATE))
+    {
+	GC fillGC = GetOpenIconFillGC(pcd);
+	if (fillGC)
+	{
+	    XFillRectangle (DISPLAY,
+			    ICON_FRAME_WIN(pcd),
+			    fillGC,
+			    textBox.x, textBox.y,
+			    (unsigned int) textBox.width,
+			    (unsigned int) textBox.height);
+	    useOpenFill = True;
+	}
+    }
+
+    if (!useOpenFill)
+    {
+	XClearArea (DISPLAY,
+		    ICON_FRAME_WIN(pcd),
+		    textBox.x, textBox.y,
+		    (unsigned int) textBox.width,
+		    (unsigned int) textBox.height,
+		    False);
+    }
+
+    {
+	Dimension textWidth;
+	int alignment;
+
+	textWidth = XmStringWidth(ICON_APPEARANCE(pcd).fontList,
+				  ICON_DISPLAY_TITLE(pcd));
+	alignment = (textWidth >= textBox.width) ?
+	    XmALIGNMENT_BEGINNING : XmALIGNMENT_CENTER;
+
+	if ((alignment == XmALIGNMENT_CENTER) &&
+	    (pcd->pSD->showOpenWindowIcons) &&
+	    (pcd->clientState != MINIMIZED_STATE))
+	{
+	    XRectangle drawBox = textBox;
+	    drawBox.x += (ICON_OPEN_EXTRA(pcd) / 2);
+	    XmStringDraw (DISPLAY, ICON_FRAME_WIN(pcd),
+			  ICON_APPEARANCE(pcd).fontList,
+			  ICON_DISPLAY_TITLE(pcd), iconGC,
+			  drawBox.x, drawBox.y, drawBox.width,
+			  alignment, XmSTRING_DIRECTION_L_TO_R, &drawBox);
+	}
+	else
+	{
+	    XmStringDraw (DISPLAY, ICON_FRAME_WIN(pcd), ICON_APPEARANCE(pcd).fontList,
+			  ICON_DISPLAY_TITLE(pcd), iconGC,
+			  textBox.x, textBox.y, textBox.width,
+			  alignment, XmSTRING_DIRECTION_L_TO_R, &textBox);
+	}
+    }
 
 } /* END OF FUNCTION DrawIconTitle */
 
@@ -902,6 +1150,7 @@ void RedisplayIconTitle (ClientData *pcd)
 {
     XRectangle textBox;
     GC iconGC;
+    Boolean useOpenFill = False;
 
     /*
      * only proceed if we've got the right icon parts to work on
@@ -921,16 +1170,7 @@ void RedisplayIconTitle (ClientData *pcd)
 	 * Get appropriate GCs 
 	 * Dim text if this is in the icon box and the client is mapped 
 	 */
-	if ((ACTIVE_PSD->useIconBox && (P_ICON_BOX(pcd)) &&
-	    !(pcd->clientFlags & CLIENT_WM_CLIENTS)) || 
-	    !(wmGD.keyboardFocus == pcd)) 
-	{
-	    iconGC = ICON_APPEARANCE(pcd).inactiveGC;
-	}
-	else 
-	{
-	    iconGC = ICON_APPEARANCE(pcd).activeGC;
-	}
+	iconGC = ICON_APPEARANCE(pcd).inactiveGC;
 
 	if ((ACTIVE_PSD->useIconBox) && 
 	    (P_ICON_BOX(pcd)) &&
@@ -940,19 +1180,64 @@ void RedisplayIconTitle (ClientData *pcd)
 	    iconGC = FADE_ICON_TEXT_GC(pcd);
 	}
 
-	/* out with the old */
-	XClearArea (DISPLAY, 
-	    ICON_FRAME_WIN(pcd), 
-	    textBox.x, textBox.y,
-	    (unsigned int) textBox.width, (unsigned int) textBox.height, 
-	    FALSE);
+	if (pcd->pSD->showOpenWindowIcons &&
+	    (pcd->clientState != MINIMIZED_STATE))
+	{
+	    GC fillGC = GetOpenIconFillGC(pcd);
+	    if (fillGC)
+	    {
+		XFillRectangle (DISPLAY,
+				ICON_FRAME_WIN(pcd),
+				fillGC,
+				textBox.x, textBox.y,
+				(unsigned int) textBox.width,
+				(unsigned int) textBox.height);
+		useOpenFill = True;
+	    }
+	}
 
-	/* in with the new */
-	WmDrawXmString(DISPLAY, ICON_FRAME_WIN(pcd), 
-		       ICON_APPEARANCE(pcd).fontList,
-		       ICON_DISPLAY_TITLE(pcd), iconGC,
-		       textBox.x, textBox.y, textBox.width, &textBox,
-		       True);
+	/* out with the old */
+	if (!useOpenFill)
+	{
+	    XClearArea (DISPLAY,
+		ICON_FRAME_WIN(pcd),
+		textBox.x, textBox.y,
+		(unsigned int) textBox.width, (unsigned int) textBox.height,
+		FALSE);
+	}
+
+	{
+	    Dimension textWidth;
+	    int alignment;
+
+	    textWidth = XmStringWidth(ICON_APPEARANCE(pcd).fontList,
+				      ICON_DISPLAY_TITLE(pcd));
+	    alignment = (textWidth >= textBox.width) ?
+		XmALIGNMENT_BEGINNING : XmALIGNMENT_CENTER;
+
+	    if ((alignment == XmALIGNMENT_CENTER) &&
+		(pcd->pSD->showOpenWindowIcons) &&
+		(pcd->clientState != MINIMIZED_STATE))
+	    {
+		XRectangle drawBox = textBox;
+		drawBox.x += (ICON_OPEN_EXTRA(pcd) / 2);
+		XmStringDraw (DISPLAY, ICON_FRAME_WIN(pcd),
+			      ICON_APPEARANCE(pcd).fontList,
+			      ICON_DISPLAY_TITLE(pcd), iconGC,
+			      drawBox.x, drawBox.y, drawBox.width,
+			      alignment, XmSTRING_DIRECTION_L_TO_R,
+			      &drawBox);
+	    }
+	    else
+	    {
+		XmStringDraw (DISPLAY, ICON_FRAME_WIN(pcd),
+			      ICON_APPEARANCE(pcd).fontList,
+			      ICON_DISPLAY_TITLE(pcd), iconGC,
+			      textBox.x, textBox.y, textBox.width,
+			      alignment, XmSTRING_DIRECTION_L_TO_R,
+			      &textBox);
+	    }
+	}
 
 	/* 
 	 * Erase & paint text in the active icon text window
@@ -1120,65 +1405,7 @@ void InitIconSize (WmScreenData *pSD)
     pSD->iconLabelHeight = label;
 
 
-    iconShrinkX =   IB_MARGIN_WIDTH 
-		  + ICON_EXTERNAL_SHADOW_WIDTH
-		  + ICON_IMAGE_LEFT_PAD
-		  + 2 * ICON_INTERNAL_SHADOW_WIDTH;
-
-		
-    iconShrinkY =   IB_MARGIN_HEIGHT
-		  + ICON_EXTERNAL_SHADOW_WIDTH 
-		  + ((pSD->iconDecoration & ICON_IMAGE_PART)
-			? (ICON_IMAGE_TOP_PAD + 
-			    (2 * ICON_INTERNAL_SHADOW_WIDTH))
-			: (WM_TOP_TITLE_PADDING));
-    if (wmGD.frameStyle == WmSLAB)
-    {
-	/* less beveling in this style */
-	iconShrinkX -= ICON_INTERNAL_SHADOW_WIDTH;
-	iconShrinkY -= ICON_INTERNAL_SHADOW_WIDTH;
-    }
-
-
-    iconShrinkWidth  =  pSD->iconImageMaximum.width ;
-    if (wmGD.frameStyle == WmSLAB)
-    {
-	iconShrinkWidth  += 2;
-    }
-
-
-
-
-    switch (pSD->iconDecoration & (ICON_IMAGE_PART | ICON_LABEL_PART)) 
-    {
-	case ICON_LABEL_PART:
-	    iconShrinkHeight = TEXT_HEIGHT(pSD->iconAppearance.font);
-	    break;
-
-	case ICON_IMAGE_PART:
-	    iconShrinkHeight = pSD->iconImageMaximum.height;
-
-	    break;
-
-	case (ICON_IMAGE_PART | ICON_LABEL_PART):
-	    iconShrinkHeight =  pSD->iconHeight
-		    - ICON_EXTERNAL_SHADOW_WIDTH
-		    - ICON_IMAGE_TOP_PAD
-		    - ICON_INTERNAL_SHADOW_WIDTH
-		    - ICON_INTERNAL_SHADOW_WIDTH
-		    - ICON_IMAGE_BOTTOM_PAD
-		    - WM_BOTTOM_TITLE_PADDING
-		    - ICON_EXTERNAL_SHADOW_WIDTH;
-	    if (wmGD.frameStyle == WmSLAB)
-	    {
-		/* adjust for less beveling in this style */
-		iconShrinkHeight += ICON_INTERNAL_SHADOW_WIDTH;
-	    }
-	    break;
-
-    }
-
-    
+    /* shrink-wrap metrics no longer used for open icon rendering */
 } /* END OF FUNCTION InitIconSize */
 
 
@@ -1504,7 +1731,7 @@ void ReparentIconWindow (ClientData *pcd, int xOffset, int yOffset)
         yOffset += ICON_INTERNAL_SHADOW_WIDTH;
     }
 
-    rpX = ((ICON_WIDTH(pcd) - width)/2)    + xOffset;
+    rpX = ((IconContentWidth(pcd) - width)/2)    + xOffset;
     rpY = ((ICON_IMAGE_HEIGHT(pcd) - height)/2) + yOffset;
 
 
@@ -2054,5 +2281,3 @@ void MoveActiveIconText (ClientData *pcd)
 
     }
 }  /* END OF FUNCTION  MoveActiveIconText */
-
-

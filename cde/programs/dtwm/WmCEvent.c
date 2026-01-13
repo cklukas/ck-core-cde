@@ -70,6 +70,9 @@
 
 extern unsigned int buttonModifierMasks[];
 
+static ClientData *iconPressCD = NULL;
+static Boolean iconPressWasActive = False;
+
 
 static void AcceptPrematureClientMessage (XClientMessageEvent *clientEvent)
 {
@@ -1378,7 +1381,12 @@ void HandleIconButtonPress (ClientData *pCD, XButtonEvent *buttonEvent)
          * double-click).  Set the focus and top the icon if appropriate.
          */
 
-        if (wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_EXPLICIT)
+	iconPressCD = pCD;
+	iconPressWasActive = (wmGD.keyboardFocus == pCD);
+
+        if ((wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_EXPLICIT) &&
+	    !(pCD->pSD->showOpenWindowIcons &&
+	      (pCD->clientState != MINIMIZED_STATE)))
         {
 	    Do_Focus_Key (pCD, buttonEvent->time, ALWAYS_SET_FOCUS);
         }
@@ -1438,6 +1446,9 @@ void HandleIconBoxButtonPress (ClientData *pCD, XButtonEvent *buttonEvent, Conte
     else if ((subContext == F_SUBCONTEXT_IB_IICON) ||
 	     (subContext == F_SUBCONTEXT_IB_WICON))
     {
+	iconPressCD = pCD;
+	iconPressWasActive = (wmGD.keyboardFocus == pCD);
+
 	/*
 	 * Indicate that a move may be starting; wait for button motion
 	 * events before moving the icon.
@@ -1738,7 +1749,28 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
 	 * SELECT_BUTTON click - post the system menu if specified.
 	 */
 
-	if (wmGD.iconClick &&
+	if (pCD->pSD->showOpenWindowIcons &&
+	    wmGD.preMove &&
+	    (wmGD.clickData.clickContext == F_SUBCONTEXT_I_ALL))
+	{
+	    if (pCD->clientState == MINIMIZED_STATE)
+	    {
+		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)NULL);
+	    }
+	    else if (iconPressCD == pCD && iconPressWasActive)
+	    {
+		SetClientState (pCD, MINIMIZED_STATE, buttonEvent->time);
+	    }
+	    else
+	    {
+		Do_Focus_Key (pCD, buttonEvent->time, ALWAYS_SET_FOCUS);
+		F_Raise ((String)NULL, pCD, (XEvent *)NULL);
+	    }
+	    iconPressCD = NULL;
+	    iconPressWasActive = False;
+	}
+	else if (wmGD.iconClick &&
+	    !(pCD->pSD->showOpenWindowIcons) &&
 	    (wmGD.clickData.clickContext == F_SUBCONTEXT_I_ALL))
 	{
 	    wmGD.checkHotspot = True;
@@ -1756,9 +1788,30 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
     else if ((buttonEvent->button == SELECT_BUTTON) &&
 	     (context & F_CONTEXT_ICONBOX))
     {
-        if ((wmGD.iconClick)  &&
-            (((pCD->clientState == MINIMIZED_STATE)  &&
-	      (wmGD.clickData.clickContext == F_SUBCONTEXT_IB_IICON)) ||
+        if (pCD->pSD->showOpenWindowIcons &&
+	    wmGD.preMove &&
+            ((wmGD.clickData.clickContext == F_SUBCONTEXT_IB_IICON) ||
+	     (wmGD.clickData.clickContext == F_SUBCONTEXT_IB_WICON))  )
+        {
+	    if (pCD->clientState == MINIMIZED_STATE)
+	    {
+		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)NULL);
+	    }
+	    else if (iconPressCD == pCD && iconPressWasActive)
+	    {
+		SetClientState (pCD, MINIMIZED_STATE, buttonEvent->time);
+	    }
+	    else
+	    {
+		Do_Focus_Key (pCD, buttonEvent->time, ALWAYS_SET_FOCUS);
+		F_Raise ((String)NULL, pCD, (XEvent *)NULL);
+	    }
+	    iconPressCD = NULL;
+	    iconPressWasActive = False;
+        }
+        else if ((wmGD.iconClick)  &&
+	    !(pCD->pSD->showOpenWindowIcons) &&
+            ((wmGD.clickData.clickContext == F_SUBCONTEXT_IB_IICON) ||
 	     (wmGD.clickData.clickContext == F_SUBCONTEXT_IB_WICON))  )
         {
             wmGD.checkHotspot = True;
@@ -1767,8 +1820,7 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
              * Post the system menu with traversal on (Button 1 should be
              * used to manipulate the menu.
              */
-            if ((wmGD.clickData.clickContext == F_SUBCONTEXT_IB_IICON) &&
-                (pCD->clientState == MINIMIZED_STATE))
+            if (wmGD.clickData.clickContext == F_SUBCONTEXT_IB_IICON)
             {
 		pCD->grabContext = F_SUBCONTEXT_IB_IICON;
                 PostMenu (pCD->systemMenuSpec, pCD, 0, 0, NoButton,

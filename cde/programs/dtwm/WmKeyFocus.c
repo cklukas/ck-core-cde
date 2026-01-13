@@ -456,6 +456,10 @@ void SetFocusIndication (ClientData *pCD)
 	 */
 
 	ShowActiveClientFrame (pCD);
+	if (pCD->pSD->showOpenWindowIcons && ICON_FRAME_WIN(pCD))
+	{
+	    IconExposureProc (pCD, True);
+	}
     }
     else if (pCD->clientState == MINIMIZED_STATE)
     {
@@ -464,6 +468,10 @@ void SetFocusIndication (ClientData *pCD)
 	 */
 
 	ShowActiveIcon (pCD);
+    }
+    else if (pCD->pSD->showOpenWindowIcons && ICON_FRAME_WIN(pCD))
+    {
+	IconExposureProc (pCD, True);
     }
 
     /* restore old keyboard focus */
@@ -518,6 +526,10 @@ void ClearFocusIndication (ClientData *pCD, Boolean refresh)
 	 */
 
 	ShowInactiveClientFrame (pCD);
+	if (pCD->pSD->showOpenWindowIcons && ICON_FRAME_WIN(pCD))
+	{
+	    IconExposureProc (pCD, True);
+	}
     }
     else if (pCD->clientState == MINIMIZED_STATE)
     {
@@ -526,6 +538,10 @@ void ClearFocusIndication (ClientData *pCD, Boolean refresh)
 	 */
 
 	ShowInactiveIcon (pCD, refresh);
+    }
+    else if (pCD->pSD->showOpenWindowIcons && ICON_FRAME_WIN(pCD))
+    {
+	IconExposureProc (pCD, True);
     }
 
     if (bUnseen) 
