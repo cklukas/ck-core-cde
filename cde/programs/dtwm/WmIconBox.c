@@ -451,14 +451,23 @@ void MakeScrolledWindow (WmWorkspaceData *pWS, IconBoxData *pIBD)
     XtSetArg (setArgs[i], XmNscrollingPolicy , (XtArgVal) XmAUTOMATIC ); i++;
 
     XtSetArg (setArgs[i], XmNborderWidth , (XtArgVal) 0 ); i++;
-    XtSetArg (setArgs[i], XmNspacing , (XtArgVal) IB_MARGIN_WIDTH ); i++;
+    {
+	int extraGap = (pWS->pSD->iconPlacementMargin > 0)
+	    ? pWS->pSD->iconPlacementMargin : 0;
+	XtSetArg (setArgs[i], XmNspacing,
+		  (XtArgVal) (IB_MARGIN_WIDTH + extraGap)); i++;
+	/* add extra padding to the scrolled window margins */
+	XtSetArg (setArgs[i], XmNscrolledWindowMarginWidth,
+		  (XtArgVal) (3 + extraGap)); i++;
+	XtSetArg (setArgs[i], XmNscrolledWindowMarginHeight,
+		  (XtArgVal) (3 + extraGap)); i++;
+    }
     /*
      * do we want to get these from a resource or set it here
      * to control the appearance of the iconBox
      */
 
-    XtSetArg (setArgs[i], XmNscrolledWindowMarginWidth, (XtArgVal) 3); i++;
-    XtSetArg (setArgs[i], XmNscrolledWindowMarginHeight, (XtArgVal) 3); i++;
+    /* margins set above when spacing is set */
     XtSetArg (setArgs[i], XmNshadowThickness,
 			(XtArgVal) FRAME_EXTERNAL_SHADOW_WIDTH); i++;
 
@@ -534,9 +543,13 @@ void MakeBulletinBoard (WmWorkspaceData *pWS, IconBoxData *pIBD)
     
     XtSetArg (setArgs[i], XmNshadowThickness,(XtArgVal) 0); i++;
 
-    XtSetArg (setArgs[i], XmNspacing , 0); i++; 
-    XtSetArg (setArgs[i], XmNmarginHeight , 0); i++;
-    XtSetArg (setArgs[i], XmNmarginWidth ,  0); i++;
+    {
+	int extraGap = (pWS->pSD->iconPlacementMargin > 0)
+	    ? pWS->pSD->iconPlacementMargin : 0;
+	XtSetArg (setArgs[i], XmNspacing , (XtArgVal) extraGap); i++; 
+	XtSetArg (setArgs[i], XmNmarginHeight , (XtArgVal) extraGap); i++;
+	XtSetArg (setArgs[i], XmNmarginWidth ,  (XtArgVal) extraGap); i++;
+    }
 
     XtSetArg (setArgs[i], XmNdialogStyle, (XtArgVal) XmDIALOG_WORK_AREA); i++;
 
@@ -956,13 +969,24 @@ void InitializeClientData (ClientData *pCD, IconBoxData *pIBD)
 
     pCD->clientFlags |= ICON_BOX ;
 
-    pCD->widthInc = pIBD->IPD.iPlaceW = ICON_WIDTH(pCD)   
-	+ IB_SPACING 
-	+ (2 * IB_MARGIN_WIDTH); 
+    {
+	int extraGap = 0;
+	if (pCD->pSD->iconPlacementMargin > 0)
+	{
+	    extraGap = pCD->pSD->iconPlacementMargin;
+	}
 
-    pCD->heightInc = pIBD->IPD.iPlaceH = ICON_HEIGHT(pCD) 
-	+ IB_SPACING  
-	+ (2 * IB_MARGIN_HEIGHT);
+	pCD->widthInc = pIBD->IPD.iPlaceW = ICON_WIDTH(pCD)
+	    + ICON_GRID_EXTRA(pCD->pSD)
+	    + IB_SPACING
+	    + extraGap
+	    + (2 * IB_MARGIN_WIDTH);
+
+	pCD->heightInc = pIBD->IPD.iPlaceH = ICON_HEIGHT(pCD)
+	    + IB_SPACING
+	    + extraGap
+	    + (2 * IB_MARGIN_HEIGHT);
+    }
 
     pCD->clientWidth = pIBD->IPD.placementCols * pCD->widthInc;
     pCD->clientHeight = pIBD->IPD.placementRows * pCD->heightInc;

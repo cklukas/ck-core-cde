@@ -55,6 +55,7 @@
 #include <Xm/RowColumn.h>
 #include <Xm/ToggleBG.h>
 #include <Xm/SeparatoG.h>
+#include <Xm/TextF.h>
 #include <Xm/VendorSEP.h>
 #include <Xm/MessageB.h>
 
@@ -143,6 +144,8 @@ typedef struct {
     Widget	desktopTG;
     Widget      increaseIconSizeTG;
     Widget      showOpenIconsTG;
+    Widget      iconGapLabel;
+    Widget      iconGapText;
     Boolean     systemDefaultFlag;
     int         origKeyboardFocusPolicy;
     int         origFocusAutoRaise;
@@ -151,6 +154,7 @@ typedef struct {
     int         origUseIconBox;
     Boolean     origIncreaseIconSize;
     Boolean     origShowOpenIcons;
+    int         origIconPlacementMargin;
     int         iconImageBaseWidth;
     int         iconImageBaseHeight;
     Widget      warnDialog;
@@ -477,6 +481,23 @@ getDtwmValues(void)
                                      dtwm.origShowOpenIcons, True);
     }
 
+    /* Get IconPlacementMargin value */
+    {
+        dtwm.origIconPlacementMargin = -1;
+        if (status = XrmGetResource (db, "dtwm.iconPlacementMargin",
+                                     "Dtwm.IconPlacementMargin",
+                                     &str_type_return, &value_return))
+        {
+            dtwm.origIconPlacementMargin = atoi((char *)value_return.addr);
+        }
+
+        {
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%d", dtwm.origIconPlacementMargin);
+            XmTextFieldSetString(dtwm.iconGapText, buf);
+        }
+    }
+
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -676,6 +697,28 @@ build_dtwmDlg(
         XmCreateToggleButtonGadget(iconPlacementForm, "showOpenIconsTG", args, n);
     XmStringFree(string);
 
+    n = 0;
+    XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
+    XtSetArg(args[n], XmNpacking, XmPACK_TIGHT); n++;
+    XtSetArg(args[n], XmNspacing, style.horizontalSpacing); n++;
+    dtwm.iconGapLabel = XmCreateRowColumn(iconPlacementForm, "iconGapRC", args, n);
+
+    string = CMPSTR((char *)GETMESSAGE(18, 19, "Icon Grid Margin"));
+    n = 0;
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    {
+        Widget iconGapLabelText =
+            XmCreateLabelGadget(dtwm.iconGapLabel, "iconGapLabel", args, n);
+        XtManageChild(iconGapLabelText);
+    }
+    XmStringFree(string);
+
+    n = 0;
+    XtSetArg(args[n], XmNcolumns, 4); n++;
+    dtwm.iconGapText = XmCreateTextField(dtwm.iconGapLabel, "iconGapText", args, n);
+    XtManageChild(dtwm.iconGapText);
+    XtManageChild(dtwm.iconGapLabel);
+
     XtAddCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, NULL);
     XtAddCallback(style.dtwmDialog, XmNmapCallback, _DtmapCB_dtwmDlg, shell);
     XtAddCallback(style.dtwmDialog, XmNcallback, ButtonCB, NULL);
@@ -701,6 +744,7 @@ build_dtwmDlg(
     XtManageChild(dtwm.desktopTG);
     XtManageChild(dtwm.increaseIconSizeTG);
     XtManageChild(dtwm.showOpenIconsTG);
+    XtManageChild(dtwm.iconGapLabel);
 
     return(style.dtwmDialog);
 }
@@ -852,13 +896,25 @@ formLayoutCB(
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
     XtSetArg(args[n], XmNtopWidget,          dtwm.increaseIconSizeTG); n++;
     XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);         n++;
+    XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNleftOffset,         0);  n++;
+    XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNrightOffset,        0);  n++;
+    XtSetValues (dtwm.showOpenIconsTG, args, n);
+
+    /* Icon grid margin */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
+    XtSetArg(args[n], XmNtopWidget,          dtwm.showOpenIconsTG);   n++;
+    XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
     XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
     XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNleftOffset,         0);  n++;
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNrightOffset,        0);  n++;
-    XtSetValues (dtwm.showOpenIconsTG, args, n);
+    XtSetValues (dtwm.iconGapLabel, args, n);
 
     XtRemoveCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, NULL);
 }
@@ -920,6 +976,7 @@ systemDefaultCB(
 
     XmToggleButtonGadgetSetState(dtwm.increaseIconSizeTG, False, True);
     XmToggleButtonGadgetSetState(dtwm.showOpenIconsTG, True, True);
+    XmTextFieldSetString(dtwm.iconGapText, "-1");
 
 }
 
@@ -1024,6 +1081,17 @@ ButtonCB(
 		  state ? "True" : "False");
 	  changeFlag = 1;
 	}
+
+      {
+        char *gapStr = XmTextFieldGetString(dtwm.iconGapText);
+        int gap = atoi(gapStr ? gapStr : "0");
+        if (gapStr) XtFree(gapStr);
+        if (gap != dtwm.origIconPlacementMargin)
+	  {
+	    sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*iconPlacementMargin: %d\n", gap);
+	    changeFlag = 1;
+	  }
+      }
       
       if (changeFlag)
 	{
@@ -1080,9 +1148,15 @@ ButtonCB(
 
       XmToggleButtonGadgetSetState (dtwm.increaseIconSizeTG,
 				    dtwm.origIncreaseIconSize ? True : False , True); 
-
+      
       XmToggleButtonGadgetSetState (dtwm.showOpenIconsTG,
 				    dtwm.origShowOpenIcons ? True : False , True); 
+
+      {
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%d", dtwm.origIconPlacementMargin);
+        XmTextFieldSetString(dtwm.iconGapText, buf);
+      }
       
       break;
     

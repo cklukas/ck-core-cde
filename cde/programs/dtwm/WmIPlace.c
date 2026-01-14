@@ -98,6 +98,9 @@ void InitIconPlacement (WmWorkspaceData *pWS)
     int extraPX;
     int extraPY;
     int i;
+    int iconGridWidth;
+    int minSpaceX;
+    int minSpaceY;
 
 
     xMargin = yMargin = extraPX = extraPY = 0;
@@ -106,17 +109,25 @@ void InitIconPlacement (WmWorkspaceData *pWS)
     sH = DisplayHeight (DISPLAY, pWS->pSD->screen);
     useMargin = (pWS->pSD->iconPlacementMargin >= 0);
     pWS->IPData.iconPlacement = pWS->pSD->iconPlacement;
+    iconGridWidth = ICON_GRID_WIDTH(pWS->pSD);
+    minSpaceX = MINIMUM_ICON_SPACING;
+    minSpaceY = MINIMUM_ICON_SPACING;
+    if (useMargin && (pWS->pSD->iconPlacementMargin > MINIMUM_ICON_SPACING))
+    {
+	minSpaceX = pWS->pSD->iconPlacementMargin;
+	minSpaceY = pWS->pSD->iconPlacementMargin;
+    }
 
     if (useMargin)
     {
 	pWS->IPData.placementCols =
-	    (sW - (2 * pWS->pSD->iconPlacementMargin)) / pWS->pSD->iconWidth;
+	    (sW - (2 * pWS->pSD->iconPlacementMargin)) / iconGridWidth;
 	pWS->IPData.placementRows =
 	    (sH - (2 * pWS->pSD->iconPlacementMargin)) / pWS->pSD->iconHeight;
     }
     else
     {
-	pWS->IPData.placementCols = sW / pWS->pSD->iconWidth;
+	pWS->IPData.placementCols = sW / iconGridWidth;
 	pWS->IPData.placementRows = sH / pWS->pSD->iconHeight;
     }
 
@@ -133,28 +144,38 @@ void InitIconPlacement (WmWorkspaceData *pWS)
 	{
 	    if (useMargin)
 	    {
+		if (pWS->IPData.placementCols <= 1)
+		{
+		    iSpaceX = 0;
+		    break;
+		}
 	        iSpaceX = 
 		    (sW - (2 * pWS->pSD->iconPlacementMargin) -
-			  (pWS->IPData.placementCols * pWS->pSD->iconWidth)) /
+			  (pWS->IPData.placementCols * iconGridWidth)) /
 			      (pWS->IPData.placementCols - 1);
 	    }
 	    else
 	    {
 	        iSpaceX = 
-		    (sW - (pWS->IPData.placementCols * pWS->pSD->iconWidth)) /
+		    (sW - (pWS->IPData.placementCols * iconGridWidth)) /
 			       pWS->IPData.placementCols;
 	    }
-	    if (iSpaceX < MINIMUM_ICON_SPACING)
+	    if (iSpaceX < minSpaceX)
 	    {
 	        pWS->IPData.placementCols--;
 	    }
 	}
-	while (iSpaceX < MINIMUM_ICON_SPACING);
+	while (iSpaceX < minSpaceX);
 
 	do
 	{
 	    if (useMargin)
 	    {
+		if (pWS->IPData.placementRows <= 1)
+		{
+		    iSpaceY = 0;
+		    break;
+		}
 	        iSpaceY = (sH - (2 * pWS->pSD->iconPlacementMargin) -
 		       (pWS->IPData.placementRows * pWS->pSD->iconHeight)) /
 				  (pWS->IPData.placementRows - 1);
@@ -165,15 +186,15 @@ void InitIconPlacement (WmWorkspaceData *pWS)
 		    (sH - (pWS->IPData.placementRows * pWS->pSD->iconHeight)) /
 					    pWS->IPData.placementRows;
 	    }
-	    if (iSpaceY < MINIMUM_ICON_SPACING)
+	    if (iSpaceY < minSpaceY)
 	    {
 	        pWS->IPData.placementRows--;
 	    }
 	}
-	while (iSpaceY < MINIMUM_ICON_SPACING);
+	while (iSpaceY < minSpaceY);
     }
 
-    pWS->IPData.iPlaceW = pWS->pSD->iconWidth + iSpaceX;
+    pWS->IPData.iPlaceW = iconGridWidth + iSpaceX;
     pWS->IPData.iPlaceH = pWS->pSD->iconHeight + iSpaceY;
 
     placementW = pWS->IPData.placementCols * pWS->IPData.iPlaceW;

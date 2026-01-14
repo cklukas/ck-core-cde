@@ -1234,12 +1234,23 @@ typedef struct _WmScreenData
     unsigned long fbStyle;
     unsigned int fbWinWidth;
     unsigned int fbWinHeight;
+    int fbWinX;
+    int fbWinY;
     char fbLocation[20];
     char fbSize[20];
     int fbLocX;
     int fbLocY;
     int fbSizeX;
     int fbSizeY;
+    Boolean fbSnapEnabled;
+    Boolean fbSnapFullScreen;
+    int fbSnapHover;
+    GC fbSnapActiveGC;
+    GC fbSnapInactiveGC;
+    GC fbSnapBgGC;
+    Pixel fbSnapActiveColor;
+    Pixel fbSnapInactiveColor;
+    Pixel fbSnapBgColor;
     int fbLastX;
     int fbLastY;
     unsigned int fbLastWidth;
@@ -1370,6 +1381,9 @@ typedef struct _WmScreenData *PtrScreenData;
     (((pcd)->pSD->showOpenWindowIcons && ((pcd)->clientState != MINIMIZED_STATE)) \
         ? (OPEN_ICON_BAR_WIDTH + OPEN_ICON_BAR_GAP) : 0)
 #define ICON_OPEN_WIDTH(pcd) (ICON_WIDTH(pcd) + ICON_OPEN_EXTRA(pcd))
+#define ICON_GRID_EXTRA(pSD) \
+    ((pSD)->showOpenWindowIcons ? (OPEN_ICON_BAR_WIDTH + OPEN_ICON_BAR_GAP) : 0)
+#define ICON_GRID_WIDTH(pSD) ((pSD)->iconWidth + ICON_GRID_EXTRA(pSD))
 #define ICON_IMAGE_HEIGHT(pcd) ((pcd)->pSD->iconImageHeight)
 #define ICON_LABEL_HEIGHT(pcd) ((pcd)->pSD->iconLabelHeight)
 #define ICON_IMAGE_MAXIMUM(pcd) ((pcd)->pSD->iconImageMaximum)
@@ -1681,6 +1695,9 @@ typedef struct _ClientData
     int		clientY;			/* normal window Y loc */
     int		clientWidth;			/* normal window width */
     int		clientHeight;			/* normal window height */
+    int		snapRestoreWidth;		/* restore width after snap */
+    int		snapRestoreHeight;		/* restore height after snap */
+    Boolean	snapRestoreValid;		/* restore size on move */
     XPoint	clientOffset;			/* frame to client window */
     XmString	clientTitle;			/* WM_NAME field */
     Window	clientFrameWin;			/* top-level, frame window */

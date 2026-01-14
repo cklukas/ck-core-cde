@@ -429,6 +429,19 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 	    int deltaX = pev->xbutton.x_root - moveLastPointerX;
 	    int deltaY = pev->xbutton.y_root - moveLastPointerY;
 	    Boolean snapRequested = MoveSnappingActive (pev);
+	    int snapX, snapY;
+	    unsigned int snapW, snapH;
+
+	    if (!wmGD.movingIcon)
+	    {
+		Boolean prevFull = pcd->pSD->fbSnapFullScreen;
+		pcd->pSD->fbSnapFullScreen = (pev->xbutton.state & ControlMask) != 0;
+		if (prevFull != pcd->pSD->fbSnapFullScreen &&
+		    (wmGD.showFeedback & WM_SHOW_FB_MOVE))
+		{
+		    PaintFeedbackWindow (pcd->pSD);
+		}
+	    }
 
 	    moveRealX += deltaX;
 	    moveRealY += deltaY;
@@ -450,6 +463,34 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 	    tmpX = moveX - prevMoveX;
 	    tmpY = moveY - prevMoveY;
 
+	    if (!wmGD.movingIcon &&
+		(wmGD.showFeedback & WM_SHOW_FB_MOVE))
+	    {
+		FeedbackUpdateSnapHover (pcd->pSD,
+					 pev->xbutton.x_root,
+					 pev->xbutton.y_root);
+	    }
+
+	    if (!wmGD.movingIcon &&
+		FeedbackGetSnapGeometry (pcd->pSD,
+					 pev->xbutton.x_root,
+					 pev->xbutton.y_root,
+					 &snapX, &snapY, &snapW, &snapH))
+	    {
+		if (!pcd->snapRestoreValid)
+		{
+		    pcd->snapRestoreWidth = pcd->clientWidth;
+		    pcd->snapRestoreHeight = pcd->clientHeight;
+		    pcd->snapRestoreValid = True;
+		}
+		moveX = snapX;
+		moveY = snapY;
+		moveWidth = snapW;
+		moveHeight = snapH;
+		moveRealX = moveX;
+		moveRealY = moveY;
+	    }
+
 	    CompleteFrameConfig (pcd, pev);
 	    moveDone = True;
 	}
@@ -465,6 +506,17 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 	    moveLastPointerY = pev->xmotion.y_root;
 	    Boolean snapRequested = MoveSnappingActive (pev);
 
+	    if (!wmGD.movingIcon)
+	    {
+		Boolean prevFull = pcd->pSD->fbSnapFullScreen;
+		pcd->pSD->fbSnapFullScreen = (pev->xmotion.state & ControlMask) != 0;
+		if (prevFull != pcd->pSD->fbSnapFullScreen &&
+		    (wmGD.showFeedback & WM_SHOW_FB_MOVE))
+		{
+		    PaintFeedbackWindow (pcd->pSD);
+		}
+	    }
+
 	    if (snapRequested)
 	    {
 		moveX = SnapCoordinate (moveRealX);
@@ -472,13 +524,21 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 	    }
 	    else
 	    {
-		moveX = moveRealX;
-		moveY = moveRealY;
+	    moveX = moveRealX;
+	    moveY = moveRealY;
 	    }
 
 	    tmpX = moveX - prevMoveX;
 	    tmpY = moveY - prevMoveY;
 	    anyMotion = True;
+
+	    if (!wmGD.movingIcon &&
+		(wmGD.showFeedback & WM_SHOW_FB_MOVE))
+	    {
+		FeedbackUpdateSnapHover (pcd->pSD,
+					 pev->xmotion.x_root,
+					 pev->xmotion.y_root);
+	    }
 	}
 
 	/* draw outline if there is something to draw */
@@ -1110,6 +1170,22 @@ void DoFeedback (ClientData *pcd, int x, int y, unsigned int width, unsigned int
     int cx = x;
     int cy = y;
     unsigned int cwidth, cheight;
+    unsigned long style;
+
+	style = newStyle ? newStyle : (pcd ? pcd->pSD->fbStyle : FB_OFF);
+    if (pcd)
+    {
+	pcd->pSD->fbSnapEnabled =
+	    (!wmGD.movingIcon &&
+	     (pcd->clientFunctions & MWM_FUNC_RESIZE) &&
+	     (style & FB_POSITION) &&
+	     !(style & FB_SIZE));
+	if (newStyle)
+	{
+	    pcd->pSD->fbSnapHover = 0;
+	    pcd->pSD->fbSnapFullScreen = False;
+	}
+    }
 
     /* compute client window coordinates from frame coordinates */
     FrameToClient (pcd, &cx, &cy, &width, &height);
@@ -1290,6 +1366,10 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 	/* reconfigure the window(s) */
 	ProcessNewConfiguration (pcd, resizeX, resizeY, 
 				 resizeWidth, resizeHeight, FALSE);
+	if (pcd)
+	{
+	    pcd->snapRestoreValid = False;
+	}
 
     }
     else if (wmGD.configAction == MOVE_CLIENT)
@@ -2600,12 +2680,29 @@ Boolean StartClientMove (ClientData *pcd, XEvent *pev)
     Boolean grabbed;
     int junk;
     Window child;
+    int restoreX, restoreY;
+    unsigned int restoreW, restoreH;
 
     /*
      *	Do our grabs if we're just starting out
      */
     if (!configGrab)
     {
+	if (!wmGD.movingIcon &&
+	    pcd->snapRestoreValid &&
+	    !pcd->maxConfig &&
+	    !pcd->fullscreen)
+	{
+	    restoreX = pcd->clientX - pcd->clientOffset.x;
+	    restoreY = pcd->clientY - pcd->clientOffset.y;
+	    restoreW = (unsigned int)pcd->snapRestoreWidth;
+	    restoreH = (unsigned int)pcd->snapRestoreHeight;
+	    ClientToFrame (pcd, &restoreX, &restoreY, &restoreW, &restoreH);
+	    ProcessNewConfiguration (pcd, restoreX, restoreY,
+				     restoreW, restoreH, FALSE);
+	    pcd->snapRestoreValid = False;
+	}
+
 	grab_win = GrabWin (pcd, pev);
 	if (grab_win == ICON_FRAME_WIN(pcd))
 	{
@@ -4099,13 +4196,15 @@ Window GrabWin (ClientData *pcd, XEvent *pev)
      */
 
     if ((pcd->clientState == MINIMIZED_STATE) ||
-        (pcd->pSD->showOpenWindowIcons &&
-         (wmGD.clickData.context & (F_CONTEXT_ICON | F_CONTEXT_ICONBOX))) ||
         (pcd->pSD->useIconBox && pev &&
          ((pev->xany.window == ICON_FRAME_WIN(pcd)) ||
           (pev->xany.window == ACTIVE_ICON_TEXT_WIN))) ||
         (pcd->pSD->showOpenWindowIcons && pev &&
-         (pev->xany.window == ICON_FRAME_WIN(pcd))))
+         (pev->xany.window == ICON_FRAME_WIN(pcd))) ||
+        (!pev && pcd->pSD->showOpenWindowIcons &&
+         ((wmGD.clickData.subContext == F_SUBCONTEXT_I_ALL) ||
+	  (wmGD.clickData.subContext == F_SUBCONTEXT_IB_IICON) ||
+	  (wmGD.clickData.subContext == F_SUBCONTEXT_IB_WICON))))
     {
         grab_win = ICON_FRAME_WIN(pcd);
     }

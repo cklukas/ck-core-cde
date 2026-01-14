@@ -44,4 +44,7 @@ extern void UpdateFeedbackInfo (WmScreenData *pSD, int x, int y,
 				unsigned int width, unsigned int height);
 extern void UpdateFeedbackText (WmScreenData *pSD, int x, int y, 
 				unsigned int width, unsigned int height);
-
+extern Boolean FeedbackUpdateSnapHover (WmScreenData *pSD, int rootX, int rootY);
+extern Boolean FeedbackGetSnapGeometry (WmScreenData *pSD, int rootX, int rootY,
+				int *pX, int *pY, unsigned int *pWidth,
+				unsigned int *pHeight);
