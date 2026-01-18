@@ -2036,3 +2036,38 @@ done:
     if (oldStates) XFree (oldStates);
     if (newStates) free (newStates);
 }
+
+void UpdateNetWmIconGeometry (ClientData *pCD)
+{
+    XWindowAttributes attr;
+    Window child;
+    int rootX = 0;
+    int rootY = 0;
+    unsigned long data[4];
+
+    if (!pCD)
+	return;
+
+    if (!ICON_FRAME_WIN(pCD))
+    {
+	XDeleteProperty (DISPLAY, pCD->client, wmGD.xa__NET_WM_ICON_GEOMETRY);
+	return;
+    }
+
+    if (!XGetWindowAttributes (DISPLAY, ICON_FRAME_WIN(pCD), &attr))
+	return;
+
+    if (!XTranslateCoordinates (DISPLAY, ICON_FRAME_WIN(pCD),
+				ROOT_FOR_CLIENT(pCD), 0, 0,
+				&rootX, &rootY, &child))
+	return;
+
+    data[0] = (unsigned long)rootX;
+    data[1] = (unsigned long)rootY;
+    data[2] = (unsigned long)attr.width;
+    data[3] = (unsigned long)attr.height;
+
+    XChangeProperty (DISPLAY, pCD->client, wmGD.xa__NET_WM_ICON_GEOMETRY,
+		     XA_CARDINAL, 32, PropModeReplace,
+		     (unsigned char *)data, 4);
+}

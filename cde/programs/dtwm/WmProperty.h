@@ -38,6 +38,7 @@ extern void SetMwmInfo (Window propWindow, long flags, Window wmWindow);
 void SetMwmSaveSessionInfo (Window wmWindow);
 extern void SetDtWmSettingsProperty (WmScreenData *pSD);
 extern void GetDtWmRequest (WmScreenData *pSD, char **pszReq, Boolean *pmore);
+extern void UpdateNetWmIconGeometry (ClientData *pCD);
 extern void GetDtSessionHints (WmScreenData *pSD, int sNum);
 
 extern PropWMState * GetWMState (Window window);

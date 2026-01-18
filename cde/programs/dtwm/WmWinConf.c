@@ -84,6 +84,7 @@
 #include "WmEvent.h"
 #include "WmFeedback.h"
 #include "WmFunction.h"
+#include "WmProperty.h"
 #include "WmWinState.h"
 #include "WmIDecor.h"
 #include "WmIPC.h"
@@ -1650,6 +1651,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 	    {
 		MoveActiveIconText(pcd);
 	    }
+	    UpdateNetWmIconGeometry (pcd);
 	}
 	else {	/* assume normal window frame */
 	    /* reconfigure the window(s) */

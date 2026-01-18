@@ -1607,10 +1607,11 @@ void ShowIconForMinimizedClient (WmWorkspaceData *pWS, ClientData *pCD)
 			     &pCD->clientEntry);
 	}
 
-        if (pWS == pSD->pActiveWS)
+	if (pWS == pSD->pActiveWS)
 	{
 	    XMapWindow (DISPLAY, ICON_FRAME_WIN(pCD));
 	    IconExposureProc (pCD, True);
+	    UpdateNetWmIconGeometry (pCD);
 	}
     }
 
@@ -1722,6 +1723,7 @@ void ShowIconForOpenClient (WmWorkspaceData *pWS, ClientData *pCD)
 	}
 	IconExposureProc (pCD, True);
     }
+    UpdateNetWmIconGeometry (pCD);
 }
 
 
