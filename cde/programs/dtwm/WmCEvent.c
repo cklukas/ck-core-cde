@@ -606,7 +606,7 @@ Boolean HandleEventsOnSpecialWindows (XEvent *pEvent)
 	        if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
 		    (keysym == XK_Meta_L) || (keysym == XK_Meta_R))
 	        {
-	            TaskSwitcherActivateSelection (ACTIVE_PSD, kev->time);
+	            TaskSwitcherActivateSelection (ACTIVE_PSD, NULL, kev->time);
 	        }
 	        XAllowEvents (DISPLAY, AsyncKeyboard, CurrentTime);
 	        dispatchEvent = False;

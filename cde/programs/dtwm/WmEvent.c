@@ -855,7 +855,7 @@ Boolean WmDispatchWsEvent (XEvent *event)
                 if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
                     (keysym == XK_Meta_L) || (keysym == XK_Meta_R))
                 {
-                    TaskSwitcherActivateSelection (ACTIVE_PSD, event->xkey.time);
+                    TaskSwitcherActivateSelection (ACTIVE_PSD, NULL, event->xkey.time);
                 }
                 dispatchEvent = False;
                 break;

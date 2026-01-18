@@ -112,14 +112,14 @@ static int taskSwitchDragWinY = 0;
 static WmScreenData *taskSwitchDragSD = NULL;
 
 void
-TaskSwitcherActivateSelection (WmScreenData *pSD, Time time)
+TaskSwitcherActivateSelection (WmScreenData *pSD, ClientData *pCD, Time time)
 {
     XEvent ev;
-    ClientData *pCD = NULL;
 
     if (!pSD)
         return;
-    if (pSD->taskSwitchIndex >= 0 &&
+    if (!pCD &&
+        pSD->taskSwitchIndex >= 0 &&
         pSD->taskSwitchIndex < pSD->taskSwitchCount)
     {
         pCD = pSD->taskSwitchList[pSD->taskSwitchIndex];
@@ -3468,7 +3468,7 @@ FinishTaskSwitcher (WmScreenData *pSD, Time time, Boolean activate)
 
     if (activate && pCD)
     {
-        TaskSwitcherActivateSelection (pSD, time);
+        TaskSwitcherActivateSelection (pSD, pCD, time);
         TaskSwitcherLog("FinishTaskSwitcher activate selection done");
     }
 }
