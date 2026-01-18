@@ -3548,6 +3548,14 @@ StartTaskSwitcher (WmScreenData *pSD, Time time, int direction)
     XRaiseWindow (DISPLAY, pSD->taskSwitchWin);
     XMapWindow (DISPLAY, pSD->taskSwitchWin);
     TaskSwitcherLog("StartTaskSwitcher XMapWindow");
+    if (!pSD->taskSwitchGrabbed)
+    {
+        int grabStatus = XGrabKeyboard (DISPLAY, pSD->taskSwitchWin, False,
+                                        GrabModeAsync, GrabModeAsync, time);
+        pSD->taskSwitchGrabbed = (grabStatus == GrabSuccess);
+        TaskSwitcherLog("StartTaskSwitcher XGrabKeyboard status=%d",
+                        grabStatus);
+    }
     PaintTaskSwitcher (pSD);
     TaskSwitcherLog("StartTaskSwitcher PaintTaskSwitcher done");
 
@@ -3585,6 +3593,14 @@ StartTaskSwitcher (WmScreenData *pSD, Time time, int direction)
         TaskSwitcherLog("StartTaskSwitcher already active -> advance");
         if (pSD->taskSwitchPinned)
             taskSwitchPinnedAlt = True;
+        if (!pSD->taskSwitchGrabbed)
+        {
+            int grabStatus = XGrabKeyboard (DISPLAY, pSD->taskSwitchWin, False,
+                                            GrabModeAsync, GrabModeAsync, time);
+            pSD->taskSwitchGrabbed = (grabStatus == GrabSuccess);
+            TaskSwitcherLog("StartTaskSwitcher XGrabKeyboard (active) status=%d",
+                            grabStatus);
+        }
         AdvanceTaskSwitcher (pSD, direction);
         XAllowEvents (DISPLAY, AsyncKeyboard, time);
     }
@@ -3805,6 +3821,12 @@ HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event)
         TaskSwitcherEnsureCursors ();
         TaskSwitcherSetCursor (pSD, taskSwitchCursorHand);
         pSD->taskSwitchPinned = True;
+        if (pSD->taskSwitchGrabbed)
+        {
+            XUngrabKeyboard (DISPLAY, event->time);
+            pSD->taskSwitchGrabbed = False;
+            TaskSwitcherLog("HandleTaskSwitcherButtonPress ungrab keyboard (pin)");
+        }
         TaskSwitcherLog("HandleTaskSwitcherButtonPress pinned");
         if (taskSwitchTimer)
         {
@@ -3826,6 +3848,11 @@ HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event)
             taskSwitchDragStartY = event->y_root;
             taskSwitchDragWinX = pSD->taskSwitchX;
             taskSwitchDragWinY = pSD->taskSwitchY;
+            if (pSD->taskSwitchIndex >= 0)
+            {
+                pSD->taskSwitchIndex = -1;
+                PaintTaskSwitcher (pSD);
+            }
             TaskSwitcherEnsureCursors ();
             TaskSwitcherSetCursor (pSD, taskSwitchCursorDrag);
             XGrabPointer (DISPLAY, pSD->taskSwitchWin, False,
