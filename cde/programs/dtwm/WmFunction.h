@@ -30,6 +30,9 @@
 /*
  * (c) Copyright 1987, 1988, 1989, 1990 HEWLETT-PACKARD COMPANY */
 
+#ifndef _Dt_WmFunction_h_
+#define _Dt_WmFunction_h_
+
 
 extern Boolean F_Action (String actionName, ClientData *pCD, XEvent *event);
 extern Boolean F_Beep (String args, ClientData *pCD, XEvent *event);
@@ -108,3 +111,4 @@ typedef struct _WmPushRecallArg {
     void *pArgs;
 } WmPushRecallArg;
 
+#endif /* _Dt_WmFunction_h_ */

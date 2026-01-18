@@ -37,6 +37,7 @@
 #include "WmResNames.h"
 
 #include "WmError.h"
+#include "WmFunction.h"
 #include <Xm/Xm.h>
 #include <X11/Shell.h>
 #include <X11/cursorfont.h>
@@ -207,6 +208,7 @@ TaskSwitcherActivateSelection (WmScreenData *pSD, ClientData *pCD, Time time)
     memset(&ev, 0, sizeof(ev));
     ev.xbutton.time = time;
     F_Normalize_And_Raise (NULL, pCD, &ev);
+    Do_Focus_Key (pCD, time, ALWAYS_SET_FOCUS);
 }
 
 void
