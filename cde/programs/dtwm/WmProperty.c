@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <Dt/WsmP.h>
+#include <Dt/WmSettings.h>
 #include <X11/Xatom.h>
 #include <Xm/AtomMgr.h>
 

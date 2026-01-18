@@ -72,6 +72,7 @@ typedef struct
 #include <Dt/Message.h>
 #include <Dt/WsmM.h>
 #include <Dt/EnvControlP.h>
+#include <Dt/WmSettings.h>
 
 /* Busy is also defined in the BMS  -> bms.h. This conflicts with
  * /usr/include/X11/Xasync.h on ibm.
@@ -1840,6 +1841,7 @@ void SetupWmWorkspaceWindows (void)
 			pSD->wmWorkspaceWin);
 	    XSaveContext (DISPLAY, pSD->wmWorkspaceWin, 
 		    wmGD.mwmWindowContextType, (caddr_t)pSD);
+	    SetDtWmSettingsProperty (pSD);
 	}
     }
 

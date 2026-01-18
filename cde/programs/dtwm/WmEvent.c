@@ -1349,6 +1349,8 @@ void HandleWsButtonPress (XButtonEvent *buttonEvent)
         wmGD.keyboardFocus)
     {
         SetKeyboardFocus (NULL, REFRESH_LAST_FOCUS);
+        Do_Focus_Key ((ClientData *)NULL, buttonEvent->time,
+            ALWAYS_SET_FOCUS | WORKSPACE_IF_NULL);
         RepairFocus ();
     }
 

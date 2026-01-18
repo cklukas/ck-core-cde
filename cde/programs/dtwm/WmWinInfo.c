@@ -1603,9 +1603,11 @@ ProcessWmHints (ClientData *pCD, Boolean firstTime)
                  * Display new icon image if the icon is showing:
                  */
 		
-                if (((pCD->clientState == MINIMIZED_STATE) ||
-                     ((pCD->pSD->useIconBox) && (P_ICON_BOX(pCD)))) &&
-                    ICON_FRAME_WIN(pCD))
+                if (ICON_FRAME_WIN(pCD) &&
+                    !(pCD->clientState & UNSEEN_STATE) &&
+                    ((pCD->clientState == MINIMIZED_STATE) ||
+                     ((pCD->pSD->useIconBox) && (P_ICON_BOX(pCD))) ||
+                     (pCD->pSD->showOpenWindowIcons)))
                 {
                     IconExposureProc (pCD, True);
                 }

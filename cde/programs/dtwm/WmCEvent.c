@@ -1511,9 +1511,7 @@ void HandleIconButtonPress (ClientData *pCD, XButtonEvent *buttonEvent)
 	iconPressCD = pCD;
 	iconPressWasActive = (wmGD.keyboardFocus == pCD);
 
-        if ((wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_EXPLICIT) &&
-	    !(pCD->pSD->showOpenWindowIcons &&
-	      (pCD->clientState != MINIMIZED_STATE)))
+        if (wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_EXPLICIT)
         {
 	    Do_Focus_Key (pCD, buttonEvent->time, ALWAYS_SET_FOCUS);
         }
@@ -1884,7 +1882,8 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
 	    {
 		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)NULL);
 	    }
-	    else if (iconPressCD == pCD && iconPressWasActive)
+	    else if (iconPressCD == pCD && iconPressWasActive &&
+		     (wmGD.keyboardFocus == pCD))
 	    {
 		SetClientState (pCD, MINIMIZED_STATE, buttonEvent->time);
 	    }
@@ -1924,7 +1923,8 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
 	    {
 		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)NULL);
 	    }
-	    else if (iconPressCD == pCD && iconPressWasActive)
+	    else if (iconPressCD == pCD && iconPressWasActive &&
+		     (wmGD.keyboardFocus == pCD))
 	    {
 		SetClientState (pCD, MINIMIZED_STATE, buttonEvent->time);
 	    }
