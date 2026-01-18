@@ -623,11 +623,12 @@ Boolean HandleEventsOnSpecialWindows (XEvent *pEvent)
 	        if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
 		    (keysym == XK_Meta_L) || (keysym == XK_Meta_R))
 	        {
-	            if (TaskSwitcherPointerInWindow (ACTIVE_PSD))
+	            if (TaskSwitcherPointerInWindow (ACTIVE_PSD) &&
+	                !TaskSwitcherGetPinnedAlt())
 	            {
-                ACTIVE_PSD->taskSwitchPinned = True;
-                TaskSwitcherSetPinnedAlt(False);
-                TaskSwitcherLog("TaskSwitcher KeyRelease pinned via hover");
+	                ACTIVE_PSD->taskSwitchPinned = True;
+	                TaskSwitcherSetPinnedAlt(False);
+	                TaskSwitcherLog("TaskSwitcher KeyRelease pinned via hover");
 	                PaintTaskSwitcher (ACTIVE_PSD);
 	                XAllowEvents (DISPLAY, AsyncKeyboard, CurrentTime);
 	                dispatchEvent = False;

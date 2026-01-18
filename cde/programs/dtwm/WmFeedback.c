@@ -215,6 +215,12 @@ TaskSwitcherSetPinnedAlt (Boolean active)
     taskSwitchPinnedAlt = active;
 }
 
+Boolean
+TaskSwitcherGetPinnedAlt (void)
+{
+    return taskSwitchPinnedAlt;
+}
+
 void
 TaskSwitcherLog (const char *fmt, ...)
 {
@@ -3708,6 +3714,7 @@ HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event)
         XSetWindowBorderWidth (DISPLAY, pSD->taskSwitchWin, 2);
         XSetWindowBorder (DISPLAY, pSD->taskSwitchWin,
                           pSD->feedbackAppearance.activeForeground);
+        PaintTaskSwitcher (pSD);
 
         if (event->button == Button1)
         {

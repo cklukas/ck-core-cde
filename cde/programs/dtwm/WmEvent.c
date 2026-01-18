@@ -855,7 +855,8 @@ Boolean WmDispatchWsEvent (XEvent *event)
                 if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
                     (keysym == XK_Meta_L) || (keysym == XK_Meta_R))
                 {
-                    if (TaskSwitcherPointerInWindow (ACTIVE_PSD))
+                    if (TaskSwitcherPointerInWindow (ACTIVE_PSD) &&
+                        !TaskSwitcherGetPinnedAlt())
                     {
                         ACTIVE_PSD->taskSwitchPinned = True;
                         TaskSwitcherSetPinnedAlt(False);
