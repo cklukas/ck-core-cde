@@ -2961,6 +2961,79 @@ TaskSwitcherComputeGeometry (WmScreenData *pSD, int *startX, int *startY,
         *bodyTextH = bodyH;
 }
 
+static void
+PaintTaskSwitcherBody (WmScreenData *pSD)
+{
+    XRectangle bodyBox;
+    XmString bodyString = NULL;
+    Boolean bodyNeedsFree = False;
+    Boolean bodyEllipsized = False;
+    int bodyTextH = TaskSwitchBodyHeight (pSD);
+
+    if (!pSD || !pSD->taskSwitchWin || !pSD->feedbackAppearance.fontList)
+        return;
+
+    bodyBox.x = TASK_SWITCH_MARGIN;
+    bodyBox.y = TASK_SWITCH_MARGIN + pSD->taskSwitchTitleH;
+    bodyBox.width = pSD->taskSwitchWidth - (2 * TASK_SWITCH_MARGIN);
+    bodyBox.height = bodyTextH;
+
+    if (bodyBox.height <= 0 || bodyBox.width <= 0)
+        return;
+
+    if (taskSwitchBackgroundGC)
+    {
+        XFillRectangle (DISPLAY, pSD->taskSwitchWin, taskSwitchBackgroundGC,
+                        bodyBox.x, bodyBox.y,
+                        bodyBox.width, bodyBox.height);
+    }
+
+    {
+        int bodyIndex = pSD->taskSwitchIndex;
+        if (pSD->taskSwitchHoverIndex >= 0 &&
+            pSD->taskSwitchHoverIndex < pSD->taskSwitchCount)
+        {
+            bodyIndex = pSD->taskSwitchHoverIndex;
+        }
+
+        if (bodyIndex >= 0 &&
+            bodyIndex < pSD->taskSwitchCount)
+        {
+            bodyString = pSD->taskSwitchTitles ?
+                pSD->taskSwitchTitles[bodyIndex] : NULL;
+        }
+
+        if (!bodyString)
+        {
+            bodyString = XmStringCreateLocalized ("(none)");
+            bodyNeedsFree = True;
+        }
+
+        {
+            XmString bodyDraw = TaskSwitchEllipsize (pSD->feedbackAppearance.fontList,
+                                                     bodyString, bodyBox.width,
+                                                     &bodyEllipsized);
+            Dimension textWidth = XmStringWidth (pSD->feedbackAppearance.fontList,
+                                                 bodyDraw);
+            int alignment = (textWidth >= bodyBox.width) ?
+                XmALIGNMENT_BEGINNING : XmALIGNMENT_CENTER;
+
+            XmStringDraw (DISPLAY, pSD->taskSwitchWin,
+                          pSD->feedbackAppearance.fontList,
+                          bodyDraw,
+                          pSD->iconAppearance.inactiveGC,
+                          bodyBox.x, bodyBox.y + TASK_SWITCH_TITLE_PAD,
+                          bodyBox.width, alignment,
+                          XmSTRING_DIRECTION_L_TO_R, &bodyBox);
+            if (bodyEllipsized)
+                XmStringFree (bodyDraw);
+        }
+
+        if (bodyNeedsFree)
+            XmStringFree (bodyString);
+    }
+}
+
 static Boolean
 TaskSwitcherIconRect (WmScreenData *pSD, int index, int startX, int startY,
                       int labelH, int *frameX, int *frameY,
@@ -3334,6 +3407,22 @@ HandleTaskSwitcherExpose (WmScreenData *pSD, XExposeEvent *event)
 
     if (event->y < gridTop)
     {
+        int bodyTop = TASK_SWITCH_MARGIN + pSD->taskSwitchTitleH;
+        int bodyBottom = bodyTop + TaskSwitchBodyHeight (pSD);
+        int eventBottom = event->y + event->height;
+
+        if (event->y >= bodyTop && event->y < bodyBottom)
+        {
+            PaintTaskSwitcherBody (pSD);
+            return;
+        }
+
+        if (eventBottom > bodyTop && event->y < bodyBottom)
+        {
+            PaintTaskSwitcherBody (pSD);
+            return;
+        }
+
         PaintTaskSwitcher (pSD);
         return;
     }
