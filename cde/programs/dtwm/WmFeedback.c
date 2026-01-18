@@ -229,24 +229,17 @@ TaskSwitcherLog (const char *fmt, ...)
 
     const char *logPath = getenv(TASK_SWITCH_LOG_ENV);
     if (!logPath || logPath[0] == '\0')
-        logPath = "/home/klukas/git/cde/cde/log.txt";
+        return;
 
-    FILE *fp = fopen(logPath, "a");
-    if (!fp)
+    static FILE *fp = NULL;
+    static Boolean triedOpen = False;
+    if (!fp && !triedOpen)
     {
-        logPath = "/tmp/dtwm-task-switcher.log";
+        triedOpen = True;
         fp = fopen(logPath, "a");
-        if (!fp)
-        {
-            va_list ap;
-            va_start(ap, fmt);
-            fprintf(stderr, "dtwm task switcher log failed: ");
-            vfprintf(stderr, fmt, ap);
-            fprintf(stderr, "\n");
-            va_end(ap);
-            return;
-        }
     }
+    if (!fp)
+        return;
 
     static Boolean wroteHeader = False;
     time_t now = time(NULL);

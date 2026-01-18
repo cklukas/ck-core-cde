@@ -261,6 +261,16 @@ MoveSnappingActive (XEvent *pev)
     return ShiftHeldOnScreen (ACTIVE_PSD);
 }
 
+static int
+PanelEdgeSnapGap (WmScreenData *pSD)
+{
+    if (pSD && pSD->iconPlacementMargin >= 0)
+    {
+	return pSD->iconPlacementMargin;
+    }
+    return MINIMUM_ICON_SPACING;
+}
+
 
 
 /*************************************<->*************************************
@@ -542,6 +552,44 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 		moveY = snapY;
 		moveWidth = snapW;
 		moveHeight = snapH;
+		moveRealX = moveX;
+		moveRealY = moveY;
+	    }
+
+	    if (!wmGD.movingIcon &&
+		(pcd->clientFlags & FRONT_PANEL_BOX))
+	    {
+		int screenW = DisplayWidth (DISPLAY, SCREEN_FOR_CLIENT(pcd));
+		int screenH = DisplayHeight (DISPLAY, SCREEN_FOR_CLIENT(pcd));
+		int gap = PanelEdgeSnapGap (pcd->pSD);
+		int leftGap = moveX;
+		int rightGap = screenW - (moveX + (int) moveWidth);
+		int topGap = moveY;
+		int bottomGap = screenH - (moveY + (int) moveHeight);
+		int absLeft = ABS (leftGap);
+		int absRight = ABS (rightGap);
+		int absTop = ABS (topGap);
+		int absBottom = ABS (bottomGap);
+
+		if (gap < 0)
+		    gap = 0;
+
+		if (absLeft <= gap || absRight <= gap)
+		{
+		    if (absLeft <= absRight)
+			moveX = 0;
+		    else
+			moveX = screenW - (int) moveWidth;
+		}
+
+		if (absTop <= gap || absBottom <= gap)
+		{
+		    if (absTop <= absBottom)
+			moveY = 0;
+		    else
+			moveY = screenH - (int) moveHeight;
+		}
+
 		moveRealX = moveX;
 		moveRealY = moveY;
 	    }
@@ -3708,6 +3756,23 @@ void FixFrameValues (ClientData *pcd, int *pfX, int *pfY, unsigned int *pfWidth,
     /* 
      * Don't move if we'd end up totally offscreen 
      */
+
+    if (!wmGD.movingIcon && (pcd->clientFlags & FRONT_PANEL_BOX))
+    {
+	int screenW = DisplayWidth (DISPLAY, SCREEN_FOR_CLIENT(pcd));
+	int screenH = DisplayHeight (DISPLAY, SCREEN_FOR_CLIENT(pcd));
+	int maxX = screenW - (int) *pfWidth;
+	int maxY = screenH - (int) *pfHeight;
+
+	if (maxX < 0) maxX = 0;
+	if (maxY < 0) maxY = 0;
+
+	if (*pfX < 0) *pfX = 0;
+	if (*pfY < 0) *pfY = 0;
+	if (*pfX > maxX) *pfX = maxX;
+	if (*pfY > maxY) *pfY = maxY;
+	return;
+    }
 
     if (wmGD.movingIcon)
     {
