@@ -1252,6 +1252,7 @@ typedef struct _WmScreenData
     int		taskSwitchIconW;
     int		taskSwitchIconH;
     int		taskSwitchTitleH;
+    int         taskSwitchHoverIndex;
     int		taskSwitchX;
     int		taskSwitchY;
     int		taskSwitchWidth;

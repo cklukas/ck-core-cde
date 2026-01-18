@@ -569,8 +569,25 @@ Boolean HandleEventsOnSpecialWindows (XEvent *pEvent)
 	{
 	    if (pEvent->xexpose.count == 0)
 	    {
-	        TaskSwitcherLog("TaskSwitcher event Expose win=%lu",
-				(unsigned long)ACTIVE_PSD->taskSwitchWin);
+	        static Window lastExposeWin = (Window)0L;
+	        static int lastX = -1;
+	        static int lastY = -1;
+	        static int lastW = -1;
+	        static int lastH = -1;
+	        if (pEvent->xexpose.window != lastExposeWin ||
+	            pEvent->xexpose.x != lastX ||
+	            pEvent->xexpose.y != lastY ||
+	            (int)pEvent->xexpose.width != lastW ||
+	            (int)pEvent->xexpose.height != lastH)
+	        {
+	            TaskSwitcherLog("TaskSwitcher event Expose win=%lu",
+				    (unsigned long)ACTIVE_PSD->taskSwitchWin);
+	            lastExposeWin = pEvent->xexpose.window;
+	            lastX = pEvent->xexpose.x;
+	            lastY = pEvent->xexpose.y;
+	            lastW = (int)pEvent->xexpose.width;
+	            lastH = (int)pEvent->xexpose.height;
+	        }
 	        HandleTaskSwitcherExpose (ACTIVE_PSD, &pEvent->xexpose);
 	    }
 	}
@@ -606,7 +623,17 @@ Boolean HandleEventsOnSpecialWindows (XEvent *pEvent)
 	        if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
 		    (keysym == XK_Meta_L) || (keysym == XK_Meta_R))
 	        {
-	            TaskSwitcherActivateSelection (ACTIVE_PSD, NULL, kev->time);
+	            if (TaskSwitcherPointerInWindow (ACTIVE_PSD))
+	            {
+                ACTIVE_PSD->taskSwitchPinned = True;
+                TaskSwitcherSetPinnedAlt(False);
+                TaskSwitcherLog("TaskSwitcher KeyRelease pinned via hover");
+	                PaintTaskSwitcher (ACTIVE_PSD);
+	                XAllowEvents (DISPLAY, AsyncKeyboard, CurrentTime);
+	                dispatchEvent = False;
+	                return dispatchEvent;
+	            }
+	            FinishTaskSwitcher (ACTIVE_PSD, kev->time, True);
 	        }
 	        XAllowEvents (DISPLAY, AsyncKeyboard, CurrentTime);
 	        dispatchEvent = False;
@@ -615,6 +642,16 @@ Boolean HandleEventsOnSpecialWindows (XEvent *pEvent)
 	    if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
 		(keysym == XK_Meta_L) || (keysym == XK_Meta_R))
 	    {
+	        if (TaskSwitcherPointerInWindow (ACTIVE_PSD))
+	        {
+            ACTIVE_PSD->taskSwitchPinned = True;
+            TaskSwitcherSetPinnedAlt(False);
+            TaskSwitcherLog("TaskSwitcher KeyRelease pinned via hover");
+	            PaintTaskSwitcher (ACTIVE_PSD);
+	            XAllowEvents (DISPLAY, AsyncKeyboard, CurrentTime);
+	            dispatchEvent = False;
+	            return dispatchEvent;
+	        }
 	        FinishTaskSwitcher (ACTIVE_PSD, kev->time, True);
 	    }
 	    else if (XQueryPointer (DISPLAY, ACTIVE_PSD->rootWindow,

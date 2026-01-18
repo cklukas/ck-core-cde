@@ -39,6 +39,7 @@
 #include "WmError.h"
 #include <Xm/Xm.h>
 #include <X11/Shell.h>
+#include <X11/cursorfont.h>
 #include <X11/Xutil.h>
 #include <Xm/Label.h>
 #include <Xm/DialogS.h>
@@ -103,6 +104,8 @@ static GC taskSwitchInactiveBorderGC = (GC)0L;
 static GC taskSwitchActiveFillGC = (GC)0L;
 static GC taskSwitchInactiveFillGC = (GC)0L;
 static GC taskSwitchBackgroundGC = (GC)0L;
+static GC taskSwitchPinnedTitleFillGC = (GC)0L;
+static GC taskSwitchPinnedTitleTextGC = (GC)0L;
 static int taskSwitchGCscreen = -1;
 static Boolean taskSwitchDragging = False;
 static int taskSwitchDragStartX = 0;
@@ -110,6 +113,80 @@ static int taskSwitchDragStartY = 0;
 static int taskSwitchDragWinX = 0;
 static int taskSwitchDragWinY = 0;
 static WmScreenData *taskSwitchDragSD = NULL;
+static Cursor taskSwitchCursorNormal = (Cursor)0L;
+static Cursor taskSwitchCursorHand = (Cursor)0L;
+static Cursor taskSwitchCursorDrag = (Cursor)0L;
+static Cursor taskSwitchCursorCurrent = (Cursor)0L;
+static Window taskSwitchCursorWindow = (Window)0L;
+static Boolean taskSwitchPinnedAlt = False;
+
+static void
+TaskSwitcherEnsureCursors (void)
+{
+    if (!taskSwitchCursorNormal)
+    {
+        taskSwitchCursorNormal = wmGD.workspaceCursor ?
+            wmGD.workspaceCursor : XCreateFontCursor (DISPLAY, XC_left_ptr);
+    }
+    if (!taskSwitchCursorHand)
+    {
+        taskSwitchCursorHand = XCreateFontCursor (DISPLAY, XC_hand2);
+        if (!taskSwitchCursorHand)
+            taskSwitchCursorHand = taskSwitchCursorNormal;
+    }
+    if (!taskSwitchCursorDrag)
+    {
+        taskSwitchCursorDrag = wmGD.configCursor ?
+            wmGD.configCursor : XCreateFontCursor (DISPLAY, XC_fleur);
+        if (!taskSwitchCursorDrag)
+            taskSwitchCursorDrag = taskSwitchCursorNormal;
+    }
+}
+
+static void
+TaskSwitcherSetCursor (WmScreenData *pSD, Cursor cursor)
+{
+    if (!pSD || !pSD->taskSwitchWin)
+        return;
+    if (taskSwitchCursorWindow == pSD->taskSwitchWin &&
+        taskSwitchCursorCurrent == cursor)
+    {
+        return;
+    }
+    XDefineCursor (DISPLAY, pSD->taskSwitchWin, cursor);
+    taskSwitchCursorWindow = pSD->taskSwitchWin;
+    taskSwitchCursorCurrent = cursor;
+}
+
+Boolean
+TaskSwitcherPointerInWindow (WmScreenData *pSD)
+{
+    Window rootRet, childRet;
+    int rootX, rootY;
+    int winX, winY;
+    unsigned int mask = 0;
+
+    if (!pSD || !pSD->taskSwitchWin)
+        return False;
+
+    if (!XQueryPointer (DISPLAY, pSD->rootWindow, &rootRet, &childRet,
+                        &rootX, &rootY, &winX, &winY, &mask))
+    {
+        return False;
+    }
+
+    if (childRet == pSD->taskSwitchWin)
+        return True;
+
+    if (winX >= 0 && winY >= 0 &&
+        winX < (int)pSD->taskSwitchWidth &&
+        winY < (int)pSD->taskSwitchHeight)
+    {
+        return True;
+    }
+
+    return False;
+}
 
 void
 TaskSwitcherActivateSelection (WmScreenData *pSD, ClientData *pCD, Time time)
@@ -130,6 +207,12 @@ TaskSwitcherActivateSelection (WmScreenData *pSD, ClientData *pCD, Time time)
     memset(&ev, 0, sizeof(ev));
     ev.xbutton.time = time;
     F_Normalize_And_Raise (NULL, pCD, &ev);
+}
+
+void
+TaskSwitcherSetPinnedAlt (Boolean active)
+{
+    taskSwitchPinnedAlt = active;
 }
 
 void
@@ -203,7 +286,8 @@ EnsureTaskSwitchBorderGCs (WmScreenData *pSD)
 
     if (taskSwitchGCscreen == pSD->screen &&
         taskSwitchActiveBorderGC && taskSwitchInactiveBorderGC &&
-        taskSwitchBackgroundGC)
+        taskSwitchBackgroundGC && taskSwitchPinnedTitleFillGC &&
+        taskSwitchPinnedTitleTextGC)
     {
         return;
     }
@@ -233,6 +317,16 @@ EnsureTaskSwitchBorderGCs (WmScreenData *pSD)
         XFreeGC (DISPLAY, taskSwitchBackgroundGC);
         taskSwitchBackgroundGC = (GC)0L;
     }
+    if (taskSwitchPinnedTitleFillGC)
+    {
+        XFreeGC (DISPLAY, taskSwitchPinnedTitleFillGC);
+        taskSwitchPinnedTitleFillGC = (GC)0L;
+    }
+    if (taskSwitchPinnedTitleTextGC)
+    {
+        XFreeGC (DISPLAY, taskSwitchPinnedTitleTextGC);
+        taskSwitchPinnedTitleTextGC = (GC)0L;
+    }
 
     values.foreground = pSD->feedbackAppearance.activeForeground;
     values.background = pSD->feedbackAppearance.background;
@@ -258,6 +352,22 @@ EnsureTaskSwitchBorderGCs (WmScreenData *pSD)
     values.background = pSD->iconAppearance.background;
     taskSwitchBackgroundGC = XCreateGC (DISPLAY, pSD->rootWindow,
                                         GCForeground | GCBackground, &values);
+
+    values.foreground = pSD->clientTitleAppearance.activeBackground ?
+        pSD->clientTitleAppearance.activeBackground :
+        pSD->iconAppearance.background;
+    values.background = values.foreground;
+    taskSwitchPinnedTitleFillGC = XCreateGC (DISPLAY, pSD->rootWindow,
+                                             GCForeground | GCBackground, &values);
+
+    values.foreground = pSD->clientTitleAppearance.activeForeground ?
+        pSD->clientTitleAppearance.activeForeground :
+        pSD->iconAppearance.foreground;
+    values.background = pSD->clientTitleAppearance.activeBackground ?
+        pSD->clientTitleAppearance.activeBackground :
+        pSD->iconAppearance.background;
+    taskSwitchPinnedTitleTextGC = XCreateGC (DISPLAY, pSD->rootWindow,
+                                             GCForeground | GCBackground, &values);
 
     taskSwitchGCscreen = pSD->screen;
 }
@@ -2479,6 +2589,8 @@ EnsureTaskSwitchWindow (WmScreenData *pSD)
         classHint.res_name = "dtwm-task-switcher";
         classHint.res_class = "DtwmTaskSwitcher";
         XSetClassHint (DISPLAY, pSD->taskSwitchWin, &classHint);
+        TaskSwitcherEnsureCursors ();
+        TaskSwitcherSetCursor (pSD, taskSwitchCursorNormal);
     }
 }
 
@@ -2495,6 +2607,8 @@ TaskSwitcherTimeout (XtPointer client_data, XtIntervalId *id)
     TaskSwitcherLog("TaskSwitcherTimeout tick");
 
     if (!pSD || !pSD->taskSwitchActive)
+        return;
+    if (pSD->taskSwitchPinned && !taskSwitchPinnedAlt)
         return;
     if (pSD->taskSwitchPinned)
         return;
@@ -2580,29 +2694,16 @@ PaintTaskSwitcher (WmScreenData *pSD)
 
     /* bevel border */
     TaskSwitcherLog("PaintTaskSwitcher border start");
-    if (pSD->taskSwitchPinned)
     {
-        XDrawLine (DISPLAY, pSD->taskSwitchWin, pSD->feedbackAppearance.activeTopShadowGC,
+        GC borderGC = pSD->taskSwitchPinned ? activeBorderGC : inactiveBorderGC;
+        XDrawLine (DISPLAY, pSD->taskSwitchWin, borderGC,
                    0, 0, pSD->taskSwitchWidth - 1, 0);
-        XDrawLine (DISPLAY, pSD->taskSwitchWin, pSD->feedbackAppearance.activeTopShadowGC,
+        XDrawLine (DISPLAY, pSD->taskSwitchWin, borderGC,
                    0, 0, 0, pSD->taskSwitchHeight - 1);
-        XDrawLine (DISPLAY, pSD->taskSwitchWin, pSD->feedbackAppearance.activeBottomShadowGC,
+        XDrawLine (DISPLAY, pSD->taskSwitchWin, borderGC,
                    pSD->taskSwitchWidth - 1, 0,
                    pSD->taskSwitchWidth - 1, pSD->taskSwitchHeight - 1);
-        XDrawLine (DISPLAY, pSD->taskSwitchWin, pSD->feedbackAppearance.activeBottomShadowGC,
-                   0, pSD->taskSwitchHeight - 1,
-                   pSD->taskSwitchWidth - 1, pSD->taskSwitchHeight - 1);
-    }
-    else
-    {
-        XDrawLine (DISPLAY, pSD->taskSwitchWin, pSD->feedbackAppearance.inactiveTopShadowGC,
-                   0, 0, pSD->taskSwitchWidth - 1, 0);
-        XDrawLine (DISPLAY, pSD->taskSwitchWin, pSD->feedbackAppearance.inactiveTopShadowGC,
-                   0, 0, 0, pSD->taskSwitchHeight - 1);
-        XDrawLine (DISPLAY, pSD->taskSwitchWin, pSD->feedbackAppearance.inactiveBottomShadowGC,
-                   pSD->taskSwitchWidth - 1, 0,
-                   pSD->taskSwitchWidth - 1, pSD->taskSwitchHeight - 1);
-        XDrawLine (DISPLAY, pSD->taskSwitchWin, pSD->feedbackAppearance.inactiveBottomShadowGC,
+        XDrawLine (DISPLAY, pSD->taskSwitchWin, borderGC,
                    0, pSD->taskSwitchHeight - 1,
                    pSD->taskSwitchWidth - 1, pSD->taskSwitchHeight - 1);
     }
@@ -2619,28 +2720,31 @@ PaintTaskSwitcher (WmScreenData *pSD)
         GC titleFillGC = (GC)0L;
         if (pSD->taskSwitchPinned)
         {
-            XGCValues values;
-            values.foreground = pSD->clientTitleAppearance.activeBackground ?
-                pSD->clientTitleAppearance.activeBackground :
-                pSD->iconAppearance.background;
-            values.background = values.foreground;
-            titleFillGC = XCreateGC (DISPLAY, pSD->rootWindow,
-                                     GCForeground | GCBackground, &values);
+            titleFillGC = taskSwitchPinnedTitleFillGC ?
+                taskSwitchPinnedTitleFillGC : taskSwitchActiveFillGC;
+            titleGC = taskSwitchPinnedTitleTextGC ?
+                taskSwitchPinnedTitleTextGC : pSD->iconAppearance.inactiveGC;
             if (titleFillGC)
             {
                 XFillRectangle (DISPLAY, pSD->taskSwitchWin, titleFillGC,
                                 TASK_SWITCH_MARGIN, TASK_SWITCH_MARGIN,
                                 pSD->taskSwitchWidth - (2 * TASK_SWITCH_MARGIN),
                                 pSD->taskSwitchTitleH);
-            }
-            if (pSD->clientTitleAppearance.activeForeground)
-            {
-                values.foreground = pSD->clientTitleAppearance.activeForeground;
-                values.background = pSD->clientTitleAppearance.activeBackground ?
-                    pSD->clientTitleAppearance.activeBackground :
-                    pSD->iconAppearance.background;
-                titleGC = XCreateGC (DISPLAY, pSD->rootWindow,
-                                     GCForeground | GCBackground, &values);
+                if (activeBorderGC && inactiveBorderGC)
+                {
+                    int tx = TASK_SWITCH_MARGIN;
+                    int ty = TASK_SWITCH_MARGIN;
+                    int tw = pSD->taskSwitchWidth - (2 * TASK_SWITCH_MARGIN);
+                    int th = pSD->taskSwitchTitleH;
+                    XDrawLine (DISPLAY, pSD->taskSwitchWin, activeBorderGC,
+                               tx, ty, tx + tw - 1, ty);
+                    XDrawLine (DISPLAY, pSD->taskSwitchWin, activeBorderGC,
+                               tx, ty, tx, ty + th - 1);
+                    XDrawLine (DISPLAY, pSD->taskSwitchWin, inactiveBorderGC,
+                               tx + tw - 1, ty, tx + tw - 1, ty + th - 1);
+                    XDrawLine (DISPLAY, pSD->taskSwitchWin, inactiveBorderGC,
+                               tx, ty + th - 1, tx + tw - 1, ty + th - 1);
+                }
             }
         }
         titleString = XmStringCreateLocalized ("Task Switcher");
@@ -2655,10 +2759,6 @@ PaintTaskSwitcher (WmScreenData *pSD)
                       titleBox.x, titleBox.y + TASK_SWITCH_TITLE_PAD,
                       titleBox.width, XmALIGNMENT_CENTER,
                       XmSTRING_DIRECTION_L_TO_R, &titleBox);
-        if (pSD->taskSwitchPinned && titleGC != pSD->iconAppearance.inactiveGC)
-            XFreeGC (DISPLAY, titleGC);
-        if (titleFillGC)
-            XFreeGC (DISPLAY, titleFillGC);
         XmStringFree (titleString);
     }
 
@@ -2666,11 +2766,18 @@ PaintTaskSwitcher (WmScreenData *pSD)
     if (pSD->feedbackAppearance.fontList)
     {
         TaskSwitcherLog("PaintTaskSwitcher title/body start");
-        if (pSD->taskSwitchIndex >= 0 &&
-            pSD->taskSwitchIndex < pSD->taskSwitchCount)
+        int bodyIndex = pSD->taskSwitchIndex;
+        if (pSD->taskSwitchHoverIndex >= 0 &&
+            pSD->taskSwitchHoverIndex < pSD->taskSwitchCount)
+        {
+            bodyIndex = pSD->taskSwitchHoverIndex;
+        }
+
+        if (bodyIndex >= 0 &&
+            bodyIndex < pSD->taskSwitchCount)
         {
             bodyString = pSD->taskSwitchTitles ?
-                pSD->taskSwitchTitles[pSD->taskSwitchIndex] : NULL;
+                pSD->taskSwitchTitles[bodyIndex] : NULL;
         }
 
         if (!bodyString)
@@ -3386,6 +3493,8 @@ StartTaskSwitcher (WmScreenData *pSD, Time time, int direction)
     else
     {
         TaskSwitcherLog("StartTaskSwitcher already active -> advance");
+        if (pSD->taskSwitchPinned)
+            taskSwitchPinnedAlt = True;
         AdvanceTaskSwitcher (pSD, direction);
         XAllowEvents (DISPLAY, AsyncKeyboard, time);
     }
@@ -3394,17 +3503,80 @@ StartTaskSwitcher (WmScreenData *pSD, Time time, int direction)
 void
 AdvanceTaskSwitcher (WmScreenData *pSD, int direction)
 {
+    int oldIndex = -1;
     if (!pSD || !pSD->taskSwitchActive)
         return;
+    if (taskSwitchDragging && taskSwitchDragSD == pSD)
+    {
+        taskSwitchDragging = False;
+        taskSwitchDragSD = NULL;
+        XUngrabPointer (DISPLAY, CurrentTime);
+        TaskSwitcherLog("AdvanceTaskSwitcher drag cancelled");
+        TaskSwitcherEnsureCursors ();
+        TaskSwitcherSetCursor (pSD, taskSwitchCursorNormal);
+    }
     if (pSD->taskSwitchCount > 0)
     {
+        oldIndex = pSD->taskSwitchIndex;
         pSD->taskSwitchIndex =
             (pSD->taskSwitchIndex + direction + pSD->taskSwitchCount) %
             pSD->taskSwitchCount;
     }
     TaskSwitcherLog("AdvanceTaskSwitcher dir=%d index=%d", direction, pSD->taskSwitchIndex);
-    PaintTaskSwitcher (pSD);
-    TaskSwitcherLog("AdvanceTaskSwitcher paint done");
+    if (pSD->taskSwitchWin && pSD->taskSwitchCount > 0)
+    {
+        int startX;
+        int startY;
+        int labelH;
+        int frameX;
+        int frameY;
+        int frameW;
+        int frameH;
+        int iconAreaH;
+        XEvent ev;
+
+        TaskSwitcherComputeGeometry (pSD, &startX, &startY, &labelH, NULL);
+
+        if (oldIndex >= 0 &&
+            TaskSwitcherIconRect (pSD, oldIndex, startX, startY, labelH,
+                                  &frameX, &frameY, &frameW, &frameH, &iconAreaH))
+        {
+            memset(&ev, 0, sizeof(ev));
+            ev.xexpose.type = Expose;
+            ev.xexpose.display = DISPLAY;
+            ev.xexpose.window = pSD->taskSwitchWin;
+            ev.xexpose.x = frameX;
+            ev.xexpose.y = frameY;
+            ev.xexpose.width = (unsigned int)frameW;
+            ev.xexpose.height = (unsigned int)frameH;
+            ev.xexpose.count = 0;
+            XSendEvent (DISPLAY, pSD->taskSwitchWin, False, ExposureMask, &ev);
+        }
+
+        if (TaskSwitcherIconRect (pSD, pSD->taskSwitchIndex, startX, startY, labelH,
+                                  &frameX, &frameY, &frameW, &frameH, &iconAreaH))
+        {
+            memset(&ev, 0, sizeof(ev));
+            ev.xexpose.type = Expose;
+            ev.xexpose.display = DISPLAY;
+            ev.xexpose.window = pSD->taskSwitchWin;
+            ev.xexpose.x = frameX;
+            ev.xexpose.y = frameY;
+            ev.xexpose.width = (unsigned int)frameW;
+            ev.xexpose.height = (unsigned int)frameH;
+            ev.xexpose.count = 0;
+            XSendEvent (DISPLAY, pSD->taskSwitchWin, False, ExposureMask, &ev);
+        }
+    }
+
+    if (pSD->taskSwitchPinned && !taskSwitchTimer)
+    {
+        taskSwitchTimer = XtAppAddTimeOut (
+            XtDisplayToApplicationContext (DISPLAY),
+            TASK_SWITCH_TIMEOUT_MS, TaskSwitcherTimeout, (XtPointer)pSD);
+        TaskSwitcherLog("AdvanceTaskSwitcher timer started id=%lu",
+                        (unsigned long)taskSwitchTimer);
+    }
 }
 
 void
@@ -3428,6 +3600,7 @@ FinishTaskSwitcher (WmScreenData *pSD, Time time, Boolean activate)
         taskSwitchTimer = (XtIntervalId)0;
         TaskSwitcherLog("FinishTaskSwitcher timer removed");
     }
+    taskSwitchPinnedAlt = False;
 
     XUngrabKeyboard (DISPLAY, time);
     XUngrabPointer (DISPLAY, time);
@@ -3458,6 +3631,7 @@ FinishTaskSwitcher (WmScreenData *pSD, Time time, Boolean activate)
     pSD->taskSwitchIconW = 0;
     pSD->taskSwitchIconH = 0;
     pSD->taskSwitchTitleH = 0;
+    pSD->taskSwitchHoverIndex = -1;
     pSD->taskSwitchX = 0;
     pSD->taskSwitchY = 0;
     pSD->taskSwitchWidth = 0;
@@ -3520,6 +3694,8 @@ HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event)
 
     if (!onIcon)
     {
+        TaskSwitcherEnsureCursors ();
+        TaskSwitcherSetCursor (pSD, taskSwitchCursorHand);
         pSD->taskSwitchPinned = True;
         TaskSwitcherLog("HandleTaskSwitcherButtonPress pinned");
         if (taskSwitchTimer)
@@ -3541,6 +3717,8 @@ HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event)
             taskSwitchDragStartY = event->y_root;
             taskSwitchDragWinX = pSD->taskSwitchX;
             taskSwitchDragWinY = pSD->taskSwitchY;
+            TaskSwitcherEnsureCursors ();
+            TaskSwitcherSetCursor (pSD, taskSwitchCursorDrag);
             XGrabPointer (DISPLAY, pSD->taskSwitchWin, False,
                           ButtonReleaseMask | PointerMotionMask,
                           GrabModeAsync, GrabModeAsync, None, None,
@@ -3549,10 +3727,18 @@ HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event)
     }
     else
     {
+        TaskSwitcherEnsureCursors ();
+        TaskSwitcherSetCursor (pSD, taskSwitchCursorHand);
         if (event->button == Button1 && !pSD->taskSwitchPinned)
         {
             pSD->taskSwitchIndex = i;
             TaskSwitcherLog("HandleTaskSwitcherButtonPress activate index=%d", i);
+            if (taskSwitchDragging && taskSwitchDragSD == pSD)
+            {
+                taskSwitchDragging = False;
+                taskSwitchDragSD = NULL;
+                XUngrabPointer (DISPLAY, event->time);
+            }
             FinishTaskSwitcher (pSD, event->time, True);
             return True;
         }
@@ -3560,6 +3746,12 @@ HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event)
         {
             pSD->taskSwitchIndex = i;
             TaskSwitcherLog("HandleTaskSwitcherButtonPress pinned activate index=%d", i);
+            if (taskSwitchDragging && taskSwitchDragSD == pSD)
+            {
+                taskSwitchDragging = False;
+                taskSwitchDragSD = NULL;
+                XUngrabPointer (DISPLAY, event->time);
+            }
             FinishTaskSwitcher (pSD, event->time, True);
             return True;
         }
@@ -3581,6 +3773,8 @@ HandleTaskSwitcherButtonRelease (WmScreenData *pSD, XButtonEvent *event)
         taskSwitchDragSD = NULL;
         XUngrabPointer (DISPLAY, event->time);
         TaskSwitcherLog("HandleTaskSwitcherButtonRelease drag end");
+        TaskSwitcherEnsureCursors ();
+        TaskSwitcherSetCursor (pSD, taskSwitchCursorNormal);
         return True;
     }
 
@@ -3590,6 +3784,13 @@ HandleTaskSwitcherButtonRelease (WmScreenData *pSD, XButtonEvent *event)
 Boolean
 HandleTaskSwitcherMotion (WmScreenData *pSD, XMotionEvent *event)
 {
+    int startX;
+    int startY;
+    int bodyTextH;
+    int labelH = 0;
+    int i;
+    Boolean onIcon = False;
+
     if (!pSD || !event)
         return False;
 
@@ -3599,11 +3800,75 @@ HandleTaskSwitcherMotion (WmScreenData *pSD, XMotionEvent *event)
         int dy = event->y_root - taskSwitchDragStartY;
         int newX = taskSwitchDragWinX + dx;
         int newY = taskSwitchDragWinY + dy;
+        int screenW = DisplayWidth (DISPLAY, pSD->screen);
+        int screenH = DisplayHeight (DISPLAY, pSD->screen);
+        int maxX = screenW - (int)pSD->taskSwitchWidth;
+        int maxY = screenH - (int)pSD->taskSwitchHeight;
+
+        if (newX < 0) newX = 0;
+        if (newY < 0) newY = 0;
+        if (newX > maxX) newX = maxX;
+        if (newY > maxY) newY = maxY;
+
         pSD->taskSwitchX = newX;
         pSD->taskSwitchY = newY;
         XMoveWindow (DISPLAY, pSD->taskSwitchWin, newX, newY);
         return True;
     }
+
+    if (pSD->taskSwitchCount > 0)
+    {
+        int hoverIndex = -1;
+        if (pSD->iconAppearance.font)
+            labelH = TEXT_HEIGHT (pSD->iconAppearance.font);
+
+        bodyTextH = TaskSwitchBodyHeight (pSD);
+        startX = TASK_SWITCH_MARGIN;
+        startY = TASK_SWITCH_MARGIN + pSD->taskSwitchTitleH + bodyTextH +
+            TASK_SWITCH_TEXT_GAP;
+
+        for (i = 0; i < pSD->taskSwitchCount; i++)
+        {
+            int row = i / pSD->taskSwitchCols;
+            int col = i % pSD->taskSwitchCols;
+            int cellX = startX + col * pSD->taskSwitchCellW;
+            int cellY = startY + row * pSD->taskSwitchCellH;
+            int frameX = cellX + IB_MARGIN_WIDTH;
+            int frameY = cellY + IB_MARGIN_HEIGHT;
+            int frameW = pSD->taskSwitchIconW + ICON_GRID_EXTRA(pSD);
+            int frameH = pSD->taskSwitchIconH;
+
+            if (event->x >= frameX && event->x < (frameX + frameW) &&
+                event->y >= frameY && event->y < (frameY + frameH))
+            {
+                onIcon = True;
+                hoverIndex = i;
+                break;
+            }
+        }
+
+        if (hoverIndex != pSD->taskSwitchHoverIndex)
+        {
+            pSD->taskSwitchHoverIndex = hoverIndex;
+            if (pSD->taskSwitchWin)
+            {
+                XEvent ev;
+                memset(&ev, 0, sizeof(ev));
+                ev.xexpose.type = Expose;
+                ev.xexpose.display = DISPLAY;
+                ev.xexpose.window = pSD->taskSwitchWin;
+                ev.xexpose.x = TASK_SWITCH_MARGIN;
+                ev.xexpose.y = TASK_SWITCH_MARGIN + pSD->taskSwitchTitleH;
+                ev.xexpose.width = pSD->taskSwitchWidth - (2 * TASK_SWITCH_MARGIN);
+                ev.xexpose.height = TaskSwitchBodyHeight (pSD);
+                ev.xexpose.count = 0;
+                XSendEvent (DISPLAY, pSD->taskSwitchWin, False, ExposureMask, &ev);
+            }
+        }
+    }
+
+    TaskSwitcherEnsureCursors ();
+    TaskSwitcherSetCursor (pSD, onIcon ? taskSwitchCursorHand : taskSwitchCursorNormal);
 
     return False;
 }

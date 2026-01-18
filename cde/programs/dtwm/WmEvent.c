@@ -855,7 +855,16 @@ Boolean WmDispatchWsEvent (XEvent *event)
                 if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
                     (keysym == XK_Meta_L) || (keysym == XK_Meta_R))
                 {
-                    TaskSwitcherActivateSelection (ACTIVE_PSD, NULL, event->xkey.time);
+                    if (TaskSwitcherPointerInWindow (ACTIVE_PSD))
+                    {
+                        ACTIVE_PSD->taskSwitchPinned = True;
+                        TaskSwitcherSetPinnedAlt(False);
+                        TaskSwitcherLog("Root KeyRelease pinned via hover");
+                        PaintTaskSwitcher (ACTIVE_PSD);
+                        dispatchEvent = False;
+                        break;
+                    }
+                    FinishTaskSwitcher (ACTIVE_PSD, event->xkey.time, True);
                 }
                 dispatchEvent = False;
                 break;

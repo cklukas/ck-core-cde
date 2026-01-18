@@ -1315,6 +1315,7 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->taskSwitchIconW = 0;
     pSD->taskSwitchIconH = 0;
     pSD->taskSwitchTitleH = 0;
+    pSD->taskSwitchHoverIndex = -1;
     pSD->taskSwitchX = 0;
     pSD->taskSwitchY = 0;
     pSD->taskSwitchWidth = 0;

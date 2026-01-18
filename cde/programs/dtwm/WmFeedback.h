@@ -62,6 +62,8 @@ extern Boolean HandleTaskSwitcherButtonRelease (WmScreenData *pSD, XButtonEvent 
 extern Boolean HandleTaskSwitcherMotion (WmScreenData *pSD, XMotionEvent *event);
 extern void HandleTaskSwitcherExpose (WmScreenData *pSD, XExposeEvent *event);
 extern void TaskSwitcherActivateSelection (WmScreenData *pSD, ClientData *pCD, Time time);
+extern Boolean TaskSwitcherPointerInWindow (WmScreenData *pSD);
+extern void TaskSwitcherSetPinnedAlt (Boolean active);
 extern Boolean HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event);
 extern void TaskSwitcherLog (const char *fmt, ...);
 
