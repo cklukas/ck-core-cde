@@ -3655,6 +3655,24 @@ AdvanceTaskSwitcher (WmScreenData *pSD, int direction)
             ev.xexpose.count = 0;
             XSendEvent (DISPLAY, pSD->taskSwitchWin, False, ExposureMask, &ev);
         }
+
+        /* Update only the body text region to avoid flicker. */
+        {
+            int bodyH = TaskSwitchBodyHeight (pSD);
+            if (bodyH > 0)
+            {
+                memset(&ev, 0, sizeof(ev));
+                ev.xexpose.type = Expose;
+                ev.xexpose.display = DISPLAY;
+                ev.xexpose.window = pSD->taskSwitchWin;
+                ev.xexpose.x = TASK_SWITCH_MARGIN;
+                ev.xexpose.y = TASK_SWITCH_MARGIN + pSD->taskSwitchTitleH;
+                ev.xexpose.width = pSD->taskSwitchWidth - (2 * TASK_SWITCH_MARGIN);
+                ev.xexpose.height = (unsigned int)bodyH;
+                ev.xexpose.count = 0;
+                XSendEvent (DISPLAY, pSD->taskSwitchWin, False, ExposureMask, &ev);
+            }
+        }
     }
 
     if (pSD->taskSwitchPinned && !taskSwitchTimer)
