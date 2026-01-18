@@ -1037,6 +1037,15 @@ typedef struct _IconBoxData *PtrIconBoxData;
 #define IB_MARGIN_WIDTH		3 
 #define IB_HIGHLIGHT_BORDER	3
 
+typedef struct _LauncherWindow
+{
+    Window win;
+    struct _ClientData *pCD;
+    struct _LauncherWindow *next;
+} LauncherWindow;
+
+typedef struct _LauncherWindow *PtrLauncherWindow;
+
 
 /*************************************<->*************************************
  *
@@ -1193,6 +1202,7 @@ typedef struct _WmScreenData
     Colormap	lastInstalledColormap;
     struct _WmWorkspaceData	*pActiveWS;	/* for this screen */
     struct _WmWorkspaceData	*pLastWS;	/* previously active WS */
+    LauncherWindow *launcherList;
 
     /* per screen caches */
     BitmapCache *bitmapCache;
@@ -1207,6 +1217,8 @@ typedef struct _WmScreenData
     WHSize	iconImageMaximum;		/* resource */
     WHSize	iconImageMinimum;		/* resource */
     Boolean	doubleIconSize;		/* resource */
+    Boolean	animateMinimizeRestore;	/* resource */
+    Boolean	showTaskSwitcher;	/* resource */
     Pixmap	builtinIconPixmap;
     int		iconWidth;
     int		iconContentWidth;
@@ -1223,6 +1235,27 @@ typedef struct _WmScreenData
     GC		openIconBarInactiveGC;
     Pixel	openIconBarActiveColor;
     Pixel	openIconBarInactiveColor;
+
+    /* task switcher */
+    Window	taskSwitchWin;
+    Boolean	taskSwitchActive;
+    Boolean	taskSwitchGrabbed;
+    Boolean	taskSwitchPinned;
+    struct _ClientData **taskSwitchList;
+    XmString    *taskSwitchTitles;
+    int		taskSwitchCount;
+    int		taskSwitchIndex;
+    int		taskSwitchCols;
+    int		taskSwitchRows;
+    int		taskSwitchCellW;
+    int		taskSwitchCellH;
+    int		taskSwitchIconW;
+    int		taskSwitchIconH;
+    int		taskSwitchTitleH;
+    int		taskSwitchX;
+    int		taskSwitchY;
+    int		taskSwitchWidth;
+    int		taskSwitchHeight;
 
     /* per screen configuration outline windows */
     Window	woN;		/* North outline window */
@@ -1245,6 +1278,7 @@ typedef struct _WmScreenData
     Boolean fbSnapEnabled;
     Boolean fbSnapFullScreen;
     int fbSnapHover;
+    struct _ClientData *fbSnapClient;
     GC fbSnapActiveGC;
     GC fbSnapInactiveGC;
     GC fbSnapBgGC;

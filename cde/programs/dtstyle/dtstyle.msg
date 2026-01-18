@@ -630,6 +630,8 @@ $ Messages 13-16 are replacements for messages 5-8
 17 Increase Icon Size
 18 Show Icons for Open Windows
 19 Icon Grid Margin
+20 Animate Minimize / Restore
+21 Show Task Switcher on Alt+Tab
 
 $set 19
 $ The set 19 contains messages for the I18N dialog

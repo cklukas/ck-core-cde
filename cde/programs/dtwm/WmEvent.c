@@ -51,6 +51,7 @@
 #include "WmCEvent.h"
 #include "WmColormap.h"
 #include "WmFunction.h"
+#include "WmFeedback.h"
 #include "WmKeyFocus.h"
 #include "WmPanelP.h"  /* for typedef in WmManage.h */
 #include "WmManage.h"
@@ -58,6 +59,7 @@
 #include "WmICCC.h"
 #include "WmProperty.h"
 #include "WmWinInfo.h"
+#include <X11/keysym.h>
 #include "WmWinState.h"
 #include "WmResNames.h"
 #include "WmResParse.h"
@@ -126,7 +128,7 @@ void InitEventHandling (void)
      * manage client windows.  Setup accelerator event processing.
      */
 
-    base_mask = SubstructureRedirectMask | FocusChangeMask;
+    base_mask = SubstructureRedirectMask | FocusChangeMask | KeyReleaseMask;
 
     /* handle entry of root window */
     base_mask |= EnterWindowMask | LeaveWindowMask;
@@ -840,6 +842,57 @@ Boolean WmDispatchWsEvent (XEvent *event)
 	     */
 
 	    dispatchEvent = HandleWsKeyPress ((XKeyEvent *)event);
+	    break;
+	}
+
+    case KeyRelease:
+    {
+        if (TaskSwitcherActive (ACTIVE_PSD))
+        {
+            if (ACTIVE_PSD->taskSwitchPinned)
+            {
+                KeySym keysym = XKeycodeToKeysym (DISPLAY, event->xkey.keycode, 0);
+                if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
+                    (keysym == XK_Meta_L) || (keysym == XK_Meta_R))
+                {
+                    TaskSwitcherActivateSelection (ACTIVE_PSD, event->xkey.time);
+                }
+                dispatchEvent = False;
+                break;
+            }
+            KeySym keysym = XKeycodeToKeysym (DISPLAY, event->xkey.keycode, 0);
+            Window rootRet, childRet;
+            int rootX, rootY;
+            int winX, winY;
+		unsigned int mask = 0;
+		TaskSwitcherLog("Root KeyRelease keysym=%lu state=0x%x",
+				(unsigned long)keysym, event->xkey.state);
+		if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
+		    (keysym == XK_Meta_L) || (keysym == XK_Meta_R))
+		{
+		    TaskSwitcherLog("Root KeyRelease Alt up -> finish");
+		    FinishTaskSwitcher (ACTIVE_PSD, event->xkey.time, True);
+		    dispatchEvent = False;
+		    break;
+		}
+		if (XQueryPointer (DISPLAY, ACTIVE_PSD->rootWindow,
+				   &rootRet, &childRet, &rootX, &rootY,
+				   &winX, &winY, &mask))
+		{
+		    if (!(mask & Mod1Mask))
+		    {
+			TaskSwitcherLog("Root KeyRelease Mod1 up -> finish");
+			FinishTaskSwitcher (ACTIVE_PSD, event->xkey.time, True);
+			dispatchEvent = False;
+			break;
+		    }
+		}
+		else
+		{
+		    TaskSwitcherLog("Root KeyRelease XQueryPointer failed");
+		}
+	    }
+	    dispatchEvent = True;
 	    break;
 	}
 

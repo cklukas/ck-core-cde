@@ -38,6 +38,7 @@
 #include "WmICCC.h"
 
 #include <X11/Xatom.h>
+#include <X11/keysym.h>
 
 /*
  * include extern functions
@@ -50,6 +51,7 @@
 #include "WmEwmh.h"
 #include "WmFeedback.h"
 #include "WmFunction.h"
+#include "WmFeedback.h"
 #include "WmIDecor.h"
 #include "WmKeyFocus.h"
 #include "WmPanelP.h"
@@ -560,6 +562,93 @@ Boolean HandleEventsOnSpecialWindows (XEvent *pEvent)
 	    }
 	}
 	dispatchEvent = False; /* don't have the toolkit dispatch the event */
+    }
+    else if (pEvent->xany.window == ACTIVE_PSD->taskSwitchWin)
+    {
+	if (pEvent->type == Expose)
+	{
+	    if (pEvent->xexpose.count == 0)
+	    {
+	        TaskSwitcherLog("TaskSwitcher event Expose win=%lu",
+				(unsigned long)ACTIVE_PSD->taskSwitchWin);
+	        HandleTaskSwitcherExpose (ACTIVE_PSD, &pEvent->xexpose);
+	    }
+	}
+	else if (pEvent->type == KeyPress)
+	{
+	    XKeyEvent *kev = (XKeyEvent *)pEvent;
+	    KeySym keysym = XKeycodeToKeysym (DISPLAY, kev->keycode, 0);
+	    TaskSwitcherLog("TaskSwitcher KeyPress keysym=%lu state=0x%x",
+			    (unsigned long)keysym, kev->state);
+	    if (keysym == XK_Tab)
+	    {
+	        int direction = (kev->state & ShiftMask) ? -1 : 1;
+	        AdvanceTaskSwitcher (ACTIVE_PSD, direction);
+	    }
+	    else if ((keysym == XK_Escape) && TaskSwitcherActive (ACTIVE_PSD))
+	    {
+	        FinishTaskSwitcher (ACTIVE_PSD, kev->time, False);
+	    }
+	    XAllowEvents (DISPLAY, AsyncKeyboard, CurrentTime);
+	}
+	else if (pEvent->type == KeyRelease)
+	{
+	    XKeyEvent *kev = (XKeyEvent *)pEvent;
+	    Window rootRet, childRet;
+	    int rootX, rootY;
+	    int winX, winY;
+	    unsigned int mask = 0;
+	    KeySym keysym = XKeycodeToKeysym (DISPLAY, kev->keycode, 0);
+	    TaskSwitcherLog("TaskSwitcher KeyRelease keysym=%lu state=0x%x",
+			    (unsigned long)keysym, kev->state);
+	    if (ACTIVE_PSD->taskSwitchPinned)
+	    {
+	        if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
+		    (keysym == XK_Meta_L) || (keysym == XK_Meta_R))
+	        {
+	            TaskSwitcherActivateSelection (ACTIVE_PSD, kev->time);
+	        }
+	        XAllowEvents (DISPLAY, AsyncKeyboard, CurrentTime);
+	        dispatchEvent = False;
+	        return dispatchEvent;
+	    }
+	    if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R) ||
+		(keysym == XK_Meta_L) || (keysym == XK_Meta_R))
+	    {
+	        FinishTaskSwitcher (ACTIVE_PSD, kev->time, True);
+	    }
+	    else if (XQueryPointer (DISPLAY, ACTIVE_PSD->rootWindow,
+				    &rootRet, &childRet, &rootX, &rootY,
+				    &winX, &winY, &mask))
+	    {
+	        if (!(mask & Mod1Mask))
+	        {
+		    TaskSwitcherLog("TaskSwitcher KeyRelease Mod1 up -> finish");
+		    FinishTaskSwitcher (ACTIVE_PSD, kev->time, True);
+	        }
+	    }
+	    else
+	    {
+		TaskSwitcherLog("TaskSwitcher KeyRelease XQueryPointer failed");
+	    }
+	    XAllowEvents (DISPLAY, AsyncKeyboard, CurrentTime);
+	}
+	else if (pEvent->type == ButtonPress)
+	{
+	    (void) HandleTaskSwitcherButtonPress (ACTIVE_PSD,
+						  (XButtonEvent *)pEvent);
+	}
+	else if (pEvent->type == ButtonRelease)
+	{
+	    (void) HandleTaskSwitcherButtonRelease (ACTIVE_PSD,
+						    (XButtonEvent *)pEvent);
+	}
+	else if (pEvent->type == MotionNotify)
+	{
+	    (void) HandleTaskSwitcherMotion (ACTIVE_PSD,
+					     (XMotionEvent *)pEvent);
+	}
+	dispatchEvent = False;
     }
     else if (pEvent->xany.window == ACTIVE_PSD->inputScreenWindow)
     {

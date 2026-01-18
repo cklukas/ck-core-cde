@@ -30,6 +30,9 @@
 /*
  * (c) Copyright 1987, 1988, 1989, 1990 HEWLETT-PACKARD COMPANY */
 
+#ifndef WM_FEEDBACK_H
+#define WM_FEEDBACK_H
+
 
 extern void ConfirmAction (WmScreenData *pSD, int nbr);
 extern void HideFeedbackWindow (WmScreenData *pSD);
@@ -48,3 +51,32 @@ extern Boolean FeedbackUpdateSnapHover (WmScreenData *pSD, int rootX, int rootY)
 extern Boolean FeedbackGetSnapGeometry (WmScreenData *pSD, int rootX, int rootY,
 				int *pX, int *pY, unsigned int *pWidth,
 				unsigned int *pHeight);
+extern int FeedbackGetSnapAction (WmScreenData *pSD, int rootX, int rootY);
+extern void StartTaskSwitcher (WmScreenData *pSD, Time time, int direction);
+extern void AdvanceTaskSwitcher (WmScreenData *pSD, int direction);
+extern void FinishTaskSwitcher (WmScreenData *pSD, Time time, Boolean activate);
+extern void PaintTaskSwitcher (WmScreenData *pSD);
+extern void TaskSwitcherIconUpdated (WmScreenData *pSD, ClientData *pCD);
+extern Boolean TaskSwitcherActive (WmScreenData *pSD);
+extern Boolean HandleTaskSwitcherButtonRelease (WmScreenData *pSD, XButtonEvent *event);
+extern Boolean HandleTaskSwitcherMotion (WmScreenData *pSD, XMotionEvent *event);
+extern void HandleTaskSwitcherExpose (WmScreenData *pSD, XExposeEvent *event);
+extern void TaskSwitcherActivateSelection (WmScreenData *pSD, ClientData *pCD, Time time);
+extern Boolean HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event);
+extern void TaskSwitcherLog (const char *fmt, ...);
+
+enum {
+    FB_SNAP_NONE = 0,
+    FB_SNAP_MAXIMIZE,
+    FB_SNAP_MINIMIZE,
+    FB_SNAP_HALF_LEFT,
+    FB_SNAP_HALF_RIGHT,
+    FB_SNAP_HALF_TOP,
+    FB_SNAP_HALF_BOTTOM,
+    FB_SNAP_QUAD_TL,
+    FB_SNAP_QUAD_TR,
+    FB_SNAP_QUAD_BL,
+    FB_SNAP_QUAD_BR
+};
+
+#endif /* WM_FEEDBACK_H */

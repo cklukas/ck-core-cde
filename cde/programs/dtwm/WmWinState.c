@@ -56,7 +56,10 @@
 #include "WmProperty.h"
 #include "WmWinInfo.h"
 #include "WmWinList.h"
+#include "WmWinConf.h"
 #include "WmWrkspace.h"
+#include <unistd.h>
+#include <stdlib.h>
 
 
 /*
@@ -68,6 +71,17 @@
 static void SlideWindowOut (ClientData *pCD);
 static void UnmapClients (ClientData *pCD, unsigned int event_mask);
 static void SetupWindowStateWithEventMask (ClientData *pCD, int newState, Time setTime, unsigned int event_mask);
+typedef struct {
+    int x;
+    int y;
+    unsigned int width;
+    unsigned int height;
+} WmAnimRect;
+
+static Boolean GetWindowAnimRect (Window win, Window root, WmAnimRect *rect);
+static Boolean GetClientFrameAnimRect (ClientData *pCD, WmAnimRect *rect);
+static Boolean GetClientIconAnimRect (ClientData *pCD, WmAnimRect *rect);
+static void AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect, const WmAnimRect *endRect);
 
 
 
@@ -75,6 +89,106 @@ static void SetupWindowStateWithEventMask (ClientData *pCD, int newState, Time s
  * Global Variables:
  */
 extern int firstTime;
+
+static Boolean
+GetWindowAnimRect (Window win, Window root, WmAnimRect *rect)
+{
+    XWindowAttributes attr;
+    Window child;
+    int rootX = 0;
+    int rootY = 0;
+
+    if (!win || !rect)
+    {
+        return False;
+    }
+
+    if (!XGetWindowAttributes (DISPLAY, win, &attr))
+    {
+        return False;
+    }
+
+    if (!XTranslateCoordinates (DISPLAY, win, root, 0, 0, &rootX, &rootY, &child))
+    {
+        return False;
+    }
+
+    rect->x = rootX;
+    rect->y = rootY;
+    rect->width = (unsigned int)attr.width;
+    rect->height = (unsigned int)attr.height;
+    return True;
+}
+
+static Boolean
+GetClientFrameAnimRect (ClientData *pCD, WmAnimRect *rect)
+{
+    if (!pCD || !pCD->clientFrameWin)
+    {
+        return False;
+    }
+    return GetWindowAnimRect (pCD->clientFrameWin, ROOT_FOR_CLIENT(pCD), rect);
+}
+
+static Boolean
+GetClientIconAnimRect (ClientData *pCD, WmAnimRect *rect)
+{
+    if (!pCD || !ICON_FRAME_WIN(pCD))
+    {
+        return False;
+    }
+    return GetWindowAnimRect (ICON_FRAME_WIN(pCD), ROOT_FOR_CLIENT(pCD), rect);
+}
+
+static void
+AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect, const WmAnimRect *endRect)
+{
+    int dx, dy;
+    int dw, dh;
+    int maxDelta;
+    int steps;
+    int i;
+    int x, y;
+    unsigned int w, h;
+    const long totalUsec = 200000L;
+
+    if (!pSD || !startRect || !endRect)
+    {
+        return;
+    }
+
+    dx = endRect->x - startRect->x;
+    dy = endRect->y - startRect->y;
+    dw = (int)endRect->width - (int)startRect->width;
+    dh = (int)endRect->height - (int)startRect->height;
+
+    maxDelta = abs(dx);
+    if (abs(dy) > maxDelta) maxDelta = abs(dy);
+    if (abs(dw) > maxDelta) maxDelta = abs(dw);
+    if (abs(dh) > maxDelta) maxDelta = abs(dh);
+
+    steps = maxDelta / 25;
+    if (steps < 10) steps = 10;
+    if (steps > 50) steps = 50;
+
+    for (i = 0; i <= steps; i++)
+    {
+        x = startRect->x + (dx * i) / steps;
+        y = startRect->y + (dy * i) / steps;
+        w = (unsigned int)((int)startRect->width + (dw * i) / steps);
+        h = (unsigned int)((int)startRect->height + (dh * i) / steps);
+
+        if (w == 0) w = 1;
+        if (h == 0) h = 1;
+
+        WindowOutline (x, y, w, h);
+        XSync (DISPLAY, False);
+        usleep ((useconds_t)(totalUsec / steps));
+    }
+
+    WindowOutline (0, 0, 0, 0);
+    XSync (DISPLAY, False);
+}
 
 
 /******************************<->*************************************
@@ -188,7 +302,23 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 	case NORMAL_STATE:
 	case MAXIMIZED_STATE:
 	{
+	    WmAnimRect iconRect;
+	    WmAnimRect frameRect;
+	    Boolean doAnimate = False;
+
+	    if ((currentState == MINIMIZED_STATE) &&
+		pSD->animateMinimizeRestore)
+	    {
+		doAnimate = GetClientIconAnimRect (pCD, &iconRect);
+	    }
+
 	    SetupWindowStateWithEventMask (pCD, newState, setTime, event_mask);
+
+	    if (doAnimate &&
+		GetClientFrameAnimRect (pCD, &frameRect))
+	    {
+		AnimateWindowRect (pSD, &iconRect, &frameRect);
+	    }
 	    XMapWindow (DISPLAY, pCD->client);
 	    XMapWindow (DISPLAY, pCD->clientFrameWin);
             WmStopWaiting();   /* in WmIPC.c */
@@ -198,6 +328,9 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 	case MINIMIZED_STATE:
 	{
 	    Boolean clientHasFocus;
+	    WmAnimRect frameRect;
+	    WmAnimRect iconRect;
+	    Boolean doAnimate = False;
 
 	    /*
 	     * Transient windows are minimized with the rest of the transient
@@ -207,6 +340,12 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 	    if ((pCD->clientState == NORMAL_STATE) ||
 		(pCD->clientState == MAXIMIZED_STATE))
 	    {
+		if (pSD->animateMinimizeRestore)
+		{
+		    doAnimate = (GetClientFrameAnimRect (pCD, &frameRect) &&
+				 GetClientIconAnimRect (pCD, &iconRect));
+		}
+
 		if ((wmGD.keyboardFocus == pCD) ||
 		    (pCD->transientChildren && wmGD.keyboardFocus &&
 		     (pCD == FindTransientTreeLeader (wmGD.keyboardFocus))))
@@ -249,6 +388,11 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 
 		/* unmap main client and all transients */
 		UnmapClients (pCD, event_mask);
+	    }
+
+	    if (doAnimate)
+	    {
+		AnimateWindowRect (pSD, &frameRect, &iconRect);
 	    }
 
 	    /*

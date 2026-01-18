@@ -785,6 +785,7 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
 
 void UnManageWindow (ClientData *pCD)
 {
+    UnregisterLauncherClient (pCD->pSD, pCD);
     if (pCD->pECD)
     {
 	WmFpEmbeddedClientData *pECD;
@@ -2912,4 +2913,3 @@ RegisterIconBoxControl (Widget wPanelist)
 #endif /* DEBUG */
 
 } /* END OF FUNCTION RegisterIconBoxControl */
-

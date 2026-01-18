@@ -1841,8 +1841,17 @@ Boolean F_Next_Key (String args, ClientData *pCD, XEvent *event)
 {
     if (wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_EXPLICIT)
     {
-	FocusNextWindow ((unsigned long)args,
-			 GetFunctionTimestamp ((XButtonEvent *)event));
+	if (event && ACTIVE_PSD->showTaskSwitcher &&
+	    (event->type == KeyPress) &&
+	    (event->xkey.state & Mod1Mask))
+	{
+	    StartTaskSwitcher (ACTIVE_PSD, event->xkey.time, 1);
+	}
+	else
+	{
+	    FocusNextWindow ((unsigned long)args,
+			     GetFunctionTimestamp ((XButtonEvent *)event));
+	}
     }
 
     return (True);
@@ -1921,8 +1930,17 @@ Boolean F_Prev_Key (String args, ClientData *pCD, XEvent *event)
 {
     if (wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_EXPLICIT)
     {
-	FocusPrevWindow ((unsigned long)args,
-			    GetFunctionTimestamp ((XButtonEvent *)event));
+	if (event && ACTIVE_PSD->showTaskSwitcher &&
+	    (event->type == KeyPress) &&
+	    (event->xkey.state & Mod1Mask))
+	{
+	    StartTaskSwitcher (ACTIVE_PSD, event->xkey.time, -1);
+	}
+	else
+	{
+	    FocusPrevWindow ((unsigned long)args,
+				GetFunctionTimestamp ((XButtonEvent *)event));
+	}
     }
 
     return (True);
@@ -4558,4 +4576,3 @@ DumpWindowList ()
     }
 }
 #endif /* DEBUG */
-

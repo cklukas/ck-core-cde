@@ -1392,6 +1392,24 @@ XtResource wmScreenResources[] =
 	XtRImmediate,
 	(XtPointer)True
     },
+    {
+	WmNshowTaskSwitcher,
+	WmCShowTaskSwitcher,
+	XtRBoolean,
+	sizeof (Boolean),
+	XtOffsetOf (WmScreenData, showTaskSwitcher),
+	XtRImmediate,
+	(XtPointer)True
+    },
+    {
+	WmNanimateMinimizeRestore,
+	WmCAnimateMinimizeRestore,
+	XtRBoolean,
+	sizeof (Boolean),
+	XtOffsetOf (WmScreenData, animateMinimizeRestore),
+	XtRImmediate,
+	(XtPointer)True
+    },
 
     {
 	WmNmoveOpaque,

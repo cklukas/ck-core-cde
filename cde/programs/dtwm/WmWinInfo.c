@@ -78,6 +78,103 @@
 #include "WmIconBox.h"
 #include "WmImage.h"
 #include "WmManage.h"
+#include "WmFeedback.h"
+
+static LauncherWindow *
+FindLauncherEntry (WmScreenData *pSD, Window win)
+{
+    LauncherWindow *entry;
+
+    if (!pSD)
+    {
+	return NULL;
+    }
+
+    for (entry = pSD->launcherList; entry; entry = entry->next)
+    {
+	if (entry->win == win)
+	{
+	    return entry;
+	}
+    }
+
+    return NULL;
+}
+
+void RegisterLauncherWindow (WmScreenData *pSD, Window win)
+{
+    LauncherWindow *entry;
+
+    if (!pSD || win == None)
+    {
+	return;
+    }
+
+    if (FindLauncherEntry (pSD, win))
+    {
+	return;
+    }
+
+    entry = (LauncherWindow *)XtMalloc (sizeof (LauncherWindow));
+    if (!entry)
+    {
+	return;
+    }
+
+    entry->win = win;
+    entry->pCD = NULL;
+    entry->next = pSD->launcherList;
+    pSD->launcherList = entry;
+
+    (void)XFindContext (DISPLAY, win, wmGD.windowContextType,
+			(caddr_t *)&entry->pCD);
+}
+
+void UnregisterLauncherWindow (WmScreenData *pSD, Window win)
+{
+    LauncherWindow **ppEntry;
+    LauncherWindow *entry;
+
+    if (!pSD || win == None)
+    {
+	return;
+    }
+
+    ppEntry = &pSD->launcherList;
+    while ((entry = *ppEntry) != NULL)
+    {
+	if (entry->win == win)
+	{
+	    *ppEntry = entry->next;
+	    XtFree ((char *)entry);
+	    return;
+	}
+	ppEntry = &entry->next;
+    }
+}
+
+void UnregisterLauncherClient (WmScreenData *pSD, ClientData *pCD)
+{
+    LauncherWindow **ppEntry;
+    LauncherWindow *entry;
+
+    if (!pSD || !pCD)
+    {
+	return;
+    }
+
+    ppEntry = &pSD->launcherList;
+    while ((entry = *ppEntry) != NULL)
+    {
+	if (entry->pCD == pCD)
+	{
+	    *ppEntry = entry->next;
+	    XtFree ((char *)entry);
+	    continue;
+	}
+	ppEntry = &entry->next;
+    }
+}
 #include "WmMenu.h"
 #include "WmOL.h"
 #include "WmProperty.h" 
@@ -1512,6 +1609,8 @@ ProcessWmHints (ClientData *pCD, Boolean firstTime)
                 {
                     IconExposureProc (pCD, True);
                 }
+
+                TaskSwitcherIconUpdated(pCD->pSD, pCD);
 	    }
 	}
     }

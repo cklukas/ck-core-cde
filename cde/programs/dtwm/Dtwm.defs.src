@@ -270,6 +270,8 @@ Dtwm*useAsyncGeometry:			      True
 
 !# Dtwm*fadeNormalIcon:	        True
 !# Dtwm*showOpenWindowIcons:    True
+!# Dtwm*showTaskSwitcher:       True
+!# Dtwm*animateMinimizeRestore: True
 !# Dtwm*iconClick:			False
 !# Dtwm*interactivePlacement:		True
 

@@ -136,6 +136,8 @@ typedef struct {
     Widget      autoRaiseTG;
     Widget      secStackTG;
     Widget      moveOpaqueTG;
+    Widget      animateMinimizeTG;
+    Widget      showTaskSwitcherTG;
     Widget      iconPlacementTB;
     Widget      useIconBoxRC;
     Widget      pointerTG;
@@ -151,6 +153,8 @@ typedef struct {
     int         origFocusAutoRaise;
     int         origSecStack;
     int         origMoveOpaque;
+    int         origAnimateMinimize;
+    int         origShowTaskSwitcher;
     int         origUseIconBox;
     Boolean     origIncreaseIconSize;
     Boolean     origShowOpenIcons;
@@ -409,6 +413,60 @@ getDtwmValues(void)
                 dtwm.origMoveOpaque, True);
     }
 
+    /* Get AnimateMinimizeRestore value */
+    if (status = XrmGetResource (db, "dtwm.animateMinimizeRestore",
+                                     "Dtwm.AnimateMinimizeRestore",
+                                     &str_type_return, &value_return))
+    {
+        /* make local copy of string */
+        string = (char *) XtMalloc( value_return.size );
+        strcpy (string, value_return.addr);
+
+        /* convert to lower case */
+        _DtWmParseToLower((unsigned char *)string);
+
+        dtwm.origAnimateMinimize =
+               (strcmp(string, "true") ? False : True);
+        XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG,
+               dtwm.origAnimateMinimize, True);
+
+        XtFree (string);
+    }
+    else /* AnimateMinimizeRestore not specified */
+    {
+        /* set the Dtwm default value: True */
+        dtwm.origAnimateMinimize =  True;
+        XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG,
+                dtwm.origAnimateMinimize, True);
+    }
+
+    /* Get ShowTaskSwitcher value */
+    if (status = XrmGetResource (db, "dtwm.showTaskSwitcher",
+                                     "Dtwm.ShowTaskSwitcher",
+                                     &str_type_return, &value_return))
+    {
+        /* make local copy of string */
+        string = (char *) XtMalloc( value_return.size );
+        strcpy (string, value_return.addr);
+
+        /* convert to lower case */
+        _DtWmParseToLower((unsigned char *)string);
+
+        dtwm.origShowTaskSwitcher =
+               (strcmp(string, "true") ? False : True);
+        XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG,
+               dtwm.origShowTaskSwitcher, True);
+
+        XtFree (string);
+    }
+    else /* ShowTaskSwitcher not specified */
+    {
+        /* set the Dtwm default value: True */
+        dtwm.origShowTaskSwitcher =  True;
+        XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG,
+                dtwm.origShowTaskSwitcher, True);
+    }
+
     /* Determine icon image maximum and double state */
     {
         int iconWidth;
@@ -660,6 +718,24 @@ build_dtwmDlg(
     XmStringFree(string);
 
     n = 0;
+    string = CMPSTR((char *)GETMESSAGE(18, 20, "Animate Minimize / Restore"));
+    XtSetArg(args[n], XmNnavigationType, XmTAB_GROUP); n++;  
+    XtSetArg(args[n], XmNlabelString, string);  n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING);  n++;
+    dtwm.animateMinimizeTG =
+        XmCreateToggleButtonGadget(windowFocusForm, "animateMinimizeTG", args, n);
+    XmStringFree(string);
+
+    n = 0;
+    string = CMPSTR((char *)GETMESSAGE(18, 21, "Show Task Switcher on Alt+Tab"));
+    XtSetArg(args[n], XmNnavigationType, XmTAB_GROUP); n++;
+    XtSetArg(args[n], XmNlabelString, string);  n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING);  n++;
+    dtwm.showTaskSwitcherTG =
+        XmCreateToggleButtonGadget(windowFocusForm, "showTaskSwitcherTG", args, n);
+    XmStringFree(string);
+
+    n = 0;
     XtSetArg(args[n], XmNmarginWidth, 0); n++;
     XtSetArg(args[n], XmNmarginHeight, 0); n++;
     dtwm.useIconBoxRC = 
@@ -738,6 +814,8 @@ build_dtwmDlg(
     XtManageChild(dtwm.autoRaiseTG);
     XtManageChild(dtwm.secStackTG);
     XtManageChild(dtwm.moveOpaqueTG);
+    XtManageChild(dtwm.animateMinimizeTG);
+    XtManageChild(dtwm.showTaskSwitcherTG);
 
     XtManageChild(dtwm.useIconBoxRC);
     XtManageChild(dtwm.iconBoxTG);
@@ -869,6 +947,32 @@ formLayoutCB(
     XtSetArg(args[n], XmNrightOffset,        0);  n++;
     XtSetValues (dtwm.moveOpaqueTG, args, n);
 
+    /* Animate minimize TG */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
+    XtSetArg(args[n], XmNtopWidget,          dtwm.moveOpaqueTG);     n++;
+    XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);         n++;
+    XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNleftOffset,         0);  n++;
+    XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNrightOffset,        0);  n++;
+    XtSetValues (dtwm.animateMinimizeTG, args, n);
+
+    /* Show Task Switcher TG */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
+    XtSetArg(args[n], XmNtopWidget,          dtwm.animateMinimizeTG); n++;
+    XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);         n++;
+    XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNleftOffset,         0);  n++;
+    XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNrightOffset,        0);  n++;
+    XtSetValues (dtwm.showTaskSwitcherTG, args, n);
+
     /* Use Icon Box RC */
     n=0;
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_FORM);       n++;
@@ -971,6 +1075,12 @@ systemDefaultCB(
     /* OpaqueMove:  False */
     XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, False, True); 
 
+    /* AnimateMinimizeRestore:  True */
+    XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG, True, True);
+
+    /* ShowTaskSwitcher: True */
+    XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG, True, True);
+
     /* PlaceOnDesktop:  True */
     XmToggleButtonGadgetSetState (dtwm.desktopTG, True, True); 
 
@@ -1041,6 +1151,24 @@ ButtonCB(
 	{
 	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*moveOpaque: %s\n",
 		  XmToggleButtonGadgetGetState (dtwm.moveOpaqueTG)
+		  ? "True" : "False");
+	  changeFlag = 1;
+	}
+
+      state = XmToggleButtonGadgetGetState (dtwm.animateMinimizeTG);
+      if ( state != dtwm.origAnimateMinimize)
+	{
+	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*animateMinimizeRestore: %s\n",
+		  XmToggleButtonGadgetGetState (dtwm.animateMinimizeTG)
+		  ? "True" : "False");
+	  changeFlag = 1;
+	}
+
+      state = XmToggleButtonGadgetGetState (dtwm.showTaskSwitcherTG);
+      if ( state != dtwm.origShowTaskSwitcher)
+	{
+	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*showTaskSwitcher: %s\n",
+		  XmToggleButtonGadgetGetState (dtwm.showTaskSwitcherTG)
 		  ? "True" : "False");
 	  changeFlag = 1;
 	}
@@ -1139,6 +1267,12 @@ ButtonCB(
       
       XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, 
 				    dtwm.origMoveOpaque ? True : False , True); 
+
+      XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG,
+				    dtwm.origAnimateMinimize ? True : False , True);
+
+      XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG,
+				    dtwm.origShowTaskSwitcher ? True : False , True);
       
       XmToggleButtonGadgetSetState (dtwm.iconBoxTG, 
 				    dtwm.origUseIconBox ? True : False , True); 
@@ -1348,6 +1482,12 @@ cancelWarnCB(
   
   XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, 
 				dtwm.origMoveOpaque ? True : False , True); 
+
+  XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG,
+				dtwm.origAnimateMinimize ? True : False , True);
+
+  XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG,
+				dtwm.origShowTaskSwitcher ? True : False , True);
   
   XmToggleButtonGadgetSetState (dtwm.iconBoxTG, 
             dtwm.origUseIconBox ? True : False , True); 
@@ -1374,6 +1514,8 @@ okWarnCB(
   dtwm.origFocusAutoRaise = XmToggleButtonGadgetGetState (dtwm.autoRaiseTG);
   dtwm.origSecStack = !XmToggleButtonGadgetGetState (dtwm.secStackTG);
   dtwm.origMoveOpaque = XmToggleButtonGadgetGetState (dtwm.moveOpaqueTG);
+  dtwm.origAnimateMinimize = XmToggleButtonGadgetGetState (dtwm.animateMinimizeTG);
+  dtwm.origShowTaskSwitcher = XmToggleButtonGadgetGetState (dtwm.showTaskSwitcherTG);
   dtwm.origUseIconBox = XmToggleButtonGadgetGetState (dtwm.iconBoxTG);
   
 

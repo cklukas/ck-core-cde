@@ -67,6 +67,7 @@
 
 #include "WmPanelP.h"
 #include "WmManage.h"
+#include "WmWinInfo.h"
 
 #include <pwd.h>
 #include <fcntl.h>
@@ -911,6 +912,11 @@ WmPanelistShow (Widget w)
 
    XtSetMappedWhenManaged (panel.shell, True);
    XtPopup (panel.shell, XtGrabNone);
+   if (panel.screen_data)
+   {
+      RegisterLauncherWindow ((WmScreenData *)panel.screen_data,
+                              XtWindow (panel.shell));
+   }
 
 
    /*  Restore the session information  */
@@ -1022,4 +1028,3 @@ WmSubpanelPosted (Display * display,
       }
    }
 }
-

@@ -64,3 +64,6 @@ extern void ProcessSmClientID (ClientData *pCD);
 extern void ProcessWmSaveHint (ClientData *pCD);
 extern void GetMaxInfo (ClientData *pCD, int *pX, int *pY, int *pWidth,
 			int *pHeight);
+extern void RegisterLauncherWindow (WmScreenData *pSD, Window win);
+extern void UnregisterLauncherWindow (WmScreenData *pSD, Window win);
+extern void UnregisterLauncherClient (WmScreenData *pSD, ClientData *pCD);

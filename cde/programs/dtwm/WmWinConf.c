@@ -42,7 +42,7 @@
 
 #define MOVE_OUTLINE_WIDTH	2
 
-#define CONFIG_MASK (KeyPressMask|ButtonPressMask|\
+#define CONFIG_MASK (KeyPressMask|KeyReleaseMask|ButtonPressMask|\
 			 ButtonReleaseMask|PointerMotionMask)
 #define PGRAB_MASK (ButtonPressMask|ButtonReleaseMask|\
 		    PointerMotionMask|PointerMotionHintMask)
@@ -84,6 +84,7 @@
 #include "WmEvent.h"
 #include "WmFeedback.h"
 #include "WmFunction.h"
+#include "WmWinState.h"
 #include "WmIDecor.h"
 #include "WmIPC.h"
 #include "WmIPlace.h"
@@ -347,6 +348,24 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 
 	if (pev->type == KeyPress) 
 	{
+	    if (!wmGD.movingIcon)
+	    {
+		KeySym ctrlSym = XKeycodeToKeysym (DISPLAY, pev->xkey.keycode, 0);
+		Boolean prevFull = pcd->pSD->fbSnapFullScreen;
+		if (ctrlSym == XK_Control_L || ctrlSym == XK_Control_R)
+		{
+		    pcd->pSD->fbSnapFullScreen = True;
+		}
+		else
+		{
+		    pcd->pSD->fbSnapFullScreen = (pev->xkey.state & ControlMask) != 0;
+		}
+		if (prevFull != pcd->pSD->fbSnapFullScreen &&
+		    (wmGD.showFeedback & WM_SHOW_FB_MOVE))
+		{
+		    PaintFeedbackWindow (pcd->pSD);
+		}
+	    }
 	    keyMultiplier = 1;
 	    while (keyMultiplier <= big_inc && 
 		      XCheckIfEvent (DISPLAY, &KeyEvent, IsRepeatedKeyEvent, 
@@ -419,6 +438,27 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 		moveRealY = moveY;
 	    }
 	}
+	else if (pev->type == KeyRelease)
+	{
+	    if (!wmGD.movingIcon)
+	    {
+		KeySym ctrlSym = XKeycodeToKeysym (DISPLAY, pev->xkey.keycode, 0);
+		Boolean prevFull = pcd->pSD->fbSnapFullScreen;
+		if (ctrlSym == XK_Control_L || ctrlSym == XK_Control_R)
+		{
+		    pcd->pSD->fbSnapFullScreen = False;
+		}
+		else
+		{
+		    pcd->pSD->fbSnapFullScreen = (pev->xkey.state & ControlMask) != 0;
+		}
+		if (prevFull != pcd->pSD->fbSnapFullScreen &&
+		    (wmGD.showFeedback & WM_SHOW_FB_MOVE))
+		{
+		    PaintFeedbackWindow (pcd->pSD);
+		}
+	    }
+	}
 	else if (pev->type == ButtonRelease) 
 	{
 	    /*
@@ -431,6 +471,7 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 	    Boolean snapRequested = MoveSnappingActive (pev);
 	    int snapX, snapY;
 	    unsigned int snapW, snapH;
+	    int snapAction = FB_SNAP_NONE;
 
 	    if (!wmGD.movingIcon)
 	    {
@@ -469,6 +510,20 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 		FeedbackUpdateSnapHover (pcd->pSD,
 					 pev->xbutton.x_root,
 					 pev->xbutton.y_root);
+	    }
+
+	    if (!wmGD.movingIcon)
+	    {
+		snapAction = FeedbackGetSnapAction (pcd->pSD,
+						    pev->xbutton.x_root,
+						    pev->xbutton.y_root);
+		if (snapAction == FB_SNAP_MINIMIZE)
+		{
+		    CancelFrameConfig (pcd);
+		    SetClientState (pcd, MINIMIZED_STATE, pev->xbutton.time);
+		    moveDone = True;
+		    continue;
+		}
 	    }
 
 	    if (!wmGD.movingIcon &&
@@ -1185,6 +1240,7 @@ void DoFeedback (ClientData *pcd, int x, int y, unsigned int width, unsigned int
 	    pcd->pSD->fbSnapHover = 0;
 	    pcd->pSD->fbSnapFullScreen = False;
 	}
+	pcd->pSD->fbSnapClient = pcd;
     }
 
     /* compute client window coordinates from frame coordinates */
