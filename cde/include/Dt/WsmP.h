@@ -46,6 +46,7 @@
 #ifndef _Dt_WsmP_h
 #define _Dt_WsmP_h
 #include <Dt/Wsm.h>
+#include <Dt/WmSettings.h>
 #include <X11/Intrinsic.h>
 #include <Dt/Service.h>
 #include <Tt/tt_c.h>
@@ -57,7 +58,6 @@
 #define _XA_DT_WORKSPACE_EMBEDDED_CLIENTS	\
 					"_DT_WORKSPACE_EMBEDDED_CLIENTS"
 #define _XA_DT_WM_REQUEST		"_DT_WM_REQUEST"
-#define _XA_DT_WM_SETTINGS_V1		"_DT_WM_SETTINGS_V1"
 #define _XA_DT_WORKSPACE_HINTS		"_DT_WORKSPACE_HINTS"
 #define _XA_DT_WORKSPACE_PRESENCE	"_DT_WORKSPACE_PRESENCE"
 #define _XA_DT_WORKSPACE_INFO		"_DT_WORKSPACE_INFO"

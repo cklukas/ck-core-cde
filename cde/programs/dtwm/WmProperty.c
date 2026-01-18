@@ -1217,8 +1217,8 @@ SetDtWmSettingsProperty (WmScreenData *pSD)
 	return;
     }
 
-    data[0] = 1; /* version */
-    data[1] = (pSD->showOpenWindowIcons ? 1UL : 0UL);
+    data[0] = DT_WM_SETTINGS_V1_VERSION;
+    data[1] = (pSD->showOpenWindowIcons ? DT_WM_SETTINGS_V1_SHOW_OPEN_WINDOW_ICONS : 0UL);
 
     XChangeProperty (DISPLAY, pSD->wmWorkspaceWin,
 	wmGD.xa_DT_WM_SETTINGS_V1,
