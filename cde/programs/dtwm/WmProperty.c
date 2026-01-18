@@ -1191,7 +1191,42 @@ void SetEmbeddedClientsProperty (Window propWindow,
 
 } /* END OF FUNCTION SetEmbeddedClientsProperty */
 
+
+/*************************************<->*************************************
+ *
+ *  SetDtWmSettingsProperty (pSD)
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Publish read-only dtwm settings on the WM workspace window.
+ *
+ *
+ *  Inputs:
+ *  ------
+ *  pSD = ptr to screen data
+ *
+ *************************************<->***********************************/
+void
+SetDtWmSettingsProperty (WmScreenData *pSD)
+{
+    unsigned long data[2];
 
+    if (!pSD || !pSD->wmWorkspaceWin)
+    {
+	return;
+    }
+
+    data[0] = 1; /* version */
+    data[1] = (pSD->showOpenWindowIcons ? 1UL : 0UL);
+
+    XChangeProperty (DISPLAY, pSD->wmWorkspaceWin,
+	wmGD.xa_DT_WM_SETTINGS_V1,
+	XA_CARDINAL, 32, PropModeReplace,
+	(unsigned char *)data, 2);
+}
+
+
 /*************************************<->*************************************
  *
  *  SetWorkspaceListProperty (pSD)

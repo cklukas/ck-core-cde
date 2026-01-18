@@ -913,12 +913,14 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
       enum { XA_DT_WORKSPACE_HINTS, XA_DT_WORKSPACE_PRESENCE,
 	     XA_DT_WORKSPACE_INFO, XA_WmNall,
 	     XA_DT_WORKSPACE_EMBEDDED_CLIENTS, XA_DT_WM_REQUEST,
-	     XA_DT_WORKSPACE_LIST, XA_DT_WORKSPACE_CURRENT, NUM_ATOMS };
+	     XA_DT_WM_SETTINGS_V1, XA_DT_WORKSPACE_LIST,
+	     XA_DT_WORKSPACE_CURRENT, NUM_ATOMS };
       static char *atom_names[] = {
 	     _XA_DT_WORKSPACE_HINTS, _XA_DT_WORKSPACE_PRESENCE,
 	     _XA_DT_WORKSPACE_INFO, WmNall,
 	     _XA_DT_WORKSPACE_EMBEDDED_CLIENTS, _XA_DT_WM_REQUEST,
-	     _XA_DT_WORKSPACE_LIST, _XA_DT_WORKSPACE_CURRENT };
+	     _XA_DT_WM_SETTINGS_V1, _XA_DT_WORKSPACE_LIST,
+	     _XA_DT_WORKSPACE_CURRENT };
 
       Atom atoms[XtNumber(atom_names)];
       XInternAtoms(DISPLAY, atom_names, XtNumber(atom_names), False, atoms);
@@ -929,6 +931,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
       wmGD.xa_ALL_WORKSPACES = atoms[XA_WmNall];
       wmGD.xa_DT_EMBEDDED_CLIENTS = atoms[XA_DT_WORKSPACE_EMBEDDED_CLIENTS];
       wmGD.xa_DT_WM_REQUEST = atoms[XA_DT_WM_REQUEST];
+      wmGD.xa_DT_WM_SETTINGS_V1 = atoms[XA_DT_WM_SETTINGS_V1];
       wmGD.xa_DT_WORKSPACE_LIST = atoms[XA_DT_WORKSPACE_LIST];
       wmGD.xa_DT_WORKSPACE_CURRENT = atoms[XA_DT_WORKSPACE_CURRENT];
     }

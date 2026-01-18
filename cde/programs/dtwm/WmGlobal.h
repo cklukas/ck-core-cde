@@ -2071,6 +2071,7 @@ typedef struct _WmGlobalData
     Atom	xa_DT_EMBEDDED_CLIENTS;
     Atom	xa_DT_WORKSPACE_LIST;
     Atom	xa_DT_WORKSPACE_CURRENT;
+    Atom	xa_DT_WM_SETTINGS_V1;
 
     Atom	xa_ALL_WORKSPACES;
     Atom        xa_DT_SESSION_HINTS;

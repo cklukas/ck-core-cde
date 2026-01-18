@@ -57,6 +57,7 @@
 #include "WmError.h"
 #include "WmGraphics.h"
 #include "WmMenu.h"
+#include "WmProperty.h"
 #include "WmResParse.h"
 #include "WmBackdrop.h"
 #include "WmIconBox.h"
@@ -4909,6 +4910,8 @@ ProcessScreenResources (WmScreenData *pSD, unsigned char *screenName)
     pSD->builtinIconPixmap = 
 	XCreateBitmapFromData (DISPLAY, pSD->rootWindow, (char *)iImage_bits, 
 				       iImage_width, iImage_height);
+
+    SetDtWmSettingsProperty (pSD);
 
 } /* END OF FUNCTION ProcessScreenResources */
 
