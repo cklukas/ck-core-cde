@@ -2716,6 +2716,14 @@ SelectFile(
 
    /* mark selected */
    SetFileSelected(file_mgr_data, file_view_data);
+
+   if (file_mgr_data == trashFileMgrData &&
+       file_mgr_data->show_status_line &&
+       file_mgr_data->file_mgr_rec)
+   {
+      FileMgrRec *file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
+      UpdateHeaders(file_mgr_rec, file_mgr_data, False);
+   }
 }
 
 
@@ -2758,6 +2766,14 @@ DeselectFile(
      SetFileUnselected(file_mgr_data, file_view_data);
    else
      file_view_data->selected = False;
+
+   if (file_mgr_data == trashFileMgrData &&
+       file_mgr_data->show_status_line &&
+       file_mgr_data->file_mgr_rec)
+   {
+      FileMgrRec *file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
+      UpdateHeaders(file_mgr_rec, file_mgr_data, False);
+   }
 }
 
 
@@ -2860,6 +2876,14 @@ DeselectAllFiles(
       (FileViewData **) XtMalloc (sizeof (FileViewData *));
    file_mgr_data->selection_list[0] = NULL;
    file_mgr_data->selected_file_count = 0;
+
+   if (file_mgr_data == trashFileMgrData &&
+       file_mgr_data->show_status_line &&
+       file_mgr_data->file_mgr_rec)
+   {
+      FileMgrRec *file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
+      UpdateHeaders(file_mgr_rec, file_mgr_data, False);
+   }
 
 }
 

@@ -519,7 +519,7 @@ Update(
    int x, y;
    int n_changes = 0;
    PixmapData *pixmapData;
-   char msg_buf[21+MAX_PATH];
+   char msg_buf[4*MAX_PATH];
 
    /* macro that updates the change count */
 # define INC_N_CHANGES() \

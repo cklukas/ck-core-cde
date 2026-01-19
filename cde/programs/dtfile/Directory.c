@@ -2305,7 +2305,7 @@ ReaddirPipeCallback(
              {
                if (file_mgr_data->show_status_line)
                {
-                 char buf[256];
+                 char buf[4*MAX_PATH];
                  XmString label_string;
                  Arg args[2];
 

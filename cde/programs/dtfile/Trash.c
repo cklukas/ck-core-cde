@@ -101,6 +101,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdint.h>
+#include <ctype.h>
+#include <time.h>
+#include <stdlib.h>
 #if defined(CSRG_BASED)
 #include <sys/param.h>
 #include <sys/mount.h>
@@ -171,6 +174,8 @@
 #define PIPEMSG_DONE          7
 #define PIPEMSG_TARGET_TIME   5
 #define PIPEMSG_FILE_MODIFIED 6
+#define PIPEMSG_RECSIZE       9
+#define PIPEMSG_RECSIZE_DONE  10
 
 /*
  * Structure describing each file in the trash can.
@@ -187,6 +192,9 @@ typedef struct {
    String  intOrig;
    String  external;
    String  filename;
+   String  deletionDate;
+   unsigned long long recSize;
+   Boolean recSizeValid;
 } TrashEntry;
 
 /* callback data MoveToTrash */
@@ -199,6 +207,7 @@ typedef struct
    char **to;
    int *rc;
    Tt_message msg;
+   String deletionDate;
 #ifdef SUN_PERF
    Tt_message *msg_list ;
    int msg_cnt ;
@@ -294,6 +303,10 @@ static Tt_message *global_msg_list ;
 static int global_msg_cnt = 0 ;
 #endif /*  SUN_PERF */
 static Boolean TrashInitialized = False;
+static XtIntervalId xdgTrashTimer = 0;
+static Boolean trashRecsizeRunning = False;
+static XtInputId trashRecsizeInput = 0;
+static int trashRecsizePipe = -1;
 
 /********    Static Function Declarations    ********/
 
@@ -314,7 +327,10 @@ static void MessagesToFileList(
 static int WriteEntry(
                         FILE *id,
                         String external,
-                        String internal) ;
+                        String internal,
+                        String deletionDate,
+                        unsigned long long recSize,
+                        Boolean recSizeValid) ;
 static Boolean MatchesSacredDirectory(
                         String file) ;
 static void VerifyCleanup(
@@ -329,6 +345,31 @@ static void VerifyOk(
                         XtPointer client_data,
                         XtPointer call_data) ;
 static Boolean WriteTrashEntries( void ) ;
+static Boolean ImportXdgTrashHome( void );
+static Boolean ParseXdgTrashInfo(
+                        const char *info_path,
+                        char **orig_path,
+                        char **deletion_date);
+static char *XdgPercentDecode(const char *src);
+static String CurrentDeletionDate( void );
+static void XdgTrashTimerCB(
+                        XtPointer client_data,
+                        XtIntervalId *id );
+Boolean TrashGetInfo(
+                        String filename,
+                        String *orig_path,
+                        String *deletion_date );
+Boolean TrashGetRecSize(
+                        String filename,
+                        unsigned long long *rec_size,
+                        Boolean *rec_valid);
+static void TrashSetStatusMsg(
+                        const char *msg);
+static void TrashMaybeStartRecSizeScan( void );
+static void TrashRecSizePipeCB(
+                        XtPointer client_data,
+                        int *fd,
+                        XtInputId *id);
 static void Select_All(
                         Widget w,
                         XtPointer client_data,
@@ -372,7 +413,8 @@ static void MoveToTrash(
 			char **file_list,
 			int file_count,
 			Boolean do_verify_checks,
-			Tt_message msg) ;
+			Tt_message msg,
+                        String deletionDate) ;
 static void RestoreFromTrash(
 			char **file_list,
 			int file_count,
@@ -396,18 +438,20 @@ static void RestoreVerifyCancel(
                         XtPointer client_data,
                         XtPointer call_data ) ;
 static int RestoreObject(
-                        Widget w,
-                        int mode,
-                        char *source,
-                        char *target,
-                        Boolean  isContainer,
-                        void (*errorHandler)(),
-                        Boolean checkForBusyDir,
-                        int type ,
-                        Boolean CheckedAlready);
+        Widget w,
+        int mode,
+        char *source,
+        char *target,
+        Boolean  isContainer,
+        void (*errorHandler)(),
+        Boolean checkForBusyDir,
+        int type ,
+        Boolean CheckedAlready);
 static void CreateRestoreDialog(
                         char  *source,
                         char *target);
+static int EnsureParentDirs(
+                        const char *target);
 
 /********    End Static Function Declarations    ********/
 
@@ -476,6 +520,8 @@ InitializeTrash( Boolean enableVerifyPrompt )
 
   /* load and verify existence for files previously left in the trash can */
   TrashInitialized = ReadTrashList( );
+  if (TrashInitialized)
+    (void)ImportXdgTrashHome();
   return( TrashInitialized );
 }
 
@@ -523,6 +569,12 @@ TrashCreateDialog(
 
    /* build up directory set for trash directory */
    FileMgrBuildDirectories (file_mgr_data, home_host_name, trash_dir);
+
+   if (xdgTrashTimer == 0)
+     xdgTrashTimer = XtAppAddTimeOut(XtWidgetToApplicationContext(toplevel),
+                                     10000, XdgTrashTimerCB, NULL);
+
+   TrashMaybeStartRecSizeScan();
 
    /* initialize trash data */
    file_mgr_data->restricted_directory =
@@ -642,6 +694,32 @@ ReadTrashList( void )
          }
          else
          {
+           char *deletionDate = NULL;
+           unsigned long long recSize = 0;
+           Boolean recValid = False;
+           char *extra = tmpPtr + extSize + 1 + intSize;
+           char *date = strstr(extra, "DeletionDate=");
+           char *rec = strstr(extra, "RecSize=");
+           if (date)
+           {
+             char *nl;
+             date += strlen("DeletionDate=");
+             nl = strchr(date, '\n');
+             if (nl)
+               *nl = '\0';
+             if (*date)
+               deletionDate = XtNewString(date);
+           }
+           if (rec)
+           {
+             rec += strlen("RecSize=");
+             if (*rec)
+             {
+               recSize = strtoull(rec, NULL, 10);
+               recValid = True;
+             }
+           }
+
            /* Add to trash list */
            if (numTrashItems >= trashListSize)
            {
@@ -651,10 +729,13 @@ ReadTrashList( void )
            }
 
            trashCan[numTrashItems].intNew = internal;
-           trashCan[numTrashItems].intOrig = XtNewString(external);
-           trashCan[numTrashItems].external = external;
-           trashCan[numTrashItems].filename = intName;
-           numTrashItems++;
+      trashCan[numTrashItems].intOrig = XtNewString(external);
+      trashCan[numTrashItems].external = external;
+      trashCan[numTrashItems].filename = intName;
+      trashCan[numTrashItems].deletionDate = deletionDate;
+      trashCan[numTrashItems].recSize = recSize;
+      trashCan[numTrashItems].recSizeValid = recValid;
+      numTrashItems++;
          } /* end if file exists */
        }
        else
@@ -667,6 +748,573 @@ ReadTrashList( void )
    fclose(trashInfoFileId);
 
    return( WriteTrashEntries() );
+}
+
+
+/*--------------------------------------------------------------------
+ * ImportXdgTrashHome
+ *   Import freedesktop.org home trash entries into the dtfile trash.
+ *   This is a one-way migration from $HOME/.local/share/Trash.
+ *------------------------------------------------------------------*/
+static Boolean
+ImportXdgTrashHome( void )
+{
+   char *info_dir;
+   char *files_dir;
+   DIR *dir;
+   struct dirent *entry;
+   Boolean moved_any = False;
+
+   info_dir = XtMalloc(strlen(users_home_dir) + strlen("/.local/share/Trash/info") + 1);
+   sprintf(info_dir, "%s/.local/share/Trash/info", users_home_dir);
+
+   files_dir = XtMalloc(strlen(users_home_dir) + strlen("/.local/share/Trash/files") + 1);
+   sprintf(files_dir, "%s/.local/share/Trash/files", users_home_dir);
+
+   dir = opendir(info_dir);
+   if (dir == NULL)
+   {
+      XtFree(info_dir);
+      XtFree(files_dir);
+      return False;
+   }
+
+   while ((entry = readdir(dir)) != NULL)
+   {
+      char *dot;
+      char *info_path;
+      char *orig_path = NULL;
+      char *deletion_date = NULL;
+      char *src_path;
+      char *to_path;
+      char *base_name;
+      struct stat stat_buf;
+
+      if (entry->d_name[0] == '.')
+         continue;
+
+      dot = strrchr(entry->d_name, '.');
+      if (dot == NULL || strcmp(dot, ".trashinfo") != 0)
+         continue;
+
+      info_path = XtMalloc(strlen(info_dir) + strlen(entry->d_name) + 2);
+      sprintf(info_path, "%s/%s", info_dir, entry->d_name);
+
+      if (!ParseXdgTrashInfo(info_path, &orig_path, &deletion_date))
+      {
+         XtFree(info_path);
+         continue;
+      }
+
+      /* base name is the info file name without .trashinfo */
+      *dot = '\0';
+      src_path = XtMalloc(strlen(files_dir) + strlen(entry->d_name) + 2);
+      sprintf(src_path, "%s/%s", files_dir, entry->d_name);
+
+      if (lstat(src_path, &stat_buf) != 0)
+      {
+         XtFree(info_path);
+         XtFree(orig_path);
+         if (deletion_date)
+            XtFree(deletion_date);
+         XtFree(src_path);
+         *dot = '.';
+         continue;
+      }
+
+      to_path = CreateTrashFilename((char *)entry->d_name, True);
+      *dot = '.';
+
+      if (rename(src_path, to_path) != 0)
+      {
+         XtFree(info_path);
+         XtFree(orig_path);
+         if (deletion_date)
+            XtFree(deletion_date);
+         XtFree(src_path);
+         XtFree(to_path);
+         continue;
+      }
+      moved_any = True;
+
+      remove(info_path);
+
+      base_name = strrchr(to_path, '/');
+      if (base_name)
+         base_name++;
+      else
+         base_name = to_path;
+
+      if (numTrashItems >= trashListSize)
+      {
+         trashListSize += 10;
+         trashCan = (TrashEntry *)XtRealloc((char *) trashCan,
+                                            sizeof(TrashEntry) * trashListSize);
+      }
+
+      trashCan[numTrashItems].problem = False;
+      trashCan[numTrashItems].intNew = to_path;
+      trashCan[numTrashItems].intOrig = XtNewString(orig_path);
+      trashCan[numTrashItems].external = XtNewString(orig_path);
+      trashCan[numTrashItems].filename = XtNewString(base_name);
+      trashCan[numTrashItems].deletionDate = deletion_date ? deletion_date : NULL;
+      trashCan[numTrashItems].recSize = 0;
+      trashCan[numTrashItems].recSizeValid = False;
+      numTrashItems++;
+
+      XtFree(info_path);
+      XtFree(orig_path);
+      XtFree(src_path);
+   }
+
+   closedir(dir);
+   XtFree(info_dir);
+   XtFree(files_dir);
+
+   if (moved_any)
+     WriteTrashEntries();
+
+   return moved_any;
+}
+
+
+/*--------------------------------------------------------------------
+ * ParseXdgTrashInfo
+ *   Extract Path= from a freedesktop .trashinfo file.
+ *------------------------------------------------------------------*/
+static Boolean
+ParseXdgTrashInfo(
+        const char *info_path,
+        char **orig_path,
+        char **deletion_date)
+{
+   FILE *fp;
+   char buf[4096];
+
+   *orig_path = NULL;
+   *deletion_date = NULL;
+
+   fp = fopen(info_path, "r");
+   if (fp == NULL)
+      return False;
+
+   while (fgets(buf, sizeof(buf), fp) != NULL)
+   {
+      if (strncmp(buf, "Path=", 5) == 0)
+      {
+         char *val = buf + 5;
+         char *nl = strchr(val, '\n');
+         if (nl)
+           *nl = '\0';
+         *orig_path = XdgPercentDecode(val);
+      }
+      else if (strncmp(buf, "DeletionDate=", 13) == 0)
+      {
+         char *val = buf + 13;
+         char *nl = strchr(val, '\n');
+         if (nl)
+           *nl = '\0';
+         if (*val)
+           *deletion_date = XtNewString(val);
+      }
+   }
+
+   fclose(fp);
+   return (*orig_path != NULL);
+}
+
+
+/*--------------------------------------------------------------------
+ * XdgPercentDecode
+ *   Decode %XX sequences in Path= values.
+ *------------------------------------------------------------------*/
+static char *
+XdgPercentDecode(const char *src)
+{
+   size_t len = strlen(src);
+   char *out = XtMalloc(len + 1);
+   char *dst = out;
+   const char *p = src;
+
+   while (*p)
+   {
+      if (*p == '%' && isxdigit((unsigned char)p[1]) && isxdigit((unsigned char)p[2]))
+      {
+         int hi = p[1];
+         int lo = p[2];
+         hi = (hi <= '9') ? (hi - '0') : (toupper(hi) - 'A' + 10);
+         lo = (lo <= '9') ? (lo - '0') : (toupper(lo) - 'A' + 10);
+         *dst++ = (char)((hi << 4) | lo);
+         p += 3;
+      }
+      else
+      {
+         *dst++ = *p++;
+      }
+   }
+
+   *dst = '\0';
+   return out;
+}
+
+
+/*--------------------------------------------------------------------
+ * CurrentDeletionDate
+ *   Format current local time for DeletionDate=... entries.
+ *------------------------------------------------------------------*/
+static String
+CurrentDeletionDate( void )
+{
+   time_t now;
+   struct tm *tm_info;
+   char buf[32];
+
+   now = time(NULL);
+   tm_info = localtime(&now);
+   if (tm_info == NULL)
+      return NULL;
+
+   if (strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", tm_info) == 0)
+      return NULL;
+
+   return XtNewString(buf);
+}
+
+
+/*--------------------------------------------------------------------
+ * TrashGetInfo
+ *   Lookup original path and deletion date for a trash file.
+ *------------------------------------------------------------------*/
+Boolean
+TrashGetInfo(
+        String filename,
+        String *orig_path,
+        String *deletion_date )
+{
+   int i;
+
+   if (orig_path)
+     *orig_path = NULL;
+   if (deletion_date)
+     *deletion_date = NULL;
+
+   if (filename == NULL || *filename == '\0')
+     return False;
+
+   for (i = 0; i < numTrashItems; i++)
+   {
+      if (trashCan[i].filename && strcmp(filename, trashCan[i].filename) == 0)
+      {
+         if (orig_path && trashCan[i].intOrig)
+            *orig_path = XtNewString(trashCan[i].intOrig);
+         if (deletion_date && trashCan[i].deletionDate)
+            *deletion_date = XtNewString(trashCan[i].deletionDate);
+         return True;
+      }
+   }
+
+   return False;
+}
+
+Boolean
+TrashGetRecSize(
+        String filename,
+        unsigned long long *rec_size,
+        Boolean *rec_valid)
+{
+   int i;
+
+   if (rec_size)
+     *rec_size = 0;
+   if (rec_valid)
+     *rec_valid = False;
+
+   if (filename == NULL || *filename == '\0')
+     return False;
+
+   for (i = 0; i < numTrashItems; i++)
+   {
+      if (trashCan[i].filename && strcmp(filename, trashCan[i].filename) == 0)
+      {
+         if (rec_size)
+            *rec_size = trashCan[i].recSize;
+         if (rec_valid)
+            *rec_valid = trashCan[i].recSizeValid;
+         return True;
+      }
+   }
+
+   return False;
+}
+
+
+/*--------------------------------------------------------------------
+ * XdgTrashTimerCB
+ *   Periodically import XDG home trash while the Trash view is open.
+ *------------------------------------------------------------------*/
+static void
+XdgTrashTimerCB(
+        XtPointer client_data,
+        XtIntervalId *id )
+{
+   Boolean moved;
+
+   if (!trashDialogPosted)
+   {
+      xdgTrashTimer = 0;
+      return;
+   }
+
+   moved = ImportXdgTrashHome();
+   if (moved && trashFileMgrData)
+     UpdateDirectory(NULL, trashFileMgrData->host,
+                     trashFileMgrData->current_directory);
+   if (moved)
+     TrashMaybeStartRecSizeScan();
+
+   xdgTrashTimer = XtAppAddTimeOut(XtWidgetToApplicationContext(toplevel),
+                                   10000, XdgTrashTimerCB, NULL);
+}
+
+
+static void
+TrashSetStatusMsg(
+        const char *msg)
+{
+   FileMgrRec *file_mgr_rec;
+
+   if (trashFileMgrData == NULL ||
+       !trashFileMgrData->show_status_line ||
+       trashFileMgrData->file_mgr_rec == NULL)
+      return;
+
+   file_mgr_rec = (FileMgrRec *)trashFileMgrData->file_mgr_rec;
+
+   if (trashFileMgrData->special_msg)
+   {
+      XtFree(trashFileMgrData->special_msg);
+      trashFileMgrData->special_msg = NULL;
+   }
+   if (trashFileMgrData->msg_timer_id)
+   {
+      XtRemoveTimeOut(trashFileMgrData->msg_timer_id);
+      trashFileMgrData->msg_timer_id = 0;
+   }
+
+   if (msg)
+      trashFileMgrData->special_msg = XtNewString(msg);
+
+   UpdateHeaders(file_mgr_rec, trashFileMgrData, False);
+}
+
+
+static unsigned long long
+TrashCalcDirSize(const char *path)
+{
+   DIR *dirp;
+   struct dirent *dp;
+   struct stat st;
+   unsigned long long total = 0;
+   char fullpath[PATH_MAX];
+   size_t base_len;
+
+   if (lstat(path, &st) < 0)
+      return 0;
+
+   if (!S_ISDIR(st.st_mode))
+      return (unsigned long long)st.st_size;
+
+   dirp = opendir(path);
+   if (dirp == NULL)
+      return 0;
+
+   strncpy(fullpath, path, sizeof(fullpath) - 2);
+   fullpath[sizeof(fullpath) - 2] = '\0';
+   base_len = strlen(fullpath);
+   if (base_len == 0 || fullpath[base_len - 1] != '/')
+   {
+      fullpath[base_len++] = '/';
+      fullpath[base_len] = '\0';
+   }
+
+   while ((dp = readdir(dirp)) != NULL)
+   {
+      if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
+         continue;
+
+      if (base_len + strlen(dp->d_name) + 1 >= sizeof(fullpath))
+         continue;
+
+      strcpy(fullpath + base_len, dp->d_name);
+
+      if (lstat(fullpath, &st) < 0)
+         continue;
+
+      if (S_ISDIR(st.st_mode))
+         total += TrashCalcDirSize(fullpath);
+      else
+         total += (unsigned long long)st.st_size;
+   }
+
+   closedir(dirp);
+   return total;
+}
+
+
+static void
+TrashRecSizePipeCB(
+        XtPointer client_data,
+        int *fd,
+        XtInputId *id)
+{
+   short pipe_msg;
+   int n;
+
+   pipe_msg = -1;
+   n = PipeRead(*fd, &pipe_msg, sizeof(short));
+   if (n <= 0)
+      pipe_msg = -1;
+
+   switch (pipe_msg)
+   {
+      case PIPEMSG_RECSIZE:
+      {
+         unsigned long long size = 0;
+         String name;
+         int i;
+
+         PipeRead(*fd, &size, sizeof(unsigned long long));
+         name = PipeReadString(*fd);
+         if (name)
+         {
+            for (i = 0; i < numTrashItems; i++)
+            {
+               if (trashCan[i].filename &&
+                   strcmp(trashCan[i].filename, name) == 0)
+               {
+                  trashCan[i].recSize = size;
+                  trashCan[i].recSizeValid = True;
+                  break;
+               }
+            }
+            XtFree(name);
+         }
+         break;
+      }
+
+      case PIPEMSG_RECSIZE_DONE:
+      default:
+         close(*fd);
+         XtRemoveInput(*id);
+         trashRecsizeInput = 0;
+         trashRecsizePipe = -1;
+         trashRecsizeRunning = False;
+         TrashSetStatusMsg(NULL);
+         WriteTrashEntries();
+         if (trashFileMgrData)
+           UpdateHeaders((FileMgrRec *)trashFileMgrData->file_mgr_rec,
+                         trashFileMgrData, False);
+         return;
+   }
+}
+
+
+static void
+TrashMaybeStartRecSizeScan( void )
+{
+   int i;
+   int count = 0;
+   int pipe_fd[2];
+   int pid;
+   char **paths = NULL;
+   char **names = NULL;
+
+   if (trashRecsizeRunning)
+      return;
+
+   for (i = 0; i < numTrashItems; i++)
+   {
+      struct stat st;
+      if (trashCan[i].intNew == NULL)
+         continue;
+      if (trashCan[i].recSizeValid)
+         continue;
+      if (lstat(trashCan[i].intNew, &st) != 0)
+         continue;
+      if (!S_ISDIR(st.st_mode))
+         continue;
+
+      paths = (char **)XtRealloc((char *)paths, sizeof(char *) * (count + 1));
+      names = (char **)XtRealloc((char *)names, sizeof(char *) * (count + 1));
+      paths[count] = XtNewString(trashCan[i].intNew);
+      names[count] = XtNewString(trashCan[i].filename);
+      count++;
+   }
+
+   if (count == 0)
+   {
+      XtFree((char *)paths);
+      XtFree((char *)names);
+      return;
+   }
+
+   if(-1 == pipe(pipe_fd)) {
+      XtFree((char *)paths);
+      XtFree((char *)names);
+      return;
+   }
+
+   pid = fork();
+   if (pid == -1)
+   {
+      close(pipe_fd[0]);
+      close(pipe_fd[1]);
+      for (i = 0; i < count; i++)
+      {
+         XtFree(paths[i]);
+         XtFree(names[i]);
+      }
+      XtFree((char *)paths);
+      XtFree((char *)names);
+      return;
+   }
+
+   if (pid == 0)
+   {
+      int j;
+      short msg;
+      unsigned long long size;
+
+      close(pipe_fd[0]);
+      for (j = 0; j < count; j++)
+      {
+         size = TrashCalcDirSize(paths[j]);
+         msg = PIPEMSG_RECSIZE;
+         write(pipe_fd[1], &msg, sizeof(short));
+         write(pipe_fd[1], &size, sizeof(unsigned long long));
+         PipeWriteString(pipe_fd[1], names[j]);
+      }
+      msg = PIPEMSG_RECSIZE_DONE;
+      write(pipe_fd[1], &msg, sizeof(short));
+      close(pipe_fd[1]);
+      exit(0);
+   }
+
+   close(pipe_fd[1]);
+   trashRecsizeRunning = True;
+   trashRecsizePipe = pipe_fd[0];
+   TrashSetStatusMsg("Determining size of deleted directories...");
+   trashRecsizeInput = XtAppAddInput(XtWidgetToApplicationContext(toplevel),
+                                     pipe_fd[0], (XtPointer)XtInputReadMask,
+                                     TrashRecSizePipeCB, NULL);
+
+   for (i = 0; i < count; i++)
+   {
+      XtFree(paths[i]);
+      XtFree(names[i]);
+   }
+   XtFree((char *)paths);
+   XtFree((char *)names);
 }
 
 
@@ -698,7 +1346,10 @@ WriteTrashEntries( void )
       /* Write all remaining entries */
       for (i = 0; i < numTrashItems; i++)
       {
-         if( WriteEntry(newFile, trashCan[i].external, trashCan[i].filename) < 0 )
+         if( WriteEntry(newFile, trashCan[i].external, trashCan[i].filename,
+                        trashCan[i].deletionDate,
+                        trashCan[i].recSize,
+                        trashCan[i].recSizeValid) < 0 )
          {
            fclose(newFile);
            remove(NewTrashInfoFileName);
@@ -740,8 +1391,30 @@ static int
 WriteEntry(
         FILE *id,
         String external,
-        String internal )
+        String internal,
+        String deletionDate,
+        unsigned long long recSize,
+        Boolean recSizeValid )
 {
+  if (deletionDate != NULL && *deletionDate != '\0')
+  {
+    if (recSizeValid)
+      return( fprintf(id, "%ld %ld %s %s DeletionDate=%s RecSize=%llu\n",
+                      (long)strlen(external), (long)strlen(internal),
+                      external, internal, deletionDate,
+                      (unsigned long long)recSize) );
+
+    return( fprintf(id, "%ld %ld %s %s DeletionDate=%s\n",
+                    (long)strlen(external), (long)strlen(internal),
+                    external, internal, deletionDate) );
+  }
+
+  if (recSizeValid)
+    return( fprintf(id, "%ld %ld %s %s RecSize=%llu\n",
+                    (long)strlen(external), (long)strlen(internal),
+                    external, internal,
+                    (unsigned long long)recSize) );
+
   return( fprintf(id, "%ld %ld %s %s\n",
 		  (long)strlen(external), (long)strlen(internal),
 		  external, internal) );
@@ -1444,7 +2117,12 @@ TrashRemoveHandler(
    }
    if (number == 0)
    {
-      MoveToTrash(file_list, file_count, verifyPromptsEnabled, msg);
+      {
+         String deletionDate = CurrentDeletionDate();
+         MoveToTrash(file_list, file_count, verifyPromptsEnabled, msg, deletionDate);
+         if (deletionDate)
+            XtFree(deletionDate);
+      }
    }
    else
    {
@@ -1558,7 +2236,12 @@ RemoveOkCB(
 				&file_list, &file_count);
 #endif /* SUN_PERF */
 
-   MoveToTrash(file_list, file_count, verifyPromptsEnabled, NULL);
+   {
+      String deletionDate = CurrentDeletionDate();
+      MoveToTrash(file_list, file_count, verifyPromptsEnabled, NULL, deletionDate);
+      if (deletionDate)
+         XtFree(deletionDate);
+   }
 
    /* reread desktop files */
    CheckDesktop();
@@ -1656,7 +2339,12 @@ TrashRemoveNoConfirmHandler(
    }
 
    MessageToFileList(msg, &file_list, &file_count);
-   MoveToTrash(file_list, file_count, False, msg);
+   {
+      String deletionDate = CurrentDeletionDate();
+      MoveToTrash(file_list, file_count, False, msg, deletionDate);
+      if (deletionDate)
+         XtFree(deletionDate);
+   }
 }
 
 
@@ -2052,7 +2740,12 @@ VerifyCleanup(
     * if so instructed
     */
    if (completeDelete)
-      MoveToTrash(verifylist, fileCount, False, NULL);
+      {
+         String deletionDate = CurrentDeletionDate();
+         MoveToTrash(verifylist, fileCount, False, NULL, deletionDate);
+         if (deletionDate)
+            XtFree(deletionDate);
+      }
 
    else
    {
@@ -2434,6 +3127,23 @@ CloseTrash(
                             XDefaultScreen(XtDisplay(trashShell)));
       XtPopdown(trashShell);
    }
+
+   if (xdgTrashTimer != 0)
+   {
+      XtRemoveTimeOut(xdgTrashTimer);
+      xdgTrashTimer = 0;
+   }
+   if (trashRecsizeInput != 0)
+   {
+      XtRemoveInput(trashRecsizeInput);
+      trashRecsizeInput = 0;
+   }
+   if (trashRecsizePipe >= 0)
+   {
+      close(trashRecsizePipe);
+      trashRecsizePipe = -1;
+   }
+   trashRecsizeRunning = False;
 
 
    for (i = 0; i < secondaryTrashHelpDialogCount; i++)
@@ -3103,9 +3813,13 @@ MoveToTrashPipeCB(
        baseName++;
        if (*baseName == '\0')
          baseName = ".";
-       trashCan[numTrashItems].filename = XtNewString(baseName);
+      trashCan[numTrashItems].filename = XtNewString(baseName);
+      trashCan[numTrashItems].deletionDate =
+        cb_data->deletionDate ? XtNewString(cb_data->deletionDate) : NULL;
+       trashCan[numTrashItems].recSize = 0;
+       trashCan[numTrashItems].recSizeValid = False;
 
-       numTrashItems++;
+      numTrashItems++;
        fileCount++;
 
        /* arrange for the source directory to be updated */
@@ -3201,7 +3915,10 @@ MoveToTrashPipeCB(
         {
           if( WriteEntry(trashInfoFileId,
                          trashCan[numTrashItems - i].external,
-                         trashCan[numTrashItems - i].filename) < 0 )
+                         trashCan[numTrashItems - i].filename,
+                         trashCan[numTrashItems - i].deletionDate,
+                         trashCan[numTrashItems - i].recSize,
+                         trashCan[numTrashItems - i].recSizeValid) < 0 )
             break;
         }
         fflush(trashInfoFileId);
@@ -3211,6 +3928,8 @@ MoveToTrashPipeCB(
                           trashFileMgrData->current_directory);
       }
    }
+   if (trashDialogPosted)
+     TrashMaybeStartRecSizeScan();
 
    /* Check for any bad files; post an error dialog */
    if (buf)
@@ -3323,6 +4042,7 @@ MoveToTrashPipeCB(
    XtFree((char *)cb_data->path);
    XtFree((char *)cb_data->to);
    XtFree((char *)cb_data->rc);
+   XtFree((char *)cb_data->deletionDate);
    XtFree((char *)cb_data);
 
    CheckDesktop();
@@ -3339,7 +4059,8 @@ MoveToTrash(
 	char **file_list,
 	int file_count,
 	Boolean do_verify_checks,
-	Tt_message msg)
+	Tt_message msg,
+        String deletionDate)
 {
    static char *pname = "MoveToTrash";
    MoveToTrashCBData *cb_data;
@@ -3363,6 +4084,7 @@ MoveToTrash(
    cb_data->to = (char **)XtCalloc(file_count, sizeof(char *));
    cb_data->rc = (int *)XtCalloc(file_count, sizeof(int));
    cb_data->msg = msg;
+   cb_data->deletionDate = deletionDate ? XtNewString(deletionDate) : CurrentDeletionDate();
 #ifdef SUN_PERF
    cb_data->msg_cnt = 0 ;
    if (global_msg_cnt > 0) {
@@ -3652,8 +4374,9 @@ RestorePipeCB(
             XtFree ((char *) trashCan[j].intOrig);
             XtFree ((char *) trashCan[j].external);
             XtFree ((char *) trashCan[j].filename);
+            XtFree ((char *) trashCan[j].deletionDate);
             for (k = j; k < (numTrashItems - 1); k++)
-               trashCan[k] = trashCan[k + 1];
+              trashCan[k] = trashCan[k + 1];
 
             numTrashItems--;
          }
@@ -3940,6 +4663,7 @@ EmptyTrashPipeCB(
                XtFree ((char *) trashCan[j].intOrig);
                XtFree ((char *) trashCan[j].external);
                XtFree ((char *) trashCan[j].filename);
+               XtFree ((char *) trashCan[j].deletionDate);
                for (k = j; k < (numTrashItems - 1); k++)
                   trashCan[k] = trashCan[k + 1];
 
@@ -4174,22 +4898,15 @@ CheckDeletePermission(
 #endif
     {
        int fd = -1;
-       char *tmpfile;
-       tmpfile = tempnam(parentdir,"dtfile");
-       if (!tmpfile)
-           return -1;
-       if ((fd = creat(tmpfile,O_RDONLY)) < 0)  /* Create a temporary file */
-       {
-           free(tmpfile);
-           return -1;
-       }
+       char tmpfile[PATH_MAX];
+
+       snprintf(tmpfile, sizeof(tmpfile), "%s/dtfile.XXXXXX", parentdir);
+       fd = mkstemp(tmpfile);
+       if (fd < 0)                              /* Create a temporary file */
+         return -1;
        close(fd);
        if (remove(tmpfile) < 0)                /* Delete the created file */
-       {
-           free(tmpfile);
-           return -1;
-       }
-       free(tmpfile);
+         return -1;
     }
 
     /* root user can delete anything */
@@ -4302,6 +5019,11 @@ RestoreObject(
       else
          *chrptr = '\0';
     }
+    if (EnsureParentDirs(localdir) != 0)
+    {
+       free(localdir);
+       return ((int)False);
+    }
     if(stat(target,&stattar) >= 0)  /* Target exists  */
     {
        if(CheckDeletePermission(localdir,target)) {
@@ -4317,6 +5039,41 @@ RestoreObject(
   free(localdir);
   return ((int )FileManip((Widget)w, MOVE_FILE, source, target, TRUE,
                           FileOpError, False, NOT_DESKTOP));
+}
+
+static int
+EnsureParentDirs(
+        const char *target)
+{
+  char *path;
+  char *p;
+  int rc = 0;
+
+  if (target == NULL || *target == '\0')
+    return 0;
+
+  path = strdup(target);
+  if (path == NULL)
+    return -1;
+
+  /* Skip root */
+  for (p = path + 1; *p; p++)
+  {
+    if (*p == '/')
+    {
+      *p = '\0';
+      if (mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO) != 0 && errno != EEXIST)
+      {
+        rc = -1;
+        *p = '/';
+        break;
+      }
+      *p = '/';
+    }
+  }
+
+  free(path);
+  return rc;
 }
 static void
 CreateRestoreDialog(
@@ -4412,4 +5169,3 @@ RestoreVerifyCancel(
   free(dirs);
   XtDestroyWidget(mbox);
 }
-

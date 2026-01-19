@@ -437,28 +437,16 @@ CopyCheckDeletePermission(
     /* nothing - always check if root */
 #endif
     {
-       char *tmpfile;
+       char tmpfile[PATH_MAX];
        int rv;
-       tmpfile = tempnam(parentdir,"dtfile");
-       if (tmpfile)
-       {
-           /* Create a temporary file */
-           if ( (rv = creat(tmpfile,O_RDONLY)) < 0)
-           {
-               free(tmpfile);
-               return -1;
-           }
-           close(rv);
-           /* Delete the created file */
-           if (remove(tmpfile) < 0)
-           {
-               free(tmpfile);
-               return -1;
-           }
 
-           free(tmpfile);
-       }
-       else
+       snprintf(tmpfile, sizeof(tmpfile), "%s/dtfile.XXXXXX", parentdir);
+       rv = mkstemp(tmpfile);
+       if (rv < 0)
+           return -1;
+       close(rv);
+       /* Delete the created file */
+       if (remove(tmpfile) < 0)
            return -1;
     }
 

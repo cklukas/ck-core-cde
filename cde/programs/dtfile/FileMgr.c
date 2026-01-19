@@ -2768,7 +2768,7 @@ UpdateStatusLine(
         FileMgrRec *file_mgr_rec,
         FileMgrData *file_mgr_data)
 {
-   char buf[21+MAX_PATH];
+   char buf[4*MAX_PATH];
    XmString label_string;
    Arg args[2];
 

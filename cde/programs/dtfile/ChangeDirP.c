@@ -59,6 +59,8 @@
  ************************************<+>*************************************/
 
 #include <limits.h>
+#include <locale.h>
+#include <time.h>
 #include <Xm/Xm.h>
 #include <Xm/XmP.h>
 #include <Xm/DrawP.h>
@@ -774,6 +776,199 @@ CurrentDirExposed(
  *
  ************************************************************************/
 
+static void
+ReplaceDecimalPoint(char *buf)
+{
+   struct lconv *lc = localeconv();
+   char *dot;
+
+   if (lc == NULL || lc->decimal_point == NULL ||
+       lc->decimal_point[0] == '\0' || lc->decimal_point[0] == '.')
+      return;
+
+   dot = strchr(buf, '.');
+   if (dot)
+      *dot = lc->decimal_point[0];
+}
+
+static void
+FormatHumanSize(unsigned long long bytes, char *buf, size_t bufsize)
+{
+   const char *units[] = {"Bytes", "KB", "MB", "GB", "TB", "PB"};
+   double size = (double)bytes;
+   int index = 0;
+   char num[32];
+
+   if (bufsize == 0)
+      return;
+
+   if (bytes < 1024ULL)
+   {
+      snprintf(buf, bufsize, "%llu %s", bytes, units[0]);
+      return;
+   }
+
+   while (size >= 1024.0 && index < (int)(sizeof(units)/sizeof(units[0])) - 1)
+   {
+      size /= 1024.0;
+      index++;
+   }
+
+   snprintf(num, sizeof(num), "%.2f", size);
+   ReplaceDecimalPoint(num);
+   snprintf(buf, bufsize, "%s %s", num, units[index]);
+}
+
+static Boolean
+ParseDeletionDate(const char *date_str, time_t *out_time)
+{
+   int year, mon, day, hour, min, sec;
+   struct tm tm_info;
+
+   if (date_str == NULL || *date_str == '\0' || out_time == NULL)
+      return False;
+
+   if (sscanf(date_str, "%d-%d-%dT%d:%d:%d",
+              &year, &mon, &day, &hour, &min, &sec) != 6)
+      return False;
+
+   memset(&tm_info, 0, sizeof(tm_info));
+   tm_info.tm_year = year - 1900;
+   tm_info.tm_mon = mon - 1;
+   tm_info.tm_mday = day;
+   tm_info.tm_hour = hour;
+   tm_info.tm_min = min;
+   tm_info.tm_sec = sec;
+   tm_info.tm_isdst = -1;
+
+   *out_time = mktime(&tm_info);
+   return (*out_time != (time_t)-1);
+}
+
+static void
+FormatLocaleDateTime(time_t t, char *buf, size_t bufsize)
+{
+   struct tm *tm_info;
+
+   if (bufsize == 0)
+      return;
+
+   tm_info = localtime(&t);
+   if (tm_info == NULL || strftime(buf, bufsize, "%x %X", tm_info) == 0)
+      snprintf(buf, bufsize, "unknown");
+}
+
+static char *
+DirnameFromPath(const char *path)
+{
+   char *copy;
+   char *slash;
+
+   if (path == NULL || *path == '\0')
+      return NULL;
+
+   copy = XtNewString(path);
+   slash = strrchr(copy, '/');
+   if (slash == NULL || slash == copy)
+   {
+      if (slash == copy)
+         *(slash + 1) = '\0';
+      return copy;
+   }
+   *slash = '\0';
+   return copy;
+}
+
+static void
+AddUniqueDir(char ***dirs, int *count, const char *dir)
+{
+   int i;
+
+   if (dir == NULL || *dir == '\0' || dirs == NULL || count == NULL)
+      return;
+
+   for (i = 0; i < *count; i++)
+   {
+      if (strcmp((*dirs)[i], dir) == 0)
+         return;
+   }
+
+   *dirs = (char **)XtRealloc((char *)(*dirs), sizeof(char *) * (*count + 1));
+   (*dirs)[*count] = XtNewString(dir);
+   (*count)++;
+}
+
+static unsigned long long
+SumVisibleSize(FileMgrData *file_mgr_data)
+{
+   unsigned long long total = 0;
+   int j;
+   FileViewData **file_view_data;
+
+   if (file_mgr_data == NULL ||
+       file_mgr_data->directory_set == NULL ||
+       file_mgr_data->directory_set[0] == NULL)
+      return 0;
+
+   file_view_data = file_mgr_data->directory_set[0]->file_view_data;
+   if (file_view_data == NULL)
+      return 0;
+
+   for (j = 0; j < file_mgr_data->directory_set[0]->file_count; j++)
+   {
+      if (file_view_data[j]->filtered)
+         continue;
+      if (file_mgr_data == trashFileMgrData &&
+          S_ISDIR(file_view_data[j]->file_data->stat.st_mode))
+      {
+         unsigned long long rec_size = 0;
+         Boolean rec_valid = False;
+         if (TrashGetRecSize(file_view_data[j]->file_data->file_name,
+                             &rec_size, &rec_valid) && rec_valid)
+         {
+            total += rec_size;
+            continue;
+         }
+      }
+      total += (unsigned long long)file_view_data[j]->file_data->stat.st_size;
+   }
+
+   return total;
+}
+
+static unsigned long long
+SumSelectionSize(FileMgrData *file_mgr_data)
+{
+   unsigned long long total = 0;
+   int j;
+
+   if (file_mgr_data == NULL || file_mgr_data->selection_list == NULL)
+      return 0;
+
+   for (j = 0; j < file_mgr_data->selected_file_count; j++)
+   {
+      FileViewData *fvd = file_mgr_data->selection_list[j];
+      if (fvd && fvd->file_data)
+      {
+         if (file_mgr_data == trashFileMgrData &&
+             S_ISDIR(fvd->file_data->stat.st_mode))
+         {
+            unsigned long long rec_size = 0;
+            Boolean rec_valid = False;
+            if (TrashGetRecSize(fvd->file_data->file_name,
+                                &rec_size, &rec_valid) && rec_valid)
+            {
+               total += rec_size;
+               continue;
+            }
+         }
+         total += (unsigned long long)fvd->file_data->stat.st_size;
+      }
+   }
+
+   return total;
+}
+
 Boolean
 GetStatusMsg(
         FileMgrData *file_mgr_data,
@@ -848,9 +1043,171 @@ GetStatusMsg(
         sprintf( buf, (GETMESSAGE(11,31, "Error while reading %s")), file_mgr_data->current_directory );
       else if( file_mgr_data == trashFileMgrData )
       {
+        int visible_count;
+        unsigned long long total_size;
+        char size_buf[64];
+
         n_hidden = file_mgr_data->directory_set[0]->filtered_file_count;
-        sprintf (buf, (GETMESSAGE(3,10, "%d Item(s)")),
-                 n_files - n_hidden);
+        visible_count = n_files - n_hidden;
+
+        if (file_mgr_data->selected_file_count == 1 &&
+            file_mgr_data->selection_list != NULL)
+        {
+          FileViewData *fvd = file_mgr_data->selection_list[0];
+          String orig_path = NULL;
+          String deletion_date = NULL;
+          char detail_size[64];
+          char date_text[64];
+          const char *path_text = "unknown";
+          time_t parsed_time;
+
+          snprintf(date_text, sizeof(date_text), "unknown");
+
+          if (fvd && fvd->file_data)
+          {
+            if (S_ISDIR(fvd->file_data->stat.st_mode))
+            {
+              unsigned long long rec_size = 0;
+              Boolean rec_valid = False;
+              if (TrashGetRecSize(fvd->file_data->file_name,
+                                  &rec_size, &rec_valid) && rec_valid)
+                FormatHumanSize(rec_size, detail_size, sizeof(detail_size));
+              else
+                FormatHumanSize((unsigned long long)fvd->file_data->stat.st_size,
+                                detail_size, sizeof(detail_size));
+            }
+            else
+            {
+              FormatHumanSize((unsigned long long)fvd->file_data->stat.st_size,
+                              detail_size, sizeof(detail_size));
+            }
+            if (TrashGetInfo(fvd->file_data->file_name,
+                             &orig_path, &deletion_date))
+            {
+              if (deletion_date && *deletion_date &&
+                  ParseDeletionDate(deletion_date, &parsed_time))
+                FormatLocaleDateTime(parsed_time, date_text, sizeof(date_text));
+              else
+                snprintf(date_text, sizeof(date_text), "unknown");
+              if (orig_path && *orig_path)
+                path_text = orig_path;
+            }
+            snprintf(buf, 4 * MAX_PATH,
+                     "Deleted: %s Size: %s From: %s",
+                     date_text, detail_size, path_text);
+          }
+          else
+            snprintf(buf, 4 * MAX_PATH, "%d Item(s)", visible_count);
+
+          if (orig_path)
+            XtFree(orig_path);
+          if (deletion_date)
+            XtFree(deletion_date);
+        }
+        else if (file_mgr_data->selected_file_count > 1)
+        {
+          total_size = SumSelectionSize(file_mgr_data);
+          FormatHumanSize(total_size, size_buf, sizeof(size_buf));
+          {
+            int j;
+            time_t min_time = 0;
+            time_t max_time = 0;
+            Boolean have_time = False;
+            char from_text[64];
+            char to_text[64];
+            char *dir_path = NULL;
+            char **dirs = NULL;
+            int dir_count = 0;
+            const char *from_display = "[multiple directories]";
+
+            for (j = 0; j < file_mgr_data->selected_file_count; j++)
+            {
+               FileViewData *fvd = file_mgr_data->selection_list[j];
+               String orig_path = NULL;
+               String deletion_date = NULL;
+               time_t t;
+
+               if (fvd == NULL || fvd->file_data == NULL)
+                  continue;
+
+               if (TrashGetInfo(fvd->file_data->file_name,
+                                &orig_path, &deletion_date))
+               {
+                  if (deletion_date && *deletion_date &&
+                      ParseDeletionDate(deletion_date, &t))
+                  {
+                     if (!have_time)
+                     {
+                        min_time = t;
+                        max_time = t;
+                        have_time = True;
+                     }
+                     else
+                     {
+                        if (t < min_time) min_time = t;
+                        if (t > max_time) max_time = t;
+                     }
+                  }
+
+                  if (orig_path && *orig_path)
+                  {
+                     dir_path = DirnameFromPath(orig_path);
+                     if (dir_path)
+                     {
+                        AddUniqueDir(&dirs, &dir_count, dir_path);
+                        XtFree(dir_path);
+                     }
+                  }
+               }
+
+               if (orig_path)
+                  XtFree(orig_path);
+               if (deletion_date)
+                  XtFree(deletion_date);
+            }
+
+            if (dir_count == 1)
+               from_display = dirs[0];
+
+            if (have_time)
+            {
+               FormatLocaleDateTime(min_time, from_text, sizeof(from_text));
+               FormatLocaleDateTime(max_time, to_text, sizeof(to_text));
+               if (min_time == max_time)
+               {
+                  snprintf(buf, 4 * MAX_PATH,
+                           "%d Selected - Deleted: %s Size: %s From: %s",
+                           file_mgr_data->selected_file_count,
+                           from_text, size_buf, from_display);
+               }
+               else
+               {
+                  snprintf(buf, 4 * MAX_PATH,
+                           "%d Selected - Deleted from %s to %s Size: %s From: %s",
+                           file_mgr_data->selected_file_count,
+                           from_text, to_text, size_buf, from_display);
+               }
+            }
+            else
+            {
+               snprintf(buf, 4 * MAX_PATH,
+                        "%d Selected - Deleted: unknown Size: %s From: %s",
+                        file_mgr_data->selected_file_count,
+                        size_buf, from_display);
+            }
+
+            for (j = 0; j < dir_count; j++)
+               XtFree(dirs[j]);
+            XtFree((char *)dirs);
+          }
+        }
+        else
+        {
+          total_size = SumVisibleSize(file_mgr_data);
+          FormatHumanSize(total_size, size_buf, sizeof(size_buf));
+          snprintf(buf, 4 * MAX_PATH, "%d Item(s) - %s",
+                   visible_count, size_buf);
+        }
       }
       else
       {
@@ -893,7 +1250,7 @@ DrawCurrentDirectory(
    int top_margin;
    int left_margin;
    char buf[2*MAX_PATH];
-   char msg[21+MAX_PATH];
+   char msg[4*MAX_PATH];
    Boolean chopped;
    int host_len;
    int host_pixels;
@@ -1389,4 +1746,3 @@ draw_imagestring( Display *display,
             break;
     }
 }
-

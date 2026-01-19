@@ -1513,6 +1513,13 @@ GetSelectionRectangle(
    XDestroyRegion (intersect_region);
    XDestroyRegion (redraw_region);
 
+   if (file_mgr_data == trashFileMgrData &&
+       file_mgr_data->show_status_line &&
+       file_mgr_data->file_mgr_rec)
+   {
+      UpdateHeaders(file_mgr_rec, file_mgr_data, False);
+   }
+
    XSync (display, 0);
    return;
 }

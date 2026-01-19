@@ -991,6 +991,14 @@ extern void UpdateHeaders(
                         FileMgrRec *file_mgr_rec,
                         FileMgrData *file_mgr_data,
                         Boolean icons_changed) ;
+extern Boolean TrashGetInfo(
+                        String filename,
+                        String *orig_path,
+                        String *deletion_date) ;
+extern Boolean TrashGetRecSize(
+                        String filename,
+                        unsigned long long *rec_size,
+                        Boolean *rec_valid) ;
 extern void FileMgrRedisplayFiles(
                         FileMgrRec *file_mgr_rec,
                         FileMgrData *file_mgr_data,
