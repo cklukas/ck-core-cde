@@ -366,6 +366,7 @@ Boolean TrashGetRecSize(
 static void TrashSetStatusMsg(
         const char *msg);
 static void TrashUpdateWindowIcon( void );
+static void TrashRaiseAndFocus( void );
 static void TrashMaybeStartRecSizeScan( void );
 static void TrashRecSizePipeCB(
                         XtPointer client_data,
@@ -1187,6 +1188,23 @@ TrashUpdateWindowIcon( void )
    }
 }
 
+/*--------------------------------------------------------------------
+ * TrashRaiseAndFocus
+ *   Bring the Trash window to the foreground and give it focus.
+ *------------------------------------------------------------------*/
+static void
+TrashRaiseAndFocus( void )
+{
+   if (trashShell == NULL)
+      return;
+
+   if (!XtIsRealized(trashShell))
+      return;
+
+   XRaiseWindow(XtDisplay(trashShell), XtWindow(trashShell));
+   XSetInputFocus(XtDisplay(trashShell), XtWindow(trashShell),
+                  RevertToParent, CurrentTime);
+}
 
 static unsigned long long
 TrashCalcDirSize(const char *path)
@@ -1810,6 +1828,7 @@ TrashDisplayHandler(
 
       trashShell = file_mgr_rec->shell;
       TrashUpdateWindowIcon();
+      TrashRaiseAndFocus();
    }
    else
    {
@@ -1838,6 +1857,7 @@ TrashDisplayHandler(
       XSync(XtDisplay(trashShell), False);
       XRaiseWindow (XtDisplay (trashShell), XtWindow (trashShell));
       XMapWindow( XtDisplay (trashShell), XtWindow (trashShell) );
+      TrashRaiseAndFocus();
       {
         Tt_message msg;
         msg = tt_pnotice_create(TT_SESSION, "DtActivity_Began");
