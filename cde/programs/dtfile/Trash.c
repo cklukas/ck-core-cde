@@ -364,7 +364,8 @@ Boolean TrashGetRecSize(
                         unsigned long long *rec_size,
                         Boolean *rec_valid);
 static void TrashSetStatusMsg(
-                        const char *msg);
+        const char *msg);
+static void TrashUpdateWindowIcon( void );
 static void TrashMaybeStartRecSizeScan( void );
 static void TrashRecSizePipeCB(
                         XtPointer client_data,
@@ -872,7 +873,10 @@ ImportXdgTrashHome( void )
    XtFree(files_dir);
 
    if (moved_any)
+   {
      WriteTrashEntries();
+     TrashUpdateWindowIcon();
+   }
 
    return moved_any;
 }
@@ -1105,6 +1109,82 @@ TrashSetStatusMsg(
       trashFileMgrData->special_msg = XtNewString(msg);
 
    UpdateHeaders(file_mgr_rec, trashFileMgrData, False);
+}
+
+
+/*--------------------------------------------------------------------
+ * TrashUpdateWindowIcon
+ *   Keep the Trash window icon in sync with empty/full state.
+ *------------------------------------------------------------------*/
+static void
+TrashUpdateWindowIcon( void )
+{
+   static Pixmap empty_icon = XmUNSPECIFIED_PIXMAP;
+   static Pixmap empty_mask = XmUNSPECIFIED_PIXMAP;
+   static Pixmap full_icon = XmUNSPECIFIED_PIXMAP;
+   static Pixmap full_mask = XmUNSPECIFIED_PIXMAP;
+   Pixmap *icon_ptr;
+   Pixmap *mask_ptr;
+   Pixel background, foreground, top_shadow, bottom_shadow, select;
+   Colormap colormap;
+   Pixmap pixmap;
+   const char *icon_name;
+   FileMgrRec *file_mgr_rec;
+   Arg args[2];
+
+   if (trashFileMgrData == NULL || trashFileMgrData->file_mgr_rec == NULL)
+      return;
+
+   file_mgr_rec = (FileMgrRec *)trashFileMgrData->file_mgr_rec;
+   trashShell = file_mgr_rec->shell;
+
+   if (numTrashItems > 0)
+   {
+      icon_ptr = &full_icon;
+      mask_ptr = &full_mask;
+      icon_name = (trashFullIcon && *trashFullIcon) ?
+                    trashFullIcon : TRASH_ICON_FULL_NAME;
+   }
+   else
+   {
+      icon_ptr = &empty_icon;
+      mask_ptr = &empty_mask;
+      icon_name = (trashIcon && *trashIcon) ?
+                    trashIcon : TRASH_ICON_NAME;
+   }
+
+   if (*icon_ptr == XmUNSPECIFIED_PIXMAP)
+   {
+      XtSetArg (args[0], XmNbackground, &background);
+      XtSetArg (args[1], XmNcolormap,  &colormap);
+      XtGetValues (file_mgr_rec->main, args, 2);
+
+      XmGetColors (XtScreen (file_mgr_rec->main), colormap, background,
+                   &foreground, &top_shadow, &bottom_shadow, &select);
+
+      pixmap = XmGetPixmap (XtScreen (file_mgr_rec->main), icon_name,
+                            foreground, background);
+      if (pixmap != XmUNSPECIFIED_PIXMAP)
+         *icon_ptr = pixmap;
+
+      pixmap = _DtGetMask (XtScreen (file_mgr_rec->main), icon_name);
+      if (pixmap != XmUNSPECIFIED_PIXMAP)
+         *mask_ptr = pixmap;
+   }
+
+   if (*icon_ptr != XmUNSPECIFIED_PIXMAP)
+   {
+      XtSetArg (args[0], XmNiconPixmap, *icon_ptr);
+      if (*mask_ptr != XmUNSPECIFIED_PIXMAP)
+      {
+         XtSetArg (args[1], XmNiconMask, *mask_ptr);
+         XtSetValues (trashShell, args, 2);
+      }
+      else
+      {
+         XtSetValues (trashShell, args, 1);
+      }
+   }
 }
 
 
@@ -1697,21 +1777,27 @@ TrashDisplayHandler(
      TrashCreateDialog (XtDisplay(toplevel));
 #endif
 
+   if (xdgTrashTimer == 0)
+     xdgTrashTimer = XtAppAddTimeOut(XtWidgetToApplicationContext(toplevel),
+                                     10000, XdgTrashTimerCB, NULL);
+
+   {
+      Boolean moved = ImportXdgTrashHome();
+      if (moved && trashFileMgrData && trashFileMgrData->file_mgr_rec)
+        UpdateDirectory(NULL, trashFileMgrData->host,
+                        trashFileMgrData->current_directory);
+      if (moved)
+        TrashMaybeStartRecSizeScan();
+   }
+
    /* the encapsulation functions do not set file_mgr_rec until a dialog */
    /* is actually displayed                                              */
    if (trashFileMgrData->file_mgr_rec == 0)
    {
-      static Pixmap trash_icon = XmUNSPECIFIED_PIXMAP;
-      static Pixmap trash_mask = XmUNSPECIFIED_PIXMAP;
-
-      Pixel background, foreground, top_shadow, bottom_shadow, select;
-      Colormap colormap;
       XClassHint classHints;
       FileMgrRec * file_mgr_rec;
       unsigned int width;
       unsigned int height;
-      Pixmap pixmap;
-      Arg args[3];
 
       classHints.res_name = trashFileMgrData->title;
       classHints.res_class = DTFILE_CLASS_NAME;
@@ -1723,38 +1809,7 @@ TrashDisplayHandler(
       file_mgr_rec = (FileMgrRec *)trashFileMgrData->file_mgr_rec;
 
       trashShell = file_mgr_rec->shell;
-
-      if (trash_icon == XmUNSPECIFIED_PIXMAP)
-      {
-         XtSetArg (args[0], XmNbackground, &background);
-         XtSetArg (args[1], XmNcolormap,  &colormap);
-         XtGetValues (file_mgr_rec->main, args, 2);
-
-         XmGetColors (XtScreen (file_mgr_rec->main), colormap, background,
-                      &foreground, &top_shadow, &bottom_shadow, &select);
-
-         pixmap = XmGetPixmap (XtScreen (file_mgr_rec->main), trashIcon,
-                                        foreground, background);
-         if( pixmap != XmUNSPECIFIED_PIXMAP)
-            trash_icon = pixmap;
-
-         /* now let's get the mask for the File Manager */
-         pixmap = _DtGetMask (XtScreen (file_mgr_rec->main), trashIcon);
-         if( pixmap != XmUNSPECIFIED_PIXMAP)
-            trash_mask = pixmap;
-
-         if (trash_icon != XmUNSPECIFIED_PIXMAP)
-         {
-            XtSetArg (args[0], XmNiconPixmap, trash_icon);
-            if(trash_mask != XmUNSPECIFIED_PIXMAP)
-            {
-               XtSetArg (args[1], XmNiconMask, trash_mask);
-               XtSetValues (trashShell, args, 2);
-            }
-            else
-               XtSetValues (trashShell, args, 1);
-         }
-      }
+      TrashUpdateWindowIcon();
    }
    else
    {
@@ -1778,8 +1833,8 @@ TrashDisplayHandler(
       XSetWMHints(XtDisplay(trashShell), XtWindow(trashShell), wmhints);
       XFree(wmhints);
 
-
       XtPopup (trashShell, XtGrabNone);
+      TrashUpdateWindowIcon();
       XSync(XtDisplay(trashShell), False);
       XRaiseWindow (XtDisplay (trashShell), XtWindow (trashShell));
       XMapWindow( XtDisplay (trashShell), XtWindow (trashShell) );
@@ -3926,6 +3981,7 @@ MoveToTrashPipeCB(
         if( trashFileMgrData )
           UpdateDirectory(NULL, trashFileMgrData->host,
                           trashFileMgrData->current_directory);
+        TrashUpdateWindowIcon();
       }
    }
    if (trashDialogPosted)
@@ -4406,6 +4462,7 @@ RestorePipeCB(
      XtFree(title);
      XtFree(tmpStr);
    }
+   TrashUpdateWindowIcon();
 
    /* send a reply to the message that triggered this operation, if any */
    if (cb_data->msg != 0) {
@@ -4700,6 +4757,7 @@ EmptyTrashPipeCB(
         XtFree(title);
         XtFree(tmpStr);
       }
+      TrashUpdateWindowIcon();
 
       /* Report any errors */
       if (problemCount)

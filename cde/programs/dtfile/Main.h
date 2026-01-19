@@ -158,6 +158,8 @@
 
 #define TOOL_ICON_NAME     CDE_INSTALLATION_TOP "/appconfig/icons/C/Fpapps.l.pm"
 #define TRASH_ICON_NAME    CDE_INSTALLATION_TOP "/appconfig/icons/C/Fptrsh.l.pm"
+#define TRASH_ICON_FULL_NAME \
+   CDE_INSTALLATION_TOP "/appconfig/icons/C/Fptrsh7.l.pm"
 #define HOME_ICON_NAME     CDE_INSTALLATION_TOP "/appconfig/icons/C/Fphome.l.pm"
 
 
@@ -320,6 +322,7 @@ extern char *special_helpVol;
 extern char *fileMgrIcon;
 extern char *appMgrIcon;
 extern char *trashIcon;
+extern char *trashFullIcon;
 extern int retryLoadDesktopInfo;
 extern int smallIconWidth;
 extern int smallIconHeight;

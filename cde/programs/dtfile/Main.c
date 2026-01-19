@@ -269,6 +269,7 @@ typedef struct
    char * fileMgrIcon;
    char * appMgrIcon;
    char * trashIcon;
+   char * trashFullIcon;
    int retryLoadDesktop;
    int smallIconWidth;
    int smallIconHeight;
@@ -616,6 +617,7 @@ char *special_helpVol;
 char *fileMgrIcon;
 char *appMgrIcon;
 char *trashIcon;
+char *trashFullIcon;
 int retryLoadDesktopInfo;
 
 int smallIconWidth;
@@ -917,6 +919,11 @@ static XtResource resources[] =
      "trashIcon", "TrashIcon", XmRString, sizeof (char *),
      XtOffset (ApplicationArgsPtr, trashIcon), XmRImmediate,
      (XtPointer) TRASH_ICON_NAME,
+   },
+   {
+     "trashFullIcon", "TrashFullIcon", XmRString, sizeof (char *),
+     XtOffset (ApplicationArgsPtr, trashFullIcon), XmRImmediate,
+     (XtPointer) TRASH_ICON_FULL_NAME,
    },
 
    {
@@ -1487,6 +1494,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    fileMgrIcon = application_args.fileMgrIcon;
    appMgrIcon = application_args.appMgrIcon;
    trashIcon = application_args.trashIcon;
+   trashFullIcon = application_args.trashFullIcon;
    retryLoadDesktopInfo = application_args.retryLoadDesktop;
    if( application_args.directories != NULL
        || (strcmp (application_args.restricted, RESTRICTED_HEADER) == 0)
