@@ -49,6 +49,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #define X_INCLUDE_STRING_H
 #define X_INCLUDE_TIME_H
 #define XOS_USE_XT_LOCKING
@@ -466,7 +467,76 @@ FileCheckTimeout(
 /*-------------------------------------------------------------
 **	CheckFile
 **		Check for change in file size
+**		Extension: XmCONTROL_MONITOR supports a colon-separated list
+**		of file/dir paths; "on" if any entry is non-empty.
 */
+static Boolean
+PathHasContent(const char *path)
+{
+  struct stat stat_buf;
+  DIR *dir;
+  struct dirent *entry;
+
+  if (path == NULL || *path == '\0')
+    return False;
+
+  if (stat(path, &stat_buf) != 0)
+    return False;
+
+  if (S_ISDIR(stat_buf.st_mode))
+  {
+    dir = opendir(path);
+    if (dir == NULL)
+      return False;
+    while ((entry = readdir(dir)) != NULL)
+    {
+      if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+        continue;
+      closedir(dir);
+      return True;
+    }
+    closedir(dir);
+    return False;
+  }
+
+  return (stat_buf.st_size == 0) ? False : True;
+}
+
+static Boolean
+PathListHasContent(const char *path_list)
+{
+  char *copy;
+  char *p;
+  char *start;
+  Boolean has_content = False;
+
+  if (path_list == NULL || *path_list == '\0')
+    return False;
+
+  copy = XtNewString(path_list);
+  start = copy;
+  for (p = copy; ; p++)
+  {
+    if (*p == ':' || *p == '\0')
+    {
+      char saved = *p;
+      *p = '\0';
+      if (*start != '\0' && PathHasContent(start))
+      {
+        has_content = True;
+        *p = saved;
+        break;
+      }
+      *p = saved;
+      if (*p == '\0')
+        break;
+      start = p + 1;
+    }
+  }
+  XtFree(copy);
+  return has_content;
+}
+
 static void 
 CheckFile(
         DtControlGadget g )
@@ -483,7 +553,7 @@ CheckFile(
   switch (G_ControlType (g))
     {
     case XmCONTROL_MONITOR:
-      file_changed = (file_size == 0) ? False : True;
+      file_changed = PathListHasContent(G_FileName (g));
       break;
 
     case XmCONTROL_MAIL:
