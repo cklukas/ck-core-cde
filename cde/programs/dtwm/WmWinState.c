@@ -58,6 +58,7 @@
 #include "WmWinList.h"
 #include "WmWinConf.h"
 #include "WmWrkspace.h"
+#include <X11/Xatom.h>
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -82,6 +83,81 @@ static Boolean GetWindowAnimRect (Window win, Window root, WmAnimRect *rect);
 static Boolean GetClientFrameAnimRect (ClientData *pCD, WmAnimRect *rect);
 static Boolean GetClientIconAnimRect (ClientData *pCD, WmAnimRect *rect);
 static void AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect, const WmAnimRect *endRect);
+
+static Boolean
+IsOpenIconEligible (ClientData *pCD)
+{
+    Atom typeAtom;
+    Atom actualType;
+    int actualFormat;
+    unsigned long nitems;
+    unsigned long bytesAfter;
+    Atom *typeList = NULL;
+    Atom skipTypes[6];
+    int i;
+
+    if (!pCD)
+    {
+        return False;
+    }
+
+    /* Skip transients / secondary windows */
+    if (pCD->transientLeader || pCD->transientFor || pCD->bPseudoTransient)
+    {
+        return False;
+    }
+
+    /* Require icon image decoration */
+    if (!(ICON_DECORATION(pCD) & ICON_IMAGE_PART))
+    {
+        return False;
+    }
+
+    /* Only iconize windows that can be minimized */
+    if (!(pCD->clientFunctions & MWM_FUNC_MINIMIZE))
+    {
+        return False;
+    }
+
+    /* Best-effort EWMH type filter (utility/dialog/popup/etc.) */
+    typeAtom = XInternAtom(DISPLAY, "_NET_WM_WINDOW_TYPE", True);
+    if (typeAtom != None)
+    {
+        if (XGetWindowProperty(DISPLAY, pCD->client, typeAtom, 0L, 32L, False,
+                               XA_ATOM, &actualType, &actualFormat, &nitems,
+                               &bytesAfter, (unsigned char **)&typeList) == Success)
+        {
+            if (actualType == XA_ATOM && actualFormat == 32 && nitems > 0 && typeList)
+            {
+                skipTypes[0] = XInternAtom(DISPLAY, "_NET_WM_WINDOW_TYPE_DIALOG", True);
+                skipTypes[1] = XInternAtom(DISPLAY, "_NET_WM_WINDOW_TYPE_UTILITY", True);
+                skipTypes[2] = XInternAtom(DISPLAY, "_NET_WM_WINDOW_TYPE_POPUP_MENU", True);
+                skipTypes[3] = XInternAtom(DISPLAY, "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU", True);
+                skipTypes[4] = XInternAtom(DISPLAY, "_NET_WM_WINDOW_TYPE_TOOLTIP", True);
+                skipTypes[5] = XInternAtom(DISPLAY, "_NET_WM_WINDOW_TYPE_SPLASH", True);
+
+                for (i = 0; i < (int)nitems; i++)
+                {
+                    int j;
+                    for (j = 0; j < 6; j++)
+                    {
+                        if (skipTypes[j] != None && typeList[i] == skipTypes[j])
+                        {
+                            XFree((char *)typeList);
+                            return False;
+                        }
+                    }
+                }
+            }
+            if (typeList)
+            {
+                XFree((char *)typeList);
+            }
+        }
+    }
+
+    return True;
+}
 
 
 
@@ -411,6 +487,13 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 		}
 
 		ShowAllIconsForMinimizedClient (pCD);
+	    }
+
+	    if (pSD->animateMinimizeRestore &&
+		!(pCD->clientFlags & WM_INITIALIZATION) &&
+		!firstTime)
+	    {
+		StartMinimizeIconBlink(pCD);
 	    }
 
 	    SetClientWMState (pCD, IconicState, MINIMIZED_STATE);
@@ -1680,6 +1763,11 @@ void ShowIconForOpenClient (WmWorkspaceData *pWS, ClientData *pCD)
     if (!pSD->showOpenWindowIcons || (pCD->clientState & UNSEEN_STATE))
     {
 	return;
+    }
+
+    if (!IsOpenIconEligible(pCD))
+    {
+        return;
     }
 
     if (pSD->useIconBox && P_ICON_BOX(pCD))

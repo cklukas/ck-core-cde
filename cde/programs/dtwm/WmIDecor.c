@@ -58,6 +58,22 @@ static unsigned int activeIconTextWidth = 1;
 static unsigned int activeIconTextHeight = 1;
 static RList *pActiveIconTopRects = NULL;
 static RList *pActiveIconBotRects = NULL;
+static const unsigned long kMinimizeBlinkIntervalMs = 320;
+static const int kMinimizeBlinkToggles = 2;
+
+typedef struct _IconBlinkData
+{
+    ClientData *pCD;
+    int remainingToggles;
+    Boolean showing;
+    XtIntervalId timerId;
+    unsigned int restoreWidth;
+    unsigned int restoreHeight;
+    Boolean resized;
+    struct _IconBlinkData *next;
+} IconBlinkData;
+
+static IconBlinkData *iconBlinkList = NULL;
 
 
 static GC GetOpenIconFillGC (ClientData *pcd)
@@ -147,7 +163,9 @@ static int IconContentWidth (ClientData *pcd)
     return ICON_WIDTH(pcd);
 }
 
-static void DrawOpenIconBar (ClientData *pcd, int xOffset, int yOffset)
+static void DrawOpenIconBarInternal (ClientData *pcd, int xOffset, int yOffset,
+                                     unsigned int openWidth, Boolean ignoreState,
+                                     int activeOverride)
 {
     GC barGC;
     GC topGC;
@@ -161,13 +179,21 @@ static void DrawOpenIconBar (ClientData *pcd, int xOffset, int yOffset)
     int barBottom;
     Boolean isActive;
 
-    if (!pcd->pSD->showOpenWindowIcons ||
-	(pcd->clientState == MINIMIZED_STATE))
+    if (!ignoreState &&
+	(!pcd->pSD->showOpenWindowIcons ||
+	 (pcd->clientState == MINIMIZED_STATE)))
     {
 	return;
     }
 
-    isActive = (wmGD.keyboardFocus == pcd);
+    if (activeOverride < 0)
+    {
+	isActive = (wmGD.keyboardFocus == pcd);
+    }
+    else
+    {
+	isActive = (activeOverride != 0);
+    }
     barGC = GetOpenIconBarGC(pcd, isActive);
     if (!barGC)
     {
@@ -175,7 +201,7 @@ static void DrawOpenIconBar (ClientData *pcd, int xOffset, int yOffset)
     }
 
     barW = OPEN_ICON_BAR_WIDTH;
-    barX = xOffset + ICON_OPEN_WIDTH(pcd) - barW;
+    barX = xOffset + (int)openWidth - barW;
     barY = yOffset + (ICON_HEIGHT(pcd) / 4);
     barH = (unsigned int) (ICON_HEIGHT(pcd) / 2);
     gapX = barX - OPEN_ICON_BAR_GAP;
@@ -207,6 +233,183 @@ static void DrawOpenIconBar (ClientData *pcd, int xOffset, int yOffset)
 	       barX, barBottom, barRight, barBottom);
     XDrawLine (DISPLAY, ICON_FRAME_WIN(pcd), botGC,
 	       barRight, barY, barRight, barBottom);
+}
+
+static void DrawOpenIconBar (ClientData *pcd, int xOffset, int yOffset)
+{
+    DrawOpenIconBarInternal(pcd, xOffset, yOffset,
+                            ICON_OPEN_WIDTH(pcd), False, -1);
+}
+
+static IconBlinkData *FindIconBlink (ClientData *pcd)
+{
+    IconBlinkData *cur = iconBlinkList;
+    while (cur)
+    {
+	if (cur->pCD == pcd)
+	{
+	    return cur;
+	}
+	cur = cur->next;
+    }
+    return NULL;
+}
+
+static void RemoveIconBlink (IconBlinkData *blink)
+{
+    IconBlinkData **pp = &iconBlinkList;
+    while (*pp)
+    {
+	if (*pp == blink)
+	{
+	    *pp = blink->next;
+	    if (blink->timerId)
+	    {
+		XtRemoveTimeOut(blink->timerId);
+	    }
+	    XtFree((char *)blink);
+	    return;
+	}
+	pp = &(*pp)->next;
+    }
+}
+
+static void ShowMinimizeBlinkBar (ClientData *pcd, Boolean active)
+{
+    int xOffset;
+    int yOffset;
+
+    if (!ICON_FRAME_WIN(pcd))
+    {
+	return;
+    }
+
+    if (P_ICON_BOX(pcd))
+    {
+	xOffset = IB_MARGIN_WIDTH;
+	yOffset = IB_MARGIN_HEIGHT;
+    }
+    else
+    {
+	xOffset = 0;
+	yOffset = 0;
+    }
+
+    /* Use parent-relative background so the gap looks like open icons. */
+    XSetWindowBackgroundPixmap (DISPLAY, ICON_FRAME_WIN(pcd),
+				ParentRelative);
+    DrawOpenIconBarInternal(pcd, xOffset, yOffset,
+                            ICON_WIDTH(pcd) + OPEN_ICON_BAR_WIDTH + OPEN_ICON_BAR_GAP,
+                            True, active ? 1 : 0);
+    XSync(DISPLAY, False);
+}
+
+static void MinimizeBlinkTimeout (XtPointer client_data, XtIntervalId *id)
+{
+    IconBlinkData *blink = (IconBlinkData *)client_data;
+
+    if (!blink || !blink->pCD)
+    {
+        return;
+    }
+
+    blink->timerId = 0;
+
+    if (blink->pCD->clientState != MINIMIZED_STATE ||
+	!ClientInWorkspace(blink->pCD->pSD->pActiveWS, blink->pCD))
+    {
+	IconExposureProc(blink->pCD, True);
+	if (blink->resized)
+	{
+	    XResizeWindow(DISPLAY, ICON_FRAME_WIN(blink->pCD),
+			  blink->restoreWidth, blink->restoreHeight);
+	}
+	RemoveIconBlink(blink);
+	return;
+    }
+
+    if (blink->remainingToggles <= 0)
+    {
+	IconExposureProc(blink->pCD, True);
+	if (blink->resized)
+	{
+	    XResizeWindow(DISPLAY, ICON_FRAME_WIN(blink->pCD),
+			  blink->restoreWidth, blink->restoreHeight);
+	}
+	RemoveIconBlink(blink);
+	return;
+    }
+
+    blink->showing = !blink->showing;
+    ShowMinimizeBlinkBar(blink->pCD, blink->showing);
+    blink->remainingToggles--;
+
+    blink->timerId = XtAppAddTimeOut(wmGD.mwmAppContext,
+				     kMinimizeBlinkIntervalMs,
+				     MinimizeBlinkTimeout,
+				     (XtPointer)blink);
+}
+
+void StartMinimizeIconBlink (ClientData *pcd)
+{
+    IconBlinkData *blink;
+    XWindowAttributes attr;
+    unsigned int openWidth;
+
+    if (!pcd || !ICON_FRAME_WIN(pcd))
+    {
+	return;
+    }
+
+    if (!ClientInWorkspace(pcd->pSD->pActiveWS, pcd))
+    {
+	return;
+    }
+
+    openWidth = ICON_WIDTH(pcd) + OPEN_ICON_BAR_WIDTH + OPEN_ICON_BAR_GAP;
+
+    blink = FindIconBlink(pcd);
+    if (blink)
+    {
+	if (blink->timerId)
+	{
+	    XtRemoveTimeOut(blink->timerId);
+	}
+	blink->remainingToggles = kMinimizeBlinkToggles;
+	blink->showing = False;
+    }
+    else
+    {
+	blink = (IconBlinkData *)XtMalloc(sizeof(IconBlinkData));
+	blink->pCD = pcd;
+	blink->remainingToggles = kMinimizeBlinkToggles;
+	blink->showing = False;
+	blink->timerId = 0;
+	blink->restoreWidth = ICON_WIDTH(pcd);
+	blink->restoreHeight = ICON_HEIGHT(pcd);
+	blink->resized = False;
+	blink->next = iconBlinkList;
+	iconBlinkList = blink;
+    }
+
+    if (!P_ICON_BOX(pcd) && XGetWindowAttributes(DISPLAY, ICON_FRAME_WIN(pcd), &attr))
+    {
+	blink->restoreWidth = (unsigned int)attr.width;
+	blink->restoreHeight = (unsigned int)attr.height;
+	if (attr.width != (int)openWidth)
+	{
+	    XResizeWindow(DISPLAY, ICON_FRAME_WIN(pcd), openWidth, attr.height);
+	    blink->resized = True;
+	}
+    }
+
+    ShowMinimizeBlinkBar(pcd, True);
+    blink->showing = True;
+
+    blink->timerId = XtAppAddTimeOut(wmGD.mwmAppContext,
+				     kMinimizeBlinkIntervalMs,
+				     MinimizeBlinkTimeout,
+				     (XtPointer)blink);
 }
 
 

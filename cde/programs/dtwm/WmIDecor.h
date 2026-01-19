@@ -53,5 +53,5 @@ extern void ReparentIconWindow (ClientData *pcd, int xOffset, int yOffset);
 extern void ShowActiveIcon (ClientData *pcd);
 extern void ShowActiveIconText (ClientData *pcd);
 extern void ShowInactiveIcon (ClientData *pcd, Boolean refresh);
-
+extern void StartMinimizeIconBlink (ClientData *pcd);
 

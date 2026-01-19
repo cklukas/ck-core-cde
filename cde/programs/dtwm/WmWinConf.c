@@ -1572,7 +1572,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			{
 			    CvtIconPlaceToPosition (pIPD, place,
 			    			&tmpX, &tmpY);
-	    		    if( (CheckIconBoxSize (P_ICON_BOX(pcd))) &&
+			    if( (CheckIconBoxSize (P_ICON_BOX(pcd))) &&
 				(CheckVisualPlace(pcd, tmpX, tmpY)))
 			    {
 				/*
