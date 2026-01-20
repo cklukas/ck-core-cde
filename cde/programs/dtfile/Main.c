@@ -287,7 +287,7 @@ static ApplicationArgs application_args;
 static void ErrorHandler(
                         Display *disp,
                         XErrorEvent *event) ;
-static void ToolkitErrorHandler(
+_X_NORETURN static void ToolkitErrorHandler(
                         char *message) ;
 static void Usage(
                         char **argv) ;
@@ -1872,7 +1872,7 @@ ErrorHandler(
 
 }
 
-static void
+_X_NORETURN static void
 ToolkitErrorHandler(
         char *message )
 {
@@ -3827,8 +3827,9 @@ GetNewView(
 
       /* we want to default for the toolboxes (i.e. Application Manager) to
        * look different from a normal File Manager view.  Let's turn off
-       * the iconic_path, current_directory, and status_line.
+       * the shelf, iconic_path, current_directory, and status_line.
        */
+      file_mgr_data->show_shelf = False;
       file_mgr_data->show_iconic_path = False;
       file_mgr_data->show_current_dir = False;
 /*
@@ -3836,6 +3837,7 @@ GetNewView(
 */
 
       preferences_data = (PreferencesData *)file_mgr_data->preferences->data;
+      preferences_data->show_shelf = file_mgr_data->show_shelf;
       preferences_data->show_iconic_path = file_mgr_data->show_iconic_path;
       preferences_data->show_current_dir = file_mgr_data->show_current_dir;
       preferences_data->show_status_line = file_mgr_data->show_status_line;

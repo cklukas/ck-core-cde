@@ -1042,6 +1042,12 @@ $ Messages 34-37 are obsolete
 $ Messages 38-41 are the text and mnemonic for the File.GoHome menu option
 38 Go Home
 41 H
+$ Messages 200-201 are the text and mnemonic for the File.AddToShelf menu option
+200 Add to Shelf
+201 A
+$ Messages 202-203 are the text and mnemonic for the View.Mounts menu option
+202 Mounts...
+203 M
 $ Messages 42-47 are obsolete
 42 Up
 46 New
@@ -1336,6 +1342,7 @@ $ Messages 2-20 and 23-29 are labels for the Set Preferences dialog
 36 Text Path
 37 Message Line
 38 By Extra Large Icons
+39 Shelf
 
 
 $set 24
@@ -1797,6 +1804,28 @@ $ Message 24 is the label for the virtual filesystem entries count
 24 Virtual filesystem entries:
 $ Message 25 is the label for the metadata size row
 25 Metadata size (dirs/special/symlinks):
+
+$set 40
+$ ****** Shelf ********
+1 Add to Shelf
+2 Add %d selected items to the Shelf?
+3 Open
+4 Open New View
+5 Remove from Shelf
+6 Move to Current Directory
+7 Copy to Current Directory
+8 Link to Current Directory
+
+$set 41
+$ ****** Mounts ********
+1 Mounts
+2 File system:
+3 Device:
+4 Size:
+5 Free:
+6 Don't show this mountpoint on Shelf
+7 Open
+8 Close
 
 $set 99
 $ ****** Version Information ********

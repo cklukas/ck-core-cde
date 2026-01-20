@@ -95,14 +95,17 @@
 #include "Main.h"
 #include "Help.h"
 #include "SharedMsgs.h"
+#include "Shelf.h"
+#include "Mounts.h"
 
+#include <stdarg.h>
 
 #define INDICATOR_TIME 12
 
 #if defined(ADD_SHOW_TRASH)
-static int menuItemCount = 52;
+static int menuItemCount = 54;
 #else
-static int menuItemCount = 51;
+static int menuItemCount = 53;
 #endif
 static MenuDesc * mainMenu = NULL;
 static Widget * actionsPaneId = NULL;
@@ -137,6 +140,14 @@ static void RestoreMenuSensitivity(
                         XtPointer client_data,
                         XtPointer call_data) ;
 static void TerminalCWD (
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data) ;
+void AddToShelfMenuCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data) ;
+void AddToShelfPopupCB(
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data) ;
@@ -254,6 +265,15 @@ CreateMenu(
       mainMenu[j].helpData = HELP_FILE_MENU_STR;
       mainMenu[j].name = "changeTo";
       mainMenu[j++].activateCallback = ShowChangeDirDialog;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].label = GETMESSAGE(20, 200, "Add to Shelf");
+      mainMenu[j].label = XtNewString(mainMenu[j].label);
+      mainMenu[j].mnemonic = GETMESSAGE(20, 201, "A");
+      mainMenu[j].mnemonic = XtNewString(mainMenu[j].mnemonic);
+      mainMenu[j].helpData = HELP_FILE_MENU_STR;
+      mainMenu[j].name = "addToShelf";
+      mainMenu[j++].activateCallback = AddToShelfMenuCB;
 
       findBtn = &(mainMenu[j].widget);
       mainMenu[j].type = MENU_BUTTON;
@@ -476,6 +496,15 @@ CreateMenu(
       mainMenu[j].helpData = HELP_PREFERENCES_COMMAND_STR;
       mainMenu[j].name = "setViewOptions";
       mainMenu[j++].activateCallback = ShowPreferencesDialog;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].label = GETMESSAGE(20, 202, "Mounts...");
+      mainMenu[j].label = XtNewString(mainMenu[j].label);
+      mainMenu[j].mnemonic = GETMESSAGE(20, 203, "M");
+      mainMenu[j].mnemonic = XtNewString(mainMenu[j].mnemonic);
+      mainMenu[j].helpData = HELP_VIEW_MENU_STR;
+      mainMenu[j].name = "mounts";
+      mainMenu[j++].activateCallback = ShowMountsDialog;
 
       defaultEnvBtn = &(mainMenu[j].widget);
       mainMenu[j].type = MENU_BUTTON;
@@ -1621,11 +1650,11 @@ RestoreMenuSensitivity(
  *
  ************************************************************************/ 
 
-static void 
+static void
 TerminalCWD (
-     Widget w,
-     XtPointer client_data,
-     XtPointer call_data)
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data)
 {
    FileMgrRec * file_mgr_rec;
    DialogData * dialog_data;
@@ -1653,4 +1682,279 @@ TerminalCWD (
    XtFree(pwd_host);
    XtFree(pwd_dir);
 
+}
+
+typedef struct
+{
+   FileMgrRec *file_mgr_rec;
+   FileMgrData *file_mgr_data;
+   int count;
+   char **paths;
+} ShelfAddData;
+
+static void
+ShelfLog(const char *fmt, ...)
+{
+   va_list ap;
+
+   if (getenv("DTFILE_SHELF_DEBUG") == NULL)
+      return;
+
+   fprintf(stderr, "dtfile-shelf: ");
+   va_start(ap, fmt);
+   vfprintf(stderr, fmt, ap);
+   va_end(ap);
+   fflush(stderr);
+}
+
+static void
+ShelfAddDataFree(ShelfAddData *data)
+{
+   int i;
+
+   if (data == NULL)
+      return;
+
+   if (data->paths)
+   {
+      for (i = 0; i < data->count; i++)
+         XtFree(data->paths[i]);
+      XtFree((char *)data->paths);
+   }
+   XtFree((char *)data);
+}
+
+static void
+ShelfAddApply(ShelfAddData *data)
+{
+   int i;
+
+   if (data == NULL)
+      return;
+
+   ShelfInit();
+   for (i = 0; i < data->count; i++)
+   {
+      int slot = ShelfNextEmptySlot();
+      ShelfLog("ShelfAddApply: slot %d path=%s\n", slot,
+               data->paths[i] ? data->paths[i] : "(null)");
+      ShelfSetSlot(slot, data->paths[i]);
+   }
+
+   ShelfRequestRebuild(data->file_mgr_rec ? data->file_mgr_rec->shell : NULL);
+}
+
+static char *
+ShelfBuildFullPath(FileViewData *file_view_data)
+{
+   DirectorySet *directory_set;
+   const char *dir_name;
+   const char *file_name;
+   size_t len;
+   char *path;
+
+   if (file_view_data == NULL || file_view_data->file_data == NULL)
+      return NULL;
+
+   directory_set = (DirectorySet *) file_view_data->directory_set;
+   if (directory_set == NULL || directory_set->name == NULL)
+      return NULL;
+
+   dir_name = directory_set->name;
+   file_name = file_view_data->file_data->file_name;
+   if (file_name == NULL)
+      return NULL;
+
+   if (strcmp(file_name, ".") == 0)
+      return XtNewString(dir_name);
+
+   len = strlen(dir_name);
+   path = (char *)XtMalloc(len + strlen(file_name) + 2);
+   strcpy(path, dir_name);
+   if (len == 0 || path[len - 1] != '/')
+      strcat(path, "/");
+   strcat(path, file_name);
+
+   return path;
+}
+
+static void
+ShelfAddConfirmCancel(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data)
+{
+   (void) w;
+   (void) call_data;
+   ShelfAddDataFree((ShelfAddData *) client_data);
+}
+
+static void
+ShelfAddConfirmOk(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data)
+{
+   (void) w;
+   (void) call_data;
+   ShelfAddApply((ShelfAddData *) client_data);
+   ShelfAddDataFree((ShelfAddData *) client_data);
+}
+
+static void
+AddToShelfWithConfirm(
+        FileMgrRec *file_mgr_rec,
+        FileMgrData *file_mgr_data,
+        char **paths,
+        int count)
+{
+   ShelfAddData *data;
+   int i;
+   int valid_count = 0;
+
+   if (paths != NULL && count > 0)
+   {
+      for (i = 0; i < count; i++)
+      {
+         if (paths[i] && *paths[i])
+         {
+            paths[valid_count++] = paths[i];
+         }
+         else if (paths[i])
+         {
+            XtFree(paths[i]);
+         }
+      }
+   }
+   count = valid_count;
+
+   DPRINTF(("AddToShelfWithConfirm: count=%d\n", count));
+   ShelfLog("AddToShelfWithConfirm: count=%d\n", count);
+
+   if (count <= 0)
+   {
+      XtFree((char *)paths);
+      return;
+   }
+
+   data = (ShelfAddData *)XtCalloc(1, sizeof(ShelfAddData));
+   data->file_mgr_rec = file_mgr_rec;
+   data->file_mgr_data = file_mgr_data;
+   data->count = count;
+   data->paths = paths;
+
+   if (count == 1)
+   {
+      ShelfAddApply(data);
+      ShelfAddDataFree(data);
+      return;
+   }
+
+   {
+      char *title;
+      char *message;
+      char buf[64];
+      const char *tmpl;
+
+      title = XtNewString(GETMESSAGE(40, 1, "Add to Shelf"));
+      tmpl = GETMESSAGE(40, 2, "Add %d selected items to the Shelf?");
+      snprintf(buf, sizeof(buf), "%d", count);
+      message = (char *)XtMalloc(strlen(tmpl) + strlen(buf) + 1);
+      sprintf(message, tmpl, count);
+
+      _DtMessageDialog(file_mgr_rec->shell, title, message, NULL, TRUE,
+                       ShelfAddConfirmCancel, ShelfAddConfirmOk, NULL,
+                       HelpRequestCB, False, QUESTION_DIALOG);
+
+      XtFree(title);
+      XtFree(message);
+   }
+}
+
+void
+AddToShelfMenuCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data)
+{
+   FileMgrRec *file_mgr_rec;
+   DialogData *dialog_data;
+   FileMgrData *file_mgr_data;
+   char **paths;
+   int i;
+   int count;
+   Arg args[1];
+   Widget mbar;
+
+   (void) call_data;
+   (void) client_data;
+
+   mbar = XmGetPostedFromWidget(XtParent(w));
+   XtSetArg(args[0], XmNuserData, &file_mgr_rec);
+   XtGetValues(mbar, args, 1);
+   if (file_mgr_rec == NULL)
+      return;
+
+   dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
+   if (dialog_data == NULL)
+      return;
+
+   file_mgr_data = (FileMgrData *) dialog_data->data;
+   if (file_mgr_data == NULL || file_mgr_data->selected_file_count <= 0)
+      return;
+
+   count = file_mgr_data->selected_file_count;
+   paths = (char **)XtMalloc(sizeof(char *) * count);
+
+   for (i = 0; i < count; i++)
+      paths[i] = ShelfBuildFullPath(file_mgr_data->selection_list[i]);
+
+   AddToShelfWithConfirm(file_mgr_rec, file_mgr_data, paths, count);
+}
+
+void
+AddToShelfPopupCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data)
+{
+   FileViewData *file_view_data;
+   DirectorySet *directory_set;
+   FileMgrData *file_mgr_data;
+   FileMgrRec *file_mgr_rec;
+   char **paths;
+   int i;
+   int count;
+
+   (void) w;
+   (void) call_data;
+
+   file_view_data = (FileViewData *) client_data;
+   if (file_view_data == NULL)
+      return;
+
+   directory_set = (DirectorySet *) file_view_data->directory_set;
+   if (directory_set == NULL || directory_set->file_mgr_data == NULL)
+      return;
+
+   file_mgr_data = (FileMgrData *) directory_set->file_mgr_data;
+   file_mgr_rec = (FileMgrRec *) file_mgr_data->file_mgr_rec;
+   if (file_mgr_rec == NULL)
+      return;
+
+   if (file_mgr_data->selected_file_count > 1)
+   {
+      count = file_mgr_data->selected_file_count;
+      paths = (char **)XtMalloc(sizeof(char *) * count);
+      for (i = 0; i < count; i++)
+         paths[i] = ShelfBuildFullPath(file_mgr_data->selection_list[i]);
+   }
+   else
+   {
+      count = 1;
+      paths = (char **)XtMalloc(sizeof(char *) * count);
+      paths[0] = ShelfBuildFullPath(file_view_data);
+   }
+
+   AddToShelfWithConfirm(file_mgr_rec, file_mgr_data, paths, count);
 }

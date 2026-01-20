@@ -93,6 +93,7 @@ typedef struct
    Dimension     width;
    Dimension     height;
 
+   Boolean show_shelf;
    Boolean show_iconic_path;
    Boolean show_current_dir;
    Boolean show_status_line;
@@ -118,6 +119,7 @@ typedef struct
 typedef struct
 {
    Widget shell;
+   Widget show_shelf;
    Widget show_iconic_path;
    Widget show_current_dir;
    Widget show_status_line;

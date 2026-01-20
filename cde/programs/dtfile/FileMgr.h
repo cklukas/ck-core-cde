@@ -253,6 +253,7 @@ typedef struct
    char * helpVol;
    Boolean toolbox;
    Boolean dropSite;
+   Boolean shelfDropSite;
    Boolean IsTrashCan;
 
    int             directory_count;
@@ -265,6 +266,7 @@ typedef struct
    char ** selection_table;
    int selected_file_count;
 
+   Boolean       show_shelf;
    Boolean       show_iconic_path;
    Boolean       show_current_dir;
    Boolean       show_status_line;
@@ -325,6 +327,9 @@ typedef struct
    Widget main;
    Widget menu;
    Widget header_frame;
+   Widget shelf_frame;
+   Widget shelf_popup;
+   XtPointer shelf_popup_data;
    Widget header_separator;
    Widget iconic_path_da;
    Widget current_directory_frame;
@@ -359,7 +364,7 @@ typedef struct
    Widget menu;
    Widget title;
    Widget wsPopup[6];
-   Widget objPopup[6];
+   Widget objPopup[7];
    Widget trash_objPopup[2];
    Widget action_separator;
 } FileMgrPopup;
@@ -460,12 +465,12 @@ typedef struct
 
 
 
-#define FM_POPUP_CHILDREN    17
-#define FM_POPUP_CHILDREN_NA 16
+#define FM_POPUP_CHILDREN    18
+#define FM_POPUP_CHILDREN_NA 17
 
 #define WS_BTNS              6
-#define OBJ_BTNS             6
-#define OBJ_BTNS_NA          5
+#define OBJ_BTNS             7
+#define OBJ_BTNS_NA          6
 #define TRASH_OBJ_BTNS       2
 
 #define BTN_PROPERTIES       0
@@ -481,7 +486,8 @@ typedef struct
 #define BTN_STORAGE_SIZE     1
 #define BTN_PUTON            2
 #define BTN_TRASH            3
-#define BTN_HELP             4
+#define BTN_ADD_TO_SHELF     4
+#define BTN_HELP             5
 
 /* trash object buttons */
 #define BTN_RESTORE          0

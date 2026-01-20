@@ -340,11 +340,27 @@ Create(
    group_form = XmCreateForm (headers_frame, "group_form", args, 0);
    XtManageChild (group_form);
 
-   label_string = XmStringCreateLocalized ((GETMESSAGE(23,24, "Iconic Path")));
+   label_string = XmStringCreateLocalized ((GETMESSAGE(23,39, "Shelf")));
    n = 0;
    XtSetArg (args[n], XmNlabelString, label_string);		n++;
    XtSetArg (args[n], XmNtopAttachment, XmATTACH_FORM);		n++;
    XtSetArg (args[n], XmNleftAttachment, XmATTACH_FORM);	n++;
+   preferences_rec->show_shelf = temp =
+      XmCreateToggleButtonGadget (group_form, "show_shelf", args, n);
+   XtManageChild (temp);
+   XmStringFree (label_string);
+   XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
+                  (XtPointer) preferences_rec);
+   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+                 HELP_PREFERENCES_HEADERS_STR);
+
+   label_string = XmStringCreateLocalized ((GETMESSAGE(23,24, "Iconic Path")));
+   n = 0;
+   XtSetArg (args[n], XmNlabelString, label_string);		n++;
+   XtSetArg (args[n], XmNtopAttachment, XmATTACH_FORM);		n++;
+   XtSetArg (args[n], XmNleftAttachment, XmATTACH_WIDGET);	n++;
+   XtSetArg (args[n], XmNleftWidget, preferences_rec->show_shelf);n++;
+   XtSetArg (args[n], XmNleftOffset, 10);                       n++;
    preferences_rec->show_iconic_path = temp =
       XmCreateToggleButtonGadget (group_form, "show_iconic_path", args, n);
    XtManageChild (temp);
@@ -1331,6 +1347,7 @@ SetValues(
        &&(PreferencesData *)trashFileMgrData->preferences->data ==
           preferences_data )
    {
+     XtSetSensitive( preferences_rec->show_shelf, False );
      XtSetSensitive( preferences_rec->show_iconic_path, False );
      XtSetSensitive( preferences_rec->show_current_dir, False );
      XtSetSensitive( preferences_rec->show_status_line, False );
@@ -1338,11 +1355,17 @@ SetValues(
    }
    else if( showFilesystem )
    {
+     XtSetSensitive( preferences_rec->show_shelf, True );
      XtSetSensitive( preferences_rec->show_iconic_path, True );
      XtSetSensitive( preferences_rec->show_current_dir, True );
      XtSetSensitive( preferences_rec->show_status_line, True );
      XtSetSensitive( preferences_rec->random_on, True );
 
+
+     if (preferences_data->show_shelf)
+       XtSetValues (preferences_rec->show_shelf, true_args, 1);
+     else
+       XtSetValues (preferences_rec->show_shelf, false_args, 1);
 
      if (preferences_data->show_iconic_path)
        XtSetValues (preferences_rec->show_iconic_path, true_args, 1);
@@ -1361,6 +1384,7 @@ SetValues(
    }
    else
    {
+     XtSetSensitive( preferences_rec->show_shelf, False );
      XtSetSensitive( preferences_rec->show_iconic_path, False );
      XtSetSensitive( preferences_rec->show_current_dir, False );
      XtSetSensitive( preferences_rec->show_status_line, False );
@@ -1446,6 +1470,7 @@ ResetCallback(
    preferences_data->order = ORDER_BY_ALPHABETICAL;
    preferences_data->direction = DIRECTION_ASCENDING;
    preferences_data->positionEnabled = RANDOM_OFF;
+   preferences_data->show_shelf = True;
    preferences_data->show_iconic_path = True;
    preferences_data->show_current_dir = True;
    preferences_data->show_status_line = True;
@@ -1770,6 +1795,8 @@ GetPreferencesValues(
    XtGetValues (preferences_rec->random_off, args, 1);
    if (set) preferences_data->positionEnabled = RANDOM_OFF;
 
+   XtGetValues (preferences_rec->show_shelf, args, 1);
+   preferences_data->show_shelf = set;
    XtGetValues (preferences_rec->show_iconic_path, args, 1);
    preferences_data->show_iconic_path = set;
    XtGetValues (preferences_rec->show_current_dir, args, 1);

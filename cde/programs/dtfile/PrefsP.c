@@ -203,6 +203,7 @@ PreferencesChange(
        file_mgr_data->order != preferences_data->order		||
        file_mgr_data->direction != preferences_data->direction  ||
        file_mgr_data->positionEnabled != preferences_data->positionEnabled ||
+       file_mgr_data->show_shelf != preferences_data->show_shelf ||
        file_mgr_data->show_iconic_path != preferences_data->show_iconic_path ||
        file_mgr_data->show_current_dir != preferences_data->show_current_dir ||
        file_mgr_data->show_status_line != preferences_data->show_status_line)
@@ -262,6 +263,7 @@ PreferencesChange(
       file_mgr_data->view_tree = preferences_data->view_tree;
       file_mgr_data->order = preferences_data->order;
       file_mgr_data->direction = preferences_data->direction;
+      file_mgr_data->show_shelf = preferences_data->show_shelf;
       file_mgr_data->show_iconic_path = preferences_data->show_iconic_path;
       file_mgr_data->show_current_dir = preferences_data->show_current_dir;
       file_mgr_data->show_status_line = preferences_data->show_status_line;

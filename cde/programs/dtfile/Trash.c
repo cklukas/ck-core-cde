@@ -1163,12 +1163,12 @@ TrashUpdateWindowIcon( void )
       XmGetColors (XtScreen (file_mgr_rec->main), colormap, background,
                    &foreground, &top_shadow, &bottom_shadow, &select);
 
-      pixmap = XmGetPixmap (XtScreen (file_mgr_rec->main), icon_name,
+      pixmap = XmGetPixmap (XtScreen (file_mgr_rec->main), (char *)icon_name,
                             foreground, background);
       if (pixmap != XmUNSPECIFIED_PIXMAP)
          *icon_ptr = pixmap;
 
-      pixmap = _DtGetMask (XtScreen (file_mgr_rec->main), icon_name);
+      pixmap = _DtGetMask (XtScreen (file_mgr_rec->main), (char *)icon_name);
       if (pixmap != XmUNSPECIFIED_PIXMAP)
          *mask_ptr = pixmap;
    }

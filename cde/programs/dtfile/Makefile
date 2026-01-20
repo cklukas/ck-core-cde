@@ -128,7 +128,9 @@ am_dtfile_OBJECTS = dtfile-ChangeDir.$(OBJEXT) \
 	dtfile-FindP.$(OBJEXT) dtfile-Help.$(OBJEXT) \
 	dtfile-HelpCB.$(OBJEXT) dtfile-HelpP.$(OBJEXT) \
 	dtfile-IconWindow.$(OBJEXT) dtfile-IconicPath.$(OBJEXT) \
-	dtfile-Main.$(OBJEXT) dtfile-Menu.$(OBJEXT) \
+	dtfile-Shelf.$(OBJEXT) dtfile-Mounts.$(OBJEXT) \
+	dtfile-Main.$(OBJEXT) \
+	dtfile-Menu.$(OBJEXT) \
 	dtfile-MkDir.$(OBJEXT) dtfile-ModAttr.$(OBJEXT) \
 	dtfile-ModAttrP.$(OBJEXT) dtfile-MultiView.$(OBJEXT) \
 	dtfile-OverWrite.$(OBJEXT) dtfile-Prefs.$(OBJEXT) \
@@ -524,7 +526,7 @@ dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 FileDialog.c    FileManip.c     FileMgr.c       FileOp.c \
 		 Filter.c        FilterP.c       Find.c          FindP.c \
 		 Help.c          HelpCB.c        HelpP.c         IconWindow.c \
-		 IconicPath.c    Main.c          Menu.c          MkDir.c \
+		 IconicPath.c    Shelf.c         Mounts.c        Main.c          Menu.c          MkDir.c \
 		 ModAttr.c       ModAttrP.c      MultiView.c     OverWrite.c \
 		 Prefs.c         PrefsP.c        SharedMsgs.c    SharedProcs.c \
 		 ToolTalk.c      Trash.c         Utils.c         fsDialog.c \
@@ -1021,6 +1023,28 @@ dtfile-IconicPath.obj: IconicPath.c
 #	$(AM_V_CC)source='IconicPath.c' object='dtfile-IconicPath.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dtfile-IconicPath.obj `if test -f 'IconicPath.c'; then $(CYGPATH_W) 'IconicPath.c'; else $(CYGPATH_W) '$(srcdir)/IconicPath.c'; fi`
+
+dtfile-Shelf.o: Shelf.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dtfile-Shelf.o -MD -MP -MF $(DEPDIR)/dtfile-Shelf.Tpo -c -o dtfile-Shelf.o `test -f 'Shelf.c' || echo '$(srcdir)/'`Shelf.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/dtfile-Shelf.Tpo $(DEPDIR)/dtfile-Shelf.Po
+#	$(AM_V_CC)source='Shelf.c' object='dtfile-Shelf.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dtfile-Shelf.o `test -f 'Shelf.c' || echo '$(srcdir)/'`Shelf.c
+
+dtfile-Shelf.obj: Shelf.c
+dtfile-Mounts.o: Mounts.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dtfile-Mounts.o -MD -MP -MF $(DEPDIR)/dtfile-Mounts.Tpo -c -o dtfile-Mounts.o `test -f 'Mounts.c' || echo '$(srcdir)/'`Mounts.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/dtfile-Mounts.Tpo $(DEPDIR)/dtfile-Mounts.Po
+#	$(AM_V_CC)source='Mounts.c' object='dtfile-Mounts.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dtfile-Mounts.o `test -f 'Mounts.c' || echo '$(srcdir)/'`Mounts.c
+
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dtfile-Shelf.obj -MD -MP -MF $(DEPDIR)/dtfile-Shelf.Tpo -c -o dtfile-Shelf.obj `if test -f 'Shelf.c'; then $(CYGPATH_W) 'Shelf.c'; else $(CYGPATH_W) '$(srcdir)/Shelf.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/dtfile-Shelf.Tpo $(DEPDIR)/dtfile-Shelf.Po
+#	$(AM_V_CC)source='Shelf.c' object='dtfile-Shelf.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dtfile-Shelf.obj `if test -f 'Shelf.c'; then $(CYGPATH_W) 'Shelf.c'; else $(CYGPATH_W) '$(srcdir)/Shelf.c'; fi`
+
 
 dtfile-Main.o: Main.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dtfile_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dtfile-Main.o -MD -MP -MF $(DEPDIR)/dtfile-Main.Tpo -c -o dtfile-Main.o `test -f 'Main.c' || echo '$(srcdir)/'`Main.c

@@ -530,10 +530,27 @@ extern void ShowNewDirectory(
                         FileMgrData *,
                         char *,
                         char * );
+extern void ShelfRebuild(
+                        FileMgrRec *,
+                        FileMgrData * );
+extern void ShelfRebuildAll(void);
+extern void ShelfRequestRebuild(Widget widget);
 extern void ShowChangeDirDialog(
                         Widget w,
                         XtPointer client_data,
                         XtPointer callback) ;
+extern void AddToShelfMenuCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data );
+extern void AddToShelfPopupCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data );
+extern void ShowMountsDialog(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data );
 extern void CurrentDirSelected(
                         Widget w,
                         XtPointer client_data,

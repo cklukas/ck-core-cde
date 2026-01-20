@@ -36,7 +36,7 @@ dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 FileDialog.c    FileManip.c     FileMgr.c       FileOp.c \
 		 Filter.c        FilterP.c       Find.c          FindP.c \
 		 Help.c          HelpCB.c        HelpP.c         IconWindow.c \
-		 IconicPath.c    Main.c          Menu.c          MkDir.c \
+		 IconicPath.c    Shelf.c         Mounts.c        Main.c          Menu.c          MkDir.c \
 		 ModAttr.c       ModAttrP.c      MultiView.c     OverWrite.c \
 		 Prefs.c         PrefsP.c        SharedMsgs.c    SharedProcs.c \
 		 ToolTalk.c      Trash.c         Utils.c         fsDialog.c \

@@ -4751,6 +4751,12 @@ FmPopup (
            XtAddCallback(fileMgrPopup.objPopup[BTN_TRASH], XmNactivateCallback,
                          TrashFiles, (XtPointer) fileViewData);
 
+           XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_ADD_TO_SHELF],
+                                XmNactivateCallback);
+           XtAddCallback(fileMgrPopup.objPopup[BTN_ADD_TO_SHELF],
+                         XmNactivateCallback, AddToShelfPopupCB,
+                         (XtPointer) fileViewData);
+
            if( file_mgr_data->toolbox && geteuid() != root_user &&
                    access(file_mgr_data->current_directory,W_OK|X_OK) != 0)
              XtSetSensitive(fileMgrPopup.objPopup[BTN_TRASH], False);
@@ -4763,6 +4769,7 @@ FmPopup (
            XtSetSensitive(fileMgrPopup.objPopup[BTN_STORAGE_SIZE], False);
 
            XtSetSensitive(fileMgrPopup.objPopup[BTN_HELP], False);
+           XtSetSensitive(fileMgrPopup.objPopup[BTN_ADD_TO_SHELF], True);
 
            /* Set popup menu label */
            label_string = XmStringCreateLocalized ((GETMESSAGE(33, 1, "Multiple Objects")));
@@ -4822,6 +4829,12 @@ FmPopup (
             XtAddCallback(fileMgrPopup.objPopup[BTN_TRASH],
                  XmNactivateCallback, TrashFiles, (XtPointer) fileViewData);
 
+            XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_ADD_TO_SHELF],
+                                 XmNactivateCallback);
+            XtAddCallback(fileMgrPopup.objPopup[BTN_ADD_TO_SHELF],
+                 XmNactivateCallback, AddToShelfPopupCB,
+                 (XtPointer) fileViewData);
+
            if ( file_mgr_data->toolbox && geteuid() != root_user &&
                    access(file_mgr_data->current_directory,W_OK|X_OK) != 0 )
              XtSetSensitive(fileMgrPopup.objPopup[BTN_TRASH], False);
@@ -4840,6 +4853,7 @@ FmPopup (
 
             XtSetSensitive(fileMgrPopup.objPopup[BTN_PUTON], True);
             XtSetSensitive(fileMgrPopup.objPopup[BTN_HELP], True);
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_ADD_TO_SHELF], True);
 
             if (fileViewData->file_data->action_name)
                tmp_label = fileViewData->file_data->action_name;
