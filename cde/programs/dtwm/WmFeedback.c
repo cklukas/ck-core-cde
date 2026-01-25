@@ -105,6 +105,7 @@ static GC taskSwitchInactiveBorderGC = (GC)0L;
 static GC taskSwitchActiveFillGC = (GC)0L;
 static GC taskSwitchInactiveFillGC = (GC)0L;
 static GC taskSwitchBackgroundGC = (GC)0L;
+static GC taskSwitchWindowBackgroundGC = (GC)0L;
 static GC taskSwitchPinnedTitleFillGC = (GC)0L;
 static GC taskSwitchPinnedTitleTextGC = (GC)0L;
 static int taskSwitchGCscreen = -1;
@@ -287,7 +288,8 @@ EnsureTaskSwitchBorderGCs (WmScreenData *pSD)
 
     if (taskSwitchGCscreen == pSD->screen &&
         taskSwitchActiveBorderGC && taskSwitchInactiveBorderGC &&
-        taskSwitchBackgroundGC && taskSwitchPinnedTitleFillGC &&
+        taskSwitchBackgroundGC && taskSwitchWindowBackgroundGC &&
+        taskSwitchPinnedTitleFillGC &&
         taskSwitchPinnedTitleTextGC)
     {
         return;
@@ -317,6 +319,11 @@ EnsureTaskSwitchBorderGCs (WmScreenData *pSD)
     {
         XFreeGC (DISPLAY, taskSwitchBackgroundGC);
         taskSwitchBackgroundGC = (GC)0L;
+    }
+    if (taskSwitchWindowBackgroundGC)
+    {
+        XFreeGC (DISPLAY, taskSwitchWindowBackgroundGC);
+        taskSwitchWindowBackgroundGC = (GC)0L;
     }
     if (taskSwitchPinnedTitleFillGC)
     {
@@ -353,6 +360,11 @@ EnsureTaskSwitchBorderGCs (WmScreenData *pSD)
     values.background = pSD->iconAppearance.background;
     taskSwitchBackgroundGC = XCreateGC (DISPLAY, pSD->rootWindow,
                                         GCForeground | GCBackground, &values);
+
+    values.foreground = pSD->clientAppearance.background;
+    values.background = pSD->clientAppearance.background;
+    taskSwitchWindowBackgroundGC = XCreateGC (DISPLAY, pSD->rootWindow,
+                                              GCForeground | GCBackground, &values);
 
     values.foreground = pSD->clientTitleAppearance.activeBackground ?
         pSD->clientTitleAppearance.activeBackground :
@@ -401,6 +413,83 @@ FillRoundedRect (Drawable target, GC gc, int x, int y, int w, int h, int radius)
     XFillArc (DISPLAY, target, gc, x, y + h - 2 * r, (unsigned int)(2 * r), (unsigned int)(2 * r), 180 * 64, 90 * 64);
     XFillArc (DISPLAY, target, gc, x + w - 2 * r, y + h - 2 * r,
               (unsigned int)(2 * r), (unsigned int)(2 * r), 270 * 64, 90 * 64);
+}
+
+static void
+DrawThickRect (Drawable target, GC gc, int x, int y, int w, int h, int thickness)
+{
+    int t;
+    int maxT;
+
+    if (w <= 0 || h <= 0)
+        return;
+
+    maxT = (w < h ? w : h) / 2;
+    if (maxT < 1)
+        maxT = 1;
+
+    if (thickness < 1)
+        thickness = 1;
+    if (thickness > maxT)
+        thickness = maxT;
+
+    for (t = 0; t < thickness; t++)
+    {
+        XDrawRectangle (DISPLAY, target, gc,
+                        x + t, y + t, w - 1 - 2 * t, h - 1 - 2 * t);
+    }
+}
+
+static void
+DrawBeveledFrame (Drawable target, GC topGC, GC botGC,
+                  int x, int y, int w, int h,
+                  int outer, int inner, int gap)
+{
+    int t;
+    int inset;
+
+    if (w <= 0 || h <= 0)
+        return;
+    if (outer < 1)
+        outer = 1;
+    if (inner < 0)
+        inner = 0;
+    if (gap < 0)
+        gap = 0;
+
+    for (t = 0; t < outer; t++)
+    {
+        XFillRectangle (DISPLAY, target, topGC,
+                        x + t, y + t, (unsigned int)(w - 2 * t), 1);
+        XFillRectangle (DISPLAY, target, topGC,
+                        x + t, y + t, 1, (unsigned int)(h - 2 * t));
+        XFillRectangle (DISPLAY, target, botGC,
+                        x + t, y + h - 1 - t, (unsigned int)(w - 2 * t), 1);
+        XFillRectangle (DISPLAY, target, botGC,
+                        x + w - 1 - t, y + t, 1, (unsigned int)(h - 2 * t));
+    }
+
+    inset = outer + gap;
+    if (inner > 0 &&
+        w > 2 * (inset + inner) &&
+        h > 2 * (inset + inner))
+    {
+        for (t = 0; t < inner; t++)
+        {
+            XFillRectangle (DISPLAY, target, botGC,
+                            x + inset + t, y + inset + t,
+                            (unsigned int)(w - 2 * (inset + t)), 1);
+            XFillRectangle (DISPLAY, target, botGC,
+                            x + inset + t, y + inset + t,
+                            1, (unsigned int)(h - 2 * (inset + t)));
+            XFillRectangle (DISPLAY, target, topGC,
+                            x + inset + t, y + h - 1 - (inset + t),
+                            (unsigned int)(w - 2 * (inset + t)), 1);
+            XFillRectangle (DISPLAY, target, topGC,
+                            x + w - 1 - (inset + t), y + inset + t,
+                            1, (unsigned int)(h - 2 * (inset + t)));
+        }
+    }
 }
 
 /* see WmGlobal.h for index defines: */
@@ -2839,23 +2928,40 @@ PaintTaskSwitcher (WmScreenData *pSD)
             int frameY = cellY + IB_MARGIN_HEIGHT;
             int frameW = pSD->taskSwitchIconW + ICON_GRID_EXTRA(pSD);
             int frameH = pSD->taskSwitchIconH;
+            ClientData *tsCD = (pSD->taskSwitchList) ? pSD->taskSwitchList[i] : NULL;
+            Boolean isOpen = (tsCD && tsCD->clientState != MINIMIZED_STATE);
+            GC frameFillGC = (GC)0L;
 
             TaskSwitcherLog("PaintTaskSwitcher icon %d frame x=%d y=%d w=%d h=%d",
                             i, frameX, frameY, frameW, frameH);
-            if (i == pSD->taskSwitchIndex)
+            if (isOpen)
             {
-                TaskSwitcherLog("PaintTaskSwitcher icon %d frame draw active start", i);
-                FillRoundedRect (pSD->taskSwitchWin, activeFillGC,
-                                 frameX, frameY, frameW, frameH, 4);
-                TaskSwitcherLog("PaintTaskSwitcher icon %d frame draw active done", i);
+                frameFillGC = taskSwitchWindowBackgroundGC ?
+                    taskSwitchWindowBackgroundGC : inactiveFillGC;
             }
             else
             {
-                TaskSwitcherLog("PaintTaskSwitcher icon %d frame draw inactive start", i);
-                FillRoundedRect (pSD->taskSwitchWin, inactiveFillGC,
-                                 frameX, frameY, frameW, frameH, 4);
-                TaskSwitcherLog("PaintTaskSwitcher icon %d frame draw inactive done", i);
+                frameFillGC = (i == pSD->taskSwitchIndex) ?
+                    activeFillGC : inactiveFillGC;
             }
+
+            TaskSwitcherLog("PaintTaskSwitcher icon %d frame draw start", i);
+            FillRoundedRect (pSD->taskSwitchWin, frameFillGC,
+                             frameX, frameY, frameW, frameH, 4);
+            if (isOpen)
+            {
+                GC topGC = pSD->clientAppearance.inactiveTopShadowGC ?
+                    pSD->clientAppearance.inactiveTopShadowGC : inactiveBorderGC;
+                GC botGC = pSD->clientAppearance.inactiveBottomShadowGC ?
+                    pSD->clientAppearance.inactiveBottomShadowGC : inactiveBorderGC;
+                int outer = (int)FRAME_EXTERNAL_SHADOW_WIDTH;
+                int inner = (int)FRAME_INTERNAL_SHADOW_WIDTH;
+                int gap = (int)FRAME_CLIENT_SHADOW_WIDTH;
+                DrawBeveledFrame (pSD->taskSwitchWin, topGC, botGC,
+                                  frameX, frameY, frameW, frameH,
+                                  outer, inner, gap);
+            }
+            TaskSwitcherLog("PaintTaskSwitcher icon %d frame draw done", i);
 
             if (pSD->taskSwitchList && pSD->taskSwitchList[i])
             {
@@ -2905,10 +3011,22 @@ PaintTaskSwitcher (WmScreenData *pSD)
                     XmALIGNMENT_BEGINNING : XmALIGNMENT_CENTER;
 
                 TaskSwitcherLog("PaintTaskSwitcher icon %d label draw start", i);
-                FillRoundedRect (pSD->taskSwitchWin,
-                                 (i == pSD->taskSwitchIndex) ? activeFillGC : inactiveFillGC,
-                                 labelBox.x, labelBox.y,
-                                 labelBox.width, labelBox.height, 3);
+                {
+                    GC labelFillGC;
+                    if (isOpen)
+                    {
+                        labelFillGC = (i == pSD->taskSwitchIndex) ?
+                            activeFillGC : frameFillGC;
+                    }
+                    else
+                    {
+                        labelFillGC = (i == pSD->taskSwitchIndex) ?
+                            activeFillGC : inactiveFillGC;
+                    }
+                    FillRoundedRect (pSD->taskSwitchWin, labelFillGC,
+                                     labelBox.x, labelBox.y,
+                                     labelBox.width, labelBox.height, 3);
+                }
                 XmStringDraw (DISPLAY, pSD->taskSwitchWin,
                               pSD->iconAppearance.fontList,
                               labelDraw,
@@ -3088,10 +3206,23 @@ PaintTaskSwitcherIcon (WmScreenData *pSD, int index, int startX, int startY,
     XWindowAttributes attr;
     int depth;
     GC backgroundGC;
+    ClientData *tsCD = NULL;
+    Boolean isOpen = False;
+    GC frameFillGC = (GC)0L;
+    GC inactiveBorderGC = taskSwitchInactiveBorderGC ?
+        taskSwitchInactiveBorderGC : pSD->feedbackAppearance.inactiveGC;
+    GC topShadowGC = pSD->clientAppearance.inactiveTopShadowGC ?
+        pSD->clientAppearance.inactiveTopShadowGC : inactiveBorderGC;
+    GC botShadowGC = pSD->clientAppearance.inactiveBottomShadowGC ?
+        pSD->clientAppearance.inactiveBottomShadowGC : inactiveBorderGC;
 
     if (!pSD || !pSD->taskSwitchWin || index < 0 ||
         index >= pSD->taskSwitchCount)
         return;
+
+    if (pSD->taskSwitchList)
+        tsCD = pSD->taskSwitchList[index];
+    isOpen = (tsCD && tsCD->clientState != MINIMIZED_STATE);
 
     row = index / pSD->taskSwitchCols;
     col = index % pSD->taskSwitchCols;
@@ -3128,15 +3259,27 @@ PaintTaskSwitcherIcon (WmScreenData *pSD, int index, int startX, int startY,
                     (unsigned int)pSD->taskSwitchCellW,
                     (unsigned int)pSD->taskSwitchCellH);
 
-    if (index == pSD->taskSwitchIndex)
+    if (isOpen)
     {
-        FillRoundedRect (target, activeFillGC,
-                         frameXrel, frameYrel, frameW, frameH, 4);
+        frameFillGC = taskSwitchWindowBackgroundGC ?
+            taskSwitchWindowBackgroundGC : inactiveFillGC;
     }
     else
     {
-        FillRoundedRect (target, inactiveFillGC,
-                         frameXrel, frameYrel, frameW, frameH, 4);
+        frameFillGC = (index == pSD->taskSwitchIndex) ?
+            activeFillGC : inactiveFillGC;
+    }
+
+    FillRoundedRect (target, frameFillGC,
+                     frameXrel, frameYrel, frameW, frameH, 4);
+    if (isOpen)
+    {
+        int outer = (int)FRAME_EXTERNAL_SHADOW_WIDTH;
+        int inner = (int)FRAME_INTERNAL_SHADOW_WIDTH;
+        int gap = (int)FRAME_CLIENT_SHADOW_WIDTH;
+        DrawBeveledFrame (target, topShadowGC, botShadowGC,
+                          frameXrel, frameYrel, frameW, frameH,
+                          outer, inner, gap);
     }
 
     if (pSD->taskSwitchList && pSD->taskSwitchList[index])
@@ -3185,10 +3328,22 @@ PaintTaskSwitcherIcon (WmScreenData *pSD, int index, int startX, int startY,
         alignment = (textWidth >= textBox.width) ?
             XmALIGNMENT_BEGINNING : XmALIGNMENT_CENTER;
 
-        FillRoundedRect (target,
-                         (index == pSD->taskSwitchIndex) ? activeFillGC : inactiveFillGC,
-                         labelBox.x, labelBox.y,
-                         labelBox.width, labelBox.height, 3);
+        {
+            GC labelFillGC;
+            if (isOpen)
+            {
+                labelFillGC = (index == pSD->taskSwitchIndex) ?
+                    activeFillGC : frameFillGC;
+            }
+            else
+            {
+                labelFillGC = (index == pSD->taskSwitchIndex) ?
+                    activeFillGC : inactiveFillGC;
+            }
+            FillRoundedRect (target, labelFillGC,
+                             labelBox.x, labelBox.y,
+                             labelBox.width, labelBox.height, 3);
+        }
         XmStringDraw (DISPLAY, target,
                       pSD->iconAppearance.fontList,
                       labelDraw,
@@ -3229,10 +3384,23 @@ PaintTaskSwitcherIconOnly (WmScreenData *pSD, int index, int startX, int startY,
     XWindowAttributes attr;
     int depth;
     GC backgroundGC;
+    ClientData *tsCD = NULL;
+    Boolean isOpen = False;
+    GC frameFillGC = (GC)0L;
+    GC inactiveBorderGC = taskSwitchInactiveBorderGC ?
+        taskSwitchInactiveBorderGC : pSD->feedbackAppearance.inactiveGC;
+    GC topShadowGC = pSD->clientAppearance.inactiveTopShadowGC ?
+        pSD->clientAppearance.inactiveTopShadowGC : inactiveBorderGC;
+    GC botShadowGC = pSD->clientAppearance.inactiveBottomShadowGC ?
+        pSD->clientAppearance.inactiveBottomShadowGC : inactiveBorderGC;
 
     if (!pSD || !pSD->taskSwitchWin || index < 0 ||
         index >= pSD->taskSwitchCount)
         return;
+
+    if (pSD->taskSwitchList)
+        tsCD = pSD->taskSwitchList[index];
+    isOpen = (tsCD && tsCD->clientState != MINIMIZED_STATE);
 
     row = index / pSD->taskSwitchCols;
     col = index % pSD->taskSwitchCols;
@@ -3258,11 +3426,28 @@ PaintTaskSwitcherIconOnly (WmScreenData *pSD, int index, int startX, int startY,
     else
         target = pSD->taskSwitchWin;
 
-    backgroundGC = (index == pSD->taskSwitchIndex) ? activeFillGC : inactiveFillGC;
-    if (!backgroundGC)
-        backgroundGC = pSD->iconAppearance.inactiveGC;
+    if (isOpen)
+    {
+        frameFillGC = taskSwitchWindowBackgroundGC ?
+            taskSwitchWindowBackgroundGC : inactiveFillGC;
+    }
+    else
+    {
+        frameFillGC = (index == pSD->taskSwitchIndex) ?
+            activeFillGC : inactiveFillGC;
+    }
+    backgroundGC = frameFillGC ? frameFillGC : pSD->iconAppearance.inactiveGC;
     XFillRectangle (DISPLAY, target, backgroundGC, 0, 0,
                     (unsigned int)frameW, (unsigned int)iconAreaH);
+    if (isOpen)
+    {
+        int outer = (int)FRAME_EXTERNAL_SHADOW_WIDTH;
+        int inner = (int)FRAME_INTERNAL_SHADOW_WIDTH;
+        int gap = (int)FRAME_CLIENT_SHADOW_WIDTH;
+        DrawBeveledFrame (target, topShadowGC, botShadowGC,
+                          0, 0, frameW, iconAreaH,
+                          outer, inner, gap);
+    }
 
     if (pSD->taskSwitchList && pSD->taskSwitchList[index])
     {

@@ -41,6 +41,7 @@
 
 
 #define MOVE_OUTLINE_WIDTH	2
+#define ICON_SLOT_HIGHLIGHT_WIDTH 4
 
 #define CONFIG_MASK (KeyPressMask|KeyReleaseMask|ButtonPressMask|\
 			 ButtonReleaseMask|PointerMotionMask)
@@ -95,7 +96,6 @@
 #include "WmWinInfo.h"
 
 
-
 /*
  * Global Variables:
  *
@@ -118,6 +118,25 @@ static unsigned int minWidth, minHeight, maxHeight, maxWidth;
 static int marqueeX, marqueeY;	/* root coords of UL corner of are */
 static long marqueeWidth, marqueeHeight;	/* size of area */
 static unsigned int marqueeAnchor;	/* id of anchor corner */
+
+static Window iconSlotHighlightRoot = (Window)0L;
+static Window iconSlotHighlightWin = (Window)0L;
+static Pixel iconSlotHighlightPixel = (Pixel)0;
+static Pixmap iconSlotHighlightMask = (Pixmap)0L;
+static unsigned int iconSlotHighlightMaskW = 0;
+static unsigned int iconSlotHighlightMaskH = 0;
+static Boolean iconSlotHighlightVisible = False;
+static int iconSlotHighlightPlace = NO_ICON_PLACE;
+static int iconSlotHighlightX = 0;
+static int iconSlotHighlightY = 0;
+static unsigned int iconSlotHighlightWidth = 0;
+static unsigned int iconSlotHighlightHeight = 0;
+
+static void EnsureIconSlotHighlightWindows (WmScreenData *pSD);
+static void ShowIconSlotHighlight (WmScreenData *pSD, int x, int y,
+				   unsigned int width, unsigned int height);
+static void HideIconSlotHighlight (void);
+static void UpdateIconSlotHighlight (ClientData *pcd);
 static long marqueeWidth0, marqueeHeight0;	/* old size of area */
 
 static int opaqueMoveX = 0;    /* for cancel request on opaque moves */
@@ -647,6 +666,10 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 
 	/* draw outline if there is something to draw */
 	if (tmpX || tmpY) {
+	    if (wmGD.movingIcon && wmGD.iconAutoPlace)
+	    {
+		UpdateIconSlotHighlight (pcd);
+	    }
 	    FixFrameValues (pcd, &moveX, &moveY, &moveWidth, &moveHeight,
 			    FALSE /* no size checks */);
 	    if (pcd->pSD->moveOpaque)
@@ -1677,6 +1700,8 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			marqueeX, marqueeY, marqueeWidth, marqueeHeight);
     }
 
+    HideIconSlotHighlight ();
+
     /*
      * Clear configuration flags and data.
      */
@@ -1700,6 +1725,273 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
     }
 
 } /* END OF FUNCTION CompleteFrameConfig */
+
+static void
+EnsureIconSlotHighlightWindows (WmScreenData *pSD)
+{
+    XSetWindowAttributes xswa;
+    unsigned int xswamask;
+
+    if (!pSD)
+	return;
+
+    if (iconSlotHighlightRoot == pSD->rootWindow &&
+	iconSlotHighlightWin != (Window)0L &&
+	iconSlotHighlightPixel == pSD->clientAppearance.background)
+    {
+	return;
+    }
+
+    if (iconSlotHighlightWin != (Window)0L)
+    {
+	XDestroyWindow (DISPLAY, iconSlotHighlightWin);
+	iconSlotHighlightWin = (Window)0L;
+    }
+    if (iconSlotHighlightMask)
+    {
+	XFreePixmap (DISPLAY, iconSlotHighlightMask);
+	iconSlotHighlightMask = (Pixmap)0L;
+	iconSlotHighlightMaskW = 0;
+	iconSlotHighlightMaskH = 0;
+    }
+
+    xswa.override_redirect = True;
+    xswa.backing_store = NotUseful;
+    xswa.save_under = True;
+    xswa.background_pixel = pSD->clientAppearance.background;
+
+    xswamask = (CWOverrideRedirect |
+		CWBackingStore |
+		CWSaveUnder |
+		CWBackPixel);
+
+    iconSlotHighlightWin = XCreateWindow (DISPLAY, pSD->rootWindow,
+					  -10, -10, ICON_SLOT_HIGHLIGHT_WIDTH,
+					  ICON_SLOT_HIGHLIGHT_WIDTH,
+					  0,
+					  XDefaultDepth (DISPLAY, pSD->screen),
+					  CopyFromParent,
+					  CopyFromParent,
+					  xswamask, &xswa);
+
+    iconSlotHighlightRoot = pSD->rootWindow;
+    iconSlotHighlightPixel = pSD->clientAppearance.background;
+}
+
+static void
+DrawRoundedRect (Drawable d, GC gc, int x, int y, unsigned int width,
+		 unsigned int height, int radius)
+{
+    int r = radius;
+    int w = (int)width;
+    int h = (int)height;
+
+    if (w <= 0 || h <= 0)
+	return;
+    if (r < 0) r = 0;
+    if (r * 2 > w) r = w / 2;
+    if (r * 2 > h) r = h / 2;
+
+    if (r == 0)
+    {
+	XFillRectangle (DISPLAY, d, gc, x, y, width, height);
+	return;
+    }
+
+    XFillRectangle (DISPLAY, d, gc, x + r, y, (unsigned int)(w - 2 * r), height);
+    XFillRectangle (DISPLAY, d, gc, x, y + r, width, (unsigned int)(h - 2 * r));
+
+    XFillArc (DISPLAY, d, gc, x, y, (unsigned int)(2 * r), (unsigned int)(2 * r),
+	      90 * 64, 90 * 64);
+    XFillArc (DISPLAY, d, gc, x + w - 2 * r, y,
+	      (unsigned int)(2 * r), (unsigned int)(2 * r),
+	      0, 90 * 64);
+    XFillArc (DISPLAY, d, gc, x, y + h - 2 * r,
+	      (unsigned int)(2 * r), (unsigned int)(2 * r),
+	      180 * 64, 90 * 64);
+    XFillArc (DISPLAY, d, gc, x + w - 2 * r, y + h - 2 * r,
+	      (unsigned int)(2 * r), (unsigned int)(2 * r),
+	      270 * 64, 90 * 64);
+}
+
+static void
+UpdateIconSlotHighlightMask (WmScreenData *pSD, unsigned int width,
+			     unsigned int height)
+{
+    Pixmap mask;
+    GC gc;
+    XGCValues values;
+    int radius;
+    unsigned int innerW;
+    unsigned int innerH;
+    int innerRadius;
+
+    if (!pSD || width == 0 || height == 0)
+	return;
+
+    if (!wmGD.hasShape)
+	return;
+
+    if (iconSlotHighlightMask &&
+	iconSlotHighlightMaskW == width &&
+	iconSlotHighlightMaskH == height)
+    {
+	return;
+    }
+
+    if (iconSlotHighlightMask)
+    {
+	XFreePixmap (DISPLAY, iconSlotHighlightMask);
+	iconSlotHighlightMask = (Pixmap)0L;
+    }
+
+    mask = XCreatePixmap (DISPLAY, pSD->rootWindow, width, height, 1);
+    if (!mask)
+	return;
+
+    values.foreground = 0;
+    values.background = 0;
+    gc = XCreateGC (DISPLAY, mask, GCForeground | GCBackground, &values);
+    XFillRectangle (DISPLAY, mask, gc, 0, 0, width, height);
+
+    radius = (int)(width * 5 / 100);
+    if (radius < 2) radius = 2;
+
+    XSetForeground (DISPLAY, gc, 1);
+    DrawRoundedRect (mask, gc, 0, 0, width, height, radius);
+
+    innerW = (width > 2 * ICON_SLOT_HIGHLIGHT_WIDTH) ?
+	width - 2 * ICON_SLOT_HIGHLIGHT_WIDTH : 0;
+    innerH = (height > 2 * ICON_SLOT_HIGHLIGHT_WIDTH) ?
+	height - 2 * ICON_SLOT_HIGHLIGHT_WIDTH : 0;
+    if (innerW > 0 && innerH > 0)
+    {
+	innerRadius = radius - ICON_SLOT_HIGHLIGHT_WIDTH;
+	if (innerRadius < 0) innerRadius = 0;
+	XSetForeground (DISPLAY, gc, 0);
+	DrawRoundedRect (mask, gc, ICON_SLOT_HIGHLIGHT_WIDTH,
+			 ICON_SLOT_HIGHLIGHT_WIDTH, innerW, innerH,
+			 innerRadius);
+    }
+
+    XFreeGC (DISPLAY, gc);
+
+    iconSlotHighlightMask = mask;
+    iconSlotHighlightMaskW = width;
+    iconSlotHighlightMaskH = height;
+    XShapeCombineMask (DISPLAY, iconSlotHighlightWin, ShapeBounding,
+		       0, 0, iconSlotHighlightMask, ShapeSet);
+}
+
+static void
+ShowIconSlotHighlight (WmScreenData *pSD, int x, int y,
+		       unsigned int width, unsigned int height)
+{
+    if (width == 0 || height == 0)
+    {
+	HideIconSlotHighlight ();
+	return;
+    }
+
+    EnsureIconSlotHighlightWindows (pSD);
+    UpdateIconSlotHighlightMask (pSD, width, height);
+
+    if (iconSlotHighlightVisible &&
+	x == iconSlotHighlightX && y == iconSlotHighlightY &&
+	width == iconSlotHighlightWidth && height == iconSlotHighlightHeight)
+    {
+	return;
+    }
+
+    XMoveResizeWindow (DISPLAY, iconSlotHighlightWin, x, y, width, height);
+    XMapWindow (DISPLAY, iconSlotHighlightWin);
+
+    iconSlotHighlightVisible = True;
+    iconSlotHighlightX = x;
+    iconSlotHighlightY = y;
+    iconSlotHighlightWidth = width;
+    iconSlotHighlightHeight = height;
+}
+
+static void
+HideIconSlotHighlight (void)
+{
+    if (!iconSlotHighlightVisible)
+	return;
+
+    XUnmapWindow (DISPLAY, iconSlotHighlightWin);
+
+    iconSlotHighlightVisible = False;
+    iconSlotHighlightPlace = NO_ICON_PLACE;
+    iconSlotHighlightX = 0;
+    iconSlotHighlightY = 0;
+    iconSlotHighlightWidth = 0;
+    iconSlotHighlightHeight = 0;
+}
+
+static void
+UpdateIconSlotHighlight (ClientData *pcd)
+{
+    IconPlacementData *pIPD;
+    int centerX;
+    int centerY;
+    int place;
+    int iconX;
+    int iconY;
+    int cellX;
+    int cellY;
+    unsigned int cellW;
+    unsigned int cellH;
+    Boolean inIconBox;
+
+    if (!pcd || !wmGD.movingIcon || !wmGD.iconAutoPlace)
+    {
+	HideIconSlotHighlight ();
+	return;
+    }
+
+    inIconBox = (pcd->pSD->useIconBox && P_ICON_BOX(pcd));
+    if (inIconBox)
+    {
+	HideIconSlotHighlight ();
+	return;
+    }
+
+    pIPD = &(ACTIVE_WS->IPData);
+    centerX = moveX + (int)(ICON_WIDTH(pcd) / 2);
+    centerY = moveY + (int)(ICON_HEIGHT(pcd) / 2);
+    place = CvtIconPositionToPlace (pIPD, centerX, centerY);
+
+    if (place != ICON_PLACE(pcd) && pIPD->placeList[place].pCD)
+    {
+	place = FindIconPlace (pcd, pIPD, centerX, centerY);
+    }
+
+    if (place == NO_ICON_PLACE)
+    {
+	HideIconSlotHighlight ();
+	return;
+    }
+
+    if (place == iconSlotHighlightPlace)
+	return;
+
+    CvtIconPlaceToPosition (pIPD, place, &iconX, &iconY);
+    cellX = iconX - pIPD->placeIconX;
+    cellY = iconY - pIPD->placeIconY;
+    cellW = (unsigned int)pIPD->iPlaceW;
+    cellH = (unsigned int)pIPD->iPlaceH;
+
+    ShowIconSlotHighlight (pcd->pSD, cellX, cellY, cellW, cellH);
+    if (iconSlotHighlightWin != (Window)0L)
+    {
+	Window stack[2];
+	stack[0] = ICON_FRAME_WIN(pcd);
+	stack[1] = iconSlotHighlightWin;
+	XRestackWindows (DISPLAY, stack, 2);
+    }
+    iconSlotHighlightPlace = place;
+}
 
 
 /*************************************<->*************************************
@@ -3173,6 +3465,8 @@ void CancelFrameConfig (ClientData *pcd)
        dtSendMarqueeSelectionNotification(ACTIVE_PSD, DT_MARQUEE_SELECT_CANCEL, 
 			    marqueeX, marqueeY, 0, 0);
     }
+
+    HideIconSlotHighlight ();
 
     /* replace pointer if no motion events received */
     if (pcd)

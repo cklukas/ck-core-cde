@@ -328,6 +328,7 @@ typedef struct
    Widget menu;
    Widget header_frame;
    Widget shelf_frame;
+   Widget shelf_separator;
    Widget shelf_popup;
    XtPointer shelf_popup_data;
    Widget header_separator;
