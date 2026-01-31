@@ -219,28 +219,6 @@
 #include "SharedMsgs.h"
 #include "StorageSize.h"
 
-/* Debug logging for file popup interactions */
-static int file_popup_debug_init = 0;
-static Boolean file_popup_debug = False;
-static void
-FilePopupLog(const char *fmt, ...)
-{
-   va_list ap;
-   if (!file_popup_debug_init)
-   {
-      file_popup_debug_init = 1;
-      file_popup_debug = (getenv("DTFILE_FILEPOPUP_DEBUG") != NULL);
-   }
-   if (!file_popup_debug)
-      return;
-   va_start(ap, fmt);
-   fprintf(stderr, "dtfile-filepopup: ");
-   vfprintf(stderr, fmt, ap);
-   fprintf(stderr, "\n");
-   va_end(ap);
-}
-
-
 extern Widget _DtDuplicateIcon ( Widget, Widget, XmString, String, XtPointer, Boolean );
 
 /* absolute value macro */
@@ -1668,8 +1646,6 @@ IconCallback(
    }
    else if (callback->reason == XmCR_POPUP)
    {
-      FilePopupLog("icon callback POPUP: widget=%s event type=%d",
-                   XtName(w), event ? event->type : -1);
       if(!desktopRec)
       {
          FmPopup (w, clientData, (XEvent *)event, fileMgrData);
@@ -4482,10 +4458,6 @@ FmPopup (
       XEvent *event,
       FileMgrData *file_mgr_data)
 {
-   FilePopupLog("enter: event=%p type=%d widget=%s", (void *)event,
-                event ? event->type : -1,
-                w ? XtName(w) : "(null)");
-
    FileMgrRec      *file_mgr_rec;
    Arg             args[2];
    FileViewData    *fileViewData = NULL;
@@ -4501,8 +4473,6 @@ FmPopup (
    /* attach the popup widget info to the menu */
    file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
 
-   FilePopupLog("before clear-grabs (no-op)");
-
    XtSetArg(args[0], XmNuserData, file_mgr_rec);
    XtSetValues(fileMgrPopup.menu, args, 1);
 
@@ -4517,7 +4487,6 @@ FmPopup (
 */
      )
   {
-      FilePopupLog("posting whitespace popup");
       DirectorySet *directory_set;
 
       /* retrieve the fileViewData for the current directory */
@@ -4678,8 +4647,6 @@ FmPopup (
   else
   {
      char label[MAX_PATH];
-
-      FilePopupLog("posting object popup");
 
       /* retrieve the fileViewData for the selected icon */
       if (client_data)
@@ -4931,7 +4898,6 @@ FmPopup (
 
 
   /* position and manage popup menu */
-  FilePopupLog("position/manage file popup");
   if(event == NULL)
    {
       Position x, y;
