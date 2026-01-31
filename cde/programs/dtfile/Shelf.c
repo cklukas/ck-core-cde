@@ -433,8 +433,24 @@ ShelfSetSlot(int slot, const char *path)
    ShelfSave();
 }
 
+static void ShelfClearSlotFlags(int slot, Boolean ignore_mount);
+
 void
 ShelfClearSlot(int slot)
+{
+  int i;
+
+   ShelfClearSlotFlags(slot, True);
+}
+
+void
+ShelfClearSlotSkipIgnore(int slot)
+{
+   ShelfClearSlotFlags(slot, False);
+}
+
+static void
+ShelfClearSlotFlags(int slot, Boolean ignore_mount)
 {
    int i;
 
@@ -444,7 +460,7 @@ ShelfClearSlot(int slot)
       {
          if (shelf_slots[i].path)
          {
-            if (slot != 0)
+            if (slot != 0 && ignore_mount)
                ShelfIgnoreMount(shelf_slots[i].path);
             XtFree(shelf_slots[i].path);
          }

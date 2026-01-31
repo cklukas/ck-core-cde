@@ -4210,7 +4210,7 @@ ShelfDropIntoSlot(
    if (shelf_drag_active && dropInfo->operation == XmDROP_MOVE &&
        shelf_drag_slot >= 0 && shelf_drag_slot != first_slot)
    {
-      ShelfClearSlot(shelf_drag_slot);
+      ShelfClearSlotSkipIgnore(shelf_drag_slot);
       ShelfUpdateSlotAllViews(shelf_drag_slot);
    }
    dropInfo->completeMove = False;
@@ -4835,7 +4835,7 @@ ShelfStartDrag(
                  XmNpixmap, &pm,
                  XmNmask, &mask,
                  NULL);
-   if (pm != None)
+   if (pm != None && mask != None)
       drag_icon = DtDndCreateSourceIcon(w, pm, mask);
    XtSetArg(args[numArgs], DtNsourceIcon, drag_icon); numArgs++;
    shelf_drag_active = True;

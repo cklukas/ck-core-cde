@@ -27,6 +27,7 @@ extern const char *ShelfGetHomePath(void);
 extern int ShelfNextEmptySlot(void);
 extern void ShelfSetSlot(int slot, const char *path);
 extern void ShelfClearSlot(int slot);
+extern void ShelfClearSlotSkipIgnore(int slot);
 extern Boolean ShelfIsIgnoredMount(const char *mount_point);
 extern void ShelfIgnoreMount(const char *mount_point);
 extern void ShelfUnignoreMount(const char *mount_point);
