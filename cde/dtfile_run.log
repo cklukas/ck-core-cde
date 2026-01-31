@@ -1,295 +1,295 @@
-dtfile-shelf: ShelfRebuild: begin shelf_frame=0xaaab0a66d220
-dtfile-shelf: ShelfRebuild: shelf_frame(before): 0xaaab0a66d220 name=shelf_frame managed=1 realized=0 x=0 y=0 w=0 h=54 parent=0xaaab0a65ab20
+dtfile-shelf: ShelfRebuild: begin shelf_frame=0xaaaac8cdf560
+dtfile-shelf: ShelfRebuild: shelf_frame(before): 0xaaaac8cdf560 name=shelf_frame managed=1 realized=0 x=0 y=0 w=0 h=54 parent=0xaaaac8ccce60
 dtfile-shelf: ShelfInit: loading shelf config
 dtfile-shelf: ShelfLoadMounts: scanning mounts
 dtfile-shelf: ShelfRebuild: slots=3
 dtfile-shelf: ShelfRebuild: shelf_frame children=0
-dtfile-shelf: ShelfRebuild: created shelf_row=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: shelf_row(after): 0xaaab0a65bb40 name=shelf_row managed=0 realized=0 x=0 y=0 w=16 h=16 parent=0xaaab0a66d220
+dtfile-shelf: ShelfRebuild: created shelf_row=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: shelf_row(after): 0xaaaac8ccde80 name=shelf_row managed=0 realized=0 x=0 y=0 w=16 h=16 parent=0xaaaac8cdf560
 dtfile-shelf: ShelfRebuild: font_height=26 shelf_icon_px=48 shelf_row_height=94
 dtfile-shelf: ShelfRebuild: default colors bg=9754079 fg=0 pix_bg=9754079 pix_fg=0
 dtfile-shelf: ShelfRebuild: set shelf_row height=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a6599c0 slot=0
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a6599c0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a6599c0 imageName=(null) pixmap=0 string=0xaaab0a682d90 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a6599c0 data=0xaaab0a682d50 slot=0 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a6599c0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a6599c0
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8ccbd00 slot=0
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8ccbd00 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8ccbd00 imageName=(null) pixmap=0 string=0xaaaac8cf51d0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8ccbd00 data=0xaaaac8cf5190 slot=0 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8ccbd00
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8ccbd00
 dtfile-shelf: ShelfRebuild: register drop site for slot 0
-dtfile-shelf: ShelfRebuild: slot 0 widget=0xaaab0a6599c0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a6550c0 slot=1
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a6550c0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a6550c0 imageName=(null) pixmap=0 string=0xaaab0a683000 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a6550c0 data=0xaaab0a683410 slot=1 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a6550c0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a6550c0
+dtfile-shelf: ShelfRebuild: slot 0 widget=0xaaaac8ccbd00 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cc7400 slot=1
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cc7400 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cc7400 imageName=(null) pixmap=0 string=0xaaaac8cf5440 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cc7400 data=0xaaaac8cf5850 slot=1 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cc7400
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cc7400
 dtfile-shelf: ShelfRebuild: register drop site for slot 1
-dtfile-shelf: ShelfRebuild: slot 1 widget=0xaaab0a6550c0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a684dc0 slot=2
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a684dc0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a684dc0 imageName=(null) pixmap=0 string=0xaaab0a683450 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a684dc0 data=0xaaab0a685010 slot=2 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a684dc0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a684dc0
+dtfile-shelf: ShelfRebuild: slot 1 widget=0xaaaac8cc7400 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf71a0 slot=2
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf71a0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf71a0 imageName=(null) pixmap=0 string=0xaaaac8cf5890 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf71a0 data=0xaaaac8cf73f0 slot=2 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf71a0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf71a0
 dtfile-shelf: ShelfRebuild: register drop site for slot 2
-dtfile-shelf: ShelfRebuild: slot 2 widget=0xaaab0a684dc0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a6851f0 slot=3
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a6851f0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a6851f0 imageName=(null) pixmap=0 string=0xaaab0a684f10 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a6851f0 data=0xaaab0a685410 slot=3 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a6851f0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a6851f0
+dtfile-shelf: ShelfRebuild: slot 2 widget=0xaaaac8cf71a0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf75d0 slot=3
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf75d0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf75d0 imageName=(null) pixmap=0 string=0xaaaac8cf72f0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf75d0 data=0xaaaac8cf77f0 slot=3 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf75d0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf75d0
 dtfile-shelf: ShelfRebuild: register drop site for slot 3
-dtfile-shelf: ShelfRebuild: slot 3 widget=0xaaab0a6851f0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a685610 slot=4
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a685610 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a685610 imageName=(null) pixmap=0 string=0xaaab0a685450 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a685610 data=0xaaab0a685830 slot=4 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a685610
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a685610
+dtfile-shelf: ShelfRebuild: slot 3 widget=0xaaaac8cf75d0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf79f0 slot=4
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf79f0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf79f0 imageName=(null) pixmap=0 string=0xaaaac8cf7830 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf79f0 data=0xaaaac8cf7c10 slot=4 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf79f0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf79f0
 dtfile-shelf: ShelfRebuild: register drop site for slot 4
-dtfile-shelf: ShelfRebuild: slot 4 widget=0xaaab0a685610 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a685a30 slot=5
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a685a30 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a685a30 imageName=(null) pixmap=0 string=0xaaab0a685870 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a685a30 data=0xaaab0a685ca0 slot=5 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a685a30
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a685a30
+dtfile-shelf: ShelfRebuild: slot 4 widget=0xaaaac8cf79f0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf7e10 slot=5
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf7e10 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf7e10 imageName=(null) pixmap=0 string=0xaaaac8cf7c50 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf7e10 data=0xaaaac8cf8080 slot=5 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf7e10
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf7e10
 dtfile-shelf: ShelfRebuild: register drop site for slot 5
-dtfile-shelf: ShelfRebuild: slot 5 widget=0xaaab0a685a30 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a685e70 slot=6
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a685e70 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a685e70 imageName=(null) pixmap=0 string=0xaaab0a685ce0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a685e70 data=0xaaab0a686090 slot=6 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a685e70
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a685e70
+dtfile-shelf: ShelfRebuild: slot 5 widget=0xaaaac8cf7e10 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf8250 slot=6
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf8250 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf8250 imageName=(null) pixmap=0 string=0xaaaac8cf80c0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf8250 data=0xaaaac8cf8470 slot=6 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf8250
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf8250
 dtfile-shelf: ShelfRebuild: register drop site for slot 6
-dtfile-shelf: ShelfRebuild: slot 6 widget=0xaaab0a685e70 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a686290 slot=7
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a686290 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a686290 imageName=(null) pixmap=0 string=0xaaab0a6860d0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a686290 data=0xaaab0a6864b0 slot=7 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a686290
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a686290
+dtfile-shelf: ShelfRebuild: slot 6 widget=0xaaaac8cf8250 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf8670 slot=7
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf8670 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf8670 imageName=(null) pixmap=0 string=0xaaaac8cf84b0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf8670 data=0xaaaac8cf8890 slot=7 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf8670
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf8670
 dtfile-shelf: ShelfRebuild: register drop site for slot 7
-dtfile-shelf: ShelfRebuild: slot 7 widget=0xaaab0a686290 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a686760 slot=8
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a686760 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a686760 imageName=(null) pixmap=0 string=0xaaab0a6864f0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a686760 data=0xaaab0a686980 slot=8 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a686760
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a686760
+dtfile-shelf: ShelfRebuild: slot 7 widget=0xaaaac8cf8670 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf8b40 slot=8
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf8b40 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf8b40 imageName=(null) pixmap=0 string=0xaaaac8cf88d0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf8b40 data=0xaaaac8cf8d60 slot=8 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf8b40
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf8b40
 dtfile-shelf: ShelfRebuild: register drop site for slot 8
-dtfile-shelf: ShelfRebuild: slot 8 widget=0xaaab0a686760 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a686b10 slot=9
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a686b10 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a686b10 imageName=(null) pixmap=0 string=0xaaab0a6869c0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a686b10 data=0xaaab0a686d60 slot=9 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a686b10
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a686b10
+dtfile-shelf: ShelfRebuild: slot 8 widget=0xaaaac8cf8b40 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf8ef0 slot=9
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf8ef0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf8ef0 imageName=(null) pixmap=0 string=0xaaaac8cf8da0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf8ef0 data=0xaaaac8cf9140 slot=9 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf8ef0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf8ef0
 dtfile-shelf: ShelfRebuild: register drop site for slot 9
-dtfile-shelf: ShelfRebuild: slot 9 widget=0xaaab0a686b10 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a686f60 slot=10
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a686f60 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a686f60 imageName=(null) pixmap=0 string=0xaaab0a686da0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a686f60 data=0xaaab0a687180 slot=10 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a686f60
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a686f60
+dtfile-shelf: ShelfRebuild: slot 9 widget=0xaaaac8cf8ef0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf9340 slot=10
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf9340 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf9340 imageName=(null) pixmap=0 string=0xaaaac8cf9180 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf9340 data=0xaaaac8cf9560 slot=10 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf9340
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf9340
 dtfile-shelf: ShelfRebuild: register drop site for slot 10
-dtfile-shelf: ShelfRebuild: slot 10 widget=0xaaab0a686f60 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a687380 slot=11
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a687380 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a687380 imageName=(null) pixmap=0 string=0xaaab0a6871c0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a687380 data=0xaaab0a6875a0 slot=11 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a687380
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a687380
+dtfile-shelf: ShelfRebuild: slot 10 widget=0xaaaac8cf9340 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf9760 slot=11
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf9760 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf9760 imageName=(null) pixmap=0 string=0xaaaac8cf95a0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf9760 data=0xaaaac8cf9980 slot=11 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf9760
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf9760
 dtfile-shelf: ShelfRebuild: register drop site for slot 11
-dtfile-shelf: ShelfRebuild: slot 11 widget=0xaaab0a687380 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a6877a0 slot=12
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a6877a0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a6877a0 imageName=(null) pixmap=0 string=0xaaab0a6875e0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a6877a0 data=0xaaab0a6879c0 slot=12 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a6877a0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a6877a0
+dtfile-shelf: ShelfRebuild: slot 11 widget=0xaaaac8cf9760 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf9b80 slot=12
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf9b80 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf9b80 imageName=(null) pixmap=0 string=0xaaaac8cf99c0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf9b80 data=0xaaaac8cf9da0 slot=12 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf9b80
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf9b80
 dtfile-shelf: ShelfRebuild: register drop site for slot 12
-dtfile-shelf: ShelfRebuild: slot 12 widget=0xaaab0a6877a0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a687bc0 slot=13
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a687bc0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a687bc0 imageName=(null) pixmap=0 string=0xaaab0a687a00 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a687bc0 data=0xaaab0a687de0 slot=13 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a687bc0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a687bc0
+dtfile-shelf: ShelfRebuild: slot 12 widget=0xaaaac8cf9b80 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cf9fa0 slot=13
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cf9fa0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cf9fa0 imageName=(null) pixmap=0 string=0xaaaac8cf9de0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cf9fa0 data=0xaaaac8cfa1c0 slot=13 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cf9fa0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cf9fa0
 dtfile-shelf: ShelfRebuild: register drop site for slot 13
-dtfile-shelf: ShelfRebuild: slot 13 widget=0xaaab0a687bc0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a687fe0 slot=14
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a687fe0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a687fe0 imageName=(null) pixmap=0 string=0xaaab0a687e20 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a687fe0 data=0xaaab0a688200 slot=14 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a687fe0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a687fe0
+dtfile-shelf: ShelfRebuild: slot 13 widget=0xaaaac8cf9fa0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfa3c0 slot=14
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfa3c0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfa3c0 imageName=(null) pixmap=0 string=0xaaaac8cfa200 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfa3c0 data=0xaaaac8cfa5e0 slot=14 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfa3c0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfa3c0
 dtfile-shelf: ShelfRebuild: register drop site for slot 14
-dtfile-shelf: ShelfRebuild: slot 14 widget=0xaaab0a687fe0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a688400 slot=15
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a688400 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a688400 imageName=(null) pixmap=0 string=0xaaab0a688240 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a688400 data=0xaaab0a6886f0 slot=15 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a688400
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a688400
+dtfile-shelf: ShelfRebuild: slot 14 widget=0xaaaac8cfa3c0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfa7e0 slot=15
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfa7e0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfa7e0 imageName=(null) pixmap=0 string=0xaaaac8cfa620 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfa7e0 data=0xaaaac8cfaad0 slot=15 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfa7e0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfa7e0
 dtfile-shelf: ShelfRebuild: register drop site for slot 15
-dtfile-shelf: ShelfRebuild: slot 15 widget=0xaaab0a688400 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a6888f0 slot=16
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a6888f0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a6888f0 imageName=(null) pixmap=0 string=0xaaab0a688730 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a6888f0 data=0xaaab0a688b10 slot=16 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a6888f0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a6888f0
+dtfile-shelf: ShelfRebuild: slot 15 widget=0xaaaac8cfa7e0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfacd0 slot=16
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfacd0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfacd0 imageName=(null) pixmap=0 string=0xaaaac8cfab10 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfacd0 data=0xaaaac8cfaef0 slot=16 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfacd0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfacd0
 dtfile-shelf: ShelfRebuild: register drop site for slot 16
-dtfile-shelf: ShelfRebuild: slot 16 widget=0xaaab0a6888f0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a688d10 slot=17
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a688d10 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a688d10 imageName=(null) pixmap=0 string=0xaaab0a688b50 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a688d10 data=0xaaab0a688f30 slot=17 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a688d10
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a688d10
+dtfile-shelf: ShelfRebuild: slot 16 widget=0xaaaac8cfacd0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfb0f0 slot=17
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfb0f0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfb0f0 imageName=(null) pixmap=0 string=0xaaaac8cfaf30 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfb0f0 data=0xaaaac8cfb310 slot=17 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfb0f0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfb0f0
 dtfile-shelf: ShelfRebuild: register drop site for slot 17
-dtfile-shelf: ShelfRebuild: slot 17 widget=0xaaab0a688d10 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a689230 slot=18
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a689230 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a689230 imageName=(null) pixmap=0 string=0xaaab0a688f70 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a689230 data=0xaaab0a689450 slot=18 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a689230
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a689230
+dtfile-shelf: ShelfRebuild: slot 17 widget=0xaaaac8cfb0f0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfb610 slot=18
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfb610 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfb610 imageName=(null) pixmap=0 string=0xaaaac8cfb350 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfb610 data=0xaaaac8cfb830 slot=18 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfb610
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfb610
 dtfile-shelf: ShelfRebuild: register drop site for slot 18
-dtfile-shelf: ShelfRebuild: slot 18 widget=0xaaab0a689230 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a689650 slot=19
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a689650 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a689650 imageName=(null) pixmap=0 string=0xaaab0a689490 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a689650 data=0xaaab0a689870 slot=19 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a689650
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a689650
+dtfile-shelf: ShelfRebuild: slot 18 widget=0xaaaac8cfb610 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfba30 slot=19
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfba30 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfba30 imageName=(null) pixmap=0 string=0xaaaac8cfb870 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfba30 data=0xaaaac8cfbc50 slot=19 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfba30
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfba30
 dtfile-shelf: ShelfRebuild: register drop site for slot 19
-dtfile-shelf: ShelfRebuild: slot 19 widget=0xaaab0a689650 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a689a70 slot=20
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a689a70 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a689a70 imageName=(null) pixmap=0 string=0xaaab0a6898b0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a689a70 data=0xaaab0a689c90 slot=20 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a689a70
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a689a70
+dtfile-shelf: ShelfRebuild: slot 19 widget=0xaaaac8cfba30 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfbe50 slot=20
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfbe50 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfbe50 imageName=(null) pixmap=0 string=0xaaaac8cfbc90 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfbe50 data=0xaaaac8cfc070 slot=20 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfbe50
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfbe50
 dtfile-shelf: ShelfRebuild: register drop site for slot 20
-dtfile-shelf: ShelfRebuild: slot 20 widget=0xaaab0a689a70 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a689e90 slot=21
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a689e90 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a689e90 imageName=(null) pixmap=0 string=0xaaab0a689cd0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a689e90 data=0xaaab0a68a0b0 slot=21 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a689e90
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a689e90
+dtfile-shelf: ShelfRebuild: slot 20 widget=0xaaaac8cfbe50 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfc270 slot=21
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfc270 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfc270 imageName=(null) pixmap=0 string=0xaaaac8cfc0b0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfc270 data=0xaaaac8cfc490 slot=21 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfc270
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfc270
 dtfile-shelf: ShelfRebuild: register drop site for slot 21
-dtfile-shelf: ShelfRebuild: slot 21 widget=0xaaab0a689e90 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68a2b0 slot=22
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68a2b0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68a2b0 imageName=(null) pixmap=0 string=0xaaab0a68a0f0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68a2b0 data=0xaaab0a68a4d0 slot=22 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68a2b0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68a2b0
+dtfile-shelf: ShelfRebuild: slot 21 widget=0xaaaac8cfc270 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfc690 slot=22
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfc690 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfc690 imageName=(null) pixmap=0 string=0xaaaac8cfc4d0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfc690 data=0xaaaac8cfc8b0 slot=22 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfc690
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfc690
 dtfile-shelf: ShelfRebuild: register drop site for slot 22
-dtfile-shelf: ShelfRebuild: slot 22 widget=0xaaab0a68a2b0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68a6d0 slot=23
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68a6d0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68a6d0 imageName=(null) pixmap=0 string=0xaaab0a68a510 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68a6d0 data=0xaaab0a68a8f0 slot=23 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68a6d0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68a6d0
+dtfile-shelf: ShelfRebuild: slot 22 widget=0xaaaac8cfc690 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfcab0 slot=23
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfcab0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfcab0 imageName=(null) pixmap=0 string=0xaaaac8cfc8f0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfcab0 data=0xaaaac8cfccd0 slot=23 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfcab0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfcab0
 dtfile-shelf: ShelfRebuild: register drop site for slot 23
-dtfile-shelf: ShelfRebuild: slot 23 widget=0xaaab0a68a6d0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68aaf0 slot=24
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68aaf0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68aaf0 imageName=(null) pixmap=0 string=0xaaab0a68a930 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68aaf0 data=0xaaab0a68ae50 slot=24 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68aaf0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68aaf0
+dtfile-shelf: ShelfRebuild: slot 23 widget=0xaaaac8cfcab0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfced0 slot=24
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfced0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfced0 imageName=(null) pixmap=0 string=0xaaaac8cfcd10 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfced0 data=0xaaaac8cfd230 slot=24 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfced0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfced0
 dtfile-shelf: ShelfRebuild: register drop site for slot 24
-dtfile-shelf: ShelfRebuild: slot 24 widget=0xaaab0a68aaf0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68b050 slot=25
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68b050 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68b050 imageName=(null) pixmap=0 string=0xaaab0a68ae90 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68b050 data=0xaaab0a68b270 slot=25 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68b050
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68b050
+dtfile-shelf: ShelfRebuild: slot 24 widget=0xaaaac8cfced0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfd430 slot=25
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfd430 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfd430 imageName=(null) pixmap=0 string=0xaaaac8cfd270 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfd430 data=0xaaaac8cfd650 slot=25 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfd430
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfd430
 dtfile-shelf: ShelfRebuild: register drop site for slot 25
-dtfile-shelf: ShelfRebuild: slot 25 widget=0xaaab0a68b050 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68b470 slot=26
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68b470 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68b470 imageName=(null) pixmap=0 string=0xaaab0a68b2b0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68b470 data=0xaaab0a68b690 slot=26 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68b470
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68b470
+dtfile-shelf: ShelfRebuild: slot 25 widget=0xaaaac8cfd430 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfd850 slot=26
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfd850 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfd850 imageName=(null) pixmap=0 string=0xaaaac8cfd690 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfd850 data=0xaaaac8cfda70 slot=26 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfd850
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfd850
 dtfile-shelf: ShelfRebuild: register drop site for slot 26
-dtfile-shelf: ShelfRebuild: slot 26 widget=0xaaab0a68b470 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68b890 slot=27
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68b890 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68b890 imageName=(null) pixmap=0 string=0xaaab0a68b6d0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68b890 data=0xaaab0a68bab0 slot=27 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68b890
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68b890
+dtfile-shelf: ShelfRebuild: slot 26 widget=0xaaaac8cfd850 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfdc70 slot=27
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfdc70 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfdc70 imageName=(null) pixmap=0 string=0xaaaac8cfdab0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfdc70 data=0xaaaac8cfde90 slot=27 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfdc70
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfdc70
 dtfile-shelf: ShelfRebuild: register drop site for slot 27
-dtfile-shelf: ShelfRebuild: slot 27 widget=0xaaab0a68b890 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68be00 slot=28
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68be00 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68be00 imageName=(null) pixmap=0 string=0xaaab0a68baf0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68be00 data=0xaaab0a68c020 slot=28 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68be00
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68be00
+dtfile-shelf: ShelfRebuild: slot 27 widget=0xaaaac8cfdc70 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfe1e0 slot=28
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfe1e0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfe1e0 imageName=(null) pixmap=0 string=0xaaaac8cfded0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfe1e0 data=0xaaaac8cfe400 slot=28 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfe1e0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfe1e0
 dtfile-shelf: ShelfRebuild: register drop site for slot 28
-dtfile-shelf: ShelfRebuild: slot 28 widget=0xaaab0a68be00 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68c220 slot=29
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68c220 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68c220 imageName=(null) pixmap=0 string=0xaaab0a68c060 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68c220 data=0xaaab0a68c440 slot=29 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68c220
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68c220
+dtfile-shelf: ShelfRebuild: slot 28 widget=0xaaaac8cfe1e0 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfe600 slot=29
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfe600 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfe600 imageName=(null) pixmap=0 string=0xaaaac8cfe440 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfe600 data=0xaaaac8cfe820 slot=29 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfe600
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfe600
 dtfile-shelf: ShelfRebuild: register drop site for slot 29
-dtfile-shelf: ShelfRebuild: slot 29 widget=0xaaab0a68c220 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68c640 slot=30
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68c640 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68c640 imageName=(null) pixmap=0 string=0xaaab0a68c480 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68c640 data=0xaaab0a68c860 slot=30 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68c640
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68c640
+dtfile-shelf: ShelfRebuild: slot 29 widget=0xaaaac8cfe600 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfea20 slot=30
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfea20 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfea20 imageName=(null) pixmap=0 string=0xaaaac8cfe860 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfea20 data=0xaaaac8cfec40 slot=30 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfea20
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfea20
 dtfile-shelf: ShelfRebuild: register drop site for slot 30
-dtfile-shelf: ShelfRebuild: slot 30 widget=0xaaab0a68c640 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68ca60 slot=31
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68ca60 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68ca60 imageName=(null) pixmap=0 string=0xaaab0a68c8a0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68ca60 data=0xaaab0a68cc80 slot=31 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68ca60
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68ca60
+dtfile-shelf: ShelfRebuild: slot 30 widget=0xaaaac8cfea20 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cfee40 slot=31
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cfee40 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cfee40 imageName=(null) pixmap=0 string=0xaaaac8cfec80 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cfee40 data=0xaaaac8cff060 slot=31 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cfee40
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cfee40
 dtfile-shelf: ShelfRebuild: register drop site for slot 31
-dtfile-shelf: ShelfRebuild: slot 31 widget=0xaaab0a68ca60 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68ce80 slot=32
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68ce80 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68ce80 imageName=(null) pixmap=0 string=0xaaab0a68ccc0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68ce80 data=0xaaab0a68d0a0 slot=32 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68ce80
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68ce80
+dtfile-shelf: ShelfRebuild: slot 31 widget=0xaaaac8cfee40 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cff260 slot=32
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cff260 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cff260 imageName=(null) pixmap=0 string=0xaaaac8cff0a0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cff260 data=0xaaaac8cff480 slot=32 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cff260
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cff260
 dtfile-shelf: ShelfRebuild: register drop site for slot 32
-dtfile-shelf: ShelfRebuild: slot 32 widget=0xaaab0a68ce80 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68d2a0 slot=33
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68d2a0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68d2a0 imageName=(null) pixmap=0 string=0xaaab0a68d0e0 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68d2a0 data=0xaaab0a68d4c0 slot=33 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68d2a0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68d2a0
+dtfile-shelf: ShelfRebuild: slot 32 widget=0xaaaac8cff260 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cff680 slot=33
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cff680 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cff680 imageName=(null) pixmap=0 string=0xaaaac8cff4c0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cff680 data=0xaaaac8cff8a0 slot=33 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cff680
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cff680
 dtfile-shelf: ShelfRebuild: register drop site for slot 33
-dtfile-shelf: ShelfRebuild: slot 33 widget=0xaaab0a68d2a0 w=144 h=94
-dtfile-shelf: ShelfRebuild: created shelf_item=0xaaab0a68d6c0 slot=34
-dtfile-shelf: ShelfRebuild: shelf_item: 0xaaab0a68d6c0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfRebuild: item=0xaaab0a68d6c0 imageName=(null) pixmap=0 string=0xaaab0a68d500 pixPos=0 strPos=0
-dtfile-shelf: ShelfRebuild: attach handlers item=0xaaab0a68d6c0 data=0xaaab0a68d8e0 slot=34 path=(null)
-dtfile-shelf: ShelfRebuild: add callback handler item=0xaaab0a68d6c0
-dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaab0a68d6c0
+dtfile-shelf: ShelfRebuild: slot 33 widget=0xaaaac8cff680 w=144 h=94
+dtfile-shelf: ShelfRebuild: created shelf_item=0xaaaac8cffaa0 slot=34
+dtfile-shelf: ShelfRebuild: shelf_item: 0xaaaac8cffaa0 name=shelf_item managed=1 realized=0 x=0 y=0 w=144 h=94 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfRebuild: item=0xaaaac8cffaa0 imageName=(null) pixmap=0 string=0xaaaac8cff8e0 pixPos=0 strPos=0
+dtfile-shelf: ShelfRebuild: attach handlers item=0xaaaac8cffaa0 data=0xaaaac8cffcc0 slot=34 path=(null)
+dtfile-shelf: ShelfRebuild: add callback handler item=0xaaaac8cffaa0
+dtfile-shelf: ShelfRebuild: add destroy callback item=0xaaaac8cffaa0
 dtfile-shelf: ShelfRebuild: register drop site for slot 34
-dtfile-shelf: ShelfRebuild: slot 34 widget=0xaaab0a68d6c0 w=144 h=94
-dtfile-shelf: ShelfRebuild: end shelf_frame=0xaaab0a66d220
+dtfile-shelf: ShelfRebuild: slot 34 widget=0xaaaac8cffaa0 w=144 h=94
+dtfile-shelf: ShelfRebuild: end shelf_frame=0xaaaac8cdf560
 dtfile-shelf: ShelfUpdateSlotWidget: slot 0 path=/home/klukas
 dtfile-shelf: ShelfResolvePath: input=/home/klukas cur_dir=/home/klukas/git/cde/cde host=devuan
 dtfile-shelf: ShelfResolvePath: resolved=/home/klukas host=devuan
@@ -304,12 +304,12 @@ dtfile-shelf: ShelfUpdateSlotWidget: slot 2 path=(null)
 dtfile-shelf: ShelfUpdateSlotWidget: slot 3 path=(null)
 dtfile-shelf: ShelfUpdateSlotWidget: slot 4 path=(null)
 dtfile-shelf: ShelfUpdateSlotWidget: slot 5 path=(null)
-dtfile-shelf: ShelfUpdateSlotWidget: slot 6 path=/home/klukas/git/ck-core/build/bin/ck-eyes
+dtfile-shelf: ShelfUpdateSlotWidget: slot 6 path=(null)
+dtfile-shelf: ShelfUpdateSlotWidget: slot 7 path=/home/klukas/git/ck-core/build/bin/ck-eyes
 dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin/ck-eyes cur_dir=/home/klukas/git/cde/cde host=devuan
 dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin/ck-eyes host=devuan
 dtfile-shelf: ShelfGetPixmapData: path=/home/klukas/git/ck-core/build/bin/ck-eyes full=/home/klukas/git/ck-core/build/bin short=ck-eyes type=EXECUTABLE
 dtfile-shelf: ShelfGetPixmapData: iconFile=/usr/dt/appconfig/icons/en_US.UTF-8/Dtexec.m.pm iconName=Dtexec inst=(null) host=(null) size=3
-dtfile-shelf: ShelfUpdateSlotWidget: slot 7 path=(null)
 dtfile-shelf: ShelfUpdateSlotWidget: slot 8 path=(null)
 dtfile-shelf: ShelfUpdateSlotWidget: slot 9 path=(null)
 dtfile-shelf: ShelfUpdateSlotWidget: slot 10 path=(null)
@@ -337,45 +337,43 @@ dtfile-shelf: ShelfUpdateSlotWidget: slot 31 path=(null)
 dtfile-shelf: ShelfUpdateSlotWidget: slot 32 path=(null)
 dtfile-shelf: ShelfUpdateSlotWidget: slot 33 path=(null)
 dtfile-shelf: ShelfUpdateSlotWidget: slot 34 path=(null)
-dtfile-shelf: ShelfDebugDump: shelf_frame: 0xaaab0a66d220 name=shelf_frame managed=1 realized=1 x=1 y=1 w=1224 h=94 parent=0xaaab0a65ab20
+dtfile-shelf: ShelfDebugDump: shelf_frame: 0xaaaac8cdf560 name=shelf_frame managed=1 realized=1 x=1 y=1 w=1224 h=94 parent=0xaaaac8ccce60
 dtfile-shelf: ShelfDebugDump: shelf_frame children=1
-dtfile-shelf: ShelfDebugDump: child: 0xaaab0a65bb40 name=shelf_row managed=1 realized=1 x=0 y=0 w=1224 h=94 parent=0xaaab0a66d220
+dtfile-shelf: ShelfDebugDump: child: 0xaaaac8ccde80 name=shelf_row managed=1 realized=1 x=0 y=0 w=1224 h=94 parent=0xaaaac8cdf560
 dtfile-shelf: ShelfDebugDump: row children=35
-dtfile-shelf: ShelfDebugDump: row child: 0xaaab0a6599c0 name=shelf_item managed=1 realized=1 x=4 y=4 w=144 h=86 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfDebugDump: row child: 0xaaab0a6550c0 name=shelf_item managed=1 realized=1 x=152 y=4 w=144 h=86 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfDebugDump: row child: 0xaaab0a684dc0 name=shelf_item managed=1 realized=1 x=300 y=4 w=144 h=86 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfDebugDump: row child: 0xaaab0a6851f0 name=shelf_item managed=1 realized=1 x=448 y=4 w=144 h=86 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfDebugDump: row child: 0xaaab0a685610 name=shelf_item managed=1 realized=1 x=596 y=4 w=144 h=86 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfDebugDump: row child: 0xaaab0a685a30 name=shelf_item managed=1 realized=1 x=744 y=4 w=144 h=86 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfDebugDump: row child: 0xaaab0a685e70 name=shelf_item managed=1 realized=1 x=892 y=4 w=144 h=86 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfDebugDump: row child: 0xaaab0a686290 name=shelf_item managed=1 realized=1 x=1040 y=4 w=144 h=86 parent=0xaaab0a65bb40
-dtfile-shelf: ShelfWidgetEvent: shelf_row map 0xaaab0a65bb40
-dtfile-shelf: ShelfWidgetEvent: map state: 0xaaab0a65bb40 name=shelf_row managed=1 realized=1 x=0 y=0 w=1224 h=94 parent=0xaaab0a66d220
-dtfile-shelf: ShelfWidgetEvent: shelf_frame map 0xaaab0a66d220
-dtfile-shelf: ShelfWidgetEvent: map state: 0xaaab0a66d220 name=shelf_frame managed=1 realized=1 x=1 y=1 w=1224 h=94 parent=0xaaab0a65ab20
-dtfile-shelf: ShelfWidgetEvent: shelf_frame configure 0xaaab0a66d220 x=1 y=1 w=1924 h=94
-dtfile-shelf: ShelfWidgetEvent: shelf_row configure 0xaaab0a65bb40 x=0 y=0 w=1924 h=94
+dtfile-shelf: ShelfDebugDump: row child: 0xaaaac8ccbd00 name=shelf_item managed=1 realized=1 x=4 y=4 w=144 h=86 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfDebugDump: row child: 0xaaaac8cc7400 name=shelf_item managed=1 realized=1 x=152 y=4 w=144 h=86 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfDebugDump: row child: 0xaaaac8cf71a0 name=shelf_item managed=1 realized=1 x=300 y=4 w=144 h=86 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfDebugDump: row child: 0xaaaac8cf75d0 name=shelf_item managed=1 realized=1 x=448 y=4 w=144 h=86 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfDebugDump: row child: 0xaaaac8cf79f0 name=shelf_item managed=1 realized=1 x=596 y=4 w=144 h=86 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfDebugDump: row child: 0xaaaac8cf7e10 name=shelf_item managed=1 realized=1 x=744 y=4 w=144 h=86 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfDebugDump: row child: 0xaaaac8cf8250 name=shelf_item managed=1 realized=1 x=892 y=4 w=144 h=86 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfDebugDump: row child: 0xaaaac8cf8670 name=shelf_item managed=1 realized=1 x=1040 y=4 w=144 h=86 parent=0xaaaac8ccde80
+dtfile-shelf: ShelfWidgetEvent: shelf_row map 0xaaaac8ccde80
+dtfile-shelf: ShelfWidgetEvent: map state: 0xaaaac8ccde80 name=shelf_row managed=1 realized=1 x=0 y=0 w=1224 h=94 parent=0xaaaac8cdf560
+dtfile-shelf: ShelfWidgetEvent: shelf_frame map 0xaaaac8cdf560
+dtfile-shelf: ShelfWidgetEvent: map state: 0xaaaac8cdf560 name=shelf_frame managed=1 realized=1 x=1 y=1 w=1224 h=94 parent=0xaaaac8ccce60
 dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin/ck-eyes cur_dir=/home/klukas/git/cde/cde host=devuan
 dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin/ck-eyes host=devuan
-dtfile-shelf: ShelfItemDropCB: item=0xaaab0a685a30 data=0xaaab0a685ca0
-dtfile-shelf: ShelfSetSlot: slot 5 -> /home/klukas/git/ck-core/build/bin
-dtfile-shelf: ShelfDropIntoSlot: dragContext=0xaaab0a5a3220 shelf_drag_context=(nil) active=0
-dtfile-shelf: ShelfUpdateSlotWidget: slot 5 path=/home/klukas/git/ck-core/build/bin
-dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin cur_dir=/home/klukas/git/ck-core/build host=devuan
-dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin host=devuan
-dtfile-shelf: ShelfGetPixmapData: path=/home/klukas/git/ck-core/build/bin full=/home/klukas/git/ck-core/build short=bin type=FOLDER
+dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin/ck-eyes cur_dir=/home/klukas/git/cde/cde host=devuan
+dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin/ck-eyes host=devuan
+dtfile-shelf: ShelfResolvePath: input=/ cur_dir=/home/klukas/git/cde/cde host=devuan
+dtfile-shelf: ShelfResolvePath: resolved=/ host=devuan
+dtfile-shelf: ShelfResolvePath: input=/home/klukas cur_dir=/ host=devuan
+dtfile-shelf: ShelfResolvePath: resolved=/home/klukas host=devuan
+dtfile-shelf: ShelfResolvePath: input=/home/klukas cur_dir=/home/klukas host=devuan
+dtfile-shelf: ShelfResolvePath: resolved=/home/klukas host=devuan
+dtfile-shelf: ShelfResolvePath: input=/home/klukas cur_dir=/home/klukas host=devuan
+dtfile-shelf: ShelfResolvePath: resolved=/home/klukas host=devuan
+dtfile-shelf: ShelfResolvePath: input=/home/klukas cur_dir=/home/klukas host=devuan
+dtfile-shelf: ShelfResolvePath: resolved=/home/klukas host=devuan
+dtfile-shelf: ShelfResolvePath: input=/home/klukas cur_dir=/home/klukas host=devuan
+dtfile-shelf: ShelfResolvePath: resolved=/home/klukas host=devuan
+dtfile-shelf: ShelfItemDropCB: item=0xaaaac8cf75d0 data=0xaaaac8cf77f0
+dtfile-shelf: ShelfSetSlot: slot 3 -> /home/klukas/bilder
+dtfile-shelf: ShelfDropIntoSlot: dragContext=0xaaaac8c15220 shelf_drag_context=(nil) active=0
+dtfile-shelf: ShelfUpdateSlotWidget: slot 3 path=/home/klukas/bilder
+dtfile-shelf: ShelfResolvePath: input=/home/klukas/bilder cur_dir=/home/klukas host=devuan
+dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/bilder host=devuan
+dtfile-shelf: ShelfGetPixmapData: path=/home/klukas/bilder full=/home/klukas short=bilder type=FOLDER
 dtfile-shelf: ShelfGetPixmapData: iconFile=/usr/dt/appconfig/icons/en_US.UTF-8/DtdirB.m.pm iconName=DtdirB inst=(null) host=(null) size=3
-dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin cur_dir=/home/klukas/git/ck-core/build host=devuan
-dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin host=devuan
-dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin/ck-eyes cur_dir=/home/klukas/git/ck-core/build/bin host=devuan
-dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin/ck-eyes host=devuan
-dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin cur_dir=/home/klukas/git/ck-core/build/bin host=devuan
-dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin host=devuan
-dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin/ck-eyes cur_dir=/home/klukas/git/ck-core/build/bin host=devuan
-dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin/ck-eyes host=devuan
-dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin/ck-eyes cur_dir=/home/klukas/git/ck-core/build/bin host=devuan
-dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin/ck-eyes host=devuan
-dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin/ck-eyes cur_dir=/home/klukas/git/ck-core/build/bin host=devuan
-dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin/ck-eyes host=devuan
-dtfile-shelf: ShelfResolvePath: input=/home/klukas/git/ck-core/build/bin/ck-eyes cur_dir=/home/klukas/git/ck-core/build/bin host=devuan
-dtfile-shelf: ShelfResolvePath: resolved=/home/klukas/git/ck-core/build/bin/ck-eyes host=devuan

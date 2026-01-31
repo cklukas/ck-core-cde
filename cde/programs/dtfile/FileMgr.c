@@ -335,6 +335,7 @@ typedef struct
    int press_x;
    int press_y;
    Boolean drop_registered;
+   Boolean is_execute;
 } ShelfItemData;
 
 typedef struct _ShelfPopupData
@@ -755,6 +756,18 @@ ShelfUpdateSlotWidgetWithData(
    label_text = NULL;
 
    resolved_path = ShelfResolvePath(file_mgr_data, path, &resolved_host);
+   if (item_data)
+   {
+      struct stat st;
+      item_data->is_execute = False;
+      if (resolved_path &&
+          stat(resolved_path, &st) == 0 &&
+          !S_ISDIR(st.st_mode) &&
+          (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
+      {
+         item_data->is_execute = True;
+      }
+   }
    pixmapData = ShelfGetPixmapData(file_mgr_rec, file_mgr_data,
                                    resolved_path, shelf_icon_size,
                                    &data_type);
@@ -4239,31 +4252,22 @@ ShelfFreePopupFileViewData(
 }
 
 static void
-ShelfRunAction(
-        FileMgrRec *file_mgr_rec,
-        ShelfPopupData *popup_data,
+ShelfRunResolvedPath(
+        FileMgrData *file_mgr_data,
+        const char *resolved_path,
+        const char *resolved_host,
         const char *action )
 {
-   FileMgrData *file_mgr_data;
-   char *resolved_path;
-   char *resolved_host = NULL;
    char *dir_path = NULL;
    FileViewData *file_view_data = NULL;
-   FileData *file_data = NULL;
    char *host_name = NULL;
 
-   if (popup_data == NULL || popup_data->file_mgr_data == NULL ||
-       popup_data->path == NULL || action == NULL)
-      return;
-
-   file_mgr_data = popup_data->file_mgr_data;
-   resolved_path = ShelfResolvePath(file_mgr_data, popup_data->path, &resolved_host);
-   if (resolved_path == NULL)
+   if (file_mgr_data == NULL || resolved_path == NULL || action == NULL)
       return;
 
    file_view_data = ShelfCreatePopupFileViewData(file_mgr_data, resolved_path);
    if (file_view_data == NULL)
-      goto cleanup;
+      return;
 
    dir_path = XtNewString(resolved_path);
    char *slash = strrchr(dir_path, '/');
@@ -4274,14 +4278,14 @@ ShelfRunAction(
    else
       *slash = '\0';
 
-   host_name = resolved_host ? resolved_host : file_mgr_data->host;
+   host_name = resolved_host ? (char *)resolved_host : file_mgr_data->host;
    if (host_name == NULL)
       host_name = home_host_name;
 
    ProcessAction((char *)action,
                  file_view_data,
                  NULL,
-                 (char *)host_name,
+                 host_name,
                  dir_path,
                  file_mgr_data->restricted_directory,
                  ((FileMgrRec *)file_mgr_data->file_mgr_rec)->file_window);
@@ -4290,8 +4294,36 @@ cleanup:
    ShelfFreePopupFileViewData(file_view_data);
    if (dir_path)
       XtFree(dir_path);
-   if (resolved_path)
-      XtFree(resolved_path);
+}
+
+static void
+ShelfRunPath(
+        FileMgrRec *file_mgr_rec,
+        const char *path,
+        const char *action )
+{
+   FileMgrData *file_mgr_data;
+   DialogData *dialog_data;
+   char *resolved_path = NULL;
+   char *resolved_host = NULL;
+
+   if (file_mgr_rec == NULL || path == NULL || action == NULL)
+      return;
+
+   dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec);
+   if (dialog_data == NULL)
+      return;
+   file_mgr_data = (FileMgrData *)dialog_data->data;
+   if (file_mgr_data == NULL)
+      return;
+
+   resolved_path = ShelfResolvePath(file_mgr_data, path, &resolved_host);
+   if (resolved_path == NULL)
+      return;
+
+   ShelfRunResolvedPath(file_mgr_data, resolved_path, resolved_host, action);
+
+   XtFree(resolved_path);
    if (resolved_host)
       XtFree(resolved_host);
 }
@@ -4312,7 +4344,7 @@ ShelfPopupRunCB(
    if (data == NULL || !data->is_execute)
       return;
 
-   ShelfRunAction(file_mgr_rec, data, "RunNoPrompt");
+   ShelfRunPath(file_mgr_rec, data->path, "RunNoPrompt");
 }
 
 static void
@@ -4331,7 +4363,7 @@ ShelfPopupRunNoPromptCB(
    if (data == NULL || !data->is_execute)
       return;
 
-   ShelfRunAction(file_mgr_rec, data, "Run");
+   ShelfRunPath(file_mgr_rec, data->path, "Run");
 }
 
 static void
@@ -4604,6 +4636,15 @@ ShelfItemDropCB(
       return;
    }
 
+   if (shelf_drag_active && shelf_drag_slot == item_data->slot)
+   {
+      dropInfo->status = DtDND_SUCCESS;
+      dropInfo->completeMove = False;
+      ShelfLog("ShelfItemDropCB: drop on same slot %d - no-op\n",
+               item_data->slot);
+      return;
+   }
+
    if (item_data->path == NULL)
    {
       ShelfDropIntoSlot(item_data->file_mgr_rec, item_data->slot, dropInfo);
@@ -4676,10 +4717,10 @@ ShelfItemCallback(
         XtPointer client_data,
         XtPointer call_data)
 {
-   ShelfItemData *item_data = (ShelfItemData *) client_data;
-   DtIconCallbackStruct *icon_cb = NULL;
-   XEvent *event = NULL;
-   int reason = 0;
+  ShelfItemData *item_data = (ShelfItemData *) client_data;
+  DtIconCallbackStruct *icon_cb = NULL;
+  XEvent *event = NULL;
+  int reason = 0;
 
    if (item_data == NULL || item_data->path == NULL)
       return;
@@ -4737,11 +4778,51 @@ ShelfItemCallback(
       return;
    }
 
-   if (reason == XmCR_SELECT || reason == XmCR_DEFAULT_ACTION ||
-       reason == XmCR_ACTIVATE)
+   if (reason == XmCR_DEFAULT_ACTION)
    {
-      if (!item_data->drag_started)
-         ShelfItemActivate(item_data);
+      if (item_data->drag_started)
+         return;
+
+      DialogData *dialog_data = _DtGetInstanceData((XtPointer)item_data->file_mgr_rec);
+      FileMgrData *file_mgr_data = dialog_data ? (FileMgrData *)dialog_data->data : NULL;
+      char *resolved_path = NULL;
+      char *resolved_host = NULL;
+      struct stat st;
+      Boolean is_dir = False;
+
+      if (file_mgr_data)
+      {
+         resolved_path = ShelfResolvePath(file_mgr_data, item_data->path, &resolved_host);
+         if (resolved_path && stat(resolved_path, &st) == 0)
+            is_dir = S_ISDIR(st.st_mode);
+      }
+
+      if (is_dir)
+      {
+         ShelfOpenNewView(file_mgr_data, resolved_path,
+                          resolved_host ? resolved_host : file_mgr_data->host);
+      }
+      else if (item_data->is_execute)
+      {
+         ShelfRunPath(item_data->file_mgr_rec, item_data->path, "Run");
+      }
+      else
+      {
+         ShelfRunPath(item_data->file_mgr_rec, item_data->path, "Open");
+      }
+
+      if (resolved_path)
+         XtFree(resolved_path);
+      if (resolved_host)
+         XtFree(resolved_host);
+      return;
+   }
+
+   if (reason == XmCR_SELECT || reason == XmCR_ACTIVATE)
+   {
+      if (item_data->drag_started)
+         return;
+      ShelfItemActivate(item_data);
       return;
    }
 }
