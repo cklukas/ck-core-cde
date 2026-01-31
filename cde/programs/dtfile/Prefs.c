@@ -178,6 +178,7 @@ static char * PreferencesName = "Preferences";
 static char * Random_on = "random_on";
 static char * Random_off = "random_off";
 static char * Render_image_icons = "render_image_icons";
+static char * Center_icons = "center_icons";
 
 
 /*  Resource definitions for the preferences dialog  */
@@ -186,6 +187,9 @@ static DialogResource resources[] =
 {
    { "render_image_icons", XmRBoolean, sizeof(Boolean),
      XtOffset(PreferencesDataPtr, render_image_icons),
+     (XtPointer) True, _DtBooleanToString },
+   { "center_icons", XmRBoolean, sizeof(Boolean),
+     XtOffset(PreferencesDataPtr, center_icons),
      (XtPointer) True, _DtBooleanToString },
 
    { "showType", SHOW_TYPE, sizeof(unsigned char),
@@ -717,6 +721,24 @@ Create(
    XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
                  HELP_PREFERENCES_VIEW_STR);
 
+   /* Center Icons above Label */
+   label_string = XmStringCreateLocalized (((char *)GETMESSAGE(23,41, "Center Icons above Label")));
+   n = 0;
+   XtSetArg (args[n], XmNlabelString, label_string);            n++;
+   XtSetArg (args[n], XmNtopAttachment, XmATTACH_WIDGET);       n++;
+   XtSetArg (args[n], XmNtopWidget, temp);                      n++;
+   XtSetArg (args[n], XmNtopOffset, offset);                    n++;
+   XtSetArg (args[n], XmNleftAttachment, XmATTACH_FORM);        n++;
+   XtSetArg (args[n], XmNindicatorType, XmN_OF_MANY);           n++;
+   preferences_rec->center_icons = temp =
+      XmCreateToggleButtonGadget (group_form, "center_icons", args, n);
+   XtManageChild (temp);
+   XmStringFree (label_string);
+   XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
+                  (XtPointer) preferences_rec);
+   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+                 HELP_PREFERENCES_VIEW_STR);
+
 
    /*  Create the file order container and widgets  */
 
@@ -1164,6 +1186,7 @@ GetDefaultValues( void )
    preferences_data->direction = DIRECTION_ASCENDING;
    preferences_data->positionEnabled = RANDOM_OFF;
    preferences_data->render_image_icons = True;
+   preferences_data->center_icons = True;
 
    return ((XtPointer) preferences_data);
 }
@@ -1370,6 +1393,11 @@ SetValues(
    else
      XtSetValues (preferences_rec->render_image_icons, false_args, 1);
 
+   if (preferences_data->center_icons)
+     XtSetValues (preferences_rec->center_icons, true_args, 1);
+   else
+     XtSetValues (preferences_rec->center_icons, false_args, 1);
+
    if( trashFileMgrData
        &&(PreferencesData *)trashFileMgrData->preferences->data ==
           preferences_data )
@@ -1502,6 +1530,7 @@ ResetCallback(
    preferences_data->show_current_dir = True;
    preferences_data->show_status_line = True;
    preferences_data->render_image_icons = True;
+   preferences_data->center_icons = True;
 
    /*  Get the current data for the dialog and redisplay.  */
 
@@ -1834,6 +1863,9 @@ GetPreferencesValues(
 
    XtGetValues (preferences_rec->render_image_icons, args, 1);
    preferences_data->render_image_icons = set;
+
+   XtGetValues (preferences_rec->center_icons, args, 1);
+   preferences_data->center_icons = set;
 }
 
 

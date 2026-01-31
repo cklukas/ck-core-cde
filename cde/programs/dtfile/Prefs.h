@@ -98,6 +98,7 @@ typedef struct
    Boolean show_current_dir;
    Boolean show_status_line;
    Boolean render_image_icons;
+   Boolean center_icons;
    unsigned char show_type;
    unsigned char tree_files;
    unsigned char view_single;
@@ -125,6 +126,7 @@ typedef struct
    Widget show_current_dir;
    Widget show_status_line;
    Widget render_image_icons;
+   Widget center_icons;
    Widget show_single;
    Widget show_multiple;
    Widget tree_files_never;

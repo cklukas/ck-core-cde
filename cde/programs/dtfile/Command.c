@@ -674,6 +674,7 @@ ProcessMoveCopyLink (
      Widget drop_window)
 
 {
+   extern void ShelfPrepareDragFinish(DtDndDropCallbackStruct *);
    unsigned int modifiers = 0;
    int numFiles, i;
    char ** file_set = NULL;
@@ -686,6 +687,8 @@ ProcessMoveCopyLink (
      /***************************************************/
    if (!drop_parameters)
      return;
+
+   ShelfPrepareDragFinish(drop_parameters);
 
 
      /**************************/
@@ -1465,4 +1468,3 @@ MoveCopyLinkHandler(
    tttk_message_destroy( ttMsg );
    return;
 }
-

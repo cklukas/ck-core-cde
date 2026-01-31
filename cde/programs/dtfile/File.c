@@ -365,9 +365,11 @@ static Cursor loc_cursor2 = None;
 #define MARGIN          5
 #define XSPACING        5
 #define YSPACING(fmd)                                                              \
-  (fmd->layout_data?                                                               \
-    (fmd->view != BY_NAME? - ((IconLayoutData *)fmd->layout_data)->highlight:      \
-                           - ((IconLayoutData *)fmd->layout_data)->highlight + 2): \
+  ((fmd)->layout_data?                                                           \
+    (((IconLayoutData *)(fmd)->layout_data)->spacing > 0 ?                         \
+       ((IconLayoutData *)(fmd)->layout_data)->spacing :                           \
+       ((XSPACING > ((IconLayoutData *)(fmd)->layout_data)->highlight) ?           \
+          (XSPACING - ((IconLayoutData *)(fmd)->layout_data)->highlight) : 0)) :    \
     0)
 #define TreeSep         5
 #define TreeOffset      15
@@ -5863,9 +5865,19 @@ UpdateOneFileIcon(
    if ((file_mgr_data->view == BY_NAME_AND_ICON ||
         file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON) &&
        file_mgr_data->show_type != MULTIPLE_DIRECTORY)
+   {
+      XtSetArg (args[n], XmNalignment,
+                file_mgr_data->center_icons ? XmALIGNMENT_CENTER
+                                            : XmALIGNMENT_BEGINNING);
+      n++;
       XtSetArg (args[n], XmNpixmapPosition, XmPIXMAP_TOP);
+      n++;
+      XtSetArg (args[n], XmNstringPosition, XmSTRING_BOTTOM);
+   }
    else
+   {
       XtSetArg (args[n], XmNpixmapPosition, XmPIXMAP_LEFT);            n++;
+   }
 
    /* See if we can re-use the same or some other icon gadget */
    if (file_view_data->widget)
@@ -6431,6 +6443,23 @@ GetIconLayoutParms(
       XtSetArg(args[5], XmNpixmapPosition, &ld->pixmap_position);
       XtGetValues((Widget)g, args, 6);
 
+      if ((file_mgr_data->view == BY_NAME_AND_ICON ||
+           file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON) &&
+          file_mgr_data->show_type != MULTIPLE_DIRECTORY &&
+          ld->pixmap_position == XmPIXMAP_TOP)
+      {
+         ld->alignment = file_mgr_data->center_icons
+                           ? XmALIGNMENT_CENTER
+                           : XmALIGNMENT_BEGINNING;
+         if (getenv("DTFILE_CENTER_DEBUG") != NULL)
+         {
+            fprintf(stderr,
+                    "dtfile-center: layout alignment=%d center_icons=%d\n",
+                    (int)ld->alignment,
+                    file_mgr_data->center_icons ? 1 : 0);
+         }
+      }
+
       ld->margin = ld->highlight + shadowThickness + marginWidth;
 
       if (g->icon.pixmap_width < maxWidth)
@@ -6510,6 +6539,7 @@ GetIconLayoutParms(
 
 static Dimension
 ComputeLabelExtent(
+        FileMgrData *file_mgr_data,
         FileViewData *file_view_data,
         IconLayoutData *layout_data,
         XmFontList measureFont )
@@ -6522,15 +6552,9 @@ ComputeLabelExtent(
       label = file_view_data->label ?
               file_view_data->label :
               file_view_data->file_data->file_name;
-      if (file_view_data->widget)
-      {
-         DtIconGadget icon = (DtIconGadget)file_view_data->widget;
-         if (icon && G_StringWidth(icon) > 0)
-            label_extent = G_StringWidth(icon);
-      }
    }
 
-   if (label_extent == 0 && label && measureFont)
+   if (label && measureFont)
    {
       XmString text = XmStringCreateLocalized(label);
       if (text)
@@ -6561,7 +6585,8 @@ EstimateIconSize(
         Dimension *height,
         XmFontList measureFont )
 {
-   Dimension label_extent = ComputeLabelExtent(file_view_data, layout_data, measureFont);
+   Dimension label_extent = ComputeLabelExtent(file_mgr_data, file_view_data,
+                                               layout_data, measureFont);
    int label_width;
 
    if (layout_data->pixmap_position == XmPIXMAP_TOP)
@@ -6909,6 +6934,40 @@ DisplaySomeIcons(
    /* Get a list of icon and button widgets we can re-use */
    file_window = (XmManagerWidget) file_mgr_rec->file_window;
    layout_data = (IconLayoutData *)file_mgr_data->layout_data;
+   if (layout_data)
+   {
+      layout_data->alignment = file_mgr_data->center_icons
+                                 ? XmALIGNMENT_CENTER
+                                 : XmALIGNMENT_BEGINNING;
+      if (getenv("DTFILE_CENTER_DEBUG") != NULL)
+         fprintf(stderr,
+                 "dtfile-center: layout_data alignment=%d (center=%d)\n",
+                 layout_data->alignment ? layout_data->alignment : 0,
+                 file_mgr_data->center_icons ? 1 : 0);
+   }
+   if (layout_data)
+   {
+      layout_data->alignment = file_mgr_data->center_icons
+                                 ? XmALIGNMENT_CENTER
+                                 : XmALIGNMENT_BEGINNING;
+      if (getenv("DTFILE_CENTER_DEBUG") != NULL)
+         fprintf(stderr,
+                 "dtfile-center: layout_data alignment=%d (center=%d)\n",
+                 layout_data->alignment ? layout_data->alignment : 0,
+                 file_mgr_data->center_icons ? 1 : 0);
+   }
+   if (file_mgr_data->preferences && file_mgr_data->preferences->data)
+   {
+      PreferencesData *prefs = (PreferencesData *)file_mgr_data->preferences->data;
+      if (prefs->center_icons != file_mgr_data->center_icons)
+      {
+         file_mgr_data->center_icons = prefs->center_icons;
+         if (getenv("DTFILE_CENTER_DEBUG") != NULL)
+            fprintf(stderr,
+                    "dtfile-center: sync layout center_icons=%d\n",
+                    file_mgr_data->center_icons ? 1 : 0);
+      }
+   }
    order_list = layout_data->order_list;
    order_count = layout_data->order_count;
    manage = layout_data->manage + layout_data->manage_count;

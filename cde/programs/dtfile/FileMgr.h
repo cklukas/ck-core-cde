@@ -271,6 +271,7 @@ typedef struct
    Boolean       show_current_dir;
    Boolean       show_status_line;
    Boolean       render_image_icons;
+   Boolean       center_icons;
    Boolean       fast_cd_enabled;
    Boolean       show_hid_enabled;
 
@@ -497,6 +498,7 @@ typedef struct
 
 /* shelf utilities */
 extern void ShelfPopdownAllMenus(FileMgrRec *file_mgr_rec);
+extern void ShelfRefreshAllViews(void);
 
 #endif /* _FileMgr_h */
 /* DON'T ADD ANYTHING AFTER THIS #endif */

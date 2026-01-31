@@ -53,6 +53,7 @@
 #include "Desktop.h"
 #include "Main.h"
 #include "Prefs.h"
+#include "IconicPath.h"
 
 
 /********    Static Function Declarations    ********/
@@ -207,7 +208,8 @@ PreferencesChange(
        file_mgr_data->show_iconic_path != preferences_data->show_iconic_path ||
        file_mgr_data->show_current_dir != preferences_data->show_current_dir ||
        file_mgr_data->show_status_line != preferences_data->show_status_line ||
-       file_mgr_data->render_image_icons != preferences_data->render_image_icons)
+       file_mgr_data->render_image_icons != preferences_data->render_image_icons ||
+       file_mgr_data->center_icons != preferences_data->center_icons)
    {
       /*
        * Depending upon which of the preferences values changed, positioning
@@ -269,6 +271,12 @@ PreferencesChange(
       file_mgr_data->show_current_dir = preferences_data->show_current_dir;
       file_mgr_data->show_status_line = preferences_data->show_status_line;
       file_mgr_data->render_image_icons = preferences_data->render_image_icons;
+      file_mgr_data->center_icons = preferences_data->center_icons;
+      if (getenv("DTFILE_CENTER_DEBUG") != NULL)
+      {
+         fprintf(stderr, "dtfile-center: apply center_icons=%d\n",
+                 file_mgr_data->center_icons ? 1 : 0);
+      }
       if (file_mgr_data->positionEnabled == preferences_data->positionEnabled)
          FileMgrRedisplayFiles (file_mgr_rec, file_mgr_data, False);
       else
@@ -276,6 +284,11 @@ PreferencesChange(
          file_mgr_data->positionEnabled = preferences_data->positionEnabled;
          FileMgrRedisplayFiles (file_mgr_rec, file_mgr_data, True);
       }
+
+      if (file_mgr_data->show_shelf)
+         ShelfRefreshAllViews();
+      if (file_mgr_data->show_iconic_path)
+         DtUpdateIconicPath(file_mgr_rec, file_mgr_data, True);
    
       if(openDirType == NEW)
          ForceMyIconOpen(file_mgr_data->host, NULL);

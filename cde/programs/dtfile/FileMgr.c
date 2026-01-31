@@ -405,6 +405,7 @@ static void ShelfUpdateSlotAllViews(
 static void ShelfFreePixmapData(
                         PixmapData *pixmapData );
 static void ShelfLog(const char *fmt, ...);
+static void CenterIconLog(const char *fmt, ...);
 static void ShelfItemDestroyCB(
                         Widget wid,
                         XtPointer client_data,
@@ -413,6 +414,8 @@ static void ShelfSlotDestroyCB(
                         Widget wid,
                         XtPointer client_data,
                         XtPointer call_data );
+static void ShelfMarkDragAccepted(
+                        DtDndDropCallbackStruct *dropInfo );
 static void ShelfRowDragEH(
                         Widget w,
                         XtPointer client_data,
@@ -422,6 +425,31 @@ static void ShelfSlotDropCB(
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data );
+static FileMgrRec **shelf_views = NULL;
+static int shelf_view_count = 0;
+static Boolean shelf_drag_active = False;
+static int shelf_drag_slot = -1;
+static ShelfItemData *shelf_drag_candidate = NULL;
+static Widget shelf_drag_widget = NULL;
+static Widget shelf_drag_context = NULL;
+static int shelf_drag_hidden_slot = -1;
+static int shelf_drag_pending_start = -1;
+static int shelf_drag_pending_end = -1;
+static char *shelf_drag_path = NULL;
+static Boolean shelf_drag_finish_pending = False;
+static int shelf_drag_finish_slot = -1;
+static unsigned char shelf_drag_finish_op = 0;
+static Boolean shelf_rebuild_after_drag = False;
+static FileMgrRec *shelf_rebuild_rec = NULL;
+static Boolean shelf_rebuild_pending = False;
+static XtIntervalId shelf_rebuild_timer = 0;
+static Dimension shelf_row_height = 0;
+static Dimension shelf_slot_width = 140;
+static Dimension shelf_slot_height = 0;
+static Dimension shelf_slot_margin_w = 4;
+static Dimension shelf_slot_margin_h = 4;
+static Dimension shelf_slot_spacing = 4;
+static int shelf_move_finish_slot = -1;
 static FileViewData *ShelfCreatePopupFileViewData(
                         FileMgrData *file_mgr_data,
                         const char *resolved_path );
@@ -690,6 +718,7 @@ ShelfUpdateSlotWidgetWithData(
    int shelf_icon_size;
    int shelf_icon_px = 0;
    int max_label_px;
+   unsigned char icon_alignment;
 
    if (file_mgr_rec == NULL)
       return;
@@ -709,6 +738,9 @@ ShelfUpdateSlotWidgetWithData(
    if (row == NULL)
       return;
 
+   icon_alignment = file_mgr_data->center_icons ? XmALIGNMENT_CENTER
+                                               : XmALIGNMENT_BEGINNING;
+
    item = ShelfFindWidgetForSlot(row, slot, &item_data);
    if (item == NULL || item_data == NULL)
       return;
@@ -718,7 +750,22 @@ ShelfUpdateSlotWidgetWithData(
       ShelfLog("ShelfUpdateSlotWidget: slot %d path=%s\n",
                slot, path ? path : "(null)");
 
+   if (shelf_drag_active && shelf_drag_hidden_slot == slot)
+      path = NULL;
+
    XtVaGetValues(item, XmNfontList, &font_list, NULL);
+
+   if (shelf_drag_active && shelf_drag_hidden_slot == slot)
+   {
+      label = XmStringCreateLocalized("");
+      XtVaSetValues(item,
+                    XmNstring, label,
+                    XmNalignment, icon_alignment,
+                    XmNimageName, (String)NULL,
+                    NULL);
+      XmStringFree(label);
+      return;
+   }
 
    if (path == NULL)
    {
@@ -735,6 +782,7 @@ ShelfUpdateSlotWidgetWithData(
       label = XmStringCreateLocalized("");
       XtVaSetValues(item,
                     XmNstring, label,
+                    XmNalignment, icon_alignment,
                     XmNimageName, (String)NULL,
                     NULL);
       XmStringFree(label);
@@ -818,6 +866,7 @@ ShelfUpdateSlotWidgetWithData(
    label = XmStringCreateLocalized(fit_label ? fit_label : "");
    XtVaSetValues(item,
                  XmNstring, label,
+                 XmNalignment, icon_alignment,
                  XmNimageName, icon_name_dup,
                  XmNpixmapPosition, XmPIXMAP_TOP,
                  XmNmaxPixmapWidth, shelf_icon_px,
@@ -893,24 +942,15 @@ ShelfUpdateSlotAllViews(
    ShelfUpdateSlotsRangeAllViews(slot, slot);
 }
 
-static FileMgrRec **shelf_views = NULL;
-static int shelf_view_count = 0;
-static Boolean shelf_drag_active = False;
-static int shelf_drag_slot = -1;
-static ShelfItemData *shelf_drag_candidate = NULL;
-static Widget shelf_drag_widget = NULL;
-static Widget shelf_drag_context = NULL;
-static Boolean shelf_rebuild_after_drag = False;
-static FileMgrRec *shelf_rebuild_rec = NULL;
-static Boolean shelf_rebuild_pending = False;
-static XtIntervalId shelf_rebuild_timer = 0;
-static Dimension shelf_row_height = 0;
-static Dimension shelf_slot_width = 140;
-static Dimension shelf_slot_height = 0;
-static Dimension shelf_slot_margin_w = 4;
-static Dimension shelf_slot_margin_h = 4;
-static Dimension shelf_slot_spacing = 4;
-static int shelf_move_finish_slot = -1;
+void
+ShelfRefreshAllViews(void)
+{
+   int count = ShelfGetSlotCount();
+   if (count <= 0)
+      return;
+   ShelfUpdateSlotsRangeAllViews(0, count - 1);
+}
+
 
 static void ShelfLog(const char *fmt, ...);
 
@@ -931,6 +971,21 @@ ShelfLog(const char *fmt, ...)
       return;
 
    fprintf(stderr, "dtfile-shelf: ");
+   va_start(ap, fmt);
+   vfprintf(stderr, fmt, ap);
+   va_end(ap);
+   fflush(stderr);
+}
+
+static void
+CenterIconLog(const char *fmt, ...)
+{
+   va_list ap;
+
+   if (getenv("DTFILE_CENTER_DEBUG") == NULL)
+      return;
+
+   fprintf(stderr, "dtfile-center: ");
    va_start(ap, fmt);
    vfprintf(stderr, fmt, ap);
    va_end(ap);
@@ -2058,6 +2113,12 @@ GetDefaultValues( void )
    file_mgr_data->show_current_dir = True;
    file_mgr_data->show_status_line = True;
    file_mgr_data->render_image_icons = True;
+   file_mgr_data->center_icons = True;
+   CenterIconLog("resource defaults: center_icons=%d\n",
+                 file_mgr_data->center_icons ? 1 : 0);
+   file_mgr_data->center_icons = True;
+   CenterIconLog("init defaults: center_icons=%d\n",
+                 file_mgr_data->center_icons ? 1 : 0);
 
    file_mgr_data->scrollToThisFile = NULL;
    file_mgr_data->scrollToThisDirectory = NULL;
@@ -2227,6 +2288,9 @@ GetDefaultValues( void )
    preferences_data->show_current_dir = file_mgr_data->show_current_dir;
    preferences_data->show_status_line = file_mgr_data->show_status_line;
    file_mgr_data->render_image_icons = preferences_data->render_image_icons;
+   file_mgr_data->center_icons = preferences_data->center_icons;
+   CenterIconLog("prefs init: center_icons=%d\n",
+                 file_mgr_data->center_icons ? 1 : 0);
 
    file_mgr_data->filter_edit = _DtGetDefaultDialogData (filter_dialog);
    file_mgr_data->filter_active = _DtGetDefaultDialogData (filter_dialog);
@@ -3882,6 +3946,42 @@ ShelfMoveFinishCB(XtPointer client_data, int rc)
 }
 
 static void
+ShelfApplyDragRemove(int slot)
+{
+   if (slot < 0)
+      return;
+   ShelfClearSlotSkipIgnore(slot);
+   ShelfUpdateSlotAllViews(slot);
+}
+
+void
+ShelfPrepareDragFinish(DtDndDropCallbackStruct *dropInfo)
+{
+   if (dropInfo == NULL)
+      return;
+   if (!shelf_drag_active || shelf_drag_context == NULL)
+      return;
+   if (dropInfo->dragContext != shelf_drag_context)
+      return;
+   shelf_drag_finish_pending = True;
+   shelf_drag_finish_slot = shelf_drag_slot;
+   shelf_drag_finish_op = dropInfo->operation;
+}
+
+static void
+ShelfDragOpFinishCB(XtPointer client_data, int rc)
+{
+   int slot = (int)(intptr_t)client_data;
+
+   if (rc == 0 && slot >= 0)
+      ShelfApplyDragRemove(slot);
+
+   shelf_drag_finish_pending = False;
+   shelf_drag_finish_slot = -1;
+   shelf_drag_finish_op = 0;
+}
+
+static void
 ShelfMoveCopyLinkToCurrent(FileMgrRec *file_mgr_rec,
                            FileMgrData *file_mgr_data,
                            const char *path,
@@ -4446,6 +4546,21 @@ ShelfDropContextDestroyCB(
 }
 
 static void
+ShelfMarkDragAccepted(
+        DtDndDropCallbackStruct *dropInfo )
+{
+   if (dropInfo == NULL)
+      return;
+   if (!shelf_drag_active || shelf_drag_context == NULL)
+      return;
+   if (dropInfo->dragContext != shelf_drag_context)
+      return;
+   if (dropInfo->status == DtDND_FAILURE)
+      return;
+   /* Only remove the source slot on move completion (via CONVERT_DELETE). */
+}
+
+static void
 ShelfDropIntoSlot(
         FileMgrRec *file_mgr_rec,
         int slot,
@@ -4483,16 +4598,25 @@ ShelfDropIntoSlot(
    }
 
    if (slot > first_slot)
-      ShelfUpdateSlotsRangeAllViews(first_slot, slot - 1);
-
-   if (shelf_drag_active && dropInfo->operation == XmDROP_MOVE &&
-       shelf_drag_slot >= 0 && shelf_drag_slot != first_slot)
    {
-      ShelfClearSlotSkipIgnore(shelf_drag_slot);
-      ShelfUpdateSlotAllViews(shelf_drag_slot);
+      if (shelf_drag_active && dropInfo->dragContext == shelf_drag_context)
+      {
+         int end = slot - 1;
+         if (shelf_drag_pending_start < 0 || first_slot < shelf_drag_pending_start)
+            shelf_drag_pending_start = first_slot;
+         if (shelf_drag_pending_end < 0 || end > shelf_drag_pending_end)
+            shelf_drag_pending_end = end;
+         if (shelf_drag_slot >= 0)
+            ShelfApplyDragRemove(shelf_drag_slot);
+      }
+      else
+      {
+         ShelfUpdateSlotsRangeAllViews(first_slot, slot - 1);
+      }
    }
    dropInfo->completeMove = False;
    dropInfo->status = DtDND_SUCCESS;
+   ShelfMarkDragAccepted(dropInfo);
 }
 
 static void
@@ -4723,9 +4847,11 @@ ShelfItemDropCB(
 
       dropInfo->completeMove = False;
       dropInfo->status = result ? DtDND_SUCCESS : DtDND_FAILURE;
+      ShelfMarkDragAccepted(dropInfo);
       return;
    }
    ShelfDropIntoSlot(item_data->file_mgr_rec, item_data->slot, dropInfo);
+   ShelfMarkDragAccepted(dropInfo);
    return;
 }
 
@@ -5069,6 +5195,23 @@ ShelfDragFinishCB(
    shelf_drag_candidate = NULL;
    shelf_drag_widget = NULL;
    shelf_drag_context = NULL;
+   if (shelf_drag_hidden_slot >= 0)
+   {
+      int slot = shelf_drag_hidden_slot;
+      shelf_drag_hidden_slot = -1;
+      ShelfUpdateSlotAllViews(slot);
+   }
+   if (shelf_drag_pending_start >= 0 && shelf_drag_pending_end >= shelf_drag_pending_start)
+   {
+      ShelfUpdateSlotsRangeAllViews(shelf_drag_pending_start, shelf_drag_pending_end);
+   }
+   shelf_drag_pending_start = -1;
+   shelf_drag_pending_end = -1;
+   if (shelf_drag_path)
+   {
+      XtFree(shelf_drag_path);
+      shelf_drag_path = NULL;
+   }
 
    if (shelf_rebuild_after_drag)
    {
@@ -5101,18 +5244,19 @@ ShelfConvertCB(
 
    (void) w;
 
-   if (item_data == NULL || item_data->path == NULL)
-      return;
-
    if (cb->reason == DtCR_DND_CONVERT_DATA)
    {
-      cb->dragData->data.files[0] = XtNewString(item_data->path);
+      const char *drag_path = shelf_drag_path ? shelf_drag_path :
+                              (item_data ? item_data->path : NULL);
+      if (drag_path == NULL)
+         return;
+      cb->dragData->data.files[0] = XtNewString(drag_path);
       cb->dragData->numItems = 1;
    }
    else if (cb->reason == DtCR_DND_CONVERT_DELETE)
    {
-      ShelfClearSlot(item_data->slot);
-      ShelfUpdateSlotAllViews(item_data->slot);
+      if (shelf_drag_finish_op == XmDROP_MOVE || shelf_drag_finish_op == 0)
+         ShelfApplyDragRemove(item_data ? item_data->slot : -1);
    }
 }
 
@@ -5290,6 +5434,12 @@ ShelfStartDrag(
    XtSetArg(args[numArgs], DtNsourceIcon, drag_icon); numArgs++;
    shelf_drag_active = True;
    shelf_drag_slot = item_data->slot;
+   shelf_drag_hidden_slot = item_data->slot;
+   if (shelf_drag_path)
+      XtFree(shelf_drag_path);
+   shelf_drag_path = XtNewString(item_data->path);
+   if (item_data->slot != 0)
+      ShelfUpdateSlotAllViews(item_data->slot);
    drag_context = DtDndDragStart(w, event, DtDND_FILENAME_TRANSFER, 1,
                                  operations,
                                  convertCB, dragFinishCB, args, numArgs);
@@ -5300,6 +5450,12 @@ ShelfStartDrag(
       shelf_drag_active = False;
       shelf_drag_slot = -1;
       shelf_drag_context = NULL;
+      if (shelf_drag_hidden_slot >= 0)
+      {
+         int slot = shelf_drag_hidden_slot;
+         shelf_drag_hidden_slot = -1;
+         ShelfUpdateSlotAllViews(slot);
+      }
    }
 }
 
@@ -6083,6 +6239,9 @@ ShelfRebuild(
       XtSetArg (args[n], XmNfillMode, XmFILL_TRANSPARENT);  n++;
       XtSetArg (args[n], XmNpixmapPosition, XmPIXMAP_TOP);  n++;
       XtSetArg (args[n], XmNstringPosition, XmSTRING_BOTTOM); n++;
+      XtSetArg (args[n], XmNalignment,
+                file_mgr_data->center_icons ? XmALIGNMENT_CENTER
+                                            : XmALIGNMENT_BEGINNING); n++;
       XtSetArg (args[n], XmNbehavior, XmICON_BUTTON);       n++;
       XtSetArg (args[n], XmNtraversalOn, False);            n++;
       XtSetArg (args[n], XmNrecomputeSize, False);          n++;
@@ -7107,6 +7266,8 @@ ProcessDropOnFileWindow (
         /* the deletion of the original file                             */
 
         dropInfo->completeMove = False;
+
+    ShelfMarkDragAccepted(dropInfo);
   }
 
   /*****************************/
@@ -7124,29 +7285,29 @@ ProcessDropOnFileWindow (
 
     command = TypeToAction(dropInfo->operation, fileType);
 
-    if( command )
-    {
-      DirectorySet *directory_set;
-      int i;
+      if( command )
+      {
+        DirectorySet *directory_set;
+        int i;
 
       /* retrieve the fileViewData for the current directory */
       directory_set = file_mgr_data->directory_set[0];
       for( i = 0; i < directory_set->file_count; ++i )
       {
-        if( strcmp(directory_set->order_list[i]->file_data->file_name, "." )
-            == 0 )
-        {
-          RunCommand( command,
-                      file_mgr_data,
-                      directory_set->order_list[i],
-                      NULL,
-                      dropInfo,
-                      w );
-          break;
+          if( strcmp(directory_set->order_list[i]->file_data->file_name, "." )
+              == 0 )
+          {
+            RunCommand( command,
+                        file_mgr_data,
+                        directory_set->order_list[i],
+                        NULL,
+                        dropInfo,
+                        w );
+            break;
+          }
         }
+        DtDtsFreeAttributeValue( command );
       }
-      DtDtsFreeAttributeValue( command );
-    }
   }
 }
 
@@ -7237,6 +7398,8 @@ ProcessDropOnObject(
           /* set the complete move flag to False since we will be handling */
           /* the deletion of the original file                             */
           dropInfo->completeMove = False;
+
+      ShelfMarkDragAccepted(dropInfo);
    }
 
    /******************************************/
@@ -7340,6 +7503,8 @@ FileMgrPropagateSettings(
                                                     src_data->show_status_line;
    dst_data->render_image_icons = dst_preferences_data->render_image_icons =
                                                     src_data->render_image_icons;
+   dst_data->center_icons = dst_preferences_data->center_icons =
+                                                   src_data->center_icons;
 
 
    /* Copy the Filter active info from src to dest data */
@@ -9032,6 +9197,8 @@ CheckMoveType(
    char * workspace_name = NULL;
    Display  *display;
    Boolean value;
+   void (*finish_cb)() = NULL;
+   XtPointer finish_data = NULL;
 
 #ifdef _CHECK_FOR_SPACES
    if (_DtSpacesInFileNames(file_set, file_count))
@@ -9337,6 +9504,13 @@ CheckMoveType(
    switch( view )
    {
        case DESKTOP:
+           if (shelf_drag_finish_pending &&
+               (shelf_drag_finish_op == XmDROP_COPY ||
+                shelf_drag_finish_op == XmDROP_LINK))
+           {
+              finish_cb = (void (*)())ShelfDragOpFinishCB;
+              finish_data = (XtPointer)(intptr_t)shelf_drag_finish_slot;
+           }
            target_host = desktopWindow->host;
            sprintf( directory, "%s/%s", directory_data->name,
                     file_view_data->file_data->file_name );
@@ -9344,10 +9518,23 @@ CheckMoveType(
            value = FileMoveCopyDesktop (file_view_data, directory,
                                         host_set, file_set, file_count,
                                         modifiers, desktopWindow,
-                                        NULL, NULL);
+                                        finish_cb, finish_data);
+           if (finish_cb && !value)
+           {
+              shelf_drag_finish_pending = False;
+              shelf_drag_finish_slot = -1;
+              shelf_drag_finish_op = 0;
+           }
            break;
 
        case NOT_DESKTOP_DIR:
+           if (shelf_drag_finish_pending &&
+               (shelf_drag_finish_op == XmDROP_COPY ||
+                shelf_drag_finish_op == XmDROP_LINK))
+           {
+              finish_cb = (void (*)())ShelfDragOpFinishCB;
+              finish_data = (XtPointer)(intptr_t)shelf_drag_finish_slot;
+           }
            target_host = file_mgr_data->host;
            sprintf( directory, "%s/%s", directory_data->name,
                     file_view_data->file_data->file_name );
@@ -9355,10 +9542,23 @@ CheckMoveType(
            value = FileMoveCopy (file_mgr_data,
                                  NULL, directory, target_host,
                                  host_set, file_set, file_count,
-                                 modifiers, NULL, NULL);
+                                 modifiers, finish_cb, finish_data);
+           if (finish_cb && !value)
+           {
+              shelf_drag_finish_pending = False;
+              shelf_drag_finish_slot = -1;
+              shelf_drag_finish_op = 0;
+           }
            break;
 
        default:/* view == NOT_DESKTOP */
+           if (shelf_drag_finish_pending &&
+               (shelf_drag_finish_op == XmDROP_COPY ||
+                shelf_drag_finish_op == XmDROP_LINK))
+           {
+              finish_cb = (void (*)())ShelfDragOpFinishCB;
+              finish_data = (XtPointer)(intptr_t)shelf_drag_finish_slot;
+           }
            target_host = file_mgr_data->host;
            strcpy(directory, file_mgr_data->current_directory);
            G_dropx = drop_x;
@@ -9370,8 +9570,21 @@ CheckMoveType(
            value = FileMoveCopy(file_mgr_data,
                                 NULL, directory, target_host,
                                 host_set, file_set, file_count,
-                                modifiers, NULL, NULL);
+                                modifiers, finish_cb, finish_data);
+           if (finish_cb && !value)
+           {
+              shelf_drag_finish_pending = False;
+              shelf_drag_finish_slot = -1;
+              shelf_drag_finish_op = 0;
+           }
            break;
+   }
+
+   if (shelf_drag_finish_pending && shelf_drag_finish_op == XmDROP_MOVE)
+   {
+      shelf_drag_finish_pending = False;
+      shelf_drag_finish_slot = -1;
+      shelf_drag_finish_op = 0;
    }
 
 

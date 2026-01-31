@@ -691,6 +691,10 @@ Update(
    int n_changes = 0;
    PixmapData *pixmapData;
    char msg_buf[4*MAX_PATH];
+   unsigned char icon_alignment = XmALIGNMENT_BEGINNING;
+
+   if (file_mgr_data && file_mgr_data->center_icons)
+      icon_alignment = XmALIGNMENT_CENTER;
 
    /* macro that updates the change count */
 # define INC_N_CHANGES() \
@@ -739,7 +743,7 @@ Update(
       xm_string = XmStringCreateLocalized("...");
       n = 0;
       XtSetArg (args[n], XmNlabelString, xm_string);            n++;
-      XtSetArg (args[n], XmNalignment, XmALIGNMENT_BEGINNING);  n++;
+      XtSetArg (args[n], XmNalignment, icon_alignment);         n++;
       XtSetArg (args[n], XmNmarginHeight, 0);                   n++;
       XtSetArg (args[n], XmNhighlightThickness, 0);             n++;
       if (ip->iconic_path.buttons)
@@ -993,7 +997,7 @@ Update(
 
             n = 0;
             XtSetArg (args[n], XmNlabelString, xm_string);            n++;
-            XtSetArg (args[n], XmNalignment, XmALIGNMENT_BEGINNING);  n++;
+            XtSetArg (args[n], XmNalignment, icon_alignment);         n++;
             XtSetArg (args[n], XmNmarginHeight, 0);                   n++;
             XtSetArg (args[n], XmNhighlightThickness, 0);             n++;
             if (ip->iconic_path.buttons)
@@ -1202,7 +1206,7 @@ next_component:
             xm_string = XmStringCreateLocalized((char *)sel_name);
             n = 0;
             XtSetArg (args[n], XmNlabelString, xm_string);            n++;
-            XtSetArg (args[n], XmNalignment, XmALIGNMENT_BEGINNING);  n++;
+            XtSetArg (args[n], XmNalignment, icon_alignment);         n++;
             XtSetArg (args[n], XmNmarginHeight, 0);                   n++;
             XtSetArg (args[n], XmNhighlightThickness, 0);             n++;
             if (ip->iconic_path.buttons)
