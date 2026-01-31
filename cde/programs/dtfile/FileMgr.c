@@ -329,6 +329,8 @@ typedef struct
    char *icon_name;
    int slot;
    Boolean drag_started;
+   Boolean drag_possible;
+   int drag_button;
    int press_x;
    int press_y;
    Boolean drop_registered;
@@ -346,6 +348,7 @@ typedef struct _ShelfPopupData
 typedef struct _ShelfMoveFinishData
 {
    int slot;
+   FileMgrRec *file_mgr_rec;
 } ShelfMoveFinishData;
 
 typedef struct _ShelfSlotData ShelfSlotData;
@@ -371,8 +374,36 @@ static PixmapData *ShelfGetPixmapData(
                         const char *resolved_path,
                         int icon_size,
                         char **data_type_out );
+static Widget ShelfGetRowWidget(
+                        FileMgrRec *file_mgr_rec );
+static Widget ShelfFindWidgetForSlot(
+                        Widget row,
+                        int slot,
+                        ShelfItemData **item_data_out );
+static void ShelfUpdateSlotWidget(
+                        FileMgrRec *file_mgr_rec,
+                        int slot );
+static void ShelfUpdateSlotWidgetWithData(
+                        FileMgrRec *file_mgr_rec,
+                        FileMgrData *file_mgr_data_in,
+                        int slot );
+static void ShelfUpdateSlotsRange(
+                        FileMgrRec *file_mgr_rec,
+                        int start_slot,
+                        int end_slot );
+static void ShelfUpdateSlotsRangeWithData(
+                        FileMgrRec *file_mgr_rec,
+                        FileMgrData *file_mgr_data_in,
+                        int start_slot,
+                        int end_slot );
+static void ShelfUpdateSlotsRangeAllViews(
+                        int start_slot,
+                        int end_slot );
+static void ShelfUpdateSlotAllViews(
+                        int slot );
 static void ShelfFreePixmapData(
                         PixmapData *pixmapData );
+static void ShelfLog(const char *fmt, ...);
 static void ShelfItemDestroyCB(
                         Widget wid,
                         XtPointer client_data,
@@ -381,7 +412,16 @@ static void ShelfSlotDestroyCB(
                         Widget wid,
                         XtPointer client_data,
                         XtPointer call_data );
+static void ShelfRowDragEH(
+                        Widget w,
+                        XtPointer client_data,
+                        XEvent *event,
+                        Boolean *cont );
 static void ShelfSlotDropCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data );
+static void ShelfDropContextDestroyCB(
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data );
@@ -508,10 +548,308 @@ ShelfFitLabel(
    return XtNewString("...");
 }
 
+/* Forward declarations for helpers that use these globals. */
+static FileMgrRec **shelf_views;
+static int shelf_view_count;
+static Dimension shelf_slot_width;
+
+static Widget
+ShelfGetRowWidget(FileMgrRec *file_mgr_rec)
+{
+   Widget *children = NULL;
+   Cardinal num_children = 0;
+   int i;
+
+   if (file_mgr_rec == NULL || file_mgr_rec->shelf_frame == NULL)
+      return NULL;
+
+   XtVaGetValues(file_mgr_rec->shelf_frame,
+                 XmNchildren, &children,
+                 XmNnumChildren, &num_children,
+                 NULL);
+   if (children == NULL || num_children == 0)
+      return NULL;
+
+   for (i = 0; i < (int)num_children; i++)
+   {
+      if (children[i] && XtName(children[i]) &&
+          strcmp(XtName(children[i]), "shelf_row") == 0)
+         return children[i];
+   }
+
+   return children[0];
+}
+
+static Widget
+ShelfFindWidgetForSlot(
+        Widget row,
+        int slot,
+        ShelfItemData **item_data_out )
+{
+   Widget *children = NULL;
+   Cardinal num_children = 0;
+   int i;
+
+   if (item_data_out)
+      *item_data_out = NULL;
+
+   if (row == NULL)
+      return NULL;
+
+   XtVaGetValues(row,
+                 XmNchildren, &children,
+                 XmNnumChildren, &num_children,
+                 NULL);
+   if (children == NULL || num_children == 0)
+      return NULL;
+
+   for (i = 0; i < (int)num_children; i++)
+   {
+      Widget child = children[i];
+      ShelfItemData *item_data = NULL;
+
+      if (child == NULL)
+         continue;
+
+      XtVaGetValues(child, XmNuserData, &item_data, NULL);
+      if (item_data == NULL)
+         continue;
+      if (item_data->slot != slot)
+         continue;
+
+      if (item_data_out)
+         *item_data_out = item_data;
+      return child;
+   }
+
+   return NULL;
+}
+
+static void
+ShelfUpdateSlotWidget(
+        FileMgrRec *file_mgr_rec,
+        int slot )
+{
+   ShelfUpdateSlotWidgetWithData(file_mgr_rec, NULL, slot);
+}
+
+static void
+ShelfUpdateSlotWidgetWithData(
+        FileMgrRec *file_mgr_rec,
+        FileMgrData *file_mgr_data_in,
+        int slot )
+{
+   DialogData *dialog_data;
+   FileMgrData *file_mgr_data;
+   Widget row;
+   Widget item;
+   ShelfItemData *item_data = NULL;
+   const char *path;
+   XmFontList font_list = NULL;
+   XmString label = NULL;
+   char *label_text = NULL;
+   char *fit_label = NULL;
+   char *resolved_path = NULL;
+   char *resolved_host = NULL;
+   char *data_type = NULL;
+   char *icon_name_owned = NULL;
+   char *icon_name_dup = NULL;
+   const char *icon_name = NULL;
+   PixmapData *pixmapData = NULL;
+   int shelf_icon_size;
+   int shelf_icon_px = 0;
+   int max_label_px;
+
+   if (file_mgr_rec == NULL)
+      return;
+
+   file_mgr_data = file_mgr_data_in;
+   if (file_mgr_data == NULL)
+   {
+      dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
+      if (dialog_data == NULL)
+         return;
+      file_mgr_data = (FileMgrData *) dialog_data->data;
+      if (file_mgr_data == NULL)
+         return;
+   }
+
+   row = ShelfGetRowWidget(file_mgr_rec);
+   if (row == NULL)
+      return;
+
+   item = ShelfFindWidgetForSlot(row, slot, &item_data);
+   if (item == NULL || item_data == NULL)
+      return;
+
+   path = ShelfGetPathForSlot(slot);
+   if (getenv("DTFILE_SHELF_DEBUG") != NULL)
+      ShelfLog("ShelfUpdateSlotWidget: slot %d path=%s\n",
+               slot, path ? path : "(null)");
+
+   XtVaGetValues(item, XmNfontList, &font_list, NULL);
+
+   if (path == NULL)
+   {
+      if (item_data->path)
+      {
+         XtFree(item_data->path);
+         item_data->path = NULL;
+      }
+      if (item_data->icon_name)
+      {
+         XtFree(item_data->icon_name);
+         item_data->icon_name = NULL;
+      }
+      label = XmStringCreateLocalized("");
+      XtVaSetValues(item,
+                    XmNstring, label,
+                    XmNimageName, (String)NULL,
+                    NULL);
+      XmStringFree(label);
+      return;
+   }
+
+   if (slot == 0)
+      label_text = XtNewString("Home");
+   else
+   {
+      const char *base = strrchr(path, '/');
+      if (base && *(base + 1) != '\0')
+         label_text = XtNewString(base + 1);
+      else
+         label_text = XtNewString(path);
+   }
+
+   shelf_icon_size = ShelfGetIconSize(file_mgr_data, &shelf_icon_px);
+   max_label_px = (int)shelf_slot_width - 8;
+   if (font_list)
+      fit_label = ShelfFitLabel(label_text, font_list, max_label_px);
+   else
+      fit_label = XtNewString(label_text);
+   XtFree(label_text);
+   label_text = NULL;
+
+   resolved_path = ShelfResolvePath(file_mgr_data, path, &resolved_host);
+   pixmapData = ShelfGetPixmapData(file_mgr_rec, file_mgr_data,
+                                   resolved_path, shelf_icon_size,
+                                   &data_type);
+   if (pixmapData && pixmapData->iconFileName && *pixmapData->iconFileName)
+      icon_name = pixmapData->iconFileName;
+
+   if (icon_name == NULL)
+   {
+      const char *fallback;
+      int dt_size;
+      if (data_type && strcmp(data_type, LT_DIRECTORY) == 0)
+         fallback = "DtdirB";
+      else
+         fallback = "Dtdeflt";
+      dt_size = (shelf_icon_size == EXTRA_LARGE) ? DtLARGE :
+                  (shelf_icon_size == LARGE) ? DtMEDIUM : DtSMALL;
+      icon_name_owned = _DtGetIconFileName(XtScreen(file_mgr_rec->shell),
+                                           NULL, (String)fallback, NULL, dt_size);
+      if (icon_name_owned && *icon_name_owned)
+         icon_name = icon_name_owned;
+   }
+
+   if (icon_name)
+      icon_name_dup = XtNewString(icon_name);
+
+   if (item_data->path)
+      XtFree(item_data->path);
+   item_data->path = XtNewString(path);
+   if (item_data->icon_name)
+      XtFree(item_data->icon_name);
+   item_data->icon_name = icon_name_dup;
+
+   label = XmStringCreateLocalized(fit_label ? fit_label : "");
+   XtVaSetValues(item,
+                 XmNstring, label,
+                 XmNimageName, icon_name_dup,
+                 XmNpixmapPosition, XmPIXMAP_TOP,
+                 XmNmaxPixmapWidth, shelf_icon_px,
+                 XmNmaxPixmapHeight, shelf_icon_px,
+                 XmNfillMode, XmFILL_TRANSPARENT,
+                 NULL);
+   XmStringFree(label);
+   if (fit_label)
+      XtFree(fit_label);
+
+   if (pixmapData)
+      ShelfFreePixmapData(pixmapData);
+   if (data_type)
+      DtDtsFreeDataType(data_type);
+   if (resolved_path)
+      XtFree(resolved_path);
+   if (resolved_host)
+      XtFree(resolved_host);
+   if (icon_name_owned)
+      XtFree(icon_name_owned);
+}
+
+static void
+ShelfUpdateSlotsRange(
+        FileMgrRec *file_mgr_rec,
+        int start_slot,
+        int end_slot )
+{
+   ShelfUpdateSlotsRangeWithData(file_mgr_rec, NULL, start_slot, end_slot);
+}
+
+static void
+ShelfUpdateSlotsRangeWithData(
+        FileMgrRec *file_mgr_rec,
+        FileMgrData *file_mgr_data_in,
+        int start_slot,
+        int end_slot )
+{
+   int i;
+
+   if (file_mgr_rec == NULL)
+      return;
+
+   if (start_slot < 0)
+      start_slot = 0;
+   if (end_slot < start_slot)
+      return;
+
+   for (i = start_slot; i <= end_slot; i++)
+      ShelfUpdateSlotWidgetWithData(file_mgr_rec, file_mgr_data_in, i);
+}
+
+static void
+ShelfUpdateSlotsRangeAllViews(
+        int start_slot,
+        int end_slot )
+{
+   int i;
+
+   for (i = 0; i < shelf_view_count; i++)
+   {
+      FileMgrRec *view = shelf_views[i];
+      if (view == NULL)
+         continue;
+      ShelfUpdateSlotsRange(view, start_slot, end_slot);
+   }
+}
+
+static void
+ShelfUpdateSlotAllViews(
+        int slot )
+{
+   ShelfUpdateSlotsRangeAllViews(slot, slot);
+}
+
 static FileMgrRec **shelf_views = NULL;
 static int shelf_view_count = 0;
 static Boolean shelf_drag_active = False;
 static int shelf_drag_slot = -1;
+static ShelfItemData *shelf_drag_candidate = NULL;
+static Widget shelf_drag_widget = NULL;
+static Widget shelf_drag_context = NULL;
+static Boolean shelf_rebuild_after_drag = False;
+static FileMgrRec *shelf_rebuild_rec = NULL;
 static Boolean shelf_rebuild_pending = False;
 static XtIntervalId shelf_rebuild_timer = 0;
 static Dimension shelf_row_height = 0;
@@ -653,6 +991,170 @@ ShelfItemEventEH(
       ShelfLog("ShelfItemEvent: unmap item=%p slot=%d\n",
                (void *)w,
                item_data ? item_data->slot : -1);
+   }
+}
+
+static Boolean
+ShelfAllowBtn1Transfer(Widget w)
+{
+   static int adjustState = -1;
+   XrmValue value_return;
+   char *str_type_return;
+
+   if (adjustState == -1)
+   {
+      if (XrmGetResource(XrmGetDatabase(XtDisplay(w)),
+                         "*enableBtn1Transfer",
+                         "*EnableBtn1Transfer",
+                         &str_type_return,
+                         &value_return) &&
+          value_return.addr &&
+          !strcmp(value_return.addr, "True"))
+      {
+         adjustState = True;
+      }
+      else
+      {
+         adjustState = False;
+      }
+   }
+
+   return adjustState ? True : False;
+}
+
+static ShelfItemData *
+ShelfItemAtPoint(Widget row, int x, int y, Widget *child_out)
+{
+   Widget *children = NULL;
+   Cardinal num_children = 0;
+   int i;
+
+   if (child_out)
+      *child_out = NULL;
+
+   XtVaGetValues(row,
+                 XmNchildren, &children,
+                 XmNnumChildren, &num_children,
+                 NULL);
+   if (children == NULL || num_children == 0)
+      return NULL;
+
+   for (i = 0; i < (int)num_children; i++)
+   {
+      Widget child = children[i];
+      Position cx = 0, cy = 0;
+      Dimension cw = 0, ch = 0;
+      ShelfItemData *item_data = NULL;
+
+      if (child == NULL)
+         continue;
+
+      XtVaGetValues(child,
+                    XmNx, &cx,
+                    XmNy, &cy,
+                    XmNwidth, &cw,
+                    XmNheight, &ch,
+                    XmNuserData, &item_data,
+                    NULL);
+
+      if (item_data == NULL || item_data->path == NULL)
+         continue;
+
+      if (x < cx || y < cy)
+         continue;
+      if ((Dimension)(x - cx) > cw || (Dimension)(y - cy) > ch)
+         continue;
+
+      if (child_out)
+         *child_out = child;
+      return item_data;
+   }
+
+   return NULL;
+}
+
+static void
+ShelfRowDragEH(
+        Widget w,
+        XtPointer client_data,
+        XEvent *event,
+        Boolean *cont )
+{
+   (void) client_data;
+   (void) cont;
+
+   if (event == NULL)
+      return;
+
+   if (event->type == ButtonPress)
+   {
+      XButtonEvent *bev = (XButtonEvent *)event;
+      ShelfItemData *item_data = NULL;
+      Widget child = NULL;
+
+      if (bev->button == bMenuButton)
+         return;
+
+      if (bev->button == Button1 || bev->button == Button2)
+      {
+         item_data = ShelfItemAtPoint(w, bev->x, bev->y, &child);
+         if (item_data == NULL || child == NULL)
+            return;
+
+         item_data->drag_possible = True;
+         item_data->drag_button = bev->button;
+         item_data->press_x = bev->x;
+         item_data->press_y = bev->y;
+         item_data->drag_started = False;
+         shelf_drag_candidate = item_data;
+         shelf_drag_widget = child;
+      }
+      return;
+   }
+
+   if (event->type == MotionNotify)
+   {
+      XMotionEvent *mev = (XMotionEvent *)event;
+      int dx, dy;
+
+      if (shelf_drag_candidate == NULL || !shelf_drag_candidate->drag_possible)
+         return;
+
+      if (shelf_drag_candidate->drag_button == Button1 &&
+          !(mev->state & Button1Mask))
+         return;
+      if (shelf_drag_candidate->drag_button == Button2 &&
+          !(mev->state & Button2Mask))
+         return;
+
+      dx = shelf_drag_candidate->press_x - mev->x;
+      dy = shelf_drag_candidate->press_y - mev->y;
+
+      if (((dx < 0 ? -dx : dx) >= dragThreshold) ||
+          ((dy < 0 ? -dy : dy) >= dragThreshold))
+      {
+         shelf_drag_candidate->drag_started = True;
+         shelf_drag_candidate->drag_possible = False;
+         if (shelf_drag_widget != NULL)
+            ShelfStartDrag(shelf_drag_widget, shelf_drag_candidate, event);
+         shelf_drag_candidate = NULL;
+         shelf_drag_widget = NULL;
+      }
+      return;
+   }
+
+   if (event->type == ButtonRelease)
+   {
+      XButtonEvent *bev = (XButtonEvent *)event;
+      if (shelf_drag_candidate != NULL &&
+          bev->button == shelf_drag_candidate->drag_button)
+      {
+         shelf_drag_candidate->drag_possible = False;
+         shelf_drag_candidate->drag_button = 0;
+         shelf_drag_candidate = NULL;
+         shelf_drag_widget = NULL;
+      }
+      return;
    }
 }
 
@@ -3321,7 +3823,7 @@ ShelfMoveFinishCB(XtPointer client_data, int rc)
    if (rc == 0)
    {
       ShelfClearSlot(data->slot);
-      ShelfRequestRebuild(toplevel);
+      ShelfUpdateSlotAllViews(data->slot);
    }
    XtFree((char *)data);
 }
@@ -3351,6 +3853,7 @@ ShelfMoveCopyLinkToCurrent(FileMgrRec *file_mgr_rec,
    {
       finish_data = XtNew(ShelfMoveFinishData);
       finish_data->slot = slot;
+      finish_data->file_mgr_rec = file_mgr_rec;
       finish_cb = (void (*)())ShelfMoveFinishCB;
    }
 
@@ -3650,6 +4153,21 @@ ShelfSlotDestroyCB(
 }
 
 static void
+ShelfDropContextDestroyCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data)
+{
+   FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
+
+   (void) w;
+   (void) call_data;
+
+   if (file_mgr_rec != NULL && file_mgr_rec->shelf_frame != NULL)
+      ShelfRequestRebuild(file_mgr_rec->shelf_frame);
+}
+
+static void
 ShelfDropIntoSlot(
         FileMgrRec *file_mgr_rec,
         int slot,
@@ -3678,15 +4196,23 @@ ShelfDropIntoSlot(
          slot++;
       }
    }
-
-   if (shelf_drag_active && shelf_drag_slot >= 0 &&
-       dropInfo->operation == XmDROP_MOVE)
+   if (getenv("DTFILE_SHELF_DEBUG") != NULL)
    {
-      if (shelf_drag_slot != first_slot)
-         ShelfClearSlot(shelf_drag_slot);
+      ShelfLog("ShelfDropIntoSlot: dragContext=%p shelf_drag_context=%p active=%d\n",
+               (void *)dropInfo->dragContext,
+               (void *)shelf_drag_context,
+               shelf_drag_active ? 1 : 0);
    }
 
-   ShelfRequestRebuild(file_mgr_rec->shelf_frame);
+   if (slot > first_slot)
+      ShelfUpdateSlotsRangeAllViews(first_slot, slot - 1);
+
+   if (shelf_drag_active && dropInfo->operation == XmDROP_MOVE &&
+       shelf_drag_slot >= 0 && shelf_drag_slot != first_slot)
+   {
+      ShelfClearSlot(shelf_drag_slot);
+      ShelfUpdateSlotAllViews(shelf_drag_slot);
+   }
    dropInfo->completeMove = False;
    dropInfo->status = DtDND_SUCCESS;
 }
@@ -3835,7 +4361,7 @@ ShelfItemDropCB(
    ShelfLog("ShelfItemDropCB: item=%p data=%p\n",
             (void *)w, (void *)item_data);
 
-   if (item_data == NULL || item_data->path == NULL)
+   if (item_data == NULL)
       return;
 
    if (dropInfo == NULL || dropInfo->dropData == NULL)
@@ -3847,6 +4373,12 @@ ShelfItemDropCB(
    if (dropInfo->dropData->protocol != DtDND_FILENAME_TRANSFER)
    {
       dropInfo->status = DtDND_FAILURE;
+      return;
+   }
+
+   if (item_data->path == NULL)
+   {
+      ShelfDropIntoSlot(item_data->file_mgr_rec, item_data->slot, dropInfo);
       return;
    }
 
@@ -4121,7 +4653,7 @@ ShelfPopupRemoveCB(
       return;
 
    ShelfClearSlot(data->slot);
-   ShelfRebuildAll();
+   ShelfUpdateSlotAllViews(data->slot);
 }
 
 static void
@@ -4224,6 +4756,19 @@ ShelfDragFinishCB(
 
    shelf_drag_active = False;
    shelf_drag_slot = -1;
+   shelf_drag_candidate = NULL;
+   shelf_drag_widget = NULL;
+   shelf_drag_context = NULL;
+
+   if (shelf_rebuild_after_drag)
+   {
+      shelf_rebuild_after_drag = False;
+      if (shelf_rebuild_rec != NULL && shelf_rebuild_rec->shelf_frame != NULL)
+         ShelfRequestRebuild(shelf_rebuild_rec->shelf_frame);
+      else
+         ShelfRebuildAll();
+      shelf_rebuild_rec = NULL;
+   }
 
    if (cb->sourceIcon)
       XtDestroyWidget(cb->sourceIcon);
@@ -4257,7 +4802,7 @@ ShelfConvertCB(
    else if (cb->reason == DtCR_DND_CONVERT_DELETE)
    {
       ShelfClearSlot(item_data->slot);
-      ShelfRequestRebuild(w);
+      ShelfUpdateSlotAllViews(item_data->slot);
    }
 }
 
@@ -4274,6 +4819,10 @@ ShelfStartDrag(
    Arg args[2];
    int numArgs = 0;
    unsigned char operations;
+   Widget drag_context;
+   Widget drag_icon = NULL;
+   Pixmap pm = None;
+   Pixmap mask = None;
 
    if (item_data == NULL || item_data->path == NULL)
       return;
@@ -4282,16 +4831,25 @@ ShelfStartDrag(
 
    operations = XmDROP_MOVE | XmDROP_COPY | XmDROP_LINK;
 
-   XtSetArg(args[numArgs], DtNsourceIcon, (Widget)NULL); numArgs++;
+   XtVaGetValues(w,
+                 XmNpixmap, &pm,
+                 XmNmask, &mask,
+                 NULL);
+   if (pm != None)
+      drag_icon = DtDndCreateSourceIcon(w, pm, mask);
+   XtSetArg(args[numArgs], DtNsourceIcon, drag_icon); numArgs++;
    shelf_drag_active = True;
    shelf_drag_slot = item_data->slot;
-   if (DtDndDragStart(w, event, DtDND_FILENAME_TRANSFER, 1,
-                      operations,
-                      convertCB, dragFinishCB, args, numArgs) == NULL)
+   drag_context = DtDndDragStart(w, event, DtDND_FILENAME_TRANSFER, 1,
+                                 operations,
+                                 convertCB, dragFinishCB, args, numArgs);
+   shelf_drag_context = drag_context;
+   if (drag_context == NULL)
    {
       item_data->drag_started = False;
       shelf_drag_active = False;
       shelf_drag_slot = -1;
+      shelf_drag_context = NULL;
    }
 }
 
@@ -4835,6 +5393,10 @@ ShelfRebuild(
                         ShelfWidgetEventEH, (XtPointer)shelf_row_tag);
    XtAddEventHandler(row, ButtonReleaseMask, False,
                      ShelfRowButtonEH, (XtPointer)file_mgr_rec);
+   XtAddEventHandler(row,
+                     ButtonPressMask | ButtonReleaseMask |
+                     Button1MotionMask | Button2MotionMask,
+                     False, ShelfRowDragEH, (XtPointer)file_mgr_rec);
    ShelfLogWidget("ShelfRebuild: shelf_row(after)", row);
 
    XtVaGetValues(row,
@@ -4999,152 +5561,14 @@ ShelfRebuild(
 
    for (i = 0; i <= max_slot; i++)
    {
-      const char *path;
       XmString label;
-      char *label_text;
-      const char *icon_name = NULL;
-      PixmapData *pixmapData = NULL;
-      char *resolved_path = NULL;
-      char *resolved_host = NULL;
-      char *data_type = NULL;
-      char *icon_name_owned = NULL;
-      char *icon_name_dup = NULL;
       Widget item;
       ShelfItemData *item_data;
 
-      path = ShelfGetPathForSlot(i);
-      DPRINTF(("ShelfRebuild: slot %d path=%s\n", i, path ? path : "(null)"));
-      ShelfLog("ShelfRebuild: slot %d path=%s\n", i,
-               path ? path : "(null)");
-      if (path == NULL)
-      {
-         ShelfSlotData *slot_data;
-         XmString empty_label;
-         n = 0;
-         empty_label = XmStringCreateLocalized("");
-         XtSetArg (args[n], XmNstring, empty_label);           n++;
-         XtSetArg (args[n], XmNimageName, (String)NULL);       n++;
-         XtSetArg (args[n], XmNmaxPixmapWidth, shelf_icon_px); n++;
-         XtSetArg (args[n], XmNmaxPixmapHeight, shelf_icon_px); n++;
-         XtSetArg (args[n], XmNunderline, False);              n++;
-         XtSetArg (args[n], XmNfillMode, XmFILL_TRANSPARENT);  n++;
-         XtSetArg (args[n], XmNpixmapPosition, XmPIXMAP_TOP);  n++;
-         XtSetArg (args[n], XmNstringPosition, XmSTRING_BOTTOM); n++;
-         XtSetArg (args[n], XmNbehavior, XmICON_BUTTON);       n++;
-         XtSetArg (args[n], XmNtraversalOn, False);            n++;
-         XtSetArg (args[n], XmNrecomputeSize, False);          n++;
-         XtSetArg (args[n], XmNresizeHeight, False);           n++;
-         XtSetArg (args[n], XmNresizeWidth, False);            n++;
-         XtSetArg (args[n], XmNhighlightThickness, 2);         n++;
-         XtSetArg (args[n], XmNborderWidth, 0);                n++;
-         XtSetArg (args[n], XmNbackground, bg);                n++;
-         XtSetArg (args[n], XmNwidth, slot_width);             n++;
-         XtSetArg (args[n], XmNheight, slot_height);           n++;
-         XtSetArg (args[n], XmNminWidth, slot_width);          n++;
-         XtSetArg (args[n], XmNmaxWidth, slot_width);          n++;
-         XtSetArg (args[n], XmNminHeight, slot_height);        n++;
-         XtSetArg (args[n], XmNmaxHeight, slot_height);        n++;
-         item = _DtCreateIcon(row, "shelf_slot", args, n);
-         XmStringFree(empty_label);
-         if (item)
-         {
-            slot_data = XtNew(ShelfSlotData);
-            slot_data->file_mgr_rec = file_mgr_rec;
-            slot_data->slot = i;
-            XtAddCallback(item, XmNdestroyCallback, ShelfSlotDestroyCB,
-                          (XtPointer)slot_data);
-            ShelfSlotRegisterDropSite(item, slot_data);
-            XtManageChild(item);
-            if (XtIsRealized(item))
-               XtResizeWidget(item, slot_width, slot_height, 0);
-            if (getenv("DTFILE_SHELF_DEBUG") != NULL)
-            {
-               Dimension sw = 0, sh = 0;
-               XtVaGetValues(item, XmNwidth, &sw, XmNheight, &sh, NULL);
-               ShelfLog("ShelfRebuild: empty slot %d widget=%p w=%u h=%u\n",
-                        i, (void *)item, (unsigned)sw, (unsigned)sh);
-            }
-         }
-         else
-         {
-            ShelfLog("ShelfRebuild: failed to create slot %d placeholder\n", i);
-         }
-         continue;
-      }
-
-      if (i == 0)
-         label_text = XtNewString("Home");
-      else
-      {
-         const char *base = strrchr(path, '/');
-         if (base && *(base + 1) != '\0')
-            label_text = XtNewString(base + 1);
-         else
-            label_text = XtNewString(path);
-      }
-
-      if (label_text)
-      {
-         char *fit = ShelfFitLabel(label_text, font_list, (int)slot_width - 10);
-         XtFree(label_text);
-         label_text = fit ? fit : XtNewString("?");
-      }
-
-      resolved_path = ShelfResolvePath(file_mgr_data, path, &resolved_host);
-      ShelfLog("ShelfRebuild: slot %d resolved=%s host=%s\n",
-               i,
-               resolved_path ? resolved_path : "(null)",
-               resolved_host ? resolved_host : "(null)");
-      if (resolved_path)
-      {
-         pixmapData = ShelfGetPixmapData(file_mgr_rec, file_mgr_data,
-                                         resolved_path, shelf_icon_size,
-                                         &data_type);
-         if (pixmapData)
-            icon_name = pixmapData->iconFileName;
-         else if (data_type)
-         {
-            char *icon_attr = DtDtsDataTypeToAttributeValue(
-                                 data_type, DtDTS_DA_ICON, NULL);
-            const char *fallback = NULL;
-            if (icon_attr && *icon_attr)
-            {
-               int dt_size = (shelf_icon_size == EXTRA_LARGE) ? DtLARGE :
-                              (shelf_icon_size == LARGE) ? DtMEDIUM : DtSMALL;
-               icon_name_owned = _DtGetIconFileName(XtScreen(file_mgr_rec->shell),
-                                                   NULL, icon_attr, NULL, dt_size);
-               DtDtsFreeAttributeValue(icon_attr);
-            }
-            else
-            {
-               if (strcmp(data_type, LT_DIRECTORY) == 0)
-                  fallback = "DtdirB";
-               else
-                  fallback = "Dtdeflt";
-               int dt_size = (shelf_icon_size == EXTRA_LARGE) ? DtLARGE :
-                              (shelf_icon_size == LARGE) ? DtMEDIUM : DtSMALL;
-               icon_name_owned = _DtGetIconFileName(XtScreen(file_mgr_rec->shell),
-                                                   NULL, (String)fallback, NULL, dt_size);
-               if (icon_attr)
-                  DtDtsFreeAttributeValue(icon_attr);
-            }
-            if (icon_name_owned && *icon_name_owned)
-               icon_name = icon_name_owned;
-            ShelfLog("ShelfRebuild: fallback icon type=%s icon=%s\n",
-                     data_type, icon_name ? icon_name : "(null)");
-         }
-      }
-
-      ShelfLog("ShelfRebuild: create item slot %d label='%s' icon='%s'\n",
-               i, label_text ? label_text : "(null)",
-               icon_name ? icon_name : "(null)");
-
-      label = XmStringCreateLocalized(label_text ? label_text : "");
-      if (icon_name)
-         icon_name_dup = XtNewString(icon_name);
+      label = XmStringCreateLocalized("");
       n = 0;
       XtSetArg (args[n], XmNstring, label);                 n++;
-      XtSetArg (args[n], XmNimageName, icon_name_dup);      n++;
+      XtSetArg (args[n], XmNimageName, (String)NULL);       n++;
       XtSetArg (args[n], XmNmaxPixmapWidth, shelf_icon_px); n++;
       XtSetArg (args[n], XmNmaxPixmapHeight, shelf_icon_px); n++;
       XtSetArg (args[n], XmNunderline, False);              n++;
@@ -5153,10 +5577,12 @@ ShelfRebuild(
       XtSetArg (args[n], XmNstringPosition, XmSTRING_BOTTOM); n++;
       XtSetArg (args[n], XmNbehavior, XmICON_BUTTON);       n++;
       XtSetArg (args[n], XmNtraversalOn, False);            n++;
-      XtSetArg (args[n], XmNshadowThickness, 2);            n++;
       XtSetArg (args[n], XmNrecomputeSize, False);          n++;
       XtSetArg (args[n], XmNresizeHeight, False);           n++;
       XtSetArg (args[n], XmNresizeWidth, False);            n++;
+      XtSetArg (args[n], XmNhighlightThickness, 2);         n++;
+      XtSetArg (args[n], XmNborderWidth, 0);                n++;
+      XtSetArg (args[n], XmNbackground, bg);                n++;
       XtSetArg (args[n], XmNwidth, slot_width);             n++;
       XtSetArg (args[n], XmNheight, slot_height);           n++;
       XtSetArg (args[n], XmNminWidth, slot_width);          n++;
@@ -5167,33 +5593,8 @@ ShelfRebuild(
       ShelfLog("ShelfRebuild: created shelf_item=%p slot=%d\n", (void *)item, i);
       if (item == NULL)
       {
-         if (pixmapData)
-         {
-            ShelfFreePixmapData(pixmapData);
-            pixmapData = NULL;
-         }
-         if (icon_name_owned)
-            XtFree(icon_name_owned);
-         if (data_type)
-            DtDtsFreeDataType(data_type);
-         if (resolved_path)
-            XtFree(resolved_path);
-         if (resolved_host)
-            XtFree(resolved_host);
          XmStringFree(label);
-         XtFree(label_text);
          continue;
-      }
-      if (icon_name_dup || label)
-      {
-         XtVaSetValues(item,
-                       XmNimageName, icon_name_dup,
-                       XmNstring, label,
-                       XmNpixmapPosition, XmPIXMAP_TOP,
-                       XmNmaxPixmapWidth, shelf_icon_px,
-                       XmNmaxPixmapHeight, shelf_icon_px,
-                       XmNfillMode, XmFILL_TRANSPARENT,
-                       NULL);
       }
       XtManageChild(item);
       if (XtIsRealized(item))
@@ -5222,28 +5623,15 @@ ShelfRebuild(
                   (unsigned)str_pos);
       }
       XmStringFree(label);
-      XtFree(label_text);
-
-      if (pixmapData)
-      {
-         ShelfFreePixmapData(pixmapData);
-         pixmapData = NULL;
-      }
-      if (icon_name_owned)
-         XtFree(icon_name_owned);
-      if (data_type)
-         DtDtsFreeDataType(data_type);
-      if (resolved_path)
-         XtFree(resolved_path);
-      if (resolved_host)
-         XtFree(resolved_host);
 
       item_data = (ShelfItemData *)XtMalloc(sizeof(ShelfItemData));
       item_data->file_mgr_rec = file_mgr_rec;
-      item_data->path = XtNewString(path);
-      item_data->icon_name = icon_name_dup;
+      item_data->path = NULL;
+      item_data->icon_name = NULL;
       item_data->slot = i;
       item_data->drag_started = False;
+      item_data->drag_possible = False;
+      item_data->drag_button = 0;
       item_data->press_x = 0;
       item_data->press_y = 0;
       item_data->drop_registered = False;
@@ -5272,6 +5660,7 @@ ShelfRebuild(
       XtResizeWidget(row, XtWidth(row), shelf_row_height, 0);
 
    ShelfLog("ShelfRebuild: end shelf_frame=%p\n", (void *)file_mgr_rec->shelf_frame);
+   ShelfUpdateSlotsRangeWithData(file_mgr_rec, file_mgr_data, 0, max_slot);
    /* Re-assert fixed shelf sizing after children are created to avoid collapse */
    if (shelf_row_height > 0)
    {
@@ -5345,6 +5734,13 @@ void
 ShelfRequestRebuild(Widget widget)
 {
    XtAppContext app;
+
+   if (shelf_drag_active || shelf_drag_context != NULL)
+   {
+      shelf_rebuild_after_drag = True;
+      shelf_rebuild_rec = NULL;
+      return;
+   }
 
    if (shelf_rebuild_pending)
       return;
