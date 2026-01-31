@@ -270,6 +270,7 @@ typedef struct
    Boolean       show_iconic_path;
    Boolean       show_current_dir;
    Boolean       show_status_line;
+   Boolean       render_image_icons;
    Boolean       fast_cd_enabled;
    Boolean       show_hid_enabled;
 

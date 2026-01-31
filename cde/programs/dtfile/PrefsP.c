@@ -206,7 +206,8 @@ PreferencesChange(
        file_mgr_data->show_shelf != preferences_data->show_shelf ||
        file_mgr_data->show_iconic_path != preferences_data->show_iconic_path ||
        file_mgr_data->show_current_dir != preferences_data->show_current_dir ||
-       file_mgr_data->show_status_line != preferences_data->show_status_line)
+       file_mgr_data->show_status_line != preferences_data->show_status_line ||
+       file_mgr_data->render_image_icons != preferences_data->render_image_icons)
    {
       /*
        * Depending upon which of the preferences values changed, positioning
@@ -267,6 +268,7 @@ PreferencesChange(
       file_mgr_data->show_iconic_path = preferences_data->show_iconic_path;
       file_mgr_data->show_current_dir = preferences_data->show_current_dir;
       file_mgr_data->show_status_line = preferences_data->show_status_line;
+      file_mgr_data->render_image_icons = preferences_data->render_image_icons;
       if (file_mgr_data->positionEnabled == preferences_data->positionEnabled)
          FileMgrRedisplayFiles (file_mgr_rec, file_mgr_data, False);
       else

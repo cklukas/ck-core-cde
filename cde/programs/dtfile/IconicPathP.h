@@ -96,6 +96,7 @@ typedef struct
 	char *msg_text;
 	
 	char * directory_shown;
+	char * selected_file_shown;
 	int icon_size_shown;
 	Widget dotdot_button;
 	Widget dropzone_icon;

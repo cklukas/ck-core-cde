@@ -190,6 +190,15 @@ extern Boolean _DtSpacesInFileNames(
 extern char * _DtResolveAppManPath(
                         char *path,
                         char *restricted_dir) ;
+extern Boolean DtfileLooksLikeImageIcon(
+                        const char *path,
+                        unsigned int *out_w,
+                        unsigned int *out_h );
+extern Boolean DtfileShouldRenderImageIcon(
+                        const char *path,
+                        Boolean enabled,
+                        unsigned int *out_w,
+                        unsigned int *out_h );
 
 /********    End Public Function Declarations    ********/
 

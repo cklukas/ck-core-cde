@@ -177,12 +177,17 @@ static char * Tree_files_always = "always";
 static char * PreferencesName = "Preferences";
 static char * Random_on = "random_on";
 static char * Random_off = "random_off";
+static char * Render_image_icons = "render_image_icons";
 
 
 /*  Resource definitions for the preferences dialog  */
 
 static DialogResource resources[] =
 {
+   { "render_image_icons", XmRBoolean, sizeof(Boolean),
+     XtOffset(PreferencesDataPtr, render_image_icons),
+     (XtPointer) True, _DtBooleanToString },
+
    { "showType", SHOW_TYPE, sizeof(unsigned char),
      XtOffset(PreferencesDataPtr, show_type),
      (XtPointer) SINGLE_DIRECTORY, ShowTypeToString },
@@ -589,8 +594,6 @@ Create(
    XtSetArg (args[n], XmNleftWidget, show_frame);               n++;
    XtSetArg (args[n], XmNrightAttachment, XmATTACH_FORM);       n++;
    XtSetArg (args[n], XmNrightOffset, offset);                  n++;
-   XtSetArg (args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET);	n++;
-   XtSetArg (args[n], XmNbottomWidget, show_frame);             n++;
    XtSetArg (args[n], XmNmarginWidth, offset);                  n++;
    XtSetArg (args[n], XmNmarginHeight, offset);                 n++;
    view_frame = _DtCreateTitleBox(form, "view_frame", args, n);
@@ -689,6 +692,24 @@ Create(
    XtSetArg (args[n], XmNindicatorType, XmONE_OF_MANY);         n++;
    preferences_rec->by_attributes = temp =
       XmCreateToggleButtonGadget (group_form, "by_attributes", args, n);
+   XtManageChild (temp);
+   XmStringFree (label_string);
+   XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
+                  (XtPointer) preferences_rec);
+   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+                 HELP_PREFERENCES_VIEW_STR);
+
+   /* Render Image Icons */
+   label_string = XmStringCreateLocalized (((char *)GETMESSAGE(23,40, "Render Image Icons")));
+   n = 0;
+   XtSetArg (args[n], XmNlabelString, label_string);            n++;
+   XtSetArg (args[n], XmNtopAttachment, XmATTACH_WIDGET);       n++;
+   XtSetArg (args[n], XmNtopWidget, temp);                      n++;
+   XtSetArg (args[n], XmNtopOffset, offset);                    n++;
+   XtSetArg (args[n], XmNleftAttachment, XmATTACH_FORM);        n++;
+   XtSetArg (args[n], XmNindicatorType, XmN_OF_MANY);           n++;
+   preferences_rec->render_image_icons = temp =
+      XmCreateToggleButtonGadget (group_form, "render_image_icons", args, n);
    XtManageChild (temp);
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
@@ -1142,6 +1163,7 @@ GetDefaultValues( void )
    preferences_data->order = ORDER_BY_ALPHABETICAL;
    preferences_data->direction = DIRECTION_ASCENDING;
    preferences_data->positionEnabled = RANDOM_OFF;
+   preferences_data->render_image_icons = True;
 
    return ((XtPointer) preferences_data);
 }
@@ -1343,6 +1365,11 @@ SetValues(
       XtSetValues (preferences_rec->random_on, false_args, 1);
    }
 
+   if (preferences_data->render_image_icons)
+     XtSetValues (preferences_rec->render_image_icons, true_args, 1);
+   else
+     XtSetValues (preferences_rec->render_image_icons, false_args, 1);
+
    if( trashFileMgrData
        &&(PreferencesData *)trashFileMgrData->preferences->data ==
           preferences_data )
@@ -1474,6 +1501,7 @@ ResetCallback(
    preferences_data->show_iconic_path = True;
    preferences_data->show_current_dir = True;
    preferences_data->show_status_line = True;
+   preferences_data->render_image_icons = True;
 
    /*  Get the current data for the dialog and redisplay.  */
 
@@ -1803,6 +1831,9 @@ GetPreferencesValues(
    preferences_data->show_current_dir = set;
    XtGetValues (preferences_rec->show_status_line, args, 1);
    preferences_data->show_status_line = set;
+
+   XtGetValues (preferences_rec->render_image_icons, args, 1);
+   preferences_data->render_image_icons = set;
 }
 
 

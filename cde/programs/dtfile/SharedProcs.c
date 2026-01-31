@@ -1963,3 +1963,151 @@ _DtResolveAppManPath(
 
    return(path);
 }
+
+Boolean
+DtfileLooksLikeImageIcon(
+         const char *path,
+         unsigned int *out_w,
+         unsigned int *out_h)
+{
+   FILE *fp;
+   char buf[4096];
+   unsigned int w = 0, h = 0;
+   Boolean saw_xpm = False;
+   const char *ext = NULL;
+
+   if (out_w) *out_w = 0;
+   if (out_h) *out_h = 0;
+   if (path == NULL || path[0] == '\0')
+      return False;
+
+   {
+      const char *fname = strrchr(path, '/');
+      if (fname && *(fname + 1) != '\0')
+         fname++;
+      else
+         fname = path;
+      if (fname)
+      {
+         size_t fn_len = strlen(fname);
+         const char *ext3 = NULL;
+         const char *ext4 = NULL;
+
+         if (fn_len >= 3)
+            ext3 = fname + fn_len - 3;
+         if (fn_len >= 4)
+            ext4 = fname + fn_len - 4;
+
+         if (!((ext3 && (strcasecmp(ext3, ".pm") == 0 || strcasecmp(ext3, ".bm") == 0)) ||
+               (ext4 && (strcasecmp(ext4, ".xbm") == 0 || strcasecmp(ext4, ".xpm") == 0))))
+            return False;
+      }
+      else
+      {
+         return False;
+      }
+   }
+
+   fp = fopen(path, "r");
+   if (fp == NULL)
+      return False;
+
+   {
+      size_t total = 0;
+      int lines = 0;
+      const size_t max_bytes = 65536;
+      const int max_lines = 200;
+
+      while (fgets(buf, sizeof(buf), fp) != NULL)
+      {
+         total += strlen(buf);
+         lines++;
+         if (total > max_bytes || lines > max_lines)
+            break;
+
+         if (!saw_xpm && strstr(buf, "XPM") != NULL)
+            saw_xpm = True;
+
+         if (saw_xpm)
+         {
+            const char *p = strchr(buf, '"');
+            if (p != NULL)
+            {
+               const char *q = strchr(p + 1, '"');
+               if (q != NULL)
+               {
+                  char header[128];
+                  size_t len = (size_t)(q - (p + 1));
+                  if (len >= sizeof(header))
+                     len = sizeof(header) - 1;
+                  memcpy(header, p + 1, len);
+                  header[len] = '\0';
+                  if (sscanf(header, "%u %u", &w, &h) == 2 &&
+                      w > 0 && h > 0 && w <= 512 && h <= 512)
+                  {
+                     fclose(fp);
+                     if (out_w) *out_w = w;
+                     if (out_h) *out_h = h;
+                     return True;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   rewind(fp);
+   {
+      size_t total = 0;
+      int lines = 0;
+      const size_t max_bytes = 65536;
+      const int max_lines = 200;
+
+      while (fgets(buf, sizeof(buf), fp) != NULL)
+      {
+         const char *p = strstr(buf, "#define");
+
+         total += strlen(buf);
+         lines++;
+         if (total > max_bytes || lines > max_lines)
+            break;
+
+         if (p != NULL)
+         {
+            unsigned int val = 0;
+            char macro[128];
+            if (sscanf(p, "#define %127s %u", macro, &val) == 2)
+            {
+               size_t mlen = strlen(macro);
+               if (mlen >= 6 && strcmp(macro + (mlen - 6), "_width") == 0)
+                  w = val;
+               else if (mlen >= 7 && strcmp(macro + (mlen - 7), "_height") == 0)
+                  h = val;
+               if (w > 0 && h > 0)
+                  break;
+            }
+         }
+      }
+   }
+   fclose(fp);
+   if (w > 0 && h > 0 && w <= 512 && h <= 512)
+   {
+      if (out_w) *out_w = w;
+      if (out_h) *out_h = h;
+      return True;
+   }
+
+   return False;
+}
+
+Boolean
+DtfileShouldRenderImageIcon(
+         const char *path,
+         Boolean enabled,
+         unsigned int *out_w,
+         unsigned int *out_h)
+{
+   if (!enabled)
+      return False;
+   return DtfileLooksLikeImageIcon(path, out_w, out_h);
+}

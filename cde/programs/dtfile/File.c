@@ -218,6 +218,7 @@
 #include "Help.h"
 #include "SharedMsgs.h"
 #include "StorageSize.h"
+#include "IconicPath.h"
 
 extern Widget _DtDuplicateIcon ( Widget, Widget, XmString, String, XtPointer, Boolean );
 
@@ -2724,6 +2725,12 @@ SelectFile(
       FileMgrRec *file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
       UpdateHeaders(file_mgr_rec, file_mgr_data, False);
    }
+   else if (file_mgr_data->file_mgr_rec && file_mgr_data->show_iconic_path)
+   {
+      FileMgrRec *file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
+      if (file_mgr_rec->iconic_path_da)
+         DtUpdateIconicPath(file_mgr_rec, file_mgr_data, True);
+   }
 }
 
 
@@ -2773,6 +2780,12 @@ DeselectFile(
    {
       FileMgrRec *file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
       UpdateHeaders(file_mgr_rec, file_mgr_data, False);
+   }
+   else if (file_mgr_data->file_mgr_rec && file_mgr_data->show_iconic_path)
+   {
+      FileMgrRec *file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
+      if (file_mgr_rec->iconic_path_da)
+         DtUpdateIconicPath(file_mgr_rec, file_mgr_data, True);
    }
 }
 
@@ -2883,6 +2896,12 @@ DeselectAllFiles(
    {
       FileMgrRec *file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
       UpdateHeaders(file_mgr_rec, file_mgr_data, False);
+   }
+   else if (file_mgr_data->file_mgr_rec && file_mgr_data->show_iconic_path)
+   {
+      FileMgrRec *file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
+      if (file_mgr_rec->iconic_path_da)
+         DtUpdateIconicPath(file_mgr_rec, file_mgr_data, True);
    }
 
 }
@@ -5627,6 +5646,12 @@ UpdateOneIconLabel(
  * UpdateOneFileIcon
  *------------------------------------------------------------------*/
 
+/*
+ * Return True if the given file looks like an XPM/XBM icon and provides
+ * reasonable (<=512x512) dimensions.
+ *
+ * Note: This is intentionally lightweight; DtIcon will do the real load.
+ */
 static void
 UpdateOneFileIcon(
         FileMgrRec *file_mgr_rec,
@@ -5640,6 +5665,8 @@ UpdateOneFileIcon(
    Widget btn_widget;
    Boolean is_instance_icon;
    Boolean instance_icon_changed;
+   char *full_path = NULL;
+   const char *effective_image_name = NULL;
    Arg args[35];
    int n_color_args;
    int argi_imageName;
@@ -5648,6 +5675,17 @@ UpdateOneFileIcon(
    XmManagerWidget file_window = (XmManagerWidget) file_mgr_rec->file_window;
    DirectorySet *directory_set = (DirectorySet *)file_view_data->directory_set;
    IconLayoutData *layout_data = (IconLayoutData *)file_mgr_data->layout_data;
+
+   {
+      const char *dir = directory_set->name ? directory_set->name : "";
+      const char *name = file_view_data->file_data->file_name ?
+                         file_view_data->file_data->file_name : "";
+      size_t need = strlen(dir) + 1 + strlen(name) + 1;
+      full_path = (char *)XtMalloc(need);
+      strcpy(full_path, dir);
+      strcat(full_path, "/");
+      strcat(full_path, name);
+   }
 
    /* Get the label and icon to be used for the widget */
    if (!file_view_data->label)
@@ -5698,14 +5736,50 @@ UpdateOneFileIcon(
    is_instance_icon = False;
    if (pixmapData != NULL)
    {
-     char tmp[1024];
-
-     strcpy(tmp, directory_set->name);
-     strcat(tmp, "/");
-     strcat(tmp, file_view_data->file_data->file_name);
-     if (strcmp(pixmapData->iconFileName, tmp) == 0)
+     if (full_path && pixmapData->iconFileName &&
+         strcmp(pixmapData->iconFileName, full_path) == 0)
         is_instance_icon = True;
    }
+
+   /* Optionally treat .pm/.bm as image icons (instance icons). */
+   if (full_path)
+   {
+      unsigned int iw = 0, ih = 0;
+      if (DtfileShouldRenderImageIcon(full_path,
+                                      file_mgr_data->render_image_icons,
+                                      &iw, &ih))
+      {
+         is_instance_icon = True;
+         effective_image_name = full_path;
+      }
+   }
+
+   /* If disabled, avoid rendering .pm/.bm as instance icons. */
+   if (full_path && !file_mgr_data->render_image_icons && is_instance_icon)
+   {
+      unsigned int iw = 0, ih = 0;
+      if (DtfileLooksLikeImageIcon(full_path, &iw, &ih))
+      {
+         /* Re-fetch without a filename to prevent instance-icon resolution. */
+         if (file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
+            pixmapData = _DtRetrievePixmapData(
+                            logical_type, NULL, directory_set->name,
+                            (Widget) file_window, EXTRA_LARGE);
+         else if (file_mgr_data->view == BY_NAME_AND_ICON)
+            pixmapData = _DtRetrievePixmapData(
+                            logical_type, NULL, directory_set->name,
+                            (Widget) file_window, LARGE);
+         else
+            pixmapData = _DtRetrievePixmapData(
+                            logical_type, NULL, directory_set->name,
+                            (Widget) file_window, SMALL);
+
+         is_instance_icon = False;
+      }
+   }
+
+   if (effective_image_name == NULL && pixmapData != NULL)
+      effective_image_name = pixmapData->iconFileName;
 
    /* check if instance icon was modified */
    instance_icon_changed = False;
@@ -5779,10 +5853,7 @@ UpdateOneFileIcon(
 
    XtSetArg (args[n], XmNstring, icon_label);                        n++;
    argi_imageName = n;
-   if (pixmapData)
-     XtSetArg (args[n], XmNimageName, pixmapData->iconFileName);
-   else
-     XtSetArg (args[n], XmNimageName, NULL);
+   XtSetArg (args[n], XmNimageName, (String)effective_image_name);
    n++;
    XtSetArg (args[n], XmNmaxPixmapWidth, layout_data->pixmap_width);   n++;
    XtSetArg (args[n], XmNmaxPixmapHeight, layout_data->pixmap_height); n++;
@@ -5829,9 +5900,9 @@ UpdateOneFileIcon(
       icon_widget->core.y = -999;
       XtSetValues (icon_widget, args, n);
 
-      if (instance_icon_changed && pixmapData)
+      if (instance_icon_changed && effective_image_name)
       {
-         XtSetArg (args[0], XmNimageName, pixmapData->iconFileName);
+         XtSetArg (args[0], XmNimageName, (String)effective_image_name);
          XtSetValues (icon_widget, args, 1);
       }
    }
@@ -5871,7 +5942,7 @@ UpdateOneFileIcon(
          icon_widget = _DtDuplicateIcon ((Widget)file_window,
                        layout_data->dup_icon_widget,
                        icon_label,
-                       (pixmapData? pixmapData->iconFileName: NULL),
+                       (String)effective_image_name,
                        (XtPointer)directory_set, /* userData */
                        False);                   /* underline */
          g = (DtIconGadget)icon_widget;
@@ -5936,6 +6007,7 @@ UpdateOneFileIcon(
                   file_view_data);
 
    XmStringFree (icon_label);
+   XtFree(full_path);
 
    /* Check if we need a button for tree branch expand */
 

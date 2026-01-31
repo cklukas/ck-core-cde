@@ -684,6 +684,9 @@ ShelfUpdateSlotWidgetWithData(
    char *icon_name_dup = NULL;
    const char *icon_name = NULL;
    PixmapData *pixmapData = NULL;
+   Boolean render_image = False;
+   unsigned int img_w = 0;
+   unsigned int img_h = 0;
    int shelf_icon_size;
    int shelf_icon_px = 0;
    int max_label_px;
@@ -759,6 +762,13 @@ ShelfUpdateSlotWidgetWithData(
    label_text = NULL;
 
    resolved_path = ShelfResolvePath(file_mgr_data, path, &resolved_host);
+   if (resolved_path)
+   {
+      if (DtfileShouldRenderImageIcon(resolved_path,
+                                      file_mgr_data->render_image_icons,
+                                      &img_w, &img_h))
+         render_image = True;
+   }
    if (item_data)
    {
       struct stat st;
@@ -774,7 +784,9 @@ ShelfUpdateSlotWidgetWithData(
    pixmapData = ShelfGetPixmapData(file_mgr_rec, file_mgr_data,
                                    resolved_path, shelf_icon_size,
                                    &data_type);
-   if (pixmapData && pixmapData->iconFileName && *pixmapData->iconFileName)
+   if (render_image)
+      icon_name = resolved_path;
+   else if (pixmapData && pixmapData->iconFileName && *pixmapData->iconFileName)
       icon_name = pixmapData->iconFileName;
 
    if (icon_name == NULL)
@@ -2045,6 +2057,7 @@ GetDefaultValues( void )
    file_mgr_data->show_iconic_path = True;
    file_mgr_data->show_current_dir = True;
    file_mgr_data->show_status_line = True;
+   file_mgr_data->render_image_icons = True;
 
    file_mgr_data->scrollToThisFile = NULL;
    file_mgr_data->scrollToThisDirectory = NULL;
@@ -2213,6 +2226,7 @@ GetDefaultValues( void )
    preferences_data->show_iconic_path = file_mgr_data->show_iconic_path;
    preferences_data->show_current_dir = file_mgr_data->show_current_dir;
    preferences_data->show_status_line = file_mgr_data->show_status_line;
+   file_mgr_data->render_image_icons = preferences_data->render_image_icons;
 
    file_mgr_data->filter_edit = _DtGetDefaultDialogData (filter_dialog);
    file_mgr_data->filter_active = _DtGetDefaultDialogData (filter_dialog);
@@ -2308,6 +2322,7 @@ GetResourceValues(
    file_mgr_data->show_iconic_path = True;
    file_mgr_data->show_current_dir = True;
    file_mgr_data->show_status_line = True;
+   file_mgr_data->render_image_icons = True;
    file_mgr_data->scrollToThisFile = NULL;
    file_mgr_data->scrollToThisDirectory = NULL;
    file_mgr_data->renaming = NULL;
@@ -7323,6 +7338,8 @@ FileMgrPropagateSettings(
                                                     src_data->show_current_dir;
    dst_data->show_status_line = dst_preferences_data->show_status_line =
                                                     src_data->show_status_line;
+   dst_data->render_image_icons = dst_preferences_data->render_image_icons =
+                                                    src_data->render_image_icons;
 
 
    /* Copy the Filter active info from src to dest data */
