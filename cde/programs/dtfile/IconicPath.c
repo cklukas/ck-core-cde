@@ -691,10 +691,7 @@ Update(
    int n_changes = 0;
    PixmapData *pixmapData;
    char msg_buf[4*MAX_PATH];
-   unsigned char icon_alignment = XmALIGNMENT_BEGINNING;
-
-   if (file_mgr_data && file_mgr_data->center_icons)
-      icon_alignment = XmALIGNMENT_CENTER;
+   unsigned char icon_alignment = FileMgrGetIconAlignment(file_mgr_data);
 
    /* macro that updates the change count */
 # define INC_N_CHANGES() \

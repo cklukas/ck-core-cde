@@ -174,6 +174,14 @@
 
 #include <stdarg.h>
 
+unsigned char
+FileMgrGetIconAlignment(const FileMgrData *file_mgr_data)
+{
+   return (file_mgr_data && file_mgr_data->center_icons)
+            ? XmALIGNMENT_CENTER
+            : XmALIGNMENT_BEGINNING;
+}
+
 /*  Dialog classes installed by Main.c  */
 
 extern int file_mgr_dialog;
@@ -738,8 +746,7 @@ ShelfUpdateSlotWidgetWithData(
    if (row == NULL)
       return;
 
-   icon_alignment = file_mgr_data->center_icons ? XmALIGNMENT_CENTER
-                                               : XmALIGNMENT_BEGINNING;
+   icon_alignment = FileMgrGetIconAlignment(file_mgr_data);
 
    item = ShelfFindWidgetForSlot(row, slot, &item_data);
    if (item == NULL || item_data == NULL)
@@ -6240,8 +6247,7 @@ ShelfRebuild(
       XtSetArg (args[n], XmNpixmapPosition, XmPIXMAP_TOP);  n++;
       XtSetArg (args[n], XmNstringPosition, XmSTRING_BOTTOM); n++;
       XtSetArg (args[n], XmNalignment,
-                file_mgr_data->center_icons ? XmALIGNMENT_CENTER
-                                            : XmALIGNMENT_BEGINNING); n++;
+                FileMgrGetIconAlignment(file_mgr_data)); n++;
       XtSetArg (args[n], XmNbehavior, XmICON_BUTTON);       n++;
       XtSetArg (args[n], XmNtraversalOn, False);            n++;
       XtSetArg (args[n], XmNrecomputeSize, False);          n++;

@@ -5867,8 +5867,7 @@ UpdateOneFileIcon(
        file_mgr_data->show_type != MULTIPLE_DIRECTORY)
    {
       XtSetArg (args[n], XmNalignment,
-                file_mgr_data->center_icons ? XmALIGNMENT_CENTER
-                                            : XmALIGNMENT_BEGINNING);
+                FileMgrGetIconAlignment(file_mgr_data));
       n++;
       XtSetArg (args[n], XmNpixmapPosition, XmPIXMAP_TOP);
       n++;
@@ -6448,16 +6447,7 @@ GetIconLayoutParms(
           file_mgr_data->show_type != MULTIPLE_DIRECTORY &&
           ld->pixmap_position == XmPIXMAP_TOP)
       {
-         ld->alignment = file_mgr_data->center_icons
-                           ? XmALIGNMENT_CENTER
-                           : XmALIGNMENT_BEGINNING;
-         if (getenv("DTFILE_CENTER_DEBUG") != NULL)
-         {
-            fprintf(stderr,
-                    "dtfile-center: layout alignment=%d center_icons=%d\n",
-                    (int)ld->alignment,
-                    file_mgr_data->center_icons ? 1 : 0);
-         }
+         ld->alignment = FileMgrGetIconAlignment(file_mgr_data);
       }
 
       ld->margin = ld->highlight + shadowThickness + marginWidth;
@@ -6934,40 +6924,16 @@ DisplaySomeIcons(
    /* Get a list of icon and button widgets we can re-use */
    file_window = (XmManagerWidget) file_mgr_rec->file_window;
    layout_data = (IconLayoutData *)file_mgr_data->layout_data;
-   if (layout_data)
-   {
-      layout_data->alignment = file_mgr_data->center_icons
-                                 ? XmALIGNMENT_CENTER
-                                 : XmALIGNMENT_BEGINNING;
-      if (getenv("DTFILE_CENTER_DEBUG") != NULL)
-         fprintf(stderr,
-                 "dtfile-center: layout_data alignment=%d (center=%d)\n",
-                 layout_data->alignment ? layout_data->alignment : 0,
-                 file_mgr_data->center_icons ? 1 : 0);
-   }
-   if (layout_data)
-   {
-      layout_data->alignment = file_mgr_data->center_icons
-                                 ? XmALIGNMENT_CENTER
-                                 : XmALIGNMENT_BEGINNING;
-      if (getenv("DTFILE_CENTER_DEBUG") != NULL)
-         fprintf(stderr,
-                 "dtfile-center: layout_data alignment=%d (center=%d)\n",
-                 layout_data->alignment ? layout_data->alignment : 0,
-                 file_mgr_data->center_icons ? 1 : 0);
-   }
    if (file_mgr_data->preferences && file_mgr_data->preferences->data)
    {
       PreferencesData *prefs = (PreferencesData *)file_mgr_data->preferences->data;
       if (prefs->center_icons != file_mgr_data->center_icons)
       {
          file_mgr_data->center_icons = prefs->center_icons;
-         if (getenv("DTFILE_CENTER_DEBUG") != NULL)
-            fprintf(stderr,
-                    "dtfile-center: sync layout center_icons=%d\n",
-                    file_mgr_data->center_icons ? 1 : 0);
       }
    }
+   if (layout_data)
+      layout_data->alignment = FileMgrGetIconAlignment(file_mgr_data);
    order_list = layout_data->order_list;
    order_count = layout_data->order_count;
    manage = layout_data->manage + layout_data->manage_count;
@@ -7126,25 +7092,6 @@ do_this_entry:
          UpdateOneFileIcon(file_mgr_rec, file_mgr_data, file_view_data);
          child = file_view_data->widget;
 
-         /*
-          * We may need to adjust the icon position based on the difference
-          * between estimated size and actual size.
-          */
-         if (layout_data->alignment == XmALIGNMENT_CENTER &&
-             (file_mgr_data->view == BY_NAME_AND_ICON ||
-              file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON))
-         {
-            EstimateIconSize(file_mgr_rec, file_mgr_data, layout_data,
-                             file_view_data, &icon_width, &icon_height, NULL);
-
-            if (child->core.width != icon_width)
-            {
-               file_view_data->x = file_view_data->x
-                 - (Dimension)(grid_width - icon_width)/(Dimension)2
-                 + (Dimension)(grid_width - child->core.width)/(Dimension)2;
-            }
-         }
-
          if (PositioningEnabledInView(file_mgr_data))
          {
             position_data = file_view_data->position_info;
@@ -7240,6 +7187,27 @@ do_this_entry:
             x = file_view_data->x + TreeWd(level, layout_data->treebtn_size);
             y = file_view_data->y - grid_height;
          }
+      }
+
+      if (layout_data->alignment == XmALIGNMENT_CENTER &&
+          (file_mgr_data->view == BY_NAME_AND_ICON ||
+           file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON) &&
+          layout_data->pixmap_position == XmPIXMAP_TOP &&
+          child->core.width < grid_width)
+      {
+         Position shift = (Position)((grid_width - child->core.width) / 2);
+         x += shift;
+         if (getenv("DTFILE_CENTER_DEBUG") != NULL)
+            fprintf(stderr,
+                    "dtfile-center: layout file=%s base=%d grid=%u child=%u shift=%d x=%d y=%d\n",
+                    file_view_data->file_data->file_name ?
+                      file_view_data->file_data->file_name : "(null)",
+                    (int)(x - shift),
+                    (unsigned)grid_width,
+                    (unsigned)child->core.width,
+                    (int)shift,
+                    (int)x,
+                    (int)y);
       }
 
       if (child->core.x != x || child->core.y != y)
@@ -7882,8 +7850,8 @@ LayoutFileIcons(
          overflow = True;
        }
 
-       order_list[k]->x = x;
-       order_list[k]->y = y + grid_height;
+      order_list[k]->x = x;
+      order_list[k]->y = y + grid_height;
 
        /* update y */
        y = (Position)tmp;
@@ -7999,17 +7967,7 @@ LayoutFileIcons(
          if (k == order_count)
            break;
 
-         if (layout_data->alignment == XmALIGNMENT_CENTER &&
-             (file_mgr_data->view == BY_NAME_AND_ICON ||
-              file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON))
-         {
-           EstimateIconSize(file_mgr_rec, file_mgr_data, layout_data,
-                            order_list[k], &icon_width, &icon_height, NULL);
-           order_list[k]->x = x +
-             (Dimension)(grid_width - icon_width)/(Dimension)2;
-         }
-         else
-           order_list[k]->x = x;
+         order_list[k]->x = x;
          order_list[k]->y = y + grid_height;
 
          x += grid_width + XSPACING;

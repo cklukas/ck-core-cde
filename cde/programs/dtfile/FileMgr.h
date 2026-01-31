@@ -499,6 +499,7 @@ typedef struct
 /* shelf utilities */
 extern void ShelfPopdownAllMenus(FileMgrRec *file_mgr_rec);
 extern void ShelfRefreshAllViews(void);
+extern unsigned char FileMgrGetIconAlignment(const FileMgrData *file_mgr_data);
 
 #endif /* _FileMgr_h */
 /* DON'T ADD ANYTHING AFTER THIS #endif */
