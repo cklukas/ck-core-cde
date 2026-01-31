@@ -336,6 +336,7 @@ typedef struct
    int press_y;
    Boolean drop_registered;
    Boolean is_execute;
+   Time last_click_time;
 } ShelfItemData;
 
 typedef struct _ShelfPopupData
@@ -358,6 +359,8 @@ static void ShelfItemPopup(
                         ShelfItemData *item_data,
                         XButtonEvent *button_event );
 static void ShelfItemActivate(
+                        ShelfItemData *item_data );
+static void ShelfItemDefaultAction(
                         ShelfItemData *item_data );
 static char *ShelfResolvePath(
                         FileMgrData *file_mgr_data,
@@ -4778,48 +4781,32 @@ ShelfItemCallback(
       return;
    }
 
+   /* DtIcon doesn't reliably distinguish single vs double click for shelf
+    * items via XmCR_DEFAULT_ACTION across environments, so we do our own
+    * multi-click tracking and treat DEFAULT_ACTION as a normal click. */
    if (reason == XmCR_DEFAULT_ACTION)
-   {
-      if (item_data->drag_started)
-         return;
-
-      DialogData *dialog_data = _DtGetInstanceData((XtPointer)item_data->file_mgr_rec);
-      FileMgrData *file_mgr_data = dialog_data ? (FileMgrData *)dialog_data->data : NULL;
-      char *resolved_path = NULL;
-      char *resolved_host = NULL;
-      struct stat st;
-      Boolean is_dir = False;
-
-      if (file_mgr_data)
-      {
-         resolved_path = ShelfResolvePath(file_mgr_data, item_data->path, &resolved_host);
-         if (resolved_path && stat(resolved_path, &st) == 0)
-            is_dir = S_ISDIR(st.st_mode);
-      }
-
-      if (is_dir)
-      {
-         ShelfOpenNewView(file_mgr_data, resolved_path,
-                          resolved_host ? resolved_host : file_mgr_data->host);
-      }
-      else if (item_data->is_execute)
-      {
-         ShelfRunPath(item_data->file_mgr_rec, item_data->path, "Run");
-      }
-      else
-      {
-         ShelfRunPath(item_data->file_mgr_rec, item_data->path, "Open");
-      }
-
-      if (resolved_path)
-         XtFree(resolved_path);
-      if (resolved_host)
-         XtFree(resolved_host);
-      return;
-   }
+      reason = XmCR_SELECT;
 
    if (reason == XmCR_SELECT || reason == XmCR_ACTIVATE)
    {
+      if (event && (event->type == ButtonPress || event->type == ButtonRelease))
+      {
+         XButtonEvent *bev = (XButtonEvent *)event;
+         if (bev->button == Button1)
+         {
+            int multi = XtGetMultiClickTime(XtDisplay(w));
+            if (item_data->last_click_time != 0 &&
+                (int)(bev->time - item_data->last_click_time) <= multi)
+            {
+               item_data->last_click_time = 0;
+               if (item_data->drag_started)
+                  return;
+               ShelfItemDefaultAction(item_data);
+               return;
+            }
+            item_data->last_click_time = bev->time;
+         }
+      }
       if (item_data->drag_started)
          return;
       ShelfItemActivate(item_data);
@@ -5468,6 +5455,56 @@ ShelfItemActivate(
       XtFree(resolved_host);
 }
 
+static void
+ShelfItemDefaultAction(
+        ShelfItemData *item_data )
+{
+   FileMgrRec *file_mgr_rec;
+   DialogData *dialog_data;
+   FileMgrData *file_mgr_data;
+   char *resolved_path = NULL;
+   char *resolved_host = NULL;
+   struct stat st;
+   Boolean is_dir = False;
+
+   if (item_data == NULL || item_data->path == NULL)
+      return;
+
+   file_mgr_rec = item_data->file_mgr_rec;
+   if (file_mgr_rec == NULL)
+      return;
+
+   dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
+   if (dialog_data == NULL)
+      return;
+   file_mgr_data = (FileMgrData *) dialog_data->data;
+   if (file_mgr_data == NULL)
+      return;
+
+   resolved_path = ShelfResolvePath(file_mgr_data, item_data->path, &resolved_host);
+   if (resolved_path && stat(resolved_path, &st) == 0)
+      is_dir = S_ISDIR(st.st_mode);
+
+   if (is_dir)
+   {
+      ShelfOpenNewView(file_mgr_data, resolved_path,
+                       resolved_host ? resolved_host : file_mgr_data->host);
+   }
+   else if (item_data->is_execute)
+   {
+      ShelfRunPath(file_mgr_rec, item_data->path, "Run");
+   }
+   else
+   {
+      ShelfRunPath(file_mgr_rec, item_data->path, "Open");
+   }
+
+   if (resolved_path)
+      XtFree(resolved_path);
+   if (resolved_host)
+      XtFree(resolved_host);
+}
+
 static char *
 ShelfResolvePath(
         FileMgrData *file_mgr_data,
@@ -6091,6 +6128,8 @@ ShelfRebuild(
       item_data->press_x = 0;
       item_data->press_y = 0;
       item_data->drop_registered = False;
+      item_data->is_execute = False;
+      item_data->last_click_time = 0;
       ShelfLog("ShelfRebuild: attach handlers item=%p data=%p slot=%d path=%s\n",
                (void *)item, (void *)item_data, item_data->slot,
                item_data->path ? item_data->path : "(null)");
