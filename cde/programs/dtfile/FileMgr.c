@@ -134,6 +134,7 @@
 
 #include <X11/ShellP.h>
 #include <X11/Shell.h>
+#include <X11/Xutil.h>
 #include <X11/Xatom.h>
 
 #include <Xm/Protocols.h>
@@ -343,13 +344,9 @@ typedef struct _ShelfPopupData
    char *path;
    int slot;
    Boolean is_dir;
+   Boolean is_execute;
+   ShelfItemData *item_data;
 } ShelfPopupData;
-
-typedef struct _ShelfMoveFinishData
-{
-   int slot;
-   FileMgrRec *file_mgr_rec;
-} ShelfMoveFinishData;
 
 typedef struct _ShelfSlotData ShelfSlotData;
 
@@ -421,6 +418,15 @@ static void ShelfSlotDropCB(
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data );
+static FileViewData *ShelfCreatePopupFileViewData(
+                        FileMgrData *file_mgr_data,
+                        const char *resolved_path );
+static void ShelfFreePopupFileViewData(
+                        FileViewData *file_view_data );
+static void ShelfRunAction(
+                        FileMgrRec *file_mgr_rec,
+                        ShelfPopupData *popup_data,
+                        const char *action );
 static void ShelfDropContextDestroyCB(
                         Widget w,
                         XtPointer client_data,
@@ -438,6 +444,14 @@ static void ShelfPopupOpenCB(
                         XtPointer client_data,
                         XtPointer call_data );
 static void ShelfPopupOpenNewViewCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data );
+static void ShelfPopupRunCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data );
+static void ShelfPopupRunNoPromptCB(
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data );
@@ -475,6 +489,16 @@ static void ShelfItemCallback(
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data );
+static Pixmap ShelfCreateDragPixmap(
+        Widget w,
+        unsigned int *width_out,
+        unsigned int *height_out,
+        unsigned int *depth_out );
+static Pixmap ShelfCreateDragMask(
+        Widget w,
+        unsigned int width,
+        unsigned int height );
+
 static void ShelfStartDrag(
                         Widget w,
                         ShelfItemData *item_data,
@@ -858,6 +882,7 @@ static Dimension shelf_slot_height = 0;
 static Dimension shelf_slot_margin_w = 4;
 static Dimension shelf_slot_margin_h = 4;
 static Dimension shelf_slot_spacing = 4;
+static int shelf_move_finish_slot = -1;
 
 static void ShelfLog(const char *fmt, ...);
 
@@ -3815,17 +3840,14 @@ ShelfPopupDataGet(FileMgrRec *file_mgr_rec)
 static void
 ShelfMoveFinishCB(XtPointer client_data, int rc)
 {
-   ShelfMoveFinishData *data = (ShelfMoveFinishData *)client_data;
+   (void) client_data;
 
-   if (data == NULL)
-      return;
-
-   if (rc == 0)
+   if (rc == 0 && shelf_move_finish_slot >= 0)
    {
-      ShelfClearSlot(data->slot);
-      ShelfUpdateSlotAllViews(data->slot);
+      ShelfClearSlotSkipIgnore(shelf_move_finish_slot);
+      ShelfUpdateSlotAllViews(shelf_move_finish_slot);
    }
-   XtFree((char *)data);
+   shelf_move_finish_slot = -1;
 }
 
 static void
@@ -3838,7 +3860,6 @@ ShelfMoveCopyLinkToCurrent(FileMgrRec *file_mgr_rec,
    char **file_set;
    char **host_set;
    Boolean result;
-   ShelfMoveFinishData *finish_data = NULL;
    void (*finish_cb)() = NULL;
 
    if (file_mgr_rec == NULL || file_mgr_data == NULL || path == NULL)
@@ -3851,9 +3872,7 @@ ShelfMoveCopyLinkToCurrent(FileMgrRec *file_mgr_rec,
 
    if (modifiers == 0)
    {
-      finish_data = XtNew(ShelfMoveFinishData);
-      finish_data->slot = slot;
-      finish_data->file_mgr_rec = file_mgr_rec;
+      shelf_move_finish_slot = slot;
       finish_cb = (void (*)())ShelfMoveFinishCB;
    }
 
@@ -3866,10 +3885,10 @@ ShelfMoveCopyLinkToCurrent(FileMgrRec *file_mgr_rec,
                          1,
                          modifiers,
                          finish_cb,
-                         (XtPointer)finish_data);
+                         NULL);
 
-   if (!result && finish_data)
-      XtFree((char *)finish_data);
+   if (!result)
+      shelf_move_finish_slot = -1;
 
    XtFree(file_set[0]);
    XtFree((char *)file_set);
@@ -3928,10 +3947,13 @@ ShelfOpenFile(FileMgrRec *file_mgr_rec,
 }
 
 static void
-ShelfOpenNewView(FileMgrData *file_mgr_data, const char *path)
+ShelfOpenNewView(FileMgrData *file_mgr_data, const char *path,
+                 const char *host)
 {
    if (file_mgr_data == NULL || path == NULL)
       return;
+
+   const char *target_host = host ? host : file_mgr_data->host;
 
    initiating_view = (XtPointer) file_mgr_data;
    if (file_mgr_data->restricted_directory != NULL)
@@ -3950,14 +3972,14 @@ ShelfOpenNewView(FileMgrData *file_mgr_data, const char *path)
       special_helpVol = XtNewString(file_mgr_data->helpVol);
 
       if (file_mgr_data->toolbox)
-         GetNewView(file_mgr_data->host, (char *)path,
+         GetNewView((char *)target_host, (char *)path,
                     file_mgr_data->restricted_directory, NULL, 0);
       else
-         GetNewView(file_mgr_data->host, (char *)path, NULL, NULL, 0);
+         GetNewView((char *)target_host, (char *)path, NULL, NULL, 0);
    }
    else
    {
-      GetNewView(file_mgr_data->host, (char *)path, NULL, NULL, 0);
+      GetNewView((char *)target_host, (char *)path, NULL, NULL, 0);
    }
    initiating_view = (XtPointer) NULL;
 }
@@ -4002,12 +4024,28 @@ ShelfPopupEnsureMenu(FileMgrRec *file_mgr_rec)
    }
 
    label = XmStringCreateLocalized("");
-   item = XmCreateLabelGadget(menu, "shelfName", NULL, 0);
+  item = XmCreateLabelGadget(menu, "shelfName", NULL, 0);
    XtVaSetValues(item, XmNlabelString, label, NULL);
    XmStringFree(label);
    XtManageChild(item);
 
    item = XmCreateSeparatorGadget(menu, "shelfNameSeparator", NULL, 0);
+   XtManageChild(item);
+
+   label = XmStringCreateLocalized("Run");
+   item = XmCreatePushButtonGadget(menu, "shelfRun", NULL, 0);
+   XtVaSetValues(item, XmNlabelString, label, NULL);
+   XmStringFree(label);
+   XtAddCallback(item, XmNactivateCallback, ShelfPopupRunCB,
+                 (XtPointer)file_mgr_rec);
+   XtManageChild(item);
+
+   label = XmStringCreateLocalized("Run...");
+   item = XmCreatePushButtonGadget(menu, "shelfRunNoPrompt", NULL, 0);
+   XtVaSetValues(item, XmNlabelString, label, NULL);
+   XmStringFree(label);
+   XtAddCallback(item, XmNactivateCallback, ShelfPopupRunNoPromptCB,
+                 (XtPointer)file_mgr_rec);
    XtManageChild(item);
 
    label = XmStringCreateLocalized(GETMESSAGE(40, 3, "Open"));
@@ -4097,6 +4135,18 @@ ShelfPopupUpdate(FileMgrRec *file_mgr_rec, ShelfPopupData *data)
       XmStringFree(label);
    }
 
+   child = XtNameToWidget(menu, "shelfRun");
+   if (child)
+      XtSetSensitive(child, (data != NULL && data->is_execute));
+
+   child = XtNameToWidget(menu, "shelfRunNoPrompt");
+   if (child)
+      XtSetSensitive(child, (data != NULL && data->is_execute));
+
+   child = XtNameToWidget(menu, "shelfOpen");
+   if (child)
+      XtSetSensitive(child, (data != NULL && !data->is_execute));
+
    child = XtNameToWidget(menu, "shelfOpenNewView");
    if (child)
       XtSetSensitive(child, is_dir);
@@ -4104,6 +4154,184 @@ ShelfPopupUpdate(FileMgrRec *file_mgr_rec, ShelfPopupData *data)
    child = XtNameToWidget(menu, "shelfRemove");
    if (child)
       XtSetSensitive(child, can_remove);
+}
+
+static FileViewData *
+ShelfCreatePopupFileViewData(
+        FileMgrData *file_mgr_data,
+        const char *resolved_path )
+{
+   FileViewData *fvd = NULL;
+   DirectorySet *ds = NULL;
+   FileData *fd = NULL;
+   char dir[MAX_PATH];
+   const char *base;
+
+   if (file_mgr_data == NULL || resolved_path == NULL || *resolved_path == '\0')
+      return NULL;
+
+   base = strrchr(resolved_path, '/');
+   if (base == NULL)
+      return NULL;
+
+   if (base == resolved_path)
+   {
+      strcpy(dir, "/");
+      base++;
+   }
+   else
+   {
+      size_t len = (size_t)(base - resolved_path);
+      if (len >= sizeof(dir))
+         return NULL;
+      memcpy(dir, resolved_path, len);
+      dir[len] = '\0';
+      base++;
+   }
+
+   fd = ReadFileData(dir, (char *)base);
+   if (fd == NULL)
+      return NULL;
+
+   ds = (DirectorySet *)XtNew(DirectorySet);
+   memset(ds, 0, sizeof(DirectorySet));
+   ds->name = XtNewString(dir);
+   ds->file_count = 1;
+   ds->file_view_data = (FileViewData **)XtMalloc(sizeof(FileViewData *));
+   ds->order_list = (FileViewData **)XtMalloc(sizeof(FileViewData *));
+   ds->filtered_file_count = 1;
+   ds->invisible_file_count = 0;
+   ds->file_mgr_data = (XtPointer)file_mgr_data;
+
+   fvd = (FileViewData *)XtNew(FileViewData);
+   memset(fvd, 0, sizeof(FileViewData));
+   fvd->directory_set = (XtPointer)ds;
+   fvd->file_data = fd;
+   fvd->displayed = True;
+   ds->file_view_data[0] = fvd;
+   ds->order_list[0] = fvd;
+
+   return fvd;
+}
+
+static void
+ShelfFreePopupFileViewData(
+        FileViewData *file_view_data )
+{
+   if (file_view_data == NULL)
+      return;
+
+   DirectorySet *ds = (DirectorySet *)file_view_data->directory_set;
+   FileData *fd = file_view_data->file_data;
+
+   if (fd)
+      FreeFileData(fd, True);
+
+   if (ds)
+   {
+      XtFree(ds->name);
+      XtFree((char *)ds->file_view_data);
+      XtFree((char *)ds->order_list);
+      XtFree((char *)ds);
+   }
+
+   XtFree((char *)file_view_data);
+}
+
+static void
+ShelfRunAction(
+        FileMgrRec *file_mgr_rec,
+        ShelfPopupData *popup_data,
+        const char *action )
+{
+   FileMgrData *file_mgr_data;
+   char *resolved_path;
+   char *resolved_host = NULL;
+   char *dir_path = NULL;
+   FileViewData *file_view_data = NULL;
+   FileData *file_data = NULL;
+   char *host_name = NULL;
+
+   if (popup_data == NULL || popup_data->file_mgr_data == NULL ||
+       popup_data->path == NULL || action == NULL)
+      return;
+
+   file_mgr_data = popup_data->file_mgr_data;
+   resolved_path = ShelfResolvePath(file_mgr_data, popup_data->path, &resolved_host);
+   if (resolved_path == NULL)
+      return;
+
+   file_view_data = ShelfCreatePopupFileViewData(file_mgr_data, resolved_path);
+   if (file_view_data == NULL)
+      goto cleanup;
+
+   dir_path = XtNewString(resolved_path);
+   char *slash = strrchr(dir_path, '/');
+   if (slash == NULL)
+      goto cleanup;
+   if (slash == dir_path)
+      slash[1] = '\0';
+   else
+      *slash = '\0';
+
+   host_name = resolved_host ? resolved_host : file_mgr_data->host;
+   if (host_name == NULL)
+      host_name = home_host_name;
+
+   ProcessAction((char *)action,
+                 file_view_data,
+                 NULL,
+                 (char *)host_name,
+                 dir_path,
+                 file_mgr_data->restricted_directory,
+                 ((FileMgrRec *)file_mgr_data->file_mgr_rec)->file_window);
+
+cleanup:
+   ShelfFreePopupFileViewData(file_view_data);
+   if (dir_path)
+      XtFree(dir_path);
+   if (resolved_path)
+      XtFree(resolved_path);
+   if (resolved_host)
+      XtFree(resolved_host);
+}
+
+static void
+ShelfPopupRunCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+   FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
+   ShelfPopupData *data;
+
+   (void) w;
+   (void) call_data;
+
+   data = ShelfPopupDataGet(file_mgr_rec);
+   if (data == NULL || !data->is_execute)
+      return;
+
+   ShelfRunAction(file_mgr_rec, data, "RunNoPrompt");
+}
+
+static void
+ShelfPopupRunNoPromptCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+   FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
+   ShelfPopupData *data;
+
+   (void) w;
+   (void) call_data;
+
+   data = ShelfPopupDataGet(file_mgr_rec);
+   if (data == NULL || !data->is_execute)
+      return;
+
+   ShelfRunAction(file_mgr_rec, data, "Run");
 }
 
 static void
@@ -4402,7 +4630,6 @@ ShelfItemDropCB(
       unsigned int modifiers = 0;
       Boolean result;
       int i;
-      ShelfMoveFinishData *finish_data = NULL;
       void (*finish_cb)() = NULL;
 
       if (dropInfo->operation == XmDROP_COPY)
@@ -4414,8 +4641,7 @@ ShelfItemDropCB(
 
       if (shelf_drag_active && modifiers == 0)
       {
-         finish_data = XtNew(ShelfMoveFinishData);
-         finish_data->slot = shelf_drag_slot;
+         shelf_move_finish_slot = shelf_drag_slot;
          finish_cb = (void (*)())ShelfMoveFinishCB;
       }
 
@@ -4428,10 +4654,10 @@ ShelfItemDropCB(
                             dropInfo->dropData->numItems,
                             modifiers,
                             finish_cb,
-                            (XtPointer)finish_data);
+                            NULL);
 
-      if (!result && finish_data)
-         XtFree((char *)finish_data);
+      if (!result)
+         shelf_move_finish_slot = -1;
 
       if (file_set && host_set)
          _DtFreeDroppedFileInfo(dropInfo->dropData->numItems, file_set, host_set);
@@ -4588,27 +4814,15 @@ ShelfPopupOpenCB(
 {
    FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
    ShelfPopupData *data;
-   struct stat st;
 
    (void) w;
    (void) call_data;
 
    data = ShelfPopupDataGet(file_mgr_rec);
-   if (data == NULL || data->file_mgr_data == NULL || data->path == NULL)
+   if (data == NULL || data->item_data == NULL)
       return;
 
-   if (stat(data->path, &st) != 0)
-      return;
-
-   if (S_ISDIR(st.st_mode))
-   {
-      ShowNewDirectory(data->file_mgr_data, data->file_mgr_data->host,
-                       data->path);
-   }
-   else
-   {
-      ShelfOpenFile(file_mgr_rec, data->file_mgr_data, data->path);
-   }
+   ShelfItemActivate(data->item_data);
 }
 
 static void
@@ -4630,7 +4844,20 @@ ShelfPopupOpenNewViewCB(
    if (!data->is_dir)
       return;
 
-   ShelfOpenNewView(data->file_mgr_data, data->path);
+   {
+      char *resolved_host = NULL;
+      char *resolved_path = ShelfResolvePath(data->file_mgr_data, data->path,
+                                             &resolved_host);
+
+      if (resolved_path == NULL)
+         return;
+
+      ShelfOpenNewView(data->file_mgr_data, resolved_path, resolved_host);
+
+      XtFree(resolved_path);
+      if (resolved_host)
+         XtFree(resolved_host);
+   }
 }
 
 static void
@@ -4806,6 +5033,129 @@ ShelfConvertCB(
    }
 }
 
+static Pixmap
+ShelfCreateDragPixmap(
+        Widget w,
+        unsigned int *width_out,
+        unsigned int *height_out,
+        unsigned int *depth_out )
+{
+   Pixmap dragPixmap;
+   Display *dpy;
+   Window root;
+   int x = 0, y = 0;
+   unsigned int width = 0, height = 0, border = 0, depth = 0;
+
+   if (w == NULL)
+      return None;
+
+   dpy = XtDisplay(w);
+   dragPixmap = _DtIconDraw(w, 0, 0, 0, False);
+   if (dragPixmap == None)
+      return None;
+
+   if (XGetGeometry(dpy, dragPixmap, &root, &x, &y,
+                    &width, &height, &border, &depth) == 0)
+   {
+      width = height = depth = 0;
+   }
+
+   if (width_out)
+      *width_out = width;
+   if (height_out)
+      *height_out = height;
+   if (depth_out)
+      *depth_out = depth;
+
+   return dragPixmap;
+}
+
+static Pixmap
+ShelfCreateDragMask(
+        Widget w,
+        unsigned int width,
+        unsigned int height )
+{
+   Pixmap dragMask;
+   Display *dpy;
+   unsigned char flags;
+   XRectangle pRect, lRect;
+   GC fillGC;
+   XGCValues values;
+   Arg args[3];
+   Dimension shadowThickness = 0;
+   Dimension marginWidth = 0;
+   Dimension marginHeight = 0;
+   int minX = 0, minY = 0;
+   Boolean minXUndefined = True, minYUndefined = True;
+
+   if (w == NULL || width == 0 || height == 0)
+      return None;
+
+   dpy = XtDisplay(w);
+   if (dpy == NULL)
+      return None;
+
+   dragMask = XCreatePixmap(dpy,
+                            RootWindowOfScreen(XtScreenOfObject(w)),
+                            width, height, 1);
+   fillGC = XCreateGC(dpy, dragMask, 0, (XGCValues *) NULL);
+
+   XFillRectangle(dpy, dragMask, fillGC, 0, 0, width, height);
+
+   values.foreground = 1;
+   XChangeGC(dpy, fillGC, GCForeground, &values);
+
+   _DtIconGetIconRects((DtIconGadget) w, &flags, &pRect, &lRect);
+
+   if (flags & XmPIXMAP_RECT)
+   {
+      minX = pRect.x;
+      minY = pRect.y;
+      minXUndefined = minYUndefined = False;
+   }
+
+   if (flags & XmLABEL_RECT)
+   {
+      if (lRect.x < minX || minXUndefined)
+      {
+         minX = lRect.x;
+         minXUndefined = False;
+      }
+      if (lRect.y < minY || minYUndefined)
+      {
+         minY = lRect.y;
+         minYUndefined = False;
+      }
+   }
+
+   XtSetArg(args[0], XmNshadowThickness, &shadowThickness);
+   XtSetArg(args[1], XmNmarginWidth, &marginWidth);
+   XtSetArg(args[2], XmNmarginHeight, &marginHeight);
+   XtGetValues(w, args, 3);
+
+   if (flags & XmPIXMAP_RECT)
+   {
+      XFillRectangle(dpy, dragMask, fillGC,
+                     pRect.x - minX + shadowThickness + marginWidth,
+                     pRect.y - minY + shadowThickness + marginHeight,
+                     pRect.width - 2 * marginWidth,
+                     pRect.height - 2 * marginHeight);
+   }
+   if (flags & XmLABEL_RECT)
+   {
+      XFillRectangle(dpy, dragMask, fillGC,
+                     lRect.x - minX + shadowThickness + marginWidth,
+                     lRect.y - minY + shadowThickness + marginHeight,
+                     lRect.width - 2 * marginWidth,
+                     lRect.height - 2 * marginHeight);
+   }
+
+   XFreeGC(dpy, fillGC);
+
+   return dragMask;
+}
+
 static void
 ShelfStartDrag(
         Widget w,
@@ -4823,6 +5173,11 @@ ShelfStartDrag(
    Widget drag_icon = NULL;
    Pixmap pm = None;
    Pixmap mask = None;
+   Pixmap dragPixmap = None;
+   Pixmap dragMask = None;
+   unsigned int dragWidth = 0;
+   unsigned int dragHeight = 0;
+   unsigned int dragDepth = 0;
 
    if (item_data == NULL || item_data->path == NULL)
       return;
@@ -4831,12 +5186,24 @@ ShelfStartDrag(
 
    operations = XmDROP_MOVE | XmDROP_COPY | XmDROP_LINK;
 
-   XtVaGetValues(w,
-                 XmNpixmap, &pm,
-                 XmNmask, &mask,
-                 NULL);
-   if (pm != None && mask != None)
-      drag_icon = DtDndCreateSourceIcon(w, pm, mask);
+   dragPixmap = ShelfCreateDragPixmap(w, &dragWidth, &dragHeight, &dragDepth);
+   if (dragPixmap != None)
+   {
+      dragMask = ShelfCreateDragMask(w, dragWidth, dragHeight);
+      if (dragMask != None)
+         drag_icon = DtDndCreateSourceIcon(w, dragPixmap, dragMask);
+      else
+         drag_icon = DtDndCreateSourceIcon(w, dragPixmap, None);
+   }
+   else
+   {
+      XtVaGetValues(w,
+                    XmNpixmap, &pm,
+                    XmNmask, &mask,
+                    NULL);
+      if (pm != None && mask != None)
+         drag_icon = DtDndCreateSourceIcon(w, pm, mask);
+   }
    XtSetArg(args[numArgs], DtNsourceIcon, drag_icon); numArgs++;
    shelf_drag_active = True;
    shelf_drag_slot = item_data->slot;
@@ -4863,6 +5230,7 @@ ShelfItemPopup(
    FileMgrData *file_mgr_data;
    ShelfPopupData *popup_data;
    Boolean is_dir = False;
+   Boolean is_execute = False;
 
    if (item_data == NULL || item_data->path == NULL || button_event == NULL)
       return;
@@ -4881,8 +5249,13 @@ ShelfItemPopup(
 
    {
       struct stat st;
-      if (stat(item_data->path, &st) == 0 && S_ISDIR(st.st_mode))
-         is_dir = True;
+      if (stat(item_data->path, &st) == 0)
+      {
+         if (S_ISDIR(st.st_mode))
+            is_dir = True;
+         else if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
+            is_execute = True;
+      }
    }
 
    popup_data = XtNew(ShelfPopupData);
@@ -4891,6 +5264,8 @@ ShelfItemPopup(
    popup_data->path = XtNewString(item_data->path);
    popup_data->slot = item_data->slot;
    popup_data->is_dir = is_dir;
+   popup_data->is_execute = is_execute && !is_dir;
+   popup_data->item_data = item_data;
 
    ShelfPopupDataSet(file_mgr_rec, popup_data);
    ShelfPopupEnsureMenu(file_mgr_rec);
