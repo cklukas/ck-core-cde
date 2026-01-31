@@ -5991,6 +5991,13 @@ ShelfRebuild(
    if (file_mgr_rec->shelf_frame == NULL)
       return;
 
+   if (file_mgr_data->preferences && file_mgr_data->preferences->data)
+   {
+      PreferencesData *prefs = (PreferencesData *)file_mgr_data->preferences->data;
+      if (prefs->center_icons != file_mgr_data->center_icons)
+         file_mgr_data->center_icons = prefs->center_icons;
+   }
+
    ShelfLog("ShelfRebuild: begin shelf_frame=%p\n", (void *)file_mgr_rec->shelf_frame);
    ShelfLogWidget("ShelfRebuild: shelf_frame(before)", file_mgr_rec->shelf_frame);
    if (file_mgr_rec->shell)
