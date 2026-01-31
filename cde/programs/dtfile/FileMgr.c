@@ -120,6 +120,7 @@
 #include <Xm/MainW.h>
 #include <Xm/PushBG.h>
 #include <Xm/RowColumn.h>
+#include <Xm/MenuShell.h>
 #include <Xm/ScrolledW.h>
 #include <Xm/SeparatoG.h>
 #include <Xm/Text.h>
@@ -409,6 +410,12 @@ static void ShelfPopupPopdownCB(
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data );
+void ShelfPopdownAllMenus(
+                        FileMgrRec *file_mgr_rec );
+static void FilePopupPopdownCB(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data );
 static void ShelfItemDropCB(
                         Widget w,
                         XtPointer client_data,
@@ -421,11 +428,6 @@ static void ShelfStartDrag(
                         Widget w,
                         ShelfItemData *item_data,
                         XEvent *event );
-static void ShelfRowButtonEH(
-                        Widget w,
-                        XtPointer client_data,
-                        XEvent *event,
-                        Boolean *cont );
 static void ShelfDebugDumpTimeout(
                         XtPointer client_data,
                         XtIntervalId *id );
@@ -3415,24 +3417,38 @@ ShelfPopupEnsureMenu(FileMgrRec *file_mgr_rec)
    Widget menu;
    Widget item;
    XmString label;
+   Arg args[2];
+   int n = 0;
 
    if (file_mgr_rec == NULL)
       return;
 
    if (file_mgr_rec->shelf_popup != NULL)
    {
-      if (XtParent(file_mgr_rec->shelf_popup) == file_mgr_rec->shelf_frame)
-      {
-         XtDestroyWidget(file_mgr_rec->shelf_popup);
-         file_mgr_rec->shelf_popup = NULL;
-      }
-      else
+      Widget menushell = XtParent(file_mgr_rec->shelf_popup);
+      Widget parent = menushell ? XtParent(menushell) : NULL;
+
+      if (parent == file_mgr_rec->shelf_frame)
          return;
+
+      if (menushell)
+         XtDestroyWidget(menushell);
+      else
+         XtDestroyWidget(file_mgr_rec->shelf_popup);
+      file_mgr_rec->shelf_popup = NULL;
    }
 
-   menu = XmCreatePopupMenu(file_mgr_rec->shell, "shelfPopup", NULL, 0);
-   XtAddCallback(menu, XmNpopdownCallback, ShelfPopupPopdownCB,
-                 (XtPointer)file_mgr_rec);
+   n = 0;
+   XtSetArg(args[n], XmNmenuAccelerator, "   "); n++;
+   XtSetArg(args[n], XmNwhichButton, bMenuButton); n++;
+   menu = XmCreatePopupMenu(file_mgr_rec->shelf_frame, "shelfPopup", args, n);
+   {
+      /* Popdown callbacks live on the popup's MenuShell, not the RowColumn itself */
+      Widget menushell = XtParent(menu);
+      if (menushell)
+         XtAddCallback(menushell, XmNpopdownCallback, ShelfPopupPopdownCB,
+                       (XtPointer)file_mgr_rec);
+   }
 
    label = XmStringCreateLocalized("");
    item = XmCreateLabelGadget(menu, "shelfName", NULL, 0);
@@ -3891,7 +3907,14 @@ ShelfItemCallback(
    }
 
    if (reason == XmCR_POPUP)
+   {
+      if (event && (event->type == ButtonPress || event->type == ButtonRelease))
+      {
+         ShelfLog("ShelfItemCallback: popup event type=%d\n", event->type);
+         ShelfItemPopup(item_data, (XButtonEvent *)event);
+      }
       return;
+   }
 
    if (reason == XmCR_ARM)
    {
@@ -3928,6 +3951,94 @@ ShelfItemCallback(
    {
       if (!item_data->drag_started)
          ShelfItemActivate(item_data);
+      return;
+   }
+}
+
+static void
+ShelfItemButtonEH(
+        Widget w,
+        XtPointer client_data,
+        XEvent *event,
+        Boolean *cont)
+{
+   ShelfItemData *item_data = (ShelfItemData *)client_data;
+   XButtonEvent *bev = (XButtonEvent *)event;
+
+   if (item_data == NULL || event == NULL)
+      return;
+
+   if (event->type != ButtonPress)
+      return;
+
+   if (bev->button != bMenuButton)
+      return;
+
+   ShelfLog("ShelfItemButtonEH: popup button=%d item=%p slot=%d\n",
+            bev->button, (void *)w, item_data->slot);
+   ShelfItemPopup(item_data, bev);
+   if (cont)
+      *cont = False;
+}
+
+static void
+ShelfRowButtonEH(
+        Widget w,
+        XtPointer client_data,
+        XEvent *event,
+        Boolean *cont)
+{
+   XButtonEvent *bev = (XButtonEvent *)event;
+   Widget *children = NULL;
+   Cardinal num_children = 0;
+   int i;
+
+   (void) client_data;
+
+   if (event == NULL || event->type != ButtonRelease)
+      return;
+
+   if (bev->button != bMenuButton)
+      return;
+
+   XtVaGetValues(w,
+                 XmNchildren, &children,
+                 XmNnumChildren, &num_children,
+                 NULL);
+   if (children == NULL || num_children == 0)
+      return;
+
+   for (i = 0; i < (int)num_children; i++)
+   {
+      Widget child = children[i];
+      Position cx = 0, cy = 0;
+      Dimension cw = 0, ch = 0;
+      ShelfItemData *item_data = NULL;
+
+      if (child == NULL)
+         continue;
+
+      XtVaGetValues(child,
+                    XmNx, &cx,
+                    XmNy, &cy,
+                    XmNwidth, &cw,
+                    XmNheight, &ch,
+                    XmNuserData, &item_data,
+                    NULL);
+
+      if (item_data == NULL)
+         continue;
+
+      if (bev->x < cx || bev->y < cy)
+         continue;
+      if ((Dimension)(bev->x - cx) > cw || (Dimension)(bev->y - cy) > ch)
+         continue;
+
+   ShelfLog("ShelfRowButtonEH: popup child=%p slot=%d (ButtonRelease)\n",
+            (void *)child, item_data->slot);
+   ShelfItemPopup(item_data, bev);
+      if (cont)
+         *cont = False;
       return;
    }
 }
@@ -4073,11 +4184,29 @@ ShelfPopupPopdownCB(
         XtPointer client_data,
         XtPointer call_data)
 {
+   FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
+
+   (void) call_data;
+
+   ShelfLog("ShelfPopupPopdownCB: widget=%p name=%s\n",
+            (void *)w, XtName(w));
+   ShelfLog("ShelfPopupPopdownCB: file_mgr_rec=%p shelf_popup=%p\n",
+            (void *)file_mgr_rec,
+            file_mgr_rec ? (void *)file_mgr_rec->shelf_popup : NULL);
+}
+
+static void
+FilePopupPopdownCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data)
+{
    (void) client_data;
    (void) call_data;
 
-   if (XtIsManaged(w))
-      XtUnmanageChild(w);
+   if (getenv("DTFILE_FILEPOPUP_DEBUG") != NULL)
+      fprintf(stderr, "dtfile-filepopup: popdown shell=%p name=%s\n",
+              (void *)w, XtName(w));
 }
 
 static void
@@ -4207,10 +4336,20 @@ ShelfItemPopup(
    ShelfPopupDataSet(file_mgr_rec, popup_data);
    ShelfPopupEnsureMenu(file_mgr_rec);
    ShelfPopupUpdate(file_mgr_rec, popup_data);
+
+   ShelfLog("ShelfItemPopup: show popup slot=%d\n", popup_data->slot);
+
    if (XtIsManaged(file_mgr_rec->shelf_popup))
       XtUnmanageChild(file_mgr_rec->shelf_popup);
    XmMenuPosition(file_mgr_rec->shelf_popup, button_event);
    XtManageChild(file_mgr_rec->shelf_popup);
+}
+
+/* Pop down any posted menus under this file manager shell to avoid grab conflicts */
+void
+ShelfPopdownAllMenus(FileMgrRec *file_mgr_rec)
+{
+   (void)file_mgr_rec;
 }
 
 static void
@@ -4314,43 +4453,6 @@ ShelfItemActivate(
    XtFree(resolved_path);
    if (resolved_host)
       XtFree(resolved_host);
-}
-
-static void
-ShelfRowButtonEH(
-        Widget w,
-        XtPointer client_data,
-        XEvent *event,
-        Boolean *cont)
-{
-   FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
-
-   (void) cont;
-
-   if (file_mgr_rec == NULL || event == NULL || event->type != ButtonRelease)
-      return;
-
-   {
-      XButtonEvent *button_event = (XButtonEvent *)event;
-      Widget child;
-      ShelfItemData *item_data = NULL;
-
-      if (button_event->button != bMenuButton)
-         return;
-
-      child = XmObjectAtPoint(w, (Position)button_event->x,
-                              (Position)button_event->y);
-      if (child == NULL)
-         return;
-
-      XtVaGetValues(child, XmNuserData, &item_data, NULL);
-      if (item_data == NULL)
-         return;
-
-      ShelfLog("ShelfRowButtonEH: popup child=%p slot=%d\n",
-               (void *)child, item_data->slot);
-      ShelfItemPopup(item_data, button_event);
-   }
 }
 
 static char *
@@ -4684,6 +4786,10 @@ ShelfRebuild(
             (unsigned)num_children);
    if (num_children > 0 && children != NULL)
    {
+      Widget popup_shell = NULL;
+      if (file_mgr_rec->shelf_popup != NULL)
+         popup_shell = XtParent(file_mgr_rec->shelf_popup);
+
       children_copy = (Widget *)XtMalloc(sizeof(Widget) * num_children);
       memcpy(children_copy, children, sizeof(Widget) * num_children);
       ShelfLog("ShelfRebuild: destroying %u children\n",
@@ -4691,6 +4797,8 @@ ShelfRebuild(
       for (i = (int)num_children - 1; i >= 0; i--)
       {
          ShelfLog("ShelfRebuild: destroy child[%d]=%p\n", i, (void *)children_copy[i]);
+         if (children_copy[i] == popup_shell)
+            continue;
          if (file_mgr_rec->shelf_popup == children_copy[i])
             file_mgr_rec->shelf_popup = NULL;
          XtDestroyWidget(children_copy[i]);
@@ -4814,7 +4922,7 @@ ShelfRebuild(
 
    slot_height = (shelf_row_height > 0) ? shelf_row_height
                                         : (Dimension)(shelf_icon_px + font_height + 20);
-   slot_width = (Dimension)(shelf_icon_px + 64);
+   slot_width = (Dimension)140; /* fixed slot width for uniform spacing */
 
    for (i = 0; i <= max_slot; i++)
    {
@@ -4919,6 +5027,9 @@ ShelfRebuild(
       XtSetArg (args[n], XmNstringPosition, XmSTRING_BOTTOM); n++;
       XtSetArg (args[n], XmNbehavior, XmICON_BUTTON);       n++;
       XtSetArg (args[n], XmNtraversalOn, False);            n++;
+      XtSetArg (args[n], XmNrecomputeSize, False);          n++;
+      XtSetArg (args[n], XmNwidth, slot_width);             n++;
+      XtSetArg (args[n], XmNheight, slot_height);           n++;
       item = _DtCreateIcon(row, "shelf_item", args, n);
       ShelfLog("ShelfRebuild: created shelf_item=%p slot=%d\n", (void *)item, i);
       if (item == NULL)
@@ -8327,6 +8438,9 @@ CreateFmPopup (Widget w)
    XtSetArg(args[n],XmNmenuAccelerator,"   "); n++;
    XtSetArg(args[n],XmNwhichButton, bMenuButton); n++;
    fileMgrPopup.menu = XmCreatePopupMenu(w, "FMPopup", args, n);
+   /* Track popdown to release grabs */
+   XtAddCallback(XtParent(fileMgrPopup.menu), XmNpopdownCallback,
+                 FilePopupPopdownCB, NULL);
    XtAddCallback(fileMgrPopup.menu, XmNhelpCallback,
                        (XtCallbackProc)HelpRequestCB,
                        HELP_POPUP_MENU_STR);

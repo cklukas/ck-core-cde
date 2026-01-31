@@ -494,5 +494,8 @@ typedef struct
 #define BTN_RESTORE          0
 #define BTN_REMOVE           1
 
+/* shelf utilities */
+extern void ShelfPopdownAllMenus(FileMgrRec *file_mgr_rec);
+
 #endif /* _FileMgr_h */
 /* DON'T ADD ANYTHING AFTER THIS #endif */
