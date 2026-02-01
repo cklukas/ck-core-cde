@@ -3429,9 +3429,13 @@ InsertArgumentString(
    String lastCh;
    int lastChLen;
    char * path;
+   char * escaped_path;
    char * value;
    char * dataType;
    char * mediaAttr;
+   const char *src;
+   char *dst;
+   size_t escaped_len;
 
    if (processingMask & _DTAct_TT_VTYPE)
       SET_TREAT_AS_FILE(mask);
@@ -3519,10 +3523,26 @@ InsertArgumentString(
                return(False);
             }
 
-            *bufPtr = GrowMsgBuffer(*bufPtr, bufSizePtr, strlen(path) + 1);
+            /* Escape backslashes and quotes so the command parser doesn't break. */
+            escaped_len = strlen(path);
+            for (src = path; *src != '\0'; src++)
+               if (*src == '\\' || *src == '\'' || *src == '\"')
+                  escaped_len++;
+            escaped_path = XtMalloc(escaped_len + 1);
+            dst = escaped_path;
+            for (src = path; *src != '\0'; src++)
+            {
+               if (*src == '\\' || *src == '\'' || *src == '\"')
+                  *dst++ = '\\';
+               *dst++ = *src;
+            }
+            *dst = '\0';
+
+            *bufPtr = GrowMsgBuffer(*bufPtr, bufSizePtr, strlen(escaped_path) + 1);
             if (addLeadingSpace)
                (void)strcat(*bufPtr, " ");
-            strcat(*bufPtr, path);
+            strcat(*bufPtr, escaped_path);
+            XtFree(escaped_path);
             XtFree(path);
          }
          else if (IS_TT_MSG(request->clonedAction->mask))

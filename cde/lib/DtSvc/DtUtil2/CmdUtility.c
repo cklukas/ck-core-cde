@@ -233,17 +233,9 @@ FillWord(
 			else if (!strcmp (qchar, _SINGLE)) {
 			   /* Must be working on a _SINGLE quoted word. */
 			   if ((DtStrcspn (string+1, "\'")) == 0) {
-			      /* 
-			       * Have \', which passes on the \, skips 
-			       * the single quote and ends the word. An 
-			       * assumption here is that the char following 
-			       * the '\' was a single byte single quote 
-			       * and there is no need for checking multi-byte. 
-			       */
+			      /* Treat \' as a literal single quote. */
+			      string++; /* skip the backslash */
 			      word[j++] = *(string)++;
-			      /* Now skip the quote. */
-			      string++;
-			      done = True;
 			      break;
 			   }
 			   else {
@@ -431,5 +423,4 @@ _DtCmdFreeStringVector(
       *pch = NULL;
    }
 }
-
 

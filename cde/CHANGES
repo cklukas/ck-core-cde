@@ -8,3 +8,6 @@
   and restore it for new instances unless a saved session provides a font size.
 - dtfile: aligned drag hotspots with the click position using state icons and explicit
   hot spot handling, plus shelf drag adjustments and color fixes for shelf icons.
+- dtfile: escape quotes and backslashes in command action file arguments, and
+  handle escaped single quotes in command parsing to allow opening files with
+  ', ", or \ in their names.
