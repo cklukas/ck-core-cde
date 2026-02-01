@@ -346,42 +346,46 @@ $ ** (for set grouping information, see the comment at the end-of-file)
 156 "10x"
 
 158 "12x"
+160 "14x"
+162 "16x"
+164 "18x"
+166 "20x"
 
-160 "V"
+168 "V"
 
-162 "Vergrößerung"
+170 "Vergrößerung"
 
-164 "O"
+172 "O"
 
-166 "Optionen"
+174 "Optionen"
 
-168 "b"
+176 "b"
 
-170 "Überblick..."
+178 "Überblick..."
 
-172 "A"
+180 "A"
 
-174 "Aufgaben..."
+182 "Aufgaben..."
 
-176 "R"
+184 "R"
 
-178 "Referenz..."
+186 "Referenz..."
 
-180 "Z"
+188 "Z"
 
-182 "Zu Element"
+190 "Zu Element"
 
-188 "f"
+192 "f"
 
-190 "Hilfe für Hilfe..."
+194 "Hilfe für Hilfe..."
 
-192 "E"
+196 "E"
 
-194 "Symboleditor: Info..."
+197 "Symboleditor: Info..."
 
-196 "H"
+198 "H"
 
-198 "Hilfe"
+199 "Hilfe"
 $ ** message 200-are used in the "instruction" line for current drawing mode 
 
 200 "Aktueller Änderungsmodus:"

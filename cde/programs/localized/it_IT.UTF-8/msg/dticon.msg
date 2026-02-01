@@ -213,24 +213,28 @@ $ ** (for set grouping information, see the comment at the end-of-file)
 154 8x
 156 10x
 158 12x
-160 I
-162 Ingrandimento
-164 O
-166 Opzioni
-168 P
-170 Panoramica...
-172 A
-174 Attività...
-176 R
-178 Riferimenti...
-180 S
-182 Sull'elemento
-188 U
-190 Uso dell'aiuto...
-192 I
-194 Informazioni sull'Editor delle icone...
-196 A
-198 Aiuto
+160 14x
+162 16x
+164 18x
+166 20x
+168 I
+170 Ingrandimento
+172 O
+174 Opzioni
+176 P
+178 Panoramica...
+180 A
+182 Attività...
+184 R
+186 Riferimenti...
+188 S
+190 Sull'elemento
+192 U
+194 Uso dell'aiuto...
+196 I
+197 Informazioni sull'Editor delle icone...
+198 A
+199 Aiuto
 
 $ ** message 200-are used in the "instruction" line for current drawing mode
 200 Modalità corrente:

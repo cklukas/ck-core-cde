@@ -346,42 +346,46 @@ $ ** (for set grouping information, see the comment at the end-of-file)
 156 "10x"
 
 158 "12x"
+160 "14x"
+162 "16x"
+164 "18x"
+166 "20x"
 
-160 "A"
+168 "A"
 
-162 "Agrandissement"
+170 "Agrandissement"
 
-164 "O"
+172 "O"
 
-166 "Options"
+174 "Options"
 
-168 "G"
+176 "G"
 
-170 "Généralités..."
+178 "Généralités..."
 
-172 "T"
+180 "T"
 
-174 "Tâches..."
+182 "Tâches..."
 
-176 "R"
+184 "R"
 
-178 "Référence..."
+186 "Référence..."
 
-180 "u"
+188 "u"
 
-182 "Sur l'élément"
+190 "Sur l'élément"
 
-188 "i"
+192 "i"
 
-190 "Aide sur l'aide..."
-
-192 "A"
-
-194 "A propos de l'éditeur d'icônes..."
+194 "Aide sur l'aide..."
 
 196 "A"
 
-198 "Aide"
+197 "A propos de l'éditeur d'icônes..."
+
+198 "A"
+
+199 "Aide"
 $ ** message 200-are used in the "instruction" line for current drawing mode  
 
 200 "Mode d'édition en cours:"

@@ -214,24 +214,28 @@ $ ** (for set grouping information, see the comment at the end-of-file)
 154 8x
 156 10x
 158 12x
-160 M
-162 Magnification
-164 O
-166 Options
-168 v
-170 Overview...
-172 T
-174 Tasks...
-176 R
-178 Reference...
-180 O
-182 On Item
-188 U
-190 Using Help...
-192 A
-194 About the Icon Editor...
-196 H
-198 Help
+160 14x
+162 16x
+164 18x
+166 20x
+168 M
+170 Magnification
+172 O
+174 Options
+176 v
+178 Overview...
+180 T
+182 Tasks...
+184 R
+186 Reference...
+188 O
+190 On Item
+192 U
+194 Using Help...
+196 A
+197 About the Icon Editor...
+198 H
+199 Help
 
 $ ** message 200-are used in the "instruction" line for current drawing mode
 200 Current Edit Mode:

@@ -207,24 +207,28 @@ $ ** (for set grouping information, see the comment at the end-of-file)
 154 8x
 156 10x
 158 12x
-160 M
-162 확대율M
-164 O
-166 선택사항O
-168 v
-170 개요v...
-172 T
-174 작업T...
-176 R
-178 참조R...
-180 O
-182 항목O
-188 U
-190 도움말 사용U...
-192 A
-194 아이콘 편집기에 관하여A...
-196 H
-198 도움말H
+160 14x
+162 16x
+164 18x
+166 20x
+168 M
+170 확대율M
+172 O
+174 선택사항O
+176 v
+178 개요v...
+180 T
+182 작업T...
+184 R
+186 참조R...
+188 O
+190 항목O
+192 U
+194 도움말 사용U...
+196 A
+197 아이콘 편집기에 관하여A...
+198 H
+199 도움말H
 
 $ ** message 200-are used in the "instruction" line for current drawing mode
 200 현재 편집 모드:

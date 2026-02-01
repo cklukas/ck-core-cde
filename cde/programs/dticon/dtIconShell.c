@@ -178,6 +178,10 @@ Widget magMenu_6x_tb;
 Widget magMenu_8x_tb;
 Widget magMenu_10x_tb;
 Widget magMenu_12x_tb;
+Widget magMenu_14x_tb;
+Widget magMenu_16x_tb;
+Widget magMenu_18x_tb;
+Widget magMenu_20x_tb;
 Widget optionsMenu_magnify;
 Widget optionsMenu_top_pb;
 Widget helpMenu;
@@ -873,6 +877,46 @@ valueChangedCB_magMenu_12x_tb(
 {
 
         New_MagFactor(12);
+}
+
+static void
+valueChangedCB_magMenu_14x_tb(
+        Widget w,
+        XtPointer clientData,
+        XtPointer callbackArg )
+{
+
+        New_MagFactor(14);
+}
+
+static void
+valueChangedCB_magMenu_16x_tb(
+        Widget w,
+        XtPointer clientData,
+        XtPointer callbackArg )
+{
+
+        New_MagFactor(16);
+}
+
+static void
+valueChangedCB_magMenu_18x_tb(
+        Widget w,
+        XtPointer clientData,
+        XtPointer callbackArg )
+{
+
+        New_MagFactor(18);
+}
+
+static void
+valueChangedCB_magMenu_20x_tb(
+        Widget w,
+        XtPointer clientData,
+        XtPointer callbackArg )
+{
+
+        New_MagFactor(20);
 }
 
 /*******************************************************************************
@@ -2066,7 +2110,7 @@ build_dtIconShell( void )
         XmStringFree(tmpXmStr);
 
 
-        tmpXmStr = GETXMSTR(12,158, "12x");
+        tmpXmStr = GETXMSTR(12,158, "x");
         magMenu_12x_tb = XtVaCreateManagedWidget( "magMenu_12x_tb",
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
@@ -2074,10 +2118,43 @@ build_dtIconShell( void )
                         NULL);
         XmStringFree(tmpXmStr);
 
+        tmpXmStr = GETXMSTR(12,160, "x");
+        magMenu_14x_tb = XtVaCreateManagedWidget( "magMenu_14x_tb",
+                        xmToggleButtonGadgetClass, magnificationMenu,
+                        XmNvisibleWhenOff, FALSE,
+                        XmNlabelString,tmpXmStr,
+                        NULL);
+        XmStringFree(tmpXmStr);
 
-        mnemonicStr = GETSTR(12,160, "M");
+        tmpXmStr = GETXMSTR(12,162, "x");
+        magMenu_16x_tb = XtVaCreateManagedWidget( "magMenu_16x_tb",
+                        xmToggleButtonGadgetClass, magnificationMenu,
+                        XmNvisibleWhenOff, FALSE,
+                        XmNlabelString,tmpXmStr,
+                        NULL);
+        XmStringFree(tmpXmStr);
+
+        tmpXmStr = GETXMSTR(12,164, "x");
+        magMenu_18x_tb = XtVaCreateManagedWidget( "magMenu_18x_tb",
+                        xmToggleButtonGadgetClass, magnificationMenu,
+                        XmNvisibleWhenOff, FALSE,
+                        XmNlabelString,tmpXmStr,
+                        NULL);
+        XmStringFree(tmpXmStr);
+
+
+        tmpXmStr = GETXMSTR(12,166, "x");
+        magMenu_20x_tb = XtVaCreateManagedWidget( "magMenu_20x_tb",
+                        xmToggleButtonGadgetClass, magnificationMenu,
+                        XmNvisibleWhenOff, FALSE,
+                        XmNlabelString,tmpXmStr,
+                        NULL);
+        XmStringFree(tmpXmStr);
+
+
+        mnemonicStr = GETSTR(12,168, "M");
         mnemonic = mnemonicStr[0];
-        tmpXmStr = GETXMSTR(12,162, "Magnification");
+        tmpXmStr = GETXMSTR(12,170, "Magnification");
         optionsMenu_magnify = XtVaCreateManagedWidget( "optionsMenu_magnify",
                         xmCascadeButtonGadgetClass, optionsMenu,
                         XmNmnemonic, mnemonic,
@@ -2087,9 +2164,9 @@ build_dtIconShell( void )
         XmStringFree(tmpXmStr);
 
 
-        mnemonicStr = GETSTR(12,164, "O");
+        mnemonicStr = GETSTR(12,172, "O");
         mnemonic = mnemonicStr[0];
-        tmpXmStr = GETXMSTR(12,166, "Options");
+        tmpXmStr = GETXMSTR(12,174, "Options");
         optionsMenu_top_pb = XtVaCreateManagedWidget( "optionsMenu_top_pb",
                         xmCascadeButtonWidgetClass, menu1,
                         XmNmnemonic, mnemonic,
@@ -2111,9 +2188,9 @@ build_dtIconShell( void )
                         NULL);
 
 
-        mnemonicStr = GETSTR(12,168, "v");
+        mnemonicStr = GETSTR(12,176, "v");
         mnemonic = mnemonicStr[0];
-        tmpXmStr = GETXMSTR(12,170, "Overview...");
+        tmpXmStr = GETXMSTR(12,178, "Overview...");
         helpMenu_intro_pb = XtVaCreateManagedWidget( "helpMenu_intro_pb",
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
@@ -2124,9 +2201,9 @@ build_dtIconShell( void )
         XtVaCreateManagedWidget( "helpMenu_separator1",
                         xmSeparatorGadgetClass, helpMenu, NULL);
 
-        mnemonicStr = GETSTR(12,172, "T");
+        mnemonicStr = GETSTR(12,180, "T");
         mnemonic = mnemonicStr[0];
-        tmpXmStr = GETXMSTR(12,174, "Tasks...");
+        tmpXmStr = GETXMSTR(12,182, "Tasks...");
         helpMenu_tasks_pb = XtVaCreateManagedWidget( "helpMenu_tasks_pb",
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
@@ -2134,9 +2211,9 @@ build_dtIconShell( void )
                         NULL);
         XmStringFree(tmpXmStr);
 
-        mnemonicStr = GETSTR(12,176, "R");
+        mnemonicStr = GETSTR(12,184, "R");
         mnemonic = mnemonicStr[0];
-        tmpXmStr = GETXMSTR(12,178, "Reference...");
+        tmpXmStr = GETXMSTR(12,186, "Reference...");
         helpMenu_ref_pb = XtVaCreateManagedWidget( "helpMenu_ref_pb",
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
@@ -2144,9 +2221,9 @@ build_dtIconShell( void )
                         NULL);
         XmStringFree(tmpXmStr);
 
-        mnemonicStr = GETSTR(12,180, "O");
+        mnemonicStr = GETSTR(12,188, "O");
         mnemonic = mnemonicStr[0];
-        tmpXmStr = GETXMSTR(12,182, "On Item");
+        tmpXmStr = GETXMSTR(12,190, "On Item");
         helpMenu_item_pb = XtVaCreateManagedWidget( "helpMenu_item_pb",
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
@@ -2157,9 +2234,9 @@ build_dtIconShell( void )
         XtVaCreateManagedWidget( "helpMenu_separator2",
                         xmSeparatorGadgetClass, helpMenu, NULL);
 
-        mnemonicStr = GETSTR(12,188, "U");
+        mnemonicStr = GETSTR(12,192, "U");
         mnemonic = mnemonicStr[0];
-        tmpXmStr = GETXMSTR(12,190, "Using Help...");
+        tmpXmStr = GETXMSTR(12,194, "Using Help...");
         helpMenu_using_pb = XtVaCreateManagedWidget("helpMenu_using_pb",
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
@@ -2170,9 +2247,9 @@ build_dtIconShell( void )
         XtVaCreateManagedWidget( "helpMenu_separator3",
                         xmSeparatorGadgetClass, helpMenu, NULL);
 
-        mnemonicStr = GETSTR(12,192, "A");
+        mnemonicStr = GETSTR(12,196, "A");
         mnemonic = mnemonicStr[0];
-        tmpXmStr = GETXMSTR(12,194, "About the Icon Editor...");
+        tmpXmStr = GETXMSTR(12,197, "About the Icon Editor...");
         helpMenu_version_pb = XtVaCreateManagedWidget( "helpMenu_version_pb",
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
@@ -2180,9 +2257,9 @@ build_dtIconShell( void )
                         NULL);
         XmStringFree(tmpXmStr);
 
-        mnemonicStr = GETSTR(12,196, "H");
+        mnemonicStr = GETSTR(12,198, "H");
         mnemonic = mnemonicStr[0];
-        tmpXmStr = GETXMSTR(12,198, "Help");
+        tmpXmStr = GETXMSTR(12,199, "Help");
         helpMenu_top_pb = XtVaCreateManagedWidget( "helpMenu_top_pb",
                         xmCascadeButtonWidgetClass, menu1,
                         XmNsubMenuId, helpMenu,
@@ -2357,6 +2434,14 @@ build_dtIconShell( void )
                         valueChangedCB_magMenu_10x_tb, NULL);
         XtAddCallback(magMenu_12x_tb, XmNvalueChangedCallback,
                         valueChangedCB_magMenu_12x_tb, NULL);
+        XtAddCallback(magMenu_14x_tb, XmNvalueChangedCallback,
+                        valueChangedCB_magMenu_14x_tb, NULL);
+        XtAddCallback(magMenu_16x_tb, XmNvalueChangedCallback,
+                        valueChangedCB_magMenu_16x_tb, NULL);
+        XtAddCallback(magMenu_18x_tb, XmNvalueChangedCallback,
+                        valueChangedCB_magMenu_18x_tb, NULL);
+        XtAddCallback(magMenu_20x_tb, XmNvalueChangedCallback,
+                        valueChangedCB_magMenu_20x_tb, NULL);
 
 
         XmMainWindowSetAreas( mainWindow, menu1, (Widget) NULL,

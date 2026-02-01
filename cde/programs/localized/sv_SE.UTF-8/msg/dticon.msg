@@ -207,24 +207,28 @@ $ ** (for set grouping information, see the comment at the end-of-file)
 154 8x
 156 10x
 158 12x
-160 F
-162 Förstoring
-164 l
-166 Alternativ
-168 v
-170 Översikt...
-172 t
-174 Steg-för-steg-anvisningar...
-176 R
-178 Referens...
-180 O
-182 Objekthjälp
-188 h
-190 Om hjälpfunktionen...
-192 k
-194 Om Ikonredigerare...
-196 H
-198 Hjälp
+160 14x
+162 16x
+164 18x
+166 20x
+168 F
+170 Förstoring
+172 l
+174 Alternativ
+176 v
+178 Översikt...
+180 t
+182 Steg-för-steg-anvisningar...
+184 R
+186 Referens...
+188 O
+190 Objekthjälp
+192 h
+194 Om hjälpfunktionen...
+196 k
+197 Om Ikonredigerare...
+198 H
+199 Hjälp
 
 $ ** message 200-are used in the "instruction" line for current drawing mode
 200 Aktuellt redigeringsläge:
