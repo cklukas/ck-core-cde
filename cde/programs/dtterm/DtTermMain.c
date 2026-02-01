@@ -804,6 +804,13 @@ CloneCallback(Widget wid, XtPointer client_data, XtPointer call_data)
 	    0);
 #endif	/* COPY_WHEN_CLONING */
 
+    {
+        long savedIndex;
+        if (GetSavedUserFontListIndex(&savedIndex)) {
+            _DtTermViewSetUserFontListIndex(termWidget, savedIndex);
+        }
+    }
+
     /* add a menubar toggle to the mwm pulldown... */
     (void) AddMenubarToggle(shellWidget, termWidget);
 
