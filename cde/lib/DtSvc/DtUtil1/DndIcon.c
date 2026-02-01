@@ -538,6 +538,8 @@ _DtDndGetIconOffset(
 	int *		offsetY)
 {
 	Widget		sourceIcon;
+	Position	hotX = -1;
+	Position	hotY = -1;
 	int		stateOffsetX, stateOffsetY;
 
 	switch (sourceType) {
@@ -555,11 +557,32 @@ _DtDndGetIconOffset(
 		*offsetX = -(data_x_hot + data_x_offset_state);
 		*offsetY = -(data_y_hot + data_y_offset_state);
 
+		if (dragContext != NULL) {
+			XtVaGetValues(dragContext,
+				XmNhotX,	&hotX,
+				XmNhotY,	&hotY,
+				NULL);
+			if (hotX >= 0 && hotY >= 0) {
+				*offsetX = -(int)hotX;
+				*offsetY = -(int)hotY;
+				break;
+			}
+		}
+
 		XtVaGetValues(dragContext,
 			XmNsourcePixmapIcon,	&sourceIcon,
 			NULL);
 
 		if (sourceIcon != NULL) {
+			XtVaGetValues(sourceIcon,
+				XmNhotX,	&hotX,
+				XmNhotY,	&hotY,
+				NULL);
+			if (hotX >= 0 && hotY >= 0) {
+				*offsetX = -(int)hotX;
+				*offsetY = -(int)hotY;
+				break;
+			}
 			calcStateIconOffset(sourceIcon,
 				&stateOffsetX, &stateOffsetY);
 			*offsetX = -(data_x_hot + stateOffsetX);

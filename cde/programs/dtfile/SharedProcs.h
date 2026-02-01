@@ -182,6 +182,20 @@ extern void _DtPathFromInput(
                         char *current_dir,
                         char **host,
                         char **rel_path) ;
+extern void _DtFileComputeDragLocalCoords(
+                        Widget w,
+                        XEvent *event,
+                        int fallback_x,
+                        int fallback_y,
+                        int *local_x,
+                        int *local_y) ;
+extern Widget _DtFileCreateDragStateIcon(
+                        Widget w,
+                        int hot_x,
+                        int hot_y,
+                        int marker_size,
+                        Dimension source_w,
+                        Dimension source_h) ;
 extern char * _DtChangeTildeToHome(
                         char *input_string) ;
 extern Boolean _DtSpacesInFileNames(

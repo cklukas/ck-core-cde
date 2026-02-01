@@ -2699,7 +2699,7 @@ SetValues(
    char * realPath;
    char * textString;
    char *tmpStr, *tempStr;
-   Arg args[8];
+   Arg args[10];
    PixmapData *pixmapData;
 
    file_mgr_data->file_mgr_rec = (XtPointer) file_mgr_rec;
@@ -3102,7 +3102,7 @@ WriteResourceValues(
    FileMgrRec * file_mgr_rec;
    char * new_name_list[20];
    int name_list_count;
-   Arg args[2];
+   Arg args[8];
    char number[10];
    int i;
    char * tmpStr;
@@ -5405,6 +5405,9 @@ ShelfStartDrag(
    unsigned char operations;
    Widget drag_context;
    Widget drag_icon = NULL;
+   Widget state_icon = NULL;
+   Dimension drag_w = 0;
+   Dimension drag_h = 0;
    Pixmap pm = None;
    Pixmap mask = None;
    Pixmap dragPixmap = None;
@@ -5412,6 +5415,8 @@ ShelfStartDrag(
    unsigned int dragWidth = 0;
    unsigned int dragHeight = 0;
    unsigned int dragDepth = 0;
+   int hot_x = 0;
+   int hot_y = 0;
 
    if (item_data == NULL || item_data->path == NULL)
       return;
@@ -5447,6 +5452,46 @@ ShelfStartDrag(
    shelf_drag_path = XtNewString(item_data->path);
    if (item_data->slot != 0)
       ShelfUpdateSlotAllViews(item_data->slot);
+
+   _DtFileComputeDragLocalCoords(w, event, -1, -1, &hot_x, &hot_y);
+   if (hot_x >= 0 && hot_y >= 0)
+   {
+      /* Align Motif's initial drag hotspot before drag start. */
+      XtSetArg(args[numArgs], XmNhotX, hot_x); numArgs++;
+      XtSetArg(args[numArgs], XmNhotY, hot_y); numArgs++;
+   }
+   if (drag_icon)
+   {
+      XtVaGetValues(drag_icon,
+                    XmNwidth, &drag_w,
+                    XmNheight, &drag_h,
+                    NULL);
+      XtVaSetValues(drag_icon,
+                    XmNhotX, hot_x,
+                    XmNhotY, hot_y,
+                    NULL);
+      XtSetArg(args[numArgs], XmNsourcePixmapIcon, drag_icon); numArgs++;
+      XtSetArg(args[numArgs], XmNsourceCursorIcon, drag_icon); numArgs++;
+   }
+   if (hot_x >= 0 && hot_y >= 0 && drag_w > 0 && drag_h > 0)
+   {
+      /* Debug state icon to align Motif's hotspot with the click point. */
+      state_icon = _DtFileCreateDragStateIcon(w, hot_x, hot_y, 9,
+                                              drag_w, drag_h);
+      if (state_icon)
+      {
+         XtSetArg(args[numArgs], XmNstateCursorIcon, state_icon); numArgs++;
+      }
+   }
+
+   if (drag_icon && hot_x >= 0 && hot_y >= 0)
+   {
+      XtVaSetValues(drag_icon,
+                    XmNhotX, hot_x,
+                    XmNhotY, hot_y,
+                    NULL);
+   }
+
    drag_context = DtDndDragStart(w, event, DtDND_FILENAME_TRANSFER, 1,
                                  operations,
                                  convertCB, dragFinishCB, args, numArgs);
@@ -5463,6 +5508,29 @@ ShelfStartDrag(
          shelf_drag_hidden_slot = -1;
          ShelfUpdateSlotAllViews(slot);
       }
+   }
+   else
+   {
+      /* Align drag hotspot to click location; state icon enforces the hotspot. */
+      XtVaSetValues(drag_context,
+                    XmNhotX, hot_x,
+                    XmNhotY, hot_y,
+                    NULL);
+      if (drag_icon)
+      {
+         XtVaSetValues(drag_context,
+                       XmNsourcePixmapIcon, drag_icon,
+                       XmNsourceCursorIcon, drag_icon,
+                       NULL);
+         XtVaSetValues(drag_icon,
+                       XmNhotX, hot_x,
+                       XmNhotY, hot_y,
+                       NULL);
+      }
+      if (state_icon)
+         XtVaSetValues(drag_context,
+                       XmNstateCursorIcon, state_icon,
+                       NULL);
    }
 }
 
@@ -5958,7 +6026,7 @@ ShelfRebuild(
    Widget *children = NULL;
    Widget *children_copy = NULL;
    Cardinal num_children = 0;
-   Arg args[24];
+   Arg args[32];
    int n;
    int i;
    int slot_count = 0;
@@ -6136,6 +6204,7 @@ ShelfRebuild(
    {
       XtVaGetValues(file_mgr_rec->shelf_frame,
                     XmNbackground, &bg,
+                    XmNforeground, &fg,
                     XmNcolormap, &colormap,
                     NULL);
       if (colormap != 0)
@@ -6147,6 +6216,11 @@ ShelfRebuild(
          ShelfLog("ShelfRebuild: default colors bg=%lu fg=%lu pix_bg=%lu pix_fg=%lu\n",
                   (unsigned long)bg, (unsigned long)fg,
                   (unsigned long)pix_bg, (unsigned long)pix_fg);
+      }
+      else
+      {
+         pix_bg = bg;
+         pix_fg = fg;
       }
    }
 
@@ -6263,6 +6337,9 @@ ShelfRebuild(
       XtSetArg (args[n], XmNhighlightThickness, 2);         n++;
       XtSetArg (args[n], XmNborderWidth, 0);                n++;
       XtSetArg (args[n], XmNbackground, bg);                n++;
+      XtSetArg (args[n], XmNforeground, fg);                n++;
+      XtSetArg (args[n], XmNpixmapBackground, pix_bg);      n++;
+      XtSetArg (args[n], XmNpixmapForeground, pix_fg);      n++;
       XtSetArg (args[n], XmNwidth, slot_width);             n++;
       XtSetArg (args[n], XmNheight, slot_height);           n++;
       XtSetArg (args[n], XmNminWidth, slot_width);          n++;

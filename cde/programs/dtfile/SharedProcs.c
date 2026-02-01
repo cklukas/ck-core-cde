@@ -99,6 +99,7 @@
 #include <Xm/RowColumn.h>
 #include <Xm/MwmUtil.h>
 #include <Xm/Protocols.h>
+#include <Xm/DragIcon.h>
 #include <X11/ShellP.h>
 #include <X11/Shell.h>
 #include <X11/Xatom.h>
@@ -137,6 +138,197 @@ extern char *pathcollapse();
 
 /* Defines */
 #define RW_ALL S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH
+
+/*
+ * Compute widget-local drag coordinates from an X event.
+ * Uses root coordinates when available, otherwise falls back to the
+ * provided widget-relative coordinates.
+ */
+void
+_DtFileComputeDragLocalCoords(
+        Widget w,
+        XEvent *event,
+        int fallback_x,
+        int fallback_y,
+        int *local_x,
+        int *local_y)
+{
+   Position widget_root_x = 0;
+   Position widget_root_y = 0;
+   int root_x = -1;
+   int root_y = -1;
+   int lx = 0;
+   int ly = 0;
+
+   if (local_x)
+      *local_x = 0;
+   if (local_y)
+      *local_y = 0;
+   if (w == NULL || event == NULL)
+      return;
+
+   XtTranslateCoords(w, 0, 0, &widget_root_x, &widget_root_y);
+   switch (event->type)
+   {
+      case MotionNotify:
+         root_x = event->xmotion.x_root;
+         root_y = event->xmotion.y_root;
+         break;
+      case ButtonPress:
+      case ButtonRelease:
+         root_x = event->xbutton.x_root;
+         root_y = event->xbutton.y_root;
+         break;
+      default:
+         break;
+   }
+
+   if (root_x >= 0 || root_y >= 0)
+   {
+      lx = root_x - (int)widget_root_x;
+      ly = root_y - (int)widget_root_y;
+   }
+   else if (fallback_x >= 0 && fallback_y >= 0)
+   {
+      lx = fallback_x - (int)XtX(w);
+      ly = fallback_y - (int)XtY(w);
+   }
+
+   if (lx < 0)
+      lx = 0;
+   if (ly < 0)
+      ly = 0;
+
+   if (local_x)
+      *local_x = lx;
+   if (local_y)
+      *local_y = ly;
+}
+
+/*
+ * Build a 1-bit drag state icon with a marker centered at the hotspot.
+ * Motif uses the state icon hotspot to anchor the drag image, so this keeps
+ * the drag pixmap aligned to the actual click point.
+ */
+Widget
+_DtFileCreateDragStateIcon(
+        Widget w,
+        int hot_x,
+        int hot_y,
+        int marker_size,
+        Dimension source_w,
+        Dimension source_h)
+{
+   static int drag_state_debug_enabled = -1;
+   Display *dpy;
+   Screen *screen;
+   Pixmap pm = None;
+   Pixmap mask = None;
+   GC gc = 0;
+   XGCValues values;
+   Arg args[12];
+   Cardinal n = 0;
+   unsigned int width;
+   unsigned int height;
+   int rect_x;
+   int rect_y;
+   unsigned int rect_w;
+   unsigned int rect_h;
+   Widget icon;
+   int half;
+
+   if (w == NULL || hot_x < 0 || hot_y < 0)
+      return NULL;
+
+   if (marker_size < 1)
+      marker_size = 1;
+   if ((marker_size % 2) == 0)
+      marker_size += 1;
+
+   dpy = XtDisplay(w);
+   screen = XtScreenOfObject(w);
+   if (dpy == NULL || screen == NULL)
+      return NULL;
+
+   /* Keep this icon small; we offset it relative to the source icon. */
+   width = (unsigned int)marker_size;
+   height = (unsigned int)marker_size;
+   if (width == 0 || height == 0)
+      return NULL;
+
+   pm = XCreatePixmap(dpy, RootWindowOfScreen(screen), width, height, 1);
+   mask = XCreatePixmap(dpy, RootWindowOfScreen(screen), width, height, 1);
+   if (pm == None || mask == None)
+      return NULL;
+
+   gc = XCreateGC(dpy, pm, 0, (XGCValues *)NULL);
+   if (gc == 0)
+      return NULL;
+
+   values.foreground = 0;
+   XChangeGC(dpy, gc, GCForeground, &values);
+   XFillRectangle(dpy, pm, gc, 0, 0, width, height);
+   XFillRectangle(dpy, mask, gc, 0, 0, width, height);
+
+   half = marker_size / 2;
+   rect_x = 0;
+   rect_y = 0;
+   if (rect_x < 0)
+      rect_x = 0;
+   if (rect_y < 0)
+      rect_y = 0;
+   rect_w = (rect_x + marker_size > (int)width)
+               ? (width - rect_x)
+               : (unsigned int)marker_size;
+   rect_h = (rect_y + marker_size > (int)height)
+               ? (height - rect_y)
+               : (unsigned int)marker_size;
+
+   values.foreground = 1;
+   XChangeGC(dpy, gc, GCForeground, &values);
+   XFillRectangle(dpy, pm, gc, rect_x, rect_y, rect_w, rect_h);
+   XFillRectangle(dpy, mask, gc, rect_x, rect_y, rect_w, rect_h);
+
+   values.foreground = 0;
+   XChangeGC(dpy, gc, GCForeground, &values);
+   XDrawPoint(dpy, pm, gc, half, half);
+
+   XFreeGC(dpy, gc);
+
+   XtSetArg(args[n], XmNpixmap, pm); n++;
+   XtSetArg(args[n], XmNmask, mask); n++;
+   XtSetArg(args[n], XmNdepth, 1); n++;
+   XtSetArg(args[n], XmNhotX, (Position)half); n++;
+   XtSetArg(args[n], XmNhotY, (Position)half); n++;
+   /*
+    * Attach at center and offset so the blended hotspot matches the
+    * source icon hotspot (the click point). This avoids Motif's
+    * pointer-based placement and keeps snap-back aligned.
+    */
+   XtSetArg(args[n], XmNattachment, XmATTACH_CENTER); n++;
+   XtSetArg(args[n], XmNoffsetX,
+            (Position)((int)hot_x - (int)half - (int)(source_w / 2))); n++;
+   XtSetArg(args[n], XmNoffsetY,
+            (Position)((int)hot_y - (int)half - (int)(source_h / 2))); n++;
+   XtSetArg(args[n], XmNwidth, (Dimension)width); n++;
+   XtSetArg(args[n], XmNheight, (Dimension)height); n++;
+   icon = XmCreateDragIcon(XtParent(w), "drag_state_icon", args, n);
+
+   if (drag_state_debug_enabled < 0)
+      drag_state_debug_enabled = (getenv("DTFILE_DRAG_DEBUG") != NULL) ? 1 : 0;
+   if (drag_state_debug_enabled)
+   {
+      fprintf(stderr,
+              "dtfile-dragstate: hot=(%d,%d) src=(%u,%u) marker=%u off=(%d,%d)\n",
+              hot_x, hot_y,
+              (unsigned)source_w, (unsigned)source_h,
+              (unsigned)marker_size,
+              (int)((int)hot_x - (int)half - (int)(source_w / 2)),
+              (int)((int)hot_y - (int)half - (int)(source_h / 2)));
+   }
+
+   return icon;
+}
 
 
 /* Global controlling whether auto-positioning is enabled */

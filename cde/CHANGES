@@ -1,3 +1,5 @@
 2026-02-01
 - dtterm: added CDE DnD filename drop handling to insert shell-safe, backslash-escaped
   paths into terminal input, with multiple items separated by single spaces.
+- dtfile: aligned drag hotspots with the click position using state icons and explicit
+  hot spot handling, plus shelf drag adjustments and color fixes for shelf icons.

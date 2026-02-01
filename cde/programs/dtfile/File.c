@@ -417,6 +417,9 @@ static char *TreePxSuffix[3] = { ".s", ".m", ".l" };
 /* value need to to convert drop position to icon placement */
 static int dragIconPixmapOffsetX;
 static int dragIconPixmapOffsetY;
+static int drag_debug_enabled = -1;
+static int drag_hot_x = -1;
+static int drag_hot_y = -1;
 
 /*  Local defines  */
 
@@ -1867,6 +1870,8 @@ GetDragIcon(
    Arg args[11];
    int n;
    unsigned int wid, hei, d, junk;
+   int hotX = 0;
+   int hotY = 0;
    Widget dragIcon;
    Pixmap dragPixmap;
    Pixmap dragMask;
@@ -1901,11 +1906,41 @@ GetDragIcon(
      XmStringFree( fileNameString );
    }
 
+   if (drag_hot_x >= 0 && drag_hot_y >= 0)
+   {
+      hotX = drag_hot_x;
+      hotY = drag_hot_y;
+   }
+   else if (initialDragX >= 0 && initialDragY >= 0)
+   {
+      hotX = initialDragX - (int)XtX(w);
+      hotY = initialDragY - (int)XtY(w);
+   }
+
+   if (hotX < 0)
+      hotX = 0;
+   if (hotY < 0)
+      hotY = 0;
+   if ((unsigned int)hotX >= wid)
+      hotX = (wid > 0) ? (int)wid - 1 : 0;
+   if ((unsigned int)hotY >= hei)
+      hotY = (hei > 0) ? (int)hei - 1 : 0;
+
+   if (drag_debug_enabled < 0)
+      drag_debug_enabled = (getenv("DTFILE_DRAG_DEBUG") != NULL) ? 1 : 0;
+   if (drag_debug_enabled)
+   {
+      fprintf(stderr,
+              "dtfile-dragicon: w=%p hot=(%d,%d) pix=(%u,%u) wsize=(%u,%u)\n",
+              (void *)w, hotX, hotY, wid, hei,
+              (unsigned)XtWidth(w), (unsigned)XtHeight(w));
+   }
+
    dragMask = GetDragIconMask(w, wid, hei);
 
    n = 0 ;
-   XtSetArg(args[n], XmNhotX, 0);  n++;
-   XtSetArg(args[n], XmNhotY, 0);  n++;
+   XtSetArg(args[n], XmNhotX, hotX);  n++;
+   XtSetArg(args[n], XmNhotY, hotY);  n++;
    XtSetArg(args[n], XmNwidth, wid);  n++;
    XtSetArg(args[n], XmNheight, hei);  n++;
    XtSetArg(args[n], XmNmaxWidth, wid);  n++;
@@ -1920,6 +1955,13 @@ GetDragIcon(
 
    return(dragIcon);
 }
+
+/*
+ * Build a small 1-bit state icon whose hotspot matches the click location.
+ * Motif uses the state icon hotspot to anchor the drag image; this keeps the
+ * drag pixmap aligned to the actual click point. The 3x3 marker is a debug
+ * aid (center pixel cleared) and can be replaced later.
+ */
 
 
 
@@ -2168,7 +2210,10 @@ StartDrag(
    static XtCallbackRec dropOnRootCB[] = { {DropOnRootCB, NULL},
                                            {NULL, NULL} };
    Widget drag_icon;
-   Arg                  args[2];
+   Widget state_icon = NULL;
+   Dimension drag_w = 0;
+   Dimension drag_h = 0;
+   Arg                  args[10];
    int                  numArgs;
    FileMgrData *        fileMgrData = NULL;
    DesktopRec *         desktopRec = NULL;
@@ -2176,6 +2221,13 @@ StartDrag(
    int                  dt;
    Boolean              desktopObj;
    unsigned char        operations;
+   XEvent               drag_event;
+   int                  local_x = 0;
+   int                  local_y = 0;
+   Position             widget_root_x = 0;
+   Position             widget_root_y = 0;
+   int                  root_x = 0;
+   int                  root_y = 0;
 
    if (event->type == INVALID_TYPE) return;
 
@@ -2188,6 +2240,29 @@ StartDrag(
    selectedCount = GetSelectedCount(fileViewData, fileMgrData,
                                     desktopRec, &dt);
 
+   drag_event = *event;
+   XtTranslateCoords(w, 0, 0, &widget_root_x, &widget_root_y);
+   switch (event->type)
+   {
+      case MotionNotify:
+         root_x = event->xmotion.x_root;
+         root_y = event->xmotion.y_root;
+         break;
+      case ButtonPress:
+      case ButtonRelease:
+         root_x = event->xbutton.x_root;
+         root_y = event->xbutton.y_root;
+         break;
+      default:
+         break;
+   }
+   _DtFileComputeDragLocalCoords(w, event,
+                                 initialDragX, initialDragY,
+                                 &local_x, &local_y);
+
+   drag_hot_x = local_x;
+   drag_hot_y = local_y;
+
    if (selectedCount > 1)
       drag_icon = NULL;
    else
@@ -2196,6 +2271,35 @@ StartDrag(
    numArgs = 0;
    XtSetArg(args[numArgs], DtNsourceIcon, drag_icon);                numArgs++;
    XtSetArg(args[numArgs], DtNdropOnRootCallback, dropOnRootCB);     numArgs++;
+   if (drag_hot_x >= 0 && drag_hot_y >= 0)
+   {
+      /* Align Motif's initial drag hotspot before drag start. */
+      XtSetArg(args[numArgs], XmNhotX, drag_hot_x);                  numArgs++;
+      XtSetArg(args[numArgs], XmNhotY, drag_hot_y);                  numArgs++;
+   }
+   if (drag_icon)
+   {
+      XtVaGetValues(drag_icon,
+                    XmNwidth, &drag_w,
+                    XmNheight, &drag_h,
+                    NULL);
+      XtVaSetValues(drag_icon,
+                    XmNhotX, drag_hot_x,
+                    XmNhotY, drag_hot_y,
+                    NULL);
+      XtSetArg(args[numArgs], XmNsourcePixmapIcon, drag_icon);       numArgs++;
+      XtSetArg(args[numArgs], XmNsourceCursorIcon, drag_icon);       numArgs++;
+   }
+   if (drag_hot_x >= 0 && drag_hot_y >= 0 && drag_w > 0 && drag_h > 0)
+   {
+      /* Debug state icon to align Motif's hotspot with the click point. */
+      state_icon = _DtFileCreateDragStateIcon(w, drag_hot_x, drag_hot_y, 9,
+                                              drag_w, drag_h);
+      if (state_icon)
+      {
+         XtSetArg(args[numArgs], XmNstateCursorIcon, state_icon);    numArgs++;
+      }
+   }
 
    if ((desktopObj && desktopRec->toolbox) ||
        (!desktopObj && fileMgrData->toolbox))
@@ -2203,9 +2307,44 @@ StartDrag(
    else
      operations = XmDROP_MOVE | XmDROP_COPY | XmDROP_LINK;
 
-   if (DtDndDragStart(w, event, DtDND_FILENAME_TRANSFER, selectedCount,
-                        operations,
-                        fileConvertCB, dragFinishCB, args, numArgs) == NULL) {
+   switch (drag_event.type)
+   {
+      case MotionNotify:
+         drag_event.xmotion.x = local_x;
+         drag_event.xmotion.y = local_y;
+         break;
+      case ButtonPress:
+      case ButtonRelease:
+         drag_event.xbutton.x = local_x;
+         drag_event.xbutton.y = local_y;
+         break;
+      default:
+         break;
+   }
+
+   if (drag_debug_enabled < 0)
+      drag_debug_enabled = (getenv("DTFILE_DRAG_DEBUG") != NULL) ? 1 : 0;
+   if (drag_debug_enabled)
+   {
+      fprintf(stderr,
+              "dtfile-drag: w=%p init=(%d,%d) wpos=(%d,%d) wroot=(%d,%d) root=(%d,%d) local=(%d,%d) wsize=(%u,%u) evt=%d\n",
+              (void *)w, initialDragX, initialDragY,
+              (int)XtX(w), (int)XtY(w),
+              (int)widget_root_x, (int)widget_root_y,
+              root_x, root_y,
+              local_x, local_y,
+              (unsigned)XtWidth(w), (unsigned)XtHeight(w),
+              drag_event.type);
+   }
+
+   {
+      Widget drag_context;
+      drag_context = DtDndDragStart(w, &drag_event, DtDND_FILENAME_TRANSFER,
+                                    selectedCount, operations,
+                                    fileConvertCB, dragFinishCB,
+                                    args, numArgs);
+      if (drag_context == NULL)
+      {
       DPRINTF(("StartDrag: dragActive -> False\n"));
 
       dragActive = False;
@@ -2214,6 +2353,54 @@ StartDrag(
       B1DragPossible = False;
       B2DragPossible = False;
       ProcessBtnUp = False;
+      }
+      else if (drag_hot_x >= 0 && drag_hot_y >= 0)
+      {
+      if (drag_icon)
+      {
+         XtVaSetValues(drag_context,
+                       XmNsourcePixmapIcon, drag_icon,
+                       XmNsourceCursorIcon, drag_icon,
+                       NULL);
+         XtVaSetValues(drag_icon,
+                       XmNhotX, drag_hot_x,
+                       XmNhotY, drag_hot_y,
+                       NULL);
+      }
+      if (state_icon)
+      {
+         XtVaSetValues(drag_context,
+                       XmNstateCursorIcon, state_icon,
+                       NULL);
+      }
+         XtVaSetValues(drag_context,
+                       XmNhotX, drag_hot_x,
+                       XmNhotY, drag_hot_y,
+                       NULL);
+         if (drag_icon)
+         {
+            XtVaSetValues(drag_icon,
+                          XmNhotX, drag_hot_x,
+                          XmNhotY, drag_hot_y,
+                          NULL);
+         }
+
+         if (drag_debug_enabled < 0)
+            drag_debug_enabled = (getenv("DTFILE_DRAG_DEBUG") != NULL) ? 1 : 0;
+         if (drag_debug_enabled)
+         {
+            Widget src_icon = NULL;
+            Position hx = -1, hy = -1;
+            XtVaGetValues(drag_context,
+                          XmNsourcePixmapIcon, &src_icon,
+                          NULL);
+            if (src_icon)
+               XtVaGetValues(src_icon, XmNhotX, &hx, XmNhotY, &hy, NULL);
+            fprintf(stderr,
+                    "dtfile-dragctx: ctx=%p src=%p hot=(%d,%d)\n",
+                    (void *)drag_context, (void *)src_icon, (int)hx, (int)hy);
+         }
+      }
    }
 }
 
