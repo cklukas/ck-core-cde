@@ -1,0 +1,3 @@
+2026-02-01
+- dtterm: added CDE DnD filename drop handling to insert shell-safe, backslash-escaped
+  paths into terminal input, with multiple items separated by single spaces.

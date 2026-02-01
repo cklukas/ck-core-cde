@@ -46,6 +46,8 @@
 #include "TermPrimBufferP.h"
 #include <Xm/DropSMgr.h>
 #include <Xm/DropTrans.h>
+#include <Dt/Dnd.h>
+#include <string.h>
 #include <ctype.h>
 #include <wctype.h>
 
@@ -71,6 +73,11 @@ XmTextScanType defaultScanArray[] =
 };
 
 static void RegisterDropSite( Widget w );
+static void DtTermDndTransferCallback(Widget w, XtPointer client, XtPointer call);
+static void SendTextToTerm(Widget w, char *buffer, int length);
+static Boolean NeedsShellEscape(int ch);
+static size_t EscapedPathLength(const char *path);
+static char *WriteEscapedPath(char *out, const char *path);
 static void doExtendedSelection (Widget  w,Time  eventTime);
 
 /* 
@@ -1507,9 +1514,6 @@ doHandleTargets
     XTextProperty           tmpProp;
     XmTextBlockRec          block;
     int                     i, status;
-    char                   *pChar;
-    char                   *pCharEnd;
-    char                   *pCharFollow;
     int                     malloc_size=0 , numVals ;
     char                   *total_tmp_value ;
     char                  **tmp_value ;
@@ -1570,24 +1574,7 @@ doHandleTargets
         block.format = XmFMT_8_BIT;
      }
  
-     pCharEnd    = block.ptr + block.length;
-     pCharFollow = (char *)block.ptr;
-
-     for (pChar = (char *)block.ptr; pChar < pCharEnd; pChar++)
-     {
-         if (*pChar == '\n')
-         {
-             *pChar = '\r';
-             DtTermSubprocSend(w, (unsigned char *) pCharFollow,
-                           pChar - pCharFollow + 1);
-             pCharFollow = pChar + 1;
-         }        
-     }
-     if (pCharFollow < pCharEnd)
-     {
-         DtTermSubprocSend(w, (unsigned char *) pCharFollow,
-                       pCharEnd - pCharFollow);
-     }
+     SendTextToTerm(w, (char *)block.ptr, block.length);
 
     if (malloc_size != 0) XtFree(total_tmp_value);
     XtFree((char *)value);
@@ -2347,6 +2334,98 @@ _DtTermPrimSelectPage
 static XContext _DtTermDNDContext = 0;
 
 static void
+SendTextToTerm(
+        Widget w,
+        char *buffer,
+        int length)
+{
+    char *pChar;
+    char *pCharEnd;
+    char *pCharFollow;
+
+    if (buffer == NULL || length <= 0)
+        return;
+
+    pCharEnd = buffer + length;
+    pCharFollow = buffer;
+
+    for (pChar = buffer; pChar < pCharEnd; pChar++)
+    {
+        if (*pChar == '\n')
+        {
+            *pChar = '\r';
+            DtTermSubprocSend(w, (unsigned char *) pCharFollow,
+                          pChar - pCharFollow + 1);
+            pCharFollow = pChar + 1;
+        }
+    }
+    if (pCharFollow < pCharEnd)
+    {
+        DtTermSubprocSend(w, (unsigned char *) pCharFollow,
+                      pCharEnd - pCharFollow);
+    }
+}
+
+static Boolean
+NeedsShellEscape(int ch)
+{
+    if (isspace((unsigned char)ch))
+        return True;
+    switch (ch) {
+        case '(':
+        case ')':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+        case '&':
+        case '|':
+        case ';':
+        case '<':
+        case '>':
+        case '*':
+        case '?':
+        case '!':
+        case '$':
+        case '\"':
+        case '\'':
+        case '`':
+        case '\\':
+            return True;
+        default:
+            return False;
+    }
+}
+
+static size_t
+EscapedPathLength(const char *path)
+{
+    size_t len = 0;
+    const unsigned char *p = (const unsigned char *)path;
+
+    while (*p) {
+        if (NeedsShellEscape(*p))
+            len++;
+        len++;
+        p++;
+    }
+    return len;
+}
+
+static char *
+WriteEscapedPath(char *out, const char *path)
+{
+    const unsigned char *p = (const unsigned char *)path;
+
+    while (*p) {
+        if (NeedsShellEscape(*p))
+            *out++ = '\\';
+        *out++ = (char)*p++;
+    }
+    return out;
+}
+
+static void
 DropTransferCallback(
         Widget w,
         XtPointer closure,
@@ -2606,6 +2685,74 @@ RegisterDropSite(
     /* XtSetArg(args[n], XmNdragProc, DragProcCallback); n++; */
     XtSetArg(args[n], XmNdropProc, DropProcCallback); n++;
     XmDropSiteRegister(w, args, n);
+
+    {
+        static XtCallbackRec dndTransferCB[] = {
+            { DtTermDndTransferCallback, NULL },
+            { NULL, NULL }
+        };
+
+        DtDndDropRegister(w, DtDND_FILENAME_TRANSFER, XmDROP_COPY,
+                          dndTransferCB, NULL, 0);
+    }
+}
+
+static void
+DtTermDndTransferCallback(
+        Widget w,
+        XtPointer client,
+        XtPointer call)
+{
+    DtDndTransferCallback cb = (DtDndTransferCallback) call;
+    Cardinal ii;
+    size_t total_len = 0;
+    char *buffer;
+    char *cursor;
+    Boolean have_item = False;
+
+    if (cb == NULL || cb->reason != DtCR_DND_TRANSFER_DATA)
+        return;
+
+    if (cb->dropData == NULL || cb->status != DtDND_SUCCESS)
+        return;
+
+    if (cb->dropData->protocol != DtDND_FILENAME_TRANSFER)
+        return;
+
+    if (cb->dropData->numItems == 0 || cb->dropData->data.files == NULL)
+        return;
+
+    for (ii = 0; ii < cb->dropData->numItems; ii++) {
+        const char *path = cb->dropData->data.files[ii];
+        if (path == NULL)
+            continue;
+        if (have_item)
+            total_len += 1;
+        total_len += EscapedPathLength(path);
+        have_item = True;
+    }
+
+    if (total_len == 0)
+        return;
+
+    buffer = XtMalloc((unsigned)total_len + 1);
+    cursor = buffer;
+
+    for (ii = 0; ii < cb->dropData->numItems; ii++) {
+        const char *path = cb->dropData->data.files[ii];
+
+        if (path == NULL)
+            continue;
+
+        if (cursor != buffer)
+            *cursor++ = ' ';
+
+        cursor = WriteEscapedPath(cursor, path);
+    }
+
+    *cursor = '\0';
+    SendTextToTerm(w, buffer, (int)(cursor - buffer));
+    XtFree(buffer);
 }
 
 
