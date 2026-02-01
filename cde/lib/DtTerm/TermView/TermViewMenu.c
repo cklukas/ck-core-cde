@@ -36,6 +36,9 @@
 #include "TermHeader.h"
 #include <string.h>		/* for strdup				*/
 #include <errno.h>		/* for errno and sys_errlist[]		*/
+#include <X11/Xresource.h>
+#include <Dt/SmCreateDirs.h>
+#include <Dt/DtPStrings.h>
 
 #include <Xm/Xm.h>
 #include <Xm/RowColumn.h>
@@ -67,6 +70,55 @@ static int fontSizeTogglesDefault = -1;
 static Widget *windowSizeToggles;
 #endif	/* WINDOW_SIZE_TOGGLES */
 static Widget newButton;
+
+static char *
+GetUserResourcePath(void)
+{
+    const char *home = getenv("HOME");
+    size_t len;
+    char *path;
+
+    if (home == NULL)
+        home = "";
+
+    len = strlen(home) + 1 + strlen(DtPERSONAL_CONFIG_DIRECTORY) + 1 +
+          strlen("dttermrc") + 1;
+    path = XtMalloc((unsigned)len);
+    if (path == NULL)
+        return NULL;
+
+    snprintf(path, len, "%s/%s/%s", home, DtPERSONAL_CONFIG_DIRECTORY,
+             "dttermrc");
+    return path;
+}
+
+static void
+SaveUserFontListIndexResource(DtTermViewWidget tw)
+{
+    XrmDatabase db;
+    char *path;
+    char value[16];
+
+    if (tw == NULL)
+        return;
+
+    _DtCreateDtDirs(XtDisplay((Widget)tw));
+
+    path = GetUserResourcePath();
+    if (path == NULL)
+        return;
+
+    db = XrmGetFileDatabase(path);
+    if (db == NULL)
+        db = XrmGetStringDatabase("");
+
+    snprintf(value, sizeof(value), "%d",
+             _DtTermViewGetUserFontListIndex((Widget)tw));
+    XrmPutStringResource(&db, "Dtterm*userFontListIndex", value);
+    XrmPutFileDatabase(db, path);
+
+    XtFree(path);
+}
 
 /* forward declarations...
  */
@@ -1478,6 +1530,8 @@ fontChangeCallback(Widget w, XtPointer client_data, XtPointer call_data)
 	(void) XtSetValues((Widget) tw, al, ac);
     }
     tw->termview.currentFontToggleButtonIndex = i1;
+    if (call_data != NULL)
+        SaveUserFontListIndexResource(tw);
     _DtTermProcessUnlock();
 }
 
@@ -1504,6 +1558,8 @@ defaultFontCallback(Widget w, XtPointer client_data, XtPointer call_data)
 	(void) XtSetValues((Widget) tw, al, ac);
     }
     tw->termview.currentFontToggleButtonIndex = fontSizeTogglesDefault;
+    if (call_data != NULL)
+        SaveUserFontListIndexResource(tw);
 }
 /*ARGSUSED*/
 static void
@@ -1621,4 +1677,3 @@ _DtTermViewSetUserFontListIndex
     _DtTermProcessUnlock();
     _DtTermAppUnlock(app);
 }
-

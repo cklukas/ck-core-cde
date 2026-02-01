@@ -686,7 +686,14 @@ None.
 .SH STDIN
 Not used.
 .SH "INPUT FILES"
-None.
+.RS 3
+.nr )J 6
+.LI \f2$HOME/.dt/dttermrc\fP
+User-specific resource settings written by dtterm. This file currently stores
+the last selected font size index.
+.PP
+.RE
+.nr )J 0
 .SH "ENVIRONMENT VARIABLES"
 The following environment variables affect the execution of
 .BR dtterm :
@@ -891,6 +898,7 @@ title@Title@String@``dtterm''
 ttyModes@TtyModes@String@NULL
 userBoldFont@UserBoldFont@XmFontList@dynamic
 userFont@UserFont@XmFontList@dynamic
+userFontListIndex@UserFontListIndex@int@0
 visualBell@VisualBell@Boolean@False
 .TE
 .S +1
@@ -1360,6 +1368,17 @@ The default is the
 value of the parent bulletin board
 (see the XmBulletinBoard widget)
 in the same manner as the XmText widget.
+.LI \f3userFontListIndex\fP
+.br
+Specifies the index of the font size entry in the user font list.
+An index of 0 selects the default font size.
+When a font size is selected from the Options menu, dtterm stores the updated
+index in
+.BR $HOME/.dt/dttermrc
+as the
+.BR Dtterm*userFontListIndex
+resource, and new dtterm instances use that value unless a saved session
+provides a different font size.
 .LI \f3visualBell\fP
 .br
 Indicates that a visual bell is preferred over an audible one.
@@ -1441,7 +1460,14 @@ Not used.
 .SH STDERR
 Used only for diagnostic messages.
 .SH "OUTPUT FILES"
-None.
+.RS 3
+.nr )J 6
+.LI \f2$HOME/.dt/dttermrc\fP
+User-specific resource settings written by dtterm, including the last selected
+font size index.
+.PP
+.RE
+.nr )J 0
 .SH "EXTENDED DESCRIPTION"
 None.
 .SH "EXIT STATUS"

@@ -4,5 +4,7 @@
   context propagation, with text detection via DTS and localized labels.
 - dtterm: added CDE DnD filename drop handling to insert shell-safe, backslash-escaped
   paths into terminal input, with multiple items separated by single spaces.
+- dtterm: persist the last selected Options -> Font Size choice in ~/.dt/dttermrc
+  and restore it for new instances unless a saved session provides a font size.
 - dtfile: aligned drag hotspots with the click position using state icons and explicit
   hot spot handling, plus shelf drag adjustments and color fixes for shelf icons.

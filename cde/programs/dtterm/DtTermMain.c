@@ -40,6 +40,8 @@
 #include <locale.h>
 #include <ctype.h>
 #include <signal.h>
+#include <X11/Xresource.h>
+#include <Dt/DtPStrings.h>
 #include <Xm/Form.h>
 #include <Xm/TextF.h>
 #include <Xm/PushBG.h>
@@ -157,6 +159,8 @@ static void RestoreTerm(
 static void SetWorkSpaceHints(
         Widget shell,
         char *workspaces );
+static char *GetUserResourcePath(void);
+static Boolean GetSavedUserFontListIndex(long *index_out);
 
 static void TestProbeHandler(
  	Widget	w,
@@ -368,6 +372,57 @@ static XtResource applicationResources[] = {
 };
 
 extern String fallbackResources[];
+
+static char *
+GetUserResourcePath(void)
+{
+    const char *home = getenv("HOME");
+    size_t len;
+    char *path;
+
+    if (home == NULL)
+        home = "";
+
+    len = strlen(home) + 1 + strlen(DtPERSONAL_CONFIG_DIRECTORY) + 1 +
+          strlen("dttermrc") + 1;
+    path = XtMalloc((unsigned)len);
+    if (path == NULL)
+        return NULL;
+
+    snprintf(path, len, "%s/%s/%s", home, DtPERSONAL_CONFIG_DIRECTORY,
+             "dttermrc");
+    return path;
+}
+
+static Boolean
+GetSavedUserFontListIndex(long *index_out)
+{
+    XrmDatabase db;
+    XrmValue value;
+    char *path;
+    char *type;
+
+    if (index_out == NULL)
+        return False;
+
+    path = GetUserResourcePath();
+    if (path == NULL)
+        return False;
+
+    db = XrmGetFileDatabase(path);
+    XtFree(path);
+    if (db == NULL)
+        return False;
+
+    if (XrmGetResource(db, "Dtterm*userFontListIndex",
+                       "Dtterm*UserFontListIndex", &type, &value) &&
+        value.addr && *(char *)value.addr) {
+        *index_out = atol((char *)value.addr);
+        return True;
+    }
+
+    return False;
+}
 
 #ifdef sun
 void
@@ -813,6 +868,13 @@ CreateInstance
 #endif	/* LOG_USAGE */
 
     termViewWidget = DtCreateTermView(topLevelWidget, name, arglist, argcnt);
+
+    {
+        long savedIndex;
+        if (GetSavedUserFontListIndex(&savedIndex)) {
+            _DtTermViewSetUserFontListIndex(termViewWidget, savedIndex);
+        }
+    }
 
     /* add a menubar toggle to the mwm pulldown... */
     (void) AddMenubarToggle(topLevelWidget, termViewWidget);
