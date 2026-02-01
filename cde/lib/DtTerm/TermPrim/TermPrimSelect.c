@@ -2662,6 +2662,9 @@ RegisterDropSite(
     XTextProperty tmp_prop;
     int status = 0;
 
+    if (XmDropSiteRegistered(w))
+        return;
+
     tmp_prop.value = NULL;
     status = XmbTextListToTextProperty(XtDisplay(w), &tmp_string, 1,
                                       (XICCEncodingStyle)XTextStyle, &tmp_prop);
@@ -2682,6 +2685,7 @@ RegisterDropSite(
     n = 0;
     XtSetArg(args[n], XmNimportTargets, targets); n++;
     XtSetArg(args[n], XmNnumImportTargets, 4); n++;
+    XtSetArg(args[n], XmNdropSiteOperations, XmDROP_COPY); n++;
     /* XtSetArg(args[n], XmNdragProc, DragProcCallback); n++; */
     XtSetArg(args[n], XmNdropProc, DropProcCallback); n++;
     XmDropSiteRegister(w, args, n);
