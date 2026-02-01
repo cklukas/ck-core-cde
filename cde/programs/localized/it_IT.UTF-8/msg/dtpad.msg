@@ -598,6 +598,20 @@ $ mnemonic and label for the "Wrap To Fit" toggle button
 111 A
 112 A capo automatico
 
+$ mnemonic and label for the "Dropped Files" submenu
+114 "F"
+115 "File rilasciati"
+
+116 "A"
+117 "Automatico"
+
+118 "P"
+119 "Inserisci percorsi"
+
+120 "C"
+121 "Inserisci contenuto"
+
+
 $ Label for the "Print" item
 113 Stampare
 

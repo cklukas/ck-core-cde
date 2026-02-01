@@ -575,6 +575,20 @@ $ mnemonic and label for the "Wrap To Fit" toggle button
 111 r
 112 Anpassa rader
 
+$ mnemonic and label for the "Dropped Files" submenu
+114 "S"
+115 "Släppta filer"
+
+116 "A"
+117 "Automatiskt"
+
+118 "V"
+119 "Infoga sökvägar"
+
+120 "I"
+121 "Infoga innehåll"
+
+
 
 $ ***********************************************************
 $ **                                              helpCB.c **

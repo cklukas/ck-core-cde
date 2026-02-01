@@ -137,6 +137,13 @@ extern "C" {
 #ifndef DtNdialogTitle
 #define DtNdialogTitle          	"dialogTitle"
 #endif
+
+#ifndef DtNdroppedFilesMode
+#define DtNdroppedFilesMode		"droppedFilesMode"
+#endif
+#ifndef DtCDroppedFilesMode
+#define DtCDroppedFilesMode		"DroppedFilesMode"
+#endif
 #ifndef DtCDialogTitle
 #define DtCDialogTitle          	XmCDialogTitle
 #endif
@@ -432,6 +439,13 @@ typedef enum _DtEditorDataFormat{
         DtEDITOR_WCHAR,
         DtEDITOR_DATA
 } DtEditorDataFormat;
+
+/*
+ * Dropped files handling modes.
+ */
+#define DtDROP_FILES_AUTO	0
+#define DtDROP_FILES_PATHS	1
+#define DtDROP_FILES_CONTENT	2
 
 
 /* Types used to pass data to/from the editor widget */

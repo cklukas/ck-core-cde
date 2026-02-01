@@ -568,6 +568,20 @@ $ mnemonic and label for the "Wrap To Fit" toggle button
 111 W
 112 自動換行(W)
 
+$ mnemonic and label for the "Dropped Files" submenu
+114 "D"
+115 "拖放的檔案(D)"
+
+116 "A"
+117 "自動(A)"
+
+118 "P"
+119 "插入路徑(P)"
+
+120 "C"
+121 "插入內容(C)"
+
+
 
 $ ***********************************************************
 $ **                                              helpCB.c **

@@ -598,6 +598,20 @@ $ mnemonic and label for the "Wrap To Fit" toggle button
 111 W
 112 行折返し(W)
 
+$ mnemonic and label for the "Dropped Files" submenu
+114 "D"
+115 "ドロップしたファイル(D)"
+
+116 "A"
+117 "自動(A)"
+
+118 "P"
+119 "パスを挿入(P)"
+
+120 "C"
+121 "内容を挿入(C)"
+
+
 $ label for the "Print" item
 113 印刷
 

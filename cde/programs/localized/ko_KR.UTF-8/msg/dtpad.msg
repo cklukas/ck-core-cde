@@ -572,6 +572,20 @@ $ mnemonic and label for the "Wrap To Fit" toggle button
 111 W
 112 줄맞추기W
 
+$ mnemonic and label for the "Dropped Files" submenu
+114 "D"
+115 "드롭된 파일D"
+
+116 "A"
+117 "자동A"
+
+118 "P"
+119 "경로 삽입P"
+
+120 "C"
+121 "내용 삽입C"
+
+
 
 $ ***********************************************************
 $ **                                              helpCB.c **

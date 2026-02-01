@@ -386,6 +386,10 @@ TTmedia_ptype_declareCB(
 	   else
 	     pPad->xrdb.viewOnly = False;
          }
+
+         if (context = tt_message_context_val(m, "DROPPEDFILESMODE")) {
+	   pPad->xrdb.droppedFilesMode = atoi(context);
+         }
    
          if  (context = tt_message_context_val(m, "WORKSPACELIST")) {
 	   pPad->xrdb.workspaceList = strdup(context);

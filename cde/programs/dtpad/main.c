@@ -104,9 +104,11 @@
 #include <Dt/Action.h>
 #include <Dt/DtpadM.h>
 #include <Dt/MsgCatP.h>
+#include <Dt/DtPStrings.h>
 #include "X11/Xutil.h"
 #include <X11/StringDefs.h>
 #include <X11/ShellP.h>
+#include <X11/Xresource.h>
 
 #ifdef HAVE_EDITRES
 #include <X11/Xmu/Editres.h>
@@ -124,6 +126,9 @@ static const char catalogName[] = "dtpad";
 #endif
 
 void SetWorkSpaceHints(Widget shell, char *workspaces);
+
+static char *GetUserResourcePath(void);
+static void LoadUserResources(Display *display);
 
 
 
@@ -147,6 +152,49 @@ unsigned char warningBits[] = {
    0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xe0, 0x07, 0x00,
    0x00, 0xc0, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
+static char *
+GetUserResourcePath(void)
+{
+    const char *home = getenv("HOME");
+    size_t len;
+    char *path;
+
+    if (home == NULL)
+        home = "";
+
+    len = strlen(home) + 1 + strlen(DtPERSONAL_CONFIG_DIRECTORY) + 1 +
+          strlen("dtpadrc") + 1;
+    path = XtMalloc((unsigned)len);
+    if (path == NULL)
+        return NULL;
+
+    snprintf(path, len, "%s/%s/%s", home, DtPERSONAL_CONFIG_DIRECTORY, "dtpadrc");
+    return path;
+}
+
+static void
+LoadUserResources(Display *display)
+{
+    XrmDatabase user_db;
+    XrmDatabase display_db;
+    char *path;
+
+    if (display == NULL)
+        return;
+
+    path = GetUserResourcePath();
+    if (path == NULL)
+        return;
+
+    user_db = XrmGetFileDatabase(path);
+    if (user_db != NULL) {
+        display_db = XtDatabase(display);
+        XrmMergeDatabases(user_db, &display_db);
+    }
+
+    XtFree(path);
+}
 
 static XtResource resources[] = {
   {"statusLine", "StatusLine", XmRBoolean, sizeof(Boolean),
@@ -172,6 +220,10 @@ static XtResource resources[] = {
   },
   {"viewOnly", "ViewOnly", XmRBoolean, sizeof(Boolean),
       XtOffset(ApplicationDataPtr,viewOnly), XmRImmediate, (XtPointer)False,
+  },
+  {"droppedFilesMode", "DroppedFilesMode", XmRInt, sizeof(int),
+      XtOffset(ApplicationDataPtr,droppedFilesMode), XmRImmediate,
+      (XtPointer)DtDROP_FILES_AUTO,
   },
   {"workspaceList", "WorkspaceList", XmRString, sizeof(char *),
       XtOffset(ApplicationDataPtr,workspaceList), XmRImmediate,(XtPointer)NULL,
@@ -622,6 +674,8 @@ CreateFirstPad(
                                            pPad->display, al, ac);
     pPad->app_context = XtWidgetToApplicationContext(pPad->app_shell);
 
+    LoadUserResources(pPad->display);
+
     /* Get the application resources */
     XtGetApplicationResources(pPad->app_shell, &pPad->xrdb, resources,
                               XtNumber(resources), NULL, 0);
@@ -709,6 +763,11 @@ SetupLoadArgs(Tt_message m, Editor *pPad)
     tt_message_context_set(m, "NONAMECHANGE",
 				pArgs->nameChange ? "t" : "f");
     tt_message_context_set(m, "VIEWONLY", pArgs->viewOnly ? "t" : "f");
+    {
+	char buf[8];
+	snprintf(buf, sizeof(buf), "%d", pArgs->droppedFilesMode);
+	tt_message_context_set(m, "DROPPEDFILESMODE", buf);
+    }
     tt_message_context_set(m, "WORKSPACELIST", pArgs->workspaceList);
 
     /* -----> client/server control options */
@@ -1567,10 +1626,35 @@ SetStateFromResources(
     XmToggleButtonSetState(pWidg->statusLineBtn,
 				pPad->xrdb.statusLine, True);
 
+    if (pWidg->droppedFilesAutoBtn != (Widget)NULL &&
+        pWidg->droppedFilesPathsBtn != (Widget)NULL &&
+        pWidg->droppedFilesContentBtn != (Widget)NULL)
+    {
+        XmToggleButtonSetState(pWidg->droppedFilesAutoBtn, False, False);
+        XmToggleButtonSetState(pWidg->droppedFilesPathsBtn, False, False);
+        XmToggleButtonSetState(pWidg->droppedFilesContentBtn, False, False);
+
+        switch (pPad->xrdb.droppedFilesMode) {
+          case DtDROP_FILES_PATHS:
+            XmToggleButtonSetState(pWidg->droppedFilesPathsBtn, True, False);
+            break;
+          case DtDROP_FILES_CONTENT:
+            XmToggleButtonSetState(pWidg->droppedFilesContentBtn, True, False);
+            break;
+          case DtDROP_FILES_AUTO:
+          default:
+            XmToggleButtonSetState(pWidg->droppedFilesAutoBtn, True, False);
+            break;
+        }
+    }
+
     /* -----> Set whether text can be edited */
     XtSetArg(al[0], DtNeditable, !pPad->xrdb.viewOnly);
     XtSetValues(pPad->editor, al, 1);
     SetInitialMenuSensitivity(pPad);
+
+    XtSetArg(al[0], DtNdroppedFilesMode, pPad->xrdb.droppedFilesMode);
+    XtSetValues(pPad->editor, al, 1);
 
 }
 

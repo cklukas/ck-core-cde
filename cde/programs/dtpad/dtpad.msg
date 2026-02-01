@@ -598,6 +598,22 @@ $ mnemonic and label for the "Wrap To Fit" toggle button
 111 W
 112 Wrap To Fit
 
+$ mnemonic and label for the "Dropped Files" submenu
+114 D
+115 Dropped Files
+
+$ mnemonic and label for the "Automatic" dropped files option
+116 A
+117 Automatic
+
+$ mnemonic and label for the "Insert Paths" dropped files option
+118 P
+119 Insert Paths
+
+$ mnemonic and label for the "Insert Content" dropped files option
+120 C
+121 Insert Content
+
 $ label for the "Print" item
 113 Print
 

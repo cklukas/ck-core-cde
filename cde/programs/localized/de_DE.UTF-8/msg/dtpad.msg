@@ -659,6 +659,20 @@ $ mnemonic and label for the "Wrap To Fit" toggle button
 
 112 "Zeilenumbruch an Fenster anpassen"
 
+$ mnemonic and label for the "Dropped Files" submenu
+114 "D"
+115 "Abgelegte Dateien"
+
+116 "A"
+117 "Automatisch"
+
+118 "P"
+119 "Pfade einfügen"
+
+120 "I"
+121 "Inhalt einfügen"
+
+
 $ Label for the "Print" item
 113 Drucken
 

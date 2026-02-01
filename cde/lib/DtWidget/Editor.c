@@ -79,6 +79,7 @@
 
 #include "EditorP.h"
 #include <Dt/Dnd.h>
+#include <Dt/Dts.h>
 #include "X11/Xutil.h"
 #include <X11/StringDefs.h>
 #include <X11/keysymdef.h>
@@ -1022,6 +1023,11 @@ static XtResource resources[] =
                 DtNeditable, DtCEditable, XmRBoolean, sizeof (Boolean),
                 XtOffset (DtEditorWidget, editor.editStuff.editable),
                 XmRImmediate, (XtPointer) True
+        },
+        {
+                DtNdroppedFilesMode, DtCDroppedFilesMode, XmRInt, sizeof(int),
+                XtOffset (DtEditorWidget, editor.droppedFilesMode),
+                XmRImmediate, (XtPointer) DtDROP_FILES_AUTO
         },
         {
                 DtNfindButtonLabel, DtCFindButtonLabel, 
@@ -4048,6 +4054,69 @@ Editor_SetSelectionProc(
 **
 **/
 
+static int
+NormalizeDroppedFilesMode(DtEditorWidget editor)
+{
+    int mode = M_droppedFilesMode(editor);
+
+    if (mode != DtDROP_FILES_PATHS && mode != DtDROP_FILES_CONTENT)
+        mode = DtDROP_FILES_AUTO;
+
+    return mode;
+}
+
+static Boolean
+IsTextDropFile(const char *path)
+{
+    static Boolean dts_loaded = False;
+    char *attr_value;
+    Boolean is_text = False;
+
+    if (path == NULL || *path == '\0')
+        return False;
+
+    if (!dts_loaded) {
+        DtDtsLoadDataTypes();
+        dts_loaded = True;
+    }
+
+    attr_value = DtDtsFileToAttributeValue(path, DtDTS_DA_IS_TEXT);
+    if (attr_value != NULL) {
+        is_text = DtDtsIsTrue(attr_value);
+        DtDtsFreeAttributeValue(attr_value);
+    }
+
+    return is_text;
+}
+
+static DtEditorErrorCode
+InsertDroppedPath(DtEditorWidget editor, const char *path, Boolean add_newline)
+{
+    DtEditorContentRec cr;
+    char *buffer;
+    size_t len;
+
+    if (path == NULL)
+        return DtEDITOR_NO_ERRORS;
+
+    len = strlen(path);
+    buffer = XtMalloc((unsigned)(len + (add_newline ? 2 : 1)));
+    memcpy(buffer, path, len);
+    if (add_newline) {
+        buffer[len] = '\n';
+        buffer[len + 1] = '\0';
+    } else {
+        buffer[len] = '\0';
+    }
+
+    cr.type = DtEDITOR_TEXT;
+    cr.value.string = buffer;
+    DtEditorInsert((Widget)editor, &cr);
+    XtFree(buffer);
+
+    return DtEDITOR_NO_ERRORS;
+}
+
 
 /*
  * Handles drops of a file into the text editor, after validation in the 
@@ -4089,22 +4158,37 @@ AnimateCallback(
 	 /*
 	  * OK, insert each file we are given
 	  */
+	 int mode = NormalizeDroppedFilesMode(editor);
+
 	 for (ii = 0; ii < numItems; ii++) 
 	 {
-           error = DtEditorInsertFromFile( (Widget)editor, 
-				animateInfo->dropData->data.files[ii] );
+           const char *path = animateInfo->dropData->data.files[ii];
+           Boolean add_newline = (ii + 1 < numItems);
+           Boolean insert_content = (mode == DtDROP_FILES_CONTENT);
 
-	   /*
-	    * If the file was not inserted successfully, then quit
-	    * (don't care if the file is read only or if it contained 
-	    * nulls that were stripped out).
-	    */
-           if( error != DtEDITOR_NO_ERRORS && 
-	       error != DtEDITOR_READ_ONLY_FILE &&
-	       error != DtEDITOR_NULLS_REMOVED )
-	   {
-	     ii = numItems; /* break out of loop */
-	   }
+           if (mode == DtDROP_FILES_AUTO)
+               insert_content = IsTextDropFile(path);
+
+           if (insert_content)
+           {
+             error = DtEditorInsertFromFile( (Widget)editor, (char *)path );
+
+	     /*
+	      * If the file was not inserted successfully, then quit
+	      * (don't care if the file is read only or if it contained 
+	      * nulls that were stripped out).
+	      */
+             if( error != DtEDITOR_NO_ERRORS && 
+	         error != DtEDITOR_READ_ONLY_FILE &&
+	         error != DtEDITOR_NULLS_REMOVED )
+	     {
+	       ii = numItems; /* break out of loop */
+	     }
+           }
+           else
+           {
+             InsertDroppedPath(editor, path, add_newline);
+           }
 
 	 } /* end for */
 
@@ -4207,10 +4291,21 @@ TransferCallback(
          /*
 	  * Check to see if we can read each file we are given
 	  */
+         int mode = NormalizeDroppedFilesMode((DtEditorWidget)client_data);
+
 	 for (ii = 0; ii < numItems; ii++) 
 	 {
+           const char *path = transferInfo->dropData->data.files[ii];
+           Boolean check_access = (mode == DtDROP_FILES_CONTENT);
+
+           if (mode == DtDROP_FILES_AUTO)
+               check_access = IsTextDropFile(path);
+
+           if (!check_access)
+               continue;
+
 	   error = _DtEditorValidateFileAccess(
-	   			transferInfo->dropData->data.files[ii],
+	   			(char *)path,
 	   			READ_ACCESS);
 
 	   /*
@@ -8280,4 +8375,3 @@ DtEditorTraverseToEditor(
 
   _DtAppUnlock(app);
 } /* end DtEditorTraverseToEditor */
-

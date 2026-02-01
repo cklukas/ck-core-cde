@@ -412,6 +412,8 @@ typedef struct _DtEditorPart
     DtEditorWarningStuff	warningStuff;
                                 /* All data for the status line */
     DtEditorStatusStuff		statusStuff;
+                                /* Dropped file handling mode */
+    int				droppedFilesMode;
 
     XtAppContext                app_context;
 
@@ -469,6 +471,7 @@ typedef struct _DtEditorRec
 #define M_topLevelShell(m)	(m -> editor.topLevelShell)
 #define M_text(m)		(m -> editor.text)
 #define M_textWidth(m)		(m -> editor.width)
+#define M_droppedFilesMode(m)	(m -> editor.droppedFilesMode)
 
 /* callbacks */
 #define M_textSelect(m)		(m -> editor.textSelect)
@@ -707,4 +710,3 @@ extern void _DtEditorSearch(
 	Boolean createonly );
 
 #endif /* _DtEditorP_h */
-

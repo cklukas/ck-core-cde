@@ -864,7 +864,8 @@ static void
 CreateOptionsMenu(
 	Editor *pPad)
 {
-    Widget options_pane, cascade, WidgList[12];
+    Widget options_pane, cascade, WidgList[16];
+    Widget dropped_pane, dropped_widgets[4];
     Arg al[10];
     int ac, count = 0;
     char *mnemonic;
@@ -934,6 +935,71 @@ CreateOptionsMenu(
     free(mnemonic);
     XmStringFree(tmpStr);
 
+    /* -----> create "Dropped Files" submenu */
+    WidgList[count++] = XmCreateSeparatorGadget(options_pane, "optionsSep", NULL, 0);
+
+    ac = 0;
+    XtSetArg(al[ac], XmNradioBehavior, True); ac++;
+    XtSetArg(al[ac], XmNradioAlwaysOne, True); ac++;
+    dropped_pane = XmCreatePulldownMenu(options_pane, "droppedFilesMenu", al, ac);
+    pWidg->droppedFilesMenu = dropped_pane;
+
+    mnemonic = strdup(((char *)GETMESSAGE(11, 114, "D")));
+    tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 115, "Dropped Files")));
+    ac = 0;
+    XtSetArg(al[ac], XmNsubMenuId, dropped_pane);  ac++;
+    XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    WidgList[count++] = XmCreateCascadeButtonGadget(options_pane, "droppedFiles", al, ac);
+    pWidg->droppedFilesBtn = WidgList[count - 1];
+    free(mnemonic);
+    XmStringFree(tmpStr);
+
+    /* -----> create "Dropped Files" radio options */
+    mnemonic = strdup(((char *)GETMESSAGE(11, 116, "A")));
+    tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 117, "Automatic")));
+    ac = 0;
+    XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNvisibleWhenOff, True); ac++;
+    XtSetArg(al[ac], XmNset, (pPad->xrdb.droppedFilesMode == DtDROP_FILES_AUTO)); ac++;
+    dropped_widgets[0] = XmCreateToggleButtonGadget(dropped_pane, "droppedAuto", al, ac);
+    pWidg->droppedFilesAutoBtn = dropped_widgets[0];
+    XtAddCallback(dropped_widgets[0], XmNvalueChangedCallback,
+                  (XtCallbackProc) DroppedFilesModeCB, (XtPointer)pPad);
+    free(mnemonic);
+    XmStringFree(tmpStr);
+
+    mnemonic = strdup(((char *)GETMESSAGE(11, 118, "P")));
+    tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 119, "Insert Paths")));
+    ac = 0;
+    XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNvisibleWhenOff, True); ac++;
+    XtSetArg(al[ac], XmNset, (pPad->xrdb.droppedFilesMode == DtDROP_FILES_PATHS)); ac++;
+    dropped_widgets[1] = XmCreateToggleButtonGadget(dropped_pane, "droppedPaths", al, ac);
+    pWidg->droppedFilesPathsBtn = dropped_widgets[1];
+    XtAddCallback(dropped_widgets[1], XmNvalueChangedCallback,
+                  (XtCallbackProc) DroppedFilesModeCB, (XtPointer)pPad);
+    free(mnemonic);
+    XmStringFree(tmpStr);
+
+    mnemonic = strdup(((char *)GETMESSAGE(11, 120, "C")));
+    tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 121, "Insert Content")));
+    ac = 0;
+    XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNvisibleWhenOff, True); ac++;
+    XtSetArg(al[ac], XmNset, (pPad->xrdb.droppedFilesMode == DtDROP_FILES_CONTENT)); ac++;
+    dropped_widgets[2] = XmCreateToggleButtonGadget(dropped_pane, "droppedContent", al, ac);
+    pWidg->droppedFilesContentBtn = dropped_widgets[2];
+    XtAddCallback(dropped_widgets[2], XmNvalueChangedCallback,
+                  (XtCallbackProc) DroppedFilesModeCB, (XtPointer)pPad);
+    free(mnemonic);
+    XmStringFree(tmpStr);
+
+    XtManageChildren(dropped_widgets, 3);
+
     XtManageChildren(WidgList, count);
 
 }
@@ -977,6 +1043,7 @@ CreateEditorWidget(
     XtSetArg(al[ac], DtNrows, DEFAULT_ROWS);  ac++;
     XtSetArg(al[ac], DtNcolumns, DEFAULT_COLS);  ac++;
     XtSetArg(al[ac], DtNdialogTitle, dialogTitleStr);  ac++;
+    XtSetArg(al[ac], DtNdroppedFilesMode, pPad->xrdb.droppedFilesMode); ac++;
     pPad->editor = DtCreateEditor(parent, "editor", al, ac);
     XmStringFree(dialogTitleStr);
 

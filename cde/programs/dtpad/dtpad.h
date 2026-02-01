@@ -133,6 +133,7 @@ typedef struct {
       Boolean	readOnlyWarning;
       Boolean	nameChange;
       Boolean	viewOnly;
+      int	droppedFilesMode;
       String	workspaceList;
       String	session;
 
@@ -262,6 +263,11 @@ typedef struct {
     Widget overstrikeBtn,
 	   wordWrapBtn,
 	   statusLineBtn,
+	   droppedFilesBtn,
+	   droppedFilesMenu,
+	   droppedFilesAutoBtn,
+	   droppedFilesPathsBtn,
+	   droppedFilesContentBtn,
 	   helpBtn,
 	   optionsBtn;
 } OptionsMenuWidgets;
@@ -704,6 +710,10 @@ extern void WordWrapCB(
         caddr_t call_data);
 
 extern void StatusLineCB(
+        Widget w,
+        caddr_t client_data,
+        caddr_t call_data);
+extern void DroppedFilesModeCB(
         Widget w,
         caddr_t client_data,
         caddr_t call_data);

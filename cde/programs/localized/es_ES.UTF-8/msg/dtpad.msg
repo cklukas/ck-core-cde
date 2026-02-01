@@ -672,6 +672,20 @@ $ mnemonic and label for the "Wrap To Fit" toggle button
 
 112 "Reiniciar"
 
+$ mnemonic and label for the "Dropped Files" submenu
+114 "S"
+115 "Archivos soltados"
+
+116 "A"
+117 "Automático"
+
+118 "R"
+119 "Insertar rutas"
+
+120 "C"
+121 "Insertar contenido"
+
+
 $ Label for the "Print" item
 113 Imprimir
 

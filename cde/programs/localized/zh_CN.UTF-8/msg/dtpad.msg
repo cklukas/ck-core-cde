@@ -561,6 +561,20 @@ $ mnemonic and label for the "Wrap To Fit" toggle button
 111 W
 112 折行
 
+$ mnemonic and label for the "Dropped Files" submenu
+114 "D"
+115 "已拖放的文件"
+
+116 "A"
+117 "自动"
+
+118 "P"
+119 "插入路径"
+
+120 "C"
+121 "插入内容"
+
+
 
 
 

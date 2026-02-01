@@ -53,6 +53,10 @@
 **********************************<+>*************************************/
 #include "dtpad.h"
 #include <Dt/HourGlass.h>
+#include <Dt/SmCreateDirs.h>
+#include <Dt/DtPStrings.h>
+#include <X11/Xresource.h>
+#include <string.h>
 
 
 /************************************************************************
@@ -157,4 +161,82 @@ StatusLineCB(
  
     /* Reset the resize increment and minimum window size properties. */
     SetAppShellResizeHints(pPad);
+}
+
+static char *
+GetUserResourcePath(void)
+{
+    const char *home = getenv("HOME");
+    size_t len;
+    char *path;
+
+    if (home == NULL)
+        home = "";
+
+    len = strlen(home) + 1 + strlen(DtPERSONAL_CONFIG_DIRECTORY) + 1 +
+          strlen("dtpadrc") + 1;
+    path = XtMalloc((unsigned)len);
+    if (path == NULL)
+        return NULL;
+
+    snprintf(path, len, "%s/%s/%s", home, DtPERSONAL_CONFIG_DIRECTORY, "dtpadrc");
+    return path;
+}
+
+static void
+SaveDroppedFilesModeResource(Editor *pPad)
+{
+    XrmDatabase db;
+    char *path;
+    char value[8];
+
+    if (pPad == NULL)
+        return;
+
+    _DtCreateDtDirs(pPad->display);
+
+    path = GetUserResourcePath();
+    if (path == NULL)
+        return;
+
+    db = XrmGetFileDatabase(path);
+    if (db == NULL)
+        db = XrmGetStringDatabase("");
+
+    snprintf(value, sizeof(value), "%d", pPad->xrdb.droppedFilesMode);
+    XrmPutStringResource(&db, "Dtpad*droppedFilesMode", value);
+    XrmPutFileDatabase(db, path);
+
+    XtFree(path);
+}
+
+/* ARGSUSED */
+void
+DroppedFilesModeCB(
+        Widget w,
+        caddr_t client_data,
+        caddr_t call_data)
+{
+    Arg al[1];
+    Editor *pPad = (Editor *)client_data;
+    XmToggleButtonCallbackStruct *cb = (XmToggleButtonCallbackStruct *)
+                                       call_data;
+    OptionsMenuWidgets *pWidg;
+    int mode = DtDROP_FILES_AUTO;
+
+    if (pPad == NULL || cb == NULL || cb->set == False)
+        return;
+
+    pWidg = &pPad->optionsStuff.widgets;
+    if (w == pWidg->droppedFilesPathsBtn)
+        mode = DtDROP_FILES_PATHS;
+    else if (w == pWidg->droppedFilesContentBtn)
+        mode = DtDROP_FILES_CONTENT;
+    else
+        mode = DtDROP_FILES_AUTO;
+
+    pPad->xrdb.droppedFilesMode = mode;
+    XtSetArg(al[0], DtNdroppedFilesMode, mode);
+    XtSetValues(pPad->editor, al, 1);
+    SaveDroppedFilesModeResource(pPad);
 }
