@@ -541,13 +541,15 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
  			}
  			else
  			{
- 			    /* copy root icon frame reference to other 
- 			     * workspaces
+			    /* copy root icon frame reference to other 
+			     * workspaces
 			     */
- 			    pCD->pWsList[i].iconFrameWin = 
- 				    pCD->pWsList[0].iconFrameWin;
- 			}
- 		    }
+			    pCD->pWsList[i].iconFrameWin = 
+				    pCD->pWsList[0].iconFrameWin;
+			    pCD->pWsList[i].iconIndicatorWin =
+				    pCD->pWsList[0].iconIndicatorWin;
+			}
+		    }
 		}
 	    }
 	}
@@ -1313,6 +1315,11 @@ void DeleteClientContext (ClientData *pCD)
 	    {
 		XDeleteContext (DISPLAY, pCD->pWsList[k].iconFrameWin, 
 				 wmGD.windowContextType);
+		if (pCD->pWsList[k].iconIndicatorWin)
+		{
+		    XDeleteContext (DISPLAY, pCD->pWsList[k].iconIndicatorWin,
+				    wmGD.windowContextType);
+		}
 	    }
 	}
 	pCD->clientFlags &= ~CLIENT_CONTEXT_SAVED;
@@ -1517,6 +1524,11 @@ void FreeIcon (ClientData *pCD)
 	    {
 		DeleteIconFromBox (pWsTmp->pIconBox, pCD);
 	    }
+	    if (pCD->pWsList[i].iconIndicatorWin)
+	    {
+		XDestroyWindow (DISPLAY, pCD->pWsList[i].iconIndicatorWin);
+		pCD->pWsList[i].iconIndicatorWin = None;
+	    }
 	}
     }
     else
@@ -1527,6 +1539,10 @@ void FreeIcon (ClientData *pCD)
 	if (pCD->pWsList[0].iconFrameWin)
 	{
 	    XDestroyWindow (DISPLAY, pCD->pWsList[0].iconFrameWin);
+	}
+	if (pCD->pWsList[0].iconIndicatorWin)
+	{
+	    XDestroyWindow (DISPLAY, pCD->pWsList[0].iconIndicatorWin);
 	}
     }
 

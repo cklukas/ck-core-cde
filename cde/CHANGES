@@ -11,3 +11,8 @@
 - dtfile: escape quotes and backslashes in command action file arguments, and
   handle escaped single quotes in command parsing to allow opening files with
   ', ", or \ in their names.
+
+2026-02-02
+- dtwm: move open-icon indicator into its own window and keep icon sizing
+  unchanged; update indicator geometry, drag behavior, focus styling, and
+  stacking to avoid flicker and show the desktop between icon and indicator.

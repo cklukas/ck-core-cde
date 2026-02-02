@@ -332,7 +332,11 @@ Boolean WmDispatchClientEvent (XEvent *event)
 
 	    if (event->xexpose.count == 0) 
 	    {
-		if (event->xexpose.window == ICON_FRAME_WIN(pCD))
+		if (event->xexpose.window == ICON_INDICATOR_WIN(pCD))
+		{
+		    UpdateOpenIconIndicator(pCD, False, -1);
+		}
+		else if (event->xexpose.window == ICON_FRAME_WIN(pCD))
 		{
 		    IconExposureProc (pCD, True);
 		    if (P_ICON_BOX(pCD))

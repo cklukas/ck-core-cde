@@ -185,6 +185,11 @@ void AddClientToList (WmWorkspaceData *pWS, ClientData *pCD, Boolean onTop)
 	    windowChanges.stack_mode = Below;
 	    XConfigureWindow (DISPLAY, pWsc->iconFrameWin,
 	        CWSibling | CWStackMode, &windowChanges);
+	    if (pWsc->iconIndicatorWin)
+	    {
+		XConfigureWindow (DISPLAY, pWsc->iconIndicatorWin,
+		    CWSibling | CWStackMode, &windowChanges);
+	    }
 
 	    pCD->iconEntry.type = MINIMIZED_STATE;
 	    pCD->iconEntry.pCD = pCD;
@@ -2777,4 +2782,3 @@ LeaderOnTop (
 
     return (bOnTop);
 }
-

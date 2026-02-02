@@ -869,12 +869,14 @@ void PackRootIcons (void)
 		    HideActiveIconText ((WmScreenData *)NULL);
 		    XMoveWindow (DISPLAY, pWsc->iconFrameWin, pWsc->iconX, 
 			     pWsc->iconY);
+		    UpdateOpenIconIndicator (pCD, False, -1);
 		    ShowActiveIconText (pCD);
 		}
 		else
 		{
 		    XMoveWindow (DISPLAY, pWsc->iconFrameWin, pWsc->iconX, 
 			     pWsc->iconY);
+		    UpdateOpenIconIndicator (pCD, False, -1);
 		}
 	    }
 	}

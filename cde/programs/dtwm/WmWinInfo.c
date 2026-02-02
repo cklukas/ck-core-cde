@@ -689,6 +689,7 @@ GetWmClientInfo (WmWorkspaceData *pWS,
 	pCD->pWsList[i].iconX = 0;
 	pCD->pWsList[i].iconY = 0;
 	pCD->pWsList[i].iconFrameWin = (Window)0L;
+	pCD->pWsList[i].iconIndicatorWin = (Window)0L;
 	pCD->pWsList[i].pIconBox = NULL;
     }
     /* 

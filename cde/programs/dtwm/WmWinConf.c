@@ -1463,6 +1463,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
     unsigned int tmpWidth, tmpHeight;
     int tmpX, tmpY;
     Boolean inIconBox;
+    Boolean wasMovingIcon = wmGD.movingIcon;
     
     
     if (wmGD.configAction == RESIZE_CLIENT) {
@@ -1712,6 +1713,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
     configGrab = FALSE;
     anyMotion = FALSE;
     wmGD.movingIcon = FALSE;
+    wmGD.movingIconClient = NULL;
 
     if (pcd)
     {
@@ -1722,6 +1724,11 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
      * Set the focus back to something reasonable
      */
     RepairFocus ();	
+    }
+
+    if (pcd && wasMovingIcon)
+    {
+	UpdateOpenIconIndicator (pcd, False, -1);
     }
 
 } /* END OF FUNCTION CompleteFrameConfig */
@@ -3102,9 +3109,11 @@ Boolean StartClientMove (ClientData *pcd, XEvent *pev)
 	}
 
 	grab_win = GrabWin (pcd, pev);
-	if (grab_win == ICON_FRAME_WIN(pcd))
+	if ((grab_win == ICON_FRAME_WIN(pcd)) ||
+	    (grab_win == ICON_INDICATOR_WIN(pcd)))
 	{
 	    wmGD.movingIcon = True;
+	    wmGD.movingIconClient = pcd;
 	}
 
 	if (pev)
@@ -3120,6 +3129,7 @@ Boolean StartClientMove (ClientData *pcd, XEvent *pev)
 	if (!grabbed)
 	{
 	    wmGD.movingIcon = False;
+	    wmGD.movingIconClient = NULL;
 	    return (False);
 	}
 	configGrab = TRUE;
@@ -3178,6 +3188,11 @@ Boolean StartClientMove (ClientData *pcd, XEvent *pev)
 		 (wmGD.keyboardFocus == pcd))
 	{
 	    HideActiveIconText ((WmScreenData *)NULL);
+	}
+
+	if (ICON_INDICATOR_WIN(pcd))
+	{
+	    XUnmapWindow (DISPLAY, ICON_INDICATOR_WIN(pcd));
 	}
     }
     else 
@@ -3419,6 +3434,7 @@ void UndoGrabs (void)
  *************************************<->***********************************/
 void CancelFrameConfig (ClientData *pcd)
 {
+    Boolean wasMovingIcon = wmGD.movingIcon;
 
     /* remove keyboard, pointer, and server grabs */
     UndoGrabs();
@@ -3460,6 +3476,10 @@ void CancelFrameConfig (ClientData *pcd)
 	}
     }
     }
+    if (pcd && wmGD.movingIcon)
+    {
+	UpdateOpenIconIndicator (pcd, False, -1);
+    }
     if (wmGD.configAction == MARQUEE_SELECT)
     {
        dtSendMarqueeSelectionNotification(ACTIVE_PSD, DT_MARQUEE_SELECT_CANCEL, 
@@ -3482,9 +3502,15 @@ void CancelFrameConfig (ClientData *pcd)
     wmGD.configSet = False;
     configGrab = FALSE;
     wmGD.movingIcon = FALSE;
+    wmGD.movingIconClient = NULL;
     
     /* set the focus back to a reasonable window */
     RepairFocus ();	
+
+    if (pcd && wasMovingIcon)
+    {
+	UpdateOpenIconIndicator (pcd, False, -1);
+    }
 } /* END OF FUNCTION  CancelFrameConfig */
 
 

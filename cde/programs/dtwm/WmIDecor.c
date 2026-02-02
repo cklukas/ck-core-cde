@@ -153,6 +153,128 @@ static GC GetOpenIconBarGC (ClientData *pcd, Boolean active)
     return *gcPtr;
 }
 
+static Boolean OpenIconIndicatorShouldShow (ClientData *pcd, Boolean ignoreState)
+{
+    if (!pcd || !ICON_FRAME_WIN(pcd))
+    {
+	return False;
+    }
+
+    if (wmGD.movingIcon && (wmGD.movingIconClient == pcd))
+    {
+	return False;
+    }
+
+    if (!ignoreState)
+    {
+	if (!pcd->pSD->showOpenWindowIcons ||
+	    (pcd->clientState == MINIMIZED_STATE))
+	{
+	    return False;
+	}
+    }
+
+    return True;
+}
+
+static Window CreateOpenIconIndicatorWindow (ClientData *pcd)
+{
+    Window parent;
+    Window root;
+    Window *children = NULL;
+    unsigned int nchildren = 0;
+    XSetWindowAttributes attrs;
+    unsigned long mask;
+    Window win;
+
+    if (!ICON_FRAME_WIN(pcd))
+    {
+	return None;
+    }
+
+    if (!XQueryTree (DISPLAY, ICON_FRAME_WIN(pcd),
+		     &root, &parent, &children, &nchildren))
+    {
+	return None;
+    }
+    if (children)
+    {
+	XFree (children);
+    }
+
+    mask = CWEventMask | CWCursor | CWBackPixel;
+    attrs.event_mask = ButtonPressMask | ButtonReleaseMask |
+		       ButtonMotionMask | ExposureMask;
+    attrs.cursor = wmGD.workspaceCursor;
+    attrs.background_pixel = ICON_APPEARANCE(pcd).background;
+
+    win = XCreateWindow (DISPLAY, parent,
+			 0, 0, 1, 1,
+			 0, CopyFromParent, InputOutput,
+			 CopyFromParent, mask, &attrs);
+    if (win)
+    {
+	XSaveContext (DISPLAY, win, wmGD.windowContextType, (caddr_t)pcd);
+	if (pcd->iconWindow)
+	{
+	    XGrabButton (DISPLAY, AnyButton, AnyModifier, win, True,
+			 ButtonPressMask|ButtonReleaseMask|
+			     ButtonMotionMask,
+			 GrabModeAsync, GrabModeAsync, None,
+			 wmGD.workspaceCursor);
+	}
+    }
+
+    return win;
+}
+
+static Boolean GetOpenIconIndicatorGeometry (ClientData *pcd, int *x, int *y,
+					     unsigned int *w, unsigned int *h)
+{
+    XWindowAttributes attr;
+    int xOffset = 0;
+    int yOffset = 0;
+
+    if (!ICON_FRAME_WIN(pcd) ||
+	!XGetWindowAttributes (DISPLAY, ICON_FRAME_WIN(pcd), &attr))
+    {
+	return False;
+    }
+
+    if (P_ICON_BOX(pcd))
+    {
+	xOffset = IB_MARGIN_WIDTH;
+	yOffset = IB_MARGIN_HEIGHT;
+    }
+
+    *x = attr.x + xOffset + ICON_WIDTH(pcd) + OPEN_ICON_BAR_GAP;
+    *w = OPEN_ICON_BAR_WIDTH;
+    *h = (unsigned int)((ICON_HEIGHT(pcd) * 3) / 8);
+    *y = attr.y + yOffset + ((int)ICON_HEIGHT(pcd) - (int)(*h)) / 2;
+
+    return True;
+}
+
+static Boolean UseSharedIconWindows (ClientData *pcd)
+{
+    if (!pcd)
+    {
+	return False;
+    }
+
+    if (!pcd->pSD->useIconBox)
+    {
+	return True;
+    }
+
+    if (pcd->clientFlags & (CLIENT_WM_CLIENTS | FRONT_PANEL_BOX))
+    {
+	return True;
+    }
+
+    return False;
+}
+
 static int OpenIconExtraWidth (ClientData *pcd)
 {
     return ICON_OPEN_EXTRA(pcd);
@@ -167,78 +289,99 @@ static void DrawOpenIconBarInternal (ClientData *pcd, int xOffset, int yOffset,
                                      unsigned int openWidth, Boolean ignoreState,
                                      int activeOverride)
 {
+    (void)xOffset;
+    (void)yOffset;
+    (void)openWidth;
+    UpdateOpenIconIndicator(pcd, ignoreState, activeOverride);
+}
+
+static void DrawOpenIconBar (ClientData *pcd, int xOffset, int yOffset)
+{
+    DrawOpenIconBarInternal(pcd, xOffset, yOffset,
+                            ICON_WIDTH(pcd), False, -1);
+}
+
+void UpdateOpenIconIndicator (ClientData *pcd, Boolean ignoreState, int activeOverride)
+{
+    Window win;
+    int x;
+    int y;
+    unsigned int w;
+    unsigned int h;
     GC barGC;
     GC topGC;
     GC botGC;
-    int barX;
-    int barY;
-    unsigned int barH;
-    int gapX;
-    int barW;
-    int barRight;
-    int barBottom;
     Boolean isActive;
 
-    if (!ignoreState &&
-	(!pcd->pSD->showOpenWindowIcons ||
-	 (pcd->clientState == MINIMIZED_STATE)))
+    if (!OpenIconIndicatorShouldShow(pcd, ignoreState))
+    {
+	if (ICON_INDICATOR_WIN(pcd))
+	{
+	    XUnmapWindow (DISPLAY, ICON_INDICATOR_WIN(pcd));
+	}
+	return;
+    }
+
+    if (!ICON_INDICATOR_WIN(pcd))
+    {
+	Window newWin = CreateOpenIconIndicatorWindow(pcd);
+	if (!newWin)
+	{
+	    return;
+	}
+	if (UseSharedIconWindows(pcd))
+	{
+	    int i;
+	    for (i = 0; i < pcd->sizeWsList; i++)
+	    {
+		pcd->pWsList[i].iconIndicatorWin = newWin;
+	    }
+	}
+	else
+	{
+	    ICON_INDICATOR_WIN(pcd) = newWin;
+	}
+    }
+
+    if (!GetOpenIconIndicatorGeometry(pcd, &x, &y, &w, &h))
     {
 	return;
     }
 
+    win = ICON_INDICATOR_WIN(pcd);
+    XMoveResizeWindow (DISPLAY, win, x, y, w, h);
+    XMapWindow (DISPLAY, win);
+
     if (activeOverride < 0)
     {
+	/* Active state follows keyboard focus unless explicitly overridden. */
 	isActive = (wmGD.keyboardFocus == pcd);
     }
     else
     {
 	isActive = (activeOverride != 0);
     }
+    /*
+     * Bar color is derived from the client's appearance:
+     * - active uses clientAppearance.activeBackground and active shadows
+     * - inactive uses clientAppearance.background and inactive shadows
+     */
     barGC = GetOpenIconBarGC(pcd, isActive);
     if (!barGC)
     {
 	return;
     }
 
-    barW = OPEN_ICON_BAR_WIDTH;
-    barX = xOffset + (int)openWidth - barW;
-    barY = yOffset + (ICON_HEIGHT(pcd) / 4);
-    barH = (unsigned int) (ICON_HEIGHT(pcd) / 2);
-    gapX = barX - OPEN_ICON_BAR_GAP;
-
-    if (gapX > xOffset)
-    {
-	XClearArea (DISPLAY, ICON_FRAME_WIN(pcd),
-		    gapX, barY,
-		    (unsigned int) OPEN_ICON_BAR_GAP, barH,
-		    False);
-    }
-
-    XFillRectangle (DISPLAY, ICON_FRAME_WIN(pcd), barGC,
-		    barX, barY, (unsigned int) barW, barH);
-
     topGC = isActive ? ICON_APPEARANCE(pcd).activeTopShadowGC
 		     : ICON_APPEARANCE(pcd).inactiveTopShadowGC;
     botGC = isActive ? ICON_APPEARANCE(pcd).activeBottomShadowGC
 		     : ICON_APPEARANCE(pcd).inactiveBottomShadowGC;
 
-    barRight = barX + barW - 1;
-    barBottom = barY + (int)barH - 1;
-
-    XDrawLine (DISPLAY, ICON_FRAME_WIN(pcd), topGC,
-	       barX, barY, barRight, barY);
-    XDrawLine (DISPLAY, ICON_FRAME_WIN(pcd), topGC,
-	       barX, barY, barX, barBottom);
-    XDrawLine (DISPLAY, ICON_FRAME_WIN(pcd), botGC,
-	       barX, barBottom, barRight, barBottom);
-    XDrawLine (DISPLAY, ICON_FRAME_WIN(pcd), botGC,
-	       barRight, barY, barRight, barBottom);
-}
-
-static void DrawOpenIconBar (ClientData *pcd, int xOffset, int yOffset)
-{
-    DrawOpenIconBarInternal(pcd, xOffset, yOffset,
-                            ICON_OPEN_WIDTH(pcd), False, -1);
+    XFillRectangle (DISPLAY, win, barGC, 0, 0, w, h);
+    XDrawLine (DISPLAY, win, topGC, 0, 0, (int)w - 1, 0);
+    XDrawLine (DISPLAY, win, topGC, 0, 0, 0, (int)h - 1);
+    XDrawLine (DISPLAY, win, botGC, 0, (int)h - 1, (int)w - 1, (int)h - 1);
+    XDrawLine (DISPLAY, win, botGC, (int)w - 1, 0, (int)w - 1, (int)h - 1);
 }
 
 static IconBlinkData *FindIconBlink (ClientData *pcd)
@@ -295,11 +438,8 @@ static void ShowMinimizeBlinkBar (ClientData *pcd, Boolean active)
 	yOffset = 0;
     }
 
-    /* Use parent-relative background so the gap looks like open icons. */
-    XSetWindowBackgroundPixmap (DISPLAY, ICON_FRAME_WIN(pcd),
-				ParentRelative);
     DrawOpenIconBarInternal(pcd, xOffset, yOffset,
-                            ICON_WIDTH(pcd) + OPEN_ICON_BAR_WIDTH + OPEN_ICON_BAR_GAP,
+                            ICON_WIDTH(pcd),
                             True, active ? 1 : 0);
     XSync(DISPLAY, False);
 }
@@ -354,7 +494,6 @@ void StartMinimizeIconBlink (ClientData *pcd)
 {
     IconBlinkData *blink;
     XWindowAttributes attr;
-    unsigned int openWidth;
 
     if (!pcd || !ICON_FRAME_WIN(pcd))
     {
@@ -365,8 +504,6 @@ void StartMinimizeIconBlink (ClientData *pcd)
     {
 	return;
     }
-
-    openWidth = ICON_WIDTH(pcd) + OPEN_ICON_BAR_WIDTH + OPEN_ICON_BAR_GAP;
 
     blink = FindIconBlink(pcd);
     if (blink)
@@ -396,11 +533,6 @@ void StartMinimizeIconBlink (ClientData *pcd)
     {
 	blink->restoreWidth = (unsigned int)attr.width;
 	blink->restoreHeight = (unsigned int)attr.height;
-	if (attr.width != (int)openWidth)
-	{
-	    XResizeWindow(DISPLAY, ICON_FRAME_WIN(pcd), openWidth, attr.height);
-	    blink->resized = True;
-	}
     }
 
     ShowMinimizeBlinkBar(pcd, True);
@@ -1741,6 +1873,7 @@ void ShowActiveIcon (ClientData *pcd)
 
 	/* simulate exposure of window */
 	IconExposureProc(pcd, False);
+	UpdateOpenIconIndicator(pcd, False, 1);
 
     }
 
@@ -1838,6 +1971,7 @@ void ShowInactiveIcon (ClientData *pcd, Boolean refresh)
 	    IconExposureProc(pcd, False);
 	}
 
+	UpdateOpenIconIndicator(pcd, False, 0);
     }
 
 } /* END OF FUNTION ShowInactiveIcon  */

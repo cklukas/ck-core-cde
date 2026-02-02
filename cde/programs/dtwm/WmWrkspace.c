@@ -886,6 +886,7 @@ GetClientWorkspaceInfo(
 	pCD->pWsList[i].iconX = 0;
 	pCD->pWsList[i].iconY = 0;
 	pCD->pWsList[i].iconFrameWin = None;
+	pCD->pWsList[i].iconIndicatorWin = None;
 	pCD->pWsList[i].pIconBox = NULL;
     }
     pCD->putInAll = bAll = False;
@@ -1384,6 +1385,7 @@ PutClientIntoWorkspace(
 	    pCD->pWsList[k].iconX = 0;
 	    pCD->pWsList[k].iconY = 0;
 	    pCD->pWsList[k].iconFrameWin = (Window) 0;
+	    pCD->pWsList[k].iconIndicatorWin = (Window) 0;
 	    pCD->pWsList[k].pIconBox = NULL;
 	}
     }
@@ -3034,6 +3036,7 @@ InsureIconForWorkspace(
 	     * in new WS.
 	     */
 	    pWsc->iconFrameWin = pCD->pWsList[0].iconFrameWin;
+	    pWsc->iconIndicatorWin = pCD->pWsList[0].iconIndicatorWin;
 	    pWsc->iconX = ICON_X(pCD); 
 	    pWsc->iconY = ICON_Y(pCD);
 

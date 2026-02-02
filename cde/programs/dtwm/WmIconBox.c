@@ -2819,11 +2819,13 @@ void PackIconBox (IconBoxData *pIBD, Boolean packVert, Boolean packHorz, int pas
 		    /* hide activeIconTextWin first */
 		    HideActiveIconText ((WmScreenData *)NULL);
 		    XtMoveWidget (pII_2->theWidget, newX, newY);
+		    UpdateOpenIconIndicator (pII_2->pCD, False, -1);
 		    ShowActiveIconText (pII_2->pCD);
 		}
 		else
 		{
 		    XtMoveWidget (pII_2->theWidget, newX, newY);
+		    UpdateOpenIconIndicator (pII_2->pCD, False, -1);
 		}
 	    }
 	}
@@ -3132,9 +3134,7 @@ void ShowClientIconState (ClientData *pCD, int newState)
 	{
 	    Arg args[2];
 	    int n = 0;
-	    Dimension newWidth = (Dimension)
-		((newState == MINIMIZED_STATE) ? ICON_WIDTH(pCD)
-					       : ICON_OPEN_WIDTH(pCD));
+	    Dimension newWidth = (Dimension) ICON_WIDTH(pCD);
 	    XtSetArg (args[n], XmNwidth, (XtArgVal) newWidth); n++;
 	    XtSetValues (iconWidget, args, n);
 	}

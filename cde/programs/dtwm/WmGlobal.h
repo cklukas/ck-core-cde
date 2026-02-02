@@ -1433,6 +1433,7 @@ typedef struct _WmScreenData *PtrScreenData;
 #define ICON_Y(pcd) ((pcd)->pWsList[(pcd)->currentWsc].iconY)
 #define P_ICON_BOX(pcd) ((pcd)->pWsList[(pcd)->currentWsc].pIconBox)
 #define ICON_FRAME_WIN(pcd) ((pcd)->pWsList[(pcd)->currentWsc].iconFrameWin)
+#define ICON_INDICATOR_WIN(pcd) ((pcd)->pWsList[(pcd)->currentWsc].iconIndicatorWin)
 
 /*
  * Definitions for Screen data
@@ -1909,6 +1910,7 @@ typedef struct _WsClientData
     int		iconX;
     int		iconY;
     Window	iconFrameWin;
+    Window	iconIndicatorWin;
     IconBoxData *pIconBox;		/* icon box for this win */
 
 } WsClientData;
@@ -2004,6 +2006,7 @@ typedef struct _WmGlobalData
     unsigned int configPart;		/* resize frame part */
     Boolean 	configSet;		/* True if configPart set */
     Boolean	movingIcon;		/* True if icon being moved */
+    ClientData	*movingIconClient;	/* icon client being moved */
     Boolean	preMove;		/* move threshold support */
     int		preMoveX;
     int		preMoveY;
@@ -2241,8 +2244,8 @@ typedef struct _WmGlobalData
 #define ICON_IMAGE_MAX_HEIGHT		128
 #define ICON_IMAGE_MIN_WIDTH		16
 #define ICON_IMAGE_MIN_HEIGHT		16
-#define OPEN_ICON_BAR_WIDTH		8
-#define OPEN_ICON_BAR_GAP		5
+#define OPEN_ICON_BAR_WIDTH		10
+#define OPEN_ICON_BAR_GAP		7
 
 /*default client window title: */
 #define DEFAULT_CLIENT_TITLE	"*****"

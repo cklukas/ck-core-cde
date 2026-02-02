@@ -1800,7 +1800,7 @@ void ShowIconForOpenClient (WmWorkspaceData *pWS, ClientData *pCD)
     if ((pWS == pSD->pActiveWS) && ICON_FRAME_WIN(pCD))
     {
 	XResizeWindow (DISPLAY, ICON_FRAME_WIN(pCD),
-	    (unsigned int) ICON_OPEN_WIDTH(pCD),
+	    (unsigned int) ICON_WIDTH(pCD),
 	    (unsigned int) ICON_HEIGHT(pCD));
 	XMoveWindow (DISPLAY, ICON_FRAME_WIN(pCD),
 	    ICON_X(pCD), ICON_Y(pCD));
@@ -1810,6 +1810,7 @@ void ShowIconForOpenClient (WmWorkspaceData *pWS, ClientData *pCD)
 	    XMapWindow (DISPLAY, pCD->iconWindow);
 	}
 	IconExposureProc (pCD, True);
+	UpdateOpenIconIndicator (pCD, False, -1);
     }
     UpdateNetWmIconGeometry (pCD);
 }

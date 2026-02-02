@@ -1647,6 +1647,7 @@ void IdentifyEventContext (XButtonEvent *event, ClientData *pCD, Context *pConte
 	    *pPartContext = FRAME_CLIENT;
 	}
 	else if ((actionWindow == ICON_FRAME_WIN(pCD)) ||
+		 (actionWindow == ICON_INDICATOR_WIN(pCD)) ||
 		 (actionWindow == ACTIVE_PSD->activeIconTextWin))
 	{
 	    if (P_ICON_BOX(pCD))

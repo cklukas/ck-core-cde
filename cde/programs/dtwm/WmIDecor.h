@@ -54,4 +54,4 @@ extern void ShowActiveIcon (ClientData *pcd);
 extern void ShowActiveIconText (ClientData *pcd);
 extern void ShowInactiveIcon (ClientData *pcd, Boolean refresh);
 extern void StartMinimizeIconBlink (ClientData *pcd);
-
+extern void UpdateOpenIconIndicator (ClientData *pcd, Boolean ignoreState, int activeOverride);

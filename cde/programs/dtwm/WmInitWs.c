@@ -771,6 +771,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
 		    wmGD.systemModalActive = False;
 		    wmGD.activeIconTextDisplayed = False;
 		    wmGD.movingIcon = False;
+		    wmGD.movingIconClient = NULL;
 		    wmGD.queryScreen = True;
 		    wmGD.dataType = GLOBAL_DATA_TYPE;
 
