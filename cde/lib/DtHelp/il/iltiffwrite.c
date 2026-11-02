@@ -111,11 +111,12 @@ typedef struct {
         /*  Init() function for ilWriteFileImage().
         */
 static ilError ilWriteFileInit (
-    ilWriteFilePrivPtr pPriv,
+    ilPtr              privateData,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilWriteFilePrivPtr pPriv = (ilWriteFilePrivPtr)privateData;
         /*  Point to beginning of strip offset/byte count memory buffers. */
     pPriv->pStripOffset = pPriv->tagInfo.pStripOffsets;
     pPriv->pStripByteCount = pPriv->tagInfo.pStripByteCounts;
@@ -132,10 +133,11 @@ static ilError ilWriteFileInit (
         /*  Cleanup() function for ilWriteFileImage().
         */
 static ilError ilWriteFileCleanup (
-    ilWriteFilePrivPtr pPriv,
+    ilPtr              privateData,
     ilBool                  aborting
     )
 {
+    ilWriteFilePrivPtr pPriv = (ilWriteFilePrivPtr)privateData;
 ilFilePtr          pFile;
 ilFileOffset                position;
 ilByte                      fourBytes[4], nextBytes[4];
@@ -217,9 +219,10 @@ int                         i;
         /*  Destroy() function for ilWriteFileImage().
         */
 static ilError ilWriteFileDestroy (
-    ilWriteFilePrivPtr      pPriv
+    ilPtr                   privateData
     )
 {
+    ilWriteFilePrivPtr pPriv = (ilWriteFilePrivPtr)privateData;
         /*  Free the tag data malloc'd by ilMergeWriteTags() when element added. */
     IL_FREE (pPriv->tagInfo.pAlloc);
     return IL_OK;

@@ -138,12 +138,15 @@ typedef struct {
                             calls to ilDestroyObject() as inc's of refCount for object.
         */
 
-typedef struct {
+typedef struct _ilObjectRec ilObjectRec, *ilObjectPtr;
+typedef void (*ilObjectDestroyProc)(ilObjectPtr);
+
+struct _ilObjectRec {
     ilObjectPublicRec   p;                  /* /ilinc/il.h , e.g. "context" */
     unsigned long       refCount;           /* see notes */
     ilPtr               pNext, pPrev;       /* private to /ilc/ilobject.c */
-    void                (*Destroy)();       /* private to /ilc/ilobject.c */
-    } ilObjectRec, *ilObjectPtr;
+    ilObjectDestroyProc Destroy;            /* private to /ilc/ilobject.c */
+    };
 
 
         /*  From /ilc/ilobject.c : */
@@ -161,7 +164,7 @@ typedef struct {
 IL_EXTERN ilObjectPtr _ilCreateObject (
     ilContext           context,                /* context to add object to */
     int                 objectType,             /* code for object, e.g. IL_PIPE */
-    void                (*Destroy)(),           /* destroy function; see above */
+    ilObjectDestroyProc Destroy,                /* destroy function; see above */
 /* Use the portable(correct) type for sizeof() operator, bug report OSF_QAR#32082 */
     size_t              sizeInBytes             /* size of object to create */
     );

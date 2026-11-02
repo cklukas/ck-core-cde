@@ -716,11 +716,12 @@ ilBool pixelValue
    ======================================================================== */
 
 static ilError _ilCompressG3Init(
-ilCompressG3G4PrivPtr   pPriv,
+ilPtr                  privateData,
 ilImageInfo            *pSrcImage,
 ilImageInfo            *pDstImage
 )
 {
+	ilCompressG3G4PrivPtr pPriv = (ilCompressG3G4PrivPtr)privateData;
 	/* Allocate space for Reference line, needed for 2 dimensional coding */
 
 	pPriv->gpRefLine = (ilPtr)IL_MALLOC(pPriv->nDstLineBytes );
@@ -738,11 +739,11 @@ ilImageInfo            *pDstImage
    ======================================================================== */
 
 static ilError _ilCompressG3Cleanup(
-ilCompressG3G4PrivPtr   pPriv,
-ilImageInfo            *pSrcImage,
-ilImageInfo            *pDstImage
+ilPtr                  privateData,
+ilBool                 aborting
 )
 {
+	ilCompressG3G4PrivPtr pPriv = (ilCompressG3G4PrivPtr)privateData;
 
 	if (pPriv->gpRefLine)
 		IL_FREE( (ilPtr)pPriv->gpRefLine);
@@ -1279,11 +1280,12 @@ static unsigned short  vcodes[7][2] = {
    ======================================================================== */
 
 static ilError _ilCompressG4Init(
-ilCompressG3G4PrivPtr       pPriv,
+ilPtr                      privateData,
 ilImageInfo            *pSrcImage,
 ilImageInfo            *pDstImage
 )
 {
+	ilCompressG3G4PrivPtr pPriv = (ilCompressG3G4PrivPtr)privateData;
 	/* Allocate space for Reference line, needed for 2 dimensional coding */
 
 	pPriv->gpRefLine = (ilPtr)IL_MALLOC(pPriv->nDstLineBytes );
@@ -1300,11 +1302,11 @@ ilImageInfo            *pDstImage
    ======================================================================== */
 
 static ilError _ilCompressG4Cleanup(
-ilCompressG3G4PrivPtr       pPriv,
-ilImageInfo            *pSrcImage,
-ilImageInfo            *pDstImage
+ilPtr                      privateData,
+ilBool                     aborting
 )
 {
+	ilCompressG3G4PrivPtr pPriv = (ilCompressG3G4PrivPtr)privateData;
 
 	if (pPriv->gpRefLine)
 		IL_FREE( (ilPtr)pPriv->gpRefLine);

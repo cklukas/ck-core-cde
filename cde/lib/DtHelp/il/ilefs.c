@@ -191,10 +191,11 @@ int                checkOrder;
 
         /*  Object Destroy() function for file type objects. */
 static void ilDestroyFileType (
-    ilEFSFileTypePtr pFileType
+    ilObjectPtr pObject
     )
 {
 ilEFSPrivatePtr             pPriv;
+ilEFSFileTypePtr   pFileType = (ilEFSFileTypePtr)pObject;
 ilEFSFileTypePtr   pReplaced;
 
     pPriv = (ilEFSPrivatePtr)
@@ -383,9 +384,10 @@ ilEFSFileType     *pfileType;
 
         /*  Object Destroy() function for file objects. */
 static void ilDestroyFile (
-    ilEFSFilePtr            pFile
+    ilObjectPtr             pObject
     )
 {
+ilEFSFilePtr       pFile = (ilEFSFilePtr)pObject;
 ilEFSFileTypePtr   pFileType;
 
         /*  Get ptr to file type; if null, file not actually open yet; skip Close() */

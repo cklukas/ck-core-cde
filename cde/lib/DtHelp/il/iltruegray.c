@@ -65,11 +65,12 @@ typedef struct {
 
 
 static ilError ilInitRGBGrayConversions (
-    ilRGBToGrayRecPtr  pPriv,
+    ilPtr              pPrivate,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilRGBToGrayRecPtr  pPriv = (ilRGBToGrayRecPtr)pPrivate;
 
     pPriv->nPixels = pSrcImage->width;
     pPriv->srcRowBytes = pSrcImage->plane[0].nBytesPerRow;
@@ -86,11 +87,12 @@ static ilError ilInitRGBGrayConversions (
    ============================================================================================================================= */
 
 static ilError ilAddElementRGBGrayConversions (
-    ilRGBToGrayRecPtr   pPriv,
+    ilPtr               pPrivate,
     unsigned short     *pPalette,           /* not used */
     void               *pOptionData         /* not used */
     )
 {
+    ilRGBToGrayRecPtr   pPriv = (ilRGBToGrayRecPtr)pPrivate;
     int        i;
 
         /*  Init tables, index by R/G/B, which effectively multiply each component

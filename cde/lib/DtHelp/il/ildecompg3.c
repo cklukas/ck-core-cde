@@ -58,11 +58,12 @@
    ======================================================================== */
 
 static ilError _ilDecompG3Init(
-ilDecompG3G4PrivPtr     pPriv,
+ilPtr                  privateData,
 ilImageInfo            *pSrcImage,
 ilImageInfo            *pDstImage
 )
 {
+	ilDecompG3G4PrivPtr pPriv = (ilDecompG3G4PrivPtr)privateData;
 	/* Allocate space for Reference line, needed for 2 dimensional coding */
 
 	pPriv->gpRefLine = (ilPtr)IL_MALLOC(pPriv->nDstLineBytes );
@@ -78,11 +79,11 @@ ilImageInfo            *pDstImage
    ======================================================================== */
 
 static ilError _ilDecompG3Cleanup(
-ilDecompG3G4PrivPtr     pPriv,
-ilImageInfo            *pSrcImage,
-ilImageInfo            *pDstImage
+ilPtr                  privateData,
+ilBool                 aborting
 )
 {
+	ilDecompG3G4PrivPtr pPriv = (ilDecompG3G4PrivPtr)privateData;
 
 	if (pPriv->gpRefLine)
 		IL_FREE( (ilPtr)pPriv->gpRefLine);
@@ -246,8 +247,8 @@ putones_done:
 
 static ilError _ilDecompG3Execute(
 ilExecuteData      *pData,
-unsigned long       dstLine,
-unsigned long      *pNLines
+long                dstLine,
+long               *pNLines
 )
 {
 	/* ========================================================================

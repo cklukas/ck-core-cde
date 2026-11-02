@@ -75,12 +75,13 @@ extern void flip_bits(ilPtr start, unsigned n);
 
 
 static ilError ilScaleInit(
-    ilScalePrivptr  pPrivate,
+    ilPtr           privateData,
     ilImageInfo     *pSrcImage,
     ilImageInfo     *pDstImage
     )
 
 {
+ ilScalePrivptr pPrivate = (ilScalePrivptr)privateData;
    pPrivate->ilScaleAccDown = pPrivate->ilScaleSrcheight - pPrivate->ilScaleDstheight;
    pPrivate->ilScaleAccUp   = pPrivate->ilScaleDstheight - pPrivate->ilScaleSrcheight;
 
@@ -448,8 +449,8 @@ int acc, nbytes;
    ============================================================================================================================= */
 static ilError ilScaleBitonalExecute (
     ilExecuteData  *pData,
-    unsigned long           dstLine,
-    unsigned long          *pNLines
+    long            dstLine,
+    long           *pNLines
     )
 {
 CARD32		   *psrcline, *pdstline;
@@ -557,8 +558,8 @@ ilScalePrivptr    pPriv;
    ============================================================================================================================= */
 static ilError ilScale3ByteExecute (
     ilExecuteData   *pData,
-    unsigned long           dstLine,
-    unsigned long          *pNLines
+    long             dstLine,
+    long            *pNLines
     )
 {
 unsigned char     *psrcline, *pdstline;
@@ -668,8 +669,8 @@ ilScalePrivptr    pPriv;
    ============================================================================================================================= */
 static ilError ilScaleByteExecute (
     ilExecuteData   *pData,
-    unsigned long           dstLine,
-    unsigned long          *pNLines
+    long             dstLine,
+    long            *pNLines
     )
 {
 unsigned char     *psrcline, *pdstline;

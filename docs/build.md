@@ -89,10 +89,20 @@ helpers. Callback implementations accept their framework-defined context type
 and recover private state inside the function, rather than relying on an
 incompatible function pointer or a cast at registration time.
 
+DtHelp's image library uses exact callback types for pipeline initialization,
+cleanup, destruction and execution, conversion records, and image-object
+lifecycle hooks. Implementations accept the pipeline or object context defined
+by the framework and recover their private record internally. This also makes
+the cleanup ABI explicit: cleanup hooks receive the private record and the
+abort flag, while image descriptors belong only to initialization hooks. The
+complete image-library archive builds from clean objects with GCC and Clang in
+C23 mode.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh
 make -j4 -C lib/tt/mini_isam check
+make -j4 -C lib/DtHelp/il
 ```
 
 This focused result does not imply that the rest of CDE is C23-clean. The

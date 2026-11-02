@@ -66,11 +66,12 @@ typedef struct {
         /*  Init() function for throttle pipe elements.
         */
 static ilError ilThrottleInit (
-    ilThrottlePrivPtr   pPriv,
+    ilPtr               privateData,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilThrottlePrivPtr pPriv = (ilThrottlePrivPtr)privateData;
     pPriv->beingRecalled = FALSE;
     pPriv->nBufferLines = 0;
     pPriv->nLinesReceived = 0;

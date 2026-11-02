@@ -1,3 +1,9 @@
+2026-11-03
+- DtHelp: give image-pipeline initialization, cleanup, destruction, execution,
+  conversion and object-lifecycle callbacks exact C23 contracts; correct legacy
+  cleanup routines that were declared with parameters different from the
+  framework call ABI.
+
 2026-11-02
 - C23: give the DtInfo Tree, Panner, Pixmap, Porthole, Restraint and Simple
   widgets exact Xt method signatures; type the DtSvc hash callbacks, Instant

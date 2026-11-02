@@ -65,8 +65,8 @@ typedef struct {
 
 static ilError ilDecompPackbitsExecute(
     ilExecuteData        *pData,
-    unsigned long        dstLine,
-    unsigned long        *pNLines
+    long                 dstLine,
+    long                *pNLines
     )
 {
 

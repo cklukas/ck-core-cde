@@ -76,14 +76,11 @@ typedef struct _ilElementRec {
     unsigned int        elementType;
     unsigned long       flags;
     ilExecuteData       exec;
-    ilError           (*Init)();
-    ilError           (*Cleanup)();
-    ilError           (*Destroy)();
-    ilError           (*ExecuteThree)();
-    ilError           (*ExecuteFour)(ilExecuteData *,
-				     long,
-				     long *,
-				     float);
+    ilPipeInitProc      Init;
+    ilPipeCleanupProc   Cleanup;
+    ilPipeDestroyProc   Destroy;
+    ilPipeExecuteProc   ExecuteThree;
+    ilPipeExecuteWithRatioProc ExecuteFour;
     unsigned long       clientPrivate;          /* client private: MUST BE LAST */
     } ilElementRec, *ilElementPtr;
 
@@ -408,6 +405,13 @@ ilError                 error;
     return (error == IL_OK);
 }
 
+static void ilDestroyPipeObject (
+    ilObjectPtr pObject
+    )
+{
+    (void)ilEmptyPipe ((ilPipe)pObject);
+}
+
 
 
         /*  ------------------------ ilCreatePipe -------------------------------- */
@@ -426,7 +430,7 @@ ilPipePtr   pPipe;
         return (ilPipe)NULL;
         }
 
-    pPipe = (ilPipePtr)_ilCreateObject (context, IL_PIPE, ((void (*)())ilEmptyPipe), 
+    pPipe = (ilPipePtr)_ilCreateObject (context, IL_PIPE, ilDestroyPipeObject,
                                        sizeof (ilPipeRec));
     if (!pPipe)
         return (ilPipe)NULL;
@@ -776,18 +780,15 @@ ilPtr ilAddPipeElement (
     unsigned long       flags,
     ilSrcElementData   *pSrcData,
     ilDstElementData   *pDstData,
-    ilError           (*Init)(),
-    ilError           (*Cleanup)(),
-    ilError           (*Destroy)(),
+    ilPipeInitProc      Init,
+    ilPipeCleanupProc   Cleanup,
+    ilPipeDestroyProc   Destroy,
 /*
 ** Added another execute function for passing in a fourth
 ** parameter which is a floating pointing.
 */
-    ilError           (*ExecuteThree)(),
-    ilError           (*ExecuteFour)(ilExecuteData *,
-					      long,
-					      long *,
-					      float),
+    ilPipeExecuteProc   ExecuteThree,
+    ilPipeExecuteWithRatioProc ExecuteFour,
     unsigned long       mustBeZero
     )
 {

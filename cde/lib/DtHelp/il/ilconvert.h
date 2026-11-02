@@ -83,29 +83,32 @@
             It can be used for example to init the private block with data
             other than what might be done by Init().
         */
+typedef ilError (*ilConvertAddElementProc)(ilPtr, unsigned short *, void *);
+typedef ilError (*ilFormatAddElementProc)(ilPtr, unsigned short *);
+
 typedef struct {
-    ilError           (*CheckFormat)();         /* reserved: MUST BE IL_NPF! */
+    ilError           (*CheckFormat)(void);     /* reserved: MUST BE IL_NPF! */
     unsigned int        srcFormatCode;          /* see above */
-    ilError           (*AddElement)();          /* see above */
+    ilConvertAddElementProc AddElement;         /* see above */
     const ilImageDes    *pDstDes;               /* ptr to new des or null */
     const ilImageFormat *pDstFormat;            /* ptr to new format or null */
     size_t              nBytesPrivate;
-    ilError           (*Init)();
-    ilError           (*Cleanup)();
-    ilError           (*Destroy)();
-    ilError           (*Execute)();
+    ilPipeInitProc      Init;
+    ilPipeCleanupProc   Cleanup;
+    ilPipeDestroyProc   Destroy;
+    ilPipeExecuteProc   Execute;
     } ilConvertRec, *ilConvertPtr;
 
         /*  Standard definition for a format filter added by ilConvert().
             Basically a subset of an ilConvertRec; see above.
         */
 typedef struct {
-    ilError           (*AddElement)();          /* see above */
+    ilFormatAddElementProc AddElement;          /* see above */
     unsigned int        nBytesPrivate;
-    ilError           (*Init)();
-    ilError           (*Cleanup)();
-    ilError           (*Destroy)();
-    ilError           (*Execute)();
+    ilPipeInitProc      Init;
+    ilPipeCleanupProc   Cleanup;
+    ilPipeDestroyProc   Destroy;
+    ilPipeExecuteProc   Execute;
     } ilFormatRec, *ilFormatPtr;
 
 

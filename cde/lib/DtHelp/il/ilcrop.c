@@ -67,11 +67,12 @@ typedef struct {
     /*  Init() function for when cropping compressed images.
     */
 static ilError ilCropCompInit (
-    ilCropCompPrivPtr   pPriv,
+    ilPtr               privateData,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilCropCompPrivPtr pPriv = (ilCropCompPrivPtr)privateData;
     pPriv->stripIndex = 0;          /* init current strip to first strip */
     return IL_OK;
 }
@@ -191,12 +192,13 @@ ilCropCompPrivPtr       pPriv;
    ============================================================================================================================= */
 
 static ilError ilCropInit(
-    ilCropPrivptr   pPrivate,
+    ilPtr           privateData,
     ilImageInfo     *pSrcImage,
     ilImageInfo     *pDstImage
     )
 
 {
+   ilCropPrivptr pPrivate = (ilCropPrivptr)privateData;
    /* Initialize counters */
    pPrivate->illinecount =  1;
 
@@ -213,8 +215,8 @@ static ilError ilCropInit(
    ============================================================================================================================= */
 static ilError ilCropBitonalExecute (
     ilExecuteData  *pData,
-    unsigned long           dstLine,
-    unsigned long          *pNLines
+    long            dstLine,
+    long           *pNLines
     )
 {
 CARD32            *psrc, *pdst, *psrcline, *pdstline, srca, srcb;
@@ -299,8 +301,8 @@ ilCropPrivptr     pPriv;
    ============================================================================================================================= */
 static ilError ilCrop3ByteExecute (
     ilExecuteData   *pData,
-    unsigned long           dstLine,
-    unsigned long          *pNLines
+    long             dstLine,
+    long            *pNLines
     )
 {
 unsigned char     *psrc, *pdst, *psrcline, *pdstline;
@@ -369,8 +371,8 @@ ilCropPrivptr     pPriv;
    ============================================================================================================================= */
 static ilError ilCropByteExecute (
     ilExecuteData   *pData,
-    unsigned long           dstLine,
-    unsigned long          *pNLines
+    long             dstLine,
+    long            *pNLines
     )
 {
 unsigned char     *psrc, *pdst, *psrcline, *pdstline;

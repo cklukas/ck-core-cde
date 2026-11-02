@@ -65,11 +65,12 @@ typedef struct {
    ======================================================================== */
 
 static ilError ilComppackbitsInit(
-    ilCompPBPrivPtr    pPrivate,
+    ilPtr              privateData,
     ilImageInfo     *pSrcImage,
     ilImageInfo     *pDstImage
     )
 {
+    ilCompPBPrivPtr pPrivate = (ilCompPBPrivPtr)privateData;
     pPrivate->firstStrip = TRUE;
     return IL_OK;
 }

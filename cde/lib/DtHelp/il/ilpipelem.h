@@ -88,8 +88,8 @@ extern "C" {                                    /* for C++ V2.0 */
 #define IL_ADD_PIPE_HOLD_SRC    (1<<1)
 #define IL_ADD_PIPE_HOLD_DST    (1<<2)
 
-        /*  ilAddPipeElement (null function pointer) */
-#define IL_NPF                  ((ilError (*)())0)
+        /*  Null callback for typed callback slots. */
+#define IL_NPF                  NULL
 
 typedef struct {
     ilObject            producerObject;
@@ -117,6 +117,13 @@ typedef struct {
         } compressed;
     long                filler [8];
     } ilExecuteData;
+
+typedef ilError (*ilPipeInitProc)(ilPtr, ilImageInfo *, ilImageInfo *);
+typedef ilError (*ilPipeCleanupProc)(ilPtr, ilBool);
+typedef ilError (*ilPipeDestroyProc)(ilPtr);
+typedef ilError (*ilPipeExecuteProc)(ilExecuteData *, long, long *);
+typedef ilError (*ilPipeExecuteWithRatioProc)(ilExecuteData *, long, long *,
+                                              float);
 
 typedef struct {
     ilObject            consumerImage;
@@ -182,18 +189,15 @@ extern ilPtr ilAddPipeElement (
     unsigned long       flags,
     ilSrcElementData   *pSrcData,
     ilDstElementData   *pDstData,
-    ilError           (*Init)(),
-    ilError           (*Cleanup)(),
-    ilError           (*Destroy)(),
+    ilPipeInitProc      Init,
+    ilPipeCleanupProc   Cleanup,
+    ilPipeDestroyProc   Destroy,
 /*
 ** Added another execute function for passing in a fourth
 ** parameter which is a floating pointing.
 */
-    ilError           (*ExecuteThree)(),
-    ilError           (*ExecuteFour)( ilExecuteData *,
-				  long,
-	                          long *,
-	                          float),
+    ilPipeExecuteProc   ExecuteThree,
+    ilPipeExecuteWithRatioProc ExecuteFour,
     unsigned long       mustBeZero
 #endif
     );

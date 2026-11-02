@@ -60,11 +60,12 @@ typedef struct {
     /*  Init() function for decompressing JPEG.
     */
 static ilError ilDecompInit (
-    ilJPEGPrivPtr       pPriv,
+    ilPtr               privateData,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilJPEGPrivPtr pPriv = (ilJPEGPrivPtr)privateData;
     pPriv->firstStrip = TRUE;
     pPriv->nLinesWritten = 0;
     pPriv->pJPEGData = (iljpgDataPtr)NULL;
@@ -77,10 +78,11 @@ static ilError ilDecompInit (
     /*  Cleanup() function for decompressing JPEG.
     */
 static ilError ilDecompCleanup (
-    ilJPEGPrivPtr       pPriv,
+    ilPtr               privateData,
     ilBool              aborting
     )
 {
+    ilJPEGPrivPtr pPriv = (ilJPEGPrivPtr)privateData;
     ilError         error;
 
         /*  Cleanup from JPEG decode, but only if firstStrip setup done */
@@ -100,8 +102,8 @@ static ilError ilDecompCleanup (
     */
 static ilError ilDecompRawExecute (
     ilExecuteData      *pData,
-    unsigned long       dstLine,
-    unsigned long      *pNLines
+    long                dstLine,
+    long               *pNLines
     )
 {
     ilJPEGPrivPtr pPriv;
@@ -147,8 +149,8 @@ static ilError ilDecompRawExecute (
     */
 static ilError ilDecompJIFExecute (
     ilExecuteData      *pData,
-    unsigned long       dstLine,
-    unsigned long      *pNLines
+    long                dstLine,
+    long               *pNLines
     )
 {
     ilJPEGPrivPtr pPriv;
