@@ -1,4 +1,7 @@
 2026-11-02
+- DtTerm: bound multibyte string appends and numeric parameter counts, keep
+  softkey lengths without 8-bit wrap, validate hex digits, and load only complete
+  hex byte pairs; reject oversized parser character inputs and negative indices.
 - dtexec: discover child executables with an iterative visited queue, complete
   PID tokens and validated IDs; retry interrupted command reads, reject
   truncated executable names, and bound vector and joined-list allocations.

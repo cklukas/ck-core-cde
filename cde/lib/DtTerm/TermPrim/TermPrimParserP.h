@@ -87,7 +87,7 @@ typedef struct _StateTableRec
 typedef struct _stringParameter
 {
     unsigned char   str[STR_SIZE + 1];   /* buffer for string */
-    unsigned char   length;              /* length of str     */
+    unsigned int    length;             /* bytes, or up to 2*STR_SIZE hex digits */
 } stringParameter;
 
 /*
@@ -157,6 +157,7 @@ typedef struct _ParserContextRec
     int              workingNum;    /* working number for entering parm  */
     Boolean	     workingNumIsDefault;
 				    /* true if working num not touched   */
+    Boolean          parameterOverflow; /* ignore numeric parameters after the limit */
     TermParserSign   sign;	    /* for numeric sign			 */
     int              parms[NUM_PARMS];	 /* parameters                   */
     stringParameter  stringParms[2];

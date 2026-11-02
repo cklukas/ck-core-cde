@@ -5,6 +5,13 @@ description: Filename drops and persistent font choices in CDE Terminal.
 
 # Terminal improvements
 
+Escape-sequence strings reserve space for a complete multibyte character and
+their terminating NUL. The softkey parser stores its full length without 8-bit
+wrap, checks hex digits and accepts only complete byte pairs. Excess numeric
+parameters are ignored after the first sixteen, preserving the stored values
+and keeping all parameter indices within bounds. The parser regression covers
+UTF-8 boundary cases, 512 hex digits and long excess-parameter sequences.
+
 CK Core CDE makes the Terminal easier to use with files and across repeated
 sessions.
 

@@ -70,6 +70,10 @@ _DtTermPrimParse
     StateEntry      thisEntry;
     StateEntry      thisPreParseEntry;
 
+    if (!parseChar || parseCharLen <= 0 ||
+        (size_t)parseCharLen > sizeof(context->inputChar))
+        return False;
+
 #ifdef    NOCODE
     /*
     ** This decision should be made somewhere else.
@@ -257,6 +261,7 @@ _DtTermPrimParserClearParm
     }
     context->workingNum = 0;
     context->workingNumIsDefault = True;
+    context->parameterOverflow = False;
     context->sign = TermPARSER_SIGNnone;
 }
 
@@ -310,7 +315,7 @@ _DtTermPrimParserNumParmPush
 {
     ParserContext   context = GetParserContext(w);
 
-    if ( parmNum < NUM_PARMS ) {
+    if ( parmNum >= 0 && parmNum < NUM_PARMS ) {
       context->parms[parmNum] = context->workingNum;
       context->workingNum     = 0;
       context->workingNumIsDefault = False;

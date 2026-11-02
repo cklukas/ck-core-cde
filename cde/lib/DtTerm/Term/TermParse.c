@@ -80,7 +80,10 @@
                                              TOPROW(w))
 #define KILLWRAP(w) if((w)->term.tpd->cursorColumn>LASTCOLUMN(w)) \
                                 (w)->term.tpd->cursorColumn=LASTCOLUMN(w)
-#define STORELASTARG(c) (c)->parms[PCOUNT(c)]=(c)->workingNum
+#define STORELASTARG(c) do { \
+  if (!(c)->parameterOverflow && PCOUNT(c) > 0 && PCOUNT(c) <= NPARAM) \
+    (c)->parms[PCOUNT(c)] = (c)->workingNum; \
+} while (0)
 
 /******************************************************************
  *   Upon entering a parse routine the parameter count is contained 
@@ -116,6 +119,8 @@ _DtTermEnterNum(Widget w)
 {
   ParserContext context ;
   context = GetParserContext(w) ;
+  if (context->parameterOverflow)
+    return;
   _DtTermPrimParserEnterNum(w) ;
   if (!PCOUNT(context)) PCOUNT(context)++ ; /* increment for first number ONLY*/
 }
@@ -125,6 +130,8 @@ _DtTermParsePushNum(Widget w)
 {
   ParserContext context ;
   context = GetParserContext(w) ;
+  if (context->parameterOverflow)
+    return;
   /* parmN(w,PCOUNT(c)) ;  Should  use this but not global   */
   if ( context->workingNumIsDefault != True) {  /* did we actually parse a num*/
      _DtTermPrimParserNumParmPush(w,PCOUNT(context)) ;
@@ -133,26 +140,34 @@ _DtTermParsePushNum(Widget w)
    if (!PCOUNT(context)) PCOUNT(context)++ ;/* increment for first number ONLY*/
   }
     
-  if ( ++PCOUNT(context)>NPARAM ) {
+  if (PCOUNT(context) >= NPARAM) {
+    context->parameterOverflow = True;
     Debug('P',fprintf(stderr,">>Too many parameters\n")) ;
     return ;
   }
+  ++PCOUNT(context);
 }
 
 void
 _DtTermSaveChar(Widget w)
 {
-  DtTermPrimitiveWidget tw = (DtTermPrimitiveWidget) w;
   ParserContext context ;
   wchar_t c;
   context = GetParserContext(w) ;
 
-  mbtowc(&c,(char *)context->inputChar,MB_CUR_MAX);
-  if ( context->stringParms[0].length < STR_SIZE && iswprint(c) ) {
-      strncpy( (
-         (char *)&context->stringParms[0].str[context->stringParms[0].length]), 
-                (char *)context->inputChar, context->inputCharLen) ;
+  if (context->inputCharLen <= 0 ||
+      (size_t)context->inputCharLen > sizeof(context->inputChar) ||
+      context->stringParms[0].length > STR_SIZE ||
+      (unsigned int)context->inputCharLen > STR_SIZE - context->stringParms[0].length)
+    return;
+  if (mbtowc(&c, (char *)context->inputChar, context->inputCharLen) !=
+      context->inputCharLen || !iswprint(c))
+    return;
+  {
+   memcpy(&context->stringParms[0].str[context->stringParms[0].length],
+          context->inputChar, context->inputCharLen);
    context->stringParms[0].length += context->inputCharLen ;
+   context->stringParms[0].str[context->stringParms[0].length] = '\0';
   }
 }
 
@@ -1623,7 +1638,8 @@ _DtTermParseUserKeyLoad(Widget w) /* vt220 DECUDK load function string */
   Debug('P', fprintf(stderr,">>In func _DtTermLoadSoftKey\n")) ;
   context = GetParserContext(w) ;
   STORELASTARG(context) ;
-  if ( !vtd->userKeysLocked)
+  if (!vtd->userKeysLocked && context->stringParms[0].length <= 2*STR_SIZE &&
+      context->stringParms[0].length % 2 == 0)
   {
      context->stringParms[0].str[context->stringParms[0].length/2] = 
                           (unsigned char)0 ;  /* Null terminate */
@@ -1647,25 +1663,23 @@ void
 _DtTermParseHexDigit(Widget w) /* vt220 DECUDK store hex digit*/
 {
   ParserContext context ;
-  int ci, left_byte, i;
-  char c, cbuf[2] ;
+  unsigned int digit, index;
+  unsigned char c;
   Debug('P', fprintf(stderr,">>In func _DtTermLoadSoftKey\n")) ;
   context = GetParserContext(w) ;
-  if ( (int)context->stringParms[0].length < 2*STR_SIZE-1 ) {
-      /* fold the hex digits into characters */
-      i = context->stringParms[0].length ;
-      cbuf[0] = *context->inputChar ;
-      cbuf[1] = (char)0 ;
-      sscanf(cbuf,"%x",&ci)   ;
-      c = (char)ci ;
-      left_byte  = (i+1)%2 ;
-      i /= 2 ;
-      if ( left_byte  )
-           context->stringParms[0].str[i] = c<<4 ;
-      else
-           context->stringParms[0].str[i] |= c & 0x0F ;
-      context->stringParms[0].length++ ;
-   }
+  if (context->inputCharLen != 1 || context->stringParms[0].length >= 2*STR_SIZE)
+    return;
+  c = context->inputChar[0];
+  if (c >= '0' && c <= '9') digit = c - '0';
+  else if (c >= 'a' && c <= 'f') digit = c - 'a' + 10;
+  else if (c >= 'A' && c <= 'F') digit = c - 'A' + 10;
+  else return;
+  index = context->stringParms[0].length / 2;
+  if (context->stringParms[0].length % 2 == 0)
+    context->stringParms[0].str[index] = (unsigned char)(digit << 4);
+  else
+    context->stringParms[0].str[index] |= (unsigned char)digit;
+  ++context->stringParms[0].length;
 }
 
 void 
