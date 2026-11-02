@@ -193,7 +193,7 @@ MapButton::expand()
       f_expanded = TRUE;
       // Create a button for each child.
       UAS_List<UAS_Common> kids (f_doc_ptr->children());
-      WXawTree tree (XtParent (f_form));
+      WXawTree tree (DtinfoXtParent((Widget)f_form));
       for (unsigned int i = 0; i < kids.length(); i++)
 	new MapButton (tree, kids[i], this);
       ON_DEBUG (puts ("managing kids"));
@@ -454,7 +454,7 @@ MapAgent::display (UAS_Pointer<UAS_Common> &doc_ptr, bool popup)
     {
       if (first_time)
 	{
-  	  WXmForm form (XtParent (XtParent (*f_panner)));
+          WXmForm form (DtinfoXtParent(DtinfoXtParent((Widget)*f_panner)));
 	  form.Height (50);
 	  first_time = False;
 	}

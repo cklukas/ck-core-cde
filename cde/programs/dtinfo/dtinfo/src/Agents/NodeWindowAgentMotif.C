@@ -2084,16 +2084,16 @@ NodeWindowAgent::lock_toggleCB(Widget lock,
   if (agent->f_locked)
     {
 	XtSetArg(args[n], XmNselectPixmap,
-		 window_system().locked_pixmap(XtParent(lock))); n++;
+		 window_system().locked_pixmap(DtinfoXtParent(lock))); n++;
 	XtSetArg(args[n], XmNlabelPixmap,
-		 window_system().semilocked_pixmap(XtParent(lock))); n++;
+		 window_system().semilocked_pixmap(DtinfoXtParent(lock))); n++;
       }
   else
     {
 	XtSetArg(args[n], XmNlabelPixmap,
-		 window_system().unlocked_pixmap(XtParent(lock))); n++;
+		 window_system().unlocked_pixmap(DtinfoXtParent(lock))); n++;
 	XtSetArg(args[n], XmNselectPixmap,
-		 window_system().semilocked_pixmap(XtParent(lock))); n++;
+		 window_system().semilocked_pixmap(DtinfoXtParent(lock))); n++;
     }
   XtSetValues(lock, args, n);
   
@@ -3622,7 +3622,7 @@ NodeWindowAgent::set_min_size()
   f_shell->Get (WArgList (XmNheight, (XtArgVal) &height,
 			  XmNwidth, &width, NULL));
 
-  Widget wid = XtParent(XtParent(f_help_dsp_area->dispWid));
+  Widget wid = DtinfoXtParent(DtinfoXtParent(f_help_dsp_area->dispWid));
   WXmFrame(wid).Get(
 		    WArgList (XmNheight, (XtArgVal) &vheight,
 			      XmNwidth, &vwidth, NULL)
@@ -4862,7 +4862,7 @@ NodeWindowAgent::layout_mark_icons()
 
       if (mi == NULL) {
 	mark_icon =
-	    new MarkIcon (XtParent (XtParent (f_help_dsp_area->dispWid)),
+	    new MarkIcon (DtinfoXtParent(DtinfoXtParent(f_help_dsp_area->dispWid)),
 			  *f_shell, m.item(),
 			  m.item()->y_position(), f_vscrollbar_offset);
 
@@ -5074,7 +5074,7 @@ NodeWindowAgent::add_mark (UAS_Pointer<Mark> &mark_ptr)
 
   if (mi == NULL) {
     MarkIcon *mark_icon = 
-	new MarkIcon (XtParent (XtParent (f_help_dsp_area->dispWid)), 
+	new MarkIcon (DtinfoXtParent(DtinfoXtParent(f_help_dsp_area->dispWid)),
 		      *f_shell,
 		      mark_canvas, ypos, f_vscrollbar_offset); 
     f_mark_icon_list.insert_before (i, mark_icon);

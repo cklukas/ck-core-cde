@@ -787,7 +787,7 @@ GraphicAgent::adjust_panner(unsigned int state)
   Dimension cwidth =  panner.CanvasWidth();
   Dimension cheight = panner.CanvasHeight();
 
-  WXawPorthole porthole(XtParent(*f_panner)) ;
+  WXawPorthole porthole(DtinfoXtParent((Widget)*f_panner)) ;
 
   ON_DEBUG(cerr << "Panner - state: " << state << " canvas ( " << cwidth
 	   << ", " << cheight << ") porthole ( " << porthole.Width() <<
@@ -953,7 +953,7 @@ GraphicAgent::fit_graphic_to_window_callback(WCallback *)
   gr_width = f_graphic->pixmap_graphic()->width();
   gr_height = f_graphic->pixmap_graphic()->height();
 
-  WXawPorthole porthole(XtParent(*f_pixmap_widget));
+  WXawPorthole porthole(DtinfoXtParent((Widget)*f_pixmap_widget));
 #if 0
   dx = abs(porthole.Width() - f_graphic->pixmap_graphic()->width());
   dy = abs(porthole.Height() - f_graphic->pixmap_graphic()->height());
@@ -992,7 +992,7 @@ GraphicAgent::fit_window_to_graphic_callback(WCallback *)
 void
 GraphicAgent::fit_window_to_graphic()
 {
-  WXawPorthole porthole(XtParent(*f_pixmap_widget));
+  WXawPorthole porthole(DtinfoXtParent((Widget)*f_pixmap_widget));
   WPixmap   picture(*f_pixmap_widget) ;
   WXawPanner panner(*f_panner);
 
@@ -1008,7 +1008,7 @@ GraphicAgent::fit_window_to_graphic()
 
   // account for frame margins 
   // frame is parent of subform is parent of panner 
-  WXmFrame frame(XtParent(XtParent(panner)));
+  WXmFrame frame(DtinfoXtParent(DtinfoXtParent(panner)));
 
   cheight += menu_bar.Height() + frame.MarginHeight() * 2 + frame.TopOffset()
     + frame.BottomOffset() + separator.Height() + 2 * separator.Margin() +
@@ -1047,7 +1047,7 @@ GraphicAgent::install_new_picture(PixmapGraphic *pgr)
   // update some more UI crud
 
   args.Reset();
-  WXawPorthole porthole(XtParent(*f_pixmap_widget));
+  WXawPorthole porthole(DtinfoXtParent((Widget)*f_pixmap_widget));
 
   args.Reset();
   WXawPanner panner(*f_panner);

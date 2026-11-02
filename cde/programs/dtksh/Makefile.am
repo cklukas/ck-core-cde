@@ -2,6 +2,11 @@ MAINTAINERCLEANFILES = Makefile.in
 
 CLEANFILES = init.c DtFuncs.dtsh
 
+check_PROGRAMS = dtksh-test
+
+dtksh_test_SOURCES = dtksh-test.c
+dtksh_test_CPPFLAGS = '-DDTKSH_TEST_BUILDDIR="$(abs_builddir)"'
+
 SUBDIRS = examples
 
 kshdir = ${libdir}/dtksh
@@ -70,7 +75,8 @@ libshell.a: $(KSH93SLIBSHELL) dtksh-init.o
 	$(AR) cq libshell.a dtksh-init.o
 
 check-local:
-	./dtksh -c true && ksh93/bin/shtests --posix --utf8 SHELL=.libs/dtksh
+	$(abs_builddir)/dtksh-test -c true && \
+		ksh93/bin/shtests --posix --utf8 SHELL=$(abs_builddir)/dtksh-test
 
 clean-local:
 	ksh93/bin/package clean

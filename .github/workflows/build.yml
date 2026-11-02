@@ -1,0 +1,70 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+    paths-ignore: ['docs/**', 'ckdocs.yml', '.github/workflows/pages.yml']
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: cde-source
+      - name: Check out latest CK Core Motif
+        uses: actions/checkout@v5
+        with:
+          repository: cklukas/ck-core-motif
+          ref: master
+          path: motif-source
+          persist-credentials: false
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            autoconf automake bison build-essential fakeroot flex ksh libatspi2.0-dev \
+            libdbus-1-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
+            librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
+            libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
+            m4 ncompress opensp pkg-config rpcsvc-proto tcl-dev xbitmaps xfonts-utils
+      - name: Build CK Core Motif ABI 9
+        run: |
+          set -eu
+          prefix="$RUNNER_TEMP/motif"
+          mkdir "$RUNNER_TEMP/motif-build"
+          (cd motif-source && autoreconf -fi)
+          cd "$RUNNER_TEMP/motif-build"
+          "$GITHUB_WORKSPACE/motif-source/configure" --prefix="$prefix" \
+            --disable-demos --disable-static --enable-xft --enable-unicode-text \
+            --enable-atspi --enable-svg CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0'
+          for component in bindings bitmaps config localized lib include tools/wml clients/uil; do
+            make -j4 -C "$component"
+            make -j1 -C "$component" install
+          done
+          test -e "$prefix/lib/libXm.so.9"
+          test -x "$prefix/bin/uil"
+      - name: Build and test CDE
+        run: |
+          set -eu
+          prefix="$RUNNER_TEMP/motif"
+          export PATH="$prefix/bin:$PATH"
+          export CPPFLAGS="-I$prefix/include $(pkg-config --cflags xft)"
+          export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
+          export LD_LIBRARY_PATH="$prefix/lib"
+          cd cde-source/cde
+          ./autogen.sh
+          ./configure CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0'
+          make -j4
+          make -j4 check
+          readelf -dW programs/dtwm/.libs/dtwm | grep -F 'libXm.so.9'

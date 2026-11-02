@@ -1018,7 +1018,7 @@ WindowSystem::core_dump_handler (int signal_number)
 	(XmString)XmStringLocalized(MCATGETS(Set_WindowSystem, 2,
 					    "Bombing...")), NULL);
 
-      WShell shell (XtParent ((Widget) byebye));
+      WShell shell (DtinfoXtParent((Widget) byebye));
       window_system().register_shell (&shell);
       window_system().set_cursor (window_system().f_bomb_cursor);
       XtVaSetValues((Widget)shell, XmNtitle, 

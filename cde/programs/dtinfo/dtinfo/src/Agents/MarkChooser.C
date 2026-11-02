@@ -102,7 +102,7 @@ MarkChooser::~MarkChooser()
      trying to remove them again - brad
      */
   removeCallbacks();		
-  XtDestroyWidget (XtParent (f_form));
+  XtDestroyWidget (DtinfoXtParent((Widget)f_form));
 }
 
 

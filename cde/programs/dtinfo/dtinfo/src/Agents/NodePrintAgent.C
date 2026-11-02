@@ -393,7 +393,7 @@ NodePrintAgent::create_ui(Widget parent)
     XtSetArg(args[n], XmNbottomAttachment, XmATTACH_WIDGET); n++;  // bottom
 
     XtSetArg(args[n], XmNbottomWidget, footer_form); n++;  // bottom
-    XtSetValues(XtParent(f_help_dsp_area->dispWid), args, n);
+    XtSetValues(DtinfoXtParent(f_help_dsp_area->dispWid), args, n);
 
     RCS_DEBUG("NodePrintAgent::create_ui exiting.\n");
 

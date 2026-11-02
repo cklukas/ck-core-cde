@@ -551,10 +551,15 @@ AC_CHECK_LIB(ICE, IceCloseConnection, [XTOOLLIB="-lICE ${XTOOLLIB}"], ,
                   [${EXTRA_INCS} ${EXTRA_LIBS}])
 AC_CHECK_LIB(SM, SmcOpenConnection, [XTOOLLIB="-lSM ${XTOOLLIB}"], ,
                  [${EXTRA_INCS} ${EXTRA_LIBS}])
-AC_CHECK_LIB(Xm, XmTextSetString, [XTOOLLIB="-lXm ${XTOOLLIB}"], ,
+AC_CHECK_LIB(Xm, XmToolkitABI, [XTOOLLIB="-lXm ${XTOOLLIB}"],
+             [AC_MSG_ERROR([CK Core Motif is required. Set CPPFLAGS and LDFLAGS to its installed include and library directories.])],
                  [${EXTRA_INCS} ${EXTRA_LIBS}])
 XTOOLLIB="${EXTRA_INCS} ${EXTRA_LIBS} ${X_EXTRA_LIBS} ${XTOOLLIB}"
 AC_SUBST([XTOOLLIB])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <Xm/Xm.h>
+#if !defined(XmABI_VERSION) || XmABI_VERSION != 9
+#error CK Core Motif ABI 9 headers required
+#endif]], [[]])], [], [AC_MSG_ERROR([CK Core Motif ABI 9 headers are required])])
 
 dnl only needed by dtlogin
 AC_CHECK_LIB(Xdmcp, XdmcpFlush, [XDMCPLIB="-lXdmcp"], [XDMCPLIB=""],

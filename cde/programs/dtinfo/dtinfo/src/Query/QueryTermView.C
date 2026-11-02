@@ -313,8 +313,8 @@ QueryTermView::create_ui()
 
   traverse_here();
 
-/*  XtUnmanageChild (XtParent(f_form));
-    XtManageChild (XtParent(f_form)); */
+/*  XtUnmanageChild (DtinfoXtParent((Widget)f_form));
+    XtManageChild (DtinfoXtParent((Widget)f_form)); */
 }
 
 

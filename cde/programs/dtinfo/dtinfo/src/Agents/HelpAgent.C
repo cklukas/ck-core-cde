@@ -241,7 +241,7 @@ void
 HelpAgent::Popup()
 {
   Widget app_shell = window_system().toplevel();
-  Widget parent = XtParent(f_helper);
+  Widget parent = DtinfoXtParent((Widget)f_helper);
   //XRaiseWindow(XtDisplay(parent), XtWindow(parent));
   UAS_List<UAS_String> env_infolibs(env().infolibs());
   library_mgr().init(env_infolibs);
@@ -296,7 +296,7 @@ void
 HelpAgent::context_help(Widget widget)
 {
   while(!XtIsSubclass(widget, topLevelShellWidgetClass))
-    widget = XtParent(widget);
+    widget = DtinfoXtParent(widget);
 
   if (widget != NULL)
   {
@@ -416,12 +416,12 @@ HelpAgent::get_locator_id(const Widget w)
    {
       UAS_String wname = XtName(w);
       UAS_String dot(".");
-      Widget parent = XtParent(w);
+      Widget parent = DtinfoXtParent(w);
       while(parent != NULL)
       {
          UAS_String Parent(XtName(parent));
          wname = Parent + dot + wname;   
-         parent = XtParent(parent);
+         parent = DtinfoXtParent(parent);
       }
       cerr << "Widget: " << (char*)wname << endl;
    }
@@ -430,12 +430,12 @@ HelpAgent::get_locator_id(const Widget w)
    {  
       // Locator id not found, look for it in a parent
       //cerr << "Locator id not found, searching parent" << endl;
-      Widget parent = XtParent(w);
+      Widget parent = DtinfoXtParent(w);
       while(parent != NULL)
       {
         XtGetApplicationResources(parent, &string, &res, 1, NULL, 0);
         if ( strcmp(string, NULL_LOCATORID)==0 )     // Not found
-          parent = XtParent(parent);
+          parent = DtinfoXtParent(parent);
         else
         {
           if(env().debug())

@@ -199,7 +199,7 @@ NodeHistoryAgent::create_ui()
   sectionlabel.LeftOffset(SECTION_OFFSET + MARGIN_FACTOR + offset);
 #undef MARGIN_FACTOR
 
-  WXmPrimitive prim(XtParent(f_list));
+  WXmPrimitive prim(DtinfoXtParent((Widget)f_list));
   prim.TopWidget(booklabel);
   prim.TopAttachment(XmATTACH_WIDGET);
 }

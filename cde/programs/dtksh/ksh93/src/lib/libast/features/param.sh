@@ -42,9 +42,11 @@ for i in "#include <sys/param.h>" "#include <sys/param.h>
 #endif"
 do	echo "$i
 struct stat V_stat_V;
-F_stat_F() { V_stat_V.st_mode = 0; }" > $tmp.c
+void F_stat_F(void) { V_stat_V.st_mode = 0; }" > $tmp.c
 	if	$cc -c $tmp.c >/dev/null
 	then	echo "$i"
-		break
+		exit 0
 	fi
 done
+echo "cannot find headers defining struct stat and st_mode" >&2
+exit 1

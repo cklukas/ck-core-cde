@@ -417,8 +417,8 @@ ScopeMenu::receive (UpdateMenu &msg, void *client_data)
     f_current_scope = s.item();
   }
   fill_menu();
-  XtUnmanageChild(XtParent(f_option_menu));
-  XtManageChild(XtParent(f_option_menu));
+  XtUnmanageChild(DtinfoXtParent((Widget)f_option_menu));
+  XtManageChild(DtinfoXtParent((Widget)f_option_menu));
   XtUnmanageChild(f_option_menu);
   XtManageChild(f_option_menu);
 }

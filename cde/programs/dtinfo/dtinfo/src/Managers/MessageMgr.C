@@ -214,8 +214,8 @@ MessageMgr::show_it(Widget dialog)
 
   XtManageChild(dialog);
 
-  if (dialog) parent = XtParent(dialog);
-  if (parent) shell = XtParent(parent);
+  if (dialog) parent = DtinfoXtParent(dialog);
+  if (parent) shell = DtinfoXtParent(parent);
   if (NULL == shell) shell = parent;
   XtPopup(shell, XtGrabNone);
   XMapRaised(XtDisplay(shell), XtWindow(shell));
@@ -240,7 +240,7 @@ MessageMgr::show_it(Widget dialog)
 void
 MessageMgr::destroy_it(Widget dialog)
 {
-  Widget shell = XtParent(dialog);
+  Widget shell = DtinfoXtParent(dialog);
   XtPopdown(shell);
   XtUnmanageChild(dialog);
   XtDestroyWidget(dialog);
@@ -310,7 +310,7 @@ MessageMgr::quit_dialog (char *message_text, Widget parent)
                 NULL);
 
   // Set the window title
-  Widget shell = XtParent(dialog);
+  Widget shell = DtinfoXtParent(dialog);
   String string = MCATGETS(Set_MessageAgent, 5, "Dtinfo: Confirm Quit");
   XtVaSetValues(shell,
                 XmNminWidth, 200,
@@ -352,7 +352,7 @@ MessageMgr::error_dialog (char *message_text, Widget parent)
                 NULL);
 
   // Set the window title
-  Widget shell = XtParent(dialog);
+  Widget shell = DtinfoXtParent(dialog);
   String string = MCATGETS(Set_MessageAgent, 1, "Dtinfo: Error");
   XtVaSetValues(shell, XmNtitle, string, NULL);
 
@@ -387,7 +387,7 @@ MessageMgr::warning_dialog (char *message_text, Widget parent)
                 NULL);
 
   // Set the window title
-  Widget shell = XtParent(dialog);
+  Widget shell = DtinfoXtParent(dialog);
   String string = MCATGETS(Set_MessageAgent, 2, "Dtinfo: Warning");
   XtVaSetValues(shell, XmNtitle, string, NULL);
 
@@ -418,7 +418,7 @@ MessageMgr::info_dialog (char *message_text, Widget parent)
   XtUnmanageChild(XmMessageBoxGetChild(dialog, XmDIALOG_CANCEL_BUTTON));
 
   // Set the window title
-  Widget shell = XtParent(dialog);
+  Widget shell = DtinfoXtParent(dialog);
   String string = MCATGETS(Set_MessageAgent, 3, "Dtinfo: Information");
   XtVaSetValues(shell, XmNtitle, string, NULL);
 
@@ -501,7 +501,7 @@ MessageMgr::question_dialog (char *message_text, Widget parent)
   XtAddCallback(dialog, XmNcancelCallback, cancelCB, this);
 
   // Set the window title
-  Widget shell = XtParent(dialog);
+  Widget shell = DtinfoXtParent(dialog);
   String string = MCATGETS(Set_MessageAgent, 3, "Dtinfo: Information");
   XtVaSetValues(shell, XmNtitle, string, NULL);
 

@@ -306,7 +306,7 @@ status=$($SHELL -c $'trap \'print $?\' ERR;/dev/null 2> /dev/null')
 
 # universe via PATH
 
-if builtin getconf 2> /dev/null; then
+if builtin getconf 2> /dev/null && whence universe > /dev/null 2>&1; then
 	getconf UNIVERSE - att # override sticky default 'UNIVERSE = foo'
 
 	[[ $(PATH=/usr/ucb/bin:/usr/bin echo -n ucb) == 'ucb' ]] || err_exit "ucb universe echo ignores -n option"

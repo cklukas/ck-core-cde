@@ -82,7 +82,7 @@ UrlAgent::UrlAgent () {
 
 UrlAgent::~UrlAgent () {
     f_form.Unmanage ();
-    XtDestroyWidget (XtParent(f_form));
+    XtDestroyWidget (DtinfoXtParent((Widget)f_form));
 }
 
 void

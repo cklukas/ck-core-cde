@@ -645,7 +645,7 @@ CreatePrintSetup(Widget parent, AppPrintData* p)
 	    }
 	    else {	
 		p->f_print_dialog =
-		    DtCreatePrintSetupBox(XtParent(parent), (char*)"PrintSetup", args, n);
+		    DtCreatePrintSetupBox(DtinfoXtParent(parent), (char*)"PrintSetup", args, n);
 	    }
 	}    
 
@@ -670,7 +670,7 @@ CreatePrintSetup(Widget parent, AppPrintData* p)
 	    }
 	    else {
 		p->f_print_dialog =
-		    DtCreatePrintSetupDialog(XtParent(parent), (char*)"PrintSetup", args, n);
+		    DtCreatePrintSetupDialog(DtinfoXtParent(parent), (char*)"PrintSetup", args, n);
 	    }
 //	    XmStringFree(title);
 	}

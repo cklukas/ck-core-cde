@@ -7,5 +7,25 @@ This repository mirrors ongoing CK-Core-specific additions on top of the upstrea
 - **Run command cleanup** – A new shell action `Run` can be used to directly start (GUI) programs. The prior "Run" action has been renamed to "Run..." and for that a checkbox "Run in Terminal" has been added, which can be used to run commands in Terminal (default), or to not run a program in Terminal.
 - **Desktop/window ergonomics** – grid-point movement and resize of windows with Shift, clicking the desktop will defocus the active window, and double-clicking the title bar to maximize/restore a window.
 
+## Building with CK Core Motif
+
+Build and install CK Core Motif ABI 9 into an isolated prefix first, including
+its Xm, Mrm and Uil libraries, headers and UIL compiler. Use the same prefix
+for the whole CDE build. For example, on Linux with Xft enabled:
+
+```sh
+export PATH="$MOTIF_SDK/bin:$PATH"
+export CPPFLAGS="-I$MOTIF_SDK/include $(pkg-config --cflags xft)"
+export LDFLAGS="-L$MOTIF_SDK/lib -Wl,-rpath,$MOTIF_SDK/lib"
+cd cde
+./autogen.sh
+./configure
+make -j4
+make -j4 check
+```
+
+Set `MOTIF_SDK` to the absolute installation prefix. CDE uses Motif private
+widget records, so rebuild CDE and its libraries when changing toolkit ABI.
+
 ## Original README
 Refer to the upstream README for the base project: [cde/README.md](cde/README.md).

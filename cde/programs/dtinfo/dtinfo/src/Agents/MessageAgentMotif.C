@@ -97,7 +97,7 @@ MessageAgent::create_ui(Widget parent)
   f_text = (WXmTextField *)
            XtCreateWidget ("text", xmTextFieldWidgetClass, *f_dialog, NULL, 0);
   
-  WXmDialogShell shell (XtParent(*f_dialog));
+  WXmDialogShell shell (DtinfoXtParent((Widget)*f_dialog));
 
   window_system().register_full_modal_shell(&shell);
 
@@ -147,7 +147,7 @@ MessageAgent::position_dialog (WCallback *)
   static int	sizesSet = 0;
 
   if (!sizesSet) {
-      WXmDialogShell theShell (XtParent (*f_dialog));
+      WXmDialogShell theShell (DtinfoXtParent((Widget)*f_dialog));
       theShell.MinHeight (theShell.Height());
       sizesSet = 1;
   }
@@ -254,7 +254,7 @@ MessageAgent::displayError (char *message_text, Widget parent)
   g_active = TRUE;
 
   // Set the window title
-  WXmDialogShell *shell = (WXmDialogShell *)XtParent(*f_dialog);
+  WXmDialogShell *shell = (WXmDialogShell *)DtinfoXtParent((Widget)*f_dialog);
 
   String string = MCATGETS(Set_MessageAgent, 1, "Dtinfo: Error");
   XtVaSetValues((Widget)shell, XmNtitle, string, NULL);
@@ -293,7 +293,7 @@ MessageAgent::displayWarning (char *message_text, Widget parent)
   g_active = TRUE;
 
   // Set the window title
-  WXmDialogShell *shell = (WXmDialogShell *)XtParent(*f_dialog);
+  WXmDialogShell *shell = (WXmDialogShell *)DtinfoXtParent((Widget)*f_dialog);
 
   String string = MCATGETS(Set_MessageAgent, 2, "Dtinfo: Warning");
   XtVaSetValues((Widget)shell, XmNtitle, string, NULL);
@@ -332,7 +332,7 @@ MessageAgent::displayInformation (char *message_text, Widget parent)
   g_active = TRUE;
 
   // Set the window title
-  WXmDialogShell *shell = (WXmDialogShell *)XtParent(*f_dialog);
+  WXmDialogShell *shell = (WXmDialogShell *)DtinfoXtParent((Widget)*f_dialog);
 
   String string = MCATGETS(Set_MessageAgent, 3, "Dtinfo: Information");
   XtVaSetValues((Widget)shell, XmNtitle, string, NULL);
@@ -367,7 +367,7 @@ MessageAgent::displayProgress (char *message_text, Widget parent) {
 	f_dialog->MessageString (message_string);
     } else {
 	//  Set the window title and message alignment.
-	WXmDialogShell *shell = (WXmDialogShell *) XtParent (*f_dialog);
+	WXmDialogShell *shell = (WXmDialogShell *) DtinfoXtParent((Widget)*f_dialog);
 #if 0
 	if (g_minWidth == -1) {
 	      g_minWidth = window_system().get_int_default ("messageDialogMinWidth");
@@ -424,7 +424,7 @@ MessageAgent::undisplayProgress () {
 #if 0
     f_dialog->ResizePolicy (XmRESIZE_ANY);
 #endif
-    WXmDialogShell *shell = (WXmDialogShell *) XtParent (*f_dialog);
+    WXmDialogShell *shell = (WXmDialogShell *) DtinfoXtParent((Widget)*f_dialog);
     shell->MinWidth (XtUnspecifiedShellInt);
 }
 
@@ -448,7 +448,7 @@ MessageAgent::displayQuestion (char *message_text, Widget parent)
   g_active = TRUE;
 
   // Set the window title
-  WXmDialogShell *shell = (WXmDialogShell *)XtParent(*f_dialog);
+  WXmDialogShell *shell = (WXmDialogShell *)DtinfoXtParent((Widget)*f_dialog);
 
   String string = MCATGETS(Set_MessageAgent, 6, "Dtinfo: Question");
   XtVaSetValues((Widget)shell, XmNtitle, string, NULL);
@@ -502,7 +502,7 @@ MessageAgent::displayQuit (char *message_text, Widget parent)
   g_active = TRUE;
 
   // Set the window title
-  WXmDialogShell *shell = (WXmDialogShell *)XtParent(*f_dialog);
+  WXmDialogShell *shell = (WXmDialogShell *)DtinfoXtParent((Widget)*f_dialog);
 
   String string = MCATGETS(Set_MessageAgent, 5, "Dtinfo: Confirm Quit");
   XtVaSetValues((Widget)shell, XmNtitle, string,
@@ -598,7 +598,7 @@ MessageAgent::get_integer (const char *message, const char* title,
   f_dialog->DialogType (XmDIALOG_QUESTION);
 
   // Set the dialog title.
-  WXmDialogShell shell (XtParent(*f_dialog));
+  WXmDialogShell shell (DtinfoXtParent((Widget)*f_dialog));
   shell.Title (title? (char*)title : (char *)"File a Bug");
 
   // Set the dialog buttons.
@@ -721,7 +721,7 @@ MessageAgent::get_string (const char *msg, const char* title,
   f_dialog->DialogType (XmDIALOG_QUESTION);
 
   // Set the dialog title.
-  WXmDialogShell shell (XtParent(*f_dialog));
+  WXmDialogShell shell (DtinfoXtParent((Widget)*f_dialog));
   shell.Title ((char*)title);
 
   // Set the dialog buttons.

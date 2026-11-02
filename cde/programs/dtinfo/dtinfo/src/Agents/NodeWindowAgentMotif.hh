@@ -89,8 +89,6 @@ class MarkIcon ;
 // class DisplayGraphic;
 
 class GraphicsHandler ;
-// self is used by some MACROS somewhere, but the X include files use
-// it as something different
 
 // we require #undef XtIsManaged, XtWindow and XtDisplay because they are defined
 // as a macros in the Private Xm Header files, but we rely on the
@@ -98,9 +96,7 @@ class GraphicsHandler ;
 // file - (brad) 
 
 
-#undef self
 #include <DtI/DisplayAreaP.h>
-#define self *this
 #undef XtIsManaged
 #undef XtWindow
 #undef XtDisplay

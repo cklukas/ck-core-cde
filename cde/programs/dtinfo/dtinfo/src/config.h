@@ -106,7 +106,9 @@ typedef unsigned char  u_char;
 
 #define WAutoManage 1
 #define WPopup 1
-#define self	*this
+
+/* CK Core Motif's private XtParent macro expects a native Widget/Object. */
+#define DtinfoXtParent(widget) XtParent((Widget)(widget))
 
 #ifndef STRINGIFY
 #if defined(__STDC__)

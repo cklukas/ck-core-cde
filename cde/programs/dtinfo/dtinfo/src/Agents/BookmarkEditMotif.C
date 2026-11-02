@@ -197,8 +197,8 @@ BookmarkEdit::display()
   f_modified = FALSE; // prevent making ok sensitive
   g_modified_count--;
 
-  Widget scrolled = XtParent (*f_notes_text);
-  ((WXmForm *) XtParent (scrolled))->InitialFocus (scrolled);
+  Widget scrolled = DtinfoXtParent((Widget)*f_notes_text);
+  ((WXmForm *) DtinfoXtParent(scrolled))->InitialFocus (scrolled);
   f_shell->Popup();
   f_shell->DeIconify();
 }

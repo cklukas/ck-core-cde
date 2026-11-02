@@ -71,7 +71,7 @@ AddLibraryAgent::AddLibraryAgent (Widget parent):
 
 AddLibraryAgent::~AddLibraryAgent() {
     f_form.Unmanage ();
-    XtDestroyWidget (XtParent(f_form));
+    XtDestroyWidget (DtinfoXtParent((Widget)f_form));
 }
 
 void
@@ -184,7 +184,7 @@ AddLibraryAgent::getInfolibName () {
     f_form.Manage();
     XmProcessTraversal( (Widget)f_text, XmTRAVERSE_CURRENT );
     // XtSetKeyboardFocus( (Widget)f_form, (Widget)f_text );
-    // ((WXmForm *) XtParent(XtParent (f_text)))->InitialFocus (f_text);
+    // ((WXmForm *) DtinfoXtParent(DtinfoXtParent(f_text)))->InitialFocus (f_text);
 
     f_shell.MinWidth (f_shell.Width());
     f_shell.MinHeight (f_shell.Height());

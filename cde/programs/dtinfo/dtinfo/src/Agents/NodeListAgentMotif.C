@@ -225,7 +225,7 @@ NodeListAgent::pane_insert_position (Widget w)
   if (XtIsSubclass (w, xmSashWidgetClass) ||
       XtIsSubclass (w, xmSeparatorGadgetClass))
     {
-      WComposite cw (XtParent(w));
+      WComposite cw (DtinfoXtParent(w));
       position = cw.NumChildren();
     }
   else

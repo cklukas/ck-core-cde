@@ -1,0 +1,23 @@
+version: 1
+site:
+  title: CK Core CDE
+  description: The Common Desktop Environment built with CK Core Motif.
+  url: https://cklukas.github.io/ck-core-cde/
+  links:
+    - title: Source
+      url: https://github.com/cklukas/ck-core-cde
+      icon: github
+source: docs
+home: docs/index.md
+search: true
+toc:
+  max_level: 3
+nav:
+  - title: Overview
+    pages:
+      - docs/index.md
+      - docs/desktop.md
+  - title: Development
+    pages:
+      - docs/build.md
+      - docs/ci.md

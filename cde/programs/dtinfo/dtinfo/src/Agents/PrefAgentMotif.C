@@ -1103,7 +1103,7 @@ PrefAgent::get_geometry (WCallback *wcb)
 
   // Get the geometry of the selected window.
   while (target != NULL && !XtIsShell (target))
-    target = XtParent (target);
+    target = DtinfoXtParent(target);
 
   if (target != (Widget) info_dialog.Parent())
     {

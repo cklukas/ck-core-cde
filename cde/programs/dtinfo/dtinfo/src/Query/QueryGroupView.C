@@ -85,7 +85,7 @@ QueryGroupView::QueryGroupView (QueryGroup *group, Widget parent)
   // Need special event handler for top level group to catch
   // resizes of window and resize the query view.
   // NOTE: It's just about time to move this to another method. 
-  if (XtClass (XtParent (f_restraint)) == xmDrawingAreaWidgetClass)
+  if (XtClass (DtinfoXtParent((Widget)f_restraint)) == xmDrawingAreaWidgetClass)
     {
       // Let's see what the parent's size is now:
       ON_DEBUG(printf ("Drawing area is width: %d, height: %d\n",
@@ -105,7 +105,7 @@ QueryGroupView::QueryGroupView (QueryGroup *group, Widget parent)
 	  // Find the shell widget. 
 	  Widget w = f_restraint.Parent();
 	  while (!XtIsShell (w))
-	    w = XtParent(w);
+	    w = DtinfoXtParent(w);
 	  WTopLevelShell shell (w);
 
 	  ON_DEBUG(printf ("** Resizing shell by = %d\n", increase));
@@ -126,7 +126,7 @@ QueryGroupView::QueryGroupView (QueryGroup *group, Widget parent)
 	  f_restraint.Width (WCore(f_restraint.Parent()).Width());
 	}
       
-      XtAddEventHandler (XtParent (f_restraint), StructureNotifyMask, False,
+      XtAddEventHandler (DtinfoXtParent((Widget)f_restraint), StructureNotifyMask, False,
 			 (XtEventHandler) &QueryGroupView::resize,
 			 (Widget) f_restraint);
       // Store the min width in UserData...

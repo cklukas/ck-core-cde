@@ -1,0 +1,5 @@
+49 /usr/dt/bin/dtsession /home/klukas/opt/ck-cde-sdk/abdb11c2a/lib/libXm.so.9.0.0
+58 /usr/dt/bin/dtwm /home/klukas/opt/ck-cde-sdk/abdb11c2a/lib/libXm.so.9.0.0
+68 /usr/dt/bin/dtstyle /home/klukas/opt/ck-cde-sdk/abdb11c2a/lib/libXm.so.9.0.0
+77 /usr/dt/bin/dtterm /home/klukas/opt/ck-cde-sdk/abdb11c2a/lib/libXm.so.9.0.0
+93 /usr/dt/bin/dtfile /home/klukas/opt/ck-cde-sdk/abdb11c2a/lib/libXm.so.9.0.0

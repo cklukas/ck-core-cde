@@ -224,14 +224,14 @@ QueryEditor::edit_query (QueryGroup *query)
       // line somehow.  11:59 02/04/93 DJB 
       f_query_area.
 	PaneMinimum (f_query_area.Height() -
-		     WCore (XtParent(XtParent(*f_query_view))).Height() +
+		     WCore (DtinfoXtParent(DtinfoXtParent((Widget)*f_query_view))).Height() +
 		     (2 * f_query_view->Height()));
 
       // Take the height of each pane - the min size of each pane.
       // That is the excess height of the dialog.
       // This needs to equal the current height - min height.
       // So subtract it from the current height to get the new min height.
-      WXmForm qform (XtParent(f_query_text.Parent()));
+      WXmForm qform (DtinfoXtParent(f_query_text.Parent()));
 #ifdef DEBUG
       printf ("qform height = %d, scrolled height = %d\n",
 	      qform.Height(), f_query_area.Height());

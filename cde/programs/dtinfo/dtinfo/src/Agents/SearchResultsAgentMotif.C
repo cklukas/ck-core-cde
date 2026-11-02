@@ -532,7 +532,7 @@ SearchResultsAgent::create_window()
   int offset = WXmString(relevancy,(char*)OLIAS_FONT).Width(f_list->FontList());
   header.LeftOffset(offset); 
 
-  WXmPrimitive prim(XtParent(*f_list));
+  WXmPrimitive prim(DtinfoXtParent((Widget)*f_list));
   prim.TopWidget(header);
   prim.TopAttachment(XmATTACH_WIDGET);
 
