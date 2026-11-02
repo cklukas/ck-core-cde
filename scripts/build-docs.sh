@@ -22,8 +22,8 @@ make -j2 -C "$tool_source" BUILD_ROOT="$work" BUILD_DIR="$work/build" \
 "$work/build/bin/ckdocs" build --strict --root "$(pwd -P)" --out "$output" \
     --site-url "$site_url"
 test -s "$output/index.html"
-rg -q 'CK Core CDE' "$output/index.html"
-rg -q 'The desktop and its tools' "$output/desktop.html"
+grep -q 'CK Core CDE' "$output/index.html"
+grep -q 'The desktop and its tools' "$output/desktop.html"
 ended=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 {
     printf 'started_utc=%s\n' "$started"
