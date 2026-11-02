@@ -1,4 +1,6 @@
 2026-11-02
+- docs: describe the normal/increased WM_ICON_SIZE contract and refresh the
+  dynamic-icon smoke screenshot with size-aware CK Core Apps output.
 - docs: explain the live client-icon contract and link CK Core Apps as the
   separate high-resolution dynamic-icon implementation and showcase.
 - project: define repository-wide agent rules for topical commits, mandatory

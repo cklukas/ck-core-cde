@@ -36,6 +36,11 @@ Clock, System Load, Browser and Coins can refresh the open-window icon directly.
 Eyes and Plasma enter their compact rendering path when their windows are
 minimized.
 
+Style Manager's **Increase Icon Size** setting doubles the icon geometry that
+dtwm publishes through `WM_ICON_SIZE`. Dynamic clients can query that contract
+and render directly at CDE's 32/64 or 48/96 pixel size pair, preserving detail
+without relying on cropping or resampling inside the window manager.
+
 ![Live Eyes, Clock, Plasma, System Load and Coins icons in CK Core CDE](../images/features/dynamic-icons.png)
 
 *CK Core Apps exercising both open-window and minimized dynamic icons in a
