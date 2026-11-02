@@ -50,6 +50,10 @@ features:
     title: CK Core Apps
     details: Add native utilities, desktop companions, games and live high-resolution window icons to CDE.
     link: https://cklukas.github.io/ck-core-apps/
+  - icon: ":file_folder:"
+    title: ck-core-fs-lib
+    details: Explore the headless, cross-platform filesystem engine and stable C ABI available to CDE and other native clients.
+    link: https://cklukas.github.io/ck-core-fs-lib/
 ---
 
 # Why CK Core CDE
