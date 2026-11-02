@@ -233,7 +233,7 @@ warning_yes_callback(
 	XtPointer client_data,
 	XtPointer call_data)
 {
-   G_do_copy=FALSE;
+   request_copy_cancel();
    G_wait_on_input = FALSE;
    if (G_over_dialog != NULL) {
      G_overwrite_selection = G_SKIP;
@@ -244,7 +244,6 @@ warning_yes_callback(
      XtDestroyWidget(G_error_dialog);
      G_error_dialog = NULL;
    }
-   G_dialog_closed = TRUE;
    G_pause_copy = FALSE;
 }
 
@@ -425,7 +424,8 @@ create_error_text_window (
   XtSetArg(args[n], XmNeditMode, XmMULTI_LINE_EDIT); n++;
   XtSetArg(args[n], XmNrows, 5); n++;
   XtSetArg(args[n], XmNscrollVertical, True); n++;
-  XtSetArg(args[n], XmNscrollHorizontal, True); n++;
+  XtSetArg(args[n], XmNscrollHorizontal, False); n++;
+  XtSetArg(args[n], XmNwordWrap, True); n++;
 
   /* create the scrolled_text_window */
   scrolled_text = XmCreateScrolledText(parent_widget,"error_text", args, n);
@@ -729,7 +729,7 @@ create_copydir_dialog(
 			    XmNeditable,              False,
 			    XmNcursorPositionVisible, False,
 			    XmNtopAttachment,         XmATTACH_WIDGET,
-			    XmNtopWidget,             G_summary_text,
+			    XmNtopWidget,             form1,
 			    XmNtopOffset,             TOP_SPACING,
 			    XmNrightAttachment,       XmATTACH_FORM,
 			    XmNrightOffset,           INDENTED_SPACING,
@@ -753,7 +753,7 @@ create_copydir_dialog(
 			    XmNeditable,              False,
 			    XmNcursorPositionVisible, False,
 			    XmNtopAttachment,         XmATTACH_WIDGET,
-			    XmNtopWidget,             G_summary_text,
+			    XmNtopWidget,             form1,
 			    XmNtopOffset,             TOP_SPACING,
 			    XmNleftAttachment,        XmATTACH_WIDGET,
 			    XmNleftWidget,            G_status_text,

@@ -5,6 +5,11 @@ description: Shelf, image previews, larger icon views and storage information in
 
 # File Manager improvements
 
+Folder-operation feedback distinguishes completed, partial, failed and cancelled
+work. Cancellation or an explicit overwrite skip blocks deletion of a move's source.
+Cancellation reports that it is settling, then leaves the final result visible;
+only successful completion can close the progress window automatically.
+
 File-copy transfers complete each input block even when the operating system
 accepts only part of a write. Interrupted reads and writes are retried; a zero-byte
 write is reported as an I/O error. The first transfer error is retained while

@@ -121,6 +121,7 @@ typedef struct {
 } SyncParams;
 
 
-extern void SyncDirectory(SyncParams *p);
+/* Return traversal status; callbacks separately report errors and skipped work. */
+extern int SyncDirectory(SyncParams *p);
 
 #endif /* _dosync_h */

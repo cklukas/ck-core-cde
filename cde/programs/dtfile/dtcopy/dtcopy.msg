@@ -29,6 +29,10 @@ $ ****** Module: main_dtcopy.c ******
 13 %s not removed because of errors.
 14 Completed.
 15 Cancelled in
+16 Cancelling...
+17 Finished with skipped items or errors.
+18 Source retained because the operation was not completed.\n
+19 Operation failed.
 $ ** Message 20 - 32
 $ ** LongFileOpNames ... message number = op + 20.
 20 processing

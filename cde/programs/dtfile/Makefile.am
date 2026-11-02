@@ -6,12 +6,13 @@ bin_PROGRAMS = dtfile
 
 EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/trash-metadata.c tests/check-copy-transfer.py tests/copy-transfer.c \
-             tests/copy-paths.c
+             tests/copy-paths.c tests/check-operation-outcome.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-writer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-metadata.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-copy-transfer.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-operation-outcome.py
 
 BUILT_SOURCES = dtfile.config dtfile_error
 CLEANFILES = dtfile.config dtfile_error
