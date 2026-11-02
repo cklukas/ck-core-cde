@@ -8,6 +8,22 @@ sisters:
   - name: ck-core-motif
     ref: master
 jobs:
+  - name: documentation
+    steps:
+      - name: documentation-site
+        script: |
+          test -n "$TMPDIR"
+          test -n "$CKGIT_SISTER_CK_GIT_HOSTING"
+          run_id="$(git rev-parse HEAD)"
+          rm -rf "$TMPDIR/cde-docs-$run_id" public
+          scripts/build-docs.sh "$CKGIT_SISTER_CK_GIT_HOSTING" \
+            "$TMPDIR/cde-docs-$run_id" "$PWD/public" \
+            http://rpi4:8421/ck-core-cde/
+          mkdir -p docs-evidence
+          cp "$TMPDIR/cde-docs-$run_id/receipt.txt" docs-evidence/receipt.txt
+    artifacts:
+      name: documentation-evidence
+      paths: [docs-evidence]
   - name: build
     steps:
       - name: build-and-test-latest-motif
@@ -54,21 +70,5 @@ jobs:
               exit 1
             fi && make -j4 && make -j4 check)
           readelf -dW cde/programs/dtwm/.libs/dtwm | grep -F 'libXm.so.9'
-  - name: documentation
-    steps:
-      - name: documentation-site
-        script: |
-          test -n "$TMPDIR"
-          test -n "$CKGIT_SISTER_CK_GIT_HOSTING"
-          run_id="$(git rev-parse HEAD)"
-          rm -rf "$TMPDIR/cde-docs-$run_id" public
-          scripts/build-docs.sh "$CKGIT_SISTER_CK_GIT_HOSTING" \
-            "$TMPDIR/cde-docs-$run_id" "$PWD/public" \
-            http://rpi4:8421/ck-core-cde/
-          mkdir -p docs-evidence
-          cp "$TMPDIR/cde-docs-$run_id/receipt.txt" docs-evidence/receipt.txt
-    artifacts:
-      name: documentation-evidence
-      paths: [docs-evidence]
 pages:
   path: public
