@@ -71,42 +71,42 @@ extern nl_catd  scmc_catd;   /* Cat descriptor for scmc conversion */
  * Declare external interface routines for supported screen savers.
  */
 
-extern void inithop();
-extern void drawhop();
+extern void inithop(perwindow *);
+extern void drawhop(perwindow *);
 
-extern void initlife();
-extern void drawlife();
+extern void initlife(perwindow *);
+extern void drawlife(perwindow *);
 
-extern void initqix();
-extern void drawqix();
+extern void initqix(perwindow *);
+extern void drawqix(perwindow *);
 
-extern void initimage();
-extern void drawimage();
+extern void initimage(perwindow *);
+extern void drawimage(perwindow *);
 
-extern void initblank();
-extern void drawblank();
+extern void initblank(perwindow *);
+extern void drawblank(perwindow *);
 
-extern void initswarm();
-extern void drawswarm();
+extern void initswarm(perwindow *);
+extern void drawswarm(perwindow *);
 
-extern void initrotor();
-extern void drawrotor();
+extern void initrotor(perwindow *);
+extern void drawrotor(perwindow *);
 
-extern void initpyro();
-extern void drawpyro();
+extern void initpyro(perwindow *);
+extern void drawpyro(perwindow *);
 
-extern void initflame();
-extern void drawflame();
+extern void initflame(perwindow *);
+extern void drawflame(perwindow *);
 
-extern void initworm();
-extern void drawworm();
+extern void initworm(perwindow *);
+extern void drawworm(perwindow *);
 
 void CheckResources(void);
 
 typedef struct {
     char       *cmdline_arg;
-    void        (*lp_init) ();
-    void        (*lp_callback) ();
+    DtScreenProc lp_init;
+    DtScreenProc lp_callback;
     int         def_delay;
     int         def_batchcount;
     float       def_saturation;
@@ -130,8 +130,6 @@ static LockStruct LockProcs[] = {
 };
 #define NUMPROCS (sizeof LockProcs / sizeof LockProcs[0])
 
-
-extern char *getenv();
 
 #ifndef DEF_FILESEARCHPATH
 #define DEF_FILESEARCHPATH "/usr/lib/X11/%T/%N%S"
@@ -395,7 +393,7 @@ GetResource(XrmDatabase database, char *parentname, char *parentclass,
 	    s = (char *) malloc(len + 1);
 	    if (s == (char *) NULL)
 #ifdef MIT_R5
-                error("%s: GetResource - couldn't allocate memory");
+                error("GetResource - couldn't allocate memory\n");
 #else
 	    {
                 fprintf(stderr, CATGETS(scmc_catd, 2, 18,
@@ -499,7 +497,7 @@ open_display(void)
 
 	if (colon == NULL)
 #ifdef MIT_R5
-            error("%s: Malformed -display argument, \"%s\"\n", display);
+            error("Malformed -display argument, \"%s\"\n", display);
 #else
 	{
             fprintf(stderr, CATGETS(scmc_catd, 2, 19,
@@ -512,7 +510,7 @@ open_display(void)
 	display = ":0.0";
     if (!(dsp = XOpenDisplay(display)))
 #ifdef MIT_R5
-        error("%s: unable to open display %s.\n", display);
+        error("unable to open display %s.\n", display);
 #else
     {
         fprintf(stderr, CATGETS(scmc_catd, 2, 17,
