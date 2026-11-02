@@ -39,6 +39,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <Dt/WsmP.h>
 #include <Dt/WmSettings.h>
 #include <X11/Xatom.h>
@@ -1669,101 +1670,59 @@ GetDtWmRequest (
 
 {
 
-    int           rValue;
-    char	 *chRequest = NULL;
-    static char  *property = NULL;
-    static int    iNext = -1;
-    int 	  i;
-    Atom          actualType;
-    int           actualFormat;
-    unsigned long leftover;
-    static unsigned long nitems = 0;
+    Atom actualType = None;
+    int actualFormat = 0, status;
+    unsigned long leftover = 0, length;
+    unsigned char *start, *end;
 
-    
-    /*
-     * We need to read the property again if we have no data left
-     * over from last time;
-     */
-    if (property == NULL)
+    if (!pszReq || !pmore)
+	return;
+    *pszReq = NULL;
+    *pmore = False;
+    if (!pSD)
+	return;
+    if (!pSD->dtWmRequestData)
     {
-	/*
-	 * Read the property and delete it.
-	 */
-	rValue = XGetWindowProperty (DISPLAY, pSD->wmWorkspaceWin,
-				     wmGD.xa_DT_WM_REQUEST, 0L,
-				     (long)1000000, True, AnyPropertyType,
-				     &actualType, &actualFormat, &nitems,
-				     &leftover, (unsigned char **)&property);
-
-	/* 
-	 * Validate the property that we've read
-	 */
-	if ((rValue != Success) || 
-	    (actualType == None) || 
-	    (actualFormat != 8))
+	pSD->dtWmRequestLength = pSD->dtWmRequestOffset = 0;
+	status = XGetWindowProperty(DISPLAY, pSD->wmWorkspaceWin,
+		wmGD.xa_DT_WM_REQUEST, 0L, 1000000L, True, AnyPropertyType,
+		&actualType, &actualFormat, &pSD->dtWmRequestLength,
+		&leftover, &pSD->dtWmRequestData);
+	if (status != Success || actualType != XA_STRING || actualFormat != 8 ||
+	    leftover || !pSD->dtWmRequestData || !pSD->dtWmRequestLength ||
+	    pSD->dtWmRequestLength > 4000000UL ||
+	    pSD->dtWmRequestData[pSD->dtWmRequestLength - 1] != '\0')
 	{
-	    /* The property does not exist or it is an invalid type. */
-	    property = NULL;
-	    iNext = -1;
-	    nitems = 0;
-	}
-	else
-	{
-	    /* the property is fine, set the index of the next char. */
-	    iNext = 0;
+	    if (status == Success && leftover)
+		XDeleteProperty(DISPLAY, pSD->wmWorkspaceWin, wmGD.xa_DT_WM_REQUEST);
+	    goto discard;
 	}
     }
-
-
-    /* 
-     * If we've got something, then extract and return the next
-     * request.
-     */
-    if (property && iNext >= 0)
+    start = pSD->dtWmRequestData + pSD->dtWmRequestOffset;
+    end = memchr(start, '\0', pSD->dtWmRequestLength - pSD->dtWmRequestOffset);
+    if (!end)
+	goto discard;
+    length = (unsigned long)(end - start) + 1;
+    *pszReq = XtMalloc(length);
+    if (!*pszReq)
     {
-	int len = 0;
-
-	for (i=iNext; i<nitems; i++)
-	{
-	    if (property [i] == '\0')
-	    {
-		break;
-	    }
-	}
-	if (i>=nitems) i=nitems;
-
-	len = i - iNext + 1 + ((property[i] == '\0') ? 0 : 1);
-
-        chRequest = (char *) XtMalloc (len);
-	if (chRequest == NULL)
-	{
-	    Warning (((char *)GETMESSAGE(54, 2, "Insufficient memory for window management data")));
-	}
-	else
-	{
-	    /* dequeue the request */
-	    strncpy (chRequest, &property[iNext], len);
-	    if (property[i] != '\0')
-	    {
-		chRequest[len-1]='\0';
-	    }
-	    iNext = i+1;
-	}
-	
-	if (iNext >= nitems)
-	{
-	    /*
-	     * Extracted the last request, free up the storage
-	     * and reset for next time.
-	     */
-	    XFree ((char *)property);
-	    iNext = -1;
-	    property = NULL;
-	}
+	Warning((char *)GETMESSAGE(54, 2, "Insufficient memory for window management data"));
+	/* A failed allocation must not leave the caller looping on 'more'. */
+	goto discard;
     }
-    
-    *pmore = (property != NULL);
-    *pszReq = chRequest;
+    memcpy(*pszReq, start, length);
+    pSD->dtWmRequestOffset += length;
+    if (pSD->dtWmRequestOffset < pSD->dtWmRequestLength)
+    {
+	*pmore = True;
+	return;
+    }
+
+discard:
+    if (pSD->dtWmRequestData)
+	XFree(pSD->dtWmRequestData);
+    pSD->dtWmRequestData = NULL;
+    pSD->dtWmRequestLength = pSD->dtWmRequestOffset = 0;
 
 } /* END OF FUNCTION GetDtWmRequest */
 

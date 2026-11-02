@@ -40,6 +40,12 @@ its ABI, compiles CDE and verifies that `dtwm` links to `libXm.so.9`.
 
 ## Automated suite
 
+Desktop request queues belong to their screen. Interleaved draining cannot apply
+another screen's commands. Replies require a complete, bounded, NUL-terminated
+8-bit string batch; malformed replies are released and an allocation failure
+ends the drain. Tests exercise two screens, invalid/truncated replies, recovery
+and allocation failure without requiring a live X server.
+
 The session database writer stages its replacement privately beside the target.
 The previous database remains available until every write, flush, sync and close
 succeeds and the replacement can be renamed into place. A failed commit reports

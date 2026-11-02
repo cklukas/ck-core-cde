@@ -1183,6 +1183,9 @@ typedef struct _WmScreenData
     Widget	switcherW;		/* workspace switcher */
     Widget	switcherShellW;		/* shell for ws switcher */
     Window	wmWorkspaceWin;		/* holds wm properties */
+    unsigned char *dtWmRequestData;      /* Xlib-owned pending request batch */
+    unsigned long dtWmRequestLength;
+    unsigned long dtWmRequestOffset;
     Window	feedbackWin;
     Window	activeIconTextWin;
     Window	activeLabelParent;
