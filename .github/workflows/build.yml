@@ -42,7 +42,8 @@ jobs:
             libdbus-1-dev libharfbuzz-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
             librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
             libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
-            m4 ncompress opensp pkg-config rpcsvc-proto tcl-dev xbitmaps xfonts-utils
+            m4 ncompress opensp pkg-config rpcsvc-proto tcl-dev x11-xserver-utils \
+            xbitmaps xfonts-utils
       - name: Build CK Core Motif ABI 9
         run: |
           set -eu
