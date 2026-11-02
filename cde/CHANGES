@@ -1,4 +1,6 @@
 2026-11-02
+- validation: record the second ten-round checkpoint, incremental dependency
+  rebuilds, full checks, targeted sanitizer follow-ups and fresh desktop smoke.
 - dtwm: validate complete typed desktop request batches, release invalid replies,
   and terminate draining on allocation failure instead of looping indefinitely.
 - dtwm: keep pending desktop requests per screen so interleaved or nested

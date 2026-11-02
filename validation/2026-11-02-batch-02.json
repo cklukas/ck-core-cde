@@ -1,0 +1,45 @@
+{
+  "batch": 2,
+  "repair_rounds": 10,
+  "code_revision": "4458c7c8626317da9e5772e9cf964e5eb0324f9e",
+  "base_revision": "77706d3ef65a5331a6a11cffcb44ecc6b88ee7ed",
+  "motif_revision": "1a2407723eb319ac5c18afa0fb386cf46aa7efdc",
+  "host_architecture": "Linux ARM64",
+  "build": {
+    "mode": "incremental; retained configured CDE tree and unchanged Motif prefix",
+    "compiler": "gcc-12 / g++-12",
+    "flags": "-O1 -g0",
+    "jobs": 6,
+    "started_utc": "2026-11-02T16:44:18Z",
+    "finished_utc": "2026-11-02T16:44:40Z",
+    "elapsed_seconds": 22,
+    "scope": "76 objects in dtwm/dtfplist, dtlogin/dtgreet/dtchooser and dtsession; shared WmGlobal.h, dm.h and SmDB.h consumers included; unrelated libraries and toolkit reused",
+    "duration_review": "First measured incremental checkpoint, with no comparable incremental baseline. Compiler invocations, dependency closure, relinks and executable timestamps inspected to establish freshness.",
+    "followup": "Embedded-NUL rejection refinement compiled only SmDB.c and relinked dtsession, 2026-11-02T16:50:56Z--16:50:57Z",
+    "output_root": "/home/klukas/tmp/cde-hardening-20261102-01/repository/cde/programs",
+    "final_input_fingerprint": "3ba1807b7043a1ad013aa31494f0225cf40baa870675349a1e4c6ace4a179fe6",
+    "fingerprint_method": "From cde/: find . -type f matching *.c, *.C, *.h, *.am; sort NUL-delimited paths; sha256sum each; sha256sum resulting list",
+    "dtwm_sha256": "f75b15470bc628038ae51dfe65d882c6ec63c45d6fa63309a5c4ce7b91039dec",
+    "dtsession_sha256": "60061063232713cb95ac3fcb7f37ec23a8c53e079397340e30ed8fdd139b8526",
+    "dtlogin_sha256": "8ac440fe661ba5f8b9ae608112010fd9e3ae5de82846585fbd22f2a493c6beda",
+    "libXm_so_9_sha256": "b83aca86fbc9d50114e3da05025a2ad9ab514ca1101d25f88bd46f0ad7d5afc6"
+  },
+  "check": {
+    "command": "make -j6 check",
+    "started_utc": "2026-11-02T16:44:40Z",
+    "finished_utc": "2026-11-02T16:50:29Z",
+    "elapsed_seconds": 349,
+    "result": "passed",
+    "followup": "After embedded-NUL refinement, dtsession component checks and the expanded login/chooser fault regression passed at 2026-11-02T16:51:32Z--16:51:34Z. The expanded chooser fixture initially duplicated a local variable name; corrected and rerun. No second full suite was needed for that targeted refinement.",
+    "coverage": "ASan/UBSan production-function regressions for session staging and sticky output failures, Xrm indices/names/integers/client references, login argument allocation/ownership, chooser failure latch, saved-session path reads and per-screen desktop request draining",
+    "limitations": "Existing dtksh known-leak skips remain. No authentication service or physical user desktop was altered. Coverage is not exhaustive across CDE."
+  },
+  "desktop_smoke": {
+    "result": "passed",
+    "finished_utc": "2026-11-02T16:51:48Z",
+    "environment": "Fresh isolated Xvfb/bwrap Xsession; private home; no prior dtwm/dtsession and no instances left after capture",
+    "checks": "Changed executable installations compared byte-for-byte with build outputs; unchanged localized assets verified; five CDE processes mapped the exact pinned libXm.so.9.0.0; six native property clients passed; visible terminal command succeeded; actual Terminal and File Manager captures inspected",
+    "terminal_capture_sha256": "37ab346320924421ac26889ee43bc15a15309c3bb1b25283eddcbd126102de78",
+    "file_manager_capture_sha256": "68be5da1ac8e07c7018ef6579857c292e34d710a0455141cae5a09a256f81d36"
+  }
+}
