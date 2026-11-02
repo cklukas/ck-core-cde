@@ -59,12 +59,47 @@ files may add rules for their subtree, but must not weaken these requirements.
 
 ## Build and validation expectations
 
-- Build CDE and the latest CK Core Motif as one matched native stack. Use an
-  isolated Motif prefix and verify that runtime processes map the intended
-  `libXm.so.9`, not a system substitute.
-- Add or update focused regression coverage for behavior changes, then run the
-  relevant component checks. For cross-cutting changes, run the full
-  `make check` suite and the desktop smoke test where the target supports it.
+- At the start of each ten-round repair batch, fetch the latest published
+  CK Core Motif primary branch into its own checkout and record the selected
+  full revision in `.ckgit/motif-revision` and the rpi4 sister pin. Build one
+  isolated prefix for that revision. Keep its source, headers, libraries and
+  tools fixed throughout the batch, including final validation and publication.
+  Concurrent toolkit updates are adopted only at the start of the next batch;
+  integration failures from those updates belong to that later checkpoint.
+  Do not repeatedly rebuild or revalidate a batch merely because Motif moves.
+- Build CDE and the selected CK Core Motif as one matched native stack. Verify
+  that runtime processes map the recorded prefix's `libXm.so.9`. CI must use the
+  same recorded revision. Do not pull into another task's active checkout.
+- Focus this audit on CDE. Treat the selected Motif revision as a dependency;
+  do not review the toolkit's incoming changes or conduct a parallel Motif
+  audit. If CDE behavior supplies evidence of a defect owned by Motif, send the
+  `motif-bug-fix` peer a focused reproducer, expected behavior and pinned revision,
+  and coordinate ownership instead of implementing a toolkit fix here.
+- Retain this task's configured CDE and Motif build trees between batches.
+  Rebuild incrementally: compile/link only changed inputs and their dependency
+  closure, using generated header dependencies. Do not run routine `make clean`,
+  recreate build directories, or rebuild the whole stack at each checkpoint.
+  Keep the SDK prefix path stable. When updating its staged installation,
+  preserve unchanged file bytes and timestamps so reinstalling identical
+  headers does not invalidate unrelated consumers.
+- Reconfigure only when configuration inputs/settings require it. If an ABI,
+  compiler or configuration change invalidates a broad set of objects, establish
+  and record that dependency reason before rebuilding that set. A new Motif
+  commit alone is not a reason to clean CDE or rebuild every component.
+- Work in validation batches of ten repair rounds. In each round, inspect the
+  complete affected path, implement related fixes, and add focused regression
+  coverage and documentation. Record the scope and outstanding questions, but
+  defer compilation, test execution and documentation validation until the ten
+  rounds are complete. Do not run a full build or suite after each small fix.
+- After round ten, compile and relink all affected components, run the focused
+  regressions together, and run the relevant checkpoint suite. For cross-cutting
+  changes, run the full `make check` suite and the desktop smoke test where the
+  target supports it. Investigate failures and repeat only the affected checks
+  unless another broad checkpoint is warranted. Never report untested work as
+  verified or publish it as an accepted fix.
+- After successful batch validation, commit related changes in cohesive topic
+  commits and integrate/push them as described above. Then immediately begin
+  the next batch of repair rounds while the overall audit goal remains active.
 - A successful compile alone is not sufficient for UI work. Inspect the actual
   user-facing window from the freshly built process before reporting a visual
   change as complete.

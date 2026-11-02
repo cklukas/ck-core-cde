@@ -5,10 +5,15 @@ description: Continuous builds and documentation publishing.
 
 # CI and documentation
 
-GitHub Actions checks out the current `master` branch of CK Core Motif, builds
+GitHub Actions checks out the batch revision in `.ckgit/motif-revision`, builds
 an isolated ABI 9 toolkit prefix, and compiles and tests CDE against that exact
 prefix. The CDE configure checks prevent a system Motif library from satisfying
 the build accidentally.
+
+The rpi4 sister checkout is pinned to the same revision, and its build checks
+that the pin matches the recorded file. Advance both pins only when starting
+the next repair batch, so concurrent toolkit changes do not alter validation
+of a batch already in progress.
 
 Documentation builds use published ckdocs `master` revision
 `1f46455b702bc955a2eab63824afe2e062fb04a4` on both GitHub and rpi4. A push to

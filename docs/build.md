@@ -10,9 +10,20 @@ from its tracked `Makefile.am`; no configured checkout paths are shipped in it.
 When reusing a build tree, run bootstrap and configuration before cleaning if
 the source Makefile definitions have changed.
 
-Build and install the latest CK Core Motif `master` into an isolated prefix
-first. The prefix must contain its ABI 9 Xm, Mrm, and Uil libraries, Motif
-headers, and UIL compiler.
+At the start of a repair batch, fetch the latest published CK Core Motif
+`master`, record its full revision in `.ckgit/motif-revision` and update the
+rpi4 sister pin to match. Build and install that revision into an isolated
+prefix. Keep the prefix fixed for all ten rounds, their validation and
+publication. Adopt further toolkit updates at the start of the next batch.
+The prefix must contain its ABI 9 Xm, Mrm, and Uil libraries, Motif headers,
+and UIL compiler.
+
+Keep the configured CDE and Motif build trees for subsequent repair batches.
+Use incremental builds for changed sources and affected header/library
+dependencies. Do not clean or recreate the trees between batches. Keep the SDK
+prefix path stable and preserve unchanged installed headers' bytes and timestamps
+during SDK updates. Reconfigure when its inputs or settings change, and record
+any ABI or toolchain change that requires broader object invalidation.
 
 ```sh
 export MOTIF_SDK=/absolute/path/to/ck-core-motif-prefix

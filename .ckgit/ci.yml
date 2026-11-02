@@ -6,15 +6,16 @@ sisters:
     # ckdocs v0.10.1
     ref: 06e4e4bfbf65dddf4c8b88b991582eddc07fa6ea
   - name: ck-core-motif
-    ref: master
+    ref: 1a2407723eb319ac5c18afa0fb386cf46aa7efdc
 jobs:
   - name: build
     steps:
-      - name: build-and-test-latest-motif
+      - name: build-and-test-batch-motif
         script: |
           set -eu
           test -n "$CKGIT_SISTER_CK_CORE_MOTIF"
           motif_revision="$(git -C "$CKGIT_SISTER_CK_CORE_MOTIF" rev-parse HEAD)"
+          test "$motif_revision" = "$(cat .ckgit/motif-revision)"
           echo "CK Core Motif revision: $motif_revision"
           xinerama_probe="$TMPDIR/cde-xinerama-probe"
           printf '%s\n' \

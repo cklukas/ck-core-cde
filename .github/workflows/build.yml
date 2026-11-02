@@ -27,11 +27,19 @@ jobs:
       - uses: actions/checkout@v5
         with:
           path: cde-source
-      - name: Check out latest CK Core Motif
+      - name: Read the batch Motif revision
+        id: motif
+        shell: bash
+        run: |
+          set -eu
+          revision="$(cat cde-source/.ckgit/motif-revision)"
+          [[ "$revision" =~ ^[0-9a-f]{40}$ ]]
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+      - name: Check out the batch CK Core Motif revision
         uses: actions/checkout@v5
         with:
           repository: cklukas/ck-core-motif
-          ref: master
+          ref: ${{ steps.motif.outputs.revision }}
           path: motif-source
           persist-credentials: false
       - name: Install build dependencies
@@ -42,7 +50,7 @@ jobs:
             libdbus-1-dev libharfbuzz-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
             librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
             libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
-            m4 ncompress opensp pkg-config rpcsvc-proto tcl-dev x11-xserver-utils \
+            m4 ncompress opensp pkg-config python3 rpcsvc-proto tcl-dev x11-xserver-utils \
             xbitmaps xfonts-utils
       - name: Build CK Core Motif ABI 9
         run: |
@@ -66,6 +74,8 @@ jobs:
       - name: Build and test CDE
         run: |
           set -eu
+          mkdir "$RUNNER_TEMP/cde-tests"
+          export TMPDIR="$RUNNER_TEMP/cde-tests"
           xinerama_probe="$RUNNER_TEMP/cde-xinerama-probe"
           printf '%s\n' \
             'char XineramaQueryScreens(void);' \

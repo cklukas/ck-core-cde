@@ -1,0 +1,49 @@
+{
+  "batch": 1,
+  "repair_rounds": 10,
+  "code_revision": "c5d567045",
+  "motif_revision": "1a2407723eb319ac5c18afa0fb386cf46aa7efdc",
+  "host_architecture": "Linux ARM64",
+  "build": {
+    "target": "CDE all",
+    "compiler": "gcc-12 / g++-12",
+    "flags": "-O1 -g0",
+    "jobs": 6,
+    "kind": "one-time clean baseline; subsequent checkpoints reuse this tree",
+    "started_utc": "2026-11-02T15:47:35Z",
+    "finished_utc": "2026-11-02T16:02:48Z",
+    "elapsed_seconds": 913,
+    "previous_comparable_seconds": [805, 1026],
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/repository/cde/programs/dtwm/.libs/dtwm",
+    "input_fingerprint": "b42249ffb657445d8e489270835514820a96e4a88767125ba74c7361e307441e",
+    "fingerprint_method": "From cde/: find . -type f matching *.c, *.C, *.h, *.am; sort NUL-delimited paths; sha256sum each; sha256sum resulting list",
+    "dtwm_sha256": "71c9abe8322933b7efab0fe65de4bade9385476308c7abc8a2c46bf0938ea40f",
+    "dtfile_sha256": "036547137afc3cf557ead3bb826ee47c645b36c91c9ef92956aa912d1ae4bb57",
+    "libXm_so_9_sha256": "b83aca86fbc9d50114e3da05025a2ad9ab514ca1101d25f88bd46f0ad7d5afc6"
+  },
+  "check": {
+    "command": "make -j6 check",
+    "started_utc": "2026-11-02T16:02:48Z",
+    "finished_utc": "2026-11-02T16:08:52Z",
+    "elapsed_seconds": 364,
+    "result": "passed",
+    "focused_regressions": "All batch sanitizer regressions passed, including property validation, Trash parsing/write failures, copy completion/paths, session ownership, procfs traversal, terminal bounds, help strings and login environment failures",
+    "limitations": "Existing dtksh leak-test skips remain; this does not establish coverage of every desktop component"
+  },
+  "desktop_smoke": {
+    "result": "passed",
+    "finished_utc": "2026-11-02T16:12:44Z",
+    "environment": "Fresh isolated Xvfb/bwrap Xsession with private home; processes terminated after capture",
+    "applications": ["dtsession", "dtwm", "dtstyle", "dtterm", "dtfile"],
+    "checks": [
+      "Staged executables equal built executables; localized configuration assets equal their generated inputs",
+      "All five processes map the pinned prefix's libXm.so.9.0.0",
+      "Six native valid/malformed X11 property cases pass against the running dtwm",
+      "Command typed through the visible terminal succeeds",
+      "Actual File Manager and Terminal screenshots inspected"
+    ],
+    "file_manager_capture_sha256": "7f48cb32d83aa6c9aa0cd2279ca3ba2fdacf32ab4598a56ae0edd26d73254ce6",
+    "terminal_capture_sha256": "962bd8919a64f07808ce993848e6f1349755e4fc51b8c6129733a3a0cdd50864",
+    "catalog_followup": "After smoke, register the already-tested Trash write-error fallback in the English catalog; incrementally regenerate only dtfile.cat, verify its text, install it and compare bytes. No executable changes."
+  }
+}
