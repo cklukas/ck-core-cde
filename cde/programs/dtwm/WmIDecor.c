@@ -1357,14 +1357,11 @@ void GetIconTitleBox (ClientData *pcd, XRectangle *pBox)
 
     }
 
-    if (pcd->pSD->showOpenWindowIcons &&
-	(pcd->clientState != MINIMIZED_STATE))
-    {
-	if ((int)pBox->width > ICON_OPEN_EXTRA(pcd))
-	{
-	    pBox->width -= ICON_OPEN_EXTRA(pcd);
-	}
-    }
+    /*
+     * The open-window indicator is a separate sibling beside the icon frame.
+     * Its reserved grid width is not part of this content box, so the label
+     * must retain the complete icon width.
+     */
 
 } /* END OF FUNCTION GetIconTitleBox */
 
@@ -1454,25 +1451,10 @@ void DrawIconTitle (ClientData *pcd)
 	alignment = (textWidth >= textBox.width) ?
 	    XmALIGNMENT_BEGINNING : XmALIGNMENT_CENTER;
 
-	if ((alignment == XmALIGNMENT_CENTER) &&
-	    (pcd->pSD->showOpenWindowIcons) &&
-	    (pcd->clientState != MINIMIZED_STATE))
-	{
-	    XRectangle drawBox = textBox;
-	    drawBox.x += (ICON_OPEN_EXTRA(pcd) / 2);
-	    XmStringDraw (DISPLAY, ICON_FRAME_WIN(pcd),
-			  ICON_APPEARANCE(pcd).fontList,
-			  ICON_DISPLAY_TITLE(pcd), iconGC,
-			  drawBox.x, drawBox.y, drawBox.width,
-			  alignment, XmSTRING_DIRECTION_L_TO_R, &drawBox);
-	}
-	else
-	{
-	    XmStringDraw (DISPLAY, ICON_FRAME_WIN(pcd), ICON_APPEARANCE(pcd).fontList,
-			  ICON_DISPLAY_TITLE(pcd), iconGC,
-			  textBox.x, textBox.y, textBox.width,
-			  alignment, XmSTRING_DIRECTION_L_TO_R, &textBox);
-	}
+	XmStringDraw (DISPLAY, ICON_FRAME_WIN(pcd), ICON_APPEARANCE(pcd).fontList,
+		      ICON_DISPLAY_TITLE(pcd), iconGC,
+		      textBox.x, textBox.y, textBox.width,
+		      alignment, XmSTRING_DIRECTION_L_TO_R, &textBox);
     }
 
 } /* END OF FUNCTION DrawIconTitle */
@@ -1571,28 +1553,12 @@ void RedisplayIconTitle (ClientData *pcd)
 	    alignment = (textWidth >= textBox.width) ?
 		XmALIGNMENT_BEGINNING : XmALIGNMENT_CENTER;
 
-	    if ((alignment == XmALIGNMENT_CENTER) &&
-		(pcd->pSD->showOpenWindowIcons) &&
-		(pcd->clientState != MINIMIZED_STATE))
-	    {
-		XRectangle drawBox = textBox;
-		drawBox.x += (ICON_OPEN_EXTRA(pcd) / 2);
-		XmStringDraw (DISPLAY, ICON_FRAME_WIN(pcd),
-			      ICON_APPEARANCE(pcd).fontList,
-			      ICON_DISPLAY_TITLE(pcd), iconGC,
-			      drawBox.x, drawBox.y, drawBox.width,
-			      alignment, XmSTRING_DIRECTION_L_TO_R,
-			      &drawBox);
-	    }
-	    else
-	    {
-		XmStringDraw (DISPLAY, ICON_FRAME_WIN(pcd),
-			      ICON_APPEARANCE(pcd).fontList,
-			      ICON_DISPLAY_TITLE(pcd), iconGC,
-			      textBox.x, textBox.y, textBox.width,
-			      alignment, XmSTRING_DIRECTION_L_TO_R,
-			      &textBox);
-	    }
+	    XmStringDraw (DISPLAY, ICON_FRAME_WIN(pcd),
+			  ICON_APPEARANCE(pcd).fontList,
+			  ICON_DISPLAY_TITLE(pcd), iconGC,
+			  textBox.x, textBox.y, textBox.width,
+			  alignment, XmSTRING_DIRECTION_L_TO_R,
+			  &textBox);
 	}
 
 	/* 

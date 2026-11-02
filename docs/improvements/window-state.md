@@ -9,6 +9,10 @@ CK Core CDE can retain a desktop icon for each open window. A compact marker
 distinguishes the focused window from other open applications, while icons stay
 synchronized as windows move between workspaces.
 
+The marker occupies its own reserved desktop space beside the icon. The icon
+image and label retain the full configured icon width, including at the normal
+32- and 48-pixel sizes.
+
 The feature keeps running applications visible in the classic CDE desktop
 model, even when their windows overlap or sit behind another application.
 

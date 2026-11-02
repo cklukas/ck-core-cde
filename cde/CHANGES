@@ -1,4 +1,6 @@
 2026-11-02
+- dtwm: let open-window icon labels use the complete icon content width instead
+  of subtracting the separately reserved focus-marker gap and bar width.
 - docs: describe the normal/increased WM_ICON_SIZE contract and refresh the
   dynamic-icon smoke screenshot with size-aware CK Core Apps output.
 - docs: explain the live client-icon contract and link CK Core Apps as the
