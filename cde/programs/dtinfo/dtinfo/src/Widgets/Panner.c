@@ -167,14 +167,16 @@ static XtResource resources[] = {
 /*
  * widget class methods used below
  */
-static void Initialize();		/* create gc's */
-static void Realize();			/* create window */
-static void Destroy();			/* clean up widget */
-static void Resize();			/* need to rescale ourselves */
-static void Redisplay();		/* draw ourselves */
-static Boolean SetValues();		/* set all of the resources */
-static void SetValuesAlmost();		/* deal with failed setval geom req */
-static XtGeometryResult QueryGeometry();  /* say how big we would like to be */
+static void Initialize(Widget, Widget, ArgList, Cardinal *); /* create gc's */
+static void Realize(Widget, XtValueMask *, XSetWindowAttributes *);
+static void Destroy(Widget);              /* clean up widget */
+static void Resize(Widget);               /* need to rescale ourselves */
+static void Redisplay(Widget, XEvent *, Region); /* draw ourselves */
+static Boolean SetValues(Widget, Widget, Widget, ArgList, Cardinal *);
+static void SetValuesAlmost(Widget, Widget, XtWidgetGeometry *,
+                            XtWidgetGeometry *);
+static XtGeometryResult QueryGeometry(Widget, XtWidgetGeometry *,
+                                      XtWidgetGeometry *);
 
 PannerClassRec pannerClassRec = {
   { /* core fields */
@@ -523,7 +525,8 @@ static int parse_page_string (char *s, int pagesize, int canvassize, Boolean *re
  *****************************************************************************/
 
 
-static void Initialize (Widget greq, Widget gnew)
+static void Initialize (Widget greq, Widget gnew, ArgList args,
+                        Cardinal *num_args)
 {
     PannerWidget req = (PannerWidget) greq, new = (PannerWidget) gnew;
     Dimension defwidth, defheight;
@@ -684,7 +687,8 @@ static void Redisplay (Widget gw, XEvent *event, Region region)
 
 
 /* ARGSUSED */
-static Boolean SetValues (Widget gcur, Widget greq, Widget gnew)
+static Boolean SetValues (Widget gcur, Widget greq, Widget gnew, ArgList args,
+                          Cardinal *num_args)
 {
     PannerWidget cur = (PannerWidget) gcur;
     PannerWidget new = (PannerWidget) gnew;

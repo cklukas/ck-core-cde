@@ -41,7 +41,10 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
-static int _amstart();
+static int _amstart(Bytearray *isfhandle, char *record,
+                    enum readmode readmode, struct keydesc *keydesc,
+                    int keylen, Bytearray *curpos, Recno *recnum,
+                    struct errcode *errcode);
 
 /*
  * err =  isstart(isfd, keydesc, length, record, mode)
@@ -115,8 +118,8 @@ isstart(int isfd, struct keydesc *keydesc, int length, char *record,
 	
     recnum = isrecnum;
 
-    if ((ret = _amstart(&fab->isfhandle, precord, reclen,
-			readmode, keydesc, length, &fab->curpos,
+    if ((ret = _amstart(&fab->isfhandle, precord, readmode,
+                        keydesc, length, &fab->curpos,
 			&recnum, &fab->errcode)) == ISOK) {
 	isrecnum = recnum;		     /* Set isrecnum */
     }
@@ -127,7 +130,7 @@ isstart(int isfd, struct keydesc *keydesc, int length, char *record,
 }
 
 /*
- * _amstart(isfhandle, record, reclen, readmode,
+ * _amstart(isfhandle, record, readmode,
  * 	    keydesc, keylen, curpos, recnum, errcode)
  *
  * _amstart() reads a record from ISAM file
@@ -145,7 +148,6 @@ isstart(int isfd, struct keydesc *keydesc, int length, char *record,
  *	curpos		new current position
  *	recnum		record number
  *	errcode		error status of the operation
- *	reclen		actual length of the record
  *
  * Note:
  * Successfull isstart() returns the new curpos and frees the old curpos.
@@ -153,8 +155,8 @@ isstart(int isfd, struct keydesc *keydesc, int length, char *record,
 
 /* ARGSUSED */
 static int
-_amstart(Bytearray *isfhandle, char *record, int *reclen,
-         enum readmode readmode, struct keydesc *keydesc, int keylen,
+_amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
+         struct keydesc *keydesc, int keylen,
          Bytearray *curpos, Recno *recnum, struct errcode *errcode)
 {
     Fcb			*fcb;
@@ -171,7 +173,7 @@ _amstart(Bytearray *isfhandle, char *record, int *reclen,
     char		*pkey;
     Btree		*btree = NULL;
     int			reclen2;
-    int			(*rec_read)();
+    int			(*rec_read)(Fcb *, char *, Recno, int *);
 
     _isam_entryhook();
 

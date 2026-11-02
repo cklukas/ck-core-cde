@@ -281,7 +281,7 @@ extern int db_oflag;
 #define INTERNAL_FIXED    PASCAL
 #define INTERNAL_VARIABLE CDECL
 
-typedef int (PASCAL *FARPROC)();
+typedef int (PASCAL *FARPROC)(int);
 typedef char *HANDLE;
 
 #define LOCK_DESC /**/
@@ -292,22 +292,12 @@ typedef struct {char *ptr; LOCK_DESC} CHAR_P;
 typedef struct {DB_ADDR *ptr; LOCK_DESC} DB_ADDR_P;
 
 
-/* Allow for function prototyping */
-#ifdef LINT_ARGS
+/* Build complete prototypes on every supported compiler. */
 #define P0	void	/* parameterless function */
 #define P1(t)	t	/* first (or only) parameter in function */
 #define Pi(t)	,t	/* subsequent (2,3,...) parameter in function */
-#ifdef ANSI
-#define Piv(t)	,...	/* begining of variable number of parameters */
-#define Pv(t)	/**/	/* function has 0 or more parameters */
-#endif
-#else
-#define P0	/**/
-#define P1(t)	/**/
-#define Pi(t)	/**/
-#define Piv(t)	/**/
-#define Pv(t)	/**/
-#endif
+#define Piv(t)	,t	/* final database-number parameter */
+#define Pv(t)	t	/* only database-number parameter */
 
 
 

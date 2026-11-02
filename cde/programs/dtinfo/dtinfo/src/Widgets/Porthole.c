@@ -73,14 +73,16 @@ static XtResource resources[] = {
 /*
  * widget class methods used below
  */
-static void Realize();			/* set gravity and upcall */
-static void Resize();			/* report new size */
-static XtGeometryResult GeometryManager();  /* deal with child requests */
-static void ChangeManaged();		/* somebody added a new widget */
-static XtGeometryResult QueryGeometry();  /* say how big would like to be */
+static void Realize(Widget, XtValueMask *, XSetWindowAttributes *);
+static void Resize(Widget);                /* report new size */
+static XtGeometryResult GeometryManager(Widget, XtWidgetGeometry *,
+                                        XtWidgetGeometry *);
+static void ChangeManaged(Widget);         /* somebody added a new widget */
+static XtGeometryResult QueryGeometry(Widget, XtWidgetGeometry *,
+                                      XtWidgetGeometry *);
 
 #if XmVersion == 1002
-static void ClassInitialize();
+static void ClassInitialize(void);
 static XmBaseClassExtRec       portholeClassExtRec = {
     NULL,                                     /* Next extension       */
     NULLQUARK,                                /* record type XmQmotif */
@@ -251,7 +253,8 @@ static void layout_child (PortholeWidget pw, Widget child,
  *****************************************************************************/
 
 
-static void Realize (Widget gw, Mask *valueMask, XSetWindowAttributes *attributes)
+static void Realize (Widget gw, XtValueMask *valueMask,
+                     XSetWindowAttributes *attributes)
 {
     attributes->bit_gravity = NorthWestGravity;
     *valueMask |= CWBitGravity;

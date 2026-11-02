@@ -39,7 +39,7 @@ int find_CDE_locale_name(void)
    char       plat[_DtPLATFORM_MAX_LEN];
    int        execver;
    int        compver;
-   static bool first = True;
+   static XimsBool first = True;
    
    if (first) {
 
@@ -95,7 +95,7 @@ char *find_system_locale_name(char *CDE_locale)
 
 char	*strcpyx(char *dest, char *src)
 {
-    while (*dest++ = *src++) ;
+    while ((*dest++ = *src++)) ;
     return(--dest);
 }
 
@@ -135,7 +135,7 @@ int	str_to_int(char *ptr, int *val)
     return(True);
 }
 
-bool	str_to_bool(char *ptr, bool def_val)
+XimsBool	str_to_bool(char *ptr, XimsBool def_val)
 {
     if (!ptr || !*ptr)	return def_val;
     skip_white(ptr);
@@ -186,7 +186,7 @@ char	**parse_strlist(char *ptr, char sep_ch)
     bp = pbuf; pbuf[0] = NULL;
     new = (char **) 0;
     while (ptr) {
-	if (sep = strchr(ptr, sep_ch))	*sep++ = 0;
+	if ((sep = strchr(ptr, sep_ch)))	*sep++ = 0;
 	p = trim_line(ptr);
 	if (*p) {
 	    *bp++ = NEWSTR(p);
@@ -240,7 +240,7 @@ void	free_strlist(char **pp)
 
 	/* ********  display string  ******** */
 
-bool	parse_dpy_str(char *display_str, char **host, int *dnum, int *snum, int *dnet)
+XimsBool	parse_dpy_str(char *display_str, char **host, int *dnum, int *snum, int *dnet)
 {
     char	buf[BUFSIZ], hostbuf[BUFSIZ], *p, *hp, *pdnum, *psnum;
     int		isdnet = 0;
@@ -260,7 +260,7 @@ bool	parse_dpy_str(char *display_str, char **host, int *dnum, int *snum, int *dn
 	gethostname(hostbuf, BUFSIZ);
 	hp = hostbuf;
     }
-    if (p = strchr(hp, '.'))	*p = 0;
+    if ((p = strchr(hp, '.')))	*p = 0;
 
 	/* extract display number */
     for (p = pdnum; *p && isdigit(*p); p++) ;
@@ -338,7 +338,7 @@ char	*dirname(char *path)
     memcpy(dname, path, dlen);
     dname[dlen] = 0;
 
-    if (p = strrchr(dname, '/')) {
+    if ((p = strrchr(dname, '/'))) {
 	if (p == dname)
 	    dname[1] = 0;
 	else {
@@ -511,7 +511,7 @@ int	put_xims_log(char *fmt, void *arg1, void *arg2, void *arg3)
 
     /* if (Verbose < 1)	return False; */
 
-    if (fp = fopen(logpath, "a")) {
+    if ((fp = fopen(logpath, "a"))) {
 	char	time_str[80];
 	time_t	tm = time((time_t *)0);
 

@@ -305,7 +305,10 @@ char		*FindElementPath(Element_t *, char *);
 char		*NearestOlderElem(Element_t *, char *);
 void		PrintLocation(Element_t *, FILE *);
 char		**Split(char *, int *, int);
-void		DescendTree(Element_t *, void(*)(), void(*)(), void(*)(), void *);
+typedef void (*ElementVisitProc)(Element_t *, void *);
+typedef void (*ContentVisitProc)(Content_t *, void *);
+void		DescendTree(Element_t *, ElementVisitProc, ElementVisitProc,
+			ContentVisitProc, void *);
 Map_t		*NewMap(int);
 Mapping_t	*FindMapping(Map_t *, char *);
 char		*FindMappingVal(Map_t *, char *);

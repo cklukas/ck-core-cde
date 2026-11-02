@@ -73,21 +73,26 @@ typedef struct {
             Merely copy the given pPalette into private.
         */
 static ilError ilAddElementPaletteToRGBByte (
-    ilPaletteToRGBPrivPtr pPriv,
-    unsigned short       *pPalette
+    ilPtr                  pPrivate,
+    unsigned short       *pPalette,
+    void                 *pOptionData
     )
 {
+    ilPaletteToRGBPrivPtr pPriv = (ilPaletteToRGBPrivPtr)pPrivate;
+
+    (void)pOptionData;
     pPriv->pPalette = pPalette;
     return IL_OK;
 }
 
         /*  Init() function: init values in private */
 static ilError ilInitPaletteToRGBByte (
-    ilPaletteToRGBPrivPtr pPriv,
+    ilPtr                  pPrivate,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilPaletteToRGBPrivPtr pPriv = (ilPaletteToRGBPrivPtr)pPrivate;
     pPriv->nPixelsM1 = pSrcImage->width - 1;
     pPriv->srcRowBytes = pSrcImage->plane[0].nBytesPerRow;
     pPriv->pSrcPixels = pSrcImage->plane[0].pPixels;

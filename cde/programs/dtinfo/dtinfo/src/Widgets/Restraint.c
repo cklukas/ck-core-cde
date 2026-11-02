@@ -60,11 +60,12 @@
 
 /*  Static routine definitions  */
 
-static void Initialize();
-static void ChangeManaged();
-static void Resize();
-static void Realize();
-static XtGeometryResult GeometryManager();
+static void Initialize(Widget, Widget, ArgList, Cardinal *);
+static void ChangeManaged(Widget);
+static void Resize(Widget);
+static void Realize(Widget, XtValueMask *, XSetWindowAttributes *);
+static XtGeometryResult GeometryManager(Widget, XtWidgetGeometry *,
+                                        XtWidgetGeometry *);
 
 /*  The Restraint class record definition  */
 externaldef(restraintclassrec) RestraintClassRec restraintClassRec =
@@ -146,9 +147,11 @@ externaldef(restraintwidgetclass) WidgetClass restraintWidgetClass =
  * ************************************************************** */
 
 static void
-Initialize (RestraintWidget original, RestraintWidget w,
+Initialize (Widget original_widget, Widget new_widget,
 	    ArgList args, Cardinal *num_args)
 {
+  RestraintWidget original = (RestraintWidget) original_widget;
+  RestraintWidget w = (RestraintWidget) new_widget;
   /* No size preferences until child is managed. */
   w->restraint.had_child = False;
 }
@@ -274,8 +277,9 @@ compute_width (RestraintWidget w, Widget child)
  * ************************************************************** */
 
 static void
-ChangeManaged (RestraintWidget w)
+ChangeManaged (Widget widget)
 {
+  RestraintWidget w = (RestraintWidget) widget;
   Widget child = NULL;
   int i;
   /* Find the child, if any. */
@@ -543,8 +547,9 @@ GeometryManager (Widget w, XtWidgetGeometry *request, XtWidgetGeometry *reply)
  * **********************************************************************/
 
 static void
-Resize (RestraintWidget w)
+Resize (Widget widget)
 {
+  RestraintWidget w = (RestraintWidget) widget;
   Widget child;
 
   /* This widget should only have one child. */

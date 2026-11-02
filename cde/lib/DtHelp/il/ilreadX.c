@@ -84,11 +84,12 @@ typedef struct {
         /*  Init() function for ilReadXDrawable() pipe elements.
         */
 static ilError ilReadXInit (
-    ilReadXPrivPtr      pPriv,
+    ilPtr               privateData,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilReadXPrivPtr pPriv = (ilReadXPrivPtr)privateData;
 #define                 NCOLORS 256
 #define                 NGRAYS  256
 #define                 NRGBS   256
@@ -183,9 +184,11 @@ ilReadXPrivRec              priv;
             Free anything in private that was created by Init().
         */
 static ilError ilReadXCleanup (
-    ilReadXPrivPtr      pPriv
+    ilPtr               privateData,
+    ilBool              aborting
     )
 {
+    ilReadXPrivPtr pPriv = (ilReadXPrivPtr)privateData;
     if (pPriv->copyPixmap) {
         XFreePixmap (pPriv->display, pPriv->copyPixmap);
         pPriv->copyPixmap = (Pixmap)0;
@@ -198,9 +201,10 @@ static ilError ilReadXCleanup (
             Free anything in private that was created when the element was added.
         */
 static ilError ilReadXDestroy (
-    ilReadXPrivPtr      pPriv
+    ilPtr               privateData
     )
 {
+    ilReadXPrivPtr pPriv = (ilReadXPrivPtr)privateData;
     if (pPriv->pPalette)
         IL_FREE (pPriv->pPalette);
     if (pPriv->grayMapImage)

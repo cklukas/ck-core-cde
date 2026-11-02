@@ -56,11 +56,12 @@ typedef struct {
     /*  Init() function for ilRCI().
     */
 static ilError ilRCIInit (
-    ilRCIPrivPtr        pPriv,
+    ilPtr               privateData,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilRCIPrivPtr pPriv = (ilRCIPrivPtr)privateData;
     pPriv->strip = 0;                       /* init strip index, for first strip */
     pPriv->nLinesWritten = 0;
     return IL_OK;

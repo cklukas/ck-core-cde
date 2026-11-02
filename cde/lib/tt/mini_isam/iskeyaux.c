@@ -39,8 +39,6 @@
 
 #include "isam_impl.h"
 
-Blkno _isgetfreekpage();
-
 /* 
  * _isindex_extract() 
  *

@@ -1209,9 +1209,9 @@ FindRelByName(
 void
 DescendTree(
     Element_t	*e,
-    void	(*enter_f)(),
-    void	(*leave_f)(),
-    void	(*data_f)(),
+    ElementVisitProc enter_f,
+    ElementVisitProc leave_f,
+    ContentVisitProc data_f,
     void	*dp
 )
 {

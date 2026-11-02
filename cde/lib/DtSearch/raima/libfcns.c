@@ -63,10 +63,8 @@
 #include "dbtype.h"
 
 /* Internal function prototypes */
-static int rec_okay(P1(int) Pi(int *) 
-				   Pi(RECORD_ENTRY * *));
-static int ctblcmp(P1(const unsigned char FAR*)
-                                  Pi(const unsigned char FAR*) Pi(int));
+static int rec_okay(int, int *, RECORD_ENTRY **);
+static int ctblcmp(const unsigned char *, const unsigned char *, int);
 
 /* Check for valid db number and set curr_db, curr_db_table and curr_rn_table
 */
@@ -201,7 +199,9 @@ const char *f2    /* pointer to field 2 */
 	    return ( bytecmp(f1, f2, len) );
 	 else if ( fld_ptr->fd_dim[0] )
 	 {
-	    if ( db_global.ctbl_activ ) return ( ctblcmp(f1, f2, len) );
+	    if ( db_global.ctbl_activ )
+	       return ( ctblcmp((const unsigned char *)f1,
+	                        (const unsigned char *)f2, len) );
 	    else return ( strncmp(f1, f2, len) );
 	 }
 	 else
@@ -414,14 +414,14 @@ int    n   /* Max. String length */
       else {
 	 if ( x1 || x2 ) { /* Only sort_as2 value for one string */
 	    if ( x1 ) {
-               *t++;    /* Compare with next character in string 2 */
+               t++;     /* Compare with next character in string 2 */
 	       if ( db_global.country_tbl.ptr[*t].sort_as1 )
 		  f2 = db_global.country_tbl.ptr[*t].sort_as1;
                else f2 = *t;
 	       if (( x = x1 - f2 )) return(x);
 	    }
 	    if ( x2 ) {
-               *s++;    /* Compare with next character in string 1 */
+               s++;     /* Compare with next character in string 1 */
 	       if ( db_global.country_tbl.ptr[*s].sort_as1 )
 		  f1 = db_global.country_tbl.ptr[*s].sort_as1;
                else f1 = *s;
@@ -435,8 +435,8 @@ int    n   /* Max. String length */
 		db_global.country_tbl.ptr[*t].sub_sort))
             return(x);  
       }
-      *s++;
-      *t++;
+      s++;
+      t++;
    }
    if (n) {
       if (*s) return(1);

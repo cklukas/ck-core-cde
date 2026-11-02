@@ -79,11 +79,12 @@ typedef struct {
 
         /*  Init() function: malloc and zero error accumulator buffers. */
 static ilError ilInitBiDiffusion (
-    ilBiDiffusionPrivPtr pPriv,
+    ilPtr                pPrivate,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilBiDiffusionPrivPtr pPriv = (ilBiDiffusionPrivPtr)pPrivate;
     pPriv->width = pSrcImage->width;
     pPriv->srcRowBytes = pSrcImage->plane[0].nBytesPerRow;
     pPriv->pSrcPixels = pSrcImage->plane[0].pPixels;
@@ -104,9 +105,13 @@ static ilError ilInitBiDiffusion (
 
         /*  Cleanup() function: dispose error accumulator buffers. */
 static ilError ilCleanupBiDiffusion (
-    ilBiDiffusionPrivPtr pPriv
+    ilPtr                pPrivate,
+    ilBool               aborting
     )
 {
+    ilBiDiffusionPrivPtr pPriv = (ilBiDiffusionPrivPtr)pPrivate;
+
+    (void)aborting;
     if (pPriv->pError1)
         IL_FREE (pPriv->pError1);
     if (pPriv->pError2)
@@ -267,11 +272,13 @@ typedef struct {
             the caller to change the threshold without reforming the pipe.
         */
 static ilError ilAddElementThreshold (
-    ilThresholdPrivPtr  pPriv,
+    ilPtr               pPrivate,
     unsigned short     *pPalette,       /* not used */
-    CARD32             *pThreshold      /* pOptionData to ilConvert() */
+    void               *pOptionData     /* pOptionData to ilConvert() */
     )
 {
+    ilThresholdPrivPtr  pPriv = (ilThresholdPrivPtr)pPrivate;
+    CARD32             *pThreshold = (CARD32 *)pOptionData;
     pPriv->pThreshold = pThreshold;
     return IL_OK;
 }
@@ -280,11 +287,12 @@ static ilError ilAddElementThreshold (
             address and rowBytes into private for faster reference in Execute().
         */
 static ilError ilInitThreshold (
-    ilThresholdPrivPtr  pPriv,
+    ilPtr               pPrivate,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilThresholdPrivPtr  pPriv = (ilThresholdPrivPtr)pPrivate;
     pPriv->width = pSrcImage->width;
     pPriv->srcRowBytes = pSrcImage->plane[0].nBytesPerRow;
     pPriv->pSrcPixels = pSrcImage->plane[0].pPixels;

@@ -60,9 +60,10 @@ typedef struct {
     /*  Destroy() function for converting JIF format JPEG to "raw" JPEG.
     */
 static ilError ilJIFToRawDestroy (
-    ilJIFToRawPrivPtr       pPriv
+    ilPtr                   privateData
     )
 {
+    ilJIFToRawPrivPtr pPriv = (ilJIFToRawPrivPtr)privateData;
         /*  Free pCompData including associated tables */
     if (pPriv->pCompData) {
         _ilJPEGFreeTables (pPriv->pCompData);
@@ -198,11 +199,12 @@ typedef struct {
     /*  Init() function for converting JIF format pipe image to raw format.
     */
 static ilError ilRawToJIFInit (
-    ilRawToJIFPrivPtr       pPriv,
+    ilPtr                   privateData,
     ilImageInfo             *pSrcImage,
     ilImageInfo             *pDstImage
     )
 {
+    ilRawToJIFPrivPtr pPriv = (ilRawToJIFPrivPtr)privateData;
     pPriv->nStripsWritten = 0;
     pPriv->nLinesWritten = 0;
     pPriv->dstOffset = 0;
@@ -376,11 +378,12 @@ typedef struct {
     /*  Init() function for compressing to "raw" JPEG.
     */
 static ilError ilCompressJPEGInit (
-    ilCompressJPEGPrivPtr   pPriv,
+    ilPtr                   privateData,
     ilImageInfo            *pSrcImage,
     ilImageInfo            *pDstImage
     )
 {
+    ilCompressJPEGPrivPtr pPriv = (ilCompressJPEGPrivPtr)privateData;
     ilError                 error;
 
         /*  Init iljpg package for compression */
@@ -394,10 +397,11 @@ static ilError ilCompressJPEGInit (
     /*  Cleanup() function for compressing to "raw" JPEG.
     */
 static ilError ilCompressJPEGCleanup (
-    ilCompressJPEGPrivPtr   pPriv,
+    ilPtr                   privateData,
     ilBool                  aborting
     )
 {
+    ilCompressJPEGPrivPtr pPriv = (ilCompressJPEGPrivPtr)privateData;
     ilError                 error;
 
         /*  Call iljpg package cleanup function */
@@ -409,9 +413,10 @@ static ilError ilCompressJPEGCleanup (
     /*  Destroy() function for compressing to "raw" JPEG.
     */
 static ilError ilCompressJPEGDestroy (
-    ilCompressJPEGPrivPtr   pPriv
+    ilPtr                   privateData
     )
 {
+    ilCompressJPEGPrivPtr pPriv = (ilCompressJPEGPrivPtr)privateData;
     int            i;
     ilPtr                   pTable;
     ilJPEGData    *pCompData;

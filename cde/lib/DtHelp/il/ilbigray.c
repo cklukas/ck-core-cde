@@ -187,11 +187,12 @@ int                 i;
         /*  Init() function: copy values from given images to private for fast reference.
         */
 static ilError ilBiGrayInit (
-    ilBiGrayPrivPtr        pPriv,
+    ilPtr                  privateData,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilBiGrayPrivPtr pPriv = (ilBiGrayPrivPtr)privateData;
 
     pPriv->lineAcc = pPriv->heightDiff;
     pPriv->srcRowBytes = pSrcImage->plane[0].nBytesPerRow;

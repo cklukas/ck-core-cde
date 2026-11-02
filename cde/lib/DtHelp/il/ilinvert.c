@@ -65,11 +65,12 @@ typedef struct {
 
 
 static ilError ilInitInvert (
-    ilinvertPtr  pPriv,
+    ilPtr        pPrivate,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilinvertPtr  pPriv = (ilinvertPtr)pPrivate;
 
     pPriv->srcRowBytes = pSrcImage->plane[0].nBytesPerRow;
     pPriv->pSrcPixels = pSrcImage->plane[0].pPixels;

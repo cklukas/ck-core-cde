@@ -297,9 +297,10 @@ static ilRGBTransPtr _ilStdYCbCrTransPtr = (ilRGBTransPtr)NULL;
         translate table, i.e. not using std values and table.
     */
 static ilError ilDestroyTransTable (
-    ilYCbCrToRGBPrivPtr pPriv
+    ilPtr               pPrivate
     )
 {
+    ilYCbCrToRGBPrivPtr pPriv = (ilYCbCrToRGBPrivPtr)pPrivate;
     IL_FREE (pPriv->pTrans);
     return IL_OK;
 }
@@ -606,7 +607,8 @@ IL_PRIVATE ilBool _ilConvertYCbCrToRGB (
     )
 {
     ilDstElementData        dstData;
-    ilError                 (*executeFunction)(), (*destroyFunction)();
+    ilPipeExecuteProc       executeFunction;
+    ilPipeDestroyProc       destroyFunction;
     ilYCbCrToRGBPrivPtr     pPriv;
     ilRGBTransPtr  pTrans;
 
@@ -679,20 +681,25 @@ typedef struct {
 
         /*  Init() function: init the counter of "y" within private */
 static ilError ilYCbCr2DitherInit (
-    ilYCbCr2DitherPrivPtr pPriv,
+    ilPtr                pPrivate,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilYCbCr2DitherPrivPtr pPriv = (ilYCbCr2DitherPrivPtr)pPrivate;
+
+    (void)pSrcImage;
+    (void)pDstImage;
     pPriv->y = 0;
     return IL_OK;
 }
 
     /*  Destroy function: destroy pTrans if not std and pPalette if not null */
 static ilError ilYCbCr2DitherDestroy (
-    ilYCbCr2DitherPrivPtr pPriv
+    ilPtr                  pPrivate
     )
 {
+    ilYCbCr2DitherPrivPtr pPriv = (ilYCbCr2DitherPrivPtr)pPrivate;
     if (pPriv->pPalette)
         IL_FREE (pPriv->pPalette);
     return IL_OK;

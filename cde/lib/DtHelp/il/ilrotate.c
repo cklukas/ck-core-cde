@@ -67,12 +67,13 @@
 
 
 static ilError ilRotateInit(
-    ilRotatePrivptr pPrivate,
+    ilPtr           privateData,
     ilImageInfo     *pSrcImage,
     ilImageInfo     *pDstImage
     )
 
 {
+ ilRotatePrivptr pPrivate = (ilRotatePrivptr)privateData;
  unsigned char  *pdstline;
  ilImagePlaneInfo        *pplane;
  int                     bitoff;

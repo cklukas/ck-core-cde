@@ -72,17 +72,19 @@ extern int  reinittime;
 extern Bool usefirst;
 extern Bool mono;
 extern Bool create;
-extern void (*callback) ();
-extern void (*init) ();
+typedef void (*DtScreenProc)(perwindow *);
+extern DtScreenProc callback;
+extern DtScreenProc init;
 
-extern void GetResources();
-extern void CheckResources();
-extern void hsbramp();
-extern void error();
-extern long seconds();
-extern void usage();
-extern void hide_hft_ring();
-extern void unhide_hft_ring();
+extern void GetResources(int, char **);
+extern void CheckResources(void);
+extern void hsbramp(double, double, double, double, double, double, int,
+                    u_char *, u_char *, u_char *);
+extern void error(const char *, ...);
+extern long seconds(void);
+extern void usage(void);
+extern void hide_hft_ring(void);
+extern void unhide_hft_ring(void);
 
 
 /* System V Release 4 redefinitions of BSD functions and structures */

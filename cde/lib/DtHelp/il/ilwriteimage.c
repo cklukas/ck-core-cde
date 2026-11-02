@@ -60,11 +60,12 @@ typedef struct {
     /*  Init() function for ilWriteImage().
     */
 static ilError ilWriteImageInit (
-    ilImagePrivPtr      pPriv,
+    ilPtr               privateData,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilImagePrivPtr pPriv = (ilImagePrivPtr)privateData;
     pPriv->nStripsWritten = 0;
     pPriv->nLinesWritten = 0;
     return IL_OK;
@@ -79,9 +80,10 @@ static ilError ilWriteImageInit (
         from destroying an image still attached to a pipe.
     */
 static ilError ilWriteImageDestroy (
-    ilImagePrivPtr      pPriv
+    ilPtr               privateData
     )
 {
+    ilImagePrivPtr pPriv = (ilImagePrivPtr)privateData;
     ilDestroyObject ((ilObject)pPriv->pImage);
     return IL_OK;
 }
@@ -93,10 +95,11 @@ static ilError ilWriteImageDestroy (
     /*  Cleanup() function for ilWriteImage(), writing compressed images.
     */
 static ilError ilWriteCompressedCleanup (
-    ilImagePrivPtr      pPriv,
+    ilPtr               privateData,
     ilBool              aborting
     )
 {
+    ilImagePrivPtr pPriv = (ilImagePrivPtr)privateData;
 ilImagePlaneInfo *pImagePlane;
 ilImagePtr     pImage;
 ilError                 error;

@@ -40,7 +40,11 @@
 #include "isam_impl.h"
 #include <sys/time.h>
 
-static int _amrewcurr(), _changekeys2();
+static int _amrewcurr(Bytearray *isfhandle, char *record, int reclen,
+                      Bytearray *curpos, Recno *recnum,
+                      struct errcode *errcode);
+static int _changekeys2(Fcb *fcb, char *record, char *oldrecord,
+                        Recno recnum, Bytearray *curpos);
 
 /*
  * err = isrewcurr(isfd, record)
@@ -73,7 +77,7 @@ isrewcurr(int isfd, char *record)
     Fab	*fab;
     int			reclen;
     int			ret;
-    int			recnum;
+    Recno		recnum;
 
     /*
      * Get File Access Block.
@@ -138,8 +142,8 @@ _amrewcurr(Bytearray *isfhandle, char *record, int reclen,
     int			err;
     char		oldrecord[ISMAXRECLEN];
     int			reclen2;
-    int			(*rec_read)();
-    int			(*rec_rewrite)();
+    int			(*rec_read)(Fcb *, char *, Recno, int *);
+    int			(*rec_rewrite)(Fcb *, char *, Recno, int);
 
     _isam_entryhook();
 

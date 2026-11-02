@@ -125,6 +125,13 @@ ilFileImagePtr pFileImage, pAltFileImage, pFileImageTemp;
     pFile->haveImageList = FALSE;
 }
 
+static void ilDestroyTIFFFileObject (
+    ilObjectPtr pObject
+    )
+{
+    ilFreeFileList ((ilFilePtr)pObject);
+}
+
 
         /*  ----------------------- ilReadFileTags --------------------------------- */
         /*  Public function: see spec.
@@ -1157,7 +1164,8 @@ ilTIFFHeader            header;
         /*  File seems to be a valid TIFF file.  Create an ilFileRec object, init it
             and return ptr to it.
         */
-    pFile = (ilFilePtr)_ilCreateObject (context, IL_FILE, ilFreeFileList, sizeof(ilFileRec));
+    pFile = (ilFilePtr)_ilCreateObject (context, IL_FILE, ilDestroyTIFFFileObject,
+                                       sizeof(ilFileRec));
     if (!pFile)
         return (ilFile)NULL;                        /* context->error already set */
 

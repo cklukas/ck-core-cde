@@ -669,7 +669,7 @@ void mgr_launch_reply( XpPdmServiceRec *rec )
      */
     if ((rec->pdm_exec_errormessage) && (g.log_file)) {
 	if ((errlog = fopen(g.log_file, "a+")) != NULL) {
-	    now = time((time_t)0);
+	    now = time(NULL);
 
 	    if ( rec->pdm_exec_errorcode == g.pdm_start_ok )
 		eec = "PDM_START_OK";
@@ -830,6 +830,8 @@ Bool has_exec_token( XpPdmServiceRec *rec )
     int i1;
 
     s1 = rec->message_string;
+    s2 = NULL;
+    i1 = 0;
 
     if (s1) {
 	/*
@@ -838,19 +840,19 @@ Bool has_exec_token( XpPdmServiceRec *rec )
 	 * required, and eliminate the token from the
 	 * output.
 	 */
-	if ( s2 = strstr( s1, "PDM_START_OK") ) {
+	if ((s2 = strstr(s1, "PDM_START_OK"))) {
 	    rec->pdm_exec_errorcode = g.pdm_start_ok;
 	    i1 = 12;
 	}
-	else if ( s2 = strstr( s1, "PDM_START_VXAUTH") ) {
+	else if ((s2 = strstr(s1, "PDM_START_VXAUTH"))) {
 	    rec->pdm_exec_errorcode = g.pdm_start_vxauth;
 	    i1 = 16;
 	}
-	else if ( s2 = strstr( s1, "PDM_START_PXAUTH") ) {
+	else if ((s2 = strstr(s1, "PDM_START_PXAUTH"))) {
 	    rec->pdm_exec_errorcode = g.pdm_start_pxauth;
 	    i1 = 16;
 	}
-	else if ( s2 = strstr( s1, "PDM_START_ERROR") ) {
+	else if ((s2 = strstr(s1, "PDM_START_ERROR"))) {
 	    rec->pdm_exec_errorcode = g.pdm_start_error;
 	    i1 = 15;
 	}
@@ -860,7 +862,7 @@ Bool has_exec_token( XpPdmServiceRec *rec )
 	     * Compress out the token.
 	     */
 	    s3 = s2 + i1;
-	    while ( *s2++ = *s3++ );
+	    while ((*s2++ = *s3++)) ;
 
 	    if ( strlen(s1) == 0 ) {
 		/*
@@ -944,7 +946,7 @@ void mgr_shutdown_scan(void)
 	    if ( ((g.serviceRecs[i]->message_string) ||
 		  (g.serviceRecs[i]->message_string2)) && (g.log_file) ) {
 		if ((errlog = fopen(g.log_file, "a+")) != NULL) {
-		    now = time((time_t)0);
+		    now = time(NULL);
 
 		    fprintf (errlog, PDMD_MSG_14, g.prog_name, ctime(&now),
 					g.serviceRecs[i]->pdm_exec_argvs[0],

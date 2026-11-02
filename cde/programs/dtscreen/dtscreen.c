@@ -110,6 +110,7 @@ nl_catd  scmc_catd;   /* Cat descriptor for scmc conversion */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
@@ -130,8 +131,8 @@ nl_catd  scmc_catd;   /* Cat descriptor for scmc conversion */
 
 char       *ProgramName;        /* argv[0] */
 Display    *dsp = NULL;         /* server display connection */
-void        (*callback) () = NULL;
-void        (*init) () = NULL;
+DtScreenProc callback = NULL;
+DtScreenProc init = NULL;
 
 static perwindow *Win; /* perwindow information */
 static int  windows;            /* number of windows */
@@ -139,9 +140,14 @@ static Window *winprop = NULL;  /* dtsession cover windows */
 
 /* VARARGS1 */
 void
-error(char *s1, char *s2)
+error(const char *format, ...)
 {
-    fprintf(stderr, s1, ProgramName, s2);
+    va_list args;
+
+    fprintf(stderr, "%s: ", ProgramName);
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
     exit(1);
 }
 

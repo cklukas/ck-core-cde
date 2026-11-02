@@ -40,7 +40,8 @@
 #include "isam_impl.h"
 #include <sys/time.h>
 
-static int _amdelcurr();
+static int _amdelcurr(Bytearray *isfhandle, Bytearray *curpos,
+                      Recno *recnum, struct errcode *errcode);
 
 /*
  * err = isdelcurr(isfd, record)
@@ -64,10 +65,9 @@ static int _amdelcurr();
 int 
 isdelcurr(int isfd)
 {
-    int			_am_delcurr();
     Fab	*fab;
     int			ret;
-    int			recnum;
+    Recno		recnum;
 
     /*
      * Get File Access Block.
@@ -118,8 +118,8 @@ _amdelcurr(Bytearray *isfhandle, Bytearray *curpos, Recno *recnum,
     Crp			*crp;
     char		recbuf[ISMAXRECLEN];
     int			reclen;
-    int			(*rec_read)();
-    int			(*rec_delete)();
+    int			(*rec_read)(Fcb *, char *, Recno, int *);
+    int			(*rec_delete)(Fcb *, Recno);
 
     _isam_entryhook();
 

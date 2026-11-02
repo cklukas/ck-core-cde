@@ -116,8 +116,6 @@ typedef struct {
 					       grays */
     } ilXWCRec, *ilXWCPtr;
 
-typedef ilError   (*executeFunctionType)();
-
         /*  ------------------------ ilFreeColorData ---------------------- */
         /*  Free the color list and translation table in the given XWC if 
 	    present. "freeMasks" indicates which should be freed: 
@@ -180,13 +178,12 @@ if (freeMask & IL_FREE_XGRAYS) {
             freed, by ilXDestroyContext() below.
         */
 static void ilDestroyXWC (
-    ilPtr pPrivate
+    ilObjectPtr pObject
     )
 {
-ilObject object = (ilObject)pPrivate;
 ilXWCPtr       pXWC;
 
-    pXWC = (ilXWCPtr)object;
+    pXWC = (ilXWCPtr)pObject;
 
 /* ~ on signed integer is not recommended, play it safe here */
     ilFreeColorData (pXWC, ~(0UL));

@@ -70,12 +70,13 @@
 
 
 static ilError ilRotateInit2(
-    ilRotatePrivptr p,
+    ilPtr            pPrivate,
     ilImageInfo     *pSrcImage,
     ilImageInfo     *pDstImage
     )
  
 {
+ilRotatePrivptr p = (ilRotatePrivptr)pPrivate;
 DATA_IN_PTR data_in;
 DATA_OUT_PTR buf;
 short          out_w, out_h;
@@ -107,10 +108,13 @@ short          out_w, out_h;
 
    ============================================================================================================================= */
 static ilError ilRotateCleanup (
-    ilRotatePrivptr   pPriv,
-    ilBool                  aborting
+    ilPtr              pPrivate,
+    ilBool             aborting
     )
 {
+   ilRotatePrivptr pPriv = (ilRotatePrivptr)pPrivate;
+
+   (void)aborting;
    free (pPriv->buf);
    _il_Rotate_Image_End();
    return IL_OK;
@@ -125,8 +129,8 @@ static ilError ilRotateCleanup (
    ============================================================================================================================= */
 static ilError ilRotateExecute (
     ilExecuteData   *pData,
-    unsigned long           dstLine,
-    unsigned long          *pNLines
+    long             dstLine,
+    long            *pNLines
     )
 {
 

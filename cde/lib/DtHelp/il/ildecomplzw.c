@@ -82,11 +82,12 @@ typedef struct {                            /* private image information   */
    ======================================================================== */
 
 static ilError ilDecompLZWInit(
-    ilDecompPrivPtr  pPriv,
+    ilPtr            privateData,
     ilImageInfo     *pSrcImage,
     ilImageInfo     *pDstImage
     )
 {
+    ilDecompPrivPtr pPriv = (ilDecompPrivPtr)privateData;
     pPriv->denodes = (ilDenodePtr)NULL;
     pPriv->pString = (ilPtr)IL_MALLOC (MAX_NODES);
     if (!pPriv->pString) 
@@ -104,10 +105,11 @@ static ilError ilDecompLZWInit(
 
 
 static ilError ilDecompLZWCleanup (
-    ilDecompPrivPtr  pPriv,
+    ilPtr            privateData,
     ilBool           aborting
     )
 {
+    ilDecompPrivPtr pPriv = (ilDecompPrivPtr)privateData;
     if (pPriv->pString) 
         IL_FREE (pPriv->pString);
     if (pPriv->denodes) 
@@ -242,8 +244,8 @@ static ilError ilInitializeDecodeTable (
 
 static ilError ilDecompLZWExecute(
     ilExecuteData           *pData,
-    unsigned long            dstLine,
-    unsigned long           *pNLines
+    long                     dstLine,
+    long                    *pNLines
     )
 {
 

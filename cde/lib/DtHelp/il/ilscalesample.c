@@ -131,11 +131,12 @@ static void ilScaleInitTables (
    ============================================================================================================================= */
 
 static ilError ilScaleSampleInit (
-    ilScaleSamplePtr   pPriv,
+    ilPtr              privateData,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilScaleSamplePtr pPriv = (ilScaleSamplePtr)privateData;
 
     pPriv->lineAcc = pPriv->heightDiff;
     return IL_OK;

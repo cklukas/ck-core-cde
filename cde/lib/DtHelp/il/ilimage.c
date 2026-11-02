@@ -440,6 +440,13 @@ ilPtr                   pPixels;
         }
 }
 
+static void ilDestroyImageObject (
+    ilObjectPtr pObject
+    )
+{
+    _ilFreeImagePixels ((ilImagePtr)pObject);
+}
+
 
     /*  ------------------------ ilAllocStripOffsets ----------------------------- */
     /*  For compressed images only: allocate strip offsets array (pStripOffsets)
@@ -505,7 +512,7 @@ ilError                 error;
         return (ilInternalImage)NULL;
 
         /*  Create the object and add it to context. */
-    pImage = (ilImagePtr)_ilCreateObject (context, IL_INTERNAL_IMAGE, _ilFreeImagePixels, 
+    pImage = (ilImagePtr)_ilCreateObject (context, IL_INTERNAL_IMAGE, ilDestroyImageObject,
                                          sizeof (ilImageRec));
     if (!pImage)
         return (ilInternalImage)NULL;
@@ -670,7 +677,7 @@ int                     plane, nPlanes;
         return (ilClientImage)NULL;
 
         /*  Create the object and add it to context. */
-    pImage = (ilImagePtr)_ilCreateObject (context, IL_CLIENT_IMAGE, _ilFreeImagePixels, 
+    pImage = (ilImagePtr)_ilCreateObject (context, IL_CLIENT_IMAGE, ilDestroyImageObject,
                                          sizeof (ilImageRec));
     if (!pImage)
         return (ilClientImage)NULL;

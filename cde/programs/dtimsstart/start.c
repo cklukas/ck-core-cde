@@ -35,16 +35,16 @@
 #endif
 
     /* local functions */
-static int	check_ims_opt(/* ptr */);
-static char	*find_session_resfile(/* res_type */);
-static int	check_selection(/* sel */);
-static int	build_run_env(/* sel */);
-static int	run_ims(/* sel */);
-static int	invoke_ims(/* sel */);
-static void	on_sig_chld(/* sig */);
-static bool	is_ims_running(/* renv, ims */);
-static int	settle_ims(/* sel */);
-static Window	property_owner(/* prop_atom, prop_str */);
+static int	check_ims_opt(char *ptr);
+static char	*find_session_resfile(int res_type);
+static int	check_selection(UserSelection *sel);
+static int	build_run_env(UserSelection *sel);
+static int	run_ims(UserSelection *sel);
+static int	invoke_ims(UserSelection *sel);
+static void	on_sig_chld(int sig);
+static XimsBool	is_ims_running(RunEnv *renv, ImsConf *ims);
+static int	settle_ims(UserSelection *sel);
+static Window	property_owner(Atom *prop_atom, char *prop_str);
 
 void	ximsStart(void)
 {
@@ -142,11 +142,11 @@ void	ximsWait(void)
 	lapse = 0;
 	interval.tv_sec = Opt.Interval / 1000;
 	interval.tv_usec = (Opt.Interval % 1000) * 1000;
-	start_tm = time((time_t) 0);
+	start_tm = time(NULL);
 
 	while (is_waiting()) {
 	    select(0, 0, 0, 0, &interval);		/* usleep */
-	    lapse = (int) time((time_t) 0) - start_tm;
+	    lapse = (int) time(NULL) - start_tm;
 
 	    if (im_mod_available(sel->renv) != 0 || lapse >= Opt.Timeout) {
 		DPR(("ximsWait(tmout=%d): wait done (%d sec.)\n",
@@ -324,7 +324,7 @@ static int	check_ims_opt(char *ptr)
 #define	RES_TYPE_DT		0
 #define	RES_TYPE_VUE		1
 
-static bool	resource_loaded = False;
+static XimsBool	resource_loaded = False;
 
 int	load_resources(void)
 {
@@ -385,14 +385,14 @@ static char	*find_session_resfile(int res_type)
     char	path[MAXPATHLEN];
     char	**ls = (char **) 0, **pp;
     char	*res = NULL;
-    bool	found = False;
+    XimsBool	found = False;
 
     if (res_type == RES_TYPE_DT) {	/* DT */
 	res = Conf.dt ? (Conf.dt)->resPath : NULL;
     }
 
     if (!res)	return NULL;
-    if (ls = parse_strlist(res, ':')) {
+    if ((ls = parse_strlist(res, ':'))) {
 	for (pp = ls; *pp; pp++) {
 	    expand_string(*pp, path, MAXPATHLEN, (ImsConf *)0);
 	    if (access(path, R_OK) == 0) {
@@ -451,12 +451,12 @@ static int	build_run_env(UserSelection *sel)
 
 	/* proto, im_mod  & atom */
     proto = renv->proto = default_protocol(ims);
-    if (p = Conf.xmod[proto]) {
+    if ((p = Conf.xmod[proto])) {
 	char	buf[BUFSIZ];
 	expand_string(p, buf, BUFSIZ, ims);
 	renv->im_mod = NEWSTR(buf);
     }
-    if (p = Conf.atom[proto]) {
+    if ((p = Conf.atom[proto])) {
 	char	buf[BUFSIZ];
 	expand_string(p, buf, BUFSIZ, ims);
 	renv->atom_name = NEWSTR(buf);
@@ -579,7 +579,7 @@ static int	invoke_ims(UserSelection *sel)
 #endif
 	execl(SH_PATH, "sh", "-c", renv->cmdbuf, NULL);
 
-	put_xims_log("%s: exec failed [%s]", SH_PATH, strerror(errno) , 0, 0);
+	put_xims_log("%s: exec failed [%s]", SH_PATH, strerror(errno), 0);
 	/* perror(SH_PATH); */
 	sleep(1);
 	_exit(1);
@@ -653,13 +653,13 @@ static void	on_sig_chld(int sig)
     return;
 }
 
-static bool	is_ims_running(RunEnv *renv, ImsConf *ims)
+static XimsBool	is_ims_running(RunEnv *renv, ImsConf *ims)
 {
     char	*prop_str;
     Window	owner;
     Atom	*atomp;
 
-    if (prop_str = ims->property) {
+    if ((prop_str = ims->property)) {
 	atomp = (Atom *)0;
     } else {
 	if (!(prop_str = renv->atom_name))
@@ -703,7 +703,7 @@ static int	settle_ims(UserSelection *sel)
 	ImsConf	*ims = sel->ent->ims;
 
 	owner = None;
-	if (prop_str = ims->property) {
+	if ((prop_str = ims->property)) {
 	    atomp = (Atom *)0;
 	    owner = property_owner(atomp, prop_str);
 	}

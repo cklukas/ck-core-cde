@@ -50,7 +50,7 @@
 /* ldlong() - Load a long integer from a potentially  unaligned address */
 
 long
-ldlong(char *p)
+ldlong(const char *p)
 {
     int i;
 #if LONG_BIT == 64
@@ -61,7 +61,7 @@ ldlong(char *p)
 
     val = 0;
     for (i=0; i<LONGSIZE ; i++)
-        val = (val << 8) + *((unsigned char *)p++);
+        val = (val << 8) + *((const unsigned char *)p++);
 
     return ((long)val);
 }
@@ -83,12 +83,12 @@ stlong(long val, char *p)
 /* ldint() - Load a short integer from a potentially  unaligned address */
 
 short
-ldint(char *p)
+ldint(const char *p)
 {
     unsigned int val;
 
-    val = *((unsigned char *)p++);
-    val = (val << 8) + *((unsigned char *)p++);
+    val = *((const unsigned char *)p++);
+    val = (val << 8) + *((const unsigned char *)p++);
 
     return ((short)val);
 }
@@ -97,12 +97,12 @@ ldint(char *p)
 /* ldunshort - load a unshort integer : for 64K record length */
 
 u_short
-ldunshort(char *p)
+ldunshort(const char *p)
 {
     unsigned int val;
 
-    val = *((unsigned char *)p++);
-    val = (val << 8) + *((unsigned char *)p++);
+    val = *((const unsigned char *)p++);
+    val = (val << 8) + *((const unsigned char *)p++);
 
     return ((u_short)val);
 }
@@ -122,7 +122,7 @@ stint(short val, char *p)
 /* ldchar() - Load character field */
 
 int
-ldchar(char *src, int len, char *dst)
+ldchar(const char *src, int len, char *dst)
 {
     char	*p;
 
@@ -145,7 +145,7 @@ ldchar(char *src, int len, char *dst)
 }
 
 int
-stchar(char *src, char *dst, int len)
+stchar(const char *src, char *dst, int len)
 {
     char	c;
 
@@ -168,7 +168,7 @@ stchar(char *src, char *dst, int len)
 /* ldchar2() - Load character field (C style, NULL padded) */
 
 int
-ldchar2(char *src, int len, char *dst)
+ldchar2(const char *src, int len, char *dst)
 {
 
     if (len <= 0)
@@ -181,7 +181,7 @@ ldchar2(char *src, int len, char *dst)
 }
 
 int
-stchar2(char *src, char *dst, int len)
+stchar2(const char *src, char *dst, int len)
 {
     char       c;
 
@@ -204,7 +204,7 @@ stchar2(char *src, char *dst, int len)
 /* ldfloat() - Load a float number from a potentially  unaligned address */
 
 float
-ldfloat(char *p)
+ldfloat(const char *p)
 {
     union {
 	float fval;
@@ -212,10 +212,10 @@ ldfloat(char *p)
     } uval;
     unsigned int val;
 
-    val = *((unsigned char *)p++);
-    val = (val << 8) + *((unsigned char *)p++);
-    val = (val << 8) + *((unsigned char *)p++);
-    val = (val << 8) + *((unsigned char *)p++);
+    val = *((const unsigned char *)p++);
+    val = (val << 8) + *((const unsigned char *)p++);
+    val = (val << 8) + *((const unsigned char *)p++);
+    val = (val << 8) + *((const unsigned char *)p++);
 
     uval.ival = val;
     return (uval.fval);
@@ -250,7 +250,7 @@ stfloat(float f, char *p)
 /* ldbld() - Load a double float number from a potentially unaligned address */
 
 double
-lddbl(char *p)
+lddbl(const char *p)
 {
     double val;
 
@@ -272,7 +272,7 @@ stdbl(double val, char *p)
 /* ldbld() - Load a double float number from a potentially unaligned address */
 
 double
-lddbl(char *p)
+lddbl(const char *p)
 {
     union {
         double rval;

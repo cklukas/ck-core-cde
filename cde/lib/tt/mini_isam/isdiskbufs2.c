@@ -42,8 +42,6 @@
 
 #include "isam_impl.h"
 
-extern struct dlink *_isdln_next(), *_isdln_first();
-
 #define ISMAXBUFFERS	200		     /* Use 20 buffers */
 #define ISHASHHDRS	256		     /* Must be a power of two */
 #define ISHASHMASK      (ISHASHHDRS-1)
@@ -62,9 +60,13 @@ extern struct dlink *_isdln_next(), *_isdln_first();
 #define _isdln_isempty(l)  _isdln_base_isempty(base,(l))
 
 /*---------------------- Local data ---------------------------------------*/
-static Bufhdr *_getavail(), *_findblock();
-static void _disk_init(), _commit1buffer(), _rollback1buffer(), _flush1buffer();
-static void _makenodata();
+static Bufhdr *_getavail(void);
+static Bufhdr *_findblock(Fcb *fcb, int unixfd, Blkno blkno);
+static void _disk_init(void);
+static void _commit1buffer(Bufhdr *p);
+static void _rollback1buffer(Bufhdr *p);
+static void _flush1buffer(Bufhdr *p);
+static void _makenodata(Bufhdr *p);
 
 Bufhdr bufhdrs [ISMAXBUFFERS];
 struct dlink  hashhdrs [ISHASHHDRS];	     /* Heads of hashed lists */
@@ -268,7 +270,6 @@ _isdisk_refix(Bufhdr *p, int newmode)
 void
 _isdisk_sync(void)
 {
-    extern time_t _istimeget();
     Bufhdr *p;
     struct dlink	   *e;
     
@@ -283,7 +284,6 @@ _isdisk_sync(void)
 void
 _isdisk_inval(void)
 {
-    extern time_t _istimeget();
     Bufhdr *p;
     struct dlink	   *e;
     

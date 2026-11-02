@@ -27,15 +27,15 @@
 #include	<sys/stat.h>
 
     /* local func */
-static void put_selection_entry(FILE *fp, int ent_type, bool is_valid, char *val, char *val2);
-static void	put_ims_conf(/* fp, sel */);
-static void	put_select_mode(/* fp, select_mode */);
-static void	put_selection_header(/* fp */);
-static void	put_selection_sep(/* fp */);
-static int	user_selection_fname(/* buf, buf_len, dpy_specific */);
+static void put_selection_entry(FILE *fp, int ent_type, XimsBool is_valid, char *val, char *val2);
+static void	put_ims_conf(FILE *fp, UserSelection *sel);
+static void	put_select_mode(FILE *fp, int select_mode);
+static void	put_selection_header(FILE *fp);
+static void	put_selection_sep(FILE *fp);
+static int	user_selection_fname(char *buf, int buf_len, int dpy_specific);
 
 static char	*SelectFileFormat = NULL;
-static bool	cmdconf_initialized = False;
+static XimsBool	cmdconf_initialized = False;
 
 
 int	create_xims_dir(void)
@@ -80,7 +80,7 @@ int	create_xims_dir(void)
 int	init_log_file(char *org_path, int check_size)
 {
     char	path[MAXPATHLEN];
-    bool	log_exists = False;
+    XimsBool	log_exists = False;
     int		fd;
     struct stat	stb;
 
@@ -386,7 +386,7 @@ int	read_imsconf(ImsConf *conf, char *ims_name, char *ims_fname)
 	if (strcmp(lp, "name") == 0)
 	    ;	/* conf->name = NEWSTR(valp); */
 	else if (strcmp(lp, "server_name") == 0) {
-	    if (p = strchr(valp, ',')) {	/* contain secondary names */
+	    if ((p = strchr(valp, ','))) {	/* contain secondary names */
 		conf->servername2 = NEWSTR(valp);	/* save full name */
 		*p = 0;
 	    }
@@ -538,7 +538,7 @@ int	read_localeconf(ImsList *list, char *locale_name)
 		break;
 	    }
 	    ent = ALLOC(1, ImsEnt);
-	    if (pp = strchr(lp, STR_PREFIX_CHAR)) {
+	    if ((pp = strchr(lp, STR_PREFIX_CHAR))) {
 		*pp++ = 0;
 		if (*pp)
 		    ent->fname = NEWSTR(pp);
@@ -648,7 +648,7 @@ int	read_selection_file(FileSel *fsel, FILE *fp)
 	    if (*valp)
 		iconic = str_to_bool(valp, False);
 	} else if (strncmp(lp + 1, STR_IMSOPTION, 4) == 0) {
-	    if (p = strchr(lp + 1, STR_PREFIX_CHAR)) {	/* indiv. opt */
+	    if ((p = strchr(lp + 1, STR_PREFIX_CHAR))) {	/* indiv. opt */
 		if (nopts >= MAXIMSENT) {
 		    DPR(("\t[line=%d] too many options - '%s' ignored\n",
 								line_num, lp));
@@ -729,7 +729,7 @@ int	save_user_selection(UserSelection *sel, char *locale_name)
 #define	_IMSOPTION	4
 #define	_IMSOPT2	5
 
-static void put_selection_entry(FILE *fp, int ent_type, bool is_valid, char *val, char *val2)
+static void put_selection_entry(FILE *fp, int ent_type, XimsBool is_valid, char *val, char *val2)
 {
     char	*name = NULL;
 
@@ -774,7 +774,7 @@ static void	put_ims_conf(FILE *fp, UserSelection *sel)
     }
 
     if (sel->fsel && (valp = sel->fsel->com_opt) && *valp) {
-	bool	opt_valid = True;
+	XimsBool	opt_valid = True;
 #if	0
 	opt_valid = !sel->fsel->name || strcmp(sel->name, sel->fsel->name) == 0;
 #endif
@@ -913,7 +913,7 @@ int	set_select_mode(int cur_mode, int new_mode)
 	    if (*lp == STR_PREFIX_CHAR) {
 		if (strncmp(lp + 1, STR_SELECTMODE, 3) == 0) {
 		    if (mode_line)	continue;	/* ignore this line */
-		    if (valp = strchr(lp, TAG_END_CHAR)) {
+		    if ((valp = strchr(lp, TAG_END_CHAR))) {
 			valp++;
 			skip_white(valp);
 			if (str_to_int(valp, &n) && n == new_mode)
@@ -952,7 +952,7 @@ static int	user_selection_fname(char *buf, int buf_len, int dpy_specific)
 {
     int		len;
     UserEnv	*uenv = &userEnv;
-    static bool	real_done = False;
+    static XimsBool	real_done = False;
 
     if (Opt.UserPath) {
 	strncpy(buf, Opt.UserPath, buf_len);

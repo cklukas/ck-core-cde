@@ -394,17 +394,19 @@ PrElemPlusID(
 static void
 match_gi(
     Element_t	*e,
-    char	**av
+    void	*client_data
 )
 {
+    char **av = client_data;
     if (!strcmp(av[1], e->gi)) PrElemPlusID(e);
 }
 
 /*  Shorthand for defining simple finctions, which are just interfaces to
  *  calling QRelation().  DescendTree() only passes ptr to element. */
 #define MATCH(Fun,Rel)	\
-	static void Fun(Element_t *e, char **av) \
-	{ if (QRelation(e, av[1], Rel)) PrElemPlusID(e);  }
+	static void Fun(Element_t *e, void *client_data) \
+	{ char **av = client_data; \
+	  if (QRelation(e, av[1], Rel)) PrElemPlusID(e); }
 
 MATCH(match_parent, REL_Parent)
 MATCH(match_child,  REL_Child)
@@ -415,9 +417,10 @@ MATCH(match_sib,    REL_Sibling)
 static void
 match_attr(
     Element_t	*e,
-    char	**av
+    void	*client_data
 )
 {
+    char **av = client_data;
     char	*atval;
 
     if ((atval = FindAttValByName(e, av[1])) && !strcmp(av[2], atval))
@@ -427,9 +430,10 @@ match_attr(
 static void
 match_cont(
     Element_t	*e,
-    char	**av
+    void	*client_data
 )
 {
+    char **av = client_data;
     int		i;
     for (i=0; i<e->ncont; i++) {
 	if (IsContData(e,i) && strstr(ContData(e,i), av[1])) {

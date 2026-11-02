@@ -177,11 +177,12 @@ typedef struct {
             address and rowBytes into private for faster reference in Execute().
         */
 static ilError ilInitDitherRGB (
-    ilDitherPrivPtr     pPriv,
+    ilPtr                pPrivate,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilDitherPrivPtr     pPriv = (ilDitherPrivPtr)pPrivate;
 
     pPriv->width = pSrcImage->width;
     pPriv->srcRowBytes = pSrcImage->plane[0].nBytesPerRow;
@@ -203,9 +204,10 @@ static ilError ilInitDitherRGB (
 
         /*  Destroy() function: free pPriv->pPalette. */
 static ilError ilDestroyDitherRGB (
-    ilDitherPrivPtr     pPriv
+    ilPtr                pPrivate
     )
 {
+    ilDitherPrivPtr     pPriv = (ilDitherPrivPtr)pPrivate;
     if (pPriv->pPalette)
        IL_FREE (pPriv->pPalette);
     if (pPriv->pColorTable)
@@ -215,9 +217,13 @@ static ilError ilDestroyDitherRGB (
 
         /*  Cleanup() function: only if diffusion: free pPriv->pErrors. */
 static ilError ilCleanupDitherRGB (
-    ilDitherPrivPtr     pPriv
+    ilPtr                pPrivate,
+    ilBool               aborting
     )
 {
+    ilDitherPrivPtr     pPriv = (ilDitherPrivPtr)pPrivate;
+
+    (void)aborting;
     if (pPriv->pErrors)
        IL_FREE (pPriv->pErrors);
     return IL_OK;
@@ -1019,7 +1025,8 @@ IL_PRIVATE ilBool _ilConvertRGBToPalette (
     ilDitherPrivPtr pPriv;
     ilDstElementData        dstData;
     ilSrcElementData        srcData;
-    ilError                 (*executeFunction)(), (*cleanupFunction)();
+    ilPipeExecuteProc       executeFunction;
+    ilPipeCleanupProc       cleanupFunction;
     ilPtr                   pTranslate;
     unsigned short         *pPalette;
     long                   *pColorTable;

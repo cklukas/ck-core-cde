@@ -61,12 +61,13 @@ extern const unsigned char ilBitReverseTable [];
 
 
 static ilError ilMirrorInit(
-    ilMirrorPrivptr  pPrivate,
+    ilPtr            privateData,
     ilImageInfo     *pSrcImage,
     ilImageInfo     *pDstImage
     )
 
 {
+ ilMirrorPrivptr pPrivate = (ilMirrorPrivptr)privateData;
  unsigned char  *pdstline;
  ilImagePlaneInfo           *pplane;
 

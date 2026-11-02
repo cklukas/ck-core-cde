@@ -78,7 +78,8 @@ static char *RCSid =
  */
 static void
 print_summ(
-    Element_t	*e
+    Element_t	*e,
+    void	*client_data
 )
 {
     int i, n, dsize;
@@ -110,7 +111,7 @@ PrintElemSummary(
     Element_t	*e
 )
 {
-    print_summ(0);
+    print_summ(NULL, NULL);
     DescendTree(e, print_summ, 0, 0, 0);
 }
 
@@ -125,7 +126,8 @@ PrintElemSummary(
  */
 static void
 print_context(
-    Element_t	*e
+    Element_t	*e,
+    void	*client_data
 )
 {
     char buf[LINESIZE];
@@ -160,7 +162,8 @@ PrintContext(
  */
 static void
 print_indent(
-    Element_t	*e
+    Element_t	*e,
+    void	*client_data
 )
 {
     int		i, ne, nd;

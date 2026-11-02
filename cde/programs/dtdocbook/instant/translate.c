@@ -85,7 +85,7 @@ void	CallInterpreter(char *, Element_t *);
  *	FILE pointer to where to write output.
  */
 
-static void	WasProcessed(Element_t *);
+static void	WasProcessed(Element_t *, void *);
 void
 DoTranslate(
     Element_t	*e,
@@ -158,7 +158,8 @@ DoTranslate(
  */
 static void
 WasProcessed(
-    Element_t	*e
+    Element_t	*e,
+    void	*client_data
 )
 {
     Trans_t	*t;
@@ -176,7 +177,8 @@ WasProcessed(
  */
 void
 PrepTranspecs(
-    Element_t	*e
+    Element_t	*e,
+    void	*client_data
 )
 {
     Trans_t	*t;

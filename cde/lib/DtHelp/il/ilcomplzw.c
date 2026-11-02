@@ -74,11 +74,12 @@ typedef struct {
         /*  Allocate the string and encode node table memory.
         */
 static ilError ilCompLZWInit (
-    ilCompLZWPrivPtr pPriv,
+    ilPtr            privateData,
     ilImageInfo     *pSrcImage,
     ilImageInfo     *pDstImage
     )
 {
+    ilCompLZWPrivPtr pPriv = (ilCompLZWPrivPtr)privateData;
     pPriv->ennodes = (ilEnnodePtr)NULL;
     pPriv->pString = (ilPtr)IL_MALLOC (MAX_NODES);
     if (!pPriv->pString) 
@@ -98,10 +99,11 @@ static ilError ilCompLZWInit (
         /*  Deallocate those things allocated in Init().
         */
 static ilError ilCompLZWCleanup (
-    ilCompLZWPrivPtr pPriv,
+    ilPtr            privateData,
     ilBool          aborting
     )
 {
+    ilCompLZWPrivPtr pPriv = (ilCompLZWPrivPtr)privateData;
     if (pPriv->pString) 
         IL_FREE (pPriv->pString);
     if (pPriv->ennodes) 

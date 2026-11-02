@@ -136,11 +136,12 @@ typedef struct {
             image, so the offshoot pipe will read directly from the bits in the main pipe.
         */
 static ilError ilTapInit (
-    ilTapPrivPtr        pPriv,
+    ilPtr               privateData,
     ilImageInfo        *pSrcImage,
     ilImageInfo        *pDstImage
     )
 {
+    ilTapPrivPtr pPriv = (ilTapPrivPtr)privateData;
 int            plane;
 ilImageInfo            *pFeedInfo;
 
@@ -155,9 +156,10 @@ ilImageInfo            *pFeedInfo;
             Destroy the offshoot pipe and the feed image.
         */
 static ilError ilTapDestroy (
-    ilTapPrivPtr        pPriv
+    ilPtr               privateData
     )
 {
+    ilTapPrivPtr pPriv = (ilTapPrivPtr)privateData;
     ilDestroyObject (pPriv->pipe);
     ilDestroyObject (pPriv->feedImage);
     return IL_OK;
