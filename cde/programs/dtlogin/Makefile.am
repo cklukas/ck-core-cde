@@ -2,6 +2,11 @@ SUBDIRS = config
 
 bin_PROGRAMS = dtlogin dtgreet dtchooser
 
+EXTRA_DIST = tests/check-environment.py
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-environment.py
+
 XDMDIR = $(CDE_LOGFILES_TOP)
 
 DEF_SERVER = $(XBINDIR)/X

@@ -1,4 +1,7 @@
 2026-11-02
+- dtlogin: check full-width environment allocation sizes, preserve existing
+  entries on allocation failure, isolate environment tokenization, and retain
+  message-catalog fallback when NLSPATH allocation or installation fails.
 - DtHelp: decode character offsets without walking before the string, reject
   invalid indices, and copy table alignment characters only when conversion
   succeeds and the complete character fits the output buffer.

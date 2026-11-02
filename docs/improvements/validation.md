@@ -14,6 +14,12 @@ its ABI, compiles CDE and verifies that `dtwm` links to `libXm.so.9`.
 
 ## Automated suite
 
+Login environment tests execute the production construction and catalog-path
+helpers with allocation and environment-installation failures. They verify
+that existing entries survive failures and tokenizer state belongs to each
+parse. They use controlled environment hooks and do not start the login service
+or change an account's authentication settings.
+
 Help-string regressions compile the production canvas string implementation
 and exercise byte offsets inside multibyte characters, malformed sequences,
 wide-string bounds and alignment-copy capacity. Invalid table alignment

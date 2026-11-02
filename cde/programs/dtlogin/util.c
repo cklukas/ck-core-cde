@@ -57,6 +57,7 @@
 #include    <sys/stat.h>
 #include    <setjmp.h>
 #include    <string.h>
+#include    <stdint.h>
 #include    <dirent.h>
 #include    <Dt/MsgCatP.h>
 #include    <X11/Xutil.h>
@@ -115,7 +116,7 @@ ReadCatalog( int set_num, int msg_num, char *def_str )
     if (alreadyopen == False)
     {
       char *curNlsPath, *newNlsPath;
-      int newNlsPathLen;
+      size_t newNlsPathLen;
 
       alreadyopen = True;
 
@@ -148,24 +149,27 @@ ReadCatalog( int set_num, int msg_num, char *def_str )
         * 1 is ":"
         * <length of curNlsPath>
         */
-        newNlsPathLen += (1 + strlen(curNlsPath));
+        size_t length = strlen(curNlsPath);
+        if (length > SIZE_MAX - newNlsPathLen - 1)
+          newNlsPathLen = 0;
+        else
+          newNlsPathLen += length + 1;
       }
 
-      newNlsPath = malloc(newNlsPathLen);  /* placed in environ, do not free */
+      newNlsPath = newNlsPathLen ? malloc(newNlsPathLen) : NULL;
 
-      if (curNlsPath != NULL)
+      if (newNlsPath)
       {
-        sprintf(newNlsPath, "NLSPATH=%s:%s", curNlsPath, NLS_PATH_STRING);
+        if (curNlsPath)
+          snprintf(newNlsPath, newNlsPathLen, "NLSPATH=%s:%s", curNlsPath, NLS_PATH_STRING);
+        else
+          snprintf(newNlsPath, newNlsPathLen, "NLSPATH=%s", NLS_PATH_STRING);
+        /* putenv retains storage only on success. Catalog fallback remains
+         * usable even when extending the search path runs out of memory.
+         */
+        if (putenv(newNlsPath) != 0)
+          free(newNlsPath);
       }
-      else
-      {
-        sprintf(newNlsPath, "NLSPATH=%s", NLS_PATH_STRING);
-      }
-
-     /*
-      * Store new NLSPATH in environment. Note this memory cannot be freed
-      */
-      putenv(newNlsPath);
 
      /*
       * Open message catalog. Note, if invalid descriptor returned (ie
@@ -181,16 +185,29 @@ ReadCatalog( int set_num, int msg_num, char *def_str )
 void
 printEnv( char **e )
 {
+	if (!e) return;
 	while (*e)
 		Debug ("    %s\n", *e++);
+}
+
+static int
+EnvAllocationSize(size_t nameLength, size_t valueLength, size_t *size)
+{
+    if (nameLength > SIZE_MAX - 2 || valueLength > SIZE_MAX - nameLength - 2)
+        return 0;
+    *size = nameLength + valueLength + 2;
+    return 1;
 }
 
 static char *
 makeEnv( char *name, char *value )
 {
 	char	*result;
+	size_t size;
 
-	result = malloc ((unsigned) (strlen (name) + strlen (value) + 2));
+	if (!name || !value || !EnvAllocationSize(strlen(name), strlen(value), &size))
+	    return NULL;
+	result = malloc (size);
 	if (!result) {
 		LogOutOfMem(
 		  ReadCatalog(MC_LOG_SET,MC_LOG_MAKEENV,MC_DEF_LOG_MAKEENV));
@@ -210,10 +227,12 @@ makeEnv( char *name, char *value )
 char *
 getEnv( char **e, char *name )
 {
-    int	l = strlen (name);
+    size_t l;
+    if (!e || !name) return NULL;
+    l = strlen(name);
 
     while (*e) {
-	if ((int) strlen (*e) > l &&
+	if (strlen (*e) > l &&
 	    !strncmp (*e, name, l) &&
 	    (*e)[l] == '=')
 	  return (*e) + l + 1;
@@ -228,9 +247,10 @@ setEnv( char **e, char *name, char *value )
 {
     char	**new, **old;
     char	*newe;
-    int		envsize;
-    int		l;
+    size_t envsize, l;
 
+    if (!name || !*name || !value || strchr(name, '='))
+        return e;
     l = strlen (name);
     newe = makeEnv (name, value);
     if (!newe) {
@@ -239,7 +259,7 @@ setEnv( char **e, char *name, char *value )
     }
     if (e) {
 	for (old = e; *old; old++)
-	    if ((int) strlen (*old) > l &&
+	    if (strlen (*old) > l &&
 		!strncmp (*old, name, l) &&
 		(*old)[l] == '=')
 	      break;
@@ -250,8 +270,12 @@ setEnv( char **e, char *name, char *value )
 		return e;
 	}
 	envsize = old - e;
+	if (envsize > SIZE_MAX / sizeof(char *) - 2) {
+	    free(newe);
+	    return e;
+	}
 	new = (char **)
-	      realloc((char *) e, (unsigned) ((envsize + 2) * sizeof (char *)));
+	      realloc((char *) e, (envsize + 2) * sizeof (char *));
     } else {
 	envsize = 0;
 	new = (char **) malloc (2 * sizeof (char *));
@@ -360,11 +384,15 @@ char * *
 parseEnv( char **e, char *string )
 {
 
-    char *s1, *s2, *t1, *t2;
+    char *s1, *s2, *t1, *t2, *state;
 
+    if (!string)
+        return e;
     s1 = s2 = strdup(string);
+    if (!s2)
+        return e;
 
-    while ((t1 = strtok(s1," \t")) != NULL ) {
+    while ((t1 = strtok_r(s1," \t", &state)) != NULL ) {
 	if ( (t2 = strchr(t1,'=')) != NULL ) {
 	    *t2++ = '\0';
 	    e = setEnv(e, t1, t2);
