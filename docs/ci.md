@@ -15,3 +15,12 @@ Documentation builds use published ckdocs `master` revision
 `master` publishes the verified site to GitHub Pages and the rpi4 Pages service.
 
 Pull requests build the same documentation without deploying it.
+
+## Topic integration
+
+Group related fixes into cohesive topic commits, including their regression
+tests, changelog entries and relevant documentation. After validation, integrate
+through the shared primary branch and push to both rpi4 (`ckgit`) and GitHub
+(`origin`). Coordinate with concurrent work, preserve unrelated changes, avoid
+force-pushes, and verify that both remotes contain the integrated revision.
+Creating a release requires a separate explicit request.

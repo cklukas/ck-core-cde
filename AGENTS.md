@@ -17,8 +17,12 @@ files may add rules for their subtree, but must not weaken these requirements.
   checkpoint, partial, temporary or known-broken commits.
 - Before committing, review the complete staged diff, run the relevant checks
   and confirm that unrelated working-tree changes remain untouched.
-- Commit locally when the requested topic is complete. Do not push, publish or
-  create a release unless the user explicitly asks for that separate action.
+- Commit completed, verified topics locally, then integrate through the shared
+  primary branch and push to both rpi4 (`ckgit`) and GitHub (`origin`). Coordinate
+  integration with other work, preserve unrelated changes, and never force-push.
+  Related fixes may share one cohesive topic commit; do not split every small
+  fix into its own commit. Record validation and confirm both remote revisions.
+  Release creation remains a separate action requiring an explicit request.
 
 ## Maintain the changelog
 

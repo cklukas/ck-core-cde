@@ -1,4 +1,6 @@
 2026-11-02
+- project: publish completed, verified topic commits through the shared primary
+  branch to both rpi4 and GitHub; group related fixes into cohesive commits.
 - docs: connect the CK Core CDE, CK Core Motif and CK Core Apps sites through
   their headers and front-page project panels.
 - ci: build GitHub Pages and rpi4 documentation with ckdocs v0.10.1.
