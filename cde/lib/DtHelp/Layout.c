@@ -2129,7 +2129,7 @@ ProcessTable(
     const char	  *saveAlignChar = layout->info.align_char;
     char	 **rowIds;
     char	  *alignCharacters = NULL;
-    char	   alignBuf[16];
+    char	   alignBuf[MB_LEN_MAX + 1];
 
     _DtCvFrmtOption   saveTxtJustify = layout->txt_justify;
     _DtCvFrmtOption   colJustify  = _DtCvJUSTIFY_LEFT;
@@ -2377,21 +2377,19 @@ ProcessTable(
 	     */
 	    if (NULL != alignCharacters && '\0' != *alignCharacters)
 	      {
-		int len = mblen(alignCharacters, MB_CUR_MAX);
-
-		/*
-		 * copy the character into a buffer
-		 */
-		strncpy(alignBuf, alignCharacters, len);
-		alignBuf[len] = '\0';
-		layout->info.align_char = alignBuf;
+                size_t len = _DtCvCopyFirstChar(alignCharacters, alignBuf,
+                                               sizeof(alignBuf));
+                if (len == 0)
+                    layout->txt_justify = _DtCvJUSTIFY_LEFT;
+                else
+                    layout->info.align_char = alignBuf;
 
 		/*
 		 * are there more characters? If so increment for the
 		 * next column that may have JUSTIFY_CHAR. Otherwise,
 		 * leave alone and re-use for other columns.
 		 */
-		if ('\0' != alignCharacters[len])
+		if (len > 0 && '\0' != alignCharacters[len])
 		    alignCharacters += len;
 	      }
 

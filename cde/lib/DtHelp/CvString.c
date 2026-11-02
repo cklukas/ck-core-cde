@@ -50,6 +50,8 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+#include <wchar.h>
 
 /*
  * private includes
@@ -155,38 +157,54 @@ _DtCvChar (
     int            type,
     int		   count)
 {
-    int i, len;
-    char *ptr;
-    char str[MB_CUR_MAX];
-    wchar_t value;
-
-    if (0 == type) {
-	ptr = (char *) p1 + count;
-
-	if (MB_CUR_MAX > 1) {
-	    len = mbtowc(&value, ptr, MB_CUR_MAX);
-
-	    if (len == -1) {
-		for (i = 1; i < MB_CUR_MAX; ++i) {
-		    ptr -= i;
-
-		    if (ptr < (char *) p1) {
-			len = -1;
-			break;
-		    }
-
-		    len = mbtowc(&value, ptr, MB_CUR_MAX);
-		    if (len == -1) continue;
-		}
-
-		if (len == -1) value = (wchar_t) -1;
-	    }
-	}
-	else value = *ptr;
+    const char *text = p1;
+    size_t length, offset = 0;
+    mbstate_t state = {0};
+    if (!p1 || count < 0)
+        return (wchar_t)-1;
+    if (type != 0) {
+        const wchar_t *wide = p1;
+        return (size_t)count <= wcslen(wide) ? wide[count] : (wchar_t)-1;
     }
-    else value = *(((wchar_t *) p1) + count);
+    length = strlen(text);
+    if ((size_t)count > length)
+        return (wchar_t)-1;
+    while (offset <= (size_t)count) {
+        wchar_t value;
+        size_t bytes = mbrtowc(&value, text + offset, length - offset + 1, &state);
+        if (bytes == (size_t)-1 || bytes == (size_t)-2) {
+            if (offset == (size_t)count)
+                return (wchar_t)-1;
+            memset(&state, 0, sizeof(state));
+            ++offset;
+            continue;
+        }
+        if (bytes == 0)
+            return offset == (size_t)count ? 0 : (wchar_t)-1;
+        if ((size_t)count - offset < bytes)
+            return value;
+        offset += bytes;
+    }
+    return (wchar_t)-1;
+}
 
-    return (value);
+size_t
+_DtCvCopyFirstChar(const char *text, char *output, size_t capacity)
+{
+    mbstate_t state = {0};
+    size_t available, bytes;
+    if (!output || capacity == 0)
+        return 0;
+    output[0] = '\0';
+    if (!text || !*text)
+        return 0;
+    available = strnlen(text, MB_CUR_MAX);
+    bytes = mbrlen(text, available, &state);
+    if (bytes == (size_t)-1 || bytes == (size_t)-2 || bytes == 0 || bytes >= capacity)
+        return 0;
+    memcpy(output, text, bytes);
+    output[bytes] = '\0';
+    return bytes;
 }
 
 /******************************************************************************

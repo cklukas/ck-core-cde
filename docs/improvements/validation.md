@@ -14,6 +14,11 @@ its ABI, compiles CDE and verifies that `dtwm` links to `libXm.so.9`.
 
 ## Automated suite
 
+Help-string regressions compile the production canvas string implementation
+and exercise byte offsets inside multibyte characters, malformed sequences,
+wide-string bounds and alignment-copy capacity. Invalid table alignment
+characters fall back to left justification before any unsafe copy is attempted.
+
 The session-manager regression executes its production XSMP/client-property
 reader and recursive top-level-window lookup with controlled Xlib replies.
 It checks property formats, counts, truncation, command validity, native-long

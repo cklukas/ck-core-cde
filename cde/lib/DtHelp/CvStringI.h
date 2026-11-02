@@ -45,6 +45,9 @@
 #ifndef _DtCvStringI_h
 #define _DtCvStringI_h
 
+#include <stddef.h>
+#include <wchar.h>
+
 /*****************************************************************************
  *           Macro defines
  *****************************************************************************/
@@ -64,6 +67,10 @@ extern	wchar_t	   _DtCvChar (
 			const void	*p1,
 			int		 type,
 			int		 count);
+/* Copy one complete multibyte character plus NUL. Zero means invalid input or
+ * insufficient capacity; output is empty on failure when capacity is nonzero.
+ */
+extern size_t _DtCvCopyFirstChar(const char *text, char *output, size_t capacity);
 extern	int	   _DtCvFreeArray (void **array);
 extern	int	   _DtCvStrcspn(
 			const void	*s1,

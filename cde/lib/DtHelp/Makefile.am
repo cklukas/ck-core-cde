@@ -8,6 +8,11 @@ dist_cfg_DATA = CDE.lcx
 
 lib_LTLIBRARIES = libDtHelp.la
 
+EXTRA_DIST = tests/check-help-strings.py tests/help-strings.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-help-strings.py
+
 libDtHelp_la_CFLAGS = -I./il -I./jpeg -I../DtSvc/DtUtil2 -DDTLIB \
 		      -DCDE_INSTALLATION_TOP='"$(CDE_INSTALLATION_TOP)"' \
 		      -DCDE_CONFIGURATION_TOP='"$(CDE_CONFIGURATION_TOP)"' \

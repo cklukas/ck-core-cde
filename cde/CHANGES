@@ -1,4 +1,7 @@
 2026-11-02
+- DtHelp: decode character offsets without walking before the string, reject
+  invalid indices, and copy table alignment characters only when conversion
+  succeeds and the complete character fits the output buffer.
 - DtTerm: bound multibyte string appends and numeric parameter counts, keep
   softkey lengths without 8-bit wrap, validate hex digits, and load only complete
   hex byte pairs; reject oversized parser character inputs and negative indices.
