@@ -145,6 +145,7 @@ extern void cancel_callback(
  		Widget w,
 		XtPointer client_data,
 		XtPointer call_data);
+extern void request_copy_cancel(void);
 extern void display_cancel_warning(Widget parent);
 extern void toggle_callback(
 		Widget w,

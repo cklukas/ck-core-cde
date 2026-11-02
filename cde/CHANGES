@@ -1,6 +1,9 @@
 2026-11-02
 - docs: interlink CK Core CDE, Apps, Motif and ck-core-fs-lib through their
   site selectors and front-page project panels.
+- dtfile_copy: distinguish completion, partial work, failure and cancellation;
+  retain move sources after cancelled/skipped work, keep incomplete results
+  visible, and show cancellation settling instead of reporting success.
 - validation: record the second ten-round checkpoint, incremental dependency
   rebuilds, full checks, targeted sanitizer follow-ups and fresh desktop smoke.
 - dtwm: validate complete typed desktop request batches, release invalid replies,

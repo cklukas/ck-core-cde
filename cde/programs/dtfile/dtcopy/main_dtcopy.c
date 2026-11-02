@@ -73,6 +73,7 @@
 #include "fsrtns.h"
 #include "dosync.h"
 #include "dtcopy.h"
+#include "OperationOutcome.h"
 #include "sharedFuncs.h"
 
 
@@ -123,6 +124,7 @@ static Boolean is_mapped = False;
 static int nfiles = 0;
 static int ndirs = 0;
 static int nerr = 0;
+static Boolean had_skipped_items = False;
 static char last_dir[MAX_PATH];
 
 #define FILEOPNUM 14
@@ -439,6 +441,20 @@ UpdateStatus(
 }
 
 
+/* Both errors and informational notices use the same complete form chain. */
+static void
+ShowDetails(void)
+{
+  if (!XtIsManaged(XtParent(G_error_msgs)))
+  {
+    XtVaSetValues(G_status_text, XmNbottomAttachment, XmATTACH_NONE, NULL);
+    XtManageChild(G_error_count);
+    XtManageChild(G_error_msgs);
+    XtManageChild(XtParent(G_error_msgs));
+  }
+}
+
+
 static void
 UpdateErrorCount(void)
 {
@@ -449,21 +465,8 @@ UpdateErrorCount(void)
   else
     sprintf(msg, GETMESSAGE(2, 8, "Errors: %d"), nerr);
 
-  /* for the first error, manage the widgets used to display errors */
   if (nerr == 1)
-  {
-    XtVaSetValues(G_status_text,
-                  XmNbottomAttachment, XmATTACH_NONE,
-                  NULL);
-/*
-    XtVaSetValues(G_status_text2,
-                  XmNbottomAttachment, XmATTACH_NONE,
-                  NULL);
-*/
-    XtManageChild(G_error_count);
-    XtManageChild(G_error_msgs);
-    XtManageChild(XtParent(G_error_msgs));
-  }
+    ShowDetails();
 
   XtVaSetValues (G_error_count,
                  XmNvalue,   msg,
@@ -477,10 +480,19 @@ AppendErrorMsg(char *msg)
 {
   XmTextPosition pos;
 
+  ShowDetails();
   pos = XmTextGetLastPosition (G_error_msgs);
   XmTextInsert (G_error_msgs, pos, msg);
   XmTextSetInsertionPosition (G_error_msgs, pos);
   XmTextShowPosition (G_error_msgs, pos);
+}
+
+void
+request_copy_cancel(void)
+{
+  G_do_copy = FALSE;
+  UpdateStatus(GETMESSAGE(2, 16, "Cancelling..."), "");
+  XmUpdateDisplay(G_toplevel);
 }
 
 
@@ -678,6 +690,8 @@ ConfirmHandler(
     sleep(1);
   }
 
+  if (rc > 0)
+    had_skipped_items = True;
   return (rc);
 }
 
@@ -767,6 +781,7 @@ main(int argc, char *argv[])
   XEvent event;
   Arg args[3];
   int rc, n,perm_status=0;
+  DtcopyOutcome outcome;
   char * tmpStr;
 
   Boolean copy_status;
@@ -852,6 +867,7 @@ main(int argc, char *argv[])
   ndirs = -1;        /* -1 so the source folder does not get counted, only subfolders */
   UpdateSummary();
   nerr = 0;
+  had_skipped_items = False;
   UpdateErrorCount();
 
   /* Realize the top level Widget */
@@ -890,16 +906,15 @@ main(int argc, char *argv[])
    * has completed or when the user aborts the operation by
    * clicking the "Cancel" button.
    */
-  SyncDirectory(&app_args.sync);
+  rc = SyncDirectory(&app_args.sync);
+  outcome = DtcopyGetOutcome(rc, !G_do_copy, nerr, had_skipped_items);
 
   /* if move was requested and the copy was successful, delete the source now */
   if (G_move)
   {
-    if (nerr > 0)
+    if (outcome != DTCOPY_COMPLETED)
     {
-       sprintf(msg, GETMESSAGE(2, 13, "%s not removed because of errors."),
-               app_args.sync.source);
-       AppendErrorMsg(msg);
+       AppendErrorMsg(GETMESSAGE(2, 18, "Source retained because the operation was not completed.\n"));
     }
     else
     {
@@ -913,10 +928,15 @@ main(int argc, char *argv[])
   }
 
   /* display the result */
-  if (G_do_copy)
+  outcome = DtcopyGetOutcome(rc, !G_do_copy, nerr, had_skipped_items);
+  if (outcome == DTCOPY_COMPLETED)
     UpdateStatus(GETMESSAGE(2, 14, "Completed."), "");
-  else
+  else if (outcome == DTCOPY_CANCELLED)
     UpdateStatus(GETMESSAGE(2, 15, "Cancelled in"), last_dir);
+  else if (outcome == DTCOPY_PARTIAL)
+    UpdateStatus(GETMESSAGE(2, 17, "Finished with skipped items or errors."), "");
+  else
+    UpdateStatus(GETMESSAGE(2, 19, "Operation failed."), "");
 
   XtVaSetValues (G_error_msgs,
                  XmNcursorPosition, 0,
@@ -927,7 +947,7 @@ main(int argc, char *argv[])
   desensitize_copy_action_area(G_copy_action_area_pbuttons);
 
   /* if successful popdown the window after a delay */
-  if (app_args.popdown && nerr == 0)
+  if (app_args.popdown && outcome == DTCOPY_COMPLETED)
     XtAppAddTimeOut(app_context, app_args.delay, TimeoutHandler, NULL);
 
   /* wait for user to close the dialog before exiting */
@@ -937,6 +957,6 @@ main(int argc, char *argv[])
     XtDispatchEvent(&event);
   }
 
-  exit(nerr);
+  exit(outcome == DTCOPY_COMPLETED ? 0 : 1);
 }
 

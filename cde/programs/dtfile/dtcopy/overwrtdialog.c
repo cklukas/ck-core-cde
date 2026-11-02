@@ -281,11 +281,8 @@ create_overwrite_dialog(
   snprintf(G_rename_oldname, sizeof(G_rename_oldname), "%s", tname);
 
 
-  if (G_move)
-  {
-     action_items[2].label   = "Cancel Move";
-     action_items[2].msg_num = 8;
-  }
+  action_items[1].label = G_move ? "Cancel Move" : "Cancel Copy";
+  action_items[1].msg_num = G_move ? 8 : 7;
 
   /* Create the dialog shell for the dialog */
   n = 0;

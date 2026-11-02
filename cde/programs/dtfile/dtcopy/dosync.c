@@ -842,10 +842,10 @@ SyncDirRecur(char *sdir, char *tdir)
 
   /* read source and target directories */
   if ((rc = GetDir(sdir, SP->exclude, SP->skip, &sP)) != 0)
-    return rc;
+    return -1;
   if ((rc = GetDir(tdir, NULL, SP->skip, &tP)) != 0) {
     FreeDir(sP);
-    return rc;
+    return -1;
   }
 
   /* append "/" to source and target directory names */
@@ -926,7 +926,7 @@ SyncDirRecur(char *sdir, char *tdir)
  * external entry point
  *------------------------------------------------------------------*/
 
-void
+int
 SyncDirectory(SyncParams *p)
 {
   char sbuf[1024], tbuf[1024];
@@ -949,7 +949,7 @@ SyncDirectory(SyncParams *p)
     if (syncErrorCallback)
       syncErrorCallback(op, sbuf, rc);
     FreeDir(sP);
-    return;
+    return -1;
   }
 
   /*
@@ -973,16 +973,17 @@ SyncDirectory(SyncParams *p)
       if (syncErrorCallback && syncErrorCallback(op, tbuf, rc) < 0) {
         FreeDir(sP);
         FreeDir(tP);
-        return;
+        return -1;
       }
     }
   }
 
   /* now do the real work */
-  SyncItem(sbuf, sP, tbuf, tP);
+  rc = SyncItem(sbuf, sP, tbuf, tP);
 
   /* free storage and return */
   FreeDir(sP);
   FreeDir(tP);
+  return rc;
 }
 
