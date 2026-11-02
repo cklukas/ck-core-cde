@@ -1,4 +1,8 @@
 2026-11-02
+- DtSearch: keep the embedded Raima runtime's public, list, startup and private
+  helper interfaces fully prototyped on every supported compiler; type its
+  error callback and make collation byte signedness and pointer advances
+  explicit under GCC and Clang C23.
 - dtpdmd: give dispatch, mailbox, manager, record, setup, utility and X I/O
   callbacks complete C23 prototypes; handle child output without a PDM status
   token deterministically instead of reading an uninitialized match pointer.

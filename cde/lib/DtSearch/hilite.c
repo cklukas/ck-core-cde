@@ -92,8 +92,8 @@ long	hilite_cleartext (int parse_type, char *stems, int stemcount)
     char		*textp, *stemp;
     DBLK		*dblk =		usrblk.dblk;
     PARG		parg;
-    char *		(*parser)() =	usrblk.dblk->parser;
-    char *		(*stemmer)() =	usrblk.dblk->stemmer;
+    char *		(*parser)(PARG *) =	usrblk.dblk->parser;
+    char *		(*stemmer)(char *, DBLK *) =	usrblk.dblk->stemmer;
     DtSrHitword		*hitwords = NULL;
     size_t		hitwords_size =	0;
     long		hitwcount =	0;
@@ -153,7 +153,7 @@ long	hilite_cleartext (int parse_type, char *stems, int stemcount)
 		hitwords_size += hitwords_size >> 1;	/* 1.5 times */
 		if (debugging_hilite || (usrblk.debug & USRDBG_RETRVL))
 		    fprintf (aa_stderr,
-			PROGNAME"098 realloc for %d hitwords.\n",
+			PROGNAME"098 realloc for %zu hitwords.\n",
 			hitwords_size);
 		hitwords = realloc (hitwords,
 		    hitwords_size * sizeof(DtSrHitword) + 16);

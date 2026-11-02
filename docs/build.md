@@ -74,6 +74,13 @@ explicitly empty rather than consulting uninitialized storage. Like
 `dtimsstart`, final relinking follows the conversion of its CDE library
 dependencies.
 
+DtSearch's embedded Raima runtime builds as a complete static archive with GCC
+and Clang in C23 mode. Its public single-database declarations, internal startup
+contract, linked-list API, private helpers and database error callback all use
+complete prototypes. The collation path explicitly crosses from character data
+to unsigned table indices, so the compiler no longer has to infer signedness or
+discard a legacy dereference expression while advancing an input pointer.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh
