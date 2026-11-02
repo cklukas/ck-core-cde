@@ -1,4 +1,7 @@
 2026-11-02
+- mini_isam: replace traditional unspecified-argument declarations with exact
+  public, internal and record-operation callback prototypes; preserve const
+  input buffers and exercise encoded data round trips under GCC and Clang C23.
 - docs: interlink CK Core CDE, Apps, Motif and ck-core-fs-lib through their
   site selectors and front-page project panels.
 - dtfile_copy: distinguish completion, partial work, failure and cancellation;

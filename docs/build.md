@@ -45,3 +45,25 @@ Motif or a different CK Core Motif ABI.
 The complete desktop also needs the X11, PAM, ToolTalk, RPC, JPEG, LMDB, Tcl,
 terminal, font, and document-processing development packages listed by the
 Debian package metadata under `cde/debian/control`.
+
+## C23 qualification
+
+CDE is being qualified subsystem by subsystem before C23 becomes the default
+language mode. The embedded ksh93 sources and genuinely historical utilities
+remain explicit GNU17 compatibility components during this work.
+
+ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
+Its public conversion routines, internal operations and record-method callbacks
+use complete prototypes; the conversion regression test also compiles const
+encoded input buffers through those interfaces and verifies integer, floating
+point and fixed-width character round trips.
+
+To repeat that focused qualification from a configured C23 build tree:
+
+```sh
+make -j4 -C lib/tt/mini_isam check
+```
+
+This focused result does not imply that the rest of CDE is C23-clean. The
+project will select C23 by default only after the complete build, `make check`,
+and the uConsole desktop smoke suite pass with the same qualified source.

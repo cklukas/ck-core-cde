@@ -162,11 +162,6 @@ typedef struct bytearray {
     char	*data;
 } Bytearray;
 
-extern Bytearray _bytearr_getempty(), _bytearr_dup();
-extern Bytearray _bytearr_new(u_short len, char *data);
-extern void _bytearr_free();
-
-
 /* Client identification - used to identify owners of locks */
 /*
    #define IPADDRLEN	4
@@ -175,10 +170,6 @@ extern void _bytearr_free();
 /* Definitions related to ISAM file descriptor (isfd.c file) */
 #define MAXISFD		FD_SETSIZE
 #define NOISFD		(-1)		     /* Not a valid file descriptor */
-
-extern struct fab *_isfd_find();
-extern void _isfd_delete();
-extern Isfd _isfd_insert();
 
 /* Definitions related to File access block (isfab.c file */
 
@@ -193,9 +184,6 @@ enum readmode { RM_FIRST = 0, RM_LAST = 1, RM_NEXT = 2, RM_PREV = 3,
 
 /* lock flag is passed to Access Method module for every record oriented op. */
 /* Bit position in the lock flag: */
-
-enum openmode _getopenmode();
-enum readmode _getreadmode();
 
 /* Error code structure */
 struct errcode {
@@ -227,9 +215,6 @@ typedef struct fab {
 					      */
 
 #define FAB_ISFDSET(fab, isfd) (fab->isfd = isfd)
-
-extern Fab *_fab_new();
-void _fab_destroy();
 
 /* ISAM file identification for locking purposes. */
 typedef struct lckfid {
@@ -470,8 +455,6 @@ struct export_opts {
 #include "isam_prototypes.h"
 
 #define stshort(n,p) stint((n), (p))
-#define ldshort(p) ldint(p)
-
 #define strecno(n,p) stlong((long)(n), (p))
 #define ldrecno(p) ((Recno)ldlong(p))
 

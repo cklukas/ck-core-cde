@@ -116,18 +116,18 @@ int isgetcurpos(int isfd, int *len, char **buf);
 int issetcurpos(int isfd, char *buf);
 
 /* isdatconv.c */
-long ldlong(char *p);
+long ldlong(const char *p);
 int stlong(long val, char *p);
-short ldint(char *p);
-u_short ldunshort(char *p);
+short ldint(const char *p);
+u_short ldunshort(const char *p);
 int stint(short val, char *p);
-int ldchar(char *src, int len, char *dst);
-int stchar(char *src, char *dst, int len);
-int ldchar2(char *src, int len, char *dst);
-int stchar2(char *src, char *dst, int len);
-float ldfloat(char *p);
+int ldchar(const char *src, int len, char *dst);
+int stchar(const char *src, char *dst, int len);
+int ldchar2(const char *src, int len, char *dst);
+int stchar2(const char *src, char *dst, int len);
+float ldfloat(const char *p);
 int stfloat(float f, char *p);
-double lddbl(char *p);
+double lddbl(const char *p);
 int stdbl(double val, char *p);
 
 /* isdel1key.c */
@@ -166,7 +166,7 @@ int iserase(char *isfname);
 void _isfatal_error(char *msg);
 void _isfatal_error1(char *msg);
 void _isam_warning(char *msg);
-int _isfatal_error_set_func(int (*func)(void));
+int _isfatal_error_set_func(int (*func)(char *msg));
 void _setiserrno2(int error, int is1, int is2);
 void _seterr_errcode(struct errcode *errcode);
 

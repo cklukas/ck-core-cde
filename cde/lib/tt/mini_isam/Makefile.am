@@ -5,6 +5,13 @@ TT_VERSION_DEFINE = -DTT_VERSION_STRING=\"$(TT_VERSION)\"
 
 noinst_LIBRARIES= libisam.a
 
+check_PROGRAMS = check-isam-datconv
+TESTS = $(check_PROGRAMS)
+
+check_isam_datconv_SOURCES = tests/check-isam-datconv.c
+check_isam_datconv_CPPFLAGS = -I$(srcdir)
+check_isam_datconv_LDADD = libisam.a
+
 libisam_a_CFLAGS = $(TT_VERSION_DEFINE)
 
 libisam_a_SOURCES = isaddindex.c isamaddindex.c isopen.c isamopen.c \

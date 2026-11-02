@@ -41,11 +41,12 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-void _removelast();
-static void _removelast2();
-char *_lastelement();
-static void _rename_datfile(), _rename_indfile(), _rename_varfile();
-static int _amrename();
+static void _removelast2(char *path);
+static void _rename_datfile(char *isfname, char *newname);
+static void _rename_indfile(char *isfname, char *newname);
+static void _rename_varfile(char *isfname, char *newname);
+static int _amrename(Bytearray *isfhandle, char *newname,
+                     struct errcode *errcode);
 
 /*
  * isfd = isrename(oldname, newname)

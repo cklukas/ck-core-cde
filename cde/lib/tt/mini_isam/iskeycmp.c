@@ -69,7 +69,7 @@ _iskeycmp(const void *lkey, const void *rkey)
 {
     int		   	     i, ret;
     struct keypart2 *p;
-      char   	     *l, *r;
+    const char      *l, *r;
     long	     llong, rlong;
     double		     ldouble, rdouble;
 
