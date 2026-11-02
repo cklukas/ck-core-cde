@@ -713,9 +713,10 @@ typedef struct {
 static void
 tr_find_gi(
     Element_t	*e,
-    Descent_t	*ds
+    void	*client_data
 )
 {
+    Descent_t *ds = client_data;
     if (StrEq(ds->gi, e->gi))
 	if (ds->action) TranByAction(e, ds->action, ds->fp);
 }
@@ -723,9 +724,10 @@ tr_find_gi(
 static void
 tr_find_gipar(
     Element_t	*e,
-    Descent_t	*ds
+    void	*client_data
 )
 {
+    Descent_t *ds = client_data;
     if (StrEq(ds->gi, e->gi) && e->parent &&
 		StrEq(ds->gi2, e->parent->gi))
 	if (ds->action) TranByAction(e, ds->action, ds->fp);
@@ -734,9 +736,10 @@ tr_find_gipar(
 static void
 tr_find_attr(
     Element_t	*e,
-    Descent_t	*ds
+    void	*client_data
 )
 {
+    Descent_t *ds = client_data;
     char	*atval;
     if ((atval = FindAttValByName(e, ds->gi)) && StrEq(ds->gi2, atval))
 	TranByAction(e, ds->action, ds->fp);
@@ -745,9 +748,10 @@ tr_find_attr(
 static void
 tr_find_parent(
     Element_t	*e,
-    Descent_t	*ds
+    void	*client_data
 )
 {
+    Descent_t *ds = client_data;
     if (QRelation(e, ds->gi, REL_Parent)) {
 	if (ds->action) TranByAction(e, ds->action, ds->fp);
     }
