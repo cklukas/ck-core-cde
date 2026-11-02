@@ -47,6 +47,9 @@ jobs:
       - name: Build CK Core Motif ABI 9
         run: |
           set -eu
+          motif_revision="$(git -C motif-source rev-parse HEAD)"
+          echo "CK Core Motif revision: $motif_revision"
+          echo "CK Core Motif revision: \`$motif_revision\`" >> "$GITHUB_STEP_SUMMARY"
           prefix="$RUNNER_TEMP/motif"
           mkdir "$RUNNER_TEMP/motif-build"
           (cd motif-source && autoreconf -fi)

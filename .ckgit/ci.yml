@@ -13,6 +13,8 @@ jobs:
         script: |
           set -eu
           test -n "$CKGIT_SISTER_CK_CORE_MOTIF"
+          motif_revision="$(git -C "$CKGIT_SISTER_CK_CORE_MOTIF" rev-parse HEAD)"
+          echo "CK Core Motif revision: $motif_revision"
           grep -q '^#define XmABI_VERSION 9$' \
             "$CKGIT_SISTER_CK_CORE_MOTIF/lib/Xm/Xm.h.in"
           grep -q 'XmToolkitABI' cde/configure.ac
