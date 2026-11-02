@@ -39,6 +39,80 @@ AC_PREFIX_DEFAULT(/usr/dt)
 
 PKG_PROG_PKG_CONFIG
 
+AC_ARG_WITH([ck-core-fs],
+  [AS_HELP_STRING([--with-ck-core-fs],
+    [build dtfile_sync using installed ck-core-fs-lib >= 0.3 (default: no)])],
+  [], [with_ck_core_fs=no])
+AS_CASE([$with_ck_core_fs],
+  [yes], [PKG_CHECK_MODULES([CK_CORE_FS], [ck-core-fs-lib >= 0.3],
+    [ck_core_fs_save_CPPFLAGS="$CPPFLAGS"
+     ck_core_fs_save_CFLAGS="$CFLAGS"
+     ck_core_fs_save_LIBS="$LIBS"
+     CPPFLAGS="$CPPFLAGS $CK_CORE_FS_CFLAGS"
+     CFLAGS="$CFLAGS -std=c11"
+     LIBS="$CK_CORE_FS_LIBS $LIBS"
+     AC_LANG_PUSH([C])
+     AC_MSG_CHECKING([for the complete CK Core filesystem 0.3 tree C API])
+     dnl Link only: these calls deliberately do not perform runtime operations.
+     AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE 1
+#endif
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE 1
+#endif
+#include <stddef.h>
+#include <ck_fs_tree.h>
+#include <stdatomic.h>
+#include <unistd.h>
+]], [[
+       ckfet_job *job = NULL;
+       ckfet_options_v1 options;
+       ckfet_snapshot_v1 snapshot;
+       ckfet_row_v1 row;
+       ckfet_page_v1 page;
+       ckfet_rule_counts_v1 counts;
+       uint64_t required = 0, command = 0, count = 0, coalesced = 0;
+       uint32_t encoding = 0, drained = 0;
+       atomic_int cancelled = ATOMIC_VAR_INIT(0);
+       ckfet_options_init_v1(&options);
+       ckfet_start_v1(NULL, NULL, &options, &job, NULL);
+       ckfet_poll_v1(job, &snapshot);
+       ckfet_drain_v1(job, &snapshot, 1, &count, &coalesced);
+       ckfet_page_v1_get(job, 0, 0, &row, 1, &page);
+       ckfet_key_copy_v1(job, 0, 0, NULL, 0, &required);
+       ckfet_native_copy_v1(job, 0, 0, CKFET_NATIVE_COMPONENT, 0,
+                            NULL, 0, &required, &encoding);
+       ckfet_rule_counts_get_v1(job, 0, &counts);
+       ckfet_review_v1(job, 0, NULL, 0, NULL, 0, &command);
+       ckfet_review_names_v1(job, 0, NULL, 0, NULL, 0, NULL, 0, &command);
+       ckfet_execute_v1(job, 0, 0, &command);
+       ckfet_acknowledge_command_v1(job, command);
+       ckfet_request_pause(job, 0);
+       ckfet_request_cancel(job);
+       ckfet_worker_drained_v1(job, &drained);
+       ckfet_release(job);
+       atomic_store(&cancelled, 1);
+       closefrom(3);
+       return atomic_load(&cancelled) != 1;
+     ]])], [ck_core_fs_tree_api=yes], [ck_core_fs_tree_api=no])
+     AC_MSG_RESULT([$ck_core_fs_tree_api])
+     AC_LANG_POP([C])
+     CPPFLAGS="$ck_core_fs_save_CPPFLAGS"
+     CFLAGS="$ck_core_fs_save_CFLAGS"
+     LIBS="$ck_core_fs_save_LIBS"
+     AS_IF([test "x$ck_core_fs_tree_api" != xyes],
+       [AC_MSG_ERROR([--with-ck-core-fs requires closefrom, C11 atomics and the complete frozen ck-core-fs-lib 0.3 tree C API, including rule counts and command acknowledgement; check config.log and the selected installed headers/library.])])],
+    [AC_MSG_ERROR([--with-ck-core-fs requires installed ck-core-fs-lib >= 0.3; set PKG_CONFIG_PATH to its pkgconfig directory. $CK_CORE_FS_PKG_ERRORS])])],
+  [no], [],
+  [AC_MSG_ERROR([--with-ck-core-fs accepts only yes or no; use PKG_CONFIG_PATH to select an installation.])])
+AM_CONDITIONAL([HAVE_CK_CORE_FS], [test "x$with_ck_core_fs" = xyes])
+dnl A private generated header makes feature toggles a real Menu.o dependency.
+dnl Do not add a global config define: other CDE objects do not consume it.
+AS_IF([test "x$with_ck_core_fs" = xyes],
+  [DTFILE_SYNC_FEATURE_ENABLED=1], [DTFILE_SYNC_FEATURE_ENABLED=0])
+AC_SUBST([DTFILE_SYNC_FEATURE_ENABLED])
+
 dnl SOURCE_DEFINES - start with CDE project default
 SOURCE_CPP_DEFINES="-DANSICPP -DMULTIBYTE -DNLS16"
 
@@ -734,7 +808,9 @@ programs/dtmail/libDtMail/Common/Makefile
 programs/dtpad/Makefile
 
 programs/dtfile/Makefile
+programs/dtfile/SyncFeature.h
 programs/dtfile/dtcopy/Makefile
+programs/dtfile/dtsync/Makefile
 
 programs/dtwm/Makefile
 

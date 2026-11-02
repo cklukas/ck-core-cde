@@ -38,10 +38,12 @@ nav:
           - docs/improvements/terminal.md
           - docs/improvements/editor.md
           - docs/improvements/file-manager.md
+          - docs/improvements/folder-comparison.md
           - docs/improvements/launching.md
           - docs/improvements/trash.md
           - docs/improvements/validation.md
   - title: Development
     pages:
       - docs/build.md
+      - docs/improvements/file-operations-design.md
       - docs/ci.md

@@ -6,3 +6,6 @@ cde/aaa_todo_shel_spec.md
 cde/freedesktop.md
 cde/dtfile_run.log
 cde/dtfile_run2.log
+
+# Private optional File Manager feature configuration.
+cde/programs/dtfile/SyncFeature.h

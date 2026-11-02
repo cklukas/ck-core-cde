@@ -7,7 +7,6 @@ on:
       - 'docs/**'
       - 'ckdocs.yml'
       - 'scripts/build-docs.sh'
-      - '.ckgit/**'
       - '.github/workflows/pages.yml'
   pull_request:
     branches: [master]
@@ -42,11 +41,26 @@ jobs:
           ref: ${{ steps.motif.outputs.revision }}
           path: motif-source
           persist-credentials: false
+      - name: Read the filesystem consumer revision
+        id: filesystem
+        shell: bash
+        run: |
+          set -eu
+          revision="$(cat cde-source/.ckgit/fs-revision)"
+          [[ "$revision" =~ ^[0-9a-f]{40}$ ]]
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+      - name: Check out the filesystem consumer revision
+        uses: actions/checkout@v5
+        with:
+          repository: cklukas/ck-core-fs-lib
+          ref: ${{ steps.filesystem.outputs.revision }}
+          path: fs-source
+          persist-credentials: false
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            autoconf automake bison build-essential fakeroot flex ksh libatspi2.0-dev \
+            autoconf automake bison build-essential cmake fakeroot flex ksh libatspi2.0-dev \
             libdbus-1-dev libharfbuzz-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
             librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
             libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
@@ -96,3 +110,28 @@ jobs:
           make -j4
           make -j4 check
           readelf -dW programs/dtwm/.libs/dtwm | grep -F 'libXm.so.9'
+      - name: Build installed filesystem C API and test dtfile workflows
+        run: |
+          set -eu
+          export TMPDIR="$RUNNER_TEMP/cde-tests"
+          fs_prefix="$RUNNER_TEMP/filesystem"
+          private_fixture="$(mktemp -d "$HOME/.cde-sync-test.XXXXXXXX")"
+          trap 'rm -rf "$private_fixture"' EXIT
+          export DTFILE_PRIVATE_TEST_ROOT="$private_fixture"
+          cmake -S fs-source -B "$RUNNER_TEMP/filesystem-build" \
+            -DCMAKE_INSTALL_PREFIX="$fs_prefix" -DCMAKE_INSTALL_LIBDIR=lib \
+            -DCK_CORE_FS_BUILD_BROWSER=OFF -DBUILD_TESTING=OFF \
+            -DCMAKE_CXX_FLAGS='-O1 -g0'
+          cmake --build "$RUNNER_TEMP/filesystem-build" --parallel 4
+          cmake --install "$RUNNER_TEMP/filesystem-build"
+          prefix="$RUNNER_TEMP/motif"
+          export PATH="$prefix/bin:$PATH"
+          export CPPFLAGS="-I$prefix/include $(pkg-config --cflags xft)"
+          export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
+          export LD_LIBRARY_PATH="$prefix/lib:$fs_prefix/lib"
+          export PKG_CONFIG_PATH="$fs_prefix/lib/pkgconfig"
+          cd cde-source/cde
+          ./configure --with-ck-core-fs CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0'
+          make -j4 -C programs/dtfile
+          make -j1 -C programs/localized/C/msg dtfile_sync.cat
+          make -j1 -C programs/dtfile check

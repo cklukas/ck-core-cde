@@ -1,9 +1,21 @@
 ---
 title: File Manager improvements
-description: Shelf, image previews, larger icon views and storage information in CDE File Manager.
+description: Optional folder comparison, saved preferences, shelf, image previews and storage information in CDE File Manager.
 ---
 
 # File Manager improvements
+
+An optional native [folder comparison window](folder-comparison.md) opens from
+**File → Synchronize Folders...** when CDE is built with `--with-ck-core-fs`
+and installed ck-core-fs-lib 0.3 or newer. It provides paged comparison, metadata
+assessment, byte/date filters, scoped matching-rule review and saved named
+preferences. Apply remains compile-time disabled: operation choices preview a
+plan, and mirror/two-way execution is not delivered.
+
+The ordinary **Copy to...** and **Move to...** commands still perform file
+operations through the existing helper. They are separate from the new window's
+read-only Copy/Update plan modes. The [design and delivery status](file-operations-design.md)
+documents the remaining execution and reconciliation requirements.
 
 Folder-operation feedback distinguishes completed, partial, failed and cancelled
 work. Cancellation or an explicit overwrite skip blocks deletion of a move's source.

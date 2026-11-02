@@ -1,20 +1,28 @@
 configdir = $(CDE_INSTALLATION_TOP)/config/C
 
 SUBDIRS = dtcopy
+if HAVE_CK_CORE_FS
+SUBDIRS += dtsync
+endif
+DIST_SUBDIRS = dtcopy dtsync
 
 bin_PROGRAMS = dtfile
 
 EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/trash-metadata.c tests/check-copy-transfer.py tests/copy-transfer.c \
-             tests/copy-paths.c tests/check-operation-outcome.py
+             tests/copy-paths.c tests/check-operation-outcome.py \
+             tests/check-sync-controller.py tests/sync-controller.c SyncFeature.h.in
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-writer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-metadata.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-copy-transfer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-operation-outcome.py
+if HAVE_CK_CORE_FS
+	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-sync-controller.py
+endif
 
-BUILT_SOURCES = dtfile.config dtfile_error
+BUILT_SOURCES = dtfile.config dtfile_error SyncFeature.h
 CLEANFILES = dtfile.config dtfile_error
 
 dist_config_DATA = dtfile.config
@@ -24,6 +32,8 @@ dist_bin_SCRIPTS = dtfile_error dterror.ds
 dtfile_CPPFLAGS = -I./dtcopy -DSHAPE -D_ILS_MACROS -DSUN_PERF \
 		-DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\" \
 		-DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\"
+
+nodist_dtfile_SOURCES = SyncFeature.h
 
 dtfile_LDADD = dtcopy/sharedFuncs.o \
 	dtcopy/fsrtns.o \

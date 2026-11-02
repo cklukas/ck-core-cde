@@ -7,6 +7,8 @@ sisters:
     ref: 7e3ee5eb57a2cef2e07f9e9fe5c4e2822502d322
   - name: ck-core-motif
     ref: 1a2407723eb319ac5c18afa0fb386cf46aa7efdc
+  - name: ck-core-fs-lib
+    ref: 39725163e43530b9ae35e9fed55f4fedb4d759b6
 jobs:
   - name: documentation
     steps:
@@ -71,5 +73,33 @@ jobs:
               exit 1
             fi && make -j4 && make -j4 check)
           readelf -dW cde/programs/dtwm/.libs/dtwm | grep -F 'libXm.so.9'
+      - name: test-installed-filesystem-consumer
+        script: |
+          set -eu
+          test -n "$TMPDIR"
+          test -n "$CKGIT_SISTER_CK_CORE_FS_LIB"
+          test "$(git -C "$CKGIT_SISTER_CK_CORE_FS_LIB" rev-parse HEAD)" = "$(cat .ckgit/fs-revision)"
+          run_id="$(git rev-parse HEAD)"
+          root="$TMPDIR/cde-build-$run_id"
+          fs_prefix="$root/fs-prefix"
+          private_fixture="$(mktemp -d "$HOME/.cde-sync-test.XXXXXXXX")"
+          trap 'rm -rf "$private_fixture"' EXIT
+          export DTFILE_PRIVATE_TEST_ROOT="$private_fixture"
+          cmake -S "$CKGIT_SISTER_CK_CORE_FS_LIB" -B "$root/fs-build" \
+            -DCMAKE_INSTALL_PREFIX="$fs_prefix" -DCMAKE_INSTALL_LIBDIR=lib \
+            -DCK_CORE_FS_BUILD_BROWSER=OFF -DBUILD_TESTING=OFF \
+            -DCMAKE_CXX_FLAGS='-O1 -g0'
+          cmake --build "$root/fs-build" --parallel 4
+          cmake --install "$root/fs-build"
+          motif_prefix="$root/motif-prefix"
+          export PATH="$motif_prefix/bin:$PATH"
+          export CPPFLAGS="-I$motif_prefix/include $(pkg-config --cflags xft)"
+          export LDFLAGS="-L$motif_prefix/lib -Wl,-rpath,$motif_prefix/lib"
+          export LD_LIBRARY_PATH="$motif_prefix/lib:$fs_prefix/lib"
+          export PKG_CONFIG_PATH="$fs_prefix/lib/pkgconfig"
+          (cd cde && ./configure --with-ck-core-fs CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0' && \
+            make -j4 -C programs/dtfile && \
+            make -j1 -C programs/localized/C/msg dtfile_sync.cat && \
+            make -j1 -C programs/dtfile check)
 pages:
   path: public
