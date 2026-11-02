@@ -1,18 +1,66 @@
-2026-02-01
-- dtpad/editor: added a dropped-files handling mode (auto/paths/content) wired
-  through resources, a new Options submenu, dtpadrc persistence, and ToolTalk
-  context propagation, with text detection via DTS and localized labels.
-- dtterm: added CDE DnD filename drop handling to insert shell-safe, backslash-escaped
-  paths into terminal input, with multiple items separated by single spaces.
-- dtterm: persist the last selected Options -> Font Size choice in ~/.dt/dttermrc
-  and restore it for new instances unless a saved session provides a font size.
-- dtfile: aligned drag hotspots with the click position using state icons and explicit
-  hot spot handling, plus shelf drag adjustments and color fixes for shelf icons.
-- dtfile: escape quotes and backslashes in command action file arguments, and
-  handle escaped single quotes in command parsing to allow opening files with
-  ', ", or \ in their names.
+2026-11-02
+- dtwm: keep the open-window icon focus marker directly below its icon frame
+  so normal client windows occlude both instead of the marker bleeding through.
+- build: require CK Core Motif ABI 9 headers and runtime symbols, build against
+  the current toolkit in ARM64 CI, and record the exact Motif revision used.
+- validation: run the complete CDE check suite and a real Xsession desktop smoke
+  test, recording process, mapped-library, screenshot, and documentation evidence.
+- dtksh: fix command lookup through changed PATH values; preserve the real shell
+  executable identity in the check launcher and gate legacy AST universe cases
+  that rely on Solaris PATH semantics not supplied by Linux.
 
 2026-02-02
-- dtwm: move open-icon indicator into its own window and keep icon sizing
-  unchanged; update indicator geometry, drag behavior, focus styling, and
-  stacking to avoid flicker and show the desktop between icon and indicator.
+- dtwm: move the open-window icon indicator into its own window without changing
+  icon sizing; synchronize indicator geometry, dragging, focus appearance, and
+  stacking while preserving visible desktop space between icon and marker.
+
+2026-02-01
+- dtpad/editor: add a dropped-files handling mode (auto/paths/content) wired
+  through resources, a new Options submenu, dtpadrc persistence, and ToolTalk
+  context propagation, with text detection via DTS and localized labels.
+- dtterm: add CDE DnD filename drop handling to insert shell-safe,
+  backslash-escaped paths into terminal input, with multiple items separated by
+  single spaces.
+- dtterm: persist the last selected Options -> Font Size choice in ~/.dt/dttermrc
+  and restore it for new instances unless a saved session provides a font size.
+- dtfile: align drag hotspots with the click position using state icons and
+  explicit hot spot handling, plus shelf drag adjustments and color fixes.
+- dtfile: escape quotes and backslashes in command action file arguments, and
+  handle escaped single quotes in command parsing so filenames containing
+  single quotes, double quotes, or backslashes can be opened.
+- dtfile/dticon: add image-content icons, extra-large presentation, additional
+  zoom levels, centered file-list and shelf layouts, and corrected shelf double
+  click, context-menu, drag, and color behavior.
+
+2026-01-20 through 2026-01-31
+- dtfile: add and stabilize the shelf for keeping frequently used objects close
+  at hand, including its layout, selection, context menus, dragging, and icons.
+
+2026-01-19
+- dtfile: expand Trash metadata and file handling, import freedesktop.org trash
+  entries, track original paths, deletion dates, and sizes, and improve full
+  Trash icon, raise/focus, error, and temporary-file behavior.
+- dtwm: add configurable minimized-window icon blinking.
+
+2026-01-18
+- dtwm: add a keyboard task switcher with hover and pinning behavior, reliable
+  focus handling, reduced repaint flicker, and configurable minimize/restore
+  animation effects.
+
+2026-01-14
+- dtwm: add visible snap feedback and half/quadrant placement while moving
+  windows, respecting the usable workspace and existing icon margins.
+
+2026-01-13
+- dtwm: add the optional desktop representation for open windows, keep its
+  placement synchronized across workspaces, and refine icon click/drag visuals.
+
+2025-12-11 through 2025-12-22
+- dtwm: add Shift-modified grid movement and resize, clear focus when the desktop
+  is clicked, and maximize or restore on a title-bar double click.
+- dtfile: add storage-size details, an extra-large icon view, and an IconicPath
+  popup that behaves like other path components.
+- actions: distinguish direct graphical Run from the interactive Run... command
+  and allow the latter to launch with or without a Terminal.
+- dtterm, DtHelp, dtstyle, and dtwm: improve font metrics, font overrides,
+  rendering, window/icon settings, and fallback action icons.

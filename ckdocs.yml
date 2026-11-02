@@ -1,8 +1,12 @@
 version: 1
 site:
   title: CK Core CDE
+  brand: CK Core CDE
   description: The Common Desktop Environment built with CK Core Motif.
   url: https://cklukas.github.io/ck-core-cde/
+  logo: docs/images/cde-mark.png
+  favicon: docs/images/cde-favicon.png
+  stylesheet: docs/styles/cde.css
   links:
     - title: Source
       url: https://github.com/cklukas/ck-core-cde
@@ -17,6 +21,18 @@ nav:
     pages:
       - docs/index.md
       - docs/desktop.md
+      - title: Improvements
+        pages:
+          - docs/improvements.md
+          - docs/improvements/toolkit.md
+          - docs/improvements/window-state.md
+          - docs/improvements/window-management.md
+          - docs/improvements/terminal.md
+          - docs/improvements/editor.md
+          - docs/improvements/file-manager.md
+          - docs/improvements/launching.md
+          - docs/improvements/trash.md
+          - docs/improvements/validation.md
   - title: Development
     pages:
       - docs/build.md

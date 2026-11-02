@@ -228,6 +228,26 @@ static Window CreateOpenIconIndicatorWindow (ClientData *pcd)
     return win;
 }
 
+static void StackOpenIconIndicatorBelowFrame (ClientData *pcd, Window win)
+{
+    XWindowChanges changes;
+
+    if (!ICON_FRAME_WIN(pcd) || !win)
+    {
+	return;
+    }
+
+    /*
+     * The indicator is a sibling of the icon frame.  Keep it immediately
+     * below that frame so a client window that obscures the icon also
+     * obscures its indicator.  Raising the icon frame here would instead
+     * pull desktop icons over normal client windows.
+     */
+    changes.sibling = ICON_FRAME_WIN(pcd);
+    changes.stack_mode = Below;
+    XConfigureWindow (DISPLAY, win, CWSibling | CWStackMode, &changes);
+}
+
 static Boolean GetOpenIconIndicatorGeometry (ClientData *pcd, int *x, int *y,
 					     unsigned int *w, unsigned int *h)
 {
@@ -350,6 +370,7 @@ void UpdateOpenIconIndicator (ClientData *pcd, Boolean ignoreState, int activeOv
 
     win = ICON_INDICATOR_WIN(pcd);
     XMoveResizeWindow (DISPLAY, win, x, y, w, h);
+    StackOpenIconIndicatorBelowFrame (pcd, win);
     XMapWindow (DISPLAY, win);
 
     if (activeOverride < 0)
