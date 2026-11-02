@@ -50,4 +50,8 @@ typedef	struct {
 	int	 window_hint;
 } DtHelpHyperTextStruct;
 
+typedef void (*DtHelpHyperTextProc)(
+    XtPointer, XtPointer, DtHelpHyperTextStruct *);
+typedef void (*DtHelpResizeProc)(XtPointer);
+
 #endif /* _DtHelpDisplayAreaI_h */

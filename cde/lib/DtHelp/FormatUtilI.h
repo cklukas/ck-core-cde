@@ -45,6 +45,8 @@
 #ifndef _DtHelpFormatUtilI_h
 #define _DtHelpFormatUtilI_h
 
+#include "FontAttrI.h"
+
 /********    Semi-Private Structure Declarations    ********/
 typedef	struct	sdlMatchData {
 	int	clan;
@@ -52,12 +54,24 @@ typedef	struct	sdlMatchData {
 	char	*ssi;
 } SdlMatchData;
 
+typedef _DtCvStatus (*_DtHelpLoadGraphicProc)(
+	_DtCvPointer, char *, char *, char *, char *, char *,
+	_DtCvUnit *, _DtCvUnit *, _DtCvPointer *);
+typedef _DtCvStatus (*_DtHelpResolveSpcProc)(
+	_DtCvPointer, char *, const char *, _DtHelpFontHints, const char *,
+	_DtCvPointer *, _DtCvUnit *, _DtCvUnit *, _DtCvUnit *);
+typedef void (*_DtHelpLoadFontProc)(
+	_DtCvPointer, char *, const char *, _DtHelpFontHints, _DtCvPointer *);
+typedef int (*_DtHelpExecFilterProc)(
+	_DtCvPointer, const char *, char **);
+typedef void (*_DtHelpDestroyRegionProc)(_DtCvPointer, _DtCvPointer);
+
 typedef struct  _frmtUiInfo {
-	_DtCvValue	(*load_graphic)();
-	_DtCvValue	(*resolve_spc)();
-	void            (*load_font)();
-	int	        (*exec_filter)();
-	void	        (*destroy_region)();
+	_DtHelpLoadGraphicProc load_graphic;
+	_DtHelpResolveSpcProc resolve_spc;
+	_DtHelpLoadFontProc load_font;
+	_DtHelpExecFilterProc exec_filter;
+	_DtHelpDestroyRegionProc destroy_region;
 	_DtCvPointer    client_data;
 	_DtCvUnit	line_width;
 	_DtCvUnit	line_height;

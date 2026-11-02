@@ -123,7 +123,8 @@ _DtHelpCeBufFileOpenWr (int fd)
 {
     BufFilePtr	f;
 
-    f = _DtHelpCeBufFileCreate ((char *) (intptr_t) fd, BufFileRawFlush, NULL, _DtHelpCeBufFileFlush);
+    f = _DtHelpCeBufFileCreateWrite ((char *) (intptr_t) fd, BufFileRawFlush,
+                                     _DtHelpCeBufFileFlush);
     f->bufp = f->buffer;
     f->left = BUFFILESIZE;
     return f;
@@ -149,7 +150,7 @@ int
 _DtHelpCeBufFileFlush (BufFilePtr f, int doClose)
 {
     if (f->bufp != f->buffer)
-	(*f->io) (BUFFILEEOF, f);
+	(*f->write) (BUFFILEEOF, f);
 
     if (doClose)
 	return (close (FileDes(f)));
@@ -274,9 +275,10 @@ ClosePipeStream (
  *			Semi-Public Routines
  *****************************************************************************/
 /*****************************************************************************
- * Function:	BufFilePtr _DtHelpCeBufFileCreate (char *hidden,
- *					int (*io)(), int (*skip)(),
- *					int (*close)())
+ * Function:	BufFilePtr _DtHelpCeBufFileCreateRead (char *hidden,
+ *					BufFileReadProc read,
+ *					BufFileSkipProc skip,
+ *					BufFileCloseProc close)
  *
  * Returns:	A pointer to malloc'ed memory or NULL.
  *
@@ -284,11 +286,11 @@ ClosePipeStream (
  *
  *****************************************************************************/
 BufFilePtr
-_DtHelpCeBufFileCreate (
+_DtHelpCeBufFileCreateRead (
     char    *hidden,
-    int	    (*io)(),
-    int	    (*skip)(),
-    int	    (*close)() )
+    BufFileReadProc read,
+    BufFileSkipProc skip,
+    BufFileCloseProc close )
 {
     BufFilePtr	f;
 
@@ -298,8 +300,29 @@ _DtHelpCeBufFileCreate (
     f->hidden = hidden;
     f->bufp = f->buffer;
     f->left = 0;
-    f->io = io;
+    f->read = read;
+    f->write = NULL;
     f->skip = skip;
+    f->close = close;
+    return f;
+}
+
+BufFilePtr
+_DtHelpCeBufFileCreateWrite (
+    char    *hidden,
+    BufFileWriteProc write,
+    BufFileCloseProc close )
+{
+    BufFilePtr f = (BufFilePtr) malloc (sizeof *f);
+
+    if (!f)
+	return NULL;
+    f->hidden = hidden;
+    f->bufp = f->buffer;
+    f->left = 0;
+    f->read = NULL;
+    f->write = write;
+    f->skip = NULL;
     f->close = close;
     return f;
 }
@@ -317,7 +340,8 @@ _DtHelpCeBufFileCreate (
 BufFilePtr
 _DtHelpCeBufFileRdWithFd (int fd)
 {
-    return _DtHelpCeBufFileCreate ((char *) (intptr_t) fd, FdRawRead, BufFileRawSkip, FdClose);
+    return _DtHelpCeBufFileCreateRead ((char *) (intptr_t) fd, FdRawRead,
+                                       BufFileRawSkip, FdClose);
 }
 
 /*****************************************************************************
@@ -333,7 +357,7 @@ _DtHelpCeBufFileRdWithFd (int fd)
 BufFilePtr
 _DtHelpCeBufFileRdRawZ (CECompressInfoPtr file)
 {
-    return _DtHelpCeBufFileCreate ((char *) file, CompressRawRead, NULL,
+    return _DtHelpCeBufFileCreateRead ((char *) file, CompressRawRead, NULL,
 							CompressRawClose);
 }
 
@@ -394,6 +418,6 @@ _DtHelpCeBufFileRd (
 BufFilePtr
 _DtHelpCeCreatePipeBufFile (FILE *stream)
 {
-    return _DtHelpCeBufFileCreate ((char *) stream,
+    return _DtHelpCeBufFileCreateRead ((char *) stream,
 					RdPipeStream, NULL, ClosePipeStream);
 }

@@ -74,7 +74,8 @@ static int magic_header[] = { 0x1F, 0x9D };
 # define MAXCODE(n_bits)	((1 << (n_bits)) - 1)
 #endif /* COMPATIBLE */
 
-static code_int getcode();
+typedef struct _compressedFILE CompressedFile;
+static code_int getcode(CompressedFile *);
 
 /*
  * the next two codes should not be changed lightly, as they must not
@@ -85,7 +86,7 @@ static code_int getcode();
 
 #define STACK_SIZE  8192
 
-typedef struct _compressedFILE {
+struct _compressedFILE {
     BufFilePtr	    file;
 
     char_type	    *stackp;
@@ -107,7 +108,7 @@ typedef struct _compressedFILE {
     char_type	    de_stack[STACK_SIZE];
     char_type	    *tab_suffix;
     unsigned short  *tab_prefix;
-} CompressedFile;
+};
 
 
 static	int hsize_table[] = {
@@ -118,7 +119,9 @@ static	int hsize_table[] = {
     69001	/* 16 bits - 95% occupancy */
 };
 
-static int  BufCompressedFill(), BufCompressedSkip(), BufCompressedClose();
+static int BufCompressedFill(BufFilePtr);
+static int BufCompressedSkip(BufFilePtr, int);
+static int BufCompressedClose(BufFilePtr, int);
 
 BufFilePtr
 _DtHelpCeBufFilePushZ (BufFilePtr f)
@@ -166,7 +169,7 @@ _DtHelpCeBufFilePushZ (BufFilePtr f)
     file->finchar = file->oldcode = getcode (file);
     if (file->oldcode != -1)
 	*file->stackp++ = file->finchar;
-    return _DtHelpCeBufFileCreate ((char *) file,
+    return _DtHelpCeBufFileCreateRead ((char *) file,
 			  BufCompressedFill,
 			  BufCompressedSkip,
 			  BufCompressedClose);

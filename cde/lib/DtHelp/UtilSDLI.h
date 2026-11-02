@@ -139,7 +139,7 @@ extern	int	_DtHelpCeSaveString (
 			int		    link_index,
 			int		    multi_len,
 			int		    flags,
-			void		   (*load_font)(),
+			_DtHelpLoadFontProc load_font,
 			_SdlFontMode	    resolve_font,
 			_DtCvValue	    newline);
 extern	int	_DtHelpCeSkipCdata (
