@@ -143,8 +143,8 @@ extern Widget  optionsMenu_grid, menu1, queryDialog, stdErrDialog;
 extern Widget  tablet_wid;
 extern Window  tablet_win;
 
-static int jskXerrorDebug();
-static int jskXerrorIODebug();
+static int jskXerrorDebug(Display *, XErrorEvent *);
+static int jskXerrorIODebug(Display *);
 
 extern Widget editMenu_undo_pb;
 

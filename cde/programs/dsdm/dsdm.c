@@ -109,7 +109,7 @@ extern void ProxyMain(Display *dpy, XEvent *event);
 
 #define PROXY 1
 #ifdef PROXY
-extern Window GetAtomWindow();
+extern Window GetAtomWindow(Display *, Window, Atom);
 extern Atom ATOM_MOTIF_RECEIVER_INFO;
 Window proxy_win;
 #endif
@@ -121,7 +121,7 @@ Atom ATOM_WM_STATE;
 Atom ATOM_SITE_RECTS;
 
 
-int (*DefaultErrorHandler)();
+XErrorHandler DefaultErrorHandler;
 
 typedef struct _site {
     int screen;
@@ -137,7 +137,9 @@ drop_site_t **NextSite;
 int SitesFound = 0;
 
 
-Bool SearchChildren();
+Bool SearchChildren(
+    Display *, Window, Window, Window *, void **, unsigned long *, int *, int *,
+    Bool);
 
 /*
  * Region stuff.  Stolen from region.h.

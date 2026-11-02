@@ -117,9 +117,9 @@ static void CacheProxyClient (
 	int			screenNum, 
 	Window			window);
 
-static void PruneSessionDirectory ();
+static void PruneSessionDirectory (void);
 
-static Boolean WriteClientDatabase ();
+static Boolean WriteClientDatabase (void);
 
 static void OutputXSMPClients (
 	ClientDB		outputDB);

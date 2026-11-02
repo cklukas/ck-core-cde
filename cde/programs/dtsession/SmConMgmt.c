@@ -156,9 +156,6 @@ GetMemoryUtilization(void)
 #if !defined(__linux__)
     static int init = 0;
     static int kmem;
-#if !defined(SVR4) && !defined(_AIX) && !defined(CSRG_BASED)
-    extern void nlist();
-#endif
     int i;
 
 

@@ -106,6 +106,14 @@ callbacks receive the byte and buffer. This removes the former dependence on a
 single unspecified-argument function pointer serving two incompatible ABIs.
 The complete shared DtHelp library compiles and links with both C23 toolchains.
 
+The maintained desktop launch and session paths also use their framework and
+system interfaces directly. `dtexec` relies on the standard and POSIX headers
+instead of shadowing them with unspecified-argument declarations; `dtaction`
+timer callbacks use the Xt timeout signature; and `dtsession` declares its
+XSMP, ICE, save-state, signal and UI routines with complete prototypes. The
+`dsdm` X error and recursive-window callbacks and the `dticon` X error hooks
+likewise use their exact Xlib contracts without function-pointer casts.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh

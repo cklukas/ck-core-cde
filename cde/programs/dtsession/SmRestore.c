@@ -471,9 +471,9 @@ SetCompatState( void )
 void
 SystemCmd (char *pchCmd)
 {
-    void (*signalHandler) ();
+    void (*signalHandler) (int);
 
-    signalHandler = (void (*)())signal (SIGCHLD, SIG_DFL);
+    signalHandler = signal (SIGCHLD, SIG_DFL);
 
     system (pchCmd);
 

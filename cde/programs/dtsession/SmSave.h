@@ -90,9 +90,9 @@ extern void SaveState(
 	Bool                    fast,
 	Bool                    global) ;
 
-extern int CompleteSave ( );
+extern int CompleteSave (void);
 
-extern void NotifyProxyClients ( );
+extern void NotifyProxyClients (void);
 
 #endif /*_smsave_h*/
 /* DON'T ADD ANYTHING AFTER THIS #endif */

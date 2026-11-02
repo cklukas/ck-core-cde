@@ -6,6 +6,9 @@
 - DtHelp: type formatter, SDL model, display-area, interpreter-filter and
   region-cleanup callbacks; split buffered input and output callbacks so read
   and write paths no longer share an incompatible function-pointer slot.
+- C23: replace ambiguous system, signal, Xt, ICE and Xlib declarations in
+  dtexec, dtaction, dtsession, dsdm and dticon with their exact interfaces;
+  remove callback casts that concealed mismatched timer and handler contracts.
 
 2026-11-02
 - C23: give the DtInfo Tree, Panner, Pixmap, Porthole, Restraint and Simple

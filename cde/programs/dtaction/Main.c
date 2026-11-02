@@ -151,7 +151,7 @@ Boolean _DtWmStringsAreEqual(
                         char *test_str) ;
 void CheckForDone( 
                         XtPointer clientData,
-                        XtIntervalId id) ;
+                        XtIntervalId *id) ;
 void CheckUserRequest( void ) ;
 void CheckPasswd( void ) ;
 void AddSuLog( 
@@ -261,14 +261,12 @@ static int exitStatus = 0;
 void
 CheckForDone(
    XtPointer clientData,
-   XtIntervalId id)
+   XtIntervalId *id)
 {
     if ( toplevel->core.num_popups ==  0 ) 
 	exit(exitStatus);
 
-    XtAppAddTimeOut(appContext,
-	10, (XtTimerCallbackProc)CheckForDone,
-      NULL);
+    XtAppAddTimeOut(appContext, 10, CheckForDone, NULL);
 }
 
 
@@ -286,7 +284,7 @@ main(
   
     XtSetLanguageProc(NULL, NULL, NULL);
     _DtEnvControl(DT_ENV_SET);
-    (void) signal(SIGCHLD, (void (*)())SIG_IGN);
+    (void) signal(SIGCHLD, SIG_IGN);
 
     /*  Initialize the toolkit and open the display  */
     XtToolkitInitialize() ;
@@ -382,9 +380,7 @@ main(
      * error dialogs to get posted.
      */
     if ( !actionId)
-	    XtAppAddTimeOut(appContext,
-		10, (XtTimerCallbackProc)CheckForDone,
-			   NULL);
+	    XtAppAddTimeOut(appContext, 10, CheckForDone, NULL);
 
     XtAppMainLoop(appContext);
 
@@ -578,7 +574,6 @@ AddSuLog(
 
 {
     char        *toString;
-    struct tm  *localtime ();
 
        FILE * f;
     struct stat st;
@@ -1248,23 +1243,17 @@ void actionStatusCallback(
 	     * to mainLoop before exiting.
 	     */
             if ( exitAfterInvoked )
-		    XtAppAddTimeOut(appContext,
-			10 , (XtTimerCallbackProc)CheckForDone,
-		      NULL);
+		    XtAppAddTimeOut(appContext, 10, CheckForDone, NULL);
             break;
 
         case DtACTION_DONE:
-	    XtAppAddTimeOut(appContext,
-		10 , (XtTimerCallbackProc)CheckForDone,
-	      NULL);
+	    XtAppAddTimeOut(appContext, 10, CheckForDone, NULL);
             break;
 
         case DtACTION_FAILED:
         case DtACTION_CANCELED:
 	    exitStatus = 1;
-	    XtAppAddTimeOut(appContext,
-		10 , (XtTimerCallbackProc)CheckForDone,
-	      NULL);
+	    XtAppAddTimeOut(appContext, 10, CheckForDone, NULL);
             break;
 
         default:
