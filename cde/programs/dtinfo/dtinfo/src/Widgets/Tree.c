@@ -85,17 +85,21 @@
 
 
 					/* widget class method */
-static void             ClassInitialize();
-static void             Initialize();
-static void             ConstraintInitialize();
-static void             ConstraintDestroy();
-static Boolean          ConstraintSetValues();
-static void             Destroy();
-static Boolean          SetValues();
-static XtGeometryResult GeometryManager();
-static void             ChangeManaged();
-static void             Redisplay();
-static XtGeometryResult	QueryGeometry();
+static void             ClassInitialize(void);
+static void             Initialize(Widget, Widget, ArgList, Cardinal *);
+static void             ConstraintInitialize(Widget, Widget, ArgList,
+                                             Cardinal *);
+static void             ConstraintDestroy(Widget);
+static Boolean          ConstraintSetValues(Widget, Widget, Widget, ArgList,
+                                            Cardinal *);
+static void             Destroy(Widget);
+static Boolean          SetValues(Widget, Widget, Widget, ArgList, Cardinal *);
+static XtGeometryResult GeometryManager(Widget, XtWidgetGeometry *,
+                                        XtWidgetGeometry *);
+static void             ChangeManaged(Widget);
+static void             Redisplay(Widget, XEvent *, Region);
+static XtGeometryResult QueryGeometry(Widget, XtWidgetGeometry *,
+                                      XtWidgetGeometry *);
 
 					/* utility routines */
 static void             insert_node(Widget, Widget);
@@ -343,10 +347,11 @@ static void ClassInitialize (void)
 }
 
 
-static void Initialize (Widget grequest, Widget gnew)
+static void Initialize (Widget grequest, Widget gnew, ArgList args,
+                        Cardinal *num_args)
 {
     TreeWidget request = (TreeWidget) grequest, new = (TreeWidget) gnew;
-    Arg args[2];
+    Arg root_args[2];
 
     /*
      * Make sure the widget's width and height are 
@@ -377,9 +382,10 @@ static void Initialize (Widget grequest, Widget gnew)
      * Create the hidden root widget.
      */
     new->tree.tree_root = (Widget) NULL;
-    XtSetArg(args[0], XtNwidth, 1);
-    XtSetArg(args[1], XtNheight, 1);
-    new->tree.tree_root = XtCreateWidget ("root", widgetClass, gnew, args,TWO);
+    XtSetArg(root_args[0], XtNwidth, 1);
+    XtSetArg(root_args[1], XtNheight, 1);
+    new->tree.tree_root = XtCreateWidget ("root", widgetClass, gnew,
+                                          root_args, TWO);
 
     /*
      * Allocate the array used to hold the widest values per depth
@@ -397,7 +403,8 @@ static void Initialize (Widget grequest, Widget gnew)
 
 
 /* ARGSUSED */
-static void ConstraintInitialize (Widget request, Widget new)
+static void ConstraintInitialize (Widget request, Widget new, ArgList args,
+                                  Cardinal *num_args)
 {
     TreeConstraints tc = TREE_CONSTRAINT(new);
     TreeWidget tw = (TreeWidget) new->core.parent;
@@ -426,7 +433,8 @@ static void ConstraintInitialize (Widget request, Widget new)
 
 
 /* ARGSUSED */
-static Boolean SetValues (Widget gcurrent, Widget grequest, Widget gnew)
+static Boolean SetValues (Widget gcurrent, Widget grequest, Widget gnew,
+                          ArgList args, Cardinal *num_args)
 {
     TreeWidget current = (TreeWidget) gcurrent, new = (TreeWidget) gnew;
     Boolean redraw = FALSE;
@@ -568,8 +576,9 @@ static void Destroy (Widget gw)
 
 
 /* ARGSUSED */
-static void Redisplay (TreeWidget tw, XEvent *event, Region region)
+static void Redisplay (Widget gw, XEvent *event, Region region)
 {
+    TreeWidget tw = (TreeWidget) gw;
     /*
      * If the Tree widget is visible, visit each managed child.
      */

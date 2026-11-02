@@ -35,12 +35,13 @@
 #define ON_DEBUG(x)
 #endif
 
-static Boolean SetValues();
-static void Initialize();
-static void Destroy();
-static void Resize();
-static void ReDisplay();
-static XtGeometryResult QueryGeometry();
+static Boolean SetValues(Widget, Widget, Widget, ArgList, Cardinal *);
+static void Initialize(Widget, Widget, ArgList, Cardinal *);
+static void Destroy(Widget);
+static void Resize(Widget);
+static void ReDisplay(Widget, XEvent *, Region);
+static XtGeometryResult QueryGeometry(Widget, XtWidgetGeometry *,
+                                      XtWidgetGeometry *);
 
 /*
 static char *defaultTranslations[] = {""};
@@ -98,8 +99,11 @@ PixmapClassRec  pixmapClassRec = {
 WidgetClass pixmapWidgetClass = (WidgetClass)&pixmapClassRec;
 
 static void
-Initialize(PixmapWidget req, PixmapWidget new, ArgList args, Cardinal *nargs)
+Initialize(Widget request_widget, Widget new_widget, ArgList args,
+           Cardinal *nargs)
 {
+  PixmapWidget req = (PixmapWidget) request_widget;
+  PixmapWidget new = (PixmapWidget) new_widget;
   XtGCMask  value_mask ;
   XGCValues values ;
 
@@ -133,15 +137,17 @@ Initialize(PixmapWidget req, PixmapWidget new, ArgList args, Cardinal *nargs)
 }
 
 static void
-Resize(PixmapWidget w)
+Resize(Widget widget)
 {
+  PixmapWidget w = (PixmapWidget) widget;
   ON_DEBUG(fprintf(stderr, "PixmapWidget: RESIZE (%d, %d)\n",
 		   w->core.width, w->core.height));
 }
 
 static void
-Destroy(PixmapWidget w)
+Destroy(Widget widget)
 {
+  PixmapWidget w = (PixmapWidget) widget;
   if (w->pixmap.pixmap != 0)
     {
       ON_DEBUG(fprintf(stderr, "Hey, free the pixmap\n"));
@@ -149,8 +155,12 @@ Destroy(PixmapWidget w)
 }
 
 static Boolean
-SetValues(PixmapWidget current, PixmapWidget request, PixmapWidget new, ArgList args, Cardinal *num_args)
+SetValues(Widget current_widget, Widget request_widget, Widget new_widget,
+          ArgList args, Cardinal *num_args)
 {
+  PixmapWidget current = (PixmapWidget) current_widget;
+  PixmapWidget request = (PixmapWidget) request_widget;
+  PixmapWidget new = (PixmapWidget) new_widget;
   Window root ;
   int x, y ;
   unsigned int width, height, border_width, depth ;
@@ -183,8 +193,10 @@ SetValues(PixmapWidget current, PixmapWidget request, PixmapWidget new, ArgList 
 
 
 static XtGeometryResult
-QueryGeometry(PixmapWidget w, XtWidgetGeometry *proposed, XtWidgetGeometry *answer)
+QueryGeometry(Widget widget, XtWidgetGeometry *proposed,
+              XtWidgetGeometry *answer)
 {
+  PixmapWidget w = (PixmapWidget) widget;
   ON_DEBUG(fprintf(stderr, "PixmapWidget:\tQueryGeometry()\n"));
 #ifdef DEBUG
   if (proposed->request_mode & CWX)
@@ -208,8 +220,10 @@ QueryGeometry(PixmapWidget w, XtWidgetGeometry *proposed, XtWidgetGeometry *answ
 #endif
 
 static void
-ReDisplay(PixmapWidget w, XExposeEvent *event)
+ReDisplay(Widget widget, XEvent *xevent, Region region)
 {
+  PixmapWidget w = (PixmapWidget) widget;
+  XExposeEvent *event = &xevent->xexpose;
   ON_DEBUG(fprintf(stderr, "PixmapWidget: EXPOSE\n"));
 
   if (w->pixmap.pixmap != 0)
