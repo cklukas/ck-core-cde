@@ -78,7 +78,7 @@ typedef struct
  */
 typedef struct
 {
-  int state;
+  unsigned long state;
   Window icon;
 } WM_STATE;
 

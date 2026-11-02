@@ -14,6 +14,11 @@ its ABI, compiles CDE and verifies that `dtwm` links to `libXm.so.9`.
 
 ## Automated suite
 
+The session-manager regression executes its production XSMP/client-property
+reader and recursive top-level-window lookup with controlled Xlib replies.
+It checks property formats, counts, truncation, command validity, native-long
+WM state storage and Xlib buffer ownership, including empty child lists.
+
 The dtwm component check also executes the production `WM_STATE`, Motif WM
 info, normal hints, colormap and UTF-8 property readers against controlled Xlib replies. It checks valid
 values, failed reads, incorrect types and formats, missing data, invalid counts,

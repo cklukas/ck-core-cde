@@ -111,8 +111,8 @@ static WindowInfo
 GetTopLevelWindowInfo(
         Window window )
 {
-    register int i;
-    Window parent,root,*children;
+    unsigned int i;
+    Window parent,root,*children = NULL;
     WindowInfo retInfo;
     Atom actualType;
     int actualFormat;
@@ -138,20 +138,23 @@ GetTopLevelWindowInfo(
 	XaWmState = XInternAtom(smGD.display, _XA_WM_STATE, True);
     }
 
-    XGetWindowProperty(smGD.display,window,XaWmState,
-		       0L,(long)BUFSIZ,False,
+    if (XGetWindowProperty(smGD.display,window,XaWmState,
+		       0L,2L,False,
 		       XaWmState,&actualType,&actualFormat,
 		       &nitems,
-		       &leftover,(unsigned char **) &wmState);
-    if (actualType==XaWmState)
+		       &leftover,(unsigned char **) &wmState) == Success &&
+        wmState && actualType == XaWmState && actualFormat == 32 &&
+        nitems == 2 && leftover == 0 &&
+        (wmState->state == NormalState || wmState->state == IconicState ||
+         wmState->state == WithdrawnState))
     {
 	retInfo.wid = window;
-	retInfo.termState = wmState->state;
+	retInfo.termState = (int)wmState->state;
 
 	/*
 	 * This data needs to be freed up!
 	 */
-	SM_FREE((char *) wmState);
+	XFree(wmState);
         return(retInfo);
     }
     else 
@@ -160,9 +163,9 @@ GetTopLevelWindowInfo(
 	 * Be sure to free the window property each time we get it
 	 * if the property exists
 	 */
-	if(actualType != None)
+	if(wmState)
 	{
-	    SM_FREE((char *) wmState);
+	    XFree(wmState);
 	}
 	
         if(XQueryTree(smGD.display,window,&root,
@@ -176,13 +179,14 @@ GetTopLevelWindowInfo(
 		    retInfo = GetTopLevelWindowInfo(children[i++]);
 		    if(retInfo.wid != 0)
 		    {
-			SM_FREE((char *) children);
+			XFree(children);
 			return(retInfo);
 		    }
 		}
-		SM_FREE((char *) children);
 	    }
 	}
+	if (children)
+	    XFree(children);
 	retInfo.wid = 0;
 	retInfo.termState = 0;
         return(retInfo);

@@ -996,13 +996,21 @@ PrintStartupInfo(
    * If the client doesn't have a WM_COMMAND property, we can't restart it
    */
   if (!wargv||!wargv[0]) 
+  {
+    if (wargv) XFreeStringList(wargv);
+    if (clientMachine) XFree(clientMachine);
     return;
+  }
 
   /*
    * If the client is an XSMP client, don't save it as a Proxy client.
    */
   if (xsmpClient)
+  {
+     XFreeStringList(wargv);
+     if (clientMachine) XFree(clientMachine);
      return;
+  }
 
 #ifdef _SUN_OS /* pull out quotes from OpenWindow tools commands */
   if (wargc == 1) {
@@ -1040,9 +1048,19 @@ PrintStartupInfo(
   /*
    * Must NULL-terminate the WM_COMMAND before writing it
    */
-  argv = (char **) XtMalloc ((wargc + 1) * sizeof (char *));
-  if (!argv)
+  if (wargc < 0 || (size_t)wargc >= UINT_MAX / sizeof(char *))
+  {
+      XFreeStringList(wargv);
+      if (clientMachine) XFree(clientMachine);
       return;
+  }
+  argv = (char **) XtMalloc (((size_t)wargc + 1) * sizeof (char *));
+  if (!argv)
+  {
+      XFreeStringList(wargv);
+      if (clientMachine) XFree(clientMachine);
+      return;
+  }
 
   for (i = 0; i < wargc; i++)
       argv[i] = wargv[i];
@@ -1054,6 +1072,8 @@ PrintStartupInfo(
   writeStatus = PutProxyClientDBRec (outputDB, &dbRec);
 
   XtFree ((char *) argv);
+  if (clientMachine)
+      XFree(clientMachine);
 
   if (writeStatus == False)
   {

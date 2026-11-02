@@ -2,6 +2,11 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtsession
 
+EXTRA_DIST = tests/check-session-properties.py
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-session-properties.py
+
 bin_SCRIPTS = dtsession_res
 
 if HAS_PAM_LIBRARY

@@ -54,6 +54,7 @@
  *************************************<+>*************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include <X11/Intrinsic.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -101,13 +102,17 @@ Status GetStandardProperties(
 	Boolean 		*xsmpClient)		/* RETURNED */
 {
   int 				cc;
-  long				suppliedRet;
-  XTextProperty			sessProp;
+  XTextProperty			sessProp = {0};
   Atom				actType;
   int				actFormat;
   unsigned long			bytesAfter;
   unsigned long 		nitems;
   unsigned char 		*data = NULL;
+
+  *argc = 0;
+  *argv = NULL;
+  *clientMachine = NULL;
+  *xsmpClient = False;
 
   /*
    * If this client is participating in the XSMP, then don't save
@@ -118,50 +123,58 @@ Status GetStandardProperties(
 			 (long) BUFSIZ, False, XA_STRING, &actType,
 			 &actFormat, &nitems, &bytesAfter, &data) == Success) 
   {
-      if (data && actType == XA_STRING)
+      if (data && actType == XA_STRING && actFormat == 8 &&
+          nitems > 0 && data[0] != '\0' && bytesAfter == 0 &&
+          (!memchr(data, '\0', nitems) ||
+           memchr(data, '\0', nitems) == data + nitems - 1))
       {
 	  ClientRecPtr		pClient;
 
 	  for (pClient = connectedList; pClient != NULL; 
 	       pClient = pClient->next) {
-	       if (!strcmp ((char *) data, pClient->clientId)) {
+	       if (pClient->clientId && !strcmp ((char *) data, pClient->clientId)) {
 		   pClient->screenNum = screen;
 		   break;
 	       }
 	  }
           *xsmpClient = True;
-          SM_FREE ((char *) data);
+          XFree(data);
   	  return (0);
       }
-      SM_FREE ((char *) data);
   }
-  *xsmpClient = False;
+  if (data)
+      XFree(data);
 
   /*
    * Get WM_COMMAND property
    */
-  if ((cc=XGetCommand(smGD.display,window,argv,argc))==0)
-      return(cc);
+  cc = XGetCommand(smGD.display,window,argv,argc);
 
   /*
    * If there is no argc or argv - don't bother going on.  We're not
    * going to save anything anyway
    */
-  if(*argc == 0)
-      return(0);
+  if (cc == 0 || *argc <= 0 || !*argv || !(*argv)[0] || !(*argv)[0][0])
+  {
+      if (*argv)
+          XFreeStringList(*argv);
+      *argv = NULL;
+      *argc = 0;
+      return 0;
+  }
 
 
   /*
    * Get WM_CLIENT_MACHINE property
    */
-  if ((cc=XGetWMClientMachine(smGD.display,window,&sessProp))==0)
-  {
-      *clientMachine = NULL;
-  }
-  else
-  {
+  if (XGetWMClientMachine(smGD.display,window,&sessProp) && sessProp.value &&
+      sessProp.encoding == XA_STRING && sessProp.format == 8 &&
+      sessProp.nitems > 0 && sessProp.value[0] != '\0' &&
+      (!memchr(sessProp.value, '\0', sessProp.nitems) ||
+       memchr(sessProp.value, '\0', sessProp.nitems) == sessProp.value + sessProp.nitems - 1))
       *clientMachine =  (char *) sessProp.value;
-  }
+  else if (sessProp.value)
+      XFree(sessProp.value);
 
   return(1);
 }
