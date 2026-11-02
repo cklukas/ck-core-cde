@@ -1,4 +1,5 @@
 2026-11-02
+- docs: place related CK Core sites in the ckdocs v0.10.1 site selector.
 - project: publish completed, verified topic commits through the shared primary
   branch to both rpi4 and GitHub; group related fixes into cohesive commits.
 - docs: connect the CK Core CDE, CK Core Motif and CK Core Apps sites through
