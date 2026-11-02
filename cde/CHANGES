@@ -1,4 +1,8 @@
 2026-11-02
+- C23: give the DtInfo Tree, Panner, Pixmap, Porthole, Restraint and Simple
+  widgets exact Xt method signatures; type the DtSvc hash callbacks, Instant
+  document-tree visitors, and dtscreen mode dispatch without function-pointer
+  casts.
 - DtSearch: keep the embedded Raima runtime's public, list, startup and private
   helper interfaces fully prototyped on every supported compiler; type its
   error callback and make collation byte signedness and pointer advances
