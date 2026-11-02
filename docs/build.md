@@ -116,3 +116,10 @@ make -j4 -C lib/DtHelp/il
 This focused result does not imply that the rest of CDE is C23-clean. The
 project will select C23 by default only after the complete build, `make check`,
 and the uConsole desktop smoke suite pass with the same qualified source.
+
+The DtInfo C++ viewer also consumes the typed DtHelp hyperlink and resize
+interfaces directly. Its callbacks accept the interface's opaque display/client
+pointers and recover the concrete viewer objects inside the callback. They do
+not cast through unspecified-argument function-pointer aliases. Rebuilding
+`programs/dtinfo/dtinfo/src/Agents/libAgents_a-NodeWindowAgentMotif.o` checks this
+consumer against the actual private DtHelp declarations.

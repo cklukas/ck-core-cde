@@ -209,21 +209,18 @@ xList<UAS_Pointer<UAS_Common> > g_tab_list;
 
 extern AppPrintData * l_AppPrintData; 
 
-extern "C"
-{
-  typedef void (*resize_cb_ptr)();
-  typedef void (*hypertext_cb_ptr)();
-}
-
 #ifdef CV_HYPER_DEBUG
 void
 #else
 static void
 #endif
-hypertext_cb (DtHelpDispAreaStruct* pDAS, NodeWindowAgent *agent, 
+hypertext_cb (XtPointer display_area, XtPointer client_data,
 	      DtHelpHyperTextStruct *callData)
 {
+  NodeWindowAgent *agent = static_cast<NodeWindowAgent *>(client_data);
 #if defined(_IBMR2) && defined(CV_HYPER_BUG)
+  DtHelpDispAreaStruct *pDAS =
+    static_cast<DtHelpDispAreaStruct *>(display_area);
   _DtCvLinkInfo ceHyper ;
   
   _DtCvUnit downX, downY, upX, upY ;
@@ -242,6 +239,7 @@ hypertext_cb (DtHelpDispAreaStruct* pDAS, NodeWindowAgent *agent,
       agent->link_to(ceHyper.specification);
     }
 #else
+  (void) display_area;
 
   if (callData->window_hint == 0) {
     if (callData->hyper_type < 0) {
@@ -265,8 +263,9 @@ hypertext_cb (DtHelpDispAreaStruct* pDAS, NodeWindowAgent *agent,
 }
 
 static void
-resize_cb (NodeWindowAgent *agent)
+resize_cb (XtPointer client_data)
 {
+  NodeWindowAgent *agent = static_cast<NodeWindowAgent *>(client_data);
   agent->canvas_resize ();
 }
 
@@ -1786,8 +1785,8 @@ NodeWindowAgent::create_ui()
 			     FALSE,		// traversal flag
 			     1,			// rows
 			     1,			// columns
-			     (hypertext_cb_ptr) hypertext_cb, // hypertext cb
-			     (resize_cb_ptr) resize_cb,       // resize cb
+			     hypertext_cb,		// hypertext cb
+			     resize_cb,			// resize cb
 			     0,			// exec ok routine
 			     this,		// client_data
 			     defaultList	// default font list

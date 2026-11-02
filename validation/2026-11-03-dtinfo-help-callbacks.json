@@ -1,0 +1,17 @@
+{
+  "scope": "C++ consumer of typed DtHelp callback interfaces",
+  "base_commit": "33adb92c0a32495da9b003a1f59adbc39c694d03",
+  "motif_tested": "1a2407723eb319ac5c18afa0fb386cf46aa7efdc",
+  "native_host": "uconsole Linux arm64",
+  "regression": "Previous incremental build rejected both void(*)() casts at callback argument conversion",
+  "object_check": {
+    "target": "programs/dtinfo/dtinfo/src/Agents/libAgents_a-NodeWindowAgentMotif.o",
+    "compiler": "g++-12 -O1 -g0; existing configured tree, no permissive callback cast",
+    "jobs": 1,
+    "exit": 0
+  },
+  "source_sha256": {
+    "cde/programs/dtinfo/dtinfo/src/Agents/NodeWindowAgentMotif.C": "7a3b61073b6de679230e7a013e05448c732bee7e039b7b46e89496f515c40ba3"
+  },
+  "remaining_qualification": "Full incremental dependency closure and native viewer exercise before primary handoff"
+}

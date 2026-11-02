@@ -8,6 +8,9 @@
   and write paths no longer share an incompatible function-pointer slot.
 
 2026-11-02
+- dtinfo: match typed DtHelp hyperlink/resize callback interfaces in the C++
+  viewer, recovering concrete client objects inside callbacks rather than
+  casting through unspecified-argument function pointers.
 - dtfile: optionally build the native dtfile_sync read-only folder comparison
   window with --with-ck-core-fs and installed ck-core-fs-lib >= 0.3; require the
   tree C API while leaving default builds free of the optional dependency.
