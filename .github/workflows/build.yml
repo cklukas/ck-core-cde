@@ -34,7 +34,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             autoconf automake bison build-essential fakeroot flex ksh libatspi2.0-dev \
-            libdbus-1-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
+            libdbus-1-dev libharfbuzz-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
             librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
             libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
             m4 ncompress opensp pkg-config rpcsvc-proto tcl-dev xbitmaps xfonts-utils
