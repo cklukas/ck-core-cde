@@ -891,9 +891,11 @@ extern void SetHourGlassCursor(
 extern char * getEnv(
 			char **e,
 			char *name) ;
-extern char ** parseArgs(
-			char **argv,
-			char *string) ;
+/* Append space/tab-separated words atomically. Failure leaves *argv intact. */
+extern int parseArgs(char ***argv, const char *string);
+/* Append one argument verbatim, including whitespace; same failure contract. */
+extern int appendArg(char ***argv, const char *word);
+extern void freeEnv(char **env);
 extern char ** parseEnv(
 			char **e,
 			char *string) ;

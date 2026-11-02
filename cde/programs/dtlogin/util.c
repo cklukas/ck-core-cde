@@ -305,53 +305,97 @@ freeEnv (char **env)
 
 # define isblank(c)	((c) == ' ' || c == '\t')
 
-char **
-parseArgs( char **argv, char *string )
+int
+appendArg(char ***argv, const char *word)
 {
-	char	*word;
-	char	*save;
-	int	i;
+    char **result;
+    size_t count = 0;
+    int savedErrno;
+    if (!argv || !word) {
+	errno = EINVAL;
+	return 0;
+    }
+    while (*argv && (*argv)[count]) ++count;
+    if (count > SIZE_MAX / sizeof(char *) - 2) {
+	errno = EOVERFLOW;
+	return 0;
+    }
+    result = malloc((count + 2) * sizeof(char *));
+    if (!result) goto failed;
+    result[count] = strdup(word);
+    if (!result[count]) {
+	savedErrno = errno;
+	free(result);
+	errno = savedErrno;
+	goto failed;
+    }
+    if (count) memcpy(result, *argv, count * sizeof(char *));
+    result[count + 1] = NULL;
+    free(*argv);
+    *argv = result;
+    return 1;
+failed:
+    savedErrno = errno ? errno : ENOMEM;
+    LogOutOfMem(ReadCatalog(MC_LOG_SET,MC_LOG_PARSEARGS,MC_DEF_LOG_PARSEARGS));
+    errno = savedErrno;
+    return 0;
+}
 
-	i = 0;
-	while (argv && argv[i])
-		++i;
-	if (!argv) {
-		argv = (char **) malloc (sizeof (char *));
-		if (!argv) {
-			LogOutOfMem(ReadCatalog(
-			  MC_LOG_SET,MC_LOG_PARSEARGS,MC_DEF_LOG_PARSEARGS));
-			return 0;
-		}
+int
+parseArgs(char ***argv, const char *string)
+{
+    char **result;
+    const char *word, *cursor;
+    size_t original = 0, added = 0, used;
+    int savedErrno;
+
+    if (!argv || !string) {
+	errno = EINVAL;
+	return 0;
+    }
+    while (*argv && (*argv)[original])
+	++original;
+    cursor = string;
+    while (*cursor) {
+	while (isblank(*cursor)) ++cursor;
+	if (!*cursor) break;
+	++added;
+	while (*cursor && !isblank(*cursor)) ++cursor;
+    }
+    if (original > SIZE_MAX / sizeof(char *) - 1 ||
+	added > SIZE_MAX / sizeof(char *) - original - 1) {
+	errno = EOVERFLOW;
+	return 0;
+    }
+    result = malloc((original + added + 1) * sizeof(char *));
+    if (!result) goto failed;
+    if (original) memcpy(result, *argv, original * sizeof(char *));
+    used = original;
+    cursor = string;
+    while (*cursor) {
+	while (isblank(*cursor)) ++cursor;
+	if (!*cursor) break;
+	word = cursor;
+	while (*cursor && !isblank(*cursor)) ++cursor;
+	result[used] = malloc((size_t)(cursor - word) + 1);
+	if (!result[used]) {
+	    while (used > original) free(result[--used]);
+	    free(result);
+	    goto failed;
 	}
-	word = string;
-	for (;;) {
-		if (!*string || isblank (*string)) {
-			if (word != string) {
-				argv = (char **) realloc ((char *) argv,
-					(unsigned) ((i + 2) * sizeof (char *)));
-				save = malloc ((unsigned) (string - word + 1));
-				if (!argv || !save) {
-					LogOutOfMem(ReadCatalog(MC_LOG_SET,
-					  MC_LOG_PARSEARGS,
-					  MC_DEF_LOG_PARSEARGS));
-					if (argv)
-						free ((char *) argv);
-					if (save)
-						free (save);
-					return 0;
-				}
-				argv[i] = strncpy (save, word, string-word);
-				argv[i][string-word] = '\0';
-				i++;
-			}
-			if (!*string)
-				break;
-			word = string + 1;
-		}
-		++string;
-	}
-	argv[i] = 0;
-	return argv;
+	memcpy(result[used], word, cursor - word);
+	result[used++][cursor - word] = '\0';
+    }
+    result[used] = NULL;
+    free(*argv);
+    *argv = result;
+    return 1;
+
+failed:
+    savedErrno = errno ? errno : ENOMEM;
+    LogOutOfMem(ReadCatalog(MC_LOG_SET,MC_LOG_PARSEARGS,MC_DEF_LOG_PARSEARGS));
+    errno = savedErrno;
+    return 0;
 }
 
 void

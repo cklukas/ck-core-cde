@@ -336,18 +336,26 @@ AddChooserHost (
     ARRAY8Ptr   addr,
     char        *closure)
 {
-    char	***argp, **parseArgs();
+    char	***argp;
     char	hostbuf[1024];
 
     argp = (char ***) closure;
+    if (!*argp)
+	return; /* Earlier callback failed; do not restart from a host argument. */
     if (addr->length == strlen ("BROADCAST") &&
 	!strncmp ((char *)addr->data, "BROADCAST", addr->length))
     {
-	*argp = parseArgs (*argp, "BROADCAST");
+	if (!parseArgs (argp, "BROADCAST")) {
+	    freeEnv(*argp);
+	    *argp = NULL;
+	}
     }
     else if (FormatARRAY8 (addr, hostbuf, sizeof (hostbuf)))
     {
-	*argp = parseArgs (*argp, hostbuf);
+	if (!parseArgs (argp, hostbuf)) {
+	    freeEnv(*argp);
+	    *argp = NULL;
+	}
     }
 }
 
@@ -409,7 +417,7 @@ void
 RunChooser (
     struct display  *d)
 {
-    char    **args, **parseArgs(), **systemEnv();
+    char    **args = NULL, **systemEnv();
     char    buf[1024];
     char    **env;
 
@@ -417,19 +425,25 @@ RunChooser (
     SetTitle (d->name, "chooser");
     LoadXloginResources (d);
 
-    args = parseArgs ((char **) 0, d->chooser);
+    if (!parseArgs (&args, d->chooser) || !args[0])
+	goto argument_failure;
     strcpy (buf, "-xdmaddress ");
-    if (FormatChooserArgument (buf + strlen (buf), sizeof (buf) - strlen (buf)))
-	args = parseArgs (args, buf);
+    if (FormatChooserArgument (buf + strlen (buf), sizeof (buf) - strlen (buf)) &&
+	!parseArgs (&args, buf))
+	goto argument_failure;
     strcpy (buf, "-clientaddress ");
-    if (FormatARRAY8 (&d->clientAddr, buf + strlen (buf), sizeof (buf) - strlen (buf)))
-	args = parseArgs (args, buf);
+    if (FormatARRAY8 (&d->clientAddr, buf + strlen (buf), sizeof (buf) - strlen (buf)) &&
+	!parseArgs (&args, buf))
+	goto argument_failure;
     sprintf (buf, "-connectionType %d", d->connectionType);
-    args = parseArgs (args, buf);
+    if (!parseArgs (&args, buf))
+	goto argument_failure;
     ForEachChooserHost (&d->clientAddr,
 			d->connectionType,
 			AddChooserHost,
 			(char *) &args);
+    if (!args)
+	goto argument_failure;
     env = systemEnv (d, (char *) 0, (char *) 0);
     if (d->authFile)
             env = setEnv (env, "XAUTHORITY", d->authFile);
@@ -459,6 +473,10 @@ RunChooser (
     Debug ("Couldn't run %s\n", args[0]);
     LogError ((unsigned char *)"Cannot execute %s\n", args[0]);
     exit (REMANAGE_DISPLAY);
+
+argument_failure:
+    freeEnv(args);
+    exit(REMANAGE_DISPLAY);
 }
 
 static char *

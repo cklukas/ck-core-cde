@@ -1,4 +1,11 @@
 2026-11-02
+- dtlogin: read the complete saved-session path and reject truncation, NUL,
+  multiline content and read/close errors before selecting an executable.
+- dtlogin: pass server authorization and saved-session paths as complete
+  arguments, preserving whitespace and removing the fixed authorization buffer.
+- dtlogin: append command arguments atomically with checked allocation sizes;
+  preserve ownership on failure and stop startup/chooser construction instead
+  of executing a partial argument list or substituting a fallback command.
 - dtsession: validate complete integer resources and client-ID references;
   reject overflow, trailing garbage, negative screens and invalid restart hints.
 - dtsession: keep record-output failures sticky so later records cannot turn a

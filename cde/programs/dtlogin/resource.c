@@ -457,9 +457,14 @@ GetResource( char *name, char *class, int valueType, char **valuep,
 		 !strcmp (str_buf, "no"))
 		*((int *) valuep) = 0;
 	break;
-    case DM_ARGV:
-        *((char ***) valuep) = parseArgs ((char **) 0, string);
+    case DM_ARGV: {
+        char **args = NULL;
+        if (!parseArgs(&args, string))
+            return 0;
+        freeEnv(*((char ***)valuep));
+        *((char ***)valuep) = args;
         break;
+    }
 
     }
 

@@ -69,6 +69,17 @@ that existing entries survive failures and tokenizer state belongs to each
 parse. They use controlled environment hooks and do not start the login service
 or change an account's authentication settings.
 
+Command-argument appends are transactional: failure preserves the original
+vector and its strings. Login, server, chooser and resource callers check the
+result before continuing. Regression failures at each append allocation verify
+that no partial arguments, leaks or stale pointers escape to the caller.
+Authorization and saved-session paths are appended as individual arguments,
+including spaces. The authorization path no longer passes through a fixed-size
+formatting buffer. Tests include long arguments, whitespace and allocation faults.
+The saved-session reader requires a complete path and successful stream read and
+close. It accepts an optional final line ending, rejects embedded NUL/multiple
+lines and overlong paths, and never executes a truncated prefix.
+
 Help-string regressions compile the production canvas string implementation
 and exercise byte offsets inside multibyte characters, malformed sequences,
 wide-string bounds and alignment-copy capacity. Invalid table alignment

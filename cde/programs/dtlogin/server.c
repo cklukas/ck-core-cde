@@ -113,7 +113,6 @@ StartServerOnce( struct display *d )
 {
     char	**f;
     char	**argv;
-    char	arg[1024];
     int		pid;
     char	**env;
     
@@ -127,10 +126,10 @@ StartServerOnce( struct display *d )
     case 0:
 	CleanUpChild ();
 	if (d->authFile) {
-	    sprintf (arg, "-auth %s", d->authFile);
-	    argv = parseArgs (argv, arg);
+	    if (!appendArg (&argv, "-auth") || !appendArg (&argv, d->authFile))
+		exit(1);
 	}
-	if (!argv) {
+	if (!argv || !argv[0]) {
 	    LogError(ReadCatalog(MC_LOG_SET,MC_LOG_NO_ARGS,MC_DEF_LOG_NO_ARGS));
 	    exit(1);
 	}

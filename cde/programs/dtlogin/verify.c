@@ -83,6 +83,35 @@ static  char    *Pndefault      = "/etc/default/login";
 
 extern char *_ExpandLang( char *string, char *lang );
 
+static int
+ReadSessionPath(FILE *file, char *path, size_t capacity)
+{
+    size_t length = 0;
+    int value;
+    if (!file || !path || capacity == 0)
+	return 0;
+    path[0] = '\0';
+    while ((value = fgetc(file)) != EOF) {
+	if (value == 0 || length == capacity - 1) {
+	    path[0] = '\0';
+	    return 0;
+	}
+	path[length++] = (char)value;
+    }
+    if (ferror(file)) {
+	path[0] = '\0';
+	return 0;
+    }
+    if (length && path[length - 1] == '\n') --length;
+    if (length && path[length - 1] == '\r') --length;
+    path[length] = '\0';
+    if (!length || strchr(path, '\n') || strchr(path, '\r')) {
+	path[0] = '\0';
+	return 0;
+    }
+    return 1;
+}
+
 int 
 Verify(
         struct display *d,
@@ -96,6 +125,7 @@ Verify(
 	char 		last_sess[MAXPATHLEN];
 	int 		notify_dt;
 	int 		i;
+	int             pathLength;
 
 	Debug ("Verify(): %s\n", greet->name);
 
@@ -179,59 +209,66 @@ Verify(
 	switch (notify_dt) {
         case NOTIFY_DT:
         case NOTIFY_OK:
-	    if(d->session)
-	      argv = parseArgs (argv,d->session);
+	    if(d->session && !parseArgs (&argv,d->session))
+		goto argument_failure;
               break;
         case NOTIFY_ALT_DTS:
-	    if((argv = setDt(d,argv,notify_dt)) == NULL)
+	    if((argv = setDt(d,argv,notify_dt)) == NULL) {
+	       if (errno != ENOENT) goto argument_failure;
 		/*if no startup file, startup the regular desktop*/
 	       if(d->session) {
-	          argv = parseArgs (argv,d->session);
+	          if (!parseArgs (&argv,d->session)) goto argument_failure;
 
                Debug ("No Startup file \n");
 	       }
+            }
             break;
         case NOTIFY_LAST_DT:
-            snprintf(last_sess, sizeof(last_sess), "%s%s", home, LAST_SESSION_FILE);
+            pathLength = snprintf(last_sess, sizeof(last_sess), "%s%s", home, LAST_SESSION_FILE);
+            if (pathLength < 0 || (size_t)pathLength >= sizeof(last_sess))
+                goto argument_failure;
 
             if((lastsession = fopen(last_sess,"r")) == NULL)  {
 	    /* 
 	     * if no lastsession file, execute the logically 
              *		first alternate desktop
 	     */
-		if((argv = setDt(d,argv,notify_dt)) == NULL)
+		if((argv = setDt(d,argv,notify_dt)) == NULL) {
+	          if (errno != ENOENT) goto argument_failure;
 	          if(d->session) {
-		    argv = parseArgs (argv,d->session);
+		    if (!parseArgs (&argv,d->session)) goto argument_failure;
 		    /* No altdts, set the Default Regular session */
                     Debug ("No AltDestops in the resources file \n");
 	          }
+                }
 	    }
             else{
-	       strcpy(last_sess,"\0");	
-               fgets(last_sess,MAXPATHLEN,lastsession);
+               int valid = ReadSessionPath(lastsession, last_sess, sizeof(last_sess));
+               if (fclose(lastsession) != 0) valid = 0;
 
-	       if(access(last_sess, X_OK) != 0) {
-		  if((argv = setDt(d,argv,notify_dt)) == NULL)
+	       if(!valid || access(last_sess, X_OK) != 0) {
+		  if((argv = setDt(d,argv,notify_dt)) == NULL) {
+		    if (errno != ENOENT) goto argument_failure;
 		    if(d->session){
-		      argv = parseArgs (argv,d->session);
+		      if (!parseArgs (&argv,d->session)) goto argument_failure;
 		      /* No altdts, set the Default Regular session */
                       Debug ("No AltDestops in the resources file setting to %s  \n",argv[0]);
 		    }
+                  }
 	       }
 	       else {
-                  argv = parseArgs (argv, last_sess);
+                  if (!appendArg (&argv, last_sess)) goto argument_failure;
 	       }
-               fclose(lastsession);
             }
             break;
         default:
             break;
         }
 	
-	if (greet->string)
-		argv = parseArgs (argv, greet->string);
-	if (!argv)
-		argv = parseArgs (argv, "xsession");
+	if (greet->string && !parseArgs (&argv, greet->string))
+		goto argument_failure;
+	if ((!argv || !argv[0]) && !parseArgs (&argv, "xsession"))
+		goto argument_failure;
 	verify->argv = argv;
 	verify->userEnviron = userEnv (d, greet->name, home, shell,p);
 	Debug ("User environment:\n");
@@ -241,6 +278,10 @@ Verify(
 	printEnv (verify->systemEnviron);
 	Debug ("End of environments\n");
 	return 1;
+
+argument_failure:
+	freeEnv(argv);
+	return 0;
 }
 
 char **
@@ -264,6 +305,7 @@ int 		altdtrequested;
 
    if(!XresourceDB) {
       Debug ("Verify - No resources \n");
+      errno = ENOENT;
       return 0;
    }
 
@@ -281,7 +323,7 @@ int 		altdtrequested;
            if(XrmGetResource(XresourceDB, altdtstart, altdtstartclass,
                &rmtype, &rmvalue) == True){
               Debug ("Start up file is %s\n",rmvalue.addr);
-              argv = parseArgs (argv, rmvalue.addr);
+              if (!parseArgs (&argv, rmvalue.addr)) return NULL;
               return argv;
            }
         }
@@ -298,10 +340,11 @@ int 		altdtrequested;
             if(XrmGetResource(XresourceDB, altdtstart, altdtstartclass,
                                         &rmtype, &rmvalue) == True){
                 Debug ("Start up file is %s\n",rmvalue.addr);
-                argv = parseArgs (argv, rmvalue.addr);
+                if (!parseArgs (&argv, rmvalue.addr)) return NULL;
                 return argv;
             }
    }
+ errno = ENOENT;
  return 0;
 }
 
