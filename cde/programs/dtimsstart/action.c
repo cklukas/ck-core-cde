@@ -28,13 +28,13 @@
 
 #include	"xims.h"
 
-static void	DbReloadProc(/* cd */);
-static bool	init_action_env(/*  */);
+static void	DbReloadProc(XtPointer cd);
+static XimsBool	init_action_env(void);
 static void	action_cb(long unsigned id, XtPointer cd,
 			  DtActionArg *args, int argcnt, DtActionStatus status);
-static void	wait_action_done(/*  */);
+static void	wait_action_done(void);
 
-static bool			actionEnabled = False;
+static XimsBool			actionEnabled = False;
 static int			actionDone = True;
 static int			actionErr = NoError;
 static DtActionInvocationID	actionId = 0;
@@ -48,7 +48,7 @@ static void	DbReloadProc(XtPointer cd)
     DtDbLoad();	/* Pick up any dynamic changes to the database files */
 }
 
-static bool	init_action_env(void)
+static XimsBool	init_action_env(void)
 {
     init_window_env();
 

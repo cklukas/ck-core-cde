@@ -48,23 +48,23 @@ static nl_catd	catd = (nl_catd) -1;
 extern char *find_system_locale_name(char *);
 
     /* local functions */
-static int	IsNoError(/* error */);
-static int	EnvNeeded(/* error */);
-static int	ErrMsgDisabled(/* error */);
-static int	ximsShowImsList(/*  */);
-static int	ximsShowCurrentIms(/*  */);
-static int	prepare_remote(/* win_st */);
-static int	ximsRemoteConf(/*  */);
-static int	ximsSetMode(/*  */);
-static void	show_select_mode(/* mode */);
-static int	set_locale_env(/* locale */);
-static void	init_command(/* progname */);
-static bool	optname_match(/* name, str, minlen */);
-static int	parse_options(/* argc, argv */);
-static void	usage(/* force */);
+static int	IsNoError(ximsError error);
+static int	EnvNeeded(ximsError error);
+static int	ErrMsgDisabled(ximsError error);
+static int	ximsShowImsList(void);
+static int	ximsShowCurrentIms(void);
+static int	prepare_remote(int win_st);
+static int	ximsRemoteConf(void);
+static int	ximsSetMode(void);
+static void	show_select_mode(int mode);
+static int	set_locale_env(char *locale);
+static void	init_command(char *progname);
+static XimsBool	optname_match(char *name, char *str, int minlen);
+static int	parse_options(int argc, char **argv);
+static void	usage(int force);
 
 static int	exitSignalNumber = 0;
-static bool	do_usage = False;
+static XimsBool	do_usage = False;
 
 
 int main (int argc, char **argv)
@@ -177,7 +177,7 @@ void	Exit(int err_code)
 int	NotifyErrCode(int err_code)
 {
     char	buf[BUFSIZ], *bp, val[20];
-    static bool	notify_done = False;
+    static XimsBool	notify_done = False;
 
     if (/* !(OpFlag & FLAG_NOTIFY) || */ notify_done)
 	return False;
@@ -226,6 +226,8 @@ static int	IsNoError(ximsError error)
 	case ErrNoSelectionFile: case ErrNoSelection: case ErrSaveSelection:
 	case ErrDisabled:
 		return True;
+	default:
+		break;
     }
     return False;
 }
@@ -239,6 +241,8 @@ static int	EnvNeeded(ximsError error)
 	/* case ErrImsExecution: case ErrImsAborted: */
 	case ErrOpenResource:	/* case ErrSignaled: */
 		return True;
+	default:
+		break;
     }
     return False;
 }
@@ -254,6 +258,8 @@ static int	ErrMsgDisabled(ximsError error)
 		return (Verbose <= 2);
 	case ErrInvState: case ErrInternal:
 		return (Verbose <= 3);
+	default:
+		break;
     }
     return False;
 }
@@ -265,6 +271,8 @@ int	ErrFilePathNeeded(ximsError error)
 	case ErrMissEntry: case ErrNoExecutable: case ErrImsAborted:
 	case ErrOpenResource:
 		return True;
+	default:
+		break;
     }
     return False;
 }
@@ -276,6 +284,8 @@ int	InWaitingState(void)
     	case State_Finish_Defered:
 	case State_Mode_Done:
 	    return True;
+	default:
+	    break;
     }
     return False;
 }
@@ -709,7 +719,7 @@ static void	init_command(char *progname)
 {
 	/* globals */
     ProgramName = progname;
-    if (progname = strrchr(progname, '/'))
+    if ((progname = strrchr(progname, '/')))
 	ProgramName = progname + 1;
 #ifdef	unused
     if (strstr(ProgramName, "mode"))		ProgramType = MODE_MODE;
@@ -750,7 +760,7 @@ static void	init_command(char *progname)
 }
 
 
-static bool	optname_match(char *name, char *str, int minlen)
+static XimsBool	optname_match(char *name, char *str, int minlen)
 {
     int		nlen, slen;
 
@@ -770,7 +780,7 @@ static int	parse_options(int argc, char **argv)
     int		wac = 1;
     char	*wav[80];
     int		orgMode = MODE_START;
-    static bool	first_time = True;
+    static XimsBool	first_time = True;
 
 #define	SET_FLAG(f)	OpFlag |= (f)
 #define	CLR_FLAG(f)	OpFlag &= ~(f)

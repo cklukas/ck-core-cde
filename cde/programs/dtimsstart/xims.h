@@ -172,7 +172,7 @@
 #define	ACTION_MASK		0xf0
 
 
-typedef	short		bool;
+typedef	short		XimsBool;
 
     /* operation states */
 typedef enum {
@@ -230,8 +230,8 @@ typedef struct {
 } DtEnv;
 
 typedef struct {
-    bool	disabled;	/* disable remote execution */
-    bool	useRemsh;	/* use remsh(1) instead of action */
+    XimsBool	disabled;	/* disable remote execution */
+    XimsBool	useRemsh;	/* use remsh(1) instead of action */
     int		timeout;	/* timeout for remote execution */
     char	*passEnv;	/* env vars passed to remote IMS */
 } RemoteEnv;
@@ -272,7 +272,7 @@ typedef struct {
     int		status;
     int		wait_status;
     pid_t	pid;
-    bool	is_remote;
+    XimsBool	is_remote;
     int		proto;
     char	*im_mod;
     char	*atom_name;
@@ -281,7 +281,7 @@ typedef struct {
 } RunEnv;
 
 typedef struct {
-    bool	dpy_specific;
+    XimsBool	dpy_specific;
     short	select_mode;
     short	iconic;
     char	*name;
@@ -393,10 +393,10 @@ Extern int		DebugLvl;	/* debug flag */
 Extern FILE		*LogFp;		/* log file */
 Extern int		Wargc;		/* argc for XtAppInitialize */
 Extern char		**Wargv;	/* argv for XtAppInitialize */
-Extern bool		WaitingDialogReply;
-Extern bool		WaitingActionDone;
-Extern bool		UseMsgWindow;
-Extern bool		IsRemote;
+Extern XimsBool		WaitingDialogReply;
+Extern XimsBool		WaitingActionDone;
+Extern XimsBool		UseMsgWindow;
+Extern XimsBool		IsRemote;
 Extern int		LastErrMsg;
 
 #undef	Extern

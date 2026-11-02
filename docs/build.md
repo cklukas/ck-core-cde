@@ -58,6 +58,14 @@ use complete prototypes; the conversion regression test also compiles const
 encoded input buffers through those interfaces and verifies integer, floating
 point and fixed-width character round trips.
 
+The `dtimsstart` desktop input-method launcher is also qualified at the
+translation-unit level with GCC and Clang in C23 mode. Its module interface and
+private functions use complete prototypes, Xt callbacks use `XtCallbackProc`,
+the Xlib error handler uses `XErrorHandler`, and X property results retain the
+unsigned-byte and `unsigned long` types required by `XGetWindowProperty`.
+Relinking the launcher remains part of the complete-tree qualification because
+it depends on CDE libraries that are being converted in later batches.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh

@@ -36,7 +36,7 @@ typedef	enum {
 
 
     /* local func */
-static int	shell_type(/* shell */);
+static int	shell_type(char *shell);
 
 int	set_cmd_env(void)
 {
@@ -104,7 +104,7 @@ int	get_user_environ(void)
 	    return ErrNoDisplay;
     }
 
-    if (p = getenv("XMODIFIERS"))
+    if ((p = getenv("XMODIFIERS")))
 	uenv->xmodifiers = NEWSTR(p);
     else
 	uenv->xmodifiers = NULL;
@@ -122,7 +122,7 @@ int	get_user_environ(void)
     uenv->username = NEWSTR(p);
 
     n = 0;
-    if (p = std_dpy_str(uenv->displayname, &n))
+    if ((p = std_dpy_str(uenv->displayname, &n)))
 	uenv->displaydir = p;
     else
 	uenv->displaydir = NEWSTR(uenv->displayname);
@@ -162,7 +162,7 @@ int	expand_string(char *in_str, char *out_str, int out_len, ImsConf *ims)
 		case 'A':	ep = conf->userAltDir; break;
 		case 'C':	ep = conf->dt->confDir; break;
 		case 'U':	ep = conf->dt->userDir; break;
-		case 'L':	if (ep = uenv->real_locale)	break;
+		case 'L':	if ((ep = uenv->real_locale))	break;
 		case 'l':	ep = uenv->locale; break;
 		case 'H':	ep = uenv->homedir; break;
 		case 'u':	ep = uenv->username; break;
@@ -219,7 +219,7 @@ static int	shell_type(char *shell)
     if (strchr(p = shell, '/')) {
 	for (len = strlen(p); len > 1 && p[len - 1] == '/'; len--) ;
 	shell[len] = 0;
-	if (p = strrchr(shell, '/'))	shell = p + 1;
+	if ((p = strrchr(shell, '/')))	shell = p + 1;
     }
     if (strstr(shell, "ksh") != NULL)
 	return K_Shell;
@@ -240,7 +240,7 @@ int	make_new_environ(OutEnv *oenv, UserSelection *sel)
     char	buf[BUFSIZ], *bp;
     char	*xmod, *xinput;
     char	**setp, **unsetp;
-    bool	xmod_done, xinput_done;
+    XimsBool	xmod_done, xinput_done;
     RunEnv	*renv;
 
     /* if (!oenv)	return ErrInternal; */
@@ -394,13 +394,13 @@ int	set_remote_env(char *ptr, char *env_pass)
 {
     char	*bp = ptr, *ep;
     char	**ls, **ls2, **pp, **pp2;
-    bool	dup_ent;
+    XimsBool	dup_ent;
 
     ls = ls2 = 0;
     if (Conf.remote->passEnv
 		&& (ls = parse_strlist(Conf.remote->passEnv, ' '))) {
 	for (pp = ls; *pp; pp++)
-	    if (ep = getenv(*pp)) {
+	    if ((ep = getenv(*pp))) {
 		*bp++ = ' '; bp = strcpyx(bp, *pp); *bp++ = '=';
 		*bp++ = '"'; bp = strcpyx(bp, ep); *bp++ = '"';
 	    }

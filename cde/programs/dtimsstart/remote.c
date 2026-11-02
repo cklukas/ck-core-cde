@@ -44,12 +44,15 @@ static char	*conf_msg_id = STR_CONFDATA;
 #define	CONF_MSG_HEADER_LEN	(CONF_MSG_ID_LEN + CONF_MSG_DATASIZE_LEN)
 #define	CONF_MSG_SIZE_MAX	(8*1024 - 64)	/* < PIPE_BUF (PIPSIZ) */
 
-static int	mk_remote_conf(/* list, locale, ims_name, status, confbuf, conflen */);
-static char	*mk_ims_ent(/* bp, idx, ent */);
-static int	parse_ims_list(/* ptr, list */);
-static int	parse_remote_conf(/* listp, locale, confbuf, conflen */);
-static int	prepare_action(/* act_typ, av, ac */);
-static int	read_property(/* prop, type, format, remove, datapp, lenp */);
+static int	mk_remote_conf(ImsList *list, char *locale, char *ims_name,
+                               int status, char *confbuf, int *conflen);
+static char	*mk_ims_ent(char *bp, int idx, ImsEnt *ent);
+static int	parse_ims_list(char *ptr, ImsList *list);
+static int	parse_remote_conf(ImsList **listp, char *locale, char *confbuf,
+                                  int conflen);
+static int	prepare_action(int act_typ, char **av, int ac);
+static int	read_property(Atom prop, Atom type, int format, int remove,
+                               unsigned char **datapp, unsigned long *lenp);
 
 #if	0	/* README */
 
@@ -379,7 +382,7 @@ static int	parse_ims_list(char *ptr, ImsList *list)
 
     def_name = NULL;
     num_ent = 0;
-    while (np = strchr(bp, '\n')) {
+    while ((np = strchr(bp, '\n'))) {
 	if (np == bp) {
 	    bp++;
 	    continue;
@@ -714,8 +717,8 @@ static int	prepare_action(int act_typ, char **av, int ac)
 
 int	get_window_status(void)
 {
-    long	*datap;
-    int		len = 0;
+    unsigned char *data;
+    unsigned long len = 0;
     int		win_st;
 
     if (winEnv.atom_status == None || winEnv.atom_owner == None)
@@ -729,9 +732,9 @@ int	get_window_status(void)
 
     win_st = WIN_ST_NONE;
     if (read_property(winEnv.atom_status, XA_INTEGER, 32, False,
-	    (char **)&datap, &len) == True && len > 0) {
-	    win_st = datap[0];
-	    FREE(datap);
+	    &data, &len) == True && len > 0) {
+	    win_st = ((long *)data)[0];
+	    FREE(data);
     }
     return win_st;
 }
@@ -774,7 +777,7 @@ int	set_window_data(int ac, char **av)
 
     for (i = 0, nbytes = 1; i < ac; i++)
 	nbytes += strlen(av[i]) + 1;
-    if (bp = buf = XtMalloc(nbytes)) {	/* copy args into single buffer */
+    if ((bp = buf = XtMalloc(nbytes))) {	/* copy args into single buffer */
 	for (i = 0; i < ac; i++) {
 	    if (av[i]) {
 		(void) strcpy(bp, av[i]);
@@ -797,19 +800,23 @@ int	set_window_data(int ac, char **av)
 int	get_window_data(int *acp, char ***avp)
 {
     int ac;
+    unsigned char *property_data;
     char *data;
     char **av;
-    int len = 0;
-    int	i, j;
+    unsigned long len = 0;
+    unsigned long i;
+    int j;
 
     if (winEnv.atom_data == None || winEnv.atom_owner == None)
 	return ErrInternal;
 
-    if (read_property(winEnv.atom_data, XA_STRING, 8, True, &data, &len) != True) {
+    if (read_property(winEnv.atom_data, XA_STRING, 8, True, &property_data,
+                      &len) != True) {
 	*acp = 0;
 	*avp = NULL;
 	return ErrRemoteData;
     }
+    data = (char *)property_data;
 
     ac = 0; av = NULL;
     if (len > 0) {

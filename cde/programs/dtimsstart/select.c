@@ -24,16 +24,16 @@
 
 #include	"xims.h"
 
-static int	fill_ims_ent(/* list, top, last */);
-static int	setup_local_selection(/* sel, list, conf_all */);
-static int	setup_remote_selection(/* sel */);
-static int	setup_user_selection(/* sel, list, idx */);
+static int	fill_ims_ent(ImsList *list, int top, int last);
+static int	setup_local_selection(UserSelection *sel, ImsList *list, int conf_all);
+static int	setup_remote_selection(UserSelection *sel);
+static int	setup_user_selection(UserSelection *sel, ImsList *list, int idx);
 
 
 void	ximsSelect(void)
 {
     int		ret;
-    bool	use_win;
+    XimsBool	use_win;
     char	*def_ims;
     ImsList	*list = (ImsList *) 0;
     FileSel	*fsel = (FileSel *) 0;

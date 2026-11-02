@@ -1,4 +1,7 @@
 2026-11-02
+- dtimsstart: replace unspecified-argument declarations with complete public,
+  internal, Xlib and Xt callback prototypes; use a C23-safe private Boolean
+  name and correctly type X property buffers under GCC and Clang C23.
 - mini_isam: replace traditional unspecified-argument declarations with exact
   public, internal and record-operation callback prototypes; preserve const
   input buffers and exercise encoded data round trips under GCC and Clang C23.
