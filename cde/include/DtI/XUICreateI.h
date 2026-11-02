@@ -47,6 +47,7 @@
 #define	_DtHelpCreateI_h
 
 #include "Dt/CanvasP.h"
+#include "DtI/DisplayAreaI.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,9 +89,9 @@ extern	XtPointer	_DtHelpCreateDisplayArea (
 				Boolean marker_flag,
 				int	rows,
 				int	columns,
-				void	(*hyperTextCB)(),
-				void	(*resizeCB)(),
-				int	(*exec_ok_routine)(),
+				DtHelpHyperTextProc hyperTextCB,
+				DtHelpResizeProc resizeCB,
+				_DtCvFilterExecCmd exec_ok_routine,
 				XtPointer client_data,
 				XmFontList  default_list );
 
@@ -105,9 +106,9 @@ extern	XtPointer	_DtHelpCreateOutputArea (
 				Dimension	width,
 				Dimension	height,
 				unsigned short media_resolution,
-				void	(*hyperTextCB)(),
-				void	(*resizeCB)(),
-				int	(*exec_ok_routine)(),
+				DtHelpHyperTextProc hyperTextCB,
+				DtHelpResizeProc resizeCB,
+				_DtCvFilterExecCmd exec_ok_routine,
 				XtPointer client_data,
 				XmFontList  default_list );
 

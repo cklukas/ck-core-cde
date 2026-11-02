@@ -131,7 +131,7 @@ static	_DtCvStatus		TermFindGraphic(
 static	void		TermGetFont(
 				_DtCvPointer	 client_data,
 				char		*lang,
-				char		*charset,
+				const char	*charset,
 				_DtHelpFontHints font_attr,
 				_DtCvPointer	*ret_font );
 static	void		TermFontMetrics(
@@ -145,9 +145,9 @@ static	void		TermFontMetrics(
 static	_DtCvStatus	TermResolveSpc(
 				_DtCvPointer	 client_data,
 				char		*lang,
-				char		*charset,
+				const char	*charset,
 				_DtHelpFontHints	 font_attr,
-				char		*spc_symbol,
+				const char	*spc_symbol,
 				_DtCvPointer	*ret_handle,
 				_DtCvUnit	*ret_width,
 				_DtCvUnit	*ret_height,
@@ -472,7 +472,7 @@ static	void
 TermGetFont (
     _DtCvPointer		 client_data,
     char		*lang,
-    char		*charset,
+    const char		*charset,
     _DtHelpFontHints	 font_attr,
     _DtCvPointer	*ret_font )
 {
@@ -493,9 +493,9 @@ static	_DtCvStatus
 TermResolveSpc (
     _DtCvPointer	 client_data,
     char		*lang,
-    char		*charset,
+    const char		*charset,
     _DtHelpFontHints	 font_attr,
-    char		*spc_symbol,
+    const char		*spc_symbol,
     _DtCvPointer	*ret_handle,
     _DtCvUnit		*ret_width,
     _DtCvUnit		*ret_height,

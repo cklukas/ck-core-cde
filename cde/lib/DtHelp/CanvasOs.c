@@ -101,7 +101,7 @@
  *********************************************************************/
 int
 _DtCvRunInterp(
-    int			(*filter_exec)(),
+    int			(*filter_exec)(_DtCvPointer, const char *, char **),
     _DtCvPointer	  client_data,
     char		 *interp,
     char                 *data,

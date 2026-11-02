@@ -698,6 +698,9 @@ typedef	int	SDLNumber;
 typedef	unsigned long	SDLMask;	/* must be a 32 bit value */
 
 typedef	_DtHelpFontHints*	_DtHelpFontHintPtr;
+typedef struct _formatStruct FormatStruct;
+typedef int (*SDLModelProc)(
+	FormatStruct *, SDLMask *, enum SdlElement, SDLMask *, SDLMask *);
 
 /********    Private Structures Declarations    ********/
 
@@ -723,7 +726,7 @@ typedef	struct {
 
 typedef	struct {
 	SDLMask	mask[SDL_MASK_LEN];
-	int	(*model)();
+	SDLModelProc model;
 } SDLContent;
 
 enum	SdlStructType {

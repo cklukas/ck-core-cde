@@ -3531,8 +3531,8 @@ DuplicateElement(
     _DtCvSegment	 *src_seg,
     _DtCvSegment	**prev_data,
     _DtCvSegment	**last_seg,
-    void                (*load_font)(),
-    _DtCvValue		(*resolve_spc)(),
+    _DtHelpLoadFontProc   load_font,
+    _DtHelpResolveSpcProc resolve_spc,
     _DtCvUnit		  line_height,
     int			  ave_char,
     _DtHelpFontHints	  srcFonts,
@@ -8439,6 +8439,7 @@ ParseSDL(
     _DtCvContainer	*activeFrmt = my_struct->active_frmt;
     SDLMask		 oldMask[SDL_MASK_LEN];
     SDLMask		 oldExcept[SDL_MASK_LEN];
+    SDLMask		 contentMask[SDL_MASK_LEN];
     _DtCvValue		 oldBlank    = my_struct->save_blank;
     _DtCvValue		 processFlag =
 				SDLSearchMask(process_mask, SdlElementCdata);
@@ -8524,7 +8525,8 @@ ParseSDL(
     while (result == 0 && content != NULL &&
 			SDLSearchMask(content->mask, SdlElementNone) == False)
       {
-	result = (*(content->model))(my_struct, content->mask,
+	SaveRestoreMask(contentMask, content->mask);
+	result = (*(content->model))(my_struct, contentMask,
 					sig_element, cur_except, process_mask);
 	content++;
       }
@@ -8633,11 +8635,13 @@ ProcessContent(
     SDLMask		*process_mask)
 {
     int   result = 0;
+    SDLMask contentMask[SDL_MASK_LEN];
 
     while (result == 0 && content != NULL &&
 			SDLSearchMask(content->mask, SdlElementNone) == False)
       {
-	result = (*(content->model))(my_struct, content->mask,
+	SaveRestoreMask(contentMask, content->mask);
+	result = (*(content->model))(my_struct, contentMask,
 					sig_element, exceptions, process_mask);
 	content++;
       }
@@ -9352,7 +9356,7 @@ CreateTitleChunks(
     SDLMask		  *stop_mask,
     const char		  *lang,
     const char		  *char_set,
-    _DtCvValue		(*resolve_spc)(),
+    _DtHelpResolveSpcProc resolve_spc,
     _DtCvPointer	  client_data,
     int			  *ret_cnt,
     void		***ret_chunks)
@@ -9506,7 +9510,7 @@ ProcessSegmentsToChunks(
     SDLMask		  *stop_mask,
     const char		  *lang,
     const char		  *char_set,
-    _DtCvValue		(*resolve_spc)(),
+    _DtHelpResolveSpcProc resolve_spc,
     _DtCvPointer	  client_data,
     void		***ret_chunks)
 {

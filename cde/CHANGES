@@ -3,6 +3,9 @@
   conversion and object-lifecycle callbacks exact C23 contracts; correct legacy
   cleanup routines that were declared with parameters different from the
   framework call ABI.
+- DtHelp: type formatter, SDL model, display-area, interpreter-filter and
+  region-cleanup callbacks; split buffered input and output callbacks so read
+  and write paths no longer share an incompatible function-pointer slot.
 
 2026-11-02
 - C23: give the DtInfo Tree, Panner, Pixmap, Porthole, Restraint and Simple

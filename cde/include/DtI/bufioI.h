@@ -35,27 +35,33 @@
 
 typedef unsigned char BufChar;
 
-typedef struct _buffile {
+typedef struct _buffile BufFileRec, *BufFilePtr;
+typedef int (*BufFileReadProc)(BufFilePtr);
+typedef int (*BufFileWriteProc)(int, BufFilePtr);
+typedef int (*BufFileSkipProc)(BufFilePtr, int);
+typedef int (*BufFileCloseProc)(BufFilePtr, int);
+
+struct _buffile {
     BufChar *bufp;
     int	    left;
     BufChar buffer[BUFFILESIZE];
-    int	    (*io)(/* BufFilePtr f */);
-    int	    (*skip)(/* BufFilePtr f, int count */);
-    int	    (*close)(/* BufFilePtr f */);
+    BufFileReadProc read;
+    BufFileWriteProc write;
+    BufFileSkipProc skip;
+    BufFileCloseProc close;
     char    *hidden;
-} BufFileRec, *BufFilePtr;
+};
 
 typedef	struct _compressInfo{
     int     fd;
     int     size;
 } CECompressInfo, *CECompressInfoPtr;
 
-extern BufFilePtr   __DtBufFileCreate ();
-extern BufFilePtr   _DtHelpCeBufFilePushZ ();
-extern BufFilePtr   _DtHelpCeBufFileOpenWr ();
-extern int	    _DtHelpCeBufFileFlush ();
-#define BufFileGet(f)	((f)->left-- ? *(f)->bufp++ : (*(f)->io) (f))
-#define BufFilePut(c,f)	(--(f)->left ? *(f)->bufp++ = (c) : (*(f)->io) (c,f))
+extern BufFilePtr   _DtHelpCeBufFilePushZ (BufFilePtr);
+extern BufFilePtr   _DtHelpCeBufFileOpenWr (int);
+extern int	    _DtHelpCeBufFileFlush (BufFilePtr, int);
+#define BufFileGet(f)	((f)->left-- ? *(f)->bufp++ : (*(f)->read) (f))
+#define BufFilePut(c,f)	(--(f)->left ? *(f)->bufp++ = (c) : (*(f)->write) (c,f))
 #define BufFilePutBack(c,f) { (f)->left++; *(--(f)->bufp) = (c); }
 #define BufFileSkip(f,c)    ((*(f)->skip) (f, c))
 
@@ -64,11 +70,15 @@ extern int	    _DtHelpCeBufFileFlush ();
 extern	void		_DtHelpCeBufFileClose (
 				BufFilePtr	f,
 				int		doClose);
-extern	BufFilePtr	_DtHelpCeBufFileCreate (
+extern	BufFilePtr	_DtHelpCeBufFileCreateRead (
 				char		*hidden,
-				int		(*io)(),
-				int		(*skip)(),
-				int		(*close)());
+				BufFileReadProc read,
+				BufFileSkipProc skip,
+				BufFileCloseProc close);
+extern	BufFilePtr	_DtHelpCeBufFileCreateWrite (
+				char		*hidden,
+				BufFileWriteProc write,
+				BufFileCloseProc close);
 extern	int		_DtHelpCeBufFileRd (
 				BufFilePtr	 f,
 				char		*buffer,

@@ -98,6 +98,14 @@ abort flag, while image descriptors belong only to initialization hooks. The
 complete image-library archive builds from clean objects with GCC and Clang in
 C23 mode.
 
+The surrounding DtHelp library also has typed contracts for formatter UI
+services, SDL content models, display-area notifications, interpreter filters,
+and region cleanup. Its buffered-I/O layer keeps read and write operations in
+separate callback slots: input callbacks receive the buffer, while output
+callbacks receive the byte and buffer. This removes the former dependence on a
+single unspecified-argument function pointer serving two incompatible ABIs.
+The complete shared DtHelp library compiles and links with both C23 toolchains.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh

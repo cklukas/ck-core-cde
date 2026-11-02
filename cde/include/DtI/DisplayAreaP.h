@@ -50,6 +50,7 @@
 #include <Xm/XmP.h>
 #include <Dt/CanvasP.h>
 #include <DtI/GraphicsP.h>
+#include <DtI/DisplayAreaI.h>
 
 /*
  * Traversal flags
@@ -160,9 +161,9 @@ typedef	struct _dtHelpDispAreaStruct {
 	short	decorThickness;		/* the shadow thickness plus highlight
 					   thickness of the display area    */
 
-	void	(*hyperCall)();		/* The hypertext callback */
-	void	(*resizeCall)();	/* The resize callback    */
-	int	(*exec_filter)();	/* The execution filter callback    */
+	DtHelpHyperTextProc hyperCall;	/* The hypertext callback */
+	DtHelpResizeProc resizeCall;	/* The resize callback    */
+	_DtCvFilterExecCmd exec_filter;	/* The execution filter callback */
 	XtPointer	clientData;	/* The client's data for the callback */
 
 	Pixel	traversalColor;		/* The client's traversal color */
