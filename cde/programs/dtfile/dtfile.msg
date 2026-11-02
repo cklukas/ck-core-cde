@@ -1564,6 +1564,10 @@ is that you do not have permissions to delete the file(s).\n\n
 115 The following object(s) cannot be deleted.\n\
 The desktop cannot function properly without this object(s).\n\n
 
+120 Trash information could not be read or saved safely.\n\
+The previous information file has been preserved.\n\
+Trash operations are disabled.
+
 $set 28
 $ ****** Module: Desktop.c ****(developer comment only)********
 

@@ -4,6 +4,15 @@ SUBDIRS = dtcopy
 
 bin_PROGRAMS = dtfile
 
+EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
+             tests/trash-metadata.c tests/check-copy-transfer.py tests/copy-transfer.c \
+             tests/copy-paths.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-trash-writer.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-trash-metadata.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-copy-transfer.py
+
 BUILT_SOURCES = dtfile.config dtfile_error
 CLEANFILES = dtfile.config dtfile_error
 
@@ -39,7 +48,7 @@ dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 IconicPath.c    Shelf.c         Mounts.c        Main.c          Menu.c          MkDir.c \
 		 ModAttr.c       ModAttrP.c      MultiView.c     OverWrite.c \
 		 Prefs.c         PrefsP.c        SharedMsgs.c    SharedProcs.c \
-		 ToolTalk.c      Trash.c         Utils.c         fsDialog.c \
+		 ToolTalk.c      Trash.c         TrashMetadata.c TrashMetadata.h Utils.c fsDialog.c \
 		 StorageSize.c
 
 # Mind the quoting here...

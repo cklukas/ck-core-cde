@@ -52,7 +52,7 @@
  *
  *  The rename, move and copy routines all take a parameter 'replace'
  *  that determines what happens if the target file/directory already
- *  exists: if 'replace' is zero, the routines return an ENOENT error;
+ *  exists: if 'replace' is zero, the routines return an EEXIST error;
  *  if 'replace' is non-zero the routines will replace any existing
  *  files/directories.
  *
@@ -73,6 +73,8 @@ extern void fsRename(char *source, char *target, int replace, int *rcP);
  *  fsMove:
  *    Like fsRename, but also works if source and target are on different
  *    file systems by copying source to target and then deleting source.
+ *    Ignoring a copy error does not authorize source deletion: the source
+ *    remains when any file or directory child was not copied completely.
  */
 extern void fsMove(char *source, char *target, int replace, int *rcP);
 

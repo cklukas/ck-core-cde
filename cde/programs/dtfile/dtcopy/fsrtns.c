@@ -63,6 +63,7 @@
 #include <sys/file.h>
 #include <string.h>
 #include <limits.h>
+#include <stdint.h>
 #include "fsrtns.h"
 
 
@@ -78,8 +79,31 @@ int (*periodicCallback)() = NULL;
  * Local subroutines
  *------------------------------------------------------------------*/
 
-static int CopyObject(char *sourceP, char *targetP, int repl, int link);
+static int CopyObject(char *sourceP, char *targetP, int repl, int link, int *complete);
 static int EraseObject(char *nameP, int force);
+
+/* Allocate an exact child path; never truncate an operand of a file operation. */
+static int ChildPath(const char *parent, const char *name, char **result)
+{
+  size_t base = strlen(parent), length = strlen(name), separator;
+  char *path;
+  *result = NULL;
+  if (base == 0)
+    return EINVAL;
+  separator = parent[base - 1] != '/';
+  if (base > SIZE_MAX - separator - 1 ||
+      length > SIZE_MAX - base - separator - 1)
+    return ENAMETOOLONG;
+  path = malloc(base + separator + length + 1);
+  if (!path)
+    return ENOMEM;
+  memcpy(path, parent, base);
+  if (separator)
+    path[base++] = '/';
+  memcpy(path + base, name, length + 1);
+  *result = path;
+  return 0;
+}
 
 
 static int
@@ -87,7 +111,7 @@ CopyFile(char *sourceP, char *targetP, int repl, struct stat *statP)
 /* copy a file; if repl non-zero, overwrite any existing file */
 {
   int src, tgt;
-  int nread, nwrite;
+  ssize_t nread, nwrite;
   char buffer[2048];
   struct utimbuf ut;
   int rc;
@@ -127,21 +151,34 @@ CopyFile(char *sourceP, char *targetP, int repl, struct stat *statP)
   }
 
   /* copy data */
+  rc = 0;
   for (;;) {
     /* read data from source file */
     do {
       errno = 0;
       nread = read(src, buffer, sizeof(buffer));
     } while (nread < 0 && errno == EINTR);
-    if (nread <= 0)
+    if (nread <= 0) {
+      if (nread < 0)
+        rc = errno;
       break;
+    }
 
-    /* write data to target file */
-    do {
-      errno = 0;
-      nwrite = write(tgt, buffer, nread);
-    } while (nwrite < 0 && errno == EINTR);
-    if (nwrite != nread)
+    /* A successful write may consume only part of the input block. */
+    {
+      size_t written = 0;
+      while (written < (size_t)nread) {
+        do {
+          nwrite = write(tgt, buffer + written, (size_t)nread - written);
+        } while (nwrite < 0 && errno == EINTR);
+        if (nwrite <= 0) {
+          rc = nwrite < 0 ? errno : EIO;
+          break;
+        }
+        written += (size_t)nwrite;
+      }
+    }
+    if (rc)
       break;
 
     if (periodicCallback)
@@ -153,18 +190,13 @@ CopyFile(char *sourceP, char *targetP, int repl, struct stat *statP)
       }
   }
 
-  /* check if data copy ended abnormally */
-  rc = (nread == 0)? 0: (errno != 0)? errno: -1;
-
-  /* close files */
-  close(src);
-  if (rc) {
-    close(tgt);
+  /* Preserve the first transfer error, including delayed close failures. */
+  if (close(src) != 0 && rc == 0)
+    rc = errno;
+  if (close(tgt) != 0 && rc == 0)
+    rc = errno;
+  if (rc)
     return rc;
-  }
-
-  if (close(tgt) != 0)
-    return errno;
 
   /* set target file attributes */
   ut.actime = statP->st_atime;
@@ -179,42 +211,61 @@ static int
 CopyLink(char *sourceP, char *targetP, int repl, struct stat *statP)
 /* copy a symbolic link */
 {
-  int l, rc;
-  char buf[PATH_MAX];
-
-  do {
-    errno = 0;
-    l = readlink(sourceP, buf, PATH_MAX - 1);
-  } while (l < 0 && errno == EINTR);
-
-  if (l < 0)
-    return errno;
-
-  buf[l] = 0;
-
-  if (symlink(buf, targetP) == 0)
-    return 0;
-  else if (errno != EEXIST || !repl)
-    return errno;
-
-  if ((rc = EraseObject(targetP, repl)) != 0)
-    return rc;
-  if (symlink(buf, targetP) == 0)
-    return 0;
-  else
-    return errno;
+  ssize_t length;
+  int rc;
+  size_t capacity = 256;
+  char *buf = malloc(capacity + 1);
+  (void)statP;
+  if (!buf)
+    return ENOMEM;
+  for (;;) {
+    char *grown;
+    do {
+      length = readlink(sourceP, buf, capacity);
+    } while (length < 0 && errno == EINTR);
+    if (length < 0) {
+      rc = errno;
+      goto done;
+    }
+    if ((size_t)length < capacity)
+      break;
+    /* A full buffer is not evidence that the entire link was read. */
+    if (capacity > (size_t)SSIZE_MAX / 2) {
+      rc = ENAMETOOLONG;
+      goto done;
+    }
+    capacity *= 2;
+    grown = realloc(buf, capacity + 1);
+    if (!grown) {
+      rc = ENOMEM;
+      goto done;
+    }
+    buf = grown;
+  }
+  buf[length] = '\0';
+  rc = symlink(buf, targetP) == 0 ? 0 : errno;
+  if (rc == EEXIST && repl) {
+    rc = EraseObject(targetP, repl);
+    if (rc == 0)
+      rc = symlink(buf, targetP) == 0 ? 0 : errno;
+  }
+done:
+  free(buf);
+  return rc;
 }
 
 
 static int
-CopyDir(char *sourceP, char *targetP, int repl, int link, struct stat *statP)
+CopyDir(char *sourceP, char *targetP, int repl, int link, struct stat *statP,
+        int *complete)
 /* copy a directory and recursively all its subdirectories */
 {
   DIR *dirP;                      /* open directory */
   struct dirent *entryP;          /* directory entry */
-  char srcname[PATH_MAX], tgtname[PATH_MAX];
-  int srclen, tgtlen;
+  char *srcname = NULL, *tgtname = NULL;
   int rc;
+  int allCopied = 1;
+  *complete = 0;
 
   /* open source directory */
   dirP = opendir(sourceP);
@@ -250,16 +301,6 @@ CopyDir(char *sourceP, char *targetP, int repl, int link, struct stat *statP)
     }
   }
 
-  /* prepare source and target names */
-  snprintf(srcname, PATH_MAX, "%s", sourceP);
-  srclen = strlen(srcname);
-  if (srcname[srclen - 1] != '/')
-    srcname[srclen++] = '/';
-  snprintf(tgtname, PATH_MAX, "%s", targetP);
-  tgtlen = strlen(tgtname);
-  if (tgtname[tgtlen - 1] != '/')
-    tgtname[tgtlen++] = '/';
-
   for (rc = 0; rc == 0; ) {
     do {
       errno = 0;
@@ -272,23 +313,35 @@ CopyDir(char *sourceP, char *targetP, int repl, int link, struct stat *statP)
     if (strcmp(entryP->d_name, ".") == 0 || strcmp(entryP->d_name, "..") == 0)
       continue;
 
-    strcpy(srcname + srclen, entryP->d_name);
-    strcpy(tgtname + tgtlen, entryP->d_name);
-
-    rc = CopyObject(srcname, tgtname, repl, link);
+    rc = ChildPath(sourceP, entryP->d_name, &srcname);
+    if (rc == 0)
+      rc = ChildPath(targetP, entryP->d_name, &tgtname);
+    if (rc == 0) {
+      int copied;
+      rc = CopyObject(srcname, tgtname, repl, link, &copied);
+      if (!copied)
+        allCopied = 0;
+    }
+    free(srcname);
+    free(tgtname);
+    srcname = tgtname = NULL;
   }
 
-  closedir(dirP);
+  if (closedir(dirP) != 0 && rc == 0)
+    rc = errno;
+  *complete = rc == 0 && allCopied;
   return rc;
 }
 
 
 static int
-CopyObject(char *sourceP, char *targetP, int repl, int link)
+CopyObject(char *sourceP, char *targetP, int repl, int link, int *complete)
 /* copy a directory, file, or symbolic link */
 {
   struct stat src_stat;
   int rc;
+  int copied = 1;
+  *complete = 0;
 
   if (progressCallback)
     if (progressCallback(sourceP) != 0)
@@ -308,7 +361,7 @@ copy_switch:
     switch(src_stat.st_mode & S_IFMT) {
 
       case S_IFDIR:
-        rc = CopyDir(sourceP, targetP, repl, link, &src_stat);
+        rc = CopyDir(sourceP, targetP, repl, link, &src_stat, &copied);
         break;
 
       case S_IFREG:
@@ -334,6 +387,8 @@ copy_switch:
    * return code -1 means the operation is aborted.
    * In either case, propagated the return code up.
    */
+  if (rc == 0)
+    *complete = copied;
   if (rc <= 0)
     return rc;
 
@@ -357,8 +412,7 @@ EmptyDir(char *sourceP, int rm, int force)
 {
   DIR *dirP;                      /* open directory */
   struct dirent *entryP;          /* directory entry */
-  char srcname[1024];
-  int srclen;
+  char *srcname;
   int rc;
 
   /* open source directory */
@@ -366,21 +420,26 @@ EmptyDir(char *sourceP, int rm, int force)
   if (dirP == NULL)
     return errno;
 
-  /* prepare source name */
-  snprintf(srcname, sizeof(srcname), "%s", sourceP);
-  srclen = strlen(srcname);
-  if (srcname[srclen - 1] != '/')
-    srcname[srclen++] = '/';
-
   rc = 0;
-  while (rc == 0 && (entryP = readdir(dirP)) != NULL) {
+  while (rc == 0) {
+    do {
+      errno = 0;
+      entryP = readdir(dirP);
+    } while (entryP == NULL && errno == EINTR);
+    if (entryP == NULL) {
+      rc = errno;
+      break;
+    }
     if (strcmp(entryP->d_name, ".") == 0 || strcmp(entryP->d_name, "..") == 0)
       continue;
-    strcpy(srcname + srclen, entryP->d_name);
-    rc = EraseObject(srcname, force);
+    rc = ChildPath(sourceP, entryP->d_name, &srcname);
+    if (rc == 0)
+      rc = EraseObject(srcname, force);
+    free(srcname);
   }
 
-  closedir(dirP);
+  if (closedir(dirP) != 0 && rc == 0)
+    rc = errno;
   if (rc == 0 && rm) {
     rc = rmdir(sourceP);
     if (rc < 0)
@@ -477,6 +536,7 @@ fsRename(char *sourceP, char *targetP, int replace, int *rcP)
 void
 fsMove(char *sourceP, char *targetP, int replace, int *rcP)
 {
+  int complete;
   /* try to rename */
   fsRename(sourceP, targetP, replace, rcP);
   if (*rcP == 0 || *rcP != EXDEV)
@@ -485,25 +545,23 @@ fsMove(char *sourceP, char *targetP, int replace, int *rcP)
   /* source and target on different file systems: do copy + erase */
   {
     /* first check if we have write permission in the source directory */
-    char dir[1024], *p;
-
-    snprintf(dir, sizeof(dir), "%s", sourceP);
-    p = strrchr(dir, '/');
-    if (p == 0)
-      strcpy(dir, ".");
-    else if (p == dir)
-      strcpy(dir, "/");
-    else
-      *p = 0;
-
-    if (access(dir, W_OK) != 0) {
-      *rcP = errno;
+    char *dir, *p = strrchr(sourceP, '/');
+    size_t length = p ? (p == sourceP ? 1 : (size_t)(p - sourceP)) : 1;
+    dir = malloc(length + 1);
+    if (!dir) {
+      *rcP = ENOMEM;
       return;
     }
+    memcpy(dir, p ? sourceP : ".", length);
+    dir[length] = '\0';
+    *rcP = access(dir, W_OK) == 0 ? 0 : errno;
+    free(dir);
+    if (*rcP)
+      return;
   }
 
-  *rcP = CopyObject(sourceP, targetP, replace, 1);
-  if (*rcP != 0)
+  *rcP = CopyObject(sourceP, targetP, replace, 1, &complete);
+  if (*rcP != 0 || !complete)
     return;
   *rcP = EraseObject(sourceP, replace);
 }
@@ -512,14 +570,16 @@ fsMove(char *sourceP, char *targetP, int replace, int *rcP)
 void
 fsCopy(char *sourceP, char *targetP, int replace, int *rcP)
 {
-   *rcP = CopyObject(sourceP, targetP, replace, 0);
+   int complete;
+   *rcP = CopyObject(sourceP, targetP, replace, 0, &complete);
 }
 
 
 void
 fsCopyLink(char *sourceP, char *targetP, int replace, int *rcP)
 {
-  *rcP = CopyObject(sourceP, targetP, replace, 1);
+  int complete;
+  *rcP = CopyObject(sourceP, targetP, replace, 1, &complete);
 }
 
 

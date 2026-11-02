@@ -5,6 +5,11 @@ description: Build CK Core CDE against CK Core Motif ABI 9.
 
 # Build CK Core CDE
 
+Configured Makefiles are build outputs. File Manager's Makefile is generated
+from its tracked `Makefile.am`; no configured checkout paths are shipped in it.
+When reusing a build tree, run bootstrap and configuration before cleaning if
+the source Makefile definitions have changed.
+
 Build and install the latest CK Core Motif `master` into an isolated prefix
 first. The prefix must contain its ABI 9 Xm, Mrm, and Uil libraries, Motif
 headers, and UIL compiler.

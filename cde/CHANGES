@@ -1,4 +1,19 @@
 2026-11-02
+- build: stop tracking File Manager's configured Makefile, which embedded an
+  obsolete checkout path; regenerate it from Makefile.am for each build tree.
+- dtfile: retain cross-filesystem move sources when a file or recursive child
+  could not be copied, including when the error callback chooses to ignore it.
+- dtfile: allocate complete recursive copy/delete paths and move-parent paths,
+  report directory iteration/close errors, and grow symbolic-link read buffers
+  until the complete target is available.
+- dtfile: complete short file-copy writes, retry interrupted transfers, report
+  zero-byte writes as I/O errors, and preserve transfer and delayed close errors.
+- dtfile: parse Trash metadata with checked unsigned lengths and exact field
+  boundaries, support embedded newlines in names, reject escaping internal
+  paths and invalid sizes, and preserve metadata when reading fails.
+- dtfile: stage Trash metadata privately beside its destination, check write,
+  flush, sync, close and rename failures, and preserve the previous metadata
+  until a complete replacement is ready.
 - dtwm: require all five native-long Motif hints fields in format 32 before
   exposing the record to callers, while allowing later extension words.
 - dtwm: reject wrong-format, incomplete and oversized WM_STATE and Motif WM

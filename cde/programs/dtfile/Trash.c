@@ -153,6 +153,7 @@
 #include "Main.h"
 #include "SharedMsgs.h"
 #include "dtcopy/fsrtns.h"
+#include "TrashMetadata.h"
 
 #define AdditionalHeader (GETMESSAGE(27,98, "(Plus %d additional object(s))"))
 
@@ -270,7 +271,6 @@ extern int EmptyDir(char *sourceP, int rm, int force);
                                             /* 'defines' for trash files */
 static char * TRASH_DIR = ".dt/Trash";
 static char * TRASH_INFO_FILE = ".dt/Trash/.trashinfo";
-static char * NEW_TRASH_INFO_FILE = ".dt/.tmptrashinfo";
 
 static char * RM = "/bin/rm";
 static char * RM_ARGS = "-rf";
@@ -289,7 +289,6 @@ static int numTrashItems = 0;
 static Boolean trashDialogPosted;
 
 static char * TrashInfoFileName = NULL;
-static char * NewTrashInfoFileName = NULL;
 
 static char ** sacred_dir_list = NULL;   /* list of directories in trash path */
 static int sacred_dir_list_size = 0;
@@ -483,12 +482,6 @@ InitializeTrash( Boolean enableVerifyPrompt )
   TrashInfoFileName = XtMalloc(strlen(users_home_dir) + strlen(TRASH_INFO_FILE) + 1);
   sprintf(TrashInfoFileName, "%s%s", users_home_dir, TRASH_INFO_FILE);
 
-  /* */
-  NewTrashInfoFileName = XtMalloc(strlen(users_home_dir) +
-                                  strlen(NEW_TRASH_INFO_FILE)
-                                  + 1);
-  sprintf(NewTrashInfoFileName, "%s%s", users_home_dir, NEW_TRASH_INFO_FILE);
-
   /* Keep track of whether to prompt for user verification */
   verifyPromptsEnabled =  enableVerifyPrompt;
 
@@ -614,13 +607,16 @@ TrashCreateDialog(
 static Boolean
 ReadTrashList( void )
 {
-   int intSize, extSize, bufSize;
+   int firstItem = numTrashItems;
+   int status, fd;
    FILE * trashInfoFileId;
-   String external, intName, internal;
-   char * trashEntry;
    struct stat statbuf;
+   DtfileTrashMetadata record = {0};
 
-   trashInfoFileId = fopen(TrashInfoFileName, "a+");
+   fd = open(TrashInfoFileName, O_RDWR|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR);
+   trashInfoFileId = fd < 0 ? NULL : fdopen(fd, "a+");
+   if (fd >= 0 && !trashInfoFileId)
+     close(fd);
    if (trashInfoFileId == 0)
    {
      char * msg, * title;
@@ -639,117 +635,106 @@ ReadTrashList( void )
      return( False );
    }
 
-   chmod(TrashInfoFileName, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
-
-   bufSize = MAX_PATH * 2;
-   trashEntry = (char *)XtCalloc( 1, bufSize );
-
-   /* Extract the size of the two path strings */
-   while( fgets( trashEntry, bufSize, trashInfoFileId ) != NULL )
+   if (fchmod(fileno(trashInfoFileId), S_IRUSR|S_IWUSR) != 0)
    {
-     int len = strlen( trashEntry );
+     fclose(trashInfoFileId);
+     return False;
+   }
 
-     if( sscanf( trashEntry, "%d %d", &extSize, &intSize ) == 2 )
+   while ((status = DtfileReadTrashMetadata(trashInfoFileId, &record)) ==
+          DTFILE_TRASH_RECORD)
+   {
+     size_t homeLength = strlen(users_home_dir), trashLength = strlen(TRASH_DIR);
+     size_t baseLength;
+     size_t nameLength = strlen(record.filename);
+     TrashEntry entry = {0};
+     if (trashLength > UINT_MAX - 2 || homeLength > UINT_MAX - trashLength - 2)
+       goto failed;
+     baseLength = homeLength + trashLength + 2;
+     if (nameLength > UINT_MAX - baseLength ||
+         strlen(record.external) >= UINT_MAX ||
+         (record.deletion_date && strlen(record.deletion_date) >= UINT_MAX))
+       goto failed;
+     entry.intNew = XtMalloc(baseLength + nameLength);
+     if (!entry.intNew)
+       goto failed;
+     sprintf(entry.intNew, "%s%s/%s", users_home_dir, TRASH_DIR, record.filename);
+     if (lstat(entry.intNew, &statbuf) != 0)
      {
-       external = (char *)XtCalloc( 1, extSize + 1 );
-       intName = (char *)XtCalloc( 1, intSize + 1 );
-
-       if( len > extSize + intSize + 3 )
-       /* extSize + intSize + 3 is a rough estimate of a trash entry
-          a trash entry looks something like the following:
-
-          8 4 /tmp/abc abcd
-
-          extSize is the size of the string '/tmp/abc'
-          intSize is the size of the string 'abcd'
-
-          so the len (the string length of the trash entry has AT LEAST to be
-          bigger than extSize + intSize + 3 separator spaces
-       */
-       {
-         char * tmpPtr;
-
-         /* sscanf can be used to reduce the code.
-            I'm not using it here because I don't have time to research.
-            I just want it to work.
-         */
-         tmpPtr = DtStrchr( trashEntry, ' ' ) + 1;
-         tmpPtr = DtStrchr( tmpPtr, ' ' ) + 1;
-
-         /* Extract the full external and partial internal file names */
-         memcpy( external, tmpPtr, extSize );
-         memcpy( intName, tmpPtr + extSize + 1, intSize );
-
-         /* Create internal/trash name */
-         internal = (char *)XtMalloc(strlen(users_home_dir)
-                                     + strlen(TRASH_DIR)
-                                     + strlen(intName) + 2);
-         sprintf(internal, "%s%s/%s", users_home_dir, TRASH_DIR, intName);
-
-         /* Make sure the file still exists */
-         if (lstat(internal, &statbuf) < 0)
-         {
-           /* File no longer exists; ignore it */
-           XtFree(internal);
-           XtFree(external);
-           XtFree(intName);
-         }
-         else
-         {
-           char *deletionDate = NULL;
-           unsigned long long recSize = 0;
-           Boolean recValid = False;
-           char *extra = tmpPtr + extSize + 1 + intSize;
-           char *date = strstr(extra, "DeletionDate=");
-           char *rec = strstr(extra, "RecSize=");
-           if (date)
-           {
-             char *nl;
-             date += strlen("DeletionDate=");
-             nl = strchr(date, '\n');
-             if (nl)
-               *nl = '\0';
-             if (*date)
-               deletionDate = XtNewString(date);
-           }
-           if (rec)
-           {
-             rec += strlen("RecSize=");
-             if (*rec)
-             {
-               recSize = strtoull(rec, NULL, 10);
-               recValid = True;
-             }
-           }
-
-           /* Add to trash list */
-           if (numTrashItems >= trashListSize)
-           {
-             trashListSize += 10;
-             trashCan = (TrashEntry *)XtRealloc((char *) trashCan,
-                                                sizeof(TrashEntry) * trashListSize);
-           }
-
-           trashCan[numTrashItems].intNew = internal;
-      trashCan[numTrashItems].intOrig = XtNewString(external);
-      trashCan[numTrashItems].external = external;
-      trashCan[numTrashItems].filename = intName;
-      trashCan[numTrashItems].deletionDate = deletionDate;
-      trashCan[numTrashItems].recSize = recSize;
-      trashCan[numTrashItems].recSizeValid = recValid;
-      numTrashItems++;
-         } /* end if file exists */
-       }
-       else
-       {
-         XtFree(external);
-         XtFree(intName);
-       }
+       int error = errno;
+       XtFree(entry.intNew);
+       if (error != ENOENT)
+         goto failed;
+       DtfileFreeTrashMetadata(&record);
+       continue;
      }
-   } /* end while */
-   fclose(trashInfoFileId);
+     if (numTrashItems >= trashListSize)
+     {
+       size_t capacity = (size_t)trashListSize + 10;
+       TrashEntry *items;
+       if (capacity > INT_MAX || capacity > UINT_MAX / sizeof(TrashEntry))
+       {
+         XtFree(entry.intNew);
+         goto failed;
+       }
+       items = (TrashEntry *)XtRealloc((char *)trashCan, capacity * sizeof(*items));
+       if (!items)
+       {
+         XtFree(entry.intNew);
+         goto failed;
+       }
+       trashCan = items;
+       trashListSize = (int)capacity;
+     }
+     entry.intOrig = XtNewString(record.external);
+     entry.external = XtNewString(record.external);
+     entry.filename = XtNewString(record.filename);
+     entry.deletionDate = record.deletion_date ? XtNewString(record.deletion_date) : NULL;
+     entry.recSize = record.rec_size;
+     entry.recSizeValid = record.rec_size_valid;
+     if (!entry.intOrig || !entry.external || !entry.filename ||
+         (record.deletion_date && !entry.deletionDate))
+     {
+       XtFree(entry.intNew);
+       XtFree(entry.intOrig);
+       XtFree(entry.external);
+       XtFree(entry.filename);
+       XtFree(entry.deletionDate);
+       goto failed;
+     }
+     trashCan[numTrashItems++] = entry;
+     DtfileFreeTrashMetadata(&record);
+   }
+   if (status != DTFILE_TRASH_END)
+     goto failed;
+   status = fclose(trashInfoFileId);
+   trashInfoFileId = NULL;
+   if (status != 0 || !WriteTrashEntries())
+     goto failed;
+   return True;
 
-   return( WriteTrashEntries() );
+failed:
+   DtfileFreeTrashMetadata(&record);
+   if (trashInfoFileId)
+     fclose(trashInfoFileId);
+   while (numTrashItems > firstItem)
+   {
+     TrashEntry *entry = &trashCan[--numTrashItems];
+     XtFree(entry->intNew);
+     XtFree(entry->intOrig);
+     XtFree(entry->external);
+     XtFree(entry->filename);
+     XtFree(entry->deletionDate);
+   }
+   {
+     char *title = XtNewString(GetSharedMessage(TRASH_ERROR_TITLE));
+     char *message = XtNewString(GETMESSAGE(27, 120,
+       "Trash information could not be read or saved safely.\nThe previous information file has been preserved.\nTrash operations are disabled."));
+     _DtMessage(toplevel, title, message, NULL, HelpRequestCB);
+     XtFree(title);
+     XtFree(message);
+   }
+   return False;
 }
 
 
@@ -1422,53 +1407,70 @@ TrashMaybeStartRecSizeScan( void )
  * WriteTrashEntries
  *   This function is responsible for creating a new copy of the trash
  *   information file.  It will open a new, temporary copy, and will
- *   copy in the contents of the trash can.  It will then remove the
- *   old trash information file, and will rename the new one, opening
- *   a handle to it for later use.
+ *   copy in the contents of the trash can.  Only a complete, flushed copy
+ *   replaces the old information file, using a single atomic rename.
  *
  ************************************************************************/
 
 static Boolean
 WriteTrashEntries( void )
 {
-   static String path = NULL;
-   FILE * newFile;
-   int i;
+   size_t length = strlen(TrashInfoFileName);
+   char *path;
+   FILE *newFile = NULL;
+   int fd, i;
 
-   newFile = fopen(NewTrashInfoFileName, "w+");
-   if (newFile)
+   if (length > SIZE_MAX - sizeof(".XXXXXX"))
+     return False;
+   path = malloc(length + sizeof(".XXXXXX"));
+   if (!path)
+     return False;
+   memcpy(path, TrashInfoFileName, length);
+   memcpy(path + length, ".XXXXXX", sizeof(".XXXXXX"));
+
+   /* Stage beside the destination, including when Trash is a mount point. */
+   fd = mkstemp(path);
+   if (fd < 0)
    {
-      chmod(NewTrashInfoFileName,
-            S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
-
-      /* Write all remaining entries */
-      for (i = 0; i < numTrashItems; i++)
-      {
-         if( WriteEntry(newFile, trashCan[i].external, trashCan[i].filename,
-                        trashCan[i].deletionDate,
-                        trashCan[i].recSize,
-                        trashCan[i].recSizeValid) < 0 )
-         {
-           fclose(newFile);
-           remove(NewTrashInfoFileName);
-           return( False );
-         }
-      }
-
-      /* Remove the original information file, and move the new one */
-      (void) fclose(newFile);
-      if(-1 == chown(NewTrashInfoFileName, getuid(), getgid())) {
-	  return( False );      
-      }
-      (void) remove(TrashInfoFileName);
-      (void) rename(NewTrashInfoFileName, TrashInfoFileName);
-      if(-1 == chown(TrashInfoFileName, getuid(), getgid())) {
-	  return( False );      
-      }
-      return( True );
+     free(path);
+     return False;
    }
-   else
-     return( False );
+   newFile = fdopen(fd, "w");
+   if (!newFile)
+   {
+     close(fd);
+     goto failed;
+   }
+   if (fchmod(fd, S_IRUSR|S_IWUSR) != 0 ||
+       fchown(fd, getuid(), getgid()) != 0)
+     goto failed;
+
+   for (i = 0; i < numTrashItems; i++)
+   {
+     if (WriteEntry(newFile, trashCan[i].external, trashCan[i].filename,
+                    trashCan[i].deletionDate, trashCan[i].recSize,
+                    trashCan[i].recSizeValid) < 0)
+       goto failed;
+   }
+   if (fflush(newFile) != 0 || fsync(fd) != 0)
+     goto failed;
+   if (fclose(newFile) != 0)
+   {
+     newFile = NULL;
+     goto failed;
+   }
+   newFile = NULL;
+   if (rename(path, TrashInfoFileName) != 0)
+     goto failed;
+   free(path);
+   return True;
+
+failed:
+   if (newFile)
+     fclose(newFile);
+   unlink(path);
+   free(path);
+   return False;
 }
 
 
@@ -3983,26 +3985,18 @@ MoveToTrashPipeCB(
    /* Update the trash information file, and the trash window */
    if (fileCount > 0)
    {
-      FILE * trashInfoFileId = fopen(TrashInfoFileName, "a+");
-      if( trashInfoFileId != NULL )
+      if (!WriteTrashEntries())
       {
-        for (i = fileCount; i > 0; i--)
-        {
-          if( WriteEntry(trashInfoFileId,
-                         trashCan[numTrashItems - i].external,
-                         trashCan[numTrashItems - i].filename,
-                         trashCan[numTrashItems - i].deletionDate,
-                         trashCan[numTrashItems - i].recSize,
-                         trashCan[numTrashItems - i].recSizeValid) < 0 )
-            break;
-        }
-        fflush(trashInfoFileId);
-        fclose(trashInfoFileId);
-        if( trashFileMgrData )
-          UpdateDirectory(NULL, trashFileMgrData->host,
-                          trashFileMgrData->current_directory);
-        TrashUpdateWindowIcon();
+        char *title = XtNewString(GetSharedMessage(TRASH_ERROR_TITLE));
+        char *message = XtNewString(GETMESSAGE(27, 88, "Cannot write to a temporary file.\nPerhaps your file system is full.\n"));
+        _DtMessage(toplevel, title, message, NULL, HelpRequestCB);
+        XtFree(title);
+        XtFree(message);
       }
+      if (trashFileMgrData)
+        UpdateDirectory(NULL, trashFileMgrData->host,
+                        trashFileMgrData->current_directory);
+      TrashUpdateWindowIcon();
    }
    if (trashDialogPosted)
      TrashMaybeStartRecSizeScan();
