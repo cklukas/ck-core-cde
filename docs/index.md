@@ -24,7 +24,7 @@ hero:
 features:
   - icon: ":desktop_computer:"
     title: Window-aware desktop icons
-    details: Open windows can remain visible as desktop icons, with active and inactive state clear at a glance.
+    details: Open windows can remain visible as desktop icons, with focus state and client-supplied live pixmaps clear at a glance.
     link: improvements/window-state.md
   - icon: ":keyboard:"
     title: Better daily tools

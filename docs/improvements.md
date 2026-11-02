@@ -15,7 +15,7 @@ integrated changes matter more than staying on the upstream feature set.
 | Area | CK Core CDE improvement | Practical result |
 | --- | --- | --- |
 | [Toolkit](improvements/toolkit.md) | Builds and tests CDE with the latest CK Core Motif ABI 9 as one matched native stack. | Desktop and toolkit improvements arrive together. |
-| [Window state](improvements/window-state.md) | Optional desktop icons represent open windows and distinguish active from inactive ones. | Open windows and keyboard focus remain visible at a glance. |
+| [Window state](improvements/window-state.md) | Optional desktop icons represent open windows, distinguish active state and repaint client-supplied live icon pixmaps. | Open windows, keyboard focus and compact application state remain visible at a glance. |
 | [Window management](improvements/window-management.md) | Task switching, snap feedback, open-window icons, Shift grid movement, desktop-click defocus and title-bar double-click maximize are integrated in dtwm. | Everyday window navigation gains familiar, visible interactions without replacing the CDE window manager. |
 | [Terminal](improvements/terminal.md) | Filename drops insert shell-safe escaped paths, and the selected font size persists for later terminals and clones. | Dragging files into a shell and keeping a readable terminal setup both work predictably. |
 | [Editor](improvements/editor.md) | Dropped files support automatic, path-list or content handling, with the choice persisted and propagated through ToolTalk. | A drop can match the editing workflow instead of having one hard-coded meaning. |
@@ -37,6 +37,11 @@ this boundary.
 Open-window icons are a CK Core CDE desktop extension. They keep running
 applications represented on the desktop and distinguish the focused window
 while retaining the classic CDE icon model.
+
+The separate [CK Core Apps](https://cklukas.github.io/ck-core-apps/) companion
+suite demonstrates the same desktop contract with high-resolution live icons
+for time, system load, pointer tracking, browser favicons, market data and an
+animated plasma demo.
 
 dtwm also carries a task switcher with keyboard focus handling, window snap
 feedback, workspace-aware open-window icons, Shift-modified grid movement and

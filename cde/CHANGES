@@ -1,4 +1,6 @@
 2026-11-02
+- docs: explain the live client-icon contract and link CK Core Apps as the
+  separate high-resolution dynamic-icon implementation and showcase.
 - project: define repository-wide agent rules for topical commits, mandatory
   changelog coverage, major-update documentation, and verified CDE screenshots.
 - dtwm: keep the open-window icon focus marker directly below its icon frame
