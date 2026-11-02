@@ -47,12 +47,11 @@
 #include <Dt/DtPStrings.h>
 
 #include <Xm/FileSB.h>
+#include "fileIO.h"
 
 /*******************************************************************************
         Includes, Defines, and Global variables from the Declarations Editor:
 *******************************************************************************/
-
-extern void Do_FileIO();
 
 Widget  fileIODialog;
 
@@ -60,7 +59,7 @@ Widget  fileIODialog;
         Forward declarations of functions that are defined later in this file.
 *******************************************************************************/
 
-Widget  create_fileIODialog();
+Widget  create_fileIODialog(void);
 
 /*******************************************************************************
         The following are callback functions.

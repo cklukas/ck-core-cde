@@ -24,7 +24,7 @@
 #pragma once
 
 /* fileIO.c */
-void Do_FileIO(Widget wid, XtPointer client_unused, XmFileSelectionBoxCallbackStruct *callback_data);
+void Do_FileIO(Widget wid, XtPointer client_unused, XtPointer call_data);
 Boolean Read_File(char *fnameIn);
 Boolean Write_File(char *fnameIn);
 void Display_XPMFile(int width, int height);

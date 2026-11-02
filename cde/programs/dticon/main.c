@@ -62,11 +62,12 @@ int ttMark;
 int tt_tmpfile_fd = -1;
 static int undeclared = 0;
 static Tt_message local_msg = (Tt_message) 0;
-void DieFromToolTalkError( );
-Tt_message ProcessToolTalkMessage( );
-Tt_message ProcessToolTalkMediaMessage( );
-extern void ProcessAppArgs();
-void send_tt_saved();
+static void DieFromToolTalkError(Widget, char *, Tt_status);
+static Tt_message ProcessToolTalkMessage(Tt_message, void *, Tt_message);
+static Tt_message ProcessToolTalkMediaMessage(
+    Tt_message, void *, Tttk_op, Tt_status, unsigned char *, int, char *,
+    char *);
+void send_tt_saved(void);
 #define dticon_ptype "DT_Icon_Editor"
 
 int edit_notifier(char* fname, Tt_message msg, int clear);
@@ -122,9 +123,14 @@ static XrmOptionDescRec option_list[] =
 
 
 extern Widget mainForm, iconForm, fileMenu_quit_pb;
-extern void GetSessionInfo();
 extern char start_file[];
 extern char dummy[];
+
+Widget create_dtIconShell(void);
+Widget create_newIconDialog(void);
+Widget create_queryDialog(void);
+Widget create_stdErrDialog(void);
+Widget create_fileIODialog(void);
 
 
 /*-----------------------------------------------------------*/
@@ -202,17 +208,6 @@ main(
     Tt_status ttRc;
     char * sessionString;
 #endif
-
-        /*-----------------------------------------------------------*/
-        /* Interface function declaration                            */
-        /*-----------------------------------------------------------*/
-        Widget  create_dtIconShell();
-        Widget  create_newIconDialog();
-        Widget  create_queryDialog();
-        Widget  create_stdErrDialog();
-        Widget  create_fileIODialog();
-        void    GetMarginData();
-
 
         /* ------------------------*/
         /*      Initialize program      */
@@ -376,7 +371,7 @@ ExitCB (Widget dialog, XtPointer client_data, XtPointer call_data)
     exit((int) (intptr_t) client_data);
 }
 
-void
+static void
 DieFromToolTalkError(Widget parent, char *errfmt, Tt_status status)
 {
     Arg		 args[10];
@@ -430,7 +425,7 @@ DieFromToolTalkError(Widget parent, char *errfmt, Tt_status status)
 }
 
 
-Tt_message ProcessToolTalkMediaMessage( Tt_message      msg,
+static Tt_message ProcessToolTalkMediaMessage( Tt_message      msg,
                                         void*           cdata,
                                         Tttk_op         op,
                                         Tt_status       diag,
@@ -752,7 +747,7 @@ send_tt_saved(void)
 }
 
 
-Tt_message ProcessToolTalkMessage(Tt_message msg,
+static Tt_message ProcessToolTalkMessage(Tt_message msg,
                                   void* cdata,
                                   Tt_message contract)
 {
@@ -793,7 +788,7 @@ Tt_message ProcessToolTalkMessage(Tt_message msg,
 NAME:           handle_dialog_child( wgt, manage_func )
 
 INPUT:          Widget  wgt                     - the dialogShellWidget
-                void    (*manage_func)()        - either XtManageChild
+                void    (*manage_func)(Widget)  - either XtManageChild
                                                   or XtUnmanageChild
 
 RETURN:         int                             - NO_ERROR if successfull
@@ -804,7 +799,8 @@ DESCRIPTION:    Handles the popping up or popping down of dialog shells
 
 CREATION:       Visual Edge Software            Sept 19/91
 -----------------------------------------------------------------------------*/
-static  int     handle_dialog_child( Widget wgt, void (*manage_func)() )
+static int
+handle_dialog_child(Widget wgt, void (*manage_func)(Widget))
 {
         int      i;
         XtArgVal num_children;

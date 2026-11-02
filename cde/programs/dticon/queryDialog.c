@@ -56,7 +56,7 @@ Widget  queryDialog;
         Forward declarations of functions that are defined later in this file.
 *******************************************************************************/
 
-Widget  create_queryDialog();
+Widget  create_queryDialog(void);
 
 /*******************************************************************************
         The following are callback functions.

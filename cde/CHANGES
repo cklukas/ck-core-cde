@@ -9,6 +9,8 @@
 - C23: replace ambiguous system, signal, Xt, ICE and Xlib declarations in
   dtexec, dtaction, dtsession, dsdm and dticon with their exact interfaces;
   remove callback casts that concealed mismatched timer and handler contracts.
+- dticon: give ToolTalk, UI-constructor, dialog-management and selection-timer
+  callbacks complete prototypes; remove unused legacy externs and timer casts.
 
 2026-11-02
 - C23: give the DtInfo Tree, Panner, Pixmap, Porthole, Restraint and Simple

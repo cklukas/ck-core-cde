@@ -114,6 +114,13 @@ XSMP, ICE, save-state, signal and UI routines with complete prototypes. The
 `dsdm` X error and recursive-window callbacks and the `dticon` X error hooks
 likewise use their exact Xlib contracts without function-pointer casts.
 
+The icon editor's remaining cross-file interfaces are fully prototyped as
+well. Its ToolTalk contract and media callbacks use the toolkit-defined
+argument lists, dialog constructors declare explicit no-argument contracts,
+and dialog-management operations accept a single `Widget`. The selection
+flash timer implements `XtTimerCallbackProc` directly, so registrations do not
+cast around an incompatible client-data parameter.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh

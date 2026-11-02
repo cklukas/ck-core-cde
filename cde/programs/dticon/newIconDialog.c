@@ -69,7 +69,7 @@ extern Widget  editMenu_deleteHS_pb;
     Forward declarations of functions that are defined later in this file.
 *******************************************************************************/
 
-Widget  create_newIconDialog();
+Widget  create_newIconDialog(void);
 
 /*******************************************************************************
     The following are callback functions.

@@ -67,11 +67,11 @@
 #include "main.h"
 #include "utils.h"
 #include "process.h"
+#include "fileIO.h"
 
 #ifdef __TOOLTALK
 #include <Tt/tttk.h>
-extern void ReplyToMessage( );
-extern Tt_message replyMsg;
+extern void send_tt_saved(void);
 #endif
 
 extern XtPointer _XmStringUngenerate (
@@ -83,17 +83,10 @@ extern XtPointer _XmStringUngenerate (
 extern Widget   formatMenu_xpm_tb, formatMenu_xbm_tb;
 extern Window tablet_win;
 extern Widget editMenu_deleteHS_pb;
-Boolean Read_File(), Write_File();
 Pixmap pix_ret, shape_ret, mask_ret;
 int successFormat, x_hot, y_hot;
 unsigned int width_ret, height_ret;
 extern GC scratch_gc;
-
-extern void PixelTableClear();
-extern void send_tt_saved();
-extern void Display_XPMFile(int, int);
-extern void Display_XBMFile(int, int);
-
 
 char  *tmpSave;            /* Save the file path being saved */
 char  dummy[256];           /* mask file for use in main */
@@ -123,8 +116,10 @@ void
 Do_FileIO(
         Widget wid,
         XtPointer client_unused,
-        XmFileSelectionBoxCallbackStruct *callback_data )
+        XtPointer call_data )
 {
+  XmFileSelectionBoxCallbackStruct *callback_data =
+      (XmFileSelectionBoxCallbackStruct *) call_data;
   int   unmanageFileIO = True;
   struct stat statbuf;        /* Information on a file. */
 

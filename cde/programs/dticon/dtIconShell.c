@@ -215,8 +215,8 @@ static char        *transTable2 = "#override\n\
         Forward declarations of functions that are defined later in this file.
 *******************************************************************************/
 
-Widget create_dtIconShell();
-static void NewGraphicsOp();
+Widget create_dtIconShell(void);
+static void NewGraphicsOp(void);
 
 /*******************************************************************************
         The following are Action functions.

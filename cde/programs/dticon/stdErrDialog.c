@@ -54,7 +54,7 @@ Widget  stdErrDialog;
         Forward declarations of functions that are defined later in this file.
 *******************************************************************************/
 
-Widget  create_stdErrDialog();
+Widget  create_stdErrDialog(void);
 
 /*******************************************************************************
         The following are callback functions.
