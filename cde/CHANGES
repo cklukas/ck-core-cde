@@ -1,4 +1,15 @@
 2026-11-02
+- dtsession: validate complete integer resources and client-ID references;
+  reject overflow, trailing garbage, negative screens and invalid restart hints.
+- dtsession: keep record-output failures sticky so later records cannot turn a
+  partial save into a successful commit; bound generated client sequence IDs.
+- dtsession: size database resource names dynamically and reject client IDs
+  containing Xrm separators before expanding them into fixed-depth quark lists.
+- dtsession: reject negative, oversized, sparse and duplicate session-array
+  indices before writing into their allocation; bound resource-entry counts.
+- dtsession: stage session databases privately, preserve the previous database
+  on header/write/flush/sync/close/rename failure, and propagate commit failures
+  to the session-save caller instead of reporting success.
 - build: retain configured local build trees and a stable SDK prefix between
   batches, rebuilding changed inputs and dependencies without routine cleans.
 - build: freeze the selected Motif revision throughout each ten-round repair

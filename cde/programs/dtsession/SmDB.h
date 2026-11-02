@@ -83,6 +83,9 @@ extern Boolean PutProxyClientDBRec(ClientDB outputDB,
 
 
 /********* Close client database *********/
+/* Output is staged privately. True commits only a fully flushed/synced/closed
+ * stream; False discards it. The handle is consumed even on failure.
+ */
 extern Boolean CloseClientDB(ClientDB clientDB, Boolean writeDB);
 
 

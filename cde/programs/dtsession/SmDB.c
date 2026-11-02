@@ -35,9 +35,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <limits.h>
+#include <string.h>
+#include <ctype.h>
 #include "SmDB.h"
 
-#define RESOURCE_BUF_SZ 1024
 #define CLIENT_ID_SZ 20
 
 typedef struct _ClientDBRec
@@ -48,6 +50,7 @@ typedef struct _ClientDBRec
     char *xrmDBFileName;        /* Filename, for openForInput == False. */
     char *tmpDBFileName;
     FILE *xrmDBFile;
+    Boolean writeFailed;       /* Sticky: a failed record cannot be committed. */
 
     /* Below used if openForInput. */
     char **XSMPClients;         /* malloc'd array of XSMP client IDs. */
@@ -67,8 +70,11 @@ static XrmClass XSMPClass[2];
 static XrmName proxyName[2];
 static XrmClass proxyClass[2];
 static XrmQuark anyQuark;
-static char *resourceBuf = NULL;
-static char *clientIDBuf = NULL;
+
+typedef struct {
+    char **strings;
+    size_t count;
+} StringArrayContext;
 
 /* Public strings */
 char *versionStr = ".version";
@@ -109,7 +115,6 @@ static void _freeStringArray(char **);
 static Boolean _putStringResource(ClientDBRec *, char *, char *, char *);
 static Boolean _putIntResource(ClientDBRec *, char *, char *, int);
 static Boolean _putStringArrayResource(ClientDBRec *, char *, char *, char **);
-static char *_tmpFileName(char *);
 
 static void
 _initXrm(void)
@@ -135,7 +140,12 @@ _countProc(XrmDatabase *clientDB, XrmBindingList bindingList,
 {
     int *countP = (int *)uData;
 
-    (*countP)++;
+    if (*countP < 0 || (unsigned int)*countP >= UINT_MAX / sizeof(char *) - 1)
+    {
+	*countP = -1;
+	return True;
+    }
+    ++*countP;
 
     return FALSE;
 }
@@ -148,6 +158,10 @@ _fillClientIDProc(XrmDatabase *clientDB, XrmBindingList bindingList,
     char ***idListPtr = (char ***)uData;
     char **clientIDPtr = *idListPtr;
 
+    if (!value->addr || !value->size ||
+	memchr(value->addr, '\0', value->size) != value->addr + value->size - 1 ||
+	!*(char *)value->addr || strpbrk(value->addr, ".*\\ \t\r\n:"))
+	return True;
     *clientIDPtr = (char *)value->addr;
     (*idListPtr)++;
 
@@ -159,18 +173,55 @@ _fillStringArrayProc(XrmDatabase *clientDB, XrmBindingList bindingList,
 		     XrmQuarkList quarkList, XrmRepresentation *reps,
 		     XrmValue *value, XPointer uData)
 {
-    char **stringsPtr = (char **)uData;
-    char *indexStr;
+    StringArrayContext *context = (StringArrayContext *)uData;
+    const char *indexStr;
+    size_t index = 0;
 
     /* Our index into this string array is at quarkList[2]. */
     if ((indexStr = XrmQuarkToString(quarkList[2])) == (char *)NULL)
 	return True;
 
-    if ((stringsPtr[atoi(indexStr)] = XtNewString((char *)value->addr))
-	== (char *)NULL)
+
+    /* Writer indices are decimal and dense. Never use an unchecked resource
+     * name as an array subscript, including aliases such as 0 and 00.
+     */
+    if (!*indexStr)
+	return True;
+    for (; *indexStr; ++indexStr)
+    {
+	unsigned int digit = (unsigned char)*indexStr - '0';
+	if (digit > 9 || digit >= context->count ||
+	    index > (context->count - 1 - digit) / 10)
+	    return True;
+	index = index * 10 + digit;
+    }
+    if (index >= context->count || context->strings[index] != NULL ||
+	value->size == 0 || value->addr == NULL ||
+	memchr(value->addr, '\0', value->size) != value->addr + value->size - 1)
+	return True;
+    if ((context->strings[index] = XtNewString((char *)value->addr)) == NULL)
 	return True;
 
     return FALSE;
+}
+
+static char *
+_resourceName(const char *format, const char *clientID)
+{
+    char *name;
+    int length;
+    /* IDs occupy exactly one Xrm component. Separators would change both the
+     * resource being selected and the number of quarks written by Xrm.
+     */
+    if (!clientID || !*clientID || strpbrk(clientID, ".*\\ \t\r\n:"))
+	return NULL;
+    length = snprintf(NULL, 0, format, clientID);
+    if (length < 0)
+	return NULL;
+    name = XtMalloc((unsigned int)length + 1);
+    if (name)
+	snprintf(name, (size_t)length + 1, format, clientID);
+    return name;
 }
 
 static Boolean
@@ -179,12 +230,20 @@ _getStringResource(XrmDatabase xrmDB, char *fmtStr,
 {
     char *resourceType;
     XrmValue resourceValue;
+    char *name = _resourceName(fmtStr, clientID);
+    Bool found;
 
-    if (NULL == resourceBuf) resourceBuf = XtMalloc(RESOURCE_BUF_SZ);
-    sprintf(resourceBuf, fmtStr, clientID);
-    if (XrmGetResource(xrmDB, resourceBuf, resourceBuf,
-		       &resourceType, &resourceValue))
+    if (!name)
+	return False;
+    found = XrmGetResource(xrmDB, name, name, &resourceType, &resourceValue);
+    XtFree(name);
+    if (found)
     {
+	if (!resourceType || strcmp(resourceType, "String") != 0 ||
+	    !resourceValue.addr || !resourceValue.size ||
+	    memchr(resourceValue.addr, '\0', resourceValue.size) !=
+		resourceValue.addr + resourceValue.size - 1)
+	    return False;
 	if ((*resourcePtr = XtNewString(resourceValue.addr)) == (char *)NULL)
 	    return False;
 
@@ -199,14 +258,28 @@ static Boolean
 _getIntResource(XrmDatabase xrmDB, char *fmtStr,
 		char *clientID, int *resourcePtr, int defaultVal)
 {
-    char *resourceType;
-    XrmValue resourceValue;
+    char *text = NULL, *end;
+    long value;
+    Boolean valid;
 
-    if (NULL == resourceBuf) resourceBuf = XtMalloc(RESOURCE_BUF_SZ);
-    sprintf(resourceBuf, fmtStr, clientID);
-    *resourcePtr = (XrmGetResource(xrmDB, resourceBuf, resourceBuf,
-				   &resourceType, &resourceValue)) ?
-			atoi(resourceValue.addr) : defaultVal;
+
+    if (!_getStringResource(xrmDB, fmtStr, clientID, &text, NULL))
+	return False;
+    if (!text)
+    {
+	*resourcePtr = defaultVal;
+	return True;
+    }
+    errno = 0;
+    value = strtol(text, &end, 10);
+    valid = end != text && errno != ERANGE && value >= INT_MIN && value <= INT_MAX;
+    while (isspace((unsigned char)*end))
+	++end;
+    valid = valid && *end == '\0';
+    XtFree(text);
+    if (!valid)
+	return False;
+    *resourcePtr = (int)value;
 
     return True;
 }
@@ -218,26 +291,29 @@ _getStringArrayResource(XrmDatabase xrmDB, char *fmtStr,
 {
     XrmQuark resourceName[3];
     XrmQuark resourceClass[3];
-    char *resourceType;
-    XrmValue resourceValue;
+    char *name = _resourceName(fmtStr, clientID);
     int nStrings;
 
     resourceName[0] = resourceName[1] = anyQuark;
     resourceName[2] = NULLQUARK;
 
-    if (NULL == resourceBuf) resourceBuf = XtMalloc(RESOURCE_BUF_SZ);
-    sprintf(resourceBuf, fmtStr, clientID);
-    XrmStringToQuarkList(resourceBuf, resourceClass);
+    if (!name)
+	return False;
+    XrmStringToQuarkList(name, resourceClass);
+    XtFree(name);
 
     nStrings = 0;
-    XrmEnumerateDatabase(xrmDB, resourceName, resourceClass,
+
+    if (XrmEnumerateDatabase(xrmDB, resourceName, resourceClass,
 			 XrmEnumOneLevel, _countProc,
-			 (XPointer)&nStrings);
+			 (XPointer)&nStrings) || nStrings < 0)
+	return False;
 
     if (nStrings > 0)
     {
 	char **stringsPtr;
 	int i;
+	StringArrayContext context;
 
 	if ((stringsPtr = (char **)XtMalloc((nStrings + 1) * sizeof(char *)))
 	    == (char **)NULL)
@@ -248,16 +324,27 @@ _getStringArrayResource(XrmDatabase xrmDB, char *fmtStr,
 	for (i = 0; i <= nStrings; i++)
 	    stringsPtr[i] = (char *)NULL;
 
+	context.strings = stringsPtr;
+	context.count = nStrings;
 	if (XrmEnumerateDatabase(xrmDB,
 				 resourceName, resourceClass,
 				 XrmEnumOneLevel, _fillStringArrayProc,
-				 (XPointer)stringsPtr))
+				 (XPointer)&context))
 	{
 	    for (i = 0; i < nStrings; i++)
 		XtFree(stringsPtr[i]);
 	    XtFree((char *)stringsPtr);
 	    return False;
 	}
+	for (i = 0; i < nStrings; ++i)
+	    if (!stringsPtr[i])
+	    {
+		int j;
+		for (j = 0; j < nStrings; ++j)
+		    XtFree(stringsPtr[j]);
+		XtFree((char *)stringsPtr);
+		return False;
+	    }
 
 	*resourcePtr = stringsPtr;
 	return True;
@@ -287,10 +374,13 @@ _putStringResource(ClientDBRec *clientDB, char *fmtStr, char *clientID,
 {
     if (resourceVal != (char *)NULL)
     {
-        if (NULL == clientIDBuf) clientIDBuf = XtMalloc(RESOURCE_BUF_SZ);
-	sprintf(clientIDBuf, fmtStr, clientID);
-	if (fprintf(clientDB->xrmDBFile, "%s: %s\n", clientIDBuf, resourceVal)
-	    < 0)
+        char *name = _resourceName(fmtStr, clientID);
+	int result;
+	if (!name)
+	    return False;
+	result = fprintf(clientDB->xrmDBFile, "%s: %s\n", name, resourceVal);
+	XtFree(name);
+	if (result < 0)
 	    return False;
     }
 
@@ -301,10 +391,13 @@ static Boolean
 _putIntResource(ClientDBRec *clientDB, char *fmtStr, char *clientID,
 		int resourceVal)
 {
-    if (NULL == clientIDBuf) clientIDBuf = XtMalloc(RESOURCE_BUF_SZ);
-    sprintf(clientIDBuf, fmtStr, clientID);
-    if (fprintf(clientDB->xrmDBFile, "%s: %d\n", clientIDBuf, resourceVal)
-	< 0)
+    char *name = _resourceName(fmtStr, clientID);
+    int result;
+    if (!name)
+	return False;
+    result = fprintf(clientDB->xrmDBFile, "%s: %d\n", name, resourceVal);
+    XtFree(name);
+    if (result < 0)
 	return False;
 
     return True;
@@ -314,48 +407,27 @@ static Boolean
 _putStringArrayResource(ClientDBRec *clientDB, char *fmtStr, char *clientID,
 			char **resourceVal)
 {
-    int i;
+    size_t i;
+    char *name;
 
     if (resourceVal != (char **)NULL)
     {
+	name = _resourceName(fmtStr, clientID);
+	if (!name)
+	    return False;
 	for (i = 0; resourceVal[i] != (char *)NULL; i++)
 	{
-            if (NULL == clientIDBuf) clientIDBuf = XtMalloc(RESOURCE_BUF_SZ);
-	    sprintf(clientIDBuf, fmtStr, clientID);
-	    if (fprintf(clientDB->xrmDBFile, "%s.%d: %s\n",
-			clientIDBuf, i, resourceVal[i]) < 0)
+	    if (fprintf(clientDB->xrmDBFile, "%s.%zu: %s\n",
+			name, i, resourceVal[i]) < 0)
+	    {
+		XtFree(name);
 		return False;
+	    }
 	}
+	XtFree(name);
     }
 
     return True;
-}
-
-static char *
-_tmpFileName(char *fileName)
-{
-    int fileNameLen = strlen(fileName);
-    char *newFileName =
-	(char *)XtMalloc((fileNameLen + 20) * sizeof(char));
-
-    if (newFileName != (char *)NULL)
-    {
-	int i;
-	char *ptr = &(newFileName[fileNameLen]);
-
-	strcpy(newFileName, fileName);
-
-	/* Hm.  I suppose if a couple billion versions of this file exist */
-	/* we could loop forever, but that's not likely. */
-	for (i = 0; ; i++)
-	{
-	    sprintf(ptr, "%d", i);
-	    if (access(newFileName, F_OK) != 0)
-		break;
-	}
-    }
-
-    return newFileName;
 }
 
 ClientDB
@@ -391,12 +463,17 @@ OpenInputClientDB(char *fileName,
     inputDB->nextXSMPClientIndex = inputDB->nextProxyClientIndex = 0;
 
     /* Count the number of XSMP and Proxy clients. */
-    XrmEnumerateDatabase(inputDB->xrmDB, XSMPName, XSMPClass,
+    if (XrmEnumerateDatabase(inputDB->xrmDB, XSMPName, XSMPClass,
 			 XrmEnumOneLevel, _countProc,
-			 (XPointer)&inputDB->nXSMPClients);
-    XrmEnumerateDatabase(inputDB->xrmDB, proxyName, proxyClass,
+			 (XPointer)&inputDB->nXSMPClients) ||
+	XrmEnumerateDatabase(inputDB->xrmDB, proxyName, proxyClass,
 			 XrmEnumOneLevel, _countProc,
-			 (XPointer)&inputDB->nProxyClients);
+			 (XPointer)&inputDB->nProxyClients))
+    {
+	XrmDestroyDatabase(inputDB->xrmDB);
+	XtFree((char *)inputDB);
+	return (ClientDB)NULL;
+    }
 
     /* Allocate space for the client IDs and fill from database. */
     if (inputDB->nXSMPClients > 0)
@@ -411,9 +488,15 @@ OpenInputClientDB(char *fileName,
 	}
 
 	tmpPtr = inputDB->XSMPClients;
-	XrmEnumerateDatabase(inputDB->xrmDB, XSMPName, XSMPClass,
+	if (XrmEnumerateDatabase(inputDB->xrmDB, XSMPName, XSMPClass,
 			     XrmEnumOneLevel, _fillClientIDProc,
-			     (XPointer)&tmpPtr);
+			     (XPointer)&tmpPtr))
+	{
+	    XrmDestroyDatabase(inputDB->xrmDB);
+	    XtFree((char *)inputDB->XSMPClients);
+	    XtFree((char *)inputDB);
+	    return (ClientDB)NULL;
+	}
     }
     if (inputDB->nProxyClients > 0)
     {
@@ -428,9 +511,16 @@ OpenInputClientDB(char *fileName,
 	}
 
 	tmpPtr = inputDB->proxyClients;
-	XrmEnumerateDatabase(inputDB->xrmDB, proxyName, proxyClass,
+	if (XrmEnumerateDatabase(inputDB->xrmDB, proxyName, proxyClass,
 			     XrmEnumOneLevel, _fillClientIDProc,
-			     (XPointer)&tmpPtr);
+			     (XPointer)&tmpPtr))
+	{
+	    XrmDestroyDatabase(inputDB->xrmDB);
+	    XtFree((char *)inputDB->XSMPClients);
+	    XtFree((char *)inputDB->proxyClients);
+	    XtFree((char *)inputDB);
+	    return (ClientDB)NULL;
+	}
     }
 
     if ((!XrmGetResource(inputDB->xrmDB, versionStr, versionStr,
@@ -461,13 +551,16 @@ OpenOutputClientDB(char *fileName,
 		   char *dtsessionID)
 {
     ClientDBRec *outputDB;
+    size_t length;
+    int fd, savedErrno;
+    const char suffix[] = ".XXXXXX";
 
     _initXrm();
 
     if ((fileName == (char *)NULL) ||
 	(version == (char *)NULL) ||
 	(dtsessionID == (char *)NULL) ||
-	((outputDB = (ClientDBRec *)XtMalloc(sizeof(ClientDBRec)))
+	((outputDB = (ClientDBRec *)XtCalloc(1, sizeof(ClientDBRec)))
 	 == (ClientDBRec *)NULL))
 	return (ClientDB)NULL;
 
@@ -476,18 +569,28 @@ OpenOutputClientDB(char *fileName,
     outputDB->nextXSMPClientIndex = 0;
     outputDB->nextProxyClientIndex = 0;
 
-    /* Save current DB to tmp file in case we need to restore later. */
+    /* Keep the previous database in place until the replacement is complete.
+     * Xt allocation sizes are Cardinal, so check before narrowing.
+     */
+    length = strlen(fileName);
+    if (length > UINT_MAX - sizeof(suffix))
+    {
+	XtFree((char *)outputDB);
+	errno = ENAMETOOLONG;
+	return (ClientDB)NULL;
+    }
     if (((outputDB->xrmDBFileName = XtNewString(fileName)) == (char *)NULL) ||
-	((outputDB->tmpDBFileName = _tmpFileName(fileName)) == (char *)NULL))
+	((outputDB->tmpDBFileName = XtMalloc(length + sizeof(suffix))) == NULL))
     {
-	if (outputDB->xrmDBFileName != (char *)NULL)
-	    XtFree(outputDB->xrmDBFileName);
+	XtFree(outputDB->xrmDBFileName);
 	XtFree((char *)outputDB);
 	return (ClientDB)NULL;
     }
 
-    if ((rename(fileName, outputDB->tmpDBFileName) != 0) &&
-	(errno != ENOENT))
+    memcpy(outputDB->tmpDBFileName, fileName, length);
+    memcpy(outputDB->tmpDBFileName + length, suffix, sizeof(suffix));
+    fd = mkstemp(outputDB->tmpDBFileName);
+    if (fd < 0)
     {
 	XtFree(outputDB->xrmDBFileName);
 	XtFree(outputDB->tmpDBFileName);
@@ -495,21 +598,28 @@ OpenOutputClientDB(char *fileName,
 	return (ClientDB)NULL;
     }
 
-    /* Open fileName for writing. */
-    if ((outputDB->xrmDBFile = fopen(fileName, "w")) == (FILE *)NULL)
+    if ((outputDB->xrmDBFile = fdopen(fd, "w")) == NULL)
     {
-        int rv;
-	rv = rename(outputDB->tmpDBFileName, fileName);
+	savedErrno = errno;
+	close(fd);
+	unlink(outputDB->tmpDBFileName);
 	XtFree(outputDB->xrmDBFileName);
 	XtFree(outputDB->tmpDBFileName);
 	XtFree((char *)outputDB);
+	errno = savedErrno;
 	return (ClientDB)NULL;
     }
 
     /* Store version and session ID. */
-    fprintf(outputDB->xrmDBFile, "! dtsession.db\n!\n%s: %s\n",
-	    versionStr, version);
-    fprintf(outputDB->xrmDBFile, "%s: %s\n", dtsessionIDStr, dtsessionID);
+    if (fprintf(outputDB->xrmDBFile, "! dtsession.db\n!\n%s: %s\n",
+		versionStr, version) < 0 ||
+	fprintf(outputDB->xrmDBFile, "%s: %s\n", dtsessionIDStr, dtsessionID) < 0)
+    {
+	savedErrno = errno;
+	CloseClientDB((ClientDB)outputDB, False);
+	errno = savedErrno;
+	return (ClientDB)NULL;
+    }
 
     return (ClientDB)outputDB;
 }
@@ -559,7 +669,9 @@ GetXSMPClientDBRec(ClientDB inputDBPtr)
 	!_getStringArrayResource(inputDB->xrmDB, environmentStr, clientID,
 				 &clientPtr->environment, (char **)NULL) ||
 	!_getIntResource(inputDB->xrmDB, restartHintStr, clientID,
-			 (int *)&clientPtr->restartHint, 0))
+			 &clientPtr->restartHint, 0) ||
+	clientPtr->screenNum < 0 || clientPtr->restartHint < SmRestartIfRunning ||
+	clientPtr->restartHint > SmRestartNever)
     {
 	FreeXSMPClientDBRec(clientPtr);
 	return (XSMPClientDBRecPtr)NULL;
@@ -600,7 +712,7 @@ GetProxyClientDBRec(ClientDB inputDBPtr)
 	!_getStringArrayResource(inputDB->xrmDB, commandStr, clientID,
 				 &clientPtr->command, (char **)NULL) ||
 	!_getIntResource(inputDB->xrmDB, screenNumStr, clientID,
-			 &clientPtr->screenNum, 0))
+			 &clientPtr->screenNum, 0) || clientPtr->screenNum < 0)
     {
 	FreeProxyClientDBRec(clientPtr);
 	return (ProxyClientDBRecPtr)NULL;
@@ -618,13 +730,19 @@ PutXSMPClientDBRec(ClientDB outputDBPtr,
     ClientDBRec *outputDB = (ClientDBRec *)outputDBPtr;
     char clientID[CLIENT_ID_SZ];
 
-    if ((outputDB == (ClientDBRec *)NULL) ||
-	(outputDB->openForInput) ||
+    if ((outputDB == (ClientDBRec *)NULL) || outputDB->openForInput)
+	return False;
+    if (outputDB->writeFailed ||
+	outputDB->nextXSMPClientIndex == INT_MAX ||
 	(clientPtr == (XSMPClientDBRecPtr)NULL) ||
 	(clientPtr->clientId == (char *)NULL))
-	return False;
 
-    sprintf(clientID, "C%d", outputDB->nextXSMPClientIndex++);
+    {
+	outputDB->writeFailed = True;
+	return False;
+    }
+
+    snprintf(clientID, sizeof(clientID), "C%d", outputDB->nextXSMPClientIndex++);
 
     if (!_putStringResource(outputDB, clientStr, clientID, clientID) ||
 	!_putStringResource(outputDB, sessionIDStr, clientID,
@@ -647,7 +765,10 @@ PutXSMPClientDBRec(ClientDB outputDBPtr,
 				 clientPtr->environment) ||
 	!_putIntResource(outputDB, restartHintStr, clientID,
 			 (int)clientPtr->restartHint))
+    {
+	outputDB->writeFailed = True;
 	return False;
+    }
 
     return True;
 }
@@ -659,12 +780,17 @@ PutProxyClientDBRec(ClientDB outputDBPtr,
     ClientDBRec *outputDB = (ClientDBRec *)outputDBPtr;
     char clientID[CLIENT_ID_SZ];
 
-    if ((outputDB == (ClientDBRec *)NULL) ||
-	(outputDB->openForInput) ||
-	(clientPtr == (ProxyClientDBRecPtr)NULL))
+    if ((outputDB == (ClientDBRec *)NULL) || outputDB->openForInput)
 	return False;
+    if (outputDB->writeFailed ||
+	outputDB->nextProxyClientIndex == INT_MAX ||
+	(clientPtr == (ProxyClientDBRecPtr)NULL))
+    {
+	outputDB->writeFailed = True;
+	return False;
+    }
 
-    sprintf(clientID, "PC%d", outputDB->nextProxyClientIndex++);
+    snprintf(clientID, sizeof(clientID), "PC%d", outputDB->nextProxyClientIndex++);
 
     if (!_putStringResource(outputDB, proxyStr, clientID, clientID) ||
 	!_putStringResource(outputDB, clientHostStr, clientID,
@@ -673,7 +799,10 @@ PutProxyClientDBRec(ClientDB outputDBPtr,
 				 clientPtr->command) ||
 	!_putIntResource(outputDB, screenNumStr, clientID,
 			 clientPtr->screenNum))
+    {
+	outputDB->writeFailed = True;
 	return False;
+    }
 
     return True;
 }
@@ -682,6 +811,8 @@ Boolean
 CloseClientDB(ClientDB clientDBPtr, Boolean writeDB)
 {
     ClientDBRec *clientDB = (ClientDBRec *)clientDBPtr;
+    Boolean result = True;
+    int savedErrno = 0;
 
     if (clientDB == (ClientDBRec *)NULL)
 	return False;
@@ -697,26 +828,38 @@ CloseClientDB(ClientDB clientDBPtr, Boolean writeDB)
 	return True;
     }
 
-    /* Otherwise, output. */
+    /* A buffered write failure must never replace the previous database. */
     if (writeDB)
     {
-	/* Close file and remove temp DB. */
-	fclose(clientDB->xrmDBFile);
-	unlink(clientDB->tmpDBFileName);
+	if (clientDB->writeFailed || ferror(clientDB->xrmDBFile) ||
+	    fflush(clientDB->xrmDBFile) != 0 ||
+	    fsync(fileno(clientDB->xrmDBFile)) != 0)
+	{
+	    result = False;
+	    savedErrno = errno ? errno : EIO;
+	}
     }
-    else
+    if (fclose(clientDB->xrmDBFile) != 0 && result)
     {
-      int rv;
-	/* Close file and remove it; restore original DB. */
-	fclose(clientDB->xrmDBFile);
-	rv = rename(clientDB->tmpDBFileName, clientDB->xrmDBFileName);
+	result = False;
+	savedErrno = errno ? errno : EIO;
     }
+    if (writeDB && result &&
+	rename(clientDB->tmpDBFileName, clientDB->xrmDBFileName) != 0)
+    {
+	result = False;
+	savedErrno = errno;
+    }
+    if (!writeDB || !result)
+	unlink(clientDB->tmpDBFileName);
 
     XtFree(clientDB->xrmDBFileName);
     XtFree(clientDB->tmpDBFileName);
     XtFree((char *)clientDB);
 
-    return True;
+    if (!result)
+	errno = savedErrno;
+    return result;
 }
 
 void

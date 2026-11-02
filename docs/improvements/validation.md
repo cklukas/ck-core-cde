@@ -40,6 +40,29 @@ its ABI, compiles CDE and verifies that `dtwm` links to `libXm.so.9`.
 
 ## Automated suite
 
+The session database writer stages its replacement privately beside the target.
+The previous database remains available until every write, flush, sync and close
+succeeds and the replacement can be renamed into place. A failed commit reports
+failure to the session-save caller. Fault-injection coverage exercises creation,
+stream setup, header output, buffered errors, flush, sync, close and rename,
+alongside successful commit and explicit abort with and without an existing file.
+Record-output failures remain attached to the database handle, including name
+allocation failures that do not set the stream's error flag. Later successful
+operations cannot commit a partial save. Tests cover that failure propagation
+and client sequence limits for both XSMP and proxy clients.
+
+Session-array tests use Xrm's real resource parser and the production reader.
+Array entries must have bounded decimal indices and form a complete list;
+negative indices, oversized numbers, holes and duplicate numeric aliases are
+rejected before they can address memory outside the allocated pointer array.
+Resource names use checked allocations instead of a fixed 1024-byte buffer;
+client IDs must occupy a single Xrm component so they cannot expand the quark
+array or redirect a lookup. Regressions include long IDs and embedded separators.
+Integer resources require a complete representable integer. Screen numbers are
+nonnegative and restart hints must belong to the XSMP-defined range; malformed
+values fail the client record instead of wrapping or silently becoming zero.
+String resources also reject embedded NUL bytes followed by hidden content.
+
 Login environment tests execute the production construction and catalog-path
 helpers with allocation and environment-installation failures. They verify
 that existing entries survive failures and tokenizer state belongs to each

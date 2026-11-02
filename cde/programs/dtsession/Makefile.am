@@ -2,10 +2,13 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtsession
 
-EXTRA_DIST = tests/check-session-properties.py
+EXTRA_DIST = tests/check-session-properties.py tests/check-database-write.py \
+             tests/check-database-arrays.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-properties.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-database-write.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-database-arrays.py
 
 bin_SCRIPTS = dtsession_res
 

@@ -620,9 +620,7 @@ WriteClientDatabase (void)
 	
 	OutputXSMPClients (outputDB);
 
-	CloseClientDB (outputDB, True);
-
-	return (True);
+	return CloseClientDB (outputDB, True);
 }
 
 
@@ -1082,7 +1080,7 @@ PrintStartupInfo(
      * since this means that there already is a write error to
      * the disk - no error can be written
      */
-    (void) CloseClientDB (outputDB, True);
+    (void) CloseClientDB (outputDB, False);
 
     /*
      * On a write error - move the old session back to
