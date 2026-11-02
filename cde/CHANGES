@@ -1,4 +1,12 @@
 2026-11-02
+- dtwm: require all five native-long Motif hints fields in format 32 before
+  exposing the record to callers, while allowing later extension words.
+- dtwm: reject wrong-format, incomplete and oversized WM_STATE and Motif WM
+  info properties, and reject truncated or wrong-format UTF-8 titles; cover
+  reply validation and Xlib storage cleanup with sanitizer regression tests.
+- dtwm: reserve a full extra colormap-list element when adding the client,
+  retain its colormap when no entries resolve, and reject partial normal-hint
+  records before reading their trailing fields.
 - project: publish completed, verified topic commits through the shared primary
   branch to both rpi4 and GitHub; group related fixes into cohesive commits.
 - docs: connect the CK Core CDE, CK Core Motif and CK Core Apps sites through

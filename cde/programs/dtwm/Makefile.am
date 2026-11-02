@@ -2,6 +2,11 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtwm dtfplist
 
+EXTRA_DIST = tests/check-property-readers.py tests/property-client.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-property-readers.py
+
 configdir = $(CDE_INSTALLATION_TOP)/config/C
 dist_config_DATA = sys.dtwmrc
 

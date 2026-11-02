@@ -121,7 +121,9 @@ GetNormalHints(
 			False, XA_WM_SIZE_HINTS, &actualType, &actualFormat,
 			&nitems, &leftover, (unsigned char **)&property)) ||
 	  (actualType != XA_WM_SIZE_HINTS) ||
-	  (nitems < (PROP_SIZE_HINTS_ELEMENTS - 3)) ||
+	  !property ||
+	  ((nitems != (PROP_SIZE_HINTS_ELEMENTS - 3)) &&
+	   (nitems != PROP_SIZE_HINTS_ELEMENTS)) ||
 	  (actualFormat != 32)))
     {
 	/*
@@ -550,8 +552,9 @@ GetWMState(
 		  &actual_type, &actual_format, 
 		  &nitems, &leftover, (unsigned char **)&property);
 
-    if (!((ret_val == Success) && (actual_type == wmGD.xa_WM_STATE) &&
-         (nitems == PROP_WM_STATE_ELEMENTS)))
+    if (!((ret_val == Success) && property &&
+         (actual_type == wmGD.xa_WM_STATE) && (actual_format == 32) &&
+         (nitems == PROP_WM_STATE_ELEMENTS) && (leftover == 0)))
     {
         /*
          * The property could not be retrieved or is not correctly set up.
@@ -650,6 +653,8 @@ GetMwmHints(
     unsigned long nitems;
     unsigned long leftover;
 
+    if (!pCD)
+        return NULL;
 
     if (!HasProperty(pCD, wmGD.xa_MWM_HINTS))
 	ret_val = ~Success;
@@ -660,23 +665,12 @@ GetMwmHints(
 		  &actual_type, &actual_format, 
 		  &nitems, &leftover, (unsigned char **)&property);
 
-    /*
-     * Retrieve the property data.
-     *
-     *     Motif 1.1.n clients:	nitems	= PROP_MWM_HINTS_ELEMENTS
-     *     Motif 1.2 clients:	nitems 	= PROP_MWM_HINTS_ELEMENTS + 2
-     *
-     * NOTES:  We don't need to check (nitems == PROP_MWM_HINTS_ELEMENTS)
-     *         since...
-     *
-     * If running Motif 1.1.n client with Mwm 1.2, then ignore extra elements
-     *    since property.flags won't have extra elements set.
-     *
-     * If running Motif 1.2 client with Mwm 1.1.n, then ignore extra elements
-     *    since Mwm 1.1.n won't try to access the extra elements.
+    /* Require the complete public hints prefix before any caller accesses its
+     * fields. Later extension words do not change the supported prefix.
      */
-
-    if ((ret_val == Success) && (actual_type == wmGD.xa_MWM_HINTS))
+    if ((ret_val == Success) && property &&
+        (actual_type == wmGD.xa_MWM_HINTS) && (actual_format == 32) &&
+        (nitems >= PROP_MWM_HINTS_ELEMENTS))
     {
 	return (property);			/* indicate success */
     }
@@ -737,8 +731,9 @@ PropMwmInfo *GetMwmInfo (Window rootWindowOfScreen)
                                      &nitems, &leftover,
                                      (unsigned char **)&property);
 
-    if ((ret_val == Success) && (actual_type == wmGD.xa_MWM_INFO) &&
-        (nitems == PROP_MWM_INFO_ELEMENTS)) 
+    if ((ret_val == Success) && property &&
+        (actual_type == wmGD.xa_MWM_INFO) && (actual_format == 32) &&
+        (nitems == PROP_MWM_INFO_ELEMENTS) && (leftover == 0))
     {
 	return (property);			/* indicate success */
     }
@@ -816,15 +811,16 @@ void ProcessWmColormapWindows (ClientData *pCD)
 		 (unsigned char **)&property);
 
 
-    if ((rValue == Success) && (actualType != None) && (actualFormat == 32) &&
-	(nitems > 0))
+    if ((rValue == Success) && property && (actualType == XA_WINDOW) &&
+        (actualFormat == 32) && (leftover == 0) &&
+	(nitems > 0) && (nitems <= MAX_COLORMAP_WINDOWS_COUNT))
     {
 	/*
 	 * WM_COLORMAP_WINDOWS exists and is a valid type.
 	 */
 
-        if (!(pWindows = (Window *)XtMalloc ((nitems * sizeof (Window)) + 1)) ||
-            !(pColormaps = (Colormap *)XtMalloc ((nitems*sizeof(Colormap)) + 1)))
+        if (!(pWindows = (Window *)XtMalloc ((nitems + 1) * sizeof (Window))) ||
+            !(pColormaps = (Colormap *)XtMalloc ((nitems + 1) * sizeof (Colormap))))
         {
 	    /* unable to allocate space */
 	    Warning (((char *)GETMESSAGE(54, 3, "Insufficient memory for window management data")));
@@ -833,8 +829,6 @@ void ProcessWmColormapWindows (ClientData *pCD)
 		XtFree ((char *)pWindows);
 	    }
         }
-	/* Is the above OSF code a bug -- allocates one extra byte, rather */
-	/* than one extra element, for the top window if needed? */
 	else if ( ! (pCmapFlags = (int *)XtCalloc(nitems+1,sizeof(int)))) {
 			/* unable to allocate space */
 			Warning (((char *)GETMESSAGE(54, 4, "Insufficient memory for window manager flags")));
@@ -908,7 +902,8 @@ void ProcessWmColormapWindows (ClientData *pCD)
 	     * Set the colormap window data.
 	     */
 
-	    pCD->clientColormap = pColormaps[0];
+	    if (colormapCount > 0)
+	        pCD->clientColormap = pColormaps[0];
 	    if (colormapCount > 1)
 	    {
 		/*
@@ -1938,7 +1933,7 @@ HasProperty (
 char *GetUtf8String (Display *display, Window w, Atom property)
 {
     int actualFormat;
-    char *propReturn;
+    char *propReturn = NULL;
     unsigned long nitems, leftover;
     Atom actualType;
     Atom reqType = wmGD.xa_UTF8_STRING;
@@ -1948,8 +1943,8 @@ char *GetUtf8String (Display *display, Window w, Atom property)
 			    (unsigned char **) &propReturn) != Success)
 	goto err;
 
-    if (!nitems) goto err;
-    if (actualType != reqType) goto err;
+    if (!propReturn || !nitems) goto err;
+    if (actualType != reqType || actualFormat != 8 || leftover != 0) goto err;
 
     return propReturn;
 
