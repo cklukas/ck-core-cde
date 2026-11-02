@@ -66,6 +66,14 @@ unsigned-byte and `unsigned long` types required by `XGetWindowProperty`.
 Relinking the launcher remains part of the complete-tree qualification because
 it depends on CDE libraries that are being converted in later batches.
 
+The `dtpdmd` print-display manager is qualified at the translation-unit level
+with both compilers as well. Its dispatch, mailbox, manager, record, setup and
+utility interfaces use complete prototypes, including the `XIOErrorHandler`
+contract. Child output that contains no PDM status token leaves the match state
+explicitly empty rather than consulting uninitialized storage. Like
+`dtimsstart`, final relinking follows the conversion of its CDE library
+dependencies.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh

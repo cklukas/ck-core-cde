@@ -1,4 +1,9 @@
 2026-11-02
+- dtpdmd: give dispatch, mailbox, manager, record, setup, utility and X I/O
+  callbacks complete C23 prototypes; handle child output without a PDM status
+  token deterministically instead of reading an uninitialized match pointer.
+- build: advance the fixed Motif revision used by the next C23 qualification
+  batch and both CI systems to 20a1461b155009c271ad7f9876c5ec4b8bbf9573.
 - dtimsstart: replace unspecified-argument declarations with complete public,
   internal, Xlib and Xt callback prototypes; use a C23-safe private Boolean
   name and correctly type X property buffers under GCC and Clang C23.

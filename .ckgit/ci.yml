@@ -6,7 +6,7 @@ sisters:
     # ckdocs v0.10.1
     ref: 7e3ee5eb57a2cef2e07f9e9fe5c4e2822502d322
   - name: ck-core-motif
-    ref: 1a2407723eb319ac5c18afa0fb386cf46aa7efdc
+    ref: 20a1461b155009c271ad7f9876c5ec4b8bbf9573
 jobs:
   - name: documentation
     steps:

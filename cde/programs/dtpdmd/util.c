@@ -55,7 +55,7 @@ int xio_quickie_handler( Display *dpy )
  *
  * str_dup using Xmalloc
  */
-char *xpstrdup(char * str)
+char *xpstrdup(const char *str)
 {
     int len;
     char *newstr;
@@ -74,15 +74,15 @@ char *xpstrdup(char * str)
  */
 int
 xpstrspn(
-        char *s1,
-        char *s2 )
+        const char *s1,
+        const char *s2 )
 {
 #ifdef NLS16
    wchar_t s1char, s2char;
    int s1len, s2len;
    int i;
    int count;
-   char * ptr;
+   const char *ptr;
    Boolean match;
 
 
@@ -141,15 +141,15 @@ xpstrspn(
  */
 int
 xpstrcspn(
-        char *s1,
-        char *s2 )
+        const char *s1,
+        const char *s2 )
 {
 #ifdef NLS16
    wchar_t s1char, s2char;
    int s1len, s2len;
    int i;
    int count;
-   char * ptr;
+   const char *ptr;
 
 
    /* An empty string has no spans */
@@ -203,7 +203,7 @@ xpstrcspn(
 char *
 xpstrtok(
         char *s1,
-        char *s2 )
+        const char *s2 )
 {
 #ifdef NLS16
    static char * ptr = NULL;
