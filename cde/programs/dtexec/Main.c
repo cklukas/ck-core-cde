@@ -64,6 +64,8 @@
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
+#include <limits.h>
+#include <stdint.h>
 #include <Tt/tttk.h>
 
 #define ACTION_ICON_CACHE_UPDATE_OP "DtActionIconCache_Update"
@@ -1203,6 +1205,18 @@ typedef struct {
     int capacity;
 } PidSet;
 
+static int
+NextListCapacity(int capacity, size_t itemSize)
+{
+    int next;
+    if (capacity < 0 || capacity == INT_MAX || itemSize == 0)
+        return 0;
+    next = capacity == 0 ? 8 : capacity > INT_MAX / 2 ? INT_MAX : capacity * 2;
+    if ((size_t)next > SIZE_MAX / itemSize)
+        return 0;
+    return next;
+}
+
 static void
 CommandListInit(CommandList *list)
 {
@@ -1242,9 +1256,11 @@ CommandListAdd(CommandList *list, const char *value)
 
     if (list->count >= list->capacity)
     {
-        int newCap = list->capacity ? list->capacity * 2 : 8;
+        int newCap = NextListCapacity(list->capacity, sizeof(char *));
+        if (!newCap)
+            return False;
         char **newItems = (char **)realloc(list->items,
-                                           newCap * sizeof(char *));
+                                           (size_t)newCap * sizeof(char *));
         if (!newItems)
             return False;
         list->items = newItems;
@@ -1266,8 +1282,12 @@ CommandListJoin(const CommandList *list)
         return NULL;
 
     size_t total = 0;
-    for (int i = 0; i < list->count; ++i)
-        total += strlen(list->items[i]) + 1;
+    for (int i = 0; i < list->count; ++i) {
+        size_t length = strlen(list->items[i]);
+        if (total == SIZE_MAX || length > SIZE_MAX - total - 1)
+            return NULL;
+        total += length + 1;
+    }
 
     char *result = (char *)malloc(total);
     if (!result)
@@ -1322,9 +1342,11 @@ PidSetAdd(PidSet *set, pid_t pid)
 
     if (set->count >= set->capacity)
     {
-        int newCap = set->capacity ? set->capacity * 2 : 8;
+        int newCap = NextListCapacity(set->capacity, sizeof(pid_t));
+        if (!newCap)
+            return False;
         pid_t *newItems = (pid_t *)realloc(set->items,
-                                           newCap * sizeof(pid_t));
+                                           (size_t)newCap * sizeof(pid_t));
         if (!newItems)
             return False;
         set->items = newItems;
@@ -1338,8 +1360,9 @@ PidSetAdd(PidSet *set, pid_t pid)
 static Boolean
 ReadProcCmdline(pid_t pid, char *buffer, size_t size)
 {
-    if (!buffer || size == 0)
+    if (!buffer || size < 2)
         return False;
+    buffer[0] = '\0';
 
     char path[64];
     snprintf(path, sizeof(path), "/proc/%d/cmdline", pid);
@@ -1347,14 +1370,29 @@ ReadProcCmdline(pid_t pid, char *buffer, size_t size)
     if (fd < 0)
         return False;
 
-    ssize_t len = read(fd, buffer, (ssize_t)(size - 1));
-    close(fd);
-
-    if (len <= 0)
-        return False;
-
-    buffer[len] = '\0';
-    return True;
+    size_t used = 0;
+    Boolean complete = False;
+    while (used < size - 1) {
+        size_t remaining = size - 1 - used;
+        ssize_t length;
+        if (remaining > (size_t)SSIZE_MAX)
+            remaining = SSIZE_MAX;
+        do {
+            length = read(fd, buffer + used, remaining);
+        } while (length < 0 && errno == EINTR);
+        if (length <= 0)
+            break;
+        if (memchr(buffer + used, '\0', (size_t)length)) {
+            complete = True;
+            break;
+        }
+        used += (size_t)length;
+    }
+    if (close(fd) != 0)
+        complete = False;
+    if (!complete)
+        buffer[0] = '\0';
+    return complete;
 }
 
 static void
@@ -1363,30 +1401,36 @@ GatherChildExecutables(pid_t pid, CommandList *commands, PidSet *visited)
     if (!commands || !visited || pid <= 0 || !PidSetAdd(visited, pid))
         return;
 
-    char cmdline[PATH_MAX];
-    if (ReadProcCmdline(pid, cmdline, sizeof(cmdline)) && cmdline[0])
-        CommandListAdd(commands, cmdline);
-
-    char path[128];
-    snprintf(path, sizeof(path), "/proc/%d/task/%d/children", pid, pid);
-    FILE *fp = fopen(path, "r");
-    if (!fp)
-        return;
-
-    char buffer[4096];
-    while (fgets(buffer, sizeof(buffer), fp))
-    {
-        char *token = strtok(buffer, " \t\n");
-        while (token)
-        {
-            pid_t child = (pid_t)strtol(token, NULL, 10);
-            if (child > 0)
-                GatherChildExecutables(child, commands, visited);
-            token = strtok(NULL, " \t\n");
+    /* The visited set is also the work queue: process depth cannot consume
+     * the C stack, and a child's tokenization cannot invalidate its parent.
+     */
+    for (int index = 0; index < visited->count; ++index) {
+        char cmdline[PATH_MAX], path[128];
+        char *buffer = NULL;
+        size_t capacity = 0;
+        pid = visited->items[index];
+        if (ReadProcCmdline(pid, cmdline, sizeof(cmdline)) && cmdline[0])
+            CommandListAdd(commands, cmdline);
+        snprintf(path, sizeof(path), "/proc/%d/task/%d/children", pid, pid);
+        FILE *fp = fopen(path, "r");
+        if (!fp)
+            continue;
+        while (getline(&buffer, &capacity, fp) >= 0) {
+            char *state, *token = strtok_r(buffer, " \t\n", &state);
+            while (token) {
+                char *end;
+                long child;
+                errno = 0;
+                child = strtol(token, &end, 10);
+                if (token[0] >= '0' && token[0] <= '9' && *end == '\0' &&
+                    errno == 0 && child > 0 && child <= INT_MAX)
+                    PidSetAdd(visited, (pid_t)child);
+                token = strtok_r(NULL, " \t\n", &state);
+            }
         }
+        free(buffer);
+        fclose(fp);
     }
-
-    fclose(fp);
 }
 
 static char *

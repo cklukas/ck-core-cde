@@ -1,4 +1,7 @@
 2026-11-02
+- dtexec: discover child executables with an iterative visited queue, complete
+  PID tokens and validated IDs; retry interrupted command reads, reject
+  truncated executable names, and bound vector and joined-list allocations.
 - dtsession: validate complete WM_STATE and XSMP client-ID properties, use
   Xlib ownership for property/tree buffers, store wire state in a native long,
   and release proxy-client properties on allocation and save failure paths.
