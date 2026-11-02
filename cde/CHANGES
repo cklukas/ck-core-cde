@@ -43,11 +43,13 @@
 - dtwm: reserve a full extra colormap-list element when adding the client,
   retain its colormap when no entries resolve, and reject partial normal-hint
   records before reading their trailing fields.
+- docs: place related CK Core sites in the ckdocs v0.10.1 site selector.
 - project: publish completed, verified topic commits through the shared primary
   branch to both rpi4 and GitHub; group related fixes into cohesive commits.
 - docs: connect the CK Core CDE, CK Core Motif and CK Core Apps sites through
   their headers and front-page project panels.
 - ci: build GitHub Pages and rpi4 documentation with ckdocs v0.10.1.
+- ci: publish rpi4 documentation before starting the long native build/test job.
 - dtwm: let open-window icon labels use the complete icon content width instead
   of subtracting the separately reserved focus-marker gap and bar width.
 - docs: describe the normal/increased WM_ICON_SIZE contract and refresh the
