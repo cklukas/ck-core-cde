@@ -1,4 +1,6 @@
 2026-11-02
+- docs: connect the CK Core CDE, CK Core Motif and CK Core Apps sites through
+  their headers and front-page project panels.
 - dtwm: let open-window icon labels use the complete icon content width instead
   of subtracting the separately reserved focus-marker gap and bar width.
 - docs: describe the normal/increased WM_ICON_SIZE contract and refresh the

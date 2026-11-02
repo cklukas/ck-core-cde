@@ -11,6 +11,10 @@ site:
     - title: Source
       url: https://github.com/cklukas/ck-core-cde
       icon: github
+    - title: CK Core Motif
+      url: https://cklukas.github.io/ck-core-motif/
+    - title: CK Core Apps
+      url: https://cklukas.github.io/ck-core-apps/
 source: docs
 home: docs/index.md
 search: true

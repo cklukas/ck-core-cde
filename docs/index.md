@@ -30,10 +30,10 @@ features:
     title: Better daily tools
     details: Terminal accepts safely escaped filename drops and remembers font size; the editor offers configurable dropped-file handling.
     link: improvements/terminal.md
-  - icon: ":art:"
-    title: Current Motif foundation
-    details: CDE and the latest CK Core Motif ABI 9 are built and tested together as one native desktop stack.
-    link: improvements/toolkit.md
+  - icon: "🏗️"
+    title: CK Core Motif
+    details: Explore the maintained native Xt toolkit that CDE builds and tests with as one desktop stack.
+    link: https://cklukas.github.io/ck-core-motif/
   - icon: ":file_folder:"
     title: File Manager refinements
     details: A shelf, image previews, larger icon views, storage details and richer path interaction make file work more capable.
@@ -46,6 +46,10 @@ features:
     title: Proven on ARM64
     details: Clean uConsole builds run the full suite, launch a real desktop and capture the desktop and its core tools.
     link: improvements/validation.md
+  - icon: "🧩"
+    title: CK Core Apps
+    details: Add native utilities, desktop companions, games and live high-resolution window icons to CDE.
+    link: https://cklukas.github.io/ck-core-apps/
 ---
 
 # Why CK Core CDE
