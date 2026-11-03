@@ -205,30 +205,30 @@ static void Create(
                         Widget *return_widget,
                         XtPointer *dialog) ;
 static void InstallChange(
-                        FindRec *find_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void InstallClose(
-                        FindRec *find_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void Destroy(
-                        FindRec *find_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetValues(
-                        FindRec *find_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetDefaultValues( void ) ;
 static XtPointer GetResourceValues(
                         XrmDatabase data_base,
                         char **name_list) ;
 static void SetValues(
-                        FindRec *find_rec,
-                        FindData *find_data) ;
+                        XtPointer dialog,
+                        XtPointer values) ;
 static void WriteResourceValues(
                         DialogData *values,
                         int fd,
                         char **name_list) ;
 static void FreeValues(
-                        FindData *find_data) ;
+                        XtPointer values) ;
 static Boolean GetFindValues(
                         FindRec *find_rec,
                         FindData *find_data,
@@ -242,12 +242,14 @@ static void FreeMatchInfo(
                         int numMatches) ;
 static void LeaveStopBttn(
                         Widget w,
-                        FindRec * find_rec,
-                        XEvent * event) ;
+                        XtPointer client_data,
+                        XEvent * event,
+                        Boolean *continue_to_dispatch) ;
 static void EnterStopBttn(
                         Widget w,
-                        FindRec * find_rec,
-                        XEvent * event) ;
+                        XtPointer client_data,
+                        XEvent * event,
+                        Boolean *continue_to_dispatch) ;
 static void StopSearch(
                         Widget w,
                         FindRec *find_rec) ;
@@ -313,8 +315,8 @@ static void SetActiveItem(
                         XtPointer client_data,
                         XtPointer call_data) ;
 static void SetFocus(
-                        FindRec *find_rec,
-                        FindData *find_data ) ;
+                        XtPointer dialog,
+                        XtPointer values ) ;
 FILE *findpopen(char *,char *,int *);
 
 /********    End Static Function Declarations    ********/
@@ -329,17 +331,17 @@ static DialogClass findClassRec =
    resources,
    XtNumber(resources),
    Create,
-   (DialogInstallChangeProc) InstallChange,
-   (DialogInstallCloseProc) InstallClose,
-   (DialogDestroyProc) Destroy,
-   (DialogGetValuesProc) GetValues,
+   InstallChange,
+   InstallClose,
+   Destroy,
+   GetValues,
    GetDefaultValues,
    GetResourceValues,
-   (DialogSetValuesProc) SetValues,
+   SetValues,
    WriteResourceValues,
-   (DialogFreeValuesProc) FreeValues,
-   (DialogMapWindowProc) _DtGenericMapWindow,
-   (DialogSetFocusProc) SetFocus,
+   FreeValues,
+   _DtGenericMapWindow,
+   SetFocus,
 };
 
 DialogClass * findClass = (DialogClass *) &findClassRec;
@@ -833,10 +835,11 @@ Create(
 
 static void
 InstallChange(
-        FindRec *find_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   FindRec *find_rec = dialog;
    FindApply * apply_data;
 
 
@@ -861,10 +864,11 @@ InstallChange(
 
 static void
 InstallClose(
-        FindRec *find_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   FindRec *find_rec = dialog;
    Atom delete_window_atom;
 
    XtAddCallback (find_rec->close, XmNactivateCallback, callback, client_data);
@@ -886,8 +890,9 @@ InstallClose(
 
 static void
 Destroy(
-        FindRec *find_rec )
+        XtPointer dialog )
 {
+   FindRec *find_rec = dialog;
    XtDestroyWidget (find_rec->shell);
    XtFree ((char *) find_rec->apply_data);
    XtFree ((char *) find_rec);
@@ -904,8 +909,9 @@ Destroy(
 
 static XtPointer
 GetValues(
-        FindRec *find_rec )
+        XtPointer dialog )
 {
+   FindRec *find_rec = dialog;
    FindData * find_data;
    Arg args[4];
 
@@ -1040,9 +1046,11 @@ GetResourceValues(
 
 static void
 SetValues(
-        FindRec *find_rec,
-        FindData *find_data )
+        XtPointer dialog,
+        XtPointer values )
 {
+   FindRec *find_rec = dialog;
+   FindData *find_data = values;
    Arg args[2];
    XmString * matches;
    int i;
@@ -1198,8 +1206,9 @@ WriteResourceValues(
 
 static void
 FreeValues(
-        FindData *find_data )
+        XtPointer values )
 {
+   FindData *find_data = values;
    if( find_data )
    {
       if( find_data->filter )
@@ -1463,8 +1472,8 @@ StopSearch(
    /*
     */
 
-   XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, (XtEventHandler)LeaveStopBttn, find_rec);
-   XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, (XtEventHandler)EnterStopBttn, find_rec);
+   XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, LeaveStopBttn, find_rec);
+   XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, EnterStopBttn, find_rec);
 
    _DtTurnOffHourGlass (find_rec->shell);
    XmUpdateDisplay (w);
@@ -1550,8 +1559,8 @@ StartSearch(
       /* This event handlers will be called when user is moving his mouse
          over the Find dialog's stop button.
       */
-      XtAddEventHandler( find_rec->stop, LeaveWindowMask, FALSE, (XtEventHandler)LeaveStopBttn, find_rec );
-      XtAddEventHandler( find_rec->stop, EnterWindowMask, FALSE, (XtEventHandler)EnterStopBttn, find_rec );
+      XtAddEventHandler( find_rec->stop, LeaveWindowMask, FALSE, LeaveStopBttn, find_rec );
+      XtAddEventHandler( find_rec->stop, EnterWindowMask, FALSE, EnterStopBttn, find_rec );
    }
 
    /* Free up the dialog values we allocated */
@@ -1569,9 +1578,11 @@ StartSearch(
 static void
 EnterStopBttn(
               Widget w,
-              FindRec * find_rec,
-              XEvent * event )
+              XtPointer client_data,
+              XEvent * event,
+              Boolean *continue_to_dispatch )
 {
+  FindRec *find_rec = client_data;
   _DtTurnOffHourGlass (find_rec->shell);
 }
 
@@ -1585,9 +1596,11 @@ EnterStopBttn(
 static void
 LeaveStopBttn(
               Widget w,
-              FindRec * find_rec,
-              XEvent * event )
+              XtPointer client_data,
+              XEvent * event,
+              Boolean *continue_to_dispatch )
 {
+  FindRec *find_rec = client_data;
   _DtTurnOnHourGlass (find_rec->shell);
 }
 
@@ -2204,8 +2217,8 @@ AlternateInputHandler(
          (void) fclose (find_rec->popenId);
          find_rec->popenId = NULL;
          XtRemoveInput (find_rec->alternateInputId);
-         XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, (XtEventHandler)LeaveStopBttn, find_rec);
-         XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, (XtEventHandler)EnterStopBttn, find_rec);
+         XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, LeaveStopBttn, find_rec);
+         XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, EnterStopBttn, find_rec);
          find_rec->alternateInputId = 0;
 
          find_rec->searchInProgress = False;
@@ -2351,8 +2364,8 @@ AlternateInputHandler2(
          (void) fclose (find_rec->popenId);
          find_rec->popenId = NULL;
          XtRemoveInput (find_rec->alternateInputId);
-         XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, (XtEventHandler)LeaveStopBttn, find_rec);
-         XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, (XtEventHandler)EnterStopBttn, find_rec);
+         XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, LeaveStopBttn, find_rec);
+         XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, EnterStopBttn, find_rec);
          find_rec->alternateInputId = 0;
 
          ExecuteGrep(find_rec);
@@ -2467,8 +2480,8 @@ AlternateInputHandler3(
          (void) fclose (find_rec->popenId);
          find_rec->popenId = NULL;
          XtRemoveInput (find_rec->alternateInputId);
-         XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, (XtEventHandler)LeaveStopBttn, find_rec);
-         XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, (XtEventHandler)EnterStopBttn, find_rec);
+         XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, LeaveStopBttn, find_rec);
+         XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, EnterStopBttn, find_rec);
          find_rec->alternateInputId = 0;
 
          if(buffer != NULL)
@@ -2853,9 +2866,10 @@ SetActiveItem(
 
 static void
 SetFocus(
-        FindRec *find_rec,
-        FindData *find_data )
+        XtPointer dialog,
+        XtPointer values )
 {
+   FindRec *find_rec = dialog;
    /* Force the focus to the text field */
    XmProcessTraversal(find_rec->fileNameFilter, XmTRAVERSE_CURRENT);
 }
