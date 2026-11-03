@@ -358,7 +358,8 @@ MAN_SRCS = $(MAN_SRCS1) $(MAN_SRCS2) $(MAN_SRCS3) $(MAN_SRCS4)	\
 	$(MAN_SRCS13) $(MAN_SRCS14)
 
 $(MAN_TOC): $(MAN_SRCS)
-	$(DGENV) $(DTINFOGEN) tocgen -T $(DTINFOGENTMPDIR) $(DTINFOGENOPTIONS) -f $(MAN_TOC) -id $(MAN_ID) -title $(MAN_TITLE) man/book.sgm
+	$(MKDIR_P) $(dir $@)
+	$(DGENV) $(DTINFOGEN) tocgen -T $(DTINFOGENTMPDIR) $(DTINFOGENOPTIONS) -f $(MAN_TOC) -id $(MAN_ID) -title $(MAN_TITLE) $(abs_srcdir)/man/book.sgm
 
 BUILT_SOURCES += $(MAN_TOC)
 CLEANFILES += $(MAN_TOC)

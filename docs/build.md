@@ -122,6 +122,31 @@ interface-value macros explicitly end an earlier token definition before
 reusing its name, and integer trie payloads cross the generic pointer boundary
 through `intptr_t` rather than a width-truncating cast.
 
+The Motif manual guide resolves its shared link definitions from the source
+tree and replaces an earlier generated link atomically enough for repeated
+out-of-tree builds. A stale or broken shadow-tree link therefore cannot stop a
+subsequent full build. Manual-page rules invoke the generated DocBook wrapper
+from the build tree rather than looking for a nonexistent generated script in
+the source checkout. The wrapper keeps static SGML data in the source tree but
+resolves the compiled `instant` converter from the build tree; each manual rule
+also passes its source-qualified declaration file. Generated wrapper scripts
+derive their launcher path from Automake's absolute build directory rather than
+the invoking shell's `PWD` environment. Shadow builds provide source-backed
+links for the entity files which the declarations resolve relative to the
+manual build directory. Source inputs and shadow-tree outputs are absolute, and
+the output directory is created before conversion. Guide TOC and information
+library rules invoke the compiled `dtdocbook2infolib` program from the build
+tree while keeping source-qualified catalog and book inputs in the source tree.
+Each generated TOC remains in a pre-created directory beneath the build tree;
+the final information-library build waits for all of those TOCs. Its derived
+bookcase descriptor maps generated TOCs to the build tree while keeping the
+immutable guide books and style sheet in the source tree, so a parallel clean
+shadow build cannot race or resolve one class of input in the wrong tree. The
+information-library helper uses the same split: static DocBook support data is
+source-owned, while the generated dtsearch database definition is build-owned.
+Its sibling generator lookup is anchored to Automake's absolute build
+directory, not the directory from which configure happened to be invoked.
+
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
 use complete prototypes; the conversion regression test also compiles const

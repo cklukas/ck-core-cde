@@ -19,6 +19,23 @@
 - DtHelp: keep generated interface parameter macros warning-free when they
   intentionally replace parser token names, preserve glossary trie payloads
   through `intptr_t`, and give the pass2 parser a conforming `int main`.
+- Documentation: make the Motif manual-link input repeatable and usable from
+  clean shadow builds by linking its source-qualified file, and invoke the
+  generated DocBook-to-man wrapper and compiled converter from the build tree.
+  Manual rules now pass their source-qualified declaration file to that
+  wrapper, whose launcher path no longer depends on the invoking shell's
+  `PWD` value. Shadow builds link the SGML entity inputs expected relative to
+  the manual build directory and create output directories before conversion;
+  guide generation likewise invokes its compiled information-library tool from
+  the build tree, reads source-qualified catalog and book inputs, and creates
+  each shadow-tree TOC directory before writing it. The final information
+  library build waits for every generated TOC and consumes a derived bookcase
+  descriptor which maps immutable books and styles to the source tree and
+  generated TOCs to the shadow build tree. The information-library helper
+  likewise reads static DocBook data from the source tree and the generated
+  dtsearch database definition from the build tree, and resolves its sibling
+  generator executables from its absolute build directory rather than the
+  configure shell's `PWD` value.
 - DtInfo: let clean out-of-tree WWL and application-module builds search their
   generated build headers before the maintained DtInfo, UAS, DtMmdb and C++
   wrapper source interfaces.
