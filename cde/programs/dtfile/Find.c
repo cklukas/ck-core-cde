@@ -1065,10 +1065,10 @@ SetValues(
    if( find_data->file_mgr_data->restricted_directory )
    {
       XtAddCallback (find_rec->searchDirectory, XmNmodifyVerifyCallback,
-                     (XtCallbackProc)TextChange,
+                     TextChange,
                      (XtPointer)find_data->file_mgr_data );
       XtAddCallback (find_rec->searchDirectory, XmNmotionVerifyCallback,
-                     (XtCallbackProc)TextChange,
+                     TextChange,
                      (XtPointer)find_data->file_mgr_data );
    }
 

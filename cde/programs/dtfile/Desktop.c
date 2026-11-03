@@ -339,7 +339,7 @@ InitializeDesktopWindows(
 
       /* Event handler for detecting drag threshold surpassed */
       XtAddEventHandler(drawA, Button1MotionMask|Button2MotionMask,
-                        False, (XtEventHandler)FileIconMotion, NULL);
+                        False, FileIconMotion, NULL);
 
       n = 0;
       XtSetArg (args[n], XmNfillMode, XmFILL_TRANSPARENT);            n++;

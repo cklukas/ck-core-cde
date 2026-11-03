@@ -599,11 +599,11 @@ SetValues(
 
       text = XmSelectionBoxGetChild(change_dir_rec->change_dir, XmDIALOG_TEXT);
       XtAddCallback (text, XmNmodifyVerifyCallback,
-                     (XtCallbackProc)TextChange, (XtPointer)file_mgr_data );
+                     TextChange, (XtPointer)file_mgr_data );
       XtAddCallback (text, XmNmotionVerifyCallback,
-                     (XtCallbackProc)TextChange, (XtPointer)file_mgr_data );
+                     TextChange, (XtPointer)file_mgr_data );
       XtAddCallback (text, XmNvalueChangedCallback,
-                     (XtCallbackProc)TextChange, (XtPointer)file_mgr_data );
+                     TextChange, (XtPointer)file_mgr_data );
    }
 
    tmp_str = GETMESSAGE(2, 16, "System Name: ");
