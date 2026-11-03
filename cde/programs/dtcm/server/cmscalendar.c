@@ -614,10 +614,12 @@ _DtCmsRbToCsaStat(Rb_Status rb_stat)
 }
 
 extern void
-garbage_collect(void)
+garbage_collect(int signal_number)
 {
 	unsigned remain;
 	_DtCmsCalendar *clist = calendar_list;
+
+	(void)signal_number;
 
 	while (clist != NULL) {
 
@@ -646,10 +648,12 @@ garbage_collect(void)
 }
 
 extern void
-debug_switch(void)
+debug_switch(int signal_number)
 {
 	_DtCmsCalendar *clist = calendar_list;
 	Access_Entry_4 *l;
+
+	(void)signal_number;
 
 	debug = !debug;
 	fprintf (stderr, "Debug Mode is %s\n", debug ? "ON" : "OFF");

@@ -45,6 +45,27 @@
 #include "rpcextras.h"
 #include "convert2-4.h"
 #include "convert4-2.h"
+
+RPCGEN_ADAPTER(_DtCm_rtable_ping_2_svc, void)
+RPCGEN_ADAPTER(_DtCm_rtable_lookup_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_lookup_next_larger_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_lookup_next_smaller_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_lookup_range_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_abbreviated_lookup_range_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_insert_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_delete_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_delete_instance_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_change_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_change_instance_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_lookup_next_reminder_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_check_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_flush_table_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_size_2_svc, Table_Args_2)
+RPCGEN_ADAPTER(_DtCm_register_callback_2_svc, Registration_2)
+RPCGEN_ADAPTER(_DtCm_deregister_callback_2_svc, Registration_2)
+RPCGEN_ADAPTER(_DtCm_rtable_set_access_2_svc, Access_Args_2)
+RPCGEN_ADAPTER(_DtCm_rtable_get_access_2_svc, Access_Args_2)
+
 #include "rtable2_tbl.i"
 
 

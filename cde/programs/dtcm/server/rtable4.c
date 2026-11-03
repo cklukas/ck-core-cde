@@ -77,6 +77,32 @@
 #include "utility.h"
 #include "lutil.h"
 #include "rpcextras.h"
+
+RPCGEN_ADAPTER(_DtCm_rtable_ping_4_svc, void)
+RPCGEN_ADAPTER(_DtCm_rtable_lookup_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_lookup_next_larger_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_lookup_next_smaller_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_lookup_range_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_abbreviated_lookup_range_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_insert_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_delete_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_delete_instance_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_change_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_change_instance_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_lookup_next_reminder_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_check_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_flush_table_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_size_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_register_callback_4_svc, Registration_4)
+RPCGEN_ADAPTER(_DtCm_deregister_callback_4_svc, Registration_4)
+RPCGEN_ADAPTER(_DtCm_rtable_set_access_4_svc, Access_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_get_access_4_svc, Access_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_abbreviated_lookup_key_range_4_svc, Table_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_gmtoff_4_svc, void)
+RPCGEN_ADAPTER(_DtCm_rtable_create_4_svc, Table_Op_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_remove_4_svc, Table_Op_Args_4)
+RPCGEN_ADAPTER(_DtCm_rtable_rename_4_svc, Table_Op_Args_4)
+
 #include "rtable4_tbl.i"
 #include "lookup.h"
 #include "cmsdata.h"
@@ -112,9 +138,12 @@ static Registration_Status_4 csastat2regstat(CSA_return_code stat);
 
 static Table_Status_4 csastat2tablestat(CSA_return_code stat);
 
+typedef caddr_t (*RbLookupNextProc)(Rb_tree *tree, caddr_t key);
+typedef Appt_4 *(*RepeaterLookupNextProc)(List_node *node, Id_4 *key);
+
 static Table_Res_4 * table_lookup_next(Table_Args_4 *args,
-			struct svc_req *svcrq, caddr_t (* rb_func)(),
-			Appt_4 *(* rp_func)());
+			struct svc_req *svcrq, RbLookupNextProc rb_func,
+			RepeaterLookupNextProc rp_func);
 
 static Appt_4 * repeater_next_smaller(List_node *p_lnode, Id_4 *key);
 
@@ -1792,8 +1821,8 @@ static Table_Res_4 *
 table_lookup_next(
 	Table_Args_4 *args,
 	struct svc_req *svcrq,
-	caddr_t (* rb_func)(),
-	Appt_4 *(* rp_func)())
+	RbLookupNextProc rb_func,
+	RepeaterLookupNextProc rp_func)
 {
 	static	Table_Res_4 res;
 	CSA_return_code stat;
@@ -1842,7 +1871,7 @@ table_lookup_next(
 		return (&res);
 	}
 
-	p_appt = (Appt_4 *) (*rb_func) (APPT_TREE(cal), &key);
+	p_appt = (Appt_4 *) (*rb_func) (APPT_TREE(cal), (caddr_t)&key);
 	p_appt1 = (*rp_func) (REPT_LIST(cal)->root, &key);
 
 	if (p_appt1 != NULL) {

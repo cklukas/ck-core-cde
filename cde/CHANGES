@@ -1,4 +1,7 @@
 2026-11-03
+- C23: replace the calendar server's heterogeneous RPC function table with
+  exact, typed dispatch adapters; type its lookup and signal callbacks, and
+  make libcsa RPC generation work from an out-of-tree build directory.
 - C23: type dtpad file-menu and ToolTalk callbacks, dtcalc button and X error
   dispatch, DtTerm parser and cleanup hooks, dtpdm constructors, dtmail utility
   accessors, libcsa hash destruction, and dtcm calendar match/list/container

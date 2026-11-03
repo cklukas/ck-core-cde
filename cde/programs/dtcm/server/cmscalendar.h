@@ -173,4 +173,7 @@ extern CSA_return_code _DtCmsV5TransactLog(
 				cms_entry	*e,
 				_DtCmsLogOps	op);
 
+extern void garbage_collect(int signal_number);
+extern void debug_switch(int signal_number);
+
 #endif

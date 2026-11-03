@@ -31,10 +31,20 @@
 #ifndef _RPCEXTRAS_H
 #define _RPCEXTRAS_H
 
-#define RPCGEN_ACTION(routine) routine
+typedef void *(*RpcgenDispatchProc)(void *argument,
+				    struct svc_req *request);
+
+#define RPCGEN_ADAPTER(routine, argument_type) \
+	static void *routine##_rpc_adapter(void *argument, \
+		struct svc_req *request) \
+	{ \
+		return routine((argument_type *)argument, request); \
+	}
+
+#define RPCGEN_ACTION(routine) routine##_rpc_adapter
 
 struct rpcgen_table {
-    char	*(*proc)();
+    RpcgenDispatchProc proc;
     xdrproc_t	xdr_arg;
     unsigned	len_arg;
     xdrproc_t	xdr_res;

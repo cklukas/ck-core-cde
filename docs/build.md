@@ -173,9 +173,12 @@ typed appointment or entry key from the container's opaque key argument, and
 the v4 result callback uses one explicit output-slot contract instead of a
 function-pointer cast. The caller keeps each concrete appointment result in a
 separately typed local. The affected libcsa and calendar-server objects compile
-with both C23 toolchains. The legacy heterogeneous RPC dispatch table remains
-outside this focused result and must be converted through typed adapters before
-the complete calendar server can be claimed C23-clean.
+with both C23 toolchains. The calendar RPC table now stores one exact dispatch
+signature and uses per-procedure adapters to call each service through its real
+argument and result types. Its tree/list selection hooks and signal handlers
+are exact as well, so the complete `rpc.cmsd` server builds and links in both
+C23 configurations. The libcsa RPC-generation rules resolve all templates and
+filter scripts through `$(srcdir)`, allowing the same clean out-of-tree build.
 
 To repeat that focused qualification from a configured C23 build tree:
 
@@ -185,12 +188,14 @@ make -j4 -C lib/tt/lib/api/dnd
 make -j4 -C lib/DtHelp/il
 make -j4 -C lib/DtSvc
 make -j4 -C lib/DtMmdb LEX=flex
+make -j4 -C lib/csa
 make -j4 -C programs/dtspcd
 make -j4 -C programs/dtfile
 make -j4 -C programs/dtdocbook LEX=flex
 make -j4 -C programs/dtcalc
 make -j4 -C programs/dtpad
 make -j4 -C programs/dtpdm
+make -j4 -C programs/dtcm/server
 ```
 
 This focused result does not imply that the rest of CDE is C23-clean. The

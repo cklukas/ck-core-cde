@@ -52,22 +52,28 @@ reparser.c reparser.h: reparser.y
 
 rtable2_clnt.c rtable3_clnt.c rtable4_clnt.c cm_clnt.c:
 	$(RM) $@
-	cat EUSinclude > $@
-	rpcgen -l $(@:_clnt.c=.x) | sed -f namechange1.sed | sed -f namechange2.sed >> $@
+	cat $(srcdir)/EUSinclude > $@
+	(cd $(srcdir) && rpcgen -l $(@:_clnt.c=.x)) | \
+		$(SED) -f $(srcdir)/namechange1.sed | \
+		$(SED) -f $(srcdir)/namechange2.sed >> $@
 
 rtable2_xdr.c rtable3_xdr.c rtable4_xdr.c agent_xdr.c:
 	$(RM) $@
-	cat EUSinclude > $(@:.x=_xdr.c)
-	rpcgen -c $(@:_xdr.c=.x) | sed -f namechange1.sed | sed -f namechange2.sed >> $(@:.x=_xdr.c)
+	cat $(srcdir)/EUSinclude > $@
+	(cd $(srcdir) && rpcgen -c $(@:_xdr.c=.x)) | \
+		$(SED) -f $(srcdir)/namechange1.sed | \
+		$(SED) -f $(srcdir)/namechange2.sed >> $@
 
 rtable4_clnt.c rtable4_xdr.c: rtable4.h namechange1.sed namechange2.sed
 rtable3_clnt.c rtable3_xdr.c: rtable3.h namechange1.sed namechange2.sed
-rtable2_clnt.c rtable2_xdr.c: rtable3.h namechange1.sed namechange2.sed
+rtable2_clnt.c rtable2_xdr.c: rtable2.h namechange1.sed namechange2.sed
 agent_xdr.c agent.c: agent.h
 
 agent.h:
 	$(RM) $@
-	cat agent.wrapbegin > agent.h
-	rpcgen -h agent.x | $(SED) -f namechange1.sed | $(SED) -f namechange2.sed >> agent.h
-	cat agent.wrapend >> agent.h
+	cat $(srcdir)/agent.wrapbegin > $@
+	(cd $(srcdir) && rpcgen -h agent.x) | \
+		$(SED) -f $(srcdir)/namechange1.sed | \
+		$(SED) -f $(srcdir)/namechange2.sed >> $@
+	cat $(srcdir)/agent.wrapend >> $@
 

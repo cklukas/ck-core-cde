@@ -54,6 +54,27 @@
 #include "iso8601.h"
 #include "log.h"
 #include "lutil.h"
+
+RPCGEN_ADAPTER(cms_ping_5_svc, void)
+RPCGEN_ADAPTER(cms_list_calendars_5_svc, void)
+RPCGEN_ADAPTER(cms_open_calendar_5_svc, cms_open_args)
+RPCGEN_ADAPTER(cms_create_calendar_5_svc, cms_create_args)
+RPCGEN_ADAPTER(cms_remove_calendar_5_svc, cms_remove_args)
+RPCGEN_ADAPTER(cms_register_5_svc, cms_register_args)
+RPCGEN_ADAPTER(cms_unregister_5_svc, cms_register_args)
+RPCGEN_ADAPTER(cms_enumerate_calendar_attr_5_svc, cms_name)
+RPCGEN_ADAPTER(cms_get_calendar_attr_5_svc, cms_get_cal_attr_args)
+RPCGEN_ADAPTER(cms_set_calendar_attr_5_svc, cms_set_cal_attr_args)
+RPCGEN_ADAPTER(cms_archive_5_svc, cms_archive_args)
+RPCGEN_ADAPTER(cms_restore_5_svc, cms_restore_args)
+RPCGEN_ADAPTER(cms_lookup_reminder_5_svc, cms_reminder_args)
+RPCGEN_ADAPTER(cms_lookup_entries_5_svc, cms_lookup_entries_args)
+RPCGEN_ADAPTER(cms_enumerate_sequence_5_svc, cms_enumerate_args)
+RPCGEN_ADAPTER(cms_get_entry_attr_5_svc, cms_get_entry_attr_args)
+RPCGEN_ADAPTER(cms_insert_entry_5_svc, cms_insert_args)
+RPCGEN_ADAPTER(cms_update_entry_5_svc, cms_update_args)
+RPCGEN_ADAPTER(cms_delete_entry_5_svc, cms_delete_args)
+
 #include "cm_tbl.i"
 #include "callback.h"
 #include "insert.h"
