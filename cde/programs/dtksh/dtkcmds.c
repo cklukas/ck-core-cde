@@ -1632,7 +1632,7 @@ do_XtAddEventHandler(
 
    ehdata = GetNewEHData(argv[4], w, eventMask, nonMaskable);
 
-   XtAddEventHandler(w->w, eventMask, nonMaskable, (XtEventHandler)stdEH, 
+   XtAddEventHandler(w->w, eventMask, nonMaskable, stdEH,
                      (XtPointer)ehdata);
 
    return(0);
@@ -1699,7 +1699,7 @@ do_XtRemoveEventHandler(
       else
          return(1);
 
-      XtRemoveEventHandler (w->w, eventMask, nonMaskable, (XtEventHandler)stdEH,
+      XtRemoveEventHandler (w->w, eventMask, nonMaskable, stdEH,
                             (XtPointer)ehdata);
 
       if ((ehdata->eventMask == 0) && (ehdata->nonMaskable == False))
@@ -4426,8 +4426,8 @@ LocateCBRecord(
 
 void
 stdEH(
-        void *widget,
-        caddr_t clientData,
+        Widget widget,
+        XtPointer clientData,
         XEvent *event,
         Boolean *continueToDispatch )
 {

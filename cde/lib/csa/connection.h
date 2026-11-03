@@ -31,6 +31,7 @@
 #ifndef _CONNECTION_H
 #define _CONNECTION_H
 
+#include <stdarg.h>
 #include <rpc/rpc.h>
 #include "ansi_c.h"
 #include "csa.h"
@@ -74,6 +75,24 @@ typedef struct conn {
 
 /* Match xdrproc_t while preserving xdr_void's no-payload semantics. */
 extern bool_t _DtCm_xdr_void(XDR *xdrs, ...);
+
+/*
+ * libtirpc exposes an intentionally variadic xdrproc_t, while rpcgen emits
+ * serializers with a typed object argument.  Keep the typed serializers and
+ * adapt them at the RPC boundary instead of casting function pointers.
+ */
+#define DTCM_XDR_PROC_NAME(proc) _DtCm_xdrproc_##proc
+#define DTCM_DEFINE_XDR_PROC(proc)                                      \
+	static bool_t DTCM_XDR_PROC_NAME(proc)(XDR *xdrs, ...)           \
+	{                                                                 \
+		va_list args;                                               \
+		void *object;                                               \
+		va_start(args, xdrs);                                      \
+		object = va_arg(args, void *);                              \
+		va_end(args);                                              \
+		return proc(xdrs, object);                                  \
+	}
+#define DTCM_XDR_PROC(proc) DTCM_XDR_PROC_NAME(proc)
 
 extern enum clnt_stat _DtCm_clnt_call(
 				_DtCm_Connection *conn,

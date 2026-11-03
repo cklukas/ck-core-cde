@@ -398,8 +398,8 @@ extern int LocateCBRecord(
                         Atom propAtom,
                         DtWsmCBContext handle) ;
 extern void stdEH( 
-                        void *widget,
-                        caddr_t clientData,
+                        Widget widget,
+                        XtPointer clientData,
                         XEvent *event,
                         Boolean *continueToDispatch) ;
 extern dtksh_event_handler_data_t * GetNewEHData( 
