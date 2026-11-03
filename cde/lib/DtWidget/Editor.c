@@ -1267,7 +1267,7 @@ dtEditorClassRec =
 	  	ClassInitialize,		/* class_initialize	*/
 	 	NULL,				/* class_part_initialize*/
 		False,				/* class_inited		*/
-		(XtInitProc) Initialize,	/* initialize		*/
+		Initialize,			/* initialize		*/
 		NULL,				/* initialize_hook	*/
 		XtInheritRealize,		/* realize		*/
 		(XtActionList)EditorActionTable,/* actions		*/
@@ -1279,7 +1279,7 @@ dtEditorClassRec =
 		XtExposeCompressMaximal,	/* compress_exposure	*/
 		False,				/* compress_enterleave	*/
 		False,				/* visible_interest	*/	
-		(XtWidgetProc) Destroy,		/* destroy		*/	
+		Destroy,			/* destroy		*/
 		XtInheritResize,		/* resize		*/
 		XtInheritExpose,		/* expose		*/	
 		SetValues,			/* set_values		*/

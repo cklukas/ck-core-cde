@@ -467,7 +467,7 @@ externaldef(dtspinboxclassrec) DtSpinBoxClassRec dtSpinBoxClassRec =
     (WidgetClass)&(xmManagerClassRec),		/* superclass         */    
     (String)"DtSpinBox",			/* class_name         */    
     (Cardinal)sizeof(DtSpinBoxPart),		/* widget_size        */    
-    (XtProc)ClassInitialize,			/* class_initialize   */    
+    ClassInitialize,				/* class_initialize   */
     (XtWidgetClassProc)NULL,			/* class_part_init    */    
     (XtEnum)FALSE,				/* class_inited       */    
     Initialize,					/* initialize         */
@@ -498,7 +498,7 @@ externaldef(dtspinboxclassrec) DtSpinBoxClassRec dtSpinBoxClassRec =
     (XtPointer)&baseClassExtRec			/* extension	      */
     },
     {		/* composite_class fields */
-    (XtGeometryHandler)GeometryManager,		/* geometry_manager   */     
+    GeometryManager,				/* geometry_manager   */
     (XtWidgetProc)XtInheritChangeManaged,	/* change_managed     */     
     (XtWidgetProc)XtInheritInsertChild,		/* insert_child	      */     
     (XtWidgetProc)XtInheritDeleteChild,		/* delete_child	      */     

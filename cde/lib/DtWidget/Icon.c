@@ -522,13 +522,13 @@ static XmSyntheticResource cache_syn_resources[] =
 		XmNmarginWidth, sizeof (Dimension),
 		I_Cache_Offset (margin_width),
 		XmeFromHorizontalPixels, 
-                (XmImportProc)XmeToHorizontalPixels
+                XmeToHorizontalPixels
 	},
 	{
 		XmNmarginHeight, sizeof (Dimension),
 		I_Cache_Offset (margin_height),
 		XmeFromVerticalPixels, 
-                (XmImportProc)XmeToVerticalPixels, 
+                XmeToVerticalPixels,
 	}
 };
 
@@ -650,9 +650,9 @@ DtIconClassRec dtIconClassRec =
 		True,				/* compress_exposure	*/
 		True,				/* compress_enterleave	*/
 		False,				/* visible_interest	*/	
-		(XtWidgetProc) Destroy, 	/* destroy		*/	
-		(XtWidgetProc) Resize,		/* resize		*/
-		(XtExposeProc) Redisplay,	/* expose		*/	
+		Destroy,			/* destroy		*/
+		Resize,				/* resize		*/
+		Redisplay,			/* expose		*/
 		SetValues,			/* set_values		*/
 		NULL,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/

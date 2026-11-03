@@ -243,14 +243,14 @@ static XmSyntheticResource syn_resources[] =
 	{
 		XmNmarginWidth, sizeof (Dimension),
 		TB_Offset (margin_width),
-		(XmExportProc) XmeFromHorizontalPixels,
-		(XmImportProc) XmeToHorizontalPixels
+		XmeFromHorizontalPixels,
+		XmeToHorizontalPixels
 	},
 	{
 		XmNmarginHeight, sizeof (Dimension),
 		TB_Offset (margin_height),
-		(XmExportProc) XmeFromVerticalPixels,
-		(XmImportProc) XmeToVerticalPixels, 
+		XmeFromVerticalPixels,
+		XmeToVerticalPixels,
 	}
 };
 

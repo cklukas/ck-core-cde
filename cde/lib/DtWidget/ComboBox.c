@@ -521,7 +521,7 @@ externaldef(dtcomboBoxclassrec) DtComboBoxClassRec dtComboBoxClassRec =
     (WidgetClass)&(xmManagerClassRec),		/* superclass         */    
     (String)"DtComboBox",			/* class_name         */    
     (Cardinal)sizeof(DtComboBoxPart),		/* widget_size        */    
-    (XtProc)ClassInitialize,			/* class_initialize   */    
+    ClassInitialize,				/* class_initialize   */
     (XtWidgetClassProc)NULL,			/* class_part_init    */    
     (XtEnum)FALSE,				/* class_inited       */    
     Initialize,					/* initialize         */
@@ -552,7 +552,7 @@ externaldef(dtcomboBoxclassrec) DtComboBoxClassRec dtComboBoxClassRec =
     (XtPointer)&baseClassExtRec			/* extension	      */
     },
     {		/* composite_class fields */
-    (XtGeometryHandler)GeometryManager,		/* geometry_manager   */     
+    GeometryManager,				/* geometry_manager   */
     (XtWidgetProc)XtInheritChangeManaged,	/* change_managed     */     
     (XtWidgetProc)XtInheritInsertChild,		/* insert_child	      */     
     (XtWidgetProc)XtInheritDeleteChild,		/* delete_child	      */     
