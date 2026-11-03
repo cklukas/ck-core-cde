@@ -1021,7 +1021,9 @@ SetClientIconFromName(ClientData *pCD, const char *iconName)
     if (!iconName)
         return False;
 
-    Pixmap pixmap = MakeNamedIconPixmap(pCD, iconName);
+    char *mutableIconName = XtNewString(iconName);
+    Pixmap pixmap = MakeNamedIconPixmap(pCD, mutableIconName);
+    XtFree(mutableIconName);
     if (pixmap == XmUNSPECIFIED_PIXMAP || pixmap == (Pixmap)None)
         return False;
 

@@ -1,4 +1,6 @@
 2026-11-03
+- dtwm: copy read-only action-cache icon names before passing them through the
+  historical mutable-string image API, preserving const correctness in C23.
 - dtksh: give Xt callbacks, work procedures, timers, and input handlers their
   exact toolkit prototypes, removing the function casts at registration.
 - dtksh: register legacy resource converters through exact `XtTypeConverter`
