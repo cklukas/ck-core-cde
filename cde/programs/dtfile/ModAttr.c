@@ -177,33 +177,33 @@ static void Create(
                         Widget *return_widget,
                         XtPointer *dialog) ;
 static void InstallChange(
-                        ModAttrRec *modAttr_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void InstallClose(
-                        ModAttrRec *modAttr_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void Destroy(
-                        ModAttrRec *modAttr_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetValues(
-                        ModAttrRec *modAttr_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetDefaultValues( void ) ;
 static XtPointer GetResourceValues(
                         XrmDatabase data_base,
                         char **name_list) ;
 static void SetValues(
-                        ModAttrRec *modAttr_rec,
-                        ModAttrData *modAttr_data) ;
+                        XtPointer dialog,
+                        XtPointer values) ;
 static void WriteResourceValues(
                         DialogData *values,
                         int fd,
                         char **name_list) ;
 static void FreeValues(
-                        ModAttrData *modAttr_data) ;
+                        XtPointer values) ;
 static void OkCallback(
                         Widget w,
-                        ModAttrApply *apply_data,
+                        XtPointer client_data,
                         XtPointer call_data) ;
 static short GetModAttrValues(
                         ModAttrRec *modAttr_rec,
@@ -242,16 +242,16 @@ static DialogClass modAttrClassRec =
    resources,
    XtNumber(resources),
    Create,
-   (DialogInstallChangeProc) InstallChange,
-   (DialogInstallCloseProc) InstallClose,
-   (DialogDestroyProc) Destroy,
-   (DialogGetValuesProc) GetValues,
+   InstallChange,
+   InstallClose,
+   Destroy,
+   GetValues,
    GetDefaultValues,
    GetResourceValues,
-   (DialogSetValuesProc) SetValues,
+   SetValues,
    WriteResourceValues,
-   (DialogFreeValuesProc) FreeValues,
-   (DialogMapWindowProc) _DtGenericMapWindow,
+   FreeValues,
+   _DtGenericMapWindow,
    NULL,
 };
 
@@ -1008,10 +1008,11 @@ Create(
 
 static void
 InstallChange(
-        ModAttrRec *modAttr_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   ModAttrRec *modAttr_rec = dialog;
    ModAttrApply * apply_data;
 
 
@@ -1027,7 +1028,7 @@ InstallChange(
 
 
    XtAddCallback (modAttr_rec->ok, XmNactivateCallback, 
-                  (XtCallbackProc)OkCallback, (XtPointer) apply_data);
+                  OkCallback, (XtPointer) apply_data);
 }
 
 
@@ -1041,10 +1042,11 @@ InstallChange(
 
 static void
 InstallClose(
-        ModAttrRec *modAttr_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   ModAttrRec *modAttr_rec = dialog;
    Atom delete_window_atom;
 
    XtAddCallback (modAttr_rec->cancel,
@@ -1078,8 +1080,9 @@ InstallClose(
 
 static void
 Destroy(
-        ModAttrRec *modAttr_rec )
+        XtPointer dialog )
 {
+   ModAttrRec *modAttr_rec = dialog;
    XtDestroyWidget (modAttr_rec->shell);
    XtFree ((char *) modAttr_rec->apply_data);
    XtFree ((char *) modAttr_rec);
@@ -1096,8 +1099,9 @@ Destroy(
 
 static XtPointer
 GetValues(
-        ModAttrRec *modAttr_rec )
+        XtPointer dialog )
 {
+   ModAttrRec *modAttr_rec = dialog;
    ModAttrData * modAttr_data;
 
 
@@ -1207,9 +1211,11 @@ GetResourceValues(
 
 static void
 SetValues(
-        ModAttrRec *modAttr_rec,
-        ModAttrData *modAttr_data )
+        XtPointer dialog,
+        XtPointer values )
 {
+   ModAttrRec *modAttr_rec = dialog;
+   ModAttrData *modAttr_data = values;
    Arg args[10];
    XmString string;
    char buf[20];
@@ -1821,8 +1827,9 @@ WriteResourceValues(
 
 static void
 FreeValues(
-        ModAttrData *modAttr_data )
+        XtPointer values )
 {
+   ModAttrData *modAttr_data = values;
    XtFree ((char *) modAttr_data->host);
    XtFree ((char *) modAttr_data->directory);
    XtFree ((char *) modAttr_data->name);
@@ -1857,9 +1864,10 @@ FreeValues(
 static void
 OkCallback(
         Widget w,
-        ModAttrApply *apply_data,
+        XtPointer client_data,
         XtPointer call_data )
 {
+  ModAttrApply *apply_data = client_data;
   ModAttrRec  * modAttr_rec = (ModAttrRec *) apply_data->modAttr_rec;
   ModAttrData * new_attr_data;
   FileMgrRec *file_mgr_rec;
