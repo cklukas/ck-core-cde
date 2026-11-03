@@ -424,6 +424,27 @@ static int setup_fields(SyncWindow *w,SyncSetup *setup,char **source,char **dest
     if (!valid) notify(w,M(25,"Check byte bounds and dates. Use YYYY-MM-DD or an ISO UTC timestamp; order the bounds."));
     return valid;
 }
+static void reset_result_view(SyncWindow *w)
+{
+    /* Retain only reusable job preferences. Row-scoped rules belong to the old
+     * generation and cannot be rebound by list position to a new inventory. */
+    unsigned reusable=0;
+    for (unsigned i=0;i<w->rule_count;++i) {
+        if (w->rules[i].scope==CKFET_SCOPE_JOB) w->rules[reusable++]=w->rules[i];
+        else free(w->rules[i].subtree);
+    }
+    w->rule_count=reusable; w->have_rendered=0; w->displayed_count=0; w->pause_requested=0; w->cancel_requested=0; w->last_error[0]=0;
+    w->dirty=1; w->setup_dirty=0; w->review_pending=0; w->execute_pending=0;
+    memset(w->view,0,sizeof(*w->view));
+    XmListDeleteAllItems(w->rules_list); XmListDeleteAllItems(w->list);
+    label(w->plan_summary,M(275,"Plan totals are not yet available."));
+    label(w->page_info,M(286,"Comparison results are not yet available."));
+    XmTextSetString(w->details,(char *)M(5,"Select a row to inspect both versions, proposed names and recovery information."));
+    Widget actions[]={w->list,w->previous,w->next,w->review,w->execute,w->pause,w->cancel,w->rule_page};
+    for (unsigned i=0;i<XtNumber(actions);++i) XtSetSensitive(actions[i],False);
+    label(w->compared_roots,M(287,"No comparison has started."));
+    XtSetSensitive(w->setup,True); XtSetSensitive(w->compare,True);
+}
 static void compare(Widget widget,XtPointer data,XtPointer call)
 {
     (void)widget;(void)call; SyncWindow *w=data;
@@ -439,6 +460,7 @@ static void compare(Widget widget,XtPointer data,XtPointer call)
         }
         w->job=NULL;
     }
+    reset_result_view(w);
     char *source=NULL,*destination=NULL; SyncSetup setup;
     if (!setup_fields(w,&setup,&source,&destination)) {
         XtFree(source); XtFree(destination); return;
@@ -449,17 +471,7 @@ static void compare(Widget widget,XtPointer data,XtPointer call)
     char *shown_source=XmTextFieldGetString(w->source),*shown_target=XmTextFieldGetString(w->destination);
     char roots[2048]; snprintf(roots,sizeof(roots),"%s: %.900s\n%s: %.900s",M(6,"Source"),shown_source,M(7,"Destination"),shown_target);
     label(w->compared_roots,roots); XtFree(shown_source); XtFree(shown_target);
-    /* Retain only reusable job preferences. Row-scoped rules belong to the old
-     * generation and cannot be rebound by list position to a new inventory. */
-    unsigned reusable=0;
-    for (unsigned i=0;i<w->rule_count;++i) {
-        if (w->rules[i].scope==CKFET_SCOPE_JOB) w->rules[reusable++]=w->rules[i];
-        else free(w->rules[i].subtree);
-    }
-    w->rule_count=reusable; w->have_rendered=0; w->displayed_count=0; w->pause_requested=0; w->cancel_requested=0; w->last_error[0]=0;
-    w->dirty=1; w->setup_dirty=0; w->review_pending=0; w->execute_pending=0;
-    memset(w->view,0,sizeof(*w->view));
-    XmListDeleteAllItems(w->rules_list); XmListDeleteAllItems(w->list); notify(w,state_label(CKFET_INVENTORY));
+    notify(w,state_label(CKFET_INVENTORY));
     XtSetSensitive(w->setup,False);
     XtVaSetValues(w->notebook,XmNcurrentPageNumber,2,NULL);
 }

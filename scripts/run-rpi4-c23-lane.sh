@@ -158,6 +158,10 @@ cat "$cde_fs_log"
 python3 "$cde_source/scripts/check-clang-cast-warnings.py" "$cde_fs_log"
 make -j1 -C programs/localized/C/msg dtfile_sync.cat
 make -j1 -C programs/dtfile check
+xvfb-run -a -s '-screen 0 1280x900x24 -nolisten tcp' \
+    env CC="$cc" python3 "$cde_source/cde/programs/dtfile/tests/check-sync-retry-ui.py" \
+        --fs-prefix "$fs_prefix" --motif-prefix "$motif_prefix" \
+        --work-dir "$private_fixture/retry-ui"
 
 finished_epoch=$(date +%s)
 finished_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)

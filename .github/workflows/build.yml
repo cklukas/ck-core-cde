@@ -181,3 +181,7 @@ jobs:
             "$cde_fs_log"
           make -j1 -C programs/localized/C/msg dtfile_sync.cat
           make -j1 -C programs/dtfile check
+          xvfb-run -a -s '-screen 0 1280x900x24 -nolisten tcp' \
+            CC='${{ matrix.cc }}' python3 "$GITHUB_WORKSPACE/cde-source/cde/programs/dtfile/tests/check-sync-retry-ui.py" \
+              --fs-prefix "$fs_prefix" --motif-prefix "$prefix" \
+              --work-dir "$private_fixture/retry-ui"
