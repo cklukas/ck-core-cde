@@ -167,7 +167,7 @@ int myscandir(char *pszDirName, struct dirent ***NameList,
      if ((*Select)(dp)) {
 #endif
 
-     if ((*Select)(dp, pszDirName)) {
+     if (select_entry(dp, pszDirName)) {
         dptmp = (struct dirent *)malloc(sizeof(struct dirent) + strlen(dp->d_name) + 1);
         memcpy(dptmp, dp, sizeof(struct dirent));
         strcpy(dptmp->d_name, dp->d_name);
