@@ -41,7 +41,7 @@ DtTermFallBackResources.c.src: $(srcdir)/Dtterm.ad.src
 
 DtTermFallBackResources.c: DtTermFallBackResources.c.src
 	$(RM) $@
-	./mkfallbk < DtTermFallBackResources.c.src > $@
+	$(SHELL) $(srcdir)/mkfallbk < DtTermFallBackResources.c.src > $@
 
 dtterm.ti: $(srcdir)/terminfoChecklist $(srcdir)/terminfoCreate
 	$(RM) $@

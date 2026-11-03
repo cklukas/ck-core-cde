@@ -6,8 +6,9 @@
   the platform dynamic-loader declarations in the bundled font layer; let a
   clean out-of-tree build find DtHelp image/JPEG headers, DtTerm private
   headers and line-data input, App Builder private headers and message-catalog
-  inputs, App Builder's BIL project and generated parser inputs, and dtterm
-  resource inputs; correct dtcreate's ToolTalk and help callback
+  inputs, App Builder's BIL project and generated parser inputs, and dtterm's
+  fallback-resource generator and inputs; correct dtcreate's ToolTalk and help
+  callback
   registrations, type its icon-selector callback table and directory filter,
   type dtlogin's saved X I/O and signal handlers and language enumerator table,
   and use its shared
