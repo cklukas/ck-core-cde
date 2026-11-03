@@ -49,6 +49,10 @@ view. Shelf items support opening, running, rearranging and file operations.
 IconicPath entries expose the same popup interaction expected from other path
 components.
 
+The initial shelf frame uses a deterministic small-icon placeholder until the
+dialog's saved view data is available. Applying the real view then rebuilds the
+shelf at its selected icon size; startup never reads an uninitialized view.
+
 ## Richer views
 
 - supported image files can render their own content as icons;

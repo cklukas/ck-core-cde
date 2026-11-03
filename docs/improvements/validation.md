@@ -130,4 +130,8 @@ opens Style Manager, Terminal and File Manager, and verifies a command typed
 through the visible Terminal. The capture records each executable and its
 mapped Motif library alongside the screenshots.
 
+The File Manager launch is part of the gate: the smoke run must observe its
+real managed window, so an early shelf or view-initialization crash fails the
+session rather than being hidden by successful compilation.
+
 See [The desktop and its tools](../desktop.md) for the current captured session.

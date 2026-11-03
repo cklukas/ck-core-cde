@@ -1551,7 +1551,7 @@ Create(
    Widget current_directory_drop;
    Widget current_directory_icon;
    Widget directory_list_form;
-   FileMgrData *file_mgr_data;
+   FileMgrData *file_mgr_data = NULL;
    Widget work_frame;
    Widget status_form;
    Widget status_separator;

@@ -97,6 +97,9 @@
   fatal Xt, event-handler and callback contracts without registration casts,
   and preserve legacy Motif/catalog string input types without discarding
   qualifiers.
+- dtfile: initialize the File Manager dialog's view data before the shelf
+  placeholder selects its startup icon geometry. This removes an uninitialized
+  pointer dereference when the first window opens with the filesystem shelf.
 - C23: remove the calendar RPC headers' obsolete K&R declaration fallbacks;
   give dtcm parsing, UI, ToolTalk and helper callbacks exact contracts; make
   clean out-of-tree calendar builds resolve generated and checked-in headers
