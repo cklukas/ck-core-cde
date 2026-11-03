@@ -3,6 +3,8 @@ MAINTAINERCLEANFILES = Makefile.in
 noinst_LIBRARIES = libCommon.a
 
 libCommon_a_CXXFLAGS = -I../../include -I../../include/utils -I$(srcdir)/lib \
+		       -I$(top_srcdir)/programs/dtmail/include \
+		       -I$(top_srcdir)/programs/dtmail/include/utils \
 		       -DDL_NOT_DYNAMIC -DUSE_SOCKSTREAM
 
 if SOLARIS

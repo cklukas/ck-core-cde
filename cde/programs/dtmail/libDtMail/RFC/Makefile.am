@@ -3,6 +3,9 @@ MAINTAINERCLEANFILES = Makefile.in
 noinst_LIBRARIES = libRFC.a
 
 libRFC_a_CXXFLAGS = -I../Common -I../../include -I../../include/utils \
+		    -I$(top_srcdir)/programs/dtmail/libDtMail/Common \
+		    -I$(top_srcdir)/programs/dtmail/include \
+		    -I$(top_srcdir)/programs/dtmail/include/utils \
 		    -DTTLOCK_OFF
 
 if SOLARIS

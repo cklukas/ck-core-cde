@@ -81,6 +81,13 @@ The DtMrm resource-registration library searches both build and source trees
 for the private DtHelp and DtTerm headers included by its widget-private
 interfaces, rather than relying on an in-tree sibling layout.
 
+The dtmail library and its Motif, RFC, desktop and print consumers likewise
+include their maintained header trees explicitly. Clean qualification builds
+therefore do not depend on source headers having been mirrored into sibling
+build directories.
+The desktop executable consumes `X_CFLAGS` as a complete optional flag set, so
+an empty platform X include path cannot swallow the following source include.
+
 The `dtimsstart` desktop input-method launcher is also qualified at the
 translation-unit level with GCC and Clang in C23 mode. Its module interface and
 private functions use complete prototypes, Xt callbacks use `XtCallbackProc`,

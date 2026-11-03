@@ -48,6 +48,10 @@
   callbacks; avoid the C23 `bool` keyword in the calendar tree checker.
 - DtMrm: let clean out-of-tree builds resolve private DtHelp and DtTerm headers
   from their maintained source directories.
+- dtmail: make the library, Motif support layer and applications resolve their
+  maintained public, utility, RFC and Help headers in clean out-of-tree builds;
+  use Autoconf's complete X compiler flags instead of emitting a bare `-I` when
+  X needs no nonstandard include directory.
 - public interfaces: replace unspecified-argument ToolTalk, DtSvc service,
   action, multimedia database, symbolic-table and event-loop declarations
   with their exact C/C++ contracts; type Instant's remaining initialization,
