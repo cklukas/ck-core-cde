@@ -1,4 +1,6 @@
 2026-11-03
+- CI: initialize each rpi4 lane's private locale root before generating the
+  help compiler locale, keeping the setup valid on a fresh build tree.
 - CI: generate the CDE documentation compiler's `en_US.UTF-8` locale inside
   each isolated rpi4 C23 lane, allowing help SDL generation on minimal runner
   hosts without changing the host locale database.

@@ -59,6 +59,7 @@ mkdir -p "$root"
 # locale inside the isolated lane instead of depending on the runner host's
 # installed locale set.
 locale_root=$root/locale
+mkdir -p "$locale_root"
 localedef -i en_US -f UTF-8 "$locale_root/en_US.UTF-8"
 export LOCPATH=$locale_root
 export LANG=en_US.UTF-8
