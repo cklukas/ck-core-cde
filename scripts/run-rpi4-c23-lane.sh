@@ -150,6 +150,13 @@ case ${HOME:-} in
         exit 2
         ;;
 esac
+# ckgit creates a dedicated HOME for every run, but its initial mode follows
+# the runner umask. Make that ephemeral access-path component private before
+# the production storage validator inspects it.
+test -d "$HOME"
+test ! -L "$HOME"
+test "$(stat -c %u "$HOME")" = "$(id -u)"
+chmod 700 "$HOME"
 private_fixture=$(mktemp -d "$HOME/.cde-sync-test.XXXXXXXX")
 case $private_fixture in
     "$HOME"/.cde-sync-test.*) ;;

@@ -21,10 +21,12 @@ of a batch already in progress. Each compiler lane also generates its required
 does not need that locale installed system-wide.
 
 The installed filesystem qualification deliberately runs its preference worker
-under a unique directory beneath the runner's private home. This gives both
-hosts an ownership-enforcing, non-group-writable ancestor chain while leaving
-the production refusal of unsafe shared temporary storage intact. The fixture
-is removed when the lane exits.
+under a unique directory beneath the runner's private home. The rpi4 driver
+first verifies that ckgit's dedicated ephemeral home belongs to the lane user
+and normalizes it to mode `0700`; this avoids inheriting a group-writable runner
+umask. Both hosts therefore provide an ownership-enforcing, non-group-writable
+ancestor chain while leaving the production refusal of unsafe shared temporary
+storage intact. The fixture is removed when the lane exits.
 
 Documentation builds use published ckdocs `master` revision
 `7e3ee5eb57a2cef2e07f9e9fe5c4e2822502d322` on both GitHub and rpi4. A push to
