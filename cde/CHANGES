@@ -60,6 +60,9 @@
   dispatch paths their exact callback contracts; split incompatible one- and
   two-name ToolTalk operations instead of routing them through an untyped
   function pointer.
+- dtksh: type Motif widget constructors, list operations, text operations,
+  subwidget accessors and X error handlers by their real signatures; use typed
+  adapters where related text operations accept different native value types.
 - public interfaces: replace unspecified-argument ToolTalk, DtSvc service,
   action, multimedia database, symbolic-table and event-loop declarations
   with their exact C/C++ contracts; type Instant's remaining initialization,

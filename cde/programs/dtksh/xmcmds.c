@@ -109,8 +109,26 @@
 
 
 
-static int _xmcreatefunc( 
-                        Widget (*func)(),
+typedef Widget (*DtkshXmCreateProc)(Widget, char *, ArgList, Cardinal);
+typedef void (*DtkshXmListItemPosProc)(Widget, XmString, int);
+typedef void (*DtkshXmListItemsPosProc)(Widget, XmString *, int, int);
+typedef void (*DtkshXmListWidgetProc)(Widget);
+typedef void (*DtkshXmListItemProc)(Widget, XmString);
+typedef void (*DtkshXmListPositionProc)(Widget, int);
+typedef Boolean (*DtkshXmListSelectedPosProc)(Widget, int **, int *);
+typedef Boolean (*DtkshXmListMatchPosProc)(Widget, XmString, int **, int *);
+typedef Boolean (*DtkshXmTextBooleanProc)(Widget);
+typedef void (*DtkshXmTextVoidProc)(Widget);
+typedef XmTextPosition (*DtkshXmTextPositionProc)(Widget);
+typedef int (*DtkshXmTextIntProc)(Widget);
+typedef char *(*DtkshXmTextStringProc)(Widget);
+typedef void (*DtkshXmTextValueProc)(Widget, unsigned long);
+typedef void (*DtkshXmTextStringSetterProc)(Widget, char *);
+typedef Boolean (*DtkshXmTextTimeProc)(Widget, Time);
+typedef Widget (*DtkshXmSubWidgetProc)(Widget);
+
+static int _xmcreatefunc(
+                        DtkshXmCreateProc func,
                         char *wclass,
                         int argc,
                         char *argv[]) ;
@@ -118,29 +136,33 @@ static wtab_t * verifyListWidget(
                         char *cmd,
                         char *widget) ;
 static int List_ItemAndPos( 
-                        void (*func)(),
+                        DtkshXmListItemPosProc func,
                         int argc,
                         char *argv[]) ;
 static int List_ItemListAndPos( 
-                        void (*func)(),
+                        DtkshXmListItemsPosProc func,
                         int argc,
                         char *argv[]) ;
 static int List_WidgetOnly( 
-                        void (*func)(),
+                        DtkshXmListWidgetProc func,
                         int argc,
                         char *argv[]) ;
 static int GetSelectedPosList(
-	                Boolean (*func)(),
-	                int paramCount,
-	                char * errmsg,
+	                DtkshXmListSelectedPosProc func,
+	                char *errmsg,
+	                int argc,
+	                char *argv[] );
+static int GetMatchPosList(
+	                DtkshXmListMatchPosProc func,
+	                char *errmsg,
                         int argc,
                         char *argv[] ) ;
 static int List_ItemOnly( 
-                        void (*func)(),
+                        DtkshXmListItemProc func,
                         int argc,
                         char *argv[]) ;
 static int List_PositionOnly( 
-                        void (*func)(),
+                        DtkshXmListPositionProc func,
                         int argc,
                         char *argv[]) ;
 static int ListSelectItem( 
@@ -153,7 +175,7 @@ static int GetMainWindowSeparator(
                         char *argv[]) ;
 static int CatchAndIgnoreXError( 
                         Display *display,
-                        XEvent *event) ;
+                        XErrorEvent *event) ;
 static int AddOrDeleteWMProtocols( 
                         int argc,
                         char *argv[]) ;
@@ -166,24 +188,42 @@ static int SetToggleState(
 static wtab_t * verifyTextWidget( 
                         char *cmd,
                         char *widget) ;
-static int Text_Widget( 
-                        Boolean (*func)(),
-                        Boolean returnBoolean,
+static int Text_WidgetBoolean(
+                        DtkshXmTextBooleanProc func,
                         int argc,
                         char *argv[]) ;
-static int Text_VarAndWidget( 
-                        long (*func)(Widget w),
-                        Boolean varIsString,
+static int Text_WidgetVoid(
+                        DtkshXmTextVoidProc func,
+                        int argc,
+                        char *argv[]) ;
+static int Text_PositionVarAndWidget(
+                        DtkshXmTextPositionProc func,
+                        int argc,
+                        char *argv[]) ;
+static int Text_IntVarAndWidget(
+                        DtkshXmTextIntProc func,
+                        int argc,
+                        char *argv[]) ;
+static int Text_StringVarAndWidget(
+                        DtkshXmTextStringProc func,
                         int argc,
                         char *argv[]) ;
 static int Text_WidgetAndBoolean( 
-                        void (*func)(Widget w, char b),
+                        void (*func)(Widget, Boolean),
                         int argc,
                         char *argv[]) ;
-static int Text_WidgetAndOneParam( 
-                        Boolean (*func)(),
-                        Boolean returnBoolean,
-                        Boolean paramIsString,
+static int Text_WidgetAndValue(
+                        DtkshXmTextValueProc func,
+                        char *usageMsg,
+                        int argc,
+                        char *argv[]) ;
+static int Text_WidgetAndString(
+                        DtkshXmTextStringSetterProc func,
+                        char *usageMsg,
+                        int argc,
+                        char *argv[]) ;
+static int Text_WidgetAndTime(
+                        DtkshXmTextTimeProc func,
                         char *usageMsg,
                         int argc,
                         char *argv[]) ;
@@ -204,12 +244,12 @@ static wtab_t * ConvertWidgetToWtab(
                         Widget w);
 static int GetSubWidget(
 	                char * errmsg,
-	                Widget (*func)(),
+	                DtkshXmSubWidgetProc func,
                         int argc,
                         char *argv[] );
 
 static int _CreatePDMJobSetup( 
-                        Widget (*func)(),
+                        DtkshXmSubWidgetProc func,
                         int argc,
                         char *argv[]) ;
 
@@ -642,7 +682,7 @@ toolkit_special_resource(
 
 static int
 _xmcreatefunc(
-        Widget (*func)(),
+        DtkshXmCreateProc func,
         char *wclass,
         int argc,
         char *argv[] )
@@ -1445,7 +1485,7 @@ verifyListWidget(
 
 static int
 List_ItemAndPos(
-        void (*func)(),
+        DtkshXmListItemPosProc func,
         int argc,
         char *argv[] )
 {
@@ -1496,7 +1536,7 @@ do_XmListAddItemUnselected(
 
 static int
 List_ItemListAndPos(
-        void (*func)(),
+        DtkshXmListItemsPosProc func,
         int argc,
         char *argv[] )
 {
@@ -1582,7 +1622,7 @@ do_XmListReplaceItemsPosUnselected(
 
 static int
 List_WidgetOnly(
-        void (*func)(),
+        DtkshXmListWidgetProc func,
         int argc,
         char *argv[] )
 {
@@ -1637,7 +1677,7 @@ do_XmListUpdateSelectedList(
 
 static int
 List_ItemOnly(
-        void (*func)(),
+        DtkshXmListItemProc func,
         int argc,
         char *argv[] )
 {
@@ -1704,7 +1744,7 @@ do_XmListSetItem(
 
 static int
 List_PositionOnly(
-        void (*func)(),
+        DtkshXmListPositionProc func,
         int argc,
         char *argv[] )
 {
@@ -1897,43 +1937,15 @@ do_XmListDeletePositions(
 
 
 static int
-GetSelectedPosList(
-	Boolean (*func)(),
-	int paramCount,
-	char * errmsg,
-        int argc,
-        char *argv[] )
+StorePositionList(
+        char *variable,
+        Boolean result,
+        int *posList,
+        int posCount )
 {
-   char *arg0 = argv[0];
-   wtab_t *w;
    int i;
    char * buf;
-   Boolean result;
-   int * posList;
-   int posCount;
    char pos[25];
-   XmString string;
-
-   if (argc != paramCount)
-   {
-      printerr(str_nill, errmsg, NULL);
-      return(1);
-   }
-
-   if ((w = verifyListWidget(argv[0], argv[2])) == NULL)
-   {
-      alt_env_set_var(argv[1], ""); 
-      return(1);
-   }
-
-   if (paramCount == 3)
-      result = (*func)(w->w, &posList, &posCount);
-   else
-   {
-      string = XmStringCreateLocalized(argv[3]);
-      result = (*func)(w->w, string, &posList, &posCount);
-      XmStringFree(string);
-   }
 
    if (result)
    {
@@ -1949,14 +1961,71 @@ GetSelectedPosList(
          strcat(buf, pos);
       }
 
-      env_set_var(argv[1], buf);
+      env_set_var(variable, buf);
       XtFree ((char *)posList);
       XtFree(buf);
    }
    else
-      env_blank(argv[1]);
+      env_blank(variable);
 
    return (!result);
+}
+
+static int
+GetSelectedPosList(
+        DtkshXmListSelectedPosProc func,
+        char *errmsg,
+        int argc,
+        char *argv[] )
+{
+   wtab_t *w;
+   int *posList;
+   int posCount;
+   Boolean result;
+
+   if (argc != 3)
+   {
+      printerr(str_nill, errmsg, NULL);
+      return 1;
+   }
+   if ((w = verifyListWidget(argv[0], argv[2])) == NULL)
+   {
+      alt_env_set_var(argv[1], "");
+      return 1;
+   }
+
+   result = func(w->w, &posList, &posCount);
+   return StorePositionList(argv[1], result, posList, posCount);
+}
+
+static int
+GetMatchPosList(
+        DtkshXmListMatchPosProc func,
+        char *errmsg,
+        int argc,
+        char *argv[] )
+{
+   wtab_t *w;
+   int *posList;
+   int posCount;
+   Boolean result;
+   XmString string;
+
+   if (argc != 4)
+   {
+      printerr(str_nill, errmsg, NULL);
+      return 1;
+   }
+   if ((w = verifyListWidget(argv[0], argv[2])) == NULL)
+   {
+      alt_env_set_var(argv[1], "");
+      return 1;
+   }
+
+   string = XmStringCreateLocalized(argv[3]);
+   result = func(w->w, string, &posList, &posCount);
+   XmStringFree(string);
+   return StorePositionList(argv[1], result, posList, posCount);
 }
 
 
@@ -1970,7 +2039,7 @@ do_XmListGetSelectedPos(
 
    errmsg = strdup(GETMESSAGE(
                    "Usage: XmListGetSelectedPos variable widget"));
-   result = GetSelectedPosList(XmListGetSelectedPos, 3, errmsg, argc, argv);
+   result = GetSelectedPosList(XmListGetSelectedPos, errmsg, argc, argv);
    free(errmsg);
    return(result);
 }
@@ -1986,7 +2055,7 @@ do_XmListGetMatchPos(
 
    errmsg = strdup(GETMESSAGE(
                    "Usage: XmListGetMatchPos variable widget item"));
-   result = GetSelectedPosList(XmListGetMatchPos, 4, errmsg, argc, argv);
+   result = GetMatchPosList(XmListGetMatchPos, errmsg, argc, argv);
    free(errmsg);
    return(result);
 }
@@ -2568,8 +2637,9 @@ do_XmInternAtom(
 static int
 CatchAndIgnoreXError(
         Display *display,
-        XEvent *event )
+        XErrorEvent *event )
 {
+   return 0;
 }
 
 
@@ -2581,7 +2651,7 @@ do_XmGetAtomName(
    char *name;
    Atom atom;
    char * p;
-   int (*oldHandler)();
+   XErrorHandler oldHandler;
    Display * display;
    char * errmsg;
 
@@ -2614,9 +2684,9 @@ do_XmGetAtomName(
       alt_env_set_var(argv[1], ""); 
       return(1);
    }
-   oldHandler = XSetErrorHandler((int(*)())CatchAndIgnoreXError);
+   oldHandler = XSetErrorHandler(CatchAndIgnoreXError);
    name = XmGetAtomName (display, atom);
-   XSetErrorHandler((int(*)())oldHandler);
+   XSetErrorHandler(oldHandler);
    if (name == NULL)
    {
       alt_env_set_var(argv[1], ""); 
@@ -3272,7 +3342,7 @@ do_XmIsTraversable(
         int argc,
         char *argv[] )
 {
-	return(do_single_widget_test_func((int(*)())XmIsTraversable, argc, 
+	return(do_single_widget_test_func(XmIsTraversable, argc,
                                           argv));
 }
 
@@ -3622,7 +3692,7 @@ GetToggleState(
       return(1);
    }
 
-   return(do_single_widget_test_func((int(*)())XmToggleButtonGetState, argc, 
+   return(do_single_widget_test_func(XmToggleButtonGetState, argc,
                                      argv));
 }
 
@@ -3872,9 +3942,8 @@ verifyTextWidget(
 
 
 static int
-Text_Widget(
-        Boolean (*func)(),
-        Boolean returnBoolean,
+Text_WidgetBoolean(
+        DtkshXmTextBooleanProc func,
         int argc,
         char *argv[] )
 {
@@ -3897,10 +3966,31 @@ Text_Widget(
 
    result = (*func) (w->w);
 
-   if (returnBoolean)
-      return(!result);
-   else
-      return(0);
+   return !result;
+}
+
+static int
+Text_WidgetVoid(
+        DtkshXmTextVoidProc func,
+        int argc,
+        char *argv[] )
+{
+   wtab_t *w;
+   char *errmsg;
+
+   if (argc != 2)
+   {
+      errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET));
+      printerrf(str_nill, errmsg, argv[0], NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL);
+      free(errmsg);
+      return 1;
+   }
+   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+      return 1;
+
+   func(w->w);
+   return 0;
 }
 
 
@@ -3909,8 +3999,7 @@ do_XmTextDisableRedisplay(
         int argc,
         char *argv[] )
 {
-   return (Text_Widget((Boolean (*)())XmTextDisableRedisplay, False, argc, 
-           argv));
+   return Text_WidgetVoid(XmTextDisableRedisplay, argc, argv);
 }
 
 
@@ -3919,8 +4008,7 @@ do_XmTextEnableRedisplay(
         int argc,
         char *argv[] )
 {
-   return (Text_Widget((Boolean (*)())XmTextEnableRedisplay, False, argc, 
-           argv));
+   return Text_WidgetVoid(XmTextEnableRedisplay, argc, argv);
 }
 
 
@@ -3929,7 +4017,7 @@ do_XmTextPaste(
         int argc,
         char *argv[] )
 {
-   return (Text_Widget(XmTextPaste, True, argc, argv));
+   return Text_WidgetBoolean(XmTextPaste, argc, argv);
 }
 
 
@@ -3938,7 +4026,7 @@ do_XmTextGetEditable(
         int argc,
         char *argv[] )
 {
-   return (Text_Widget(XmTextGetEditable, True, argc, argv));
+   return Text_WidgetBoolean(XmTextGetEditable, argc, argv);
 }
 
 
@@ -3947,53 +4035,98 @@ do_XmTextRemove(
         int argc,
         char *argv[] )
 {
-   return (Text_Widget(XmTextRemove, True, argc, argv));
+   return Text_WidgetBoolean(XmTextRemove, argc, argv);
 }
 
 
 static int
-Text_VarAndWidget(
-        long (*func)(Widget w),
-        Boolean varIsString,
+Text_PositionVarAndWidget(
+        DtkshXmTextPositionProc func,
         int argc,
         char *argv[] )
 {
-   char *arg0 = argv[0];
    wtab_t *w;
-   int result;
-   char * string;
-   char buf[10];
-   char * errmsg;
+   XmTextPosition result;
+   char buf[32];
+   char *errmsg;
 
-   if (argc != 3) 
+   if (argc != 3)
    {
       errmsg = strdup(GETMESSAGE("Usage: %s variable widget"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL, NULL,
+      printerrf(str_nill, errmsg, argv[0], NULL, NULL, NULL,
                 NULL, NULL, NULL, NULL);
       free(errmsg);
-      return(1);
+      return 1;
    }
-
    if ((w = verifyTextWidget(argv[0], argv[2])) == NULL)
    {
       alt_env_set_var(argv[1], "");
-      return(1);
+      return 1;
    }
 
-   if (varIsString)
+   result = func(w->w);
+   sprintf(buf, "%ld", (long)result);
+   alt_env_set_var(argv[1], buf);
+   return 0;
+}
+
+static int
+Text_IntVarAndWidget(
+        DtkshXmTextIntProc func,
+        int argc,
+        char *argv[] )
+{
+   wtab_t *w;
+   char buf[32];
+   char *errmsg;
+
+   if (argc != 3)
    {
-      string = (char *)(*func) (w->w);
-      alt_env_set_var(argv[1],  string);
-      XtFree(string);
-      return(0);
+      errmsg = strdup(GETMESSAGE("Usage: %s variable widget"));
+      printerrf(str_nill, errmsg, argv[0], NULL, NULL, NULL,
+                NULL, NULL, NULL, NULL);
+      free(errmsg);
+      return 1;
    }
-   else
+   if ((w = verifyTextWidget(argv[0], argv[2])) == NULL)
    {
-      result = (*func) (w->w);
-      sprintf(buf, "%d", result);
-      alt_env_set_var(argv[1],  buf);
-      return(0);
+      alt_env_set_var(argv[1], "");
+      return 1;
    }
+
+   sprintf(buf, "%d", func(w->w));
+   alt_env_set_var(argv[1], buf);
+   return 0;
+}
+
+static int
+Text_StringVarAndWidget(
+        DtkshXmTextStringProc func,
+        int argc,
+        char *argv[] )
+{
+   wtab_t *w;
+   char *result;
+   char *errmsg;
+
+   if (argc != 3)
+   {
+      errmsg = strdup(GETMESSAGE("Usage: %s variable widget"));
+      printerrf(str_nill, errmsg, argv[0], NULL, NULL, NULL,
+                NULL, NULL, NULL, NULL);
+      free(errmsg);
+      return 1;
+   }
+   if ((w = verifyTextWidget(argv[0], argv[2])) == NULL)
+   {
+      alt_env_set_var(argv[1], "");
+      return 1;
+   }
+
+   result = func(w->w);
+   alt_env_set_var(argv[1], result);
+   XtFree(result);
+   return 0;
 }
 
 
@@ -4002,8 +4135,7 @@ do_XmTextGetTopCharacter(
         int argc,
         char *argv[] )
 {
-   return (Text_VarAndWidget((long (*)())XmTextGetTopCharacter, False, argc, 
-           argv));
+   return Text_PositionVarAndWidget(XmTextGetTopCharacter, argc, argv);
 }
 
 
@@ -4012,7 +4144,7 @@ do_XmTextGetBaseline(
         int argc,
         char *argv[] )
 {
-    return (Text_VarAndWidget((long (*)())XmTextGetBaseline, False, argc, argv));
+   return Text_IntVarAndWidget(XmTextGetBaseline, argc, argv);
 }
 
 
@@ -4021,8 +4153,7 @@ do_XmTextGetInsertionPosition(
         int argc,
         char *argv[] )
 {
-   return (Text_VarAndWidget((long (*)())XmTextGetInsertionPosition, False, 
-           argc, argv));
+   return Text_PositionVarAndWidget(XmTextGetInsertionPosition, argc, argv);
 }
 
 
@@ -4031,8 +4162,7 @@ do_XmTextGetLastPosition(
         int argc,
         char *argv[] )
 {
-   return (Text_VarAndWidget((long (*)())XmTextGetLastPosition, False, argc, 
-                             argv));
+   return Text_PositionVarAndWidget(XmTextGetLastPosition, argc, argv);
 }
 
 
@@ -4041,7 +4171,7 @@ do_XmTextGetMaxLength(
         int argc,
         char *argv[] )
 {
-   return (Text_VarAndWidget((long (*)())XmTextGetMaxLength, False, argc, argv));
+   return Text_IntVarAndWidget(XmTextGetMaxLength, argc, argv);
 }
 
 
@@ -4050,7 +4180,7 @@ do_XmTextGetSelection(
         int argc,
         char *argv[] )
 {
-   return (Text_VarAndWidget((long (*)())XmTextGetSelection, True, argc, argv));
+   return Text_StringVarAndWidget(XmTextGetSelection, argc, argv);
 }
 
 
@@ -4059,7 +4189,7 @@ do_XmTextGetString(
         int argc,
         char *argv[] )
 {
-   return (Text_VarAndWidget((long (*)())XmTextGetString, True, argc, argv));
+   return Text_StringVarAndWidget(XmTextGetString, argc, argv);
 }
 
 
@@ -4120,53 +4250,124 @@ do_XmTextSetAddMode(
 
 
 static int
-Text_WidgetAndOneParam(
-        Boolean (*func)(),
-        Boolean returnBoolean,
-        Boolean paramIsString,
+Text_WidgetAndValue(
+        DtkshXmTextValueProc func,
         char *usageMsg,
         int argc,
         char *argv[] )
 {
-   char *arg0 = argv[0];
    wtab_t *w;
-   Boolean result;
-   int string;
-   char buf[10];
-   char * p;
-   int param;
-   char * errmsg;
+   char *p;
+   unsigned long value;
+   char *errmsg;
 
-   if (argc != 3) 
+   if (argc != 3)
    {
-      printerrf(str_nill, usageMsg, arg0, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-      return(1);
+      printerrf(str_nill, usageMsg, argv[0], NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL);
+      return 1;
    }
-
    if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
-      return(1);
+      return 1;
 
-   if (paramIsString)
-      result = (*func) (w->w, argv[2]);
-   else
+   value = strtoul(argv[2], &p, 0);
+   if (p == argv[2])
    {
-      param = strtoul(argv[2], &p, 0);
-      if (p == argv[2])
-      {
-         errmsg = strdup(GETMESSAGE(
-                         "The parameter specified is invalid: %s"));
-         printerrf(arg0, errmsg, argv[2],
-                   NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-         free(errmsg);
-         return(1);
-      }
-      result = (*func) (w->w, param);
+      errmsg = strdup(GETMESSAGE("The parameter specified is invalid: %s"));
+      printerrf(argv[0], errmsg, argv[2], NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL);
+      free(errmsg);
+      return 1;
    }
 
-   if (returnBoolean)
-      return (!result);
-   else
-      return(0);
+   func(w->w, value);
+   return 0;
+}
+
+static int
+Text_WidgetAndString(
+        DtkshXmTextStringSetterProc func,
+        char *usageMsg,
+        int argc,
+        char *argv[] )
+{
+   wtab_t *w;
+
+   if (argc != 3)
+   {
+      printerrf(str_nill, usageMsg, argv[0], NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL);
+      return 1;
+   }
+   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+      return 1;
+
+   func(w->w, argv[2]);
+   return 0;
+}
+
+static int
+Text_WidgetAndTime(
+        DtkshXmTextTimeProc func,
+        char *usageMsg,
+        int argc,
+        char *argv[] )
+{
+   wtab_t *w;
+   char *p;
+   Time value;
+   char *errmsg;
+
+   if (argc != 3)
+   {
+      printerrf(str_nill, usageMsg, argv[0], NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL);
+      return 1;
+   }
+   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+      return 1;
+
+   value = (Time)strtoul(argv[2], &p, 0);
+   if (p == argv[2])
+   {
+      errmsg = strdup(GETMESSAGE("The parameter specified is invalid: %s"));
+      printerrf(argv[0], errmsg, argv[2], NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL);
+      free(errmsg);
+      return 1;
+   }
+
+   return !func(w->w, value);
+}
+
+static void DtkshXmTextScroll(Widget w, unsigned long value)
+{
+   XmTextScroll(w, (int)value);
+}
+
+static void DtkshXmTextSetInsertionPosition(Widget w, unsigned long value)
+{
+   XmTextSetInsertionPosition(w, (XmTextPosition)value);
+}
+
+static void DtkshXmTextSetTopCharacter(Widget w, unsigned long value)
+{
+   XmTextSetTopCharacter(w, (XmTextPosition)value);
+}
+
+static void DtkshXmTextSetMaxLength(Widget w, unsigned long value)
+{
+   XmTextSetMaxLength(w, (int)value);
+}
+
+static void DtkshXmTextShowPosition(Widget w, unsigned long value)
+{
+   XmTextShowPosition(w, (XmTextPosition)value);
+}
+
+static void DtkshXmTextClearSelection(Widget w, unsigned long value)
+{
+   XmTextClearSelection(w, (Time)value);
 }
 
 
@@ -4179,8 +4380,7 @@ do_XmTextScroll(
    int retVal;
    
    errmsg = strdup(GETMESSAGE("Usage: %s widget lines"));
-   retVal = Text_WidgetAndOneParam((Boolean (*)())XmTextScroll, False, False, 
-                                    errmsg, argc, argv);
+   retVal = Text_WidgetAndValue(DtkshXmTextScroll, errmsg, argc, argv);
    free(errmsg);
    return (retVal);
 }
@@ -4196,8 +4396,8 @@ do_XmTextSetInsertionPosition(
    int retVal;
    
    errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET_POS));
-   retVal = Text_WidgetAndOneParam((Boolean (*)())XmTextSetInsertionPosition, 
-                                    False, False, errmsg, argc, argv);
+   retVal = Text_WidgetAndValue(DtkshXmTextSetInsertionPosition, errmsg, argc,
+                                argv);
    free(errmsg);
    return(retVal);
 }
@@ -4212,8 +4412,8 @@ do_XmTextSetTopCharacter(
    int retVal;
    
    errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET_POS));
-   retVal = Text_WidgetAndOneParam((Boolean (*)())XmTextSetTopCharacter, False, 
-                                   False, errmsg, argc, argv);
+   retVal = Text_WidgetAndValue(DtkshXmTextSetTopCharacter, errmsg, argc,
+                                argv);
    free(errmsg);
    return(retVal);
 }
@@ -4228,8 +4428,7 @@ do_XmTextSetMaxLength(
    int retVal;
    
    errmsg = strdup(GETMESSAGE("Usage: %s widget maxLength"));
-   retVal = Text_WidgetAndOneParam((Boolean (*)())XmTextSetMaxLength, False, 
-                                   False, errmsg, argc, argv);
+   retVal = Text_WidgetAndValue(DtkshXmTextSetMaxLength, errmsg, argc, argv);
    free(errmsg);
    return(retVal);
 }
@@ -4244,8 +4443,7 @@ do_XmTextSetString(
    int retVal;
    
    errmsg = strdup(GETMESSAGE("Usage: %s widget string"));
-   retVal = Text_WidgetAndOneParam((Boolean (*)())XmTextSetString, False, True, 
-                                   errmsg, argc, argv);
+   retVal = Text_WidgetAndString(XmTextSetString, errmsg, argc, argv);
    free(errmsg);
    return(retVal);
 }
@@ -4260,8 +4458,7 @@ do_XmTextShowPosition(
    int retVal;
    
    errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET_POS));
-   retVal = Text_WidgetAndOneParam((Boolean (*)())XmTextShowPosition, False, 
-                                   False, errmsg, argc, argv);
+   retVal = Text_WidgetAndValue(DtkshXmTextShowPosition, errmsg, argc, argv);
    free(errmsg);
    return(retVal);
 }
@@ -4276,8 +4473,7 @@ do_XmTextClearSelection(
    int retVal;
    
    errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET_TIME));
-   retVal = Text_WidgetAndOneParam((Boolean (*)())XmTextClearSelection, False, 
-                                    False, errmsg, argc, argv);
+   retVal = Text_WidgetAndValue(DtkshXmTextClearSelection, errmsg, argc, argv);
    free(errmsg);
    return(retVal);
 }
@@ -4292,7 +4488,7 @@ do_XmTextCopy(
    int retVal;
    
    errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET_TIME));
-   retVal = Text_WidgetAndOneParam(XmTextCopy, True, False, errmsg, argc, argv);
+   retVal = Text_WidgetAndTime(XmTextCopy, errmsg, argc, argv);
    free(errmsg);
    return(retVal);
 }
@@ -4307,7 +4503,7 @@ do_XmTextCut(
    int retVal;
    
    errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET_TIME));
-   retVal = Text_WidgetAndOneParam(XmTextCut, True, False, errmsg, argc, argv);
+   retVal = Text_WidgetAndTime(XmTextCut, errmsg, argc, argv);
    free(errmsg);
    return(retVal);
 }
@@ -4766,7 +4962,7 @@ do_XmTextFindString(
 static int
 GetSubWidget(
 	char * errmsg,
-	Widget (*func)(),
+	DtkshXmSubWidgetProc func,
         int argc,
         char *argv[] )
 {
@@ -4969,7 +5165,7 @@ do_XmFileSelectionDoSearch(
 
 static int
 _CreatePDMJobSetup(
-        Widget (*func)(),
+        DtkshXmSubWidgetProc func,
         int argc,
         char *argv[] )
 {

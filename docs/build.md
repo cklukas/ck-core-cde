@@ -60,6 +60,9 @@ The maintained dtksh command layer is compiled in the enclosing C23 mode. Its
 Xt, Xlib, ToolTalk, print-setup and ksh discipline callbacks use their native
 prototypes; operations with different signatures have separate typed paths or
 small value adapters rather than common untyped dispatch.
+The same rule applies to Motif constructors and list, text and subwidget
+operations: related commands share a helper only when their callback types are
+actually compatible.
 
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
