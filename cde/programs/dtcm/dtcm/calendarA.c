@@ -2305,7 +2305,7 @@ logon_retry(XtPointer data, XtIntervalId *dummy)
 }
 
 static void
-view_event(Widget w, XEvent *event, String *params, Cardinal *num_params)
+handle_view_event(XEvent *event)
 {
         Calendar *c = calendar;
 
@@ -2321,6 +2321,21 @@ view_event(Widget w, XEvent *event, String *params, Cardinal *num_params)
         else if (c->view->glance == yearGlance)
                 year_event(event);
 */
+}
+
+static void
+view_event_action(Widget w, XEvent *event, String *params,
+                  Cardinal *num_params)
+{
+        handle_view_event(event);
+}
+
+static void
+view_event_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+        XmDrawingAreaCallbackStruct *callback_data = call_data;
+
+        handle_view_event(callback_data == NULL ? NULL : callback_data->event);
 }
 
 static void
@@ -2484,7 +2499,7 @@ init_calendar(int argc, char **argv)
         	"<Btn1Down>: view_event()               \n\
          	<Btn1Motion>: view_event()";
         static XtActionsRec action_table[] = {
-                {(String) "view_event", view_event},
+                {(String) "view_event", view_event_action},
 		{(String) "TranslationDragStart", 
 		   TranslationDragStart},
 		{"dtcm-process-press",
@@ -2707,7 +2722,7 @@ init_calendar(int argc, char **argv)
 	XtMapWidget(calendar->frame);
 
         XtAddCallback(calendar->canvas, XmNresizeCallback, resize_proc, NULL);
-        XtAddCallback(calendar->canvas, XmNinputCallback, view_event, NULL);
+        XtAddCallback(calendar->canvas, XmNinputCallback, view_event_cb, NULL);
         XtAddCallback(calendar->canvas, XmNexposeCallback, repaint_proc, NULL);
 
 	cm_register_drop_site(calendar, calendar->form);
