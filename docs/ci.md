@@ -16,7 +16,9 @@ and libraries established by the full build.
 The rpi4 sister checkout is pinned to the same revision, and its build checks
 that the pin matches the recorded file. Advance both pins only when starting
 the next repair batch, so concurrent toolkit changes do not alter validation
-of a batch already in progress.
+of a batch already in progress. Each compiler lane also generates its required
+`en_US.UTF-8` document locale inside the isolated build root; a minimal runner
+does not need that locale installed system-wide.
 
 Documentation builds use published ckdocs `master` revision
 `7e3ee5eb57a2cef2e07f9e9fe5c4e2822502d322` on both GitHub and rpi4. A push to

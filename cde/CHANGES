@@ -1,4 +1,7 @@
 2026-11-03
+- CI: generate the CDE documentation compiler's `en_US.UTF-8` locale inside
+  each isolated rpi4 C23 lane, allowing help SDL generation on minimal runner
+  hosts without changing the host locale database.
 - CI: make network-isolated rpi4 jobs independent of the runner host's Git
   system configuration, keeping checkout metadata and archive creation inside
   the job sandbox.

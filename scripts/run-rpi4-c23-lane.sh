@@ -55,6 +55,15 @@ esac
 rm -rf "$root"
 mkdir -p "$root"
 
+# The help compiler switches to the document's en_US.UTF-8 locale. Keep that
+# locale inside the isolated lane instead of depending on the runner host's
+# installed locale set.
+locale_root=$root/locale
+localedef -i en_US -f UTF-8 "$locale_root/en_US.UTF-8"
+export LOCPATH=$locale_root
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
 started_epoch=$(date +%s)
 started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 strict_cflags='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type -Werror=incompatible-pointer-types -Werror=implicit-function-declaration'
