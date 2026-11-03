@@ -746,8 +746,8 @@ void mpunfl(int *);
 
 /* Help routines */
 void Help(char *, char *);
-void HelpRequestCB(Widget, caddr_t, caddr_t);
-void HelpModeCB(Widget, caddr_t, caddr_t);
+void HelpRequestCB(Widget, XtPointer, XtPointer);
+void HelpModeCB(Widget, XtPointer, XtPointer);
 void DisplayHelp(char *, char *);
 void HelpHelp(void);
 void SetWmHnts(void);

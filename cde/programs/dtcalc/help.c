@@ -59,8 +59,8 @@ typedef struct _helpStruct {
 static Widget GetHelpDialog(void);
 static void UnmanageCB(Widget, XtPointer, XtPointer) ;
 static void CenterMsgCB(Widget, XtPointer, XtPointer);
-static void HelpHyperlinkCB(Widget, caddr_t, caddr_t);
-static void HelpCloseCB(Widget, caddr_t, caddr_t);
+static void HelpHyperlinkCB(Widget, XtPointer, XtPointer);
+static void HelpCloseCB(Widget, XtPointer, XtPointer);
 
 
 void
@@ -82,9 +82,9 @@ Help(char *helpVolume, char *locationId)
         DtWsmRemoveWorkspaceFunctions(X->dpy,
                       XtWindow(XtParent(X->helpDialog)));
         XtAddCallback(X->helpDialog, DtNhyperLinkCallback,
-                      (XtCallbackProc)HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, NULL);
         XtAddCallback(X->helpDialog, DtNcloseCallback,
-                      (XtCallbackProc)HelpCloseCB, NULL);
+                      HelpCloseCB, NULL);
     }
     else
     {
@@ -114,7 +114,7 @@ Help(char *helpVolume, char *locationId)
 }
 
 static void
-HelpCloseCB(Widget widget, caddr_t client_data, caddr_t call_data)
+HelpCloseCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 
   HelpStruct *pHelpCache = (HelpStruct *)client_data;
@@ -131,7 +131,7 @@ HelpCloseCB(Widget widget, caddr_t client_data, caddr_t call_data)
 }
 
 static void 
-HelpHyperlinkCB(Widget widget, caddr_t client_data, caddr_t call_data)
+HelpHyperlinkCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   DtHelpDialogCallbackStruct *pHyper = (DtHelpDialogCallbackStruct *) call_data;
   
@@ -147,7 +147,7 @@ HelpHyperlinkCB(Widget widget, caddr_t client_data, caddr_t call_data)
  
 
 void 
-HelpRequestCB(Widget widget, caddr_t client_data, caddr_t call_data)
+HelpRequestCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   char  *helpVolume, *locationId;
   intptr_t   topic;
@@ -370,7 +370,7 @@ HelpRequestCB(Widget widget, caddr_t client_data, caddr_t call_data)
 }
 
 void
-HelpModeCB(Widget w, caddr_t client_data, caddr_t call_data)
+HelpModeCB(Widget w, XtPointer client_data, XtPointer call_data)
 {
   Widget widget;
   char *errorMsg, *tmp;
@@ -440,9 +440,9 @@ GetHelpDialog(void)
         DtWsmRemoveWorkspaceFunctions(X->dpy,
                 XtWindow(XtParent(pHelp->dialog)));
         XtAddCallback(pHelp->dialog, DtNhyperLinkCallback,
-                      (XtCallbackProc)HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, NULL);
         XtAddCallback(pHelp->dialog, DtNcloseCallback,
-                      (XtCallbackProc)HelpCloseCB, pHelpCache);
+                      HelpCloseCB, pHelpCache);
         return pHelp->dialog;
     }
     else
@@ -469,9 +469,9 @@ GetHelpDialog(void)
         DtWsmRemoveWorkspaceFunctions(X->dpy,
                       XtWindow(XtParent(pHelp->dialog)));
         XtAddCallback(pHelp->dialog, DtNhyperLinkCallback,
-                      (XtCallbackProc)HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, NULL);
         XtAddCallback(pHelp->dialog, DtNcloseCallback,
-                      (XtCallbackProc)HelpCloseCB, pHelpCache);
+                      HelpCloseCB, pHelpCache);
         return pHelp->dialog;
     }
 }

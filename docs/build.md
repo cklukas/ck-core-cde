@@ -320,7 +320,9 @@ The editor, calculator, print-display manager, terminal primitive layer and
 selected calendar/mail interfaces are qualified with GCC and Clang C23 as
 well. `dtpad` uses `XtCallbackProc` and the complete ToolTalk contract for its
 file workflow; `dtcalc` registers its X error handler without a cast and keeps
-its button dispatch explicitly parameterless; and `dtpdm` publishes explicit
+its button dispatch explicitly parameterless. Its help callbacks implement
+`XtCallbackProc` directly, while typed callback adapters invoke the
+parameterless ASCII-conversion and exit operations. `dtpdm` publishes explicit
 no-argument constructors. DtTerm's parser action table and cleanup entry points
 now carry their actual arguments, while dtmail's generated utility accessors
 state that they take no arguments.
