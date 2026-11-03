@@ -1,4 +1,6 @@
 2026-11-03
+- DtWidget: expose every editor translation action through its exact
+  `XtActionProc` contract instead of casting the action table entries.
 - DtAction: register text actions and invocation status callbacks through their
   exact toolkit contracts instead of function-pointer casts.
 - DtPad: expose editor, help, formatting, option, session and print callbacks

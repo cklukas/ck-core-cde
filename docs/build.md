@@ -444,6 +444,9 @@ Xt callbacks or no-argument helpers to the signal ABI.
 DtIcon's help, hyperlink and close callbacks accept Xt's opaque client and call
 data directly, so all help registrations use typed callback entries without
 casts.
+DtWidget's editor translation table stores its complete four-argument Xt action
+implementations directly, allowing the compiler to check every public and
+internal editor action.
 DtPad exposes its editor, help, formatting, option, session and print callbacks
 through `XtCallbackProc` directly, and routes panic signals through a typed
 signal adapter. DtAction likewise registers its custom text actions and
