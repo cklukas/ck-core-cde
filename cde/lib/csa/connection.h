@@ -72,6 +72,9 @@ typedef struct conn {
 	enum clnt_stat	stat;
 } _DtCm_Connection;
 
+/* Match xdrproc_t while preserving xdr_void's no-payload semantics. */
+extern bool_t _DtCm_xdr_void(XDR *xdrs, ...);
+
 extern enum clnt_stat _DtCm_clnt_call(
 				_DtCm_Connection *conn,
 				u_long proc,

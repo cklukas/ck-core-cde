@@ -79,6 +79,13 @@ static CSA_return_code get_client_handle(const char *host, const u_long prognum,
 			CLIENT **clnt);
 static CSA_return_code regstat4_to_dtcmstatus(Registration_Status_4 stat4);
 
+bool_t
+_DtCm_xdr_void(XDR *xdrs, ...)
+{
+	(void)xdrs;
+	return (TRUE);
+}
+
 extern CSA_return_code
 _DtCm_create_udp_client(
 	char *host,
@@ -825,8 +832,8 @@ get_client_handle(
 
 		if ((cl = clnt_create(host, prognum, vers, nettype)) != NULL) {
 			clnt_control(cl, CLSET_TIMEOUT, (char *)&tv);
-			status = clnt_call(cl, 0, (xdrproc_t) xdr_void, 
-					   (char *)NULL, (xdrproc_t) xdr_void,
+			status = clnt_call(cl, 0, _DtCm_xdr_void,
+					   (char *)NULL, _DtCm_xdr_void,
 					   (char *)NULL, tv);
 
 			if (status == RPC_SUCCESS) {
