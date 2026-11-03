@@ -1,4 +1,7 @@
 2026-11-03
+- dtksh: build the desktop shell from a checksum-pinned upstream ksh93
+  maintenance revision. Keep CDE built-ins and patches separate, support
+  offline archive builds, and install the upstream license and notices.
 - C23: remove the calendar RPC headers' obsolete K&R declaration fallbacks;
   give dtcm parsing, UI, ToolTalk and helper callbacks exact contracts; make
   clean out-of-tree calendar builds resolve generated and checked-in headers

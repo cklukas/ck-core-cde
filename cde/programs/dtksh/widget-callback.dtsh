@@ -1,0 +1,23 @@
+set -e
+XtInitialize top callbackTest CallbackTest "$0"
+builtin -f "$1"
+DtLoadWidget LoadedPushButton testWidgetClass
+XtCreateManagedWidget form form XmForm "$top"
+XtCreateManagedWidget button button LoadedPushButton "$form" labelString:Before
+XtRealizeWidget "$top"
+
+called=0
+on_activate()
+{
+    [[ $CB_WIDGET == "$button" ]] || return 1
+    (( called += 1 ))
+    XtSetValues "$button" labelString:After
+}
+XtAddCallback "$button" activateCallback on_activate
+XtCallCallbacks "$button" activateCallback
+XtGetValues "$button" labelString:label
+[[ $called == 1 && $label == After ]]
+classes=$(DtWidgetInfo -c)
+[[ $'\n'${classes}$'\n' == *$'\nLoadedPushButton\n'* ]]
+resources=$(DtWidgetInfo -r "$button")
+[[ $resources == *labelString* && $resources == *topAttachment* ]]

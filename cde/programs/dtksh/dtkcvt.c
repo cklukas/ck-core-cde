@@ -55,7 +55,6 @@
 #include <Dt/Help.h>
 #include <Dt/EnvControlP.h>
 #include <Dt/Print.h>
-#include "hash.h"
 #include "stdio.h"
 #include "dtksh.h"
 #include "xmksh.h"
@@ -67,7 +66,7 @@
 #include "xmwidgets.h"
 #include "msgs.h"
 
-extern Hashtab_t * Wclasses;
+
 
 
 
@@ -696,7 +695,6 @@ DtkshCvtStringToWidgetClass(
    static WidgetClass wc;
    int i;
    char * wcName;
-   char * hashInfo;
    classtab_t * classtab;
 
    if (fval->size <= 0 || fval->addr == NULL) 
@@ -707,9 +705,8 @@ DtkshCvtStringToWidgetClass(
    }
 
    wcName = (char *)(fval->addr);
-   if ((hashInfo = hashget(Wclasses, wcName)) != NULL)
+   if ((classtab = dtksh_lookup_class(wcName)) != NULL)
    {
-      classtab = (classtab_t *)hashInfo;
       wc = classtab->class;
       toval->addr = (caddr_t)&wc;
       toval->size = sizeof(WidgetClass);

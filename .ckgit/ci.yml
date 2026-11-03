@@ -71,7 +71,13 @@ jobs:
             if ! ./configure CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0'; then
               tail -n 200 config.log
               exit 1
-            fi && make -j4 && make -j4 check)
+            fi && make -j1 -C programs/dtksh prepare-ksh &&
+            make -j4 &&
+            for cc in gcc-14 clang-19; do
+              make -j1 -C programs/dtksh -f Makefile -f "$PWD/../scripts/check-dtksh-c23.mk" CC="$cc" check-dtksh-c23 || exit 1
+            done &&
+            make -j4 check &&
+            xvfb-run -a make -j1 -C programs/dtksh check-widget)
           readelf -dW cde/programs/dtwm/.libs/dtwm | grep -F 'libXm.so.9'
       - name: test-installed-filesystem-consumer
         script: |

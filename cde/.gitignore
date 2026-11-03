@@ -2182,3 +2182,6 @@ lib/DtMmdb/compression/sgml.C
 lib/DtMmdb/schema/sheet.C
 lib/DtMmdb/schema/sheet.tab.h
 lib/DtMmdb/schema/token.C
+
+/programs/dtksh/ksh-work/
+/programs/dtksh/lib/dtksh/ksh93

@@ -5,7 +5,9 @@ In 2012, CDE was opensourced under the terms of the LGPL V2 license by
 the Open Group.
 
 You may reuse and redistribute this code under the terms of this
-license. See the COPYING file for details.
+license. See the COPYING file for details. Desktop KornShell also uses
+the separately licensed ksh93 dependency. Its upstream archive includes
+the EPL-2.0 license and additional notices in LICENSE.md and COPYRIGHT.
 
 # Downloading
 

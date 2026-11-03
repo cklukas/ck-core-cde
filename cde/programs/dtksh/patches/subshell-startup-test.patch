@@ -1,0 +1,39 @@
+--- a/src/cmd/ksh93/tests/subshell.sh
++++ b/src/cmd/ksh93/tests/subshell.sh
+@@ -1469,9 +1469,9 @@
+ 	(( (diff = SECONDS - startsec) < .1 )) \
+ 		|| err_exit "${forkmsg}comsub fails to unblock when subshell child closes stdout" \
+ 			"(took ${diff}s)"
+-	startsec=SECONDS
+-	: $( $fork; ("$SHELL" -c 'redirect >&-; sleep .1') & )
+-	(( (diff = SECONDS - startsec) < .1 )) \
++	# Start timing inside the external interpreter, immediately before redirection.
++	startsec=$( $fork; ("$SHELL" -c 'printf "%(%s.%N)T\n" now; redirect >&-; sleep .1') & )
++	(( startsec > 0 && (diff = $(printf '%(%s.%N)T' now) - startsec) < .1 )) \
+ 		|| err_exit "${forkmsg}comsub fails to unblock when non-subshell child closes stdout" \
+ 			"(took ${diff}s)"
+ 	# ...or when the child redirects its standard output
+@@ -1480,9 +1480,8 @@
+ 	(( (diff = SECONDS - startsec) < .1 )) \
+ 		|| err_exit "${forkmsg}comsub fails to unblock when subshell child closes stdout" \
+ 			"(took ${diff}s)"
+-	startsec=SECONDS
+-	: $( $fork; ("$SHELL" -c 'redirect >/dev/null; sleep .1') & )
+-	(( (diff = SECONDS - startsec) < .1 )) \
++	startsec=$( $fork; ("$SHELL" -c 'printf "%(%s.%N)T\n" now; redirect >/dev/null; sleep .1') & )
++	(( startsec > 0 && (diff = $(printf '%(%s.%N)T' now) - startsec) < .1 )) \
+ 		|| err_exit "${forkmsg}comsub fails to unblock when non-subshell child closes stdout" \
+ 			"(took ${diff}s)"
+ 	# ...but *not* when the child redirects its standard output back to itself
+@@ -1491,9 +1490,8 @@
+ 	(( (diff = SECONDS - startsec) >= .05 )) \
+ 		|| err_exit "${forkmsg}comsub fails to block when subshell child redirects stdout to itself" \
+ 			"(took ${diff}s)"
+-	startsec=SECONDS
+-	: $( $fork; ("$SHELL" -c 'redirect 3>&1; redirect 1>&3; sleep .05') & )
+-	(( (diff = SECONDS - startsec) >= .05 )) \
++	startsec=$( $fork; ("$SHELL" -c 'printf "%(%s.%N)T\n" now; redirect 3>&1; redirect 1>&3; sleep .05') & )
++	(( startsec > 0 && (diff = $(printf '%(%s.%N)T' now) - startsec) >= .05 )) \
+ 		|| err_exit "${forkmsg}comsub fails to block when non-subshell child redirects stdout to itself" \
+ 			"(took ${diff}s)"
+ done

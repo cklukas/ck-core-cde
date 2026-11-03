@@ -447,6 +447,8 @@ AC_FUNC_FORK
 
 dnl programs with full paths
 
+AC_ARG_VAR([KSH93_ARCHIVE], [local archive of the pinned dtksh shell dependency for offline builds])
+
 dnl - KSH, some systems call it as ksh93
 AC_PATH_PROG(KSH, ksh)
 if test -z "$ac_cv_path_KSH"; then

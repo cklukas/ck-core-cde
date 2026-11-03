@@ -43,7 +43,6 @@
 #include <Xm/Xm.h>
 #include <Xm/XmStrDefs.h>
 #include <Xm/DialogS.h>
-#include "hash.h"
 #include "stdio.h"
 #include "dtksh.h"
 #include "xmksh.h"
@@ -56,8 +55,6 @@
 
 /* values for the flags field of the W array */
 
-#define RESOURCE_HASHSIZE	64
-#define CLASS_HASHSIZE		32
 #define WIDGETALLOC		16	/* Will realloc the widget array in this increment */
 
 wtab_t **W = NULL;
@@ -69,38 +66,34 @@ int Wtab_free = 0;	/* A count of how many table entries have been freed */
 /* CONSTANTS */
 char str_0123456789[] = "0123456789";
 
-Hashtab_t *Wclasses;
+static Dt_t *Wclasses;
+
+/* The dictionaries index existing records and allocate their own links. */
+static Dtdisc_t class_keys = { .key = offsetof(classtab_t, cname), .size = -1, .link = -1 };
+static Dtdisc_t resource_keys = { .key = offsetof(XtResource, resource_name), .size = -1, .link = -1 };
+
+static Dt_t *
+widget_dictionary(Dtdisc_t *keys)
+{
+    Dt_t *table = dtopen(keys, Dtoset);
+    if (!table)
+        XtError("dtksh cannot allocate widget dictionary");
+    return table;
+}
 
 
 
 
 static void fixupresources( 
-                        char *name,
-                        Hash_table_t *res,
+                        Dt_t *res,
                         resfixup_t *fixups) ;
-static int rescompare( 
-                        XtResource **r1,
-                        XtResource **r2) ;
 static void _pr_class( 
                         classtab_t *c) ;
 static void _pr_resource_list( 
                         XtResource *res) ;
-static void sort_and_print_res( void ) ;
-static void gather_resource_list( 
-                        char *name,
-                        char *r,
-                        void *notUsed) ;
 static void _pr_resource( 
                         classtab_t *c,
                         wtab_t *w) ;
-static void pr_resource( 
-                        char *name,
-                        char *r,
-                        void *notUsed) ;
-static void pr_class( 
-                        char *name,
-                        char *c,
-                        void *notUsed) ;
 static char * getname( 
                         wtab_t *w,
                         char *buf,
@@ -115,7 +108,6 @@ void
 init_widgets( void )
 {
 	int i, n = 0;
-	char *nam;
 	wtab_t *wentries;
         char * errmsg;
         char * errhdr;
@@ -125,10 +117,10 @@ init_widgets( void )
 
 	toolkit_init_widgets();
 
-        Wclasses = hashalloc(NULL, 0);
+        Wclasses = widget_dictionary(&class_keys);
 
 	for (i = 0; C[i].cname != NULL; i++) {
-                if ((nam = hashput(Wclasses, C[i].cname, (char *)(&C[i]))) == NULL) 
+                if (dtinstall(Wclasses, &C[i]) == NULL)
                 {
                          errhdr = strdup(GetSharedMsg(DTKSH_ERROR));
                          errmsg = strdup(GETMESSAGE(
@@ -155,6 +147,12 @@ init_widgets( void )
 	MaxW = WIDGETALLOC;
 }
 
+classtab_t *
+dtksh_lookup_class(const char *name)
+{
+        return Wclasses ? dtmatch(Wclasses, name) : NULL;
+}
+
 /*
  * string to widgetclass
  */
@@ -166,7 +164,6 @@ str_to_class(
 {
    int i, j, n;
    Widget w;
-   char *nam;
    classtab_t *ret;
    char * errhdr;
    char * errmsg;
@@ -184,9 +181,8 @@ str_to_class(
          return(w->wclass);
    }
 
-   if ((nam = hashget(Wclasses, s)) != NULL) 
+   if ((ret = dtksh_lookup_class(s)) != NULL)
    {
-      ret = (classtab_t *)nam;
       if (ret->res == NULL) 
       {
          XtResourceList resources;
@@ -197,7 +193,7 @@ str_to_class(
           * be initialized, it's resources read and
           * hashed.
           */
-         ret->res = (char *)hashalloc(NULL, 0);
+         ret->res = widget_dictionary(&resource_keys);
 
          /*
           * Have to force the class init
@@ -211,8 +207,7 @@ str_to_class(
          XtGetResourceList(ret->class, &resources, &numresources);
          for (i = 0; i < numresources; i++) 
          {
-            if ((nam = (char *)hashput((Hash_table_t*)ret->res, 
-                resources[i].resource_name, (char *)&resources[i])) == NULL) 
+            if (dtinstall(ret->res, &resources[i]) == NULL)
             {
                errhdr = strdup(GetSharedMsg(DTKSH_ERROR));
                errmsg=strdup(GetSharedMsg( DT_HASHING_FAILURE));
@@ -248,9 +243,7 @@ str_to_class(
             {
                for (j = 0; j < blockArray[i]->num_resources; j++)
                {
-                  if ((nam = (char *)hashput((Hash_table_t*)ret->res, 
-                             blockArray[i]->resources[j].resource_name, 
-                             (char *)&(blockArray[i]->resources[j]))) == NULL)
+                  if (dtinstall(ret->res, &blockArray[i]->resources[j]) == NULL)
                   {
                      errhdr = strdup(GetSharedMsg(DTKSH_ERROR));
                      errmsg=strdup(GetSharedMsg( DT_HASHING_FAILURE));
@@ -272,8 +265,8 @@ str_to_class(
          }
 
          /* Perform any special resource fixing up */
-         fixupresources(s, (Hash_table_t *)ret->res, 
-                        (resfixup_t *)&ret->resfix[0]);
+         fixupresources(ret->res,
+                        ret->resfix);
 
          /*
 	  * Get constraint resources, if there are any
@@ -281,11 +274,10 @@ str_to_class(
          XtGetConstraintResourceList(ret->class, &resources, &numresources);
          if (resources != NULL) 
          {
-            ret->con = (char *)hashalloc(NULL, 0);
+            ret->con = widget_dictionary(&resource_keys);
             for (i = 0; i < numresources; i++) 
             {
-               if ((nam = (char *)hashput((Hash_table_t*)ret->con, 
-                    resources[i].resource_name, &resources[i])) == NULL) 
+               if (dtinstall(ret->con, &resources[i]) == NULL)
                {
                   errhdr =strdup(GetSharedMsg(DTKSH_ERROR));
                   errmsg=strdup(GetSharedMsg(DT_HASHING_FAILURE));
@@ -295,8 +287,8 @@ str_to_class(
                   free(errmsg);
                } 
             }
-            fixupresources(s, (Hash_table_t *)ret->con, 
-                           (resfixup_t *)&ret->confix[0]);
+            fixupresources(ret->con,
+                           ret->confix);
          } 
          else 
             ret->con = NULL;
@@ -541,19 +533,17 @@ get_new_wtab(
 
 static void
 fixupresources(
-        char *name,
-        Hash_table_t *res,
+        Dt_t *res,
         resfixup_t *fixups )
 {
 	XtResource *resource;
 	int i;
-	char *nam;
 
 	if (fixups == NULL)
 		return;
 
         for (i = 0; fixups[i].name != NULL; i++) {
-                resource = (XtResource *)hashget(res, fixups[i].name);
+                resource = (XtResource *)dtmatch(res, fixups[i].name);
                 /*
                  * We could be either adding a new resource or
                  * modifying an old one.
@@ -575,7 +565,7 @@ fixupresources(
                 resource->resource_class = (String)fixups[i].class;
                 resource->resource_type = (String)fixups[i].type;
                 resource->resource_size = fixups[i].size;
-                hashput(res, fixups[i].name, (char *)resource);
+                dtinstall(res, resource);
         }
 }
 
@@ -612,7 +602,6 @@ do_DtLoadWidget(
 {
    classtab_t *classtab;
    void *address;
-   char *nam;
    char * errhdr;
    char * errmsg;
 
@@ -642,7 +631,7 @@ do_DtLoadWidget(
       memset(classtab, '\0', sizeof(classtab_t));
       classtab->cname = (char *)strdup(argv[1]);
       classtab->class = ((WidgetClass *)address)[0];
-      if ((nam = hashput(Wclasses, classtab->cname, (char *)classtab)) == NULL)
+      if (dtinstall(Wclasses, classtab) == NULL)
       {
          errhdr = strdup(GetSharedMsg(DTKSH_ERROR));
          errmsg= strdup(GETMESSAGE(
@@ -657,17 +646,6 @@ do_DtLoadWidget(
    return(0);
 }
 
-static XtResource *Res[1024];
-static int Nres;
-
-static int
-rescompare(
-        XtResource **r1,
-        XtResource **r2 )
-{
-	return(strcmp(r1[0]->resource_name, r2[0]->resource_name));
-}
-
 static void
 _pr_class(
         classtab_t *c )
@@ -680,27 +658,6 @@ _pr_resource_list(
         XtResource *res )
 {
 	printf("\t%-24.24s %-24.24s %s\n", res->resource_name, res->resource_class, res->resource_type);
-}
-
-static void
-sort_and_print_res( void )
-{
-	int i;
-	qsort(Res, Nres, sizeof(XtResource *), (int (*)())rescompare);
-	for (i = 0; i < Nres; i++) {
-		_pr_resource_list(Res[i]);
-	}
-}
-
-static void
-gather_resource_list(
-        char *name,
-        char *r,
-        void *notUsed )
-{
-        XtResource *res = (XtResource *)r;
-
-	Res[Nres++] = res;
 }
 
 static int Show_constraint;
@@ -729,38 +686,23 @@ _pr_resource(
         free(errmsg);
         free(errmsg2);
 
-	Nres = 0;
+        Dt_t *primary = Show_constraint ? c->con : c->res;
+        Dt_t *parent = NULL;
+        if (!Show_constraint && w && w->parent && XtIsConstraint(w->parent->w))
+                parent = w->parent->wclass->con;
 
-        hashwalk((Hash_table_t*)(Show_constraint ? c->con : c->res), 0, (int (*)())gather_resource_list, NULL);
-	if (!Show_constraint && w && w->parent != NULL && 
-		XtIsConstraint(w->parent->w)) {
-                hashwalk((Hash_table_t *)w->parent->wclass->con, 0, (int (*)())gather_resource_list, NULL);
-
-	}
-
-	sort_and_print_res();
-}
-
-static void
-pr_resource(
-        char *name,
-        char *r,
-        void *notUsed )
-{
-        classtab_t *c = (classtab_t *)r;
-
-	_pr_resource(c, NULL);
-}
-
-static void
-pr_class(
-        char *name,
-        char *c,
-        void *notUsed )
-{
-        classtab_t *class = (classtab_t *)c;
-
-	_pr_class(class);
+        /* Merge the two name-ordered lists, retaining both entries on a tie. */
+        XtResource *a = primary ? dtfirst(primary) : NULL;
+        XtResource *b = parent ? dtfirst(parent) : NULL;
+        while (a || b) {
+                if (!b || (a && strcmp(a->resource_name, b->resource_name) <= 0)) {
+                        _pr_resource_list(a);
+                        a = dtnext(primary, a);
+                } else {
+                        _pr_resource_list(b);
+                        b = dtnext(parent, b);
+                }
+        }
 }
 
 static char *
@@ -885,8 +827,8 @@ do_DtWidgetInfo(
 			strcmp(argv[1], "-R") == 0) {
 			/* print all the resources in each widget or class */
 			if (argc == 2) {
-                                hashwalk((Hash_table_t *)Wclasses, 0, 
-                                           (int (*)())pr_resource, 0);
+                                for (c = dtfirst(Wclasses); c; c = dtnext(Wclasses, c))
+                                        _pr_resource(c, NULL);
 				return(0);
 			} else {
 				for (i = 2; i < argc; i++) {
@@ -909,7 +851,8 @@ do_DtWidgetInfo(
 			 * class is available
 			 */
 			if (argc == 2) {
-                                hashwalk((Hash_table_t *)Wclasses, 0, (int (*)())pr_class, 0);
+                                for (c = dtfirst(Wclasses); c; c = dtnext(Wclasses, c))
+                                        _pr_class(c);
 			} else {
 				for (i = 2; i < argc; i++) {
 					if ((c = str_to_class(argv[0], argv[i])) != NULL)

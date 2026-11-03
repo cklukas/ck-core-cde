@@ -1,0 +1,11 @@
+--- a/src/cmd/ksh93/tests/pty.sh
++++ b/src/cmd/ksh93/tests/pty.sh
+@@ -32,7 +32,7 @@
+ # the trickiest part of the tests is avoiding typeahead
+ # in the pty dialogue
+ 
+-JOBMAX=32  # max number of parallel tests
++JOBMAX=2   # limit concurrent desktop shell startups in the PTY tests
+ 
+ ((!SHOPT_SCRIPTONLY)) || { warning "interactive shell was compiled out -- tests skipped"; exit 0; }
+ whence -q pty || { warning "pty command not found -- tests skipped"; exit 0; }

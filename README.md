@@ -27,5 +27,9 @@ make -j4 check
 Set `MOTIF_SDK` to the absolute installation prefix. CDE uses Motif private
 widget records, so rebuild CDE and its libraries when changing toolkit ABI.
 
+Desktop KornShell uses a checksum-pinned upstream source archive. The build
+guide covers offline builds, patch updates and the widget integration test.
+[Desktop KornShell dependency](docs/build.md#desktop-kornshell-dependency)
+
 ## Original README
 Refer to the upstream README for the base project: [cde/README.md](cde/README.md).

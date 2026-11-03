@@ -54,6 +54,7 @@ extern int MaxW;
 
 
 
+extern classtab_t *dtksh_lookup_class(const char *name);
 extern void init_widgets( void ) ;
 extern classtab_t * str_to_class( 
                         char *arg0,

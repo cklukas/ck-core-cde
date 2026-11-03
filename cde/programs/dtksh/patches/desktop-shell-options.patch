@@ -1,0 +1,23 @@
+--- a/src/cmd/ksh93/SHOPT.sh
++++ b/src/cmd/ksh93/SHOPT.sh
+@@ -13,16 +13,16 @@
+ SHOPT CMDLIB_HDR=  # '<cmdlist.h>'	# custom -lcmd list for path-bound builtins
+ SHOPT CMDLIB_DIR=  # '"/opt/ast/bin"'	# virtual directory prefix for path-bound builtins
+ SHOPT CRNL=				# accept MS Windows newlines (<cr><nl>) for <nl>
+-SHOPT ECHOPRINT=			# make echo equivalent to print
+-SHOPT EDPREDICT=0			# History pattern search menu (type #<pattern>, then ESC <number> TAB). Deprecated.
++SHOPT ECHOPRINT=1			# make echo equivalent to print
++SHOPT EDPREDICT=1			# History pattern search menu (type #<pattern>, then ESC <number> TAB). Deprecated.
+ SHOPT ESH=1				# emacs/gmacs edit mode
+ SHOPT FILESCAN=1			# fast file scan: while <file; do [use $REPLY or positional parameters]; done
+ SHOPT FIXEDARRAY=1			# fixed dimension indexed array
+ SHOPT GLOBCASEDET=			# -o globcasedetect: adapt globbing/completion to case-insensitive file systems
+ SHOPT HISTEXPAND=1			# csh-style history file expansions
+-SHOPT KIA=				# ksh -R <outfile> <script> generates cross-ref database from script
++SHOPT KIA=1				# ksh -R <outfile> <script> generates cross-ref database from script
+ SHOPT MKSERVICE=0			# enable the mkservice and eloop builtins
+-SHOPT MULTIBYTE=			# multibyte character handling
++SHOPT MULTIBYTE=1			# multibyte character handling
+ SHOPT NAMESPACE=1			# allow namespaces
+ SHOPT NOECHOE=0				# turn off 'echo -e' when SHOPT_ECHOPRINT is disabled
+ SHOPT OPTIMIZE=1			# optimize loop invariants

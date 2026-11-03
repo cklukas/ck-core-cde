@@ -33,6 +33,8 @@
 #ifndef _Dtksh_dtksh_h
 #define _Dtksh_dtksh_h
 
+#include <cdt.h>
+
 #define SUCCESS		0
 #define FAIL		(-1)
 
@@ -73,8 +75,8 @@ typedef struct {
 	resfixup_t  *resfix;   /* fixup list for resources */
 	resfixup_t  *confix;   /* fixup list for constraint resources */
 	discInfo * disciplines;  /* Callback data environment disciplines */
-	char	*res;	/* Hashed list of resources */
-	char	*con;	/* Hashed list of constraint resources */
+	Dt_t *res;	/* Resources keyed by name */
+	Dt_t *con;	/* Constraint resources keyed by name */
 } classtab_t;
 
 typedef struct wtab {

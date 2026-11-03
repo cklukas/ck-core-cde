@@ -46,11 +46,70 @@ The complete desktop also needs the X11, PAM, ToolTalk, RPC, JPEG, LMDB, Tcl,
 terminal, font, and document-processing development packages listed by the
 Debian package metadata under `cde/debian/control`.
 
+## Desktop KornShell dependency
+
+CK Core CDE builds `dtksh` from the ksh93/ksh `1.0` maintenance line. The
+exact commit, archive SHA-256, and ordered patches are in
+`cde/programs/dtksh/ksh93.mk`. The desktop built-ins and widget bindings are
+CDE source. The CDE entry point registers them through ksh’s startup callback. The
+bindings use the CDE compiler settings and the generated headers for the
+same pinned library. The dependency uses its upstream compiler flags.
+The build installs ksh’s shared libraries under `lib/dtksh/ksh93/` so
+`builtin -f` and `DtLoadWidget` can load widget classes at runtime.
+Build native plug-ins against the pinned headers. The `test-widget.c` fixture
+includes `ast.h` before `shcmd.h` and uses `SHLIB` to advertise the matching
+plug-in ABI.
+
+A normal build prepares the dependency automatically. From a configured
+`cde/` build directory you can also prepare it explicitly.
+
+```sh
+make -C programs/dtksh prepare-ksh
+```
+
+The preparation step requires Python 3, tar and patch. From a Git checkout it
+uses curl to download the pinned archive from GitHub on first use. For an offline build,
+supply the absolute path to a local copy of that archive.
+
+```sh
+make -j4 KSH93_ARCHIVE=/absolute/path/to/ksh-REVISION.tar.gz
+```
+
+Preparation verifies the archive checksum before extraction or patching. The
+verified archive and patched source live in the build directory under
+`programs/dtksh/ksh-work/`. The source distribution includes that upstream
+archive as well as the integration sources, manifest and patches, so release
+builds can run offline. When distributing a binary, provide its matching source
+distribution and directions for obtaining it. Installation includes the
+upstream EPL-2.0 license and copyright notices in `share/licenses/dtksh/`.
+
+To update ksh, select an upstream maintenance commit, update the commit and
+checksum together, and review each patch against the new code. The desktop
+options patch preserves the interactive history menu, cross-reference
+generation, multibyte handling and echo behavior. The platform probe patch
+makes failure to find usable stat headers an explicit build error. The test-only patches apply to
+a temporary copy of the upstream regression suite. The pipeline regressions
+check for SIGPIPE and verify that a command substitution returns while its
+upstream producer is still alive. The version-option check excludes the CDE
+ToolTalk commands. Signal and command-substitution tests measure their
+original deadlines from inside the started child interpreter, excluding
+the time needed to load its desktop libraries.
+Run the upstream POSIX and UTF-8 suites through the linked `dtksh`, then
+exercise the widget callback under Xvfb.
+
+```sh
+make -j4 -C programs/dtksh check
+xvfb-run -a make -j1 -C programs/dtksh check-widget
+```
+
+For a focused rerun, pass a space-separated list of upstream test names,
+for example `KSH93_TEST_CASES="basic signal subshell"`, to the same `make check`
+command.
+
 ## C23 qualification
 
 CDE is being qualified subsystem by subsystem before C23 becomes the default
-language mode. The embedded ksh93 sources and genuinely historical utilities
-remain explicit GNU17 compatibility components during this work.
+language mode. Historical CDE utilities retain their scoped GNU17 settings during this work.
 
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks

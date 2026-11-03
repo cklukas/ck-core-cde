@@ -21,14 +21,9 @@
  * Floor, Boston, MA 02110-1301 USA
  */
 /* $XConsortium: msgs.c /main/4 1995/11/01 15:56:14 rswiston $ */
-#include "stdio.h"
-#include <sys/param.h>
-#include <string.h>
-#ifndef _SUN_OS
-#include <nl_types.h>
-#endif
+#include <stdlib.h>
+#include <error.h>
 #include "msgs.h"
-#include "error.h"
 
 char *_DtGetMessage(char *filename, char *s)
 {

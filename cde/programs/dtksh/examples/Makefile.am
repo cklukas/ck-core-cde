@@ -12,6 +12,8 @@ BUILT_SOURCES =  CallbackTest2 CallDataTest4 crMovesText1 DtCursorTest2 \
                  SelBoxResTest SessionTest TextCutBuf1 TextDisp1 TextFXYPos1 \
                  TransEventTest TransTest1 WorkProcTest1 XdrawTest
 
+EXTRA_DIST = $(noinst_SCRIPTS:%=%.src)
+
 CLEANFILES = $(BUILT_SOURCES)
 
 CallbackTest2: CallbackTest2.src

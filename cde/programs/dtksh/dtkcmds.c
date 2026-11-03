@@ -59,7 +59,6 @@
 #include <Tt/tttk.h>
 #include <Tt/tt_c.h>
 #include "XtCvtrs.h"
-#include "hash.h"
 #include "stdio.h"
 #include "defs.h"
 #include "dtksh.h"
@@ -279,35 +278,43 @@ static Namdisc_t * CheckClassDisciplines(
                         char *cbname) ;
 void SetTextDoit(
                         Namval_t *np,
-                        char *name,
+                        const char *name,
+                        nvflag_t flags,
                         Namfun_t *fp);
 void SetTextStartPos(
                         Namval_t *np,
-                        char *name,
+                        const char *name,
+                        nvflag_t flags,
                         Namfun_t *fp);
 void SetTextEndPos(
                         Namval_t *np,
-                        char *name,
+                        const char *name,
+                        nvflag_t flags,
                         Namfun_t *fp);
 void SetTextPtr(
                         Namval_t *np,
-                        char *name,
+                        const char *name,
+                        nvflag_t flags,
                         Namfun_t *fp);
 void SetTextLen(
                         Namval_t *np,
-                        char *name,
+                        const char *name,
+                        nvflag_t flags,
                         Namfun_t *fp);
 void SetTextFormat(
                         Namval_t *np,
-                        char *name,
+                        const char *name,
+                        nvflag_t flags,
                         Namfun_t *fp);
 void SetTextWCSptr(
                         Namval_t *np,
-                        char *name,
+                        const char *name,
+                        nvflag_t flags,
                         Namfun_t *fp);
 void SetTextWCSlen(
                         Namval_t *np,
-                        char *name,
+                        const char *name,
+                        nvflag_t flags,
                         Namfun_t *fp);
 
 
@@ -344,31 +351,19 @@ int npTableSize = 0;
 int * npListSizes = NULL;
 int nestingLevel = -1;
 
-static Namdisc_t transDiscipline ={0, NULL, NULL, NULL, NULL, 
-                                  (Namval_t *(*)())transCreateDisc, NULL, NULL};
-static Namdisc_t ehDiscipline = {0, NULL, NULL, NULL, NULL, 
-                                  (Namval_t *(*)())ehCreateDisc, NULL, NULL};
-static Namdisc_t dftDiscipline = {0, NULL, NULL, NULL, NULL, 
-                                  (Namval_t *(*)())dftCreateDisc, NULL, NULL};
-static Namdisc_t nopDiscipline = {0, NULL, NULL, NULL, NULL, 
-                                  (Namval_t *(*)())nopCreateDisc, NULL, NULL};
+static Namdisc_t transDiscipline = { .createf = transCreateDisc };
+static Namdisc_t ehDiscipline = { .createf = ehCreateDisc };
+static Namdisc_t dftDiscipline = { .createf = dftCreateDisc };
+static Namdisc_t nopDiscipline = { .createf = nopCreateDisc };
 
-static Namdisc_t text_doit_disc = {0, (void (*)())SetTextDoit, NULL, NULL, NULL,
-                                  NULL, NULL, NULL};
-static Namdisc_t text_startpos_disc = {0, (void (*)())SetTextStartPos, NULL, 
-                                  NULL, NULL,NULL, NULL, NULL};
-static Namdisc_t text_endpos_disc = {0, (void (*)())SetTextEndPos, NULL, NULL, 
-                                  NULL, NULL, NULL, NULL};
-static Namdisc_t text_ptr_disc = {0, (void (*)())SetTextPtr, NULL, NULL, NULL,
-                                  NULL, NULL, NULL};
-static Namdisc_t text_len_disc = {0, (void (*)())SetTextLen, NULL, NULL, NULL,
-                                  NULL, NULL, NULL};
-static Namdisc_t text_format_disc = {0, (void (*)())SetTextFormat, NULL, NULL, 
-                                  NULL, NULL, NULL, NULL};
-static Namdisc_t text_wcsptr_disc = {0, (void (*)())SetTextWCSptr, NULL, NULL, 
-                                  NULL, NULL, NULL, NULL};
-static Namdisc_t text_wcslen_disc = {0, (void (*)())SetTextWCSlen, NULL, NULL, 
-                                  NULL, NULL, NULL, NULL};
+static Namdisc_t text_doit_disc = { .putval = SetTextDoit };
+static Namdisc_t text_startpos_disc = { .putval = SetTextStartPos };
+static Namdisc_t text_endpos_disc = { .putval = SetTextEndPos };
+static Namdisc_t text_ptr_disc = { .putval = SetTextPtr };
+static Namdisc_t text_len_disc = { .putval = SetTextLen };
+static Namdisc_t text_format_disc = { .putval = SetTextFormat };
+static Namdisc_t text_wcsptr_disc = { .putval = SetTextWCSptr };
+static Namdisc_t text_wcslen_disc = { .putval = SetTextWCSlen };
 
 static const XtActionsRec Ksh_actions[] = {
 	{ "ksh_eval",	Translation_ksh_eval }
@@ -1736,7 +1731,7 @@ do_XtGetValues(
 
 		envar[n] = &p[1];
 		*p = ':';
-		args[n].value = (XtArgVal)stakalloc(256);
+		args[n].value = (XtArgVal)stkalloc(stkstd, 256);
 		n++;
 	}
 	XtGetValues(w->w, args, n);
@@ -3089,6 +3084,20 @@ do_XClearWindow(
    invokeXDrawFunction(CLEAR_WINDOW, argc, argv);
 }
 
+static XtResource *
+lookup_resource(char *command, classtab_t *class, wtab_t *parent, char *name)
+{
+    XtResource *res = class->res ? dtmatch(class->res, name) : NULL;
+    if (!res && parent && parent->wclass && parent->wclass->con)
+        res = dtmatch(parent->wclass->con, name);
+    if (!res) {
+        char *message = strdup(GetSharedMsg(DT_UNDEF_RESOURCE));
+        printerrf(command, message, class->cname, name, NULL, NULL, NULL, NULL, NULL, NULL);
+        free(message);
+    }
+    return res;
+}
+
 int
 ConvertTypeToString(
         char *arg0,
@@ -3102,28 +3111,11 @@ ConvertTypeToString(
 	char *from_type;
 	XtResourceList res;
 	XrmValue    fr_val, to_val;
-	char *nam;
         char * errmsg;
 
-        if ((nam = hashget((Hash_table_t*)class->res, resource)) == NULL) {
-		/* If we didn't find it in this widget's class record,
-		 * see if the parent is a constraint widget class, and
-		 * if so then see if we can find the class there.
-		 */
-		if (parent == NULL || parent->wclass == NULL ||
-	 	  parent->wclass->con == NULL ||
-                  (nam = hashget((Hash_table_t*)parent->wclass->con, resource))
-                          == NULL)
-                {
-			errmsg = strdup(GetSharedMsg(DT_UNDEF_RESOURCE));
-			printerrf(arg0, errmsg, 
-				(char *)(class->cname), resource, NULL, NULL,
-                                NULL, NULL, NULL, NULL);
-                        free(errmsg);
-			return(FAIL);
-		}
-	}
-        res = (XtResourceList)nam;
+        res = lookup_resource(arg0, class, parent, resource);
+        if (!res)
+                return FAIL;
 
 	/*
 	 * unfortunately, we have to have a special case for String
@@ -3178,32 +3170,15 @@ ConvertStringToType(
 	char *to_type;
 	XtResourceList res;
 	XrmValue    fr_val, to_val;
-	char *nam;
         char * errmsg;
 
 	DTKSHConversionClass = class;	/* needed by callback converter */
 	DTKSHConversionResource = resource;  /* needed by callback converter */
 	DTKSHConversionWidget = w;	/* needed by callback converter */
 
-        if ((nam = hashget((Hash_table_t*)class->res, resource)) == NULL) {
-		/* If we didn't find it in this widget's class record,
-		 * see if the parent is a constraint widget class, and
-		 * if so then see if we can find the class there.
-		 */
-		if (parent == NULL || parent->wclass == NULL ||
-			parent->wclass->con == NULL ||
-                        (nam = hashget((Hash_table_t*)parent->wclass->con, 
-                                        resource)) == NULL)
-                {
-			errmsg = strdup(GetSharedMsg(DT_UNDEF_RESOURCE));
-			printerrf(arg0, errmsg,
-				(char *)(class->cname), resource, NULL,
-                                NULL, NULL, NULL, NULL, NULL);
-                        free(errmsg);
-			return(CONVERT_FAILED);
-		}
-	}
-        res = (XtResourceList)nam;
+        res = lookup_resource(arg0, class, parent, resource);
+        if (!res)
+                return CONVERT_FAILED;
 
 	/*
 	 * Unfortunately, because String types can be variable in size,
@@ -7886,8 +7861,8 @@ ProcessHelpCallbackReason(
 Namval_t *
 nopCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    Namval_t * np2;
@@ -7913,8 +7888,8 @@ nopCreateDisc(
 Namval_t *
 dftCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    Namval_t * np2;
@@ -7953,8 +7928,8 @@ dftCreateDisc(
 Namval_t *
 ehCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    Namval_t * np2;
@@ -7984,8 +7959,8 @@ ehCreateDisc(
 Namval_t *
 transCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    Namval_t * np2;
@@ -8014,8 +7989,8 @@ transCreateDisc(
 Namval_t *
 scaleCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8054,8 +8029,8 @@ scaleCreateDisc(
 Namval_t *
 arrowCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8102,8 +8077,8 @@ arrowCreateDisc(
 Namval_t *
 comboCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8148,8 +8123,8 @@ comboCreateDisc(
 Namval_t *
 cmdCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8197,8 +8172,8 @@ cmdCreateDisc(
 Namval_t *
 dAreaCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8237,8 +8212,8 @@ dAreaCreateDisc(
 Namval_t *
 dbtnCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8287,8 +8262,8 @@ dbtnCreateDisc(
 Namval_t *
 fselCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8366,8 +8341,8 @@ fselCreateDisc(
 Namval_t *
 listCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8465,8 +8440,8 @@ listCreateDisc(
 Namval_t *
 pbtnCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8513,8 +8488,8 @@ pbtnCreateDisc(
 Namval_t *
 rcCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8567,8 +8542,8 @@ rcCreateDisc(
 Namval_t *
 sbarCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8614,8 +8589,8 @@ sbarCreateDisc(
 Namval_t *
 swinCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8656,8 +8631,8 @@ swinCreateDisc(
 Namval_t *
 sboxCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8705,8 +8680,8 @@ sboxCreateDisc(
 Namval_t *
 tbtnCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8749,8 +8724,8 @@ tbtnCreateDisc(
 Namval_t *
 textCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -8906,8 +8881,8 @@ textCreateDisc(
 Namval_t *
 textCreateDisc2(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -9018,8 +8993,8 @@ textCreateDisc2(
 Namval_t *
 helpCreateDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -9098,8 +9073,8 @@ helpCreateDisc(
 Namval_t *
 dtPrintSetupProcDisc(
         Namval_t *np,
-        char *name,
-	int flags,
+        const char *name,
+	nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -9159,9 +9134,8 @@ CloneDiscipline(
 {
    Namfun_t * clonedDisc;
 
-   clonedDisc = (Namfun_t *)XtMalloc(sizeof(Namfun_t));
+   clonedDisc = (Namfun_t *)XtCalloc(1, sizeof(Namfun_t));
    clonedDisc->disc = discipline;
-   clonedDisc->next = NULL;
    return(clonedDisc);
 }
 
@@ -9177,7 +9151,8 @@ FreeDiscipline(
 void
 SetTextDoit(
         Namval_t *np,
-        char *name,
+        const char *name,
+        nvflag_t flags,
         Namfun_t *fp )
 {
    XrmValue fval, tval;
@@ -9187,8 +9162,11 @@ SetTextDoit(
    char * p;
    Namval_t *cbDataNp;
 
+   if (name == NULL)
+      return;
+
    /* Convert from string to a boolean */
-   fval.addr = name;
+   fval.addr = (XPointer)name;
    fval.size = strlen(name);
    XtConvert(Toplevel, XtRString, &fval, XtRBoolean, &tval);
 
@@ -9206,13 +9184,17 @@ SetTextDoit(
 void
 SetTextStartPos(
         Namval_t *np,
-        char *name,
+        const char *name,
+        nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
    XmTextVerifyCallbackStruct * cbData;
    char * p;
    Namval_t *cbDataNp;
+
+   if (name == NULL)
+      return;
 
    if (cbDataNp = nv_open("CB_CALL_DATA", sh.var_tree, 0))
    {
@@ -9225,13 +9207,17 @@ SetTextStartPos(
 void
 SetTextEndPos(
         Namval_t *np,
-        char *name,
+        const char *name,
+        nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
    XmTextVerifyCallbackStruct * cbData;
    char * p;
    Namval_t *cbDataNp;
+
+   if (name == NULL)
+      return;
 
    if (cbDataNp = nv_open("CB_CALL_DATA", sh.var_tree, 0))
    {
@@ -9244,7 +9230,8 @@ SetTextEndPos(
 void
 SetTextPtr(
         Namval_t *np,
-        char *name,
+        const char *name,
+        nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -9252,6 +9239,9 @@ SetTextPtr(
    char * p;
    Namval_t *cbDataNp;
    static char * staticBuf = NULL;
+
+   if (name == NULL)
+      return;
 
    if (cbDataNp = nv_open("CB_CALL_DATA", sh.var_tree, 0))
    {
@@ -9273,13 +9263,17 @@ SetTextPtr(
 void
 SetTextLen(
         Namval_t *np,
-        char *name,
+        const char *name,
+        nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
    XmTextVerifyCallbackStruct * cbData;
    char * p;
    Namval_t *cbDataNp;
+
+   if (name == NULL)
+      return;
 
    if (cbDataNp = nv_open("CB_CALL_DATA", sh.var_tree, 0))
    {
@@ -9292,7 +9286,8 @@ SetTextLen(
 void
 SetTextFormat(
         Namval_t *np,
-        char *name,
+        const char *name,
+        nvflag_t flags,
         Namfun_t *fp )
 {
    XrmValue fval, tval;
@@ -9302,8 +9297,11 @@ SetTextFormat(
    char * p;
    Namval_t *cbDataNp;
 
+   if (name == NULL)
+      return;
+
    /* Convert from string to format type */
-   fval.addr = name;
+   fval.addr = (XPointer)name;
    fval.size = strlen(name);
    XtConvert(Toplevel, XtRString, &fval, "TextFormat", &tval);
 
@@ -9319,7 +9317,8 @@ SetTextFormat(
 void
 SetTextWCSptr(
         Namval_t *np,
-        char *name,
+        const char *name,
+        nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
@@ -9328,6 +9327,9 @@ SetTextWCSptr(
    Namval_t *cbDataNp;
    static wchar_t * wcBuf = NULL;
    int count;
+
+   if (name == NULL)
+      return;
 
    if (cbDataNp = nv_open("CB_CALL_DATA", sh.var_tree, 0))
    {
@@ -9350,13 +9352,17 @@ SetTextWCSptr(
 void
 SetTextWCSlen(
         Namval_t *np,
-        char *name,
+        const char *name,
+        nvflag_t flags,
         Namfun_t *fp )
 {
    char * cbDataAddrStr;
    XmTextVerifyCallbackStructWcs * cbData;
    char * p;
    Namval_t *cbDataNp;
+
+   if (name == NULL)
+      return;
 
    if (cbDataNp = nv_open("CB_CALL_DATA", sh.var_tree, 0))
    {
