@@ -19,7 +19,7 @@ integrated changes matter more than staying on the upstream feature set.
 | [Window management](improvements/window-management.md) | Task switching, snap feedback, open-window icons, Shift grid movement, desktop-click defocus and title-bar double-click maximize are integrated in dtwm. | Everyday window navigation gains familiar, visible interactions without replacing the CDE window manager. |
 | [Terminal](improvements/terminal.md) | Filename drops insert shell-safe escaped paths, and the selected font size persists for later terminals and clones. | Dragging files into a shell and keeping a readable terminal setup both work predictably. |
 | [Editor](improvements/editor.md) | Dropped files support automatic, path-list or content handling, with the choice persisted and propagated through ToolTalk. | A drop can match the editing workflow instead of having one hard-coded meaning. |
-| [File Manager](improvements/file-manager.md) | Adds a shelf, image-content icons, extra-large views, storage details and richer IconicPath interaction. | Common locations and visual files are easier to browse. |
+| [File Manager](improvements/file-manager.md) | Adds a shelf, image-content icons, extra-large views, storage details and optional read-only folder comparison with saved preferences. | Browse files and inspect folder differences; existing Copy/Move commands remain available. |
 | [Launching](improvements/launching.md) | Distinguishes direct GUI launch from the interactive `Run...` dialog and lets that dialog choose whether to use a Terminal. | Starting a graphical application no longer requires an unnecessary terminal wrapper. |
 | [Trash](improvements/trash.md) | Improves trash state and full-icon handling and can raise and focus the Trash window. | The desktop communicates trash state and returns to the relevant window more reliably. |
 | [Validation](improvements/validation.md) | ARM64 CI builds the current Motif dependency, compiles CDE, runs `make check`, verifies the ABI link and launches the desktop smoke test. | A successful result covers the native stack and a real CDE session, not just compilation. |
@@ -58,7 +58,9 @@ Style Manager and File Manager from the uConsole smoke run.
 - **Editor:** selectable dropped-file behavior with persisted configuration.
 - **File Manager:** a shelf, image-content icons, extra-large views, storage
   information, IconicPath interaction, improved Trash handling and support for
-  filenames containing quotes or backslashes.
+  filenames containing quotes or backslashes; optional
+  [read-only folder comparison](improvements/folder-comparison.md) adds filters,
+  matching-rule review and saved preferences.
 - **Run actions:** direct graphical launch alongside the configurable
   Terminal-backed `Run...` workflow.
 

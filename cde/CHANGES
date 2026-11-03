@@ -13,6 +13,32 @@
   callbacks complete prototypes; remove unused legacy externs and timer casts.
 
 2026-11-02
+- dtinfo: match typed DtHelp hyperlink/resize callback interfaces in the C++
+  viewer, recovering concrete client objects inside callbacks rather than
+  casting through unspecified-argument function pointers.
+- dtfile: optionally build the native dtfile_sync read-only folder comparison
+  window with --with-ck-core-fs and installed ck-core-fs-lib >= 0.3; require the
+  tree C API while leaving default builds free of the optional dependency.
+- dtfile_sync: preview metadata scopes, byte/date filters and scoped matching
+  rules with paged results and plan totals; keep Apply compile-time disabled.
+  Mirror/two-way execution is not delivered; existing Copy/Move still work.
+- dtfile_sync: save/load/delete bounded named preferences asynchronously,
+  preserve native path bytes and exact UTC date bounds, retain corrupt stores,
+  and wait for worker drain when cancelling or closing the comparison.
+- dtfile_sync: check macOS ACLs and the private profile access path, and flush
+  the parent after creating or adopting the config directory; use descriptive
+  Help/Delete dialog titles and keep operation errors visible.
+- dtfile_sync: allow journal-free/HOME-free Compare, close inherited parent
+  descriptors after exec, preserve Resume across inventory completion, and
+  prevent queued recomparison from restarting work after Close.
+- dtfile: track optional menu configuration through a private generated header
+  so incremental default/optional toggles rebuild the affected object.
+- dtfile_sync: place notebook tabs at the top, scroll each page independently,
+  and bound the initial window by the screen so bottom actions remain visible.
+- validation: inspect the native comparison/profile UI on a 1280-pixel-wide
+  screen and verify a separate ordinary-copy controller fixture's 70 contents,
+  permission modes, modification times, completion and actual worker drain;
+  keep the graphical helper's Apply gate disabled.
 - C23: give the DtInfo Tree, Panner, Pixmap, Porthole, Restraint and Simple
   widgets exact Xt method signatures; type the DtSvc hash callbacks, Instant
   document-tree visitors, and dtscreen mode dispatch without function-pointer

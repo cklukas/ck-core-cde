@@ -58,6 +58,12 @@
  ****************************************************************************
  ************************************<+>*************************************/
 
+#include "SyncFeature.h"
+#include <cde_config.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
 #include <pwd.h>
@@ -76,6 +82,7 @@
 #include <Xm/XmPrivate.h> /* _XmGetActiveTopLevelMenu */
 
 #include <X11/ShellP.h>
+#include <X11/StringDefs.h>
 
 #include <Dt/DtP.h>
 #include <Dt/DtNlUtils.h>
@@ -107,11 +114,19 @@ static int menuItemCount = 54;
 #else
 static int menuItemCount = 53;
 #endif
+#if DTFILE_SYNC_FEATURE_ENABLED
+static Widget * synchronizeFoldersBtn = NULL;
+static Boolean synchronizeLaunchPending = False;
+#endif
 static MenuDesc * mainMenu = NULL;
 static Widget * actionsPaneId = NULL;
 static char * homeDir = NULL;
 
 /********    Static Function Declarations    ********/
+#if DTFILE_SYNC_FEATURE_ENABLED
+static void SynchronizeFolders(Widget w, XtPointer client_data,
+                              XtPointer call_data);
+#endif
 static void GetMainMenuData (
                         Widget mbar,
                         XtPointer * mainRecordPtr,
@@ -176,6 +191,9 @@ CreateMenu(
 
    if (createSharedComponents)
    {
+#if DTFILE_SYNC_FEATURE_ENABLED
+      ++menuItemCount;
+#endif
       mainMenu = (MenuDesc *)XtCalloc(sizeof(MenuDesc) * menuItemCount, 1);
       j = 0;
 
@@ -311,9 +329,23 @@ CreateMenu(
          mainMenu[j].helpData = HELP_FILE_MENU_STR;
          mainMenu[j].name = "openTerminal";
          mainMenu[j++].activateCallback = TerminalCWD;
+#if DTFILE_SYNC_FEATURE_ENABLED
+         synchronizeFoldersBtn = &(mainMenu[j].widget);
+         mainMenu[j].type = MENU_BUTTON;
+         mainMenu[j].label = XtNewString(GETMESSAGE(20, 204, "Synchronize Folders..."));
+         mainMenu[j].mnemonic = XtNewString(GETMESSAGE(20, 205, "y"));
+         mainMenu[j].helpData = HELP_FILE_MENU_STR;
+         mainMenu[j].name = "synchronizeFolders";
+         mainMenu[j++].activateCallback = SynchronizeFolders;
+#endif
       }
-      else 
+      else
+      {
          --menuItemCount;
+#if DTFILE_SYNC_FEATURE_ENABLED
+         --menuItemCount;
+#endif
+      }
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
@@ -1375,6 +1407,14 @@ SetMenuSensitivity(
 
       file_mgr_data = (FileMgrData *) dialog_data->data;
 
+#if DTFILE_SYNC_FEATURE_ENABLED
+      if (synchronizeFoldersBtn != NULL)
+         XtSetSensitive(*synchronizeFoldersBtn,
+                        !synchronizeLaunchPending &&
+                        file_mgr_data->restricted_directory == NULL &&
+                        !file_mgr_data->toolbox);
+#endif
+
       if( stat( file_mgr_data->current_directory, &file_info ) == 0 )
       {
         if( ! (file_info.st_mode & S_IXUSR)
@@ -1683,6 +1723,198 @@ TerminalCWD (
    XtFree(pwd_dir);
 
 }
+
+#if DTFILE_SYNC_FEATURE_ENABLED
+typedef struct
+{
+   Widget shell;
+   XtInputId input;
+   int fd;
+   size_t received;
+   unsigned char bytes[sizeof(int) + 1];
+} SynchronizeLaunch;
+
+static void SynchronizeShellDestroyed(Widget w, XtPointer client_data,
+                                     XtPointer call_data);
+
+static void
+SynchronizeLaunchError(Widget shell, int launch_error)
+{
+   const char *message = GETMESSAGE(20, 208, "Cannot start folder synchronization.");
+   char *detail = XtMalloc(strlen(message) + strlen(strerror(launch_error)) + 2);
+
+   sprintf(detail, "%s\n%s", message, strerror(launch_error));
+   _DtMessage(shell, GETMESSAGE(20, 206, "Folder Synchronization"),
+              detail, NULL, HelpRequestCB);
+   XtFree(detail);
+}
+
+static void
+SynchronizeLaunchFree(SynchronizeLaunch *launch, Boolean shell_destroyed)
+{
+   XtRemoveInput(launch->input);
+   close(launch->fd);
+   if (!shell_destroyed)
+      XtRemoveCallback(launch->shell, XtNdestroyCallback,
+                       SynchronizeShellDestroyed, (XtPointer)launch);
+   synchronizeLaunchPending = False;
+   XtFree((char *)launch);
+}
+
+static void
+SynchronizeShellDestroyed(Widget w, XtPointer client_data, XtPointer call_data)
+{
+   (void)w;
+   (void)call_data;
+   /* Cancel the observer; the existing SIGCHLD policy still owns reaping. */
+   SynchronizeLaunchFree((SynchronizeLaunch *)client_data, True);
+}
+
+static void
+SynchronizeLaunchInput(XtPointer client_data, int *fd, XtInputId *input)
+{
+   SynchronizeLaunch *launch = (SynchronizeLaunch *)client_data;
+   Widget shell = launch->shell;
+   int launch_error = 0;
+   ssize_t count;
+
+   (void)input;
+   /* One bounded nonblocking read per dispatch, including after EINTR. */
+   count = read(*fd, launch->bytes + launch->received,
+                sizeof(launch->bytes) - launch->received);
+   if (count < 0)
+   {
+      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
+         return;
+      launch_error = errno;
+   }
+   else if (count > 0)
+   {
+      launch->received += (size_t)count;
+      if (launch->received <= sizeof(int))
+         return; /* Wait for EOF to validate an exact errno-sized receipt. */
+      launch_error = EIO;
+   }
+   else if (launch->received != 0)
+   {
+      if (launch->received != sizeof(int))
+         launch_error = EIO;
+      else
+      {
+         memcpy(&launch_error, launch->bytes, sizeof(launch_error));
+         if (launch_error <= 0)
+            launch_error = EIO;
+      }
+   }
+   /* Empty EOF means exec closed the writer successfully. */
+   SynchronizeLaunchFree(launch, False);
+   if (launch_error != 0)
+      SynchronizeLaunchError(shell, launch_error);
+}
+
+/* The helper receives a local path as one argument, never a shell command. */
+static void
+SynchronizeFolders(Widget w, XtPointer client_data, XtPointer call_data)
+{
+   FileMgrRec *file_mgr_rec = NULL;
+   DialogData *dialog_data;
+   FileMgrData *file_mgr_data;
+   Widget mbar = XmGetPostedFromWidget(XtParent(w));
+   Tt_status status;
+   char *source;
+   int error_pipe[2];
+   int read_flags;
+   int launch_error = 0;
+   pid_t pid;
+   SynchronizeLaunch *launch;
+
+   (void)client_data;
+   (void)call_data;
+   if (mbar == NULL || restrictMode || synchronizeLaunchPending)
+      return;
+   XtVaGetValues(mbar, XmNuserData, &file_mgr_rec, NULL);
+   if (file_mgr_rec == NULL ||
+       (dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec)) == NULL)
+      return;
+   file_mgr_data = (FileMgrData *)dialog_data->data;
+   if (file_mgr_data->restricted_directory != NULL || file_mgr_data->toolbox)
+      return;
+
+   synchronizeLaunchPending = True;
+   source = ResolveLocalPathName(file_mgr_data->host,
+                                file_mgr_data->current_directory, NULL,
+                                home_host_name, &status);
+   if (status != TT_OK || source == NULL)
+   {
+      synchronizeLaunchPending = False;
+      XtFree(source);
+      _DtMessage(file_mgr_rec->shell,
+                 GETMESSAGE(20, 206, "Folder Synchronization"),
+                 GETMESSAGE(20, 207, "Cannot access the current folder on this host."),
+                 NULL, HelpRequestCB);
+      return;
+   }
+
+   if (pipe(error_pipe) == -1)
+      launch_error = errno;
+   else
+   {
+      read_flags = fcntl(error_pipe[0], F_GETFL);
+      if (read_flags == -1 ||
+          fcntl(error_pipe[0], F_SETFL, read_flags | O_NONBLOCK) == -1 ||
+          fcntl(error_pipe[0], F_SETFD, FD_CLOEXEC) == -1 ||
+          fcntl(error_pipe[1], F_SETFD, FD_CLOEXEC) == -1)
+         launch_error = errno;
+      else if ((pid = fork()) == -1)
+         launch_error = errno;
+      else if (pid == 0)
+      {
+         size_t sent = 0;
+         ssize_t count;
+
+         close(error_pipe[0]);
+         execl(CDE_INSTALLATION_TOP "/bin/dtfile_sync", "dtfile_sync",
+               source, (char *)NULL);
+         launch_error = errno;
+         /* Only async-signal-safe operations are used after fork. */
+         while (sent < sizeof(launch_error))
+         {
+            count = write(error_pipe[1], (char *)&launch_error + sent,
+                          sizeof(launch_error) - sent);
+            if (count > 0)
+               sent += (size_t)count;
+            else if (count == -1 && errno == EINTR)
+               continue;
+            else
+               break;
+         }
+         _exit(127);
+      }
+      close(error_pipe[1]);
+      if (launch_error == 0)
+      {
+         launch = (SynchronizeLaunch *)XtCalloc(1, sizeof(*launch));
+         launch->shell = file_mgr_rec->shell;
+         launch->fd = error_pipe[0];
+         launch->input = XtAppAddInput(XtWidgetToApplicationContext(launch->shell),
+                                      launch->fd, (XtPointer)XtInputReadMask,
+                                      SynchronizeLaunchInput, (XtPointer)launch);
+         XtAddCallback(launch->shell, XtNdestroyCallback,
+                       SynchronizeShellDestroyed, (XtPointer)launch);
+         XtSetSensitive(*synchronizeFoldersBtn, False);
+      }
+      else
+         close(error_pipe[0]);
+   }
+   XtFree(source);
+   if (launch_error != 0)
+   {
+      synchronizeLaunchPending = False;
+      SynchronizeLaunchError(file_mgr_rec->shell, launch_error);
+   }
+   /* Never wait here: Main.c's existing SIGCHLD handling owns the child. */
+}
+#endif
 
 typedef struct
 {

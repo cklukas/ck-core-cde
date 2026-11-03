@@ -1048,6 +1048,12 @@ $ Messages 200-201 are the text and mnemonic for the File.AddToShelf menu option
 $ Messages 202-203 are the text and mnemonic for the View.Mounts menu option
 202 Mounts...
 203 M
+$ Messages 204-208 describe the optional folder synchronization action
+204 Synchronize Folders...
+205 y
+206 Folder Synchronization
+207 Cannot access the current folder on this host.
+208 Cannot start folder synchronization.
 $ Messages 42-47 are obsolete
 42 Up
 46 New

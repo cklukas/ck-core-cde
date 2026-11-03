@@ -13,6 +13,10 @@ BUILT_SOURCES = Xm.cat Mrm.cat Uil.cat DtHelp.cat DtMail.cat		\
       dtudcexch.cat dtudcfonted.cat libdtcm.cat libDtMail.cat		\
       dtinfo.cat dtinfo_start.cat
 
+if HAVE_CK_CORE_FS
+BUILT_SOURCES += dtfile_sync.cat
+endif
+
 CLEANFILES = $(BUILT_SOURCES)
 
 msgcatdir = $(CDE_INSTALLATION_TOP)/lib/nls/msg/$(LANG)
@@ -108,6 +112,12 @@ dtcopy.cat: $(TOP)/dtfile/dtcopy/dtcopy.msg
 dtcreate.cat: $(TOP)/dtcreate/dtcreate.msg
 	$(RM) $@
 	LANG=C $(GENCAT) $@ $^ || $(RM) $@
+
+if HAVE_CK_CORE_FS
+dtfile_sync.cat: $(top_srcdir)/programs/dtfile/dtsync/dtfile_sync.msg
+	$(RM) $@
+	LANG=C $(GENCAT) $@ $< || { status=$$?; $(RM) $@; exit $$status; }
+endif
 
 dtfile.cat: $(TOP)/dtfile/dtfile.msg
 	$(RM) $@
