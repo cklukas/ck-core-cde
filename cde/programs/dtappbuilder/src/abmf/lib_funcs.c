@@ -66,6 +66,7 @@
 
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <Tt/tttk.h>
@@ -2107,7 +2108,7 @@ dtb_center(
 
    XtAddEventHandler(form_child,
             StructureNotifyMask, False,
-            centering_handler, (XtPointer)type);
+            centering_handler, (XtPointer)(uintptr_t)type);
 }
 
 /*
@@ -2128,7 +2129,7 @@ dtb_uncenter(
 
    XtRemoveEventHandler(form_child,
             StructureNotifyMask, False,
-            centering_handler, (XtPointer)type);
+            centering_handler, (XtPointer)(uintptr_t)type);
 }
 
 /*
@@ -2166,6 +2167,9 @@ center_widget(
                 NULL);
 
     switch (type) {
+	case DTB_CENTER_NONE:
+	break;
+
 	case DTB_CENTER_POSITION_VERT:
 
             if (left_attach != XmATTACH_POSITION)
@@ -2240,6 +2244,9 @@ uncenter_widget(
                 NULL);
 
     switch (type) {
+	case DTB_CENTER_NONE:
+	break;
+
 	case DTB_CENTER_POSITION_VERT:
 
             if (left_attach != XmATTACH_POSITION)
@@ -2289,7 +2296,7 @@ centering_handler(
 {
     XConfigureEvent	*xcon = &event->xconfigure;
     Widget		resized_child;
-    DTB_CENTERING_TYPES	type = (DTB_CENTERING_TYPES)client_data;
+    DTB_CENTERING_TYPES	type = (DTB_CENTERING_TYPES)(uintptr_t)client_data;
 
 
     if ((event->type != ConfigureNotify) && (event->type != MapNotify))
@@ -2735,6 +2742,10 @@ dtb_children_align(
 	case DTB_GROUP_ROWS:
 	    num_rows = 1;
 	    num_cols = 0;
+	break;
+
+	case DTB_GROUP_NONE:
+	case DTB_GROUP_ROWSCOLUMNS:
 	break;
 
     }

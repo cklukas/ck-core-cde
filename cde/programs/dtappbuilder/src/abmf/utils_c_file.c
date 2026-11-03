@@ -110,6 +110,7 @@ abmfP_write_utils_c_file(
 
     abmfP_write_c_system_include(genCodeInfo, "unistd.h");
     abmfP_write_c_system_include(genCodeInfo, "stdlib.h");
+    abmfP_write_c_system_include(genCodeInfo, "stdint.h");
     abmfP_write_c_system_include(genCodeInfo, "stdio.h");
     abmfP_write_c_system_include(genCodeInfo, "sys/param.h");
     abmfP_write_c_system_include(genCodeInfo, "sys/stat.h");

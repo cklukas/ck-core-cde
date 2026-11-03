@@ -83,6 +83,16 @@ adapters are registered without function-pointer casts as well. Icon geometry
 returns Motif's negotiated result, and the registered fatal Xt handler is
 non-returning even if delivery of the requested core-dump signal fails.
 
+The `ttsnoop` App Builder rules likewise treat BIL projects, module
+descriptions, maintained stub templates and C/C++ wrapper fragments as source
+inputs. Generated UI modules, utility headers and the main translation unit
+remain private build outputs, and a clean out-of-tree build never depends on
+copies left beside them by an earlier in-tree generation. The generated utility
+runtime covers each centering and grouping enum value and transports numeric Xt
+client data through `uintptr_t`. The maintained ToolTalk viewer uses one
+`mkstemp` path helper for its temporary files and FIFO names, with explicit file
+descriptor, allocation and cleanup ownership.
+
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
 use complete prototypes; the conversion regression test also compiles const

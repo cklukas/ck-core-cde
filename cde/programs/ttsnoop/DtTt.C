@@ -26,6 +26,7 @@
 //%%  (c) Copyright 1993, 1994 Novell, Inc.
 //%%  $XConsortium: DtTt.C /main/4 1996/03/19 10:47:59 barstow $
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/wait.h>
@@ -616,20 +617,59 @@ _DtTtChoices(
         return 0;
 }
 
-#if defined(aix)
-#define AIX_CONST_STRING	(char *)
-#else
-#define AIX_CONST_STRING
-#endif
+int
+_DtCreateTemporaryFile(
+	const char *	prefix,
+	char **		path
+)
+{
+    const char *temp_dir;
+    char *template_path;
+    size_t template_size;
+    int fd;
+
+    if ((prefix == 0) || (path == 0)) {
+	errno = EINVAL;
+	return -1;
+    }
+
+    temp_dir = getenv("TMPDIR");
+    if ((temp_dir == 0) || (*temp_dir == '\0')) {
+	temp_dir = "/tmp";
+    }
+
+    template_size = strlen(temp_dir) + strlen(prefix) + 9;
+    template_path = (char *)malloc(template_size);
+    if (template_path == 0) {
+	return -1;
+    }
+
+    snprintf(template_path, template_size, "%s/%s.XXXXXX", temp_dir, prefix);
+    fd = mkstemp(template_path);
+    if (fd == -1) {
+	free(template_path);
+	return -1;
+    }
+
+    *path = template_path;
+    return fd;
+}
 
 void
 _DtOpen(
 	Widget		label,
 	const char *	cmd,
-	const char *	tempnamTemplate
+	const char *	temporaryPrefix
 )
 {
-    char *file = tempnam( 0, AIX_CONST_STRING tempnamTemplate );
+    char *file = 0;
+    int fd = _DtCreateTemporaryFile(temporaryPrefix, &file);
+    if (fd == -1) {
+	DtTtSetLabel(label, temporaryPrefix, errno);
+	return;
+    }
+    close(fd);
+
     std::ostringstream cmdStream;
     cmdStream << cmd << " > " << file << ends;
     int sysStat = system( cmdStream.str().c_str() );
@@ -637,13 +677,18 @@ _DtOpen(
 	    std::ostringstream func;
 	    func << "system( \"" << cmdStream.str() << "\" )" << ends;
 	    DtTtSetLabel( label, func.str().c_str(), sysStat );
+	    unlink(file);
+	    free(file);
 	    return;
     }
     if (WEXITSTATUS( sysStat ) != 0) {
         DtTtSetLabel( label, cmdStream.str().c_str(), WEXITSTATUS( sysStat ));
+	    unlink(file);
+	    free(file);
 	    return;
     }
     _DtOpen( label, file );
+    free(file);
 }
 
 void
@@ -668,17 +713,43 @@ _DtOpen(
 	Widget		label,
 	void *		buf,
 	size_t		len,
-	const char *	tempnamTemplate
+	const char *	temporaryPrefix
 )
 {
-    char *file = tempnam( 0, AIX_CONST_STRING tempnamTemplate );
-    int fd = open( file, O_WRONLY|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR );
-    if (write( fd, buf, len ) < 0) {
-	    DtTtSetLabel( label, file, errno );
+    char *file = 0;
+    const char *next = (const char *)buf;
+    size_t remaining = len;
+    int fd = _DtCreateTemporaryFile(temporaryPrefix, &file);
+    if (fd == -1) {
+	    DtTtSetLabel(label, temporaryPrefix, errno);
 	    return;
+    }
+    while (remaining > 0) {
+	ssize_t written = write(fd, next, remaining);
+	if (written < 0) {
+	    if (errno == EINTR) {
+		continue;
+	    }
+	    DtTtSetLabel(label, file, errno);
+	    close(fd);
+	    unlink(file);
+	    free(file);
+	    return;
+	}
+	if (written == 0) {
+	    errno = EIO;
+	    DtTtSetLabel(label, file, errno);
+	    close(fd);
+	    unlink(file);
+	    free(file);
+	    return;
+	}
+	next += written;
+	remaining -= (size_t)written;
     }
     close( fd );
     _DtOpen( label, file );
+    free(file);
 }
 
 void

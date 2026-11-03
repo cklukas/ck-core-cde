@@ -1,4 +1,10 @@
 2026-11-03
+- ttsnoop: resolve App Builder project, module, stub-template and wrapper
+  inputs from the maintained source directory, so clean out-of-tree builds
+  regenerate every UI module and the main program without staged source files;
+  emit complete enum dispatch and pass integer-valued Xt client data through
+  `uintptr_t`; and replace `tempnam` with owned `mkstemp` paths for FIFOs and
+  ToolTalk viewer data.
 - dtprintinfo: search both build and maintained source directories for its
   private UI, object and utility headers, and resolve message-generator scripts
   and inputs from the source tree during clean out-of-tree builds; give the
