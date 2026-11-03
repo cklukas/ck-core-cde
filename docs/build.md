@@ -66,6 +66,11 @@ The same rule applies to Motif constructors and list, text and subwidget
 operations: related commands share a helper only when their callback types are
 actually compatible.
 
+The `dtsearchpath` executable searches the libCliSrv build directory before its
+maintained source directory. Generated interfaces can therefore override their
+source counterparts when present, while a clean out-of-tree build still finds
+the checked-in `Environ.h` interface without copying it into the build tree.
+
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
 use complete prototypes; the conversion regression test also compiles const

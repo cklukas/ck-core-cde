@@ -1,4 +1,7 @@
 2026-11-03
+- dtsearchpath: resolve the private libCliSrv interface from both its build and
+  maintained source directories, so clean out-of-tree qualification does not
+  depend on a copied `Environ.h`.
 - C23: type the remaining core DtHelp, DtTerm, DtWidget, dtcreate, dtlogin,
   dtsession and dtstyle no-argument interfaces; give dtlogin network,
   authentication and Xt hooks exact contracts; type dtappbuilder utilities,
