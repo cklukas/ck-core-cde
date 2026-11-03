@@ -2,7 +2,9 @@
 - CI: make both ARM64 GCC and Clang whole-CDE C23 lanes reject ambiguous
   function declarations, old-style definitions and incompatible
   function-pointer casts. The installed filesystem-consumer qualification uses
-  the same strict C boundary.
+  the same strict C boundary. The rpi4 runner uses separate isolated,
+  out-of-tree lanes with pinned Motif and filesystem revisions and records each
+  verified build's timing, compiler, source revisions and dtwm fingerprint.
 - DtTerm: load the Solaris interactive-session hook through its documented
   four-argument function contract instead of an unprototyped `void (*)()`
   cast. App Builder drops a disabled, structurally obsolete matrix renderer

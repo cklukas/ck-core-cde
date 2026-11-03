@@ -580,8 +580,10 @@ client, and map every captured desktop process to CK Core Motif ABI 9. The CI
 workflow preserves both compiler lanes with explicit `-std=c23` and promotes
 strict-prototype, old-style-definition and incompatible function-pointer
 diagnostics to errors. The installed filesystem-consumer qualification uses
-the same C diagnostics. Each CI lane configures in an empty out-of-tree
-directory. Generated public headers in
+the same C diagnostics. GitHub and rpi4 each run separate GCC and Clang lanes;
+the rpi4 driver records the compiler, source revisions, timing, output path and
+`dtwm` fingerprint in its isolated task directory. Each CI lane configures in
+an empty out-of-tree directory. Generated public headers in
 that directory take precedence, with the maintained source header tree as the
 fallback. ToolTalk applies the same build-first/source-second order to its
 private library interfaces, and the named Dt, DtI, ToolTalk, Xm, CSA and SPC
