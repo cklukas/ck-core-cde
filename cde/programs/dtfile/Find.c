@@ -1942,13 +1942,13 @@ ExecuteFind(
    {
       find_rec->alternateInputId =
          XtAddInput (fileno (find_rec->popenId), (XtPointer)XtInputReadMask,
-                  (XtInputCallbackProc)AlternateInputHandler2, find_rec);
+                  AlternateInputHandler2, find_rec);
    }
    else
    {
       find_rec->alternateInputId =
          XtAddInput (fileno (find_rec->popenId), (XtPointer)XtInputReadMask,
-                  (XtInputCallbackProc)AlternateInputHandler, find_rec);
+                  AlternateInputHandler, find_rec);
    }
 
    /* printf ("%s\n", command); */
@@ -2075,7 +2075,7 @@ ExecuteGrep( FindRec * find_rec)
 
    find_rec->alternateInputId =
       XtAddInput (fileno (find_rec->popenId), (XtPointer)XtInputReadMask,
-                  (XtInputCallbackProc)AlternateInputHandler3, find_rec);
+                  AlternateInputHandler3, find_rec);
 
    /* printf ("%s\n", command); */
 

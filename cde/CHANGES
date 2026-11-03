@@ -35,7 +35,8 @@
   Command, dialog-cache and Change Directory timeouts now implement
   `XtTimerCallbackProc` directly instead of treating client data as a widget
   parameter in the function type. Dialog-cache structure notifications use the
-  complete `XtEventHandler` signature.
+  complete `XtEventHandler` signature. Find and content-search pipe readers
+  register their exact `XtInputCallbackProc` contracts directly.
   Rename verification and tree-button activation recover concrete Motif
   callback records inside exact `XtCallbackProc` boundaries.
   Map, help, icon activation and iconic-path event handlers are registered
