@@ -912,9 +912,9 @@ IconEventHandler(
 	if (button_event->button == Button2 || button_event->button == Button3)
 	{
 		if (button_event->type == ButtonPress)
-			InputDispatch ((Widget) g, button_event, XmARM_EVENT);
+			InputDispatch ((Widget) g, event, XmARM_EVENT);
 		else if (button_event->type == ButtonRelease)
-			InputDispatch ((Widget) g, button_event, XmACTIVATE_EVENT);
+			InputDispatch ((Widget) g, event, XmACTIVATE_EVENT);
 	}
 }
 
@@ -2057,7 +2057,7 @@ Redisplay(
 /*	Draw highlight if highlighted.
 */
 	if (G_Highlighted (g))
-                BorderHighlight( (DtIconGadget)g );
+		BorderHighlight(w);
 }
 
 
@@ -2809,11 +2809,11 @@ InputDispatch(
 
 	if (event_mask & XmARM_EVENT || event_mask & XmMULTI_ARM_EVENT)
 		if (event->button == Button2)
-			IconDrag (w, (XEvent*) event);	
+			IconDrag (w, xevent);
                 else if (event->button == Button3)
-                        IconPopup (w, (XEvent*) event);
+			IconPopup (w, xevent);
 		else
-			IconArm (w, (XEvent*) event);
+			IconArm (w, xevent);
 	else if (event_mask & XmACTIVATE_EVENT ||
 		 event_mask & XmMULTI_ACTIVATE_EVENT)
 	{
@@ -2823,9 +2823,9 @@ InputDispatch(
 			 event->x <= G_X (g) + (int)G_Width (g) &&
 			 event->y >= G_Y (g) &&
 			 event->y <= G_Y (g) + (int)G_Height (g))
-			IconActivate (w, (XEvent*) event);
+			IconActivate (w, xevent);
 		else
-			IconDisarm (w, (XEvent*) event);
+			IconDisarm (w, xevent);
 	}
 	else if (event_mask & XmHELP_EVENT)
 		_XmSocorro (w, (XEvent *)event,NULL,NULL);

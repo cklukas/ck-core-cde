@@ -2,6 +2,8 @@
 - DtWidget and DtInfo: store project-owned widget methods, synthetic-resource
   converters and selection callbacks directly through their already-exact
   Xt/Motif contracts instead of retaining redundant function-pointer casts.
+  Icon input dispatch now preserves the enclosing `XEvent` pointer through
+  button handling and passes widget methods the declared `Widget` boundary.
 - ToolTalk: implement the desktop timeout hook through its exact
   `XtTimerCallbackProc` contract and register it directly.
 - ToolTalk: type every dynamically loaded Xlib and Xt entry with its native
