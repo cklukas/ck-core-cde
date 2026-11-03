@@ -74,11 +74,14 @@ extern int errno;
 
 #define add_to_list(h,t,e) {if (t) (t)->next = (e); else (h) = (e); (t) = (e);}
 
+typedef int (*CommandHandler)(char *, int, int, char **);
+typedef int (*EntryHandler)(char *, int, _tt_AuthFileEntry *, char *);
+
 typedef struct _CommandTable {		/* commands that are understood */
     char *name;				/* full name */
     int minlen;				/* unique prefix */
     int maxlen;				/* strlen(name) */
-    int (*processfunc)();		/* handler */
+    CommandHandler processfunc;		/* handler */
     char *helptext;			/* what to print for help */
 } CommandTable;
 
@@ -885,7 +888,7 @@ merge_entries(_tt_AuthFileEntryList **firstp, _tt_AuthFileEntryList *second,
 
 static int
 search_and_do(char *inputfilename, int lineno, int start,
-              int argc, char *argv[], int (*do_func)(), char *data)
+              int argc, char *argv[], EntryHandler do_func, char *data)
 {
     int i;
     int status;

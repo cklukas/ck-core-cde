@@ -63,6 +63,14 @@ consumers rather than retaining a K&R fallback. Its send/receive callbacks and
 the internal ToolTalk reply callbacks use their complete argument lists. The
 library builds and links with both C23 compilers, and its type negotiation is
 exercised against the linked archive for common-type and fallback selection.
+The `ttdbck` utility searches both build and source directories for its private
+ToolTalk, mini-ISAM and typed-database headers, so a clean out-of-tree build no
+longer relies on headers copied into a sibling build directory. The
+`tt_type_comp` utility likewise links its generated grammar include to the
+maintained source header and searches the private ToolTalk source directories.
+The `ttauth` command utility declares its public entry points explicitly and
+uses separate typed dispatch contracts for command handlers and authority-entry
+iterators, so C23 does not reinterpret either table as accepting no arguments.
 
 The `dtimsstart` desktop input-method launcher is also qualified at the
 translation-unit level with GCC and Clang in C23 mode. Its module interface and

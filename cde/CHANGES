@@ -50,7 +50,11 @@
   action, multimedia database, symbolic-table and event-loop declarations
   with their exact C/C++ contracts; type Instant's remaining initialization,
   browsing and output-buffer entry points and link their consumers with GCC
-  and Clang C23.
+  and Clang C23; let a clean out-of-tree `ttdbck` build resolve its private
+  ToolTalk headers from their source directories, and make `tt_type_comp` use
+  the source grammar header and private source includes; give `ttauth` public
+  entry points, command handlers and authority-entry iterators exact function
+  contracts.
 - dtfile: type resource serializers, file-operation dispatch, menu-data
   callbacks and selected signal and X/Xt callbacks without unspecified
   argument lists or compatibility casts; link the complete File Manager with
