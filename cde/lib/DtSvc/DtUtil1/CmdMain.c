@@ -40,6 +40,7 @@
 #include <Dt/CmdInv.h>
 
 #include <fcntl.h>
+#include <stdint.h>
 #include <termios.h>
 #include <errno.h>
 #include <unistd.h>
@@ -120,7 +121,7 @@ static void CheckCommandTerminator (
                         int pid,
                         int type,
                         int cause,
-                        unsigned long ind) ;
+                        void *terminate_data) ;
 static int DtCmdGetWindowType(
         unsigned long windowTypeMask);
 static void _DtCmdInitializeErrorMessages(void);
@@ -864,8 +865,8 @@ _DtCmdCommandInvokerExecute (
        */
       _DtSvcProcessLock();
       if ((DtSPCRegisterTerminator(cmdChannel,
-		    (SPC_TerminateHandlerType) CheckCommandTerminator,
-		    (void *) ++requestNum)) == SPC_ERROR) 
+		    CheckCommandTerminator,
+		    (void *)(uintptr_t)++requestNum)) == SPC_ERROR)
       {
 	DtSPCClose(cmdChannel);
 	Cmd_FreeAllocatedStringVector (commandArray);
@@ -1069,8 +1070,9 @@ CheckCommandTerminator(
         int pid, 			/* NOT USED */
         int type, 			/* NOT USED */
         int cause,			/* Exit value of the remote process. */
-        unsigned long requestNum)	/* Specifies the request number. */
+        void *terminate_data)		/* Encodes the request number. */
 {
+   unsigned long requestNum = (unsigned long)(uintptr_t)terminate_data;
    Boolean xhostError;
    char errorMessage[MAX_BUF_SIZE];
    Cmd_RequestQueue *prev  = NULL;

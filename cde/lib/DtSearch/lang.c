@@ -407,11 +407,11 @@ char	*teskey_parser (PARG *parg)
 
 	if (parg->string) {
 	    cofunction_arg = parg->string;
-	    cofunction = (READCFP) readchar_string;
+	    cofunction = readchar_string;
 	}
 	else if (parg->ftext) {
 	    cofunction_arg = parg;
-	    cofunction = (READCFP) readchar_ftext;
+	    cofunction = readchar_ftext;
 	}
 	else {
 	    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_lang, 5,

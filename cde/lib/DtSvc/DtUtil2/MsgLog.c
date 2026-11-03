@@ -104,6 +104,11 @@ static char * check_possible_files (
 	const char	* type,
 	FILE		** fp );
 static void initialize_message_strings (void);
+static void DtMsgLogDefaultHandler (
+	const char *program_name,
+	DtMsgLogType msg_type,
+	const char *format,
+	va_list args);
 
 
 /*
@@ -246,18 +251,17 @@ static char * check_possible_files (
 }
 
 /*
- * DtMsgLogMessage -
+ * DtMsgLogDefaultHandler -
  *
  * Returns: 0 if the message is successfully logged or 1 if an
  *    error occurs and the message is not logged.
  */
-void DtMsgLogMessage (
+static void DtMsgLogDefaultHandler (
 	const char 		* program_name,
 	DtMsgLogType		msg_type,
 	const char 		* format,
-	... )
+	va_list			args )
 {
-	va_list			args;
 	FILE 			* fp = NULL;
 	char			* file = NULL;
 	time_t 			now;
@@ -271,25 +275,6 @@ void DtMsgLogMessage (
 	char			* result;
 	_Xltimeparams		localtime_buf;
 	struct tm		* current_time;
-
-	Va_start (args, format);
-
-#ifndef MSGLOG_CLIENT_ONLY
-	_DtSvcProcessLock();
-	if (saved_msglog_handler != NULL) {
-
-		(*saved_msglog_handler) (program_name ? program_name : 
-					 DtProgName, 
-					 msg_type,
-					 format,
-					 args);
-		_DtSvcProcessUnlock();
-		va_end (args);
-
-		return;
-	}
-	_DtSvcProcessUnlock();
-#endif /* MSGLOG_CLIENT_ONLY */
 
 	if (!information_string) {
 #ifndef MSGLOG_CLIENT_ONLY
@@ -378,8 +363,6 @@ void DtMsgLogMessage (
 #else
 	num_bytes += vfprintf (fp, format, args);
 #endif
-	va_end (args);
-
 	// JET - extraneous noise, just output the count
         // fprintf (fp, "\n*** [%d]\n\n", num_bytes);
         fprintf (fp, "[%d bytes]\n\n", num_bytes);
@@ -391,6 +374,31 @@ void DtMsgLogMessage (
 
   	if (file)
 		free (file);
+}
+
+void DtMsgLogMessage (
+	const char 		* program_name,
+	DtMsgLogType		msg_type,
+	const char 		* format,
+	... )
+{
+	va_list args;
+
+	Va_start (args, format);
+#ifndef MSGLOG_CLIENT_ONLY
+	_DtSvcProcessLock();
+	if (saved_msglog_handler != NULL) {
+		(*saved_msglog_handler) (program_name ? program_name : DtProgName,
+					 msg_type, format, args);
+		_DtSvcProcessUnlock();
+	} else {
+		_DtSvcProcessUnlock();
+		DtMsgLogDefaultHandler(program_name, msg_type, format, args);
+	}
+#else
+	DtMsgLogDefaultHandler(program_name, msg_type, format, args);
+#endif /* MSGLOG_CLIENT_ONLY */
+	va_end (args);
 }
 
 
@@ -417,18 +425,20 @@ DtMsgLogHandler DtMsgLogSetHandler (
 		if (saved_msglog_handler) {
 			previous_handler = saved_msglog_handler;
 			saved_msglog_handler = NULL;
+			_DtSvcProcessUnlock();
 			return (previous_handler);
 		}
 		else {
 			saved_msglog_handler = NULL;
-			return  (DtMsgLogHandler) DtMsgLogMessage;
+			_DtSvcProcessUnlock();
+			return DtMsgLogDefaultHandler;
 		}
 	}
 
 	if (saved_msglog_handler)
 		previous_handler = saved_msglog_handler;
 	else
-		previous_handler = (DtMsgLogHandler) DtMsgLogMessage;
+		previous_handler = DtMsgLogDefaultHandler;
 
 	saved_msglog_handler = handler;
 	_DtSvcProcessUnlock();

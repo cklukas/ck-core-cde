@@ -225,6 +225,17 @@ element/content tree visitors, and dtscreen's mode dispatch and fireworks
 helpers. Callback implementations accept their framework-defined context type
 and recover private state inside the function, rather than relying on an
 incompatible function pointer or a cast at registration time.
+DtSvc's action translations, timeouts, prompt handlers, message logger and
+subprocess termination hook likewise expose their exact framework callback
+boundaries. Its database converter table uses one typed Boolean-returning
+contract for every converter. Private dialog state and the queued command
+identifier are recovered from the opaque client-data argument inside those
+callbacks.
+DtSearch uses typed exit adapters for database and shared-memory cleanup rather
+than treating unrelated no-argument routines as exit hooks. Its string and file
+readers also implement the parser's shared opaque-argument callback directly.
+DtWidget's ComboBox, Control and DialogBox class records use full Xt/Motif
+method signatures and recover their concrete widget types inside each method.
 
 DtHelp's image library uses exact callback types for pipeline initialization,
 cleanup, destruction and execution, conversion records, and image-object

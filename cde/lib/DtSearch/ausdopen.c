@@ -64,6 +64,13 @@
 
 #define PROGNAME	"AUSDOPEN"
 
+static void
+close_database_on_exit(int return_code)
+{
+    (void)return_code;
+    (void)d_close();
+}
+
 
 /****************************************/
 /*					*/
@@ -183,7 +190,7 @@ INVALID_DBNAME:
     }
 
     /* From here on, emergency exits MUST close the database. */
-    austext_exit_dbms = (void (*) (int)) d_close;
+    austext_exit_dbms = close_database_on_exit;
 
     /* If requested, read the dbrec into caller's buffer. */
     if (dbrec != NULL) {

@@ -1,4 +1,14 @@
 2026-11-03
+- DtSvc: give action translations, timers, prompt handlers, message logging,
+  command termination handlers and database converters their exact callback
+  and function-table contracts. Registrations no longer cast functions with
+  incompatible types.
+- DtSearch: route database-close and shared-memory cleanup through typed exit
+  adapters instead of storing incompatible functions in exit-hook slots. Text
+  parser reader callbacks now implement their shared opaque-argument contract
+  directly.
+- DtWidget: give ComboBox, Control and DialogBox their complete Xt/Motif method
+  signatures, including argument lists and base-class widget parameters.
 - DtInfo: preprocess the aggregate message input from the shadow build
   directory where it is generated, and materialize the preprocessor stream
   before running the catalog converter. A missing generated input now fails

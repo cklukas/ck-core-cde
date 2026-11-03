@@ -106,17 +106,21 @@ static void Destroy (Widget);
 
 static void Initialize( 
                         Widget request_w,
-                        Widget new_w) ;
+                        Widget new_w,
+                        ArgList args,
+                        Cardinal *num_args) ;
 static Boolean SetValues(
         		Widget current_w,
                         Widget request_w,
-                        Widget new_w) ;
+                        Widget new_w,
+                        ArgList args,
+                        Cardinal *num_args) ;
 static void GetSize( 
-                        DtControlGadget g,
+                        DtIconGadget icon,
                         Dimension *w,
                         Dimension *h) ;
 static void GetPositions( 
-                        DtControlGadget g,
+                        DtIconGadget icon,
                         Position w,
                         Position h,
                         Dimension h_t,
@@ -126,7 +130,7 @@ static void GetPositions(
                         Position *str_x,
                         Position *str_y) ;
 static void Draw( 
-                        DtControlGadget g,
+                        DtIconGadget icon,
                         Drawable drawable,
                         Position x,
                         Position y,
@@ -137,12 +141,12 @@ static void Draw(
                         unsigned char s_type,
                         unsigned char fill_mode) ;
 static void CallCallback( 
-                        DtControlGadget g,
+                        DtIconGadget icon,
                         XtCallbackList cb,
                         int reason,
                         XEvent *event) ;
 static void UpdateGCs( 
-                        DtControlGadget g) ;
+                        DtIconGadget icon) ;
 static void ReplaceJPDate(
                         char *date,
                         char *jpstr,
@@ -367,7 +371,7 @@ DtControlClassRec dtControlClassRec =
 		ClassInitialize,		/* class_initialize	*/
 		ClassPartInitialize,		/* class_part_initialize*/
 		False,				/* class_inited		*/
-		(XtInitProc) Initialize,	/* initialize		*/
+		Initialize,		/* initialize		*/
 		NULL,				/* initialize_hook	*/
 		NULL,				/* realize		*/
 		NULL,				/* actions		*/
@@ -383,7 +387,7 @@ DtControlClassRec dtControlClassRec =
 		Destroy,		 	/* destroy		*/	
 		XtInheritResize,		/* resize		*/
 		XtInheritExpose,		/* expose		*/	
-		(XtSetValuesFunc)SetValues,	/* set_values		*/	
+		SetValues,			/* set_values		*/
 		NULL,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
 		NULL,				/* get_values_hook	*/
@@ -414,11 +418,11 @@ DtControlClassRec dtControlClassRec =
 	/*	DtIcon Part
 	*/
 	{
-(GetSizeProc)	GetSize,			/* get_size		*/
-(GetPositionProc)	GetPositions,			/* get_positions	*/
-(DrawProc)	Draw,				/* draw			*/
-(CallCallbackProc)	CallCallback,			/* call_callback	*/
-(UpdateGCsProc)	UpdateGCs,			/* update_gcs		*/
+		GetSize,			/* get_size		*/
+		GetPositions,			/* get_positions	*/
+		Draw,				/* draw			*/
+		CallCallback,			/* call_callback	*/
+		UpdateGCs,			/* update_gcs		*/
 		True,				/* optimize_redraw	*/
 		NULL,				/* class_cache_part	*/
 		NULL,				/* extension		*/
@@ -822,7 +826,9 @@ ClassPartInitialize(
 static void 
 Initialize(
         Widget request_w,
-        Widget new_w )
+        Widget new_w,
+        ArgList args,
+        Cardinal *num_args )
 {
   DtControlGadget	request = (DtControlGadget) request_w,
   new = (DtControlGadget) new_w;
@@ -830,6 +836,9 @@ Initialize(
     XtWidgetToApplicationContext (new_w);
   String		str;			
   UpdateGCsProc	update_gcs;
+
+  (void)args;
+  (void)num_args;
   
   G_MonitorTimer (new) = 0;
   G_ClickTimer (new) = 0;
@@ -1060,12 +1069,18 @@ static Boolean
 SetValues(
         Widget current_w,
         Widget request_w,
-        Widget new_w )
+        Widget new_w,
+        ArgList args,
+        Cardinal *num_args )
 {
 
 
     DtControlGadget	current_c =	(DtControlGadget) current_w,
 			new_c =		(DtControlGadget) new_w;
+
+    (void)request_w;
+    (void)args;
+    (void)num_args;
 #if 0
 	String		file_name =	G_FileName (new);
 	int		file_name_size;				
@@ -1149,10 +1164,11 @@ if ((G_ControlType (new) == XmCONTROL_MONITOR) ||
 */
 static void 
 GetSize(
-        DtControlGadget g,
+        DtIconGadget icon,
         Dimension *w,
         Dimension *h )
 {
+	DtControlGadget g = (DtControlGadget)icon;
   Dimension	s_t = G_ShadowThickness (g);
   Dimension	h_t = G_HighlightThickness (g);
   Dimension	p_w = G_PixmapWidth (g);
@@ -1215,7 +1231,7 @@ GetSize(
 */
 static void 
 GetPositions(
-        DtControlGadget g,
+        DtIconGadget icon,
         Position w,
         Position h,
         Dimension h_t,
@@ -1225,6 +1241,7 @@ GetPositions(
         Position *str_x,
         Position *str_y )
 {
+	DtControlGadget g = (DtControlGadget)icon;
 	Dimension	p_w =		G_PixmapWidth (g),
 			p_h =		G_PixmapHeight (g),
 			s_w =		G_StringWidth (g),
@@ -1343,7 +1360,7 @@ GetPositions(
 */
 static void 
 Draw(
-        DtControlGadget g,
+        DtIconGadget icon,
         Drawable drawable,
         Position x,
         Position y,
@@ -1354,6 +1371,7 @@ Draw(
         unsigned char s_type,
         unsigned char fill_mode )
 {
+	DtControlGadget g = (DtControlGadget)icon;
   XmManagerWidget	mgr =	(XmManagerWidget) XtParent (g);
   Display *		d = 	XtDisplay (g);
   GC			gc, gcTS, gcBS;
@@ -1733,11 +1751,12 @@ Draw(
 */
 static void 
 CallCallback(
-        DtControlGadget g,
+        DtIconGadget icon,
         XtCallbackList cb,
         int reason,
         XEvent *event )
 {
+	DtControlGadget g = (DtControlGadget)icon;
   DtControlCallbackStruct	cb_data;
   XtAppContext	app_context = XtWidgetToApplicationContext ((Widget) g);
   
@@ -1775,8 +1794,9 @@ CallCallback(
 */
 static void 
 UpdateGCs(
-        DtControlGadget g )
+        DtIconGadget icon )
 {
+	DtControlGadget g = (DtControlGadget)icon;
   XGCValues		values;
   XtGCMask		value_mask;
   XmManagerWidget	mw = (XmManagerWidget) XtParent(g);

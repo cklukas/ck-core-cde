@@ -420,10 +420,10 @@ sfe(DtDtsDbRecord * item1, DtDtsDbRecord * item2)
 }
 
 int
-cde_dc_compare(DtDtsDbRecord ** a, DtDtsDbRecord ** b)
+cde_dc_compare(const void *a, const void *b)
 {
-	DtDtsDbRecord **x = (DtDtsDbRecord **) a;
-	DtDtsDbRecord **y = (DtDtsDbRecord **) b;
+	DtDtsDbRecord *const *x = a;
+	DtDtsDbRecord *const *y = b;
 	int		results;
 	char		c;
 
@@ -456,10 +456,13 @@ cde_ft_field_value(XrmQuark  name_quark)
 }
 
 int
-cde_dc_field_compare(DtDtsDbField ** a, DtDtsDbField ** b)
+cde_dc_field_compare(const void *a, const void *b)
 {
-	return (cde_ft_field_value((*a)->fieldName) -
-		cde_ft_field_value((*b)->fieldName));
+	DtDtsDbField *const *field1 = a;
+	DtDtsDbField *const *field2 = b;
+
+	return (cde_ft_field_value((*field1)->fieldName) -
+		cde_ft_field_value((*field2)->fieldName));
 }
 
 int cde_da_compare(DtDtsDbRecord ** a, DtDtsDbRecord ** b)

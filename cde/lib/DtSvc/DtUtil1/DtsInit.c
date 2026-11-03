@@ -105,7 +105,7 @@ _DtDtsSeqReset(void)
 	cur_da_count = 0;
 	_DtSvcProcessUnlock();
 }
-void
+Boolean
 _DtDtsDCConverter(DtDtsDbField * fields,
 	       DtDbPathId pathId,
 	       char *hostPrefix,
@@ -138,7 +138,7 @@ _DtDtsDCConverter(DtDtsDbField * fields,
 				else
 				{
 					_DtSvcProcessUnlock();
-					return;
+					return False;
 				}
 			}
 			rec = _DtDtsDbAddRecord(db);
@@ -155,9 +155,10 @@ _DtDtsDCConverter(DtDtsDbField * fields,
 		i++;
 	}
 	_DtSvcProcessUnlock();
+	return False;
 }
 
-void
+Boolean
 _DtDtsDAConverter(DtDtsDbField * fields,
 	       DtDbPathId pathId,
 	       char *hostPrefix,
@@ -191,7 +192,7 @@ _DtDtsDAConverter(DtDtsDbField * fields,
 				else
 				{
 				        _DtSvcProcessUnlock();
-					return;
+					return False;
 				}
 			}
 			rec = _DtDtsDbAddRecord(db);
@@ -211,6 +212,7 @@ _DtDtsDAConverter(DtDtsDbField * fields,
 		i++;
 	}
 	_DtSvcProcessUnlock();
+	return False;
 }
 
 

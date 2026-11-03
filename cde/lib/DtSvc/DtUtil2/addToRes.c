@@ -124,8 +124,8 @@ static void _DtAddEntry(
                         Entries *e,
                         Entry entry) ;
 static int _DtCompareEntries( 
-                        Entry *e1,
-                        Entry *e2) ;
+                        const void *e1,
+                        const void *e2) ;
 static char * _DtFindFirst( 
                         char *string,
                         char dest) ;
@@ -242,9 +242,11 @@ _DtAddEntry(
 
 static int 
 _DtCompareEntries(
-        Entry *e1,
-        Entry *e2 )
+        const void *item1,
+        const void *item2 )
 {
+    const Entry *e1 = item1;
+    const Entry *e2 = item2;
     return strcmp(e1->tag, e2->tag);
 }
 
@@ -358,7 +360,7 @@ _DtGetEntries(
     
     if (dosort && (entries->used > 0))
       qsort(entries->entry, entries->used, sizeof(Entry), 
-	    (int (*)(const void *, const void *))_DtCompareEntries);
+	    _DtCompareEntries);
 }
 
 static void 

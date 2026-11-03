@@ -63,8 +63,8 @@
 
 static void build_file_list(DtShmProtoIntList, DtDirPaths *,
 			    DtDtsMMHeader *, const char *);
-extern	int	cde_dc_field_compare(DtDtsDbField **, DtDtsDbField **);
-extern	int	cde_dc_compare(DtDtsDbRecord **, DtDtsDbRecord **);
+extern	int	cde_dc_field_compare(const void *, const void *);
+extern	int	cde_dc_compare(const void *, const void *);
 static void	_DtMMSortDataTypes(DtShmProtoStrtab str_handle);
 static void	_DtMMAddActionsToDataAttribute(DtDtsDbDatabase *db_ptr);
 static int	write_db(DtDtsMMHeader *header, void *index, int size,
