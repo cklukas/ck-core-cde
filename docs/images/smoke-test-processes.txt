@@ -1,5 +1,5 @@
-49 /usr/dt/bin/dtsession /home/klukas/opt/ck-cde-sdk/8b5f7b092/lib/libXm.so.9.0.0
-58 /usr/dt/bin/dtwm /home/klukas/opt/ck-cde-sdk/8b5f7b092/lib/libXm.so.9.0.0
-68 /usr/dt/bin/dtstyle /home/klukas/opt/ck-cde-sdk/8b5f7b092/lib/libXm.so.9.0.0
-77 /usr/dt/bin/dtterm /home/klukas/opt/ck-cde-sdk/8b5f7b092/lib/libXm.so.9.0.0
-93 /usr/dt/bin/dtfile /home/klukas/opt/ck-cde-sdk/8b5f7b092/lib/libXm.so.9.0.0
+530396 /usr/dt/bin/dtsession /home/klukas/tmp/cde-c23-batch02-20261102-01/motif-prefix/lib/libXm.so.9.0.0
+530406 /usr/dt/bin/dtwm /home/klukas/tmp/cde-c23-batch02-20261102-01/motif-prefix/lib/libXm.so.9.0.0
+530479 /usr/dt/bin/dtstyle /home/klukas/tmp/cde-c23-batch02-20261102-01/motif-prefix/lib/libXm.so.9.0.0
+530498 /usr/dt/bin/dtterm /home/klukas/tmp/cde-c23-batch02-20261102-01/motif-prefix/lib/libXm.so.9.0.0
+530536 /usr/dt/bin/dtfile /home/klukas/tmp/cde-c23-batch02-20261102-01/motif-prefix/lib/libXm.so.9.0.0

@@ -1,4 +1,7 @@
 2026-11-03
+- Validation: pass clean GCC and Clang C23 builds, both complete check suites,
+  the Xvfb dtksh widget callback test, installed private-ksh resolution, and an
+  installed uConsole desktop smoke session using the pinned CK Core Motif.
 - dtwm: copy read-only action-cache icon names before passing them through the
   historical mutable-string image API, preserving const correctness in C23.
 - dtksh: give Xt callbacks, work procedures, timers, and input handlers their
