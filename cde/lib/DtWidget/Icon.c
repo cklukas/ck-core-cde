@@ -144,9 +144,10 @@ static void GetString(
 static void IconEventHandler( 
                         Widget w,
                         XtPointer client_data,
-                        XButtonEvent *event) ;
+                        XEvent *event,
+                        Boolean *continue_to_dispatch) ;
 static void ClickTimeout( 
-                        Widget w,
+                        XtPointer client_data,
                         XtIntervalId *id) ;
 static void IconArm( 
                         Widget w,
@@ -891,21 +892,23 @@ static void
 IconEventHandler(
         Widget w,
         XtPointer client_data,
-        XButtonEvent *event )
+        XEvent *event,
+        Boolean *continue_to_dispatch )
 {
 	DtIconGadget		g =	NULL;
+	XButtonEvent		*button_event = &event->xbutton;
 
-	g = (DtIconGadget) XmObjectAtPoint (w, event->x, event->y);
+	g = (DtIconGadget) XmObjectAtPoint (w, button_event->x, button_event->y);
 	
 	if (!g || !DtIsIcon ((Widget)g))
 		return;
 
-	if (event->button == Button2 || event->button == Button3)
+	if (button_event->button == Button2 || button_event->button == Button3)
 	{
-		if (event->type == ButtonPress)
-			InputDispatch ((Widget) g, event, XmARM_EVENT);
-		else if (event->type == ButtonRelease)
-			InputDispatch ((Widget) g, event, XmACTIVATE_EVENT);
+		if (button_event->type == ButtonPress)
+			InputDispatch ((Widget) g, button_event, XmARM_EVENT);
+		else if (button_event->type == ButtonRelease)
+			InputDispatch ((Widget) g, button_event, XmACTIVATE_EVENT);
 	}
 }
 
@@ -918,9 +921,10 @@ IconEventHandler(
 /* ARGSUSED */
 static void 
 ClickTimeout(
-        Widget w,
+        XtPointer client_data,
         XtIntervalId *id )
 {
+	Widget		w = client_data;
 	DtIconGadget	g = 	(DtIconGadget) w;
 	Time		last_time, end_time;
 
@@ -950,7 +954,7 @@ ClickTimeout(
 		G_ClickTimerID (g) = 
 			XtAppAddTimeOut (XtWidgetToApplicationContext ((Widget)g),
 					(unsigned long) 50, 
-					(XtTimerCallbackProc)ClickTimeout, 
+					ClickTimeout,
 					(XtPointer) g);
 	}
 /*	Handle Select action.
@@ -1127,7 +1131,7 @@ IconActivate(
 				G_ClickTimerID (g) =
 					XtAppAddTimeOut (
 						XtWidgetToApplicationContext ((Widget)g),
-						delay, (XtTimerCallbackProc)ClickTimeout,
+						delay, ClickTimeout,
 						(XtPointer) g);
 			}
 		}
@@ -1742,7 +1746,7 @@ Initialize(
 	{
 		mask = ButtonPressMask|ButtonReleaseMask;
 		XtAddEventHandler (XtParent (new), mask, False,
-				(XtEventHandler) IconEventHandler, 0);
+				IconEventHandler, 0);
 	}
 
 	G_ClickTimerID (new) = 0;
@@ -2106,7 +2110,7 @@ SetValues(
 
 			mask = ButtonPressMask|ButtonReleaseMask;
 			XtAddEventHandler (XtParent (new), mask, False,
-					(XtEventHandler) IconEventHandler, 0);
+					IconEventHandler, 0);
 		}
 	}
 

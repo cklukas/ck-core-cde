@@ -868,10 +868,10 @@ Initialize(	DtComboBoxWidget request,
      * Set up event handlers needed for handling grab states.
      */
     XtInsertEventHandler(List(new), LIST_EVENTS, TRUE,
-			 (XtEventHandler)list_event_handler, 
+			 list_event_handler,
 			 (XtPointer)new, XtListHead);
     XtInsertEventHandler(Shell(new), SHELL_EVENTS, TRUE,
-			 (XtEventHandler)shell_event_handler, 
+			 shell_event_handler,
 			 (XtPointer)new, XtListHead);
 
     /*

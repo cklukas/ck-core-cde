@@ -783,7 +783,7 @@ CreateChildren(
 		btn = XmCreatePushButtonGadget ((Widget)new, button_name, al, ac);
 		XtManageChild (btn);
  		XtAddCallback (btn, XmNactivateCallback,
-				(XtCallbackProc)ButtonCallback,
+				ButtonCallback,
 				(XtPointer)((long)(i+1)));
 
 		button[i] = btn;

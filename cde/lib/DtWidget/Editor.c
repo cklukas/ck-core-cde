@@ -583,28 +583,28 @@ static void	CallHelpCallback(
 
 static void	HelpEditWindowCB(
         Widget		w,
-        caddr_t		client_data,
-        caddr_t		call_data );
+        XtPointer		client_data,
+        XtPointer		call_data );
 
 static void	HelpStatusCurrentLineCB(
         Widget		w,
-        caddr_t		client_data,
-        caddr_t		call_data );
+        XtPointer		client_data,
+        XtPointer		call_data );
 
 static void	HelpStatusTotalLinesCB(
         Widget		w,
-        caddr_t		client_data,
-        caddr_t		call_data );
+        XtPointer		client_data,
+        XtPointer		call_data );
 
 static void	HelpStatusMessageCB(
         Widget		w,
-        caddr_t		client_data,
-        caddr_t		call_data );
+        XtPointer		client_data,
+        XtPointer		call_data );
 
 static void	HelpStatusOverstrikeCB(
         Widget		w,
-        caddr_t		client_data,
-        caddr_t		call_data );
+        XtPointer		client_data,
+        XtPointer		call_data );
 
 static void	RegisterDropZone( 
 			DtEditorWidget w );
@@ -620,13 +620,13 @@ static int	FormatText (
 
 static void	AdjustParaCB(
 			Widget w,
-			caddr_t client_data,
-			caddr_t call_data );
+			XtPointer client_data,
+			XtPointer call_data );
 
 static void	AdjustAllCB(
         		Widget w,
-        		caddr_t client_data,
-        		caddr_t call_data );
+			XtPointer client_data,
+			XtPointer call_data );
 
 static DtEditorErrorCode DoAdjust(
         		DtEditorWidget	editor,
@@ -1737,13 +1737,13 @@ CreateText(
     * Add modify verify callback
     */
    XtAddCallback(text, XmNmodifyVerifyCallback,
-                  (XtCallbackProc) _DtEditorModifyVerifyCB,
+                  _DtEditorModifyVerifyCB,
                   (XtPointer) parent);
 
    /* 
     * Add the Help callback
     */
-   XtAddCallback( text, XmNhelpCallback, (XtCallbackProc) HelpEditWindowCB,
+   XtAddCallback( text, XmNhelpCallback, HelpEditWindowCB,
                   (XtPointer) parent );
 
 
@@ -4568,8 +4568,8 @@ _DtEditorWarning(
 static void
 PositionActivateCB(
         Widget w,
-	caddr_t client_data,
-	caddr_t call_data )
+	XtPointer client_data,
+	XtPointer call_data )
 {
     DtEditorWidget editor = (DtEditorWidget)client_data;
     char *lineStr = XmTextFieldGetString(M_status_lineText(editor));
@@ -4712,8 +4712,8 @@ _DtEditorGetLineIndex(
 static void
 SetCursorPosStatus(
         Widget w,
-	caddr_t client_data,
-	caddr_t call_data )
+	XtPointer client_data,
+	XtPointer call_data )
 {
     DtEditorWidget editor = (DtEditorWidget)client_data;
     XmTextWidget tw = (XmTextWidget)w;
@@ -4773,7 +4773,7 @@ SetStatusLine(
      XtSetValues( XtParent(M_text(ew)), al, ac );
      
      XtAddCallback( M_text(ew), XmNmotionVerifyCallback,
-		    (XtCallbackProc) SetCursorPosStatus, (XtPointer)ew);
+		    SetCursorPosStatus, (XtPointer)ew);
 
    }
    else 
@@ -4786,7 +4786,7 @@ SetStatusLine(
      XtSetValues( XtParent(M_text(ew)), al, ac );
 
      XtRemoveCallback( M_text(ew), XmNmotionVerifyCallback,
-		    (XtCallbackProc) SetCursorPosStatus, (XtPointer)ew);
+		    SetCursorPosStatus, (XtPointer)ew);
 
      /* 
       * Hide the status line
@@ -4866,7 +4866,7 @@ CreateStatusLine(
 						"lineLabel", al, ac);
     XtManageChild(M_status_lineLabel(parent));
     XtAddCallback(M_status_lineLabel(parent), XmNhelpCallback,
-		  (XtCallbackProc)HelpStatusCurrentLineCB, parent);
+		  HelpStatusCurrentLineCB, parent);
     XmStringFree(tmpStr);
 
     ac = 0;
@@ -4882,9 +4882,9 @@ CreateStatusLine(
 						   al, ac );
     XtManageChild(M_status_lineText(parent));
     XtAddCallback(M_status_lineText(parent), XmNactivateCallback,
-		  (XtCallbackProc)PositionActivateCB, parent);
+		  PositionActivateCB, parent);
     XtAddCallback(M_status_lineText(parent), XmNhelpCallback,
-		  (XtCallbackProc)HelpStatusCurrentLineCB, parent);
+		  HelpStatusCurrentLineCB, parent);
 
     /*
      * Create the total lines labels
@@ -4915,7 +4915,7 @@ CreateStatusLine(
 						"totalLabel", al, ac);
     XtManageChild(M_status_totalLabel(parent));
     XtAddCallback(M_status_totalLabel(parent), XmNhelpCallback,
-		  (XtCallbackProc)HelpStatusTotalLinesCB, parent);
+		  HelpStatusTotalLinesCB, parent);
     XmStringFree(tmpStr);
 
     ac = 0;
@@ -4928,7 +4928,7 @@ CreateStatusLine(
 						"totalText", al, ac);
     XtManageChild(M_status_totalText(parent));
     XtAddCallback(M_status_totalText(parent), XmNhelpCallback,
-		  (XtCallbackProc)HelpStatusTotalLinesCB, parent);
+		  HelpStatusTotalLinesCB, parent);
 
     /*
      * Create the overstrike indicator
@@ -4949,7 +4949,7 @@ CreateStatusLine(
 	(Widget) XmCreateLabelGadget( container, "overstrikeLabel", al, ac);
     XtManageChild(M_status_overstrikeWidget(parent));
     XtAddCallback(M_status_overstrikeWidget(parent), XmNhelpCallback,
-		  (XtCallbackProc)HelpStatusOverstrikeCB, parent);
+		  HelpStatusOverstrikeCB, parent);
 
     /*
      * Create the application message area
@@ -4973,7 +4973,7 @@ CreateStatusLine(
 
     XtManageChild(M_status_messageText(parent));
     XtAddCallback(M_status_messageText(parent), XmNhelpCallback,
-		  (XtCallbackProc)HelpStatusMessageCB, parent);
+		  HelpStatusMessageCB, parent);
 
     return( container );
 
@@ -5009,8 +5009,8 @@ CallHelpCallback(
 static void
 HelpEditWindowCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback((DtEditorWidget)client_data, DtEDITOR_HELP_EDIT_WINDOW);
 }
@@ -5027,8 +5027,8 @@ HelpEditWindowCB(
 static void
 HelpStatusLineCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback((DtEditorWidget)client_data, DtEDITOR_HELP_STATUS_LINE);
 }
@@ -5037,8 +5037,8 @@ HelpStatusLineCB(
 static void
 HelpStatusCurrentLineCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback( (DtEditorWidget)client_data, 
 		      DtEDITOR_HELP_STATUS_CURRENT_LINE );
@@ -5048,8 +5048,8 @@ HelpStatusCurrentLineCB(
 static void
 HelpStatusTotalLinesCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback( (DtEditorWidget)client_data, 
 		      DtEDITOR_HELP_STATUS_TOTAL_LINES );
@@ -5059,8 +5059,8 @@ HelpStatusTotalLinesCB(
 static void
 HelpStatusMessageCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback( (DtEditorWidget)client_data, 
 		      DtEDITOR_HELP_STATUS_MESSAGE );
@@ -5070,8 +5070,8 @@ HelpStatusMessageCB(
 static void
 HelpStatusOverstrikeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback( (DtEditorWidget)client_data, 
 		      DtEDITOR_HELP_STATUS_OVERSTRIKE );
@@ -5085,8 +5085,8 @@ HelpStatusOverstrikeCB(
 static void
 HelpFormatDialogCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback((DtEditorWidget)client_data, DtEDITOR_HELP_FORMAT_DIALOG);
 }
@@ -5095,8 +5095,8 @@ HelpFormatDialogCB(
 static void
 HelpFormatRightMarginCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
   CallHelpCallback( (DtEditorWidget)client_data, 
 		    DtEDITOR_HELP_FORMAT_RIGHT_MARGIN);
@@ -5106,8 +5106,8 @@ HelpFormatRightMarginCB(
 static void
 HelpFormatLeftMarginCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback( (DtEditorWidget)client_data, 
 		      DtEDITOR_HELP_FORMAT_LEFT_MARGIN);
@@ -5117,8 +5117,8 @@ HelpFormatLeftMarginCB(
 static void
 HelpFormatJustifyButtonsCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback( (DtEditorWidget)client_data, 
 		      DtEDITOR_HELP_FORMAT_ALIGNMENT);
@@ -5132,8 +5132,8 @@ HelpFormatJustifyButtonsCB(
 void
 _DtEditorHelpSearchCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     DtEditorWidget editor = (DtEditorWidget)client_data;
 
@@ -5155,8 +5155,8 @@ _DtEditorHelpSearchCB(
 void
 _DtEditorHelpSearchFindCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback( (DtEditorWidget)client_data, 
 		      DtEDITOR_HELP_CHANGE_FIND);
@@ -5165,8 +5165,8 @@ _DtEditorHelpSearchFindCB(
 void
 _DtEditorHelpSearchChangeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     DtEditorWidget editor = (DtEditorWidget)client_data;
 
@@ -5188,8 +5188,8 @@ _DtEditorHelpSearchChangeCB(
 void
 _DtEditorHelpSearchSpellCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     CallHelpCallback( (DtEditorWidget)client_data, 
 		      DtEDITOR_HELP_SPELL_MISSPELLED_WORDS);
@@ -6921,8 +6921,8 @@ WORD	*pword;
 static void
 AdjustParaCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
 
     DtEditorFormat( (Widget)client_data, (DtEditorFormatSettings *)NULL,
@@ -6934,8 +6934,8 @@ AdjustParaCB(
 static void
 AdjustAllCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
 
     DtEditorFormat( (Widget)client_data, (DtEditorFormatSettings *)NULL,
@@ -7118,8 +7118,8 @@ DoAdjust(
 static void
 AdjustCloseCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     DtEditorWidget editor = (DtEditorWidget )client_data;
     XtUnmanageChild (M_format_dialog(editor));
@@ -7161,8 +7161,9 @@ ComputeRightMargin(
 static void 
 UpdateAdjust(
         Widget widget,
-        XtPointer *client_data,
-        XConfigureEvent *event )
+        XtPointer client_data,
+        XEvent *event,
+        Boolean *continue_to_dispatch )
 {
     Dimension width;
     DtEditorWidget editor = (DtEditorWidget) client_data;
@@ -7316,7 +7317,7 @@ CreateFormatDialog(
          XmStringFree( tempString );
 
        XtAddCallback(M_format_dialog(editor), XmNhelpCallback,
-		     (XtCallbackProc)HelpFormatDialogCB, (XtPointer)editor);
+		     HelpFormatDialogCB, (XtPointer)editor);
 
 
        /*
@@ -7361,7 +7362,7 @@ CreateFormatDialog(
        XmStringFree (tempString);
 
        XtAddCallback(M_format_leftLabel(editor), XmNhelpCallback,
-		     (XtCallbackProc)HelpFormatLeftMarginCB, (XtPointer)editor);
+		     HelpFormatLeftMarginCB, (XtPointer)editor);
 
        ac = 0;
        XtSetArg (al[ac], XmNbackground, textBackground);   ac++;
@@ -7380,7 +7381,7 @@ CreateFormatDialog(
 				M_format_dialog(editor), "left_text", al, ac);
        XtManageChild (M_format_leftMarginField(editor));
        XtAddCallback(M_format_leftMarginField(editor), XmNhelpCallback,
-		     (XtCallbackProc)HelpFormatLeftMarginCB, (XtPointer)editor);
+		     HelpFormatLeftMarginCB, (XtPointer)editor);
        /*
         * create the right margin label and text field
         */
@@ -7411,7 +7412,7 @@ CreateFormatDialog(
        XtManageChild (M_format_rightLabel(editor));
        XmStringFree (tempString);
        XtAddCallback(M_format_rightLabel(editor), XmNhelpCallback,
-		     (XtCallbackProc)HelpFormatRightMarginCB, 
+		     HelpFormatRightMarginCB,
 		     (XtPointer)editor);
        ac = 0;
        XtSetArg (al[ac], XmNbackground, textBackground);   ac++;
@@ -7431,7 +7432,7 @@ CreateFormatDialog(
                                                 "right_text", al, ac);
        XtManageChild (M_format_rightMarginField(editor));
        XtAddCallback(M_format_rightMarginField(editor), XmNhelpCallback,
-		     (XtCallbackProc)HelpFormatRightMarginCB, 
+		     HelpFormatRightMarginCB,
 		     (XtPointer)editor);
 
        /*
@@ -7449,7 +7450,7 @@ CreateFormatDialog(
        M_format_radioBox(editor) = (Widget) XmCreateRadioBox(
 				M_format_dialog(editor), "radioBox", al, ac);
        XtAddCallback(M_format_radioBox(editor), XmNhelpCallback,
-		     (XtCallbackProc)HelpFormatJustifyButtonsCB,
+		     HelpFormatJustifyButtonsCB,
 		     (XtPointer)editor);
        XtManageChild(M_format_radioBox(editor));
 
@@ -7587,7 +7588,7 @@ CreateFormatDialog(
        XtManageChild (M_format_paragraph(editor));
        XmStringFree (tempString);
        XtAddCallback (M_format_paragraph(editor), XmNactivateCallback,
-                       (XtCallbackProc) AdjustParaCB, (XtPointer) editor);
+                       AdjustParaCB, (XtPointer) editor);
 
        /* Create Format All button */
        ac = 0;
@@ -7622,7 +7623,7 @@ CreateFormatDialog(
        XtManageChild (M_format_all(editor));
        XmStringFree (tempString);
        XtAddCallback (M_format_all(editor), XmNactivateCallback,
-                       (XtCallbackProc) AdjustAllCB, (XtPointer) editor);
+                       AdjustAllCB, (XtPointer) editor);
 
        /* Create Close button */
        tempString = XmStringCreateLocalized(CLOSE_BUTTON);
@@ -7645,7 +7646,7 @@ CreateFormatDialog(
        XtManageChild (M_format_close(editor));
        XmStringFree (tempString);
        XtAddCallback (M_format_close(editor), XmNactivateCallback,
-                       (XtCallbackProc) AdjustCloseCB, (XtPointer) editor);
+                       AdjustCloseCB, (XtPointer) editor);
 
        tempString = XmStringCreateLocalized(HELP_BUTTON);
        ac = 0;
@@ -7667,7 +7668,7 @@ CreateFormatDialog(
        XtManageChild (M_format_help(editor));
        XmStringFree (tempString);
        XtAddCallback( M_format_help(editor), XmNactivateCallback,
-                      (XtCallbackProc) HelpFormatDialogCB, (XtPointer) editor);
+                      HelpFormatDialogCB, (XtPointer) editor);
 
        /*
         * set the default/activation button.
@@ -7686,7 +7687,7 @@ CreateFormatDialog(
        XtGetValues(M_text(editor), al, 1);
 
        XtAddEventHandler(M_text(editor), StructureNotifyMask, False,
-                            (XtEventHandler) UpdateAdjust, (XtPointer) editor);
+                            UpdateAdjust, (XtPointer) editor);
 
 } /* end CreateFormatDialog */
 

@@ -198,7 +198,11 @@ calendar-program builds link under both GCC and Clang C23.
 
 The next maintained-program tranche removes unspecified argument lists from
 the remaining small DtHelp, DtTerm and DtWidget helpers and from dtcreate,
-dtlogin, dtsession and dtstyle. In dtlogin, the network-address helpers are
+dtlogin, dtsession and dtstyle. DtWidget's editor and search callbacks expose
+`XtPointer` at the toolkit boundary; its icon timer receives `XtPointer`, and
+its icon and format event handlers implement the full `XtEventHandler` ABI.
+These paths register directly without function-pointer casts. In dtlogin, the
+network-address helpers are
 declared once in the shared interface, optional authentication initializers
 match the dispatch table's `void` contract, and chooser callbacks carry their
 complete Xt types. Dtappbuilder's browser, editor and generated-application
