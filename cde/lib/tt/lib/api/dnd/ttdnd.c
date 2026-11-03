@@ -37,11 +37,14 @@
 #include "Tt/tt_c.h"
 #include "ttdnd.h"
 
-static Tt_callback_action	_ttdnd_get_contents_callback();
-static void 			_ttdnd_get_contents();
-static Tt_callback_action	_ttdnd_continue_transfer();
-void				_ttdnd_receive();
-int				_ttdnd_convert_selection();
+static Tt_callback_action _ttdnd_get_contents_callback(Tt_message m,
+						       Tt_pattern p);
+static void _ttdnd_get_contents(int sourceXid, const char *source_type,
+				Ttdnd_receive_data_func *receivefunc,
+				int chunknumber);
+static Tt_callback_action _ttdnd_continue_transfer(Tt_message m,
+						   Tt_pattern p);
+static void _ttdnd_receive(void);
 
 
 #define MAXCHUNK 32768 /* Need some way for user to set this? */	
@@ -107,9 +110,9 @@ ttdnd_negotiate_types(
 	const char *s, *t;
 
 	tlist = targettypes;
-	while (t = *tlist++) {
+	while ((t = *tlist++)) {
 		slist = sourcetypes;
-		while (s = *slist++) {
+		while ((s = *slist++)) {
 			if (0==strcmp(s,t)) {
 				return (char *)t;
 			}
@@ -277,7 +280,7 @@ _ttdnd_get_contents_callback(Tt_message m, Tt_pattern p)
  * This is a simple notifier fd input function to read
  * tt messages whenever the tt filedescriptor has input.
  */
-void
+static void
 _ttdnd_receive(void)
 {
 	Tt_message m;

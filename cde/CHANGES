@@ -1,4 +1,7 @@
 2026-11-03
+- ToolTalk DND: expose complete C and C++ callback interfaces and type the
+  transfer/reply callbacks used by the C23 implementation; remove the obsolete
+  K&R declaration fallback and an unused internal declaration.
 - DtHelp: give image-pipeline initialization, cleanup, destruction, execution,
   conversion and object-lifecycle callbacks exact C23 contracts; correct legacy
   cleanup routines that were declared with parameters different from the

@@ -58,6 +58,12 @@ use complete prototypes; the conversion regression test also compiles const
 encoded input buffers through those interfaces and verifies integer, floating
 point and fixed-width character round trips.
 
+ToolTalk's drag-and-drop helper also publishes one typed interface to C and C++
+consumers rather than retaining a K&R fallback. Its send/receive callbacks and
+the internal ToolTalk reply callbacks use their complete argument lists. The
+library builds and links with both C23 compilers, and its type negotiation is
+exercised against the linked archive for common-type and fallback selection.
+
 The `dtimsstart` desktop input-method launcher is also qualified at the
 translation-unit level with GCC and Clang in C23 mode. Its module interface and
 private functions use complete prototypes, Xt callbacks use `XtCallbackProc`,
@@ -137,6 +143,7 @@ To repeat that focused qualification from a configured C23 build tree:
 
 ```sh
 make -j4 -C lib/tt/mini_isam check
+make -j4 -C lib/tt/lib/api/dnd
 make -j4 -C lib/DtHelp/il
 ```
 
