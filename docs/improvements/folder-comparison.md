@@ -16,6 +16,10 @@ perform file operations through the existing copy/move helper. Choosing **Copy**
 in this comparison window selects a proposed policy; it does not run that legacy
 copy command.
 
+![Native folder comparison with paged results and a disabled Apply action](../images/dtfile-folder-comparison.png)
+
+Read-only comparison in the native helper. Apply remains disabled.
+
 ## Enable the optional helper
 
 The default CDE build has no filesystem-library dependency and does not include
@@ -30,6 +34,11 @@ PKG_CONFIG_PATH="/absolute/fs-prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFI
 Run this from the CDE source/build configuration directory, keeping the other
 options and CK Core Motif setup described in the [build guide](../build.md).
 Use the installation's actual pkg-config directory, which may be `lib64/pkgconfig`.
+Keep the selected shared library available to the desktop session at runtime.
+For a custom prefix, add its library directory to the configured runtime linker
+path, for example with `LDFLAGS="${LDFLAGS:+$LDFLAGS }-Wl,-rpath,/absolute/fs-prefix/lib"`,
+following the Motif setup in the build guide, or use the system loader's library
+installation path. The native qualification uses explicit frozen library paths.
 The helper also requires C11 atomics and the platform's `closefrom` capability.
 It closes inherited descriptors above standard input/output/error immediately
 after exec, before locale/catalog, display or worker initialization, so File
