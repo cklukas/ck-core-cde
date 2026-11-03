@@ -1,6 +1,10 @@
 2026-11-03
 - ToolTalk: implement the desktop timeout hook through its exact
   `XtTimerCallbackProc` contract and register it directly.
+- ToolTalk: type every dynamically loaded Xlib and Xt entry with its native
+  prototype. The desktop I/O-error handler now stores and restores the native
+  `XIOErrorHandler` instead of converting it through data and variadic function
+  pointers.
 - DtSvc: initialize an optional preserved drop callback with a typed null value
   instead of a function-pointer cast.
 - DtCm: register the shared calendar help callback directly throughout menus,

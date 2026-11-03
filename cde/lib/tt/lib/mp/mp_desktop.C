@@ -183,7 +183,7 @@ init(_Tt_string dt_handle, _Tt_dt_type /* t */)
 
 // I/O error handler. Longjmp back to before the error occurred.
 int _Tt_desktop::
-io_error_proc(void *)
+io_error_proc(Display *)
 {
 	siglongjmp(io_exception, 1);
 	return(0);
@@ -193,10 +193,9 @@ io_error_proc(void *)
 // Sets the error handler function which will get invoked on any I/O
 // errors received from the X11 connection
 void _Tt_desktop::
-set_error_handler(_Tt_dt_errfn efn)
+set_error_handler(XIOErrorHandler efn)
 {
-	user_io_handler = (int *)
-		CALLX11(XSetIOErrorHandler)((XIOErrorHandler)efn);
+	user_io_handler = CALLX11(XSetIOErrorHandler)(efn);
 }
 
 
@@ -204,7 +203,7 @@ set_error_handler(_Tt_dt_errfn efn)
 void _Tt_desktop::
 restore_user_handler()
 {
-	CALLX11(XSetIOErrorHandler)((XIOErrorHandler)user_io_handler);
+	CALLX11(XSetIOErrorHandler)(user_io_handler);
 }
 
 

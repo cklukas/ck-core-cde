@@ -35,6 +35,7 @@
 #ifndef MP_DESKTOP_H
 #define MP_DESKTOP_H
 #include <setjmp.h>
+#include <X11/Xlib.h>
 #include <mp/mp_global.h>
 #include <util/tt_object.h>
 
@@ -42,8 +43,6 @@ enum _Tt_dt_type {
 	_TT_DESKTOP_X11,
 	_TT_DESKTOP_LAST
 };
-
-typedef int (*_Tt_dt_errfn)(void *);
 
 struct _Tt_desktop_private;
 
@@ -60,12 +59,12 @@ class _Tt_desktop : public _Tt_object {
 	int			del_prop(_Tt_string pname);
 	int			get_prop(_Tt_string pname, _Tt_string &val);
 	_Tt_string		session_name(_Tt_string dt_handle);
-	void			set_error_handler(_Tt_dt_errfn efn);
+	void			set_error_handler(XIOErrorHandler efn);
       private:
 	int			close();
 	void			restore_user_handler();
-	static int		io_error_proc(void *);
-	int			*user_io_handler;
+	static int		io_error_proc(Display *);
+	XIOErrorHandler		user_io_handler;
 	static sigjmp_buf	io_exception;
 	_Tt_desktop_private	*priv;
 };

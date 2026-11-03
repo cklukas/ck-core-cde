@@ -182,7 +182,9 @@ The ToolTalk database server also searches the maintained ToolTalk and
 mini-ISAM source directories, allowing its C++ sources to build cleanly from an
 out-of-tree C23 qualification directory. The ToolTalk session server uses the
 same source-aware include contract for its private session, message and utility
-headers.
+headers. ToolTalk's optional dynamic Xlib/Xt dispatch table preserves every
+native function prototype, including the X I/O-error callback; only the POSIX
+`dlsym` boundary converts the resolved address into that exact type.
 
 The DtMrm resource-registration library searches both build and source trees
 for the private DtHelp and DtTerm headers included by its widget-private
