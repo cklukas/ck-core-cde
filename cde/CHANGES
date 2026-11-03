@@ -18,6 +18,8 @@
   pointer contract. Button and clock gadget class records now store exact
   initialization, redisplay, set-values, dispatch, drawing and graphics-context
   methods without project-function casts.
+- DtInfo: store Restraint geometry and management methods directly, and match
+  Simple's sensitivity method to the class record's `Bool` result contract.
 - DtCm: register the shared calendar help callback directly throughout menus,
   editors, browsers and dialogs through its exact `XtCallbackProc` contract.
   Appointment, group, to-do and standalone-editor drag-motion hooks now

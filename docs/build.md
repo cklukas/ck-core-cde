@@ -226,7 +226,10 @@ C23 qualification covers DtSvc's private hash callbacks, Instant's typed
 element/content tree visitors, and dtscreen's mode dispatch and fireworks
 helpers. Callback implementations accept their framework-defined context type
 and recover private state inside the function, rather than relying on an
-incompatible function pointer or a cast at registration time.
+incompatible function pointer or a cast at registration time. Restraint's
+geometry and child-management slots and Simple's sensitivity slot now preserve
+their native class-record types as well; casts still emitted by these widget
+records are Xt/Motif inheritance sentinels.
 DtSvc's action translations, timeouts, prompt handlers, message logger and
 subprocess termination hook likewise expose their exact framework callback
 boundaries. Its database converter table uses one typed Boolean-returning
