@@ -1,4 +1,7 @@
 2026-11-03
+- CI: place rpi4 filesystem preference fixtures beneath the runner's private
+  home directory, so the production ownership checks exercise trusted storage
+  without weakening their rejection of unsafe temporary-directory ancestors.
 - DtHelp: serialize pass1 element-definition table generation like the canon1
   and pass2 twins, preventing parallel builds from compiling a delimiter header
   while its generator is replacing it.

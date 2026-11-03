@@ -143,8 +143,22 @@ readelf -dW programs/dtwm/.libs/dtwm | grep -F 'libXm.so.9'
 
 fs_prefix=$root/fs-prefix
 fs_build=$root/fs-build
-private_fixture=$root/private-fixture
-mkdir -p "$private_fixture"
+case ${HOME:-} in
+    /*) ;;
+    *)
+        echo "HOME must name an absolute private runner directory" >&2
+        exit 2
+        ;;
+esac
+private_fixture=$(mktemp -d "$HOME/.cde-sync-test.XXXXXXXX")
+case $private_fixture in
+    "$HOME"/.cde-sync-test.*) ;;
+    *)
+        echo "refusing unsafe private fixture: $private_fixture" >&2
+        exit 2
+        ;;
+esac
+trap 'rm -rf "$private_fixture"' EXIT HUP INT TERM
 export DTFILE_PRIVATE_TEST_ROOT=$private_fixture
 cmake -S "$CKGIT_SISTER_CK_CORE_FS_LIB" -B "$fs_build" \
     -DCMAKE_INSTALL_PREFIX="$fs_prefix" -DCMAKE_INSTALL_LIBDIR=lib \
@@ -176,6 +190,9 @@ xvfb-run -a -s '-screen 0 1280x900x24 -nolisten tcp' \
     env CC="$cc" python3 "$cde_source/cde/programs/dtfile/tests/check-sync-retry-ui.py" \
         --fs-prefix "$fs_prefix" --motif-prefix "$motif_prefix" \
         --work-dir "$private_fixture/retry-ui"
+
+rm -rf "$private_fixture"
+trap - EXIT HUP INT TERM
 
 finished_epoch=$(date +%s)
 finished_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)
