@@ -225,3 +225,7 @@ does not apply filesystem changes; `result.json` and logs record the run.
 Set `TMPDIR` explicitly. Private test homes must be on an ownership-enforcing
 filesystem with trusted ancestors; if that differs from the build's temporary
 location, set `DTFILE_PRIVATE_TEST_ROOT` to an existing suitable fixture directory.
+The access-path validator also supports unprivileged user namespaces, where the
+host-owned filesystem root can appear with an unmapped UID. That exception is
+limited to the descriptor opened directly as `/`; every ordinary ancestor and
+private object keeps the ownership, permission, link and ACL requirements above.

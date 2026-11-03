@@ -27,7 +27,30 @@
  * Group ACL grants are conservatively refused, without membership inference.
  */
 typedef enum { SYNC_STORAGE_OK, SYNC_STORAGE_IO, SYNC_STORAGE_UNSAFE, SYNC_STORAGE_NOMEM } SyncStorageStatus;
-typedef enum { SYNC_STORAGE_ANCESTOR, SYNC_STORAGE_HOME, SYNC_STORAGE_DIRECTORY, SYNC_STORAGE_FILE } SyncStorageKind;
+typedef enum { SYNC_STORAGE_ROOT, SYNC_STORAGE_ANCESTOR, SYNC_STORAGE_HOME,
+    SYNC_STORAGE_DIRECTORY, SYNC_STORAGE_FILE } SyncStorageKind;
+
+/* The actual filesystem root is a trusted administration boundary even when
+ * an unprivileged user namespace reports its host owner as an unmapped UID.
+ * This exception is deliberately unavailable to every ordinary ancestor. */
+static inline int SyncStorageMetadataSafe(const struct stat *st, SyncStorageKind kind,
+    uid_t caller)
+{
+    if (kind == SYNC_STORAGE_ROOT)
+        return S_ISDIR(st->st_mode) && !(st->st_mode & 0022);
+    if (kind == SYNC_STORAGE_ANCESTOR)
+        return S_ISDIR(st->st_mode) && (st->st_uid == 0 || st->st_uid == caller) &&
+            (!(st->st_mode & 0022) || (st->st_mode & S_ISVTX) ||
+             (st->st_uid == 0 && st->st_gid == 0 && !(st->st_mode & 0002)));
+    if (kind == SYNC_STORAGE_HOME)
+        return S_ISDIR(st->st_mode) && st->st_uid == caller && !(st->st_mode & 0022);
+    if (kind == SYNC_STORAGE_DIRECTORY)
+        return S_ISDIR(st->st_mode) && st->st_uid == caller && (st->st_mode & 07777) == 0700;
+    if (kind == SYNC_STORAGE_FILE)
+        return S_ISREG(st->st_mode) && st->st_uid == caller &&
+            (st->st_mode & 07777) == 0600 && st->st_nlink == 1;
+    return 0;
+}
 
 /* ACLs are independent of mode bits on Darwin. Refuse uninspectable ACLs,
  * unknown grants and group grants rather than infer group membership. Denies
@@ -109,23 +132,13 @@ static inline SyncStorageStatus SyncStorageCheck(int fd, SyncStorageKind kind, c
         return SYNC_STORAGE_UNSAFE;
     }
 #endif
-    int safe;
-    if (kind == SYNC_STORAGE_ANCESTOR)
-        safe = S_ISDIR(st.st_mode) && (st.st_uid == 0 || st.st_uid == geteuid()) &&
-            (!(st.st_mode & 0022) || (st.st_mode & S_ISVTX) ||
-             (st.st_uid == 0 && st.st_gid == 0 && !(st.st_mode & 0002)));
-    else if (kind == SYNC_STORAGE_HOME)
-        safe = S_ISDIR(st.st_mode) && st.st_uid == geteuid() && !(st.st_mode & 0022);
-    else if (kind == SYNC_STORAGE_DIRECTORY)
-        safe = S_ISDIR(st.st_mode) && st.st_uid == geteuid() && (st.st_mode & 07777) == 0700;
-    else if (kind == SYNC_STORAGE_FILE)
-        safe = S_ISREG(st.st_mode) && st.st_uid == geteuid() && (st.st_mode & 07777) == 0600 && st.st_nlink == 1;
-    else safe = 0;
+    int safe = SyncStorageMetadataSafe(&st, kind, geteuid());
     if (!safe) {
         snprintf(error, capacity, "Unsafe private storage ownership, permissions, type or link count");
         return SYNC_STORAGE_UNSAFE;
     }
-    return SyncStorageACL(fd, kind == SYNC_STORAGE_ANCESTOR, error, capacity);
+    return SyncStorageACL(fd, kind == SYNC_STORAGE_ROOT || kind == SYNC_STORAGE_ANCESTOR,
+        error, capacity);
 }
 
 /* Resolve from / using openat+O_NOFOLLOW on every component, including home.
@@ -143,6 +156,7 @@ static inline SyncStorageStatus SyncStorageOpenHome(const char *home, int *out, 
     char *path = strdup(home);
     if (!path) { snprintf(error, capacity, "Cannot inspect private storage access path"); return SYNC_STORAGE_NOMEM; }
     int fd = open("/", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    int at_root = 1;
     SyncStorageStatus status = SYNC_STORAGE_OK;
     if (fd < 0) { snprintf(error, capacity, "Open private storage root: %s", strerror(errno)); status = SYNC_STORAGE_IO; }
     char *cursor = path + 1;
@@ -155,10 +169,12 @@ static inline SyncStorageStatus SyncStorageOpenHome(const char *home, int *out, 
             snprintf(error, capacity, "Parent traversal is not allowed in private storage home");
             status = SYNC_STORAGE_UNSAFE; break;
         }
-        status = SyncStorageCheck(fd, SYNC_STORAGE_ANCESTOR, error, capacity);
+        status = SyncStorageCheck(fd, at_root ? SYNC_STORAGE_ROOT : SYNC_STORAGE_ANCESTOR,
+            error, capacity);
         if (status != SYNC_STORAGE_OK) break;
         int next = openat(fd, component, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
         close(fd); fd = next;
+        at_root = 0;
         if (fd < 0) { snprintf(error, capacity, "Open private storage path without following links: %s", strerror(errno)); status = SYNC_STORAGE_IO; }
     }
     if (fd >= 0 && status == SYNC_STORAGE_OK) status = SyncStorageCheck(fd, SYNC_STORAGE_HOME, error, capacity);

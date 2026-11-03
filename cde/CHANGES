@@ -1,4 +1,8 @@
 2026-11-03
+- dtfile: recognize the already-opened filesystem root as the trusted system
+  boundary when a user namespace exposes its owner as an unmapped UID. Ordinary
+  ancestors and private storage retain their strict ownership, mode, link and
+  ACL checks.
 - CI: normalize the dedicated rpi4 sandbox home to private permissions and
   place filesystem preference fixtures beneath it, so the production ownership
   checks exercise trusted storage without weakening their rejection of unsafe

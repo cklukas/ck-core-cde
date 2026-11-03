@@ -1133,6 +1133,22 @@ static void test_access_path(const char *root)
     assert(lstat(config, &st) < 0 && errno == ENOENT);
     free(config); free(alias); free(link); free(home); test_remove_tree(parent); free(parent);
 }
+static void test_storage_metadata_policy(void)
+{
+    struct stat st = { 0 };
+    uid_t caller = geteuid(), other = caller == 1 ? 2 : 1;
+    st.st_mode = S_IFDIR | 0755;
+    st.st_uid = other;
+    assert(SyncStorageMetadataSafe(&st, SYNC_STORAGE_ROOT, caller));
+    assert(!SyncStorageMetadataSafe(&st, SYNC_STORAGE_ANCESTOR, caller));
+    st.st_mode = S_IFDIR | 0775;
+    assert(!SyncStorageMetadataSafe(&st, SYNC_STORAGE_ROOT, caller));
+    st.st_mode = S_IFDIR | 0700;
+    assert(!SyncStorageMetadataSafe(&st, SYNC_STORAGE_HOME, caller));
+    st.st_uid = caller;
+    assert(SyncStorageMetadataSafe(&st, SYNC_STORAGE_HOME, caller));
+    puts("Private storage metadata: unmapped filesystem root and strict ordinary ancestors passed");
+}
 static int test_writer(const char *home, const char *name)
 {
     SyncProfiles *s = test_start(home);
@@ -1145,6 +1161,7 @@ static int test_writer(const char *home, const char *name)
 int main(int argc, char **argv)
 {
     if (argc == 4 && !strcmp(argv[1], "--writer")) return test_writer(argv[2], argv[3]);
+    test_storage_metadata_policy();
     assert(argc == 2 || argc == 3);
     assert(argv[1][0] == '/');
     ProfileError safety = { 0 };
