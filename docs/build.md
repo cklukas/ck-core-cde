@@ -456,6 +456,9 @@ their complete four-argument Xt action contracts directly.
 DtHelp's help-view close hook uses its native Xt callback boundary directly.
 DtCalc's popup mapping, help-selection timeout and X editres hooks also register
 their already-exact callback contracts without function-pointer casts.
+DtPad registers its X editres hook through the complete Xt event-handler
+contract, while DtIcon uses a typed timeout adapter around its reusable polygon
+click-state reset helper.
 DtWidget's editor translation table stores its complete four-argument Xt action
 implementations directly, allowing the compiler to check every public and
 internal editor action.

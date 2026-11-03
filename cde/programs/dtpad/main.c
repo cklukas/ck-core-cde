@@ -920,7 +920,7 @@ SendMessageToServer(
 
 #ifdef HAVE_EDITRES
     XtAddEventHandler(topLevelWithWmCommand, 0, True,
-                      (XtEventHandler) _XEditResCheckMessages,
+                      _XEditResCheckMessages,
                       (XtPointer) NULL);
 #endif
 

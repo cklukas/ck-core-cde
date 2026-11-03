@@ -86,6 +86,14 @@ Clear_ClickCount( void )
   ClickCount = 0;
 }
 
+static void
+Clear_ClickCountTimeout(XtPointer client_data, XtIntervalId *id)
+{
+  (void)client_data;
+  (void)id;
+  Clear_ClickCount();
+}
+
 /* Forward declarations */
 
 void iArc(
@@ -463,8 +471,7 @@ Do_ButtonOp(
                           ClickCount++;
                           polyTimerID = XtAppAddTimeOut( AppContext,
                                                          multiClickTime,
-                                                         (XtTimerCallbackProc)
-                                                             Clear_ClickCount,
+                                                         Clear_ClickCountTimeout,
                                                          NULL);
                           break;
        } /* switch(GraphicsOp) */
