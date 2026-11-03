@@ -55,7 +55,12 @@
 #define	APPT_KEY(p_appt)		((Appt_4 *) (p_appt))->appt_id.key
 #define	APPT_TICK(p_appt)		((Appt_4 *) (p_appt))->appt_id.tick
 
-typedef CSA_return_code (*_DtCmGetAttrFunc)();
+struct __DtCmsCalendar;
+
+typedef CSA_return_code (*_DtCmGetAttrFunc)(
+    struct __DtCmsCalendar *calendar,
+    int index,
+    cms_attribute *attribute);
 
 typedef	struct __DtCmsCalendar {
 	char		*owner;

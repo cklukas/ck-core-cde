@@ -430,7 +430,7 @@ struct button {
   enum op_type opdisp ;     /* Is button selected during operation? */
   enum menu_type mtype ;    /* Type of popup menu (if any). */
   char *resname ;           /* Button resource name. */
-  void (*func)() ;          /* Function to obey on button press. */
+  void (*func)(void) ;      /* Function to obey on button press. */
 } ;
 extern struct button buttons[] ;           /* Calculator button values. */
 extern struct button mode_buttons[] ;      /* Special "mode" buttons. */

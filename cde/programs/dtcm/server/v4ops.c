@@ -633,8 +633,9 @@ _DtCmsInsertApptAndLog(_DtCmsCalendar *cal, Appt_4 *appt)
 }
 
 extern _DtCmsComparisonResult
-_DtCmsCompareAppt(Id_4 *key, caddr_t data)
+_DtCmsCompareAppt(caddr_t key_data, caddr_t data)
 {
+	Id_4 *key = (Id_4 *)key_data;
 	Appt_4 *appt = (Appt_4 *)data;
 
 	/* Composite key */
@@ -653,8 +654,9 @@ _DtCmsCompareAppt(Id_4 *key, caddr_t data)
 }
 
 extern _DtCmsComparisonResult
-_DtCmsCompareRptAppt(Id_4 *key, caddr_t data)
+_DtCmsCompareRptAppt(caddr_t key_data, caddr_t data)
 {
+	Id_4 *key = (Id_4 *)key_data;
 	Appt_4 *appt = (Appt_4 *)data;
 
 	if (key->key < appt->appt_id.key)
@@ -694,7 +696,7 @@ _DtCmsLookupRangeV4(
 	boolean_t	no_end_time_range,
 	long		end1,
 	long		end2,
-	boolean_t	(*match_func)(),
+	_DtCmsMatchApptProc match_func,
 	uint		num_attrs,
 	cms_attribute	*attrs,
 	CSA_enum	*ops,
@@ -703,7 +705,9 @@ _DtCmsLookupRangeV4(
 {
 	CSA_return_code	stat = CSA_SUCCESS;
 	Period_4	period;
-	caddr_t		ilp = NULL;
+	Appt_4		*appt_result = NULL;
+	Abb_Appt_4	*abbr_result = NULL;
+	void		*result_slot;
 	int		tmp_tick, endtick;
 	Id_4		lo_key;
 	int		n;
@@ -714,7 +718,7 @@ _DtCmsLookupRangeV4(
 	int		ntimes;
 	Appt_4		*p_appt;
 	cms_entry	*entries;
-	CSA_return_code	(*add_list_func)();
+	_DtCmsAddListProc add_list_func;
 
 	/* do lookup on new format calendar */
 	if (cal->fversion > 1) {
@@ -739,6 +743,7 @@ _DtCmsLookupRangeV4(
 		add_list_func = _AddToLinkedAppts;
 	else
 		add_list_func = _AddToLinkedAbbrAppts;
+	result_slot = appt_r ? (void *)&appt_result : (void *)&abbr_result;
 
 	while (p_range != NULL)
 	{
@@ -773,14 +778,15 @@ _DtCmsLookupRangeV4(
 			}
 
 			if ((stat = (*add_list_func)(p_appt, user,
-			    access,&ilp)) != CSA_SUCCESS) {
-				if (ilp != NULL) {
+			    access, result_slot)) != CSA_SUCCESS) {
+				if (appt_result != NULL || abbr_result != NULL) {
 					if (appt_r)
-						_DtCm_free_appt4((Appt_4 *)ilp);
+						_DtCm_free_appt4(appt_result);
 					else
 						_DtCm_free_abbrev_appt4(
-							(Abb_Appt_4 *)ilp);
-					ilp = NULL;
+							abbr_result);
+					appt_result = NULL;
+					abbr_result = NULL;
 				}
 				break;
 			}
@@ -855,19 +861,21 @@ _DtCmsLookupRangeV4(
 
 				/* Add to list, restore parent key */
 				stat = (*add_list_func)(p_appt, user,
-					access, &ilp);
+					access, result_slot);
 
 				APPT_TICK(p_appt) = tmp_tick;
 
 				if (stat != CSA_SUCCESS) {
-					if (ilp != NULL) {
+					if (appt_result != NULL ||
+					    abbr_result != NULL) {
 						if (appt_r)
 						    _DtCm_free_appt4(
-							(Appt_4 *)ilp);
+							appt_result);
 						else
 						    _DtCm_free_abbrev_appt4(
-							(Abb_Appt_4 *)ilp);
-						ilp = NULL;
+							abbr_result);
+						appt_result = NULL;
+						abbr_result = NULL;
 					}
 					break;
 				}
@@ -884,9 +892,9 @@ _DtCmsLookupRangeV4(
 
 	if (stat == CSA_SUCCESS) {
 		if (appt_r)
-			*appt_r = (Appt_4 *)ilp;
+			*appt_r = appt_result;
 		else
-			*abbr_r = (Abb_Appt_4 *)ilp;
+			*abbr_r = abbr_result;
 	}
 
 	return (stat);
@@ -904,7 +912,7 @@ _DtCmsLookupKeyrangeV4(
 	time_t		end1,
 	time_t		end2,
 	long		id,
-	boolean_t	(*match_func)(),
+	_DtCmsMatchApptProc match_func,
 	uint		num_attrs,
 	cms_attribute	*attrs,
 	CSA_enum	*ops,
@@ -923,7 +931,7 @@ _DtCmsLookupKeyrangeV4(
 	Appt_4		*p_appt, *tappt;
 	Abb_Appt_4	*tabbr;
 	cms_entry	*entries;
-	CSA_return_code (*add_list_func)();
+	_DtCmsAddListProc add_list_func;
 
 	/* do lookup on new format calendar */
 	if (cal->fversion >= _DtCM_FIRST_EXTENSIBLE_DATA_VERSION) {
@@ -967,7 +975,7 @@ _DtCmsLookupKeyrangeV4(
 		/* just return the first event */
 		if (no_start_time_range && no_end_time_range)
 			return ((*add_list_func)(p_appt, user, access,
-				(appt_r ? (caddr_t)appt_r : (caddr_t)abbr_r)));
+				(appt_r ? (void *)appt_r : (void *)abbr_r)));
 
 		/* Get the range of events from this appointment. */
 		ntimes = _DtCms_get_ninstance_v4(p_appt);
@@ -1020,8 +1028,8 @@ _DtCmsLookupKeyrangeV4(
 
 				/* Add to list, restore parent key */
 				stat = (*add_list_func)(p_appt, user, access,
-					(appt_r ? (caddr_t)appt_r :
-					(caddr_t)abbr_r));
+					(appt_r ? (void *)appt_r :
+					(void *)abbr_r));
 
 				APPT_TICK(p_appt) = tmp_tick;
 
@@ -1050,8 +1058,8 @@ _DtCmsLookupKeyrangeV4(
 				} else {
 					return ((*add_list_func)(p_appt, user,
 						access, (appt_r ?
-						(caddr_t)appt_r :
-						(caddr_t)abbr_r)));
+						(void *)appt_r :
+						(void *)abbr_r)));
 				}
 			}
 		}
@@ -1064,8 +1072,9 @@ _AddToLinkedAppts(
 	Appt_4	*p_appt,
 	char	*user,
 	uint	access,
-	caddr_t	*ilp)
+	void	*result)
 {
+	Appt_4	**appt_r = (Appt_4 **)result;
 	Appt_4	*p_prev;
 	Appt_4	*copy;
 
@@ -1083,7 +1092,7 @@ _AddToLinkedAppts(
 	if (copy == NULL)
 		return(CSA_E_INSUFFICIENT_MEMORY);
 	else {
-		*ilp = (caddr_t)_AddApptInOrder((Appt_4 *)*ilp, copy);
+		*appt_r = _AddApptInOrder(*appt_r, copy);
 		return (CSA_SUCCESS);
 	}
 }
@@ -1093,8 +1102,9 @@ _AddToLinkedAbbrAppts(
 	Appt_4	*p_appt,
 	char	*user,
 	uint	access,
-	caddr_t	*ilp)
+	void	*result)
 {
+	Abb_Appt_4 **abbr_r = (Abb_Appt_4 **)result;
 	Abb_Appt_4 *copy;
 
 	switch (_GetAccessLevel(user, access, p_appt)) {
@@ -1111,7 +1121,7 @@ _AddToLinkedAbbrAppts(
 	if (copy == NULL)
 		return(CSA_E_INSUFFICIENT_MEMORY);
 	else {
-		*ilp = (caddr_t)_AddAbbApptInOrder((Abb_Appt_4 *)*ilp, copy);
+		*abbr_r = _AddAbbApptInOrder(*abbr_r, copy);
 		return (CSA_SUCCESS);
 	}
 }

@@ -54,8 +54,8 @@ typedef struct {
 	_DtCmsCompareProc compare;
 	} Private;
 
-typedef void (*Action_proc)
-	(/* Private *private; Tree_node *y, *z, *root */);
+typedef void (*Action_proc)(Private *private, Tree_node *y,
+			    Tree_node *z, Tree_node *root);
 
 
 static Tree_node *
@@ -155,7 +155,7 @@ rb_create (_DtCmsGetKeyProc get, _DtCmsCompareProc compare)
 
 
 extern void
-rb_destroy(Rb_tree *tree, _DtCmsEnumerateProc destroy)
+rb_destroy(Rb_tree *tree, _DtCmsDestroyProc destroy)
 {
 	Private *p = NULL;
 	caddr_t data = NULL;
@@ -591,7 +591,7 @@ assert(int p)
 	return(p);
 }
 
-typedef struct {caddr_t max; int i; boolean_t bool;} Rec;
+typedef struct {caddr_t max; int i; boolean_t red_child;} Rec;
 
 static void
 check1(Tree_node *x, caddr_t max, Tree_node *z, Rec *rec, Private *private)
@@ -602,14 +602,14 @@ check1(Tree_node *x, caddr_t max, Tree_node *z, Rec *rec, Private *private)
 	if (x == z) {
 		rec->max = max;
 	  	rec->i = 0;
-	  	rec->bool = B_FALSE;
+		rec->red_child = B_FALSE;
 	  	return;
 	}
 	check1(x->llink, max, z, localp, private);
 	if (private->status == rb_badtable) return;
 	max = localp->max;
 	dl = localp->i;
-	redchild = localp->bool;
+	redchild = localp->red_child;
 	if (!assert (!(redchild && (x->color == red)))) {
 		private->status = rb_badtable;
 	  	return;
@@ -624,7 +624,7 @@ check1(Tree_node *x, caddr_t max, Tree_node *z, Rec *rec, Private *private)
 	if (private->status == rb_badtable) return;
 	max = localp->max;
 	dr = localp->i;
-	redchild = localp->bool;
+	redchild = localp->red_child;
 	if (!assert (!(redchild && (x->color == red)))) {
 		private->status = rb_badtable;
 	  	return;
@@ -635,7 +635,7 @@ check1(Tree_node *x, caddr_t max, Tree_node *z, Rec *rec, Private *private)
 	}
 	rec->max = max;
 	rec->i = dl + ((x->color == black) ? 1 : 0);
-	rec->bool = ((x->color == red) ? B_TRUE : B_FALSE);
+	rec->red_child = ((x->color == red) ? B_TRUE : B_FALSE);
 }
 
 static void

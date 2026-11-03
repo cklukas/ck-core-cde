@@ -53,7 +53,7 @@ typedef struct {
 
 extern Rb_tree* rb_create(_DtCmsGetKeyProc, _DtCmsCompareProc);
 
-extern void rb_destroy(Rb_tree*, _DtCmsEnumerateProc); 
+extern void rb_destroy(Rb_tree*, _DtCmsDestroyProc);
 
 extern int rb_size(Rb_tree*t);
 

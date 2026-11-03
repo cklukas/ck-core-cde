@@ -173,7 +173,7 @@ extern Boolean PdmOidListHasOid(const PdmOidList* list, PdmOid oid);
 /*
  * PdmOidLinkedList public methods
  */
-extern PdmOidLinkedList* PdmOidLinkedListNew();
+extern PdmOidLinkedList* PdmOidLinkedListNew(void);
 extern void PdmOidLinkedListDelete(PdmOidLinkedList*);
 #define PdmOidLinkedListCount(l) ((l) ? (l)->count : 0)
 extern PdmOid PdmOidLinkedListGetOid(PdmOidLinkedList* list, int i);

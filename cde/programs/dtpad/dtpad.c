@@ -487,7 +487,7 @@ CreateFileMenu(
     XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
     cascade = XmCreateCascadeButtonGadget (pPad->menu_bar, "File", al, ac);
     XtAddCallback (cascade, XmNcascadingCallback, 
-		   (XtCallbackProc)FileCascadingCB, (XtPointer) pPad);
+		   FileCascadingCB, (XtPointer) pPad);
     XtAddCallback(cascade, XmNhelpCallback, (XtCallbackProc)HelpFileCB, pPad);
     XtManageChild (cascade);
     free(mnemonic);
@@ -502,7 +502,7 @@ CreateFileMenu(
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "new", al, ac);
     pWidg->newBtn = WidgList[count-1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
-		   (XtCallbackProc)FileNewCB, (XtPointer) pPad);
+		   FileNewCB, (XtPointer) pPad);
     free(mnemonic);
     XmStringFree(tmpStr);
 
@@ -515,7 +515,7 @@ CreateFileMenu(
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "open", al, ac);
     pWidg->openBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
-		   (XtCallbackProc) FileOpenCB, (XtPointer) pPad);
+		   FileOpenCB, (XtPointer) pPad);
     free(mnemonic);
     XmStringFree(tmpStr);
 
@@ -528,7 +528,7 @@ CreateFileMenu(
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "include", al, ac);
     pWidg->includeBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
-		   (XtCallbackProc) FileIncludeCB, (XtPointer) pPad);
+		   FileIncludeCB, (XtPointer) pPad);
     free(mnemonic);
     XmStringFree(tmpStr);
 
@@ -549,7 +549,7 @@ CreateFileMenu(
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "save", al, ac);
     pWidg->saveBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
-		   (XtCallbackProc) FileSaveCB, (XtPointer) pPad);
+		   FileSaveCB, (XtPointer) pPad);
     free(mnemonic);
 
     /* -----> create "Save As..." push button
@@ -559,7 +559,7 @@ CreateFileMenu(
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "saveAs", al, ac);
     pWidg->saveAsBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
-		   (XtCallbackProc) FileSaveAsCB, (XtPointer) pPad);
+		   FileSaveAsCB, (XtPointer) pPad);
 
     /* -----> create "Print..." push button */
     mnemonic = strdup(((char *)GETMESSAGE(11, 27, "P")));
@@ -570,7 +570,7 @@ CreateFileMenu(
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "print", al, ac);
     pWidg->printBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
-		   (XtCallbackProc) FileXpPrintCB, (XtPointer) pPad);
+		   FileXpPrintCB, (XtPointer) pPad);
     free(mnemonic);
     XmStringFree(tmpStr);
 
@@ -588,7 +588,7 @@ CreateFileMenu(
     pPad->ExitWid = WidgList[count-1];
     pWidg->exitBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
-		   (XtCallbackProc) FileExitCB, (XtPointer) pPad);
+		   FileExitCB, (XtPointer) pPad);
     free(mnemonic);
     XmStringFree(tmpStr);
 
@@ -1296,7 +1296,7 @@ CreatePopupMenu( Editor *pPad )
     popupBtns[i] = XmCreatePushButtonGadget(pPad->popup, "New", al, ac);
     XtAddCallback(button, XmNactivateCallback, callback, callData);
     XtAddCallback (popupBtns[i], XmNactivateCallback, 
-		   (XtCallbackProc)FileNewCB, (XtPointer) pPad);
+		   FileNewCB, (XtPointer) pPad);
     free(mnemonic);
     XmStringFree(tmpStr);
     i++;

@@ -120,7 +120,7 @@ hc_create(_DtCmsGetKeyProc get, _DtCmsCompareProc compare)
 }
 
 extern void
-hc_destroy(Hc_list *hc_list, Destroy_proc destroy_func)
+hc_destroy(Hc_list *hc_list, _DtCmsDestroyProc destroy_func)
 {
 	Private	*p;
 	List_node	*p_node, *p_next;

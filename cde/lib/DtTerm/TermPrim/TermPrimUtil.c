@@ -41,7 +41,7 @@
 #include <signal.h>
 #include <sys/file.h>
 
-void _DtTermPrimRemoveSuidRoot();
+void _DtTermPrimRemoveSuidRoot(void);
 static void ForceCloseLog(DtTermPrimitiveWidget);
 static void PointerMoved(Widget w, XtPointer closure, XEvent *event, Boolean *cont) ;
 void _DtTermPrimPointerOff(Widget w, XtIntervalId *id) ;

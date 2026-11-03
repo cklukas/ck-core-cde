@@ -96,7 +96,7 @@ static String PdmShellFallbackResources[] =
 /*
  * static function declarations
  */
-static PdmShell* PdmShellNew();
+static PdmShell *PdmShellNew(void);
 static int PdmShellCreate(PdmShell*, const String*, int*, String*);
 static void PdmShellPresent(PdmShell* me);
 static Boolean PdmStartOkWorkProc(XtPointer client_data);

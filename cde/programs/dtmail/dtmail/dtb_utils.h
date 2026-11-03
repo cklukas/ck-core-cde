@@ -177,11 +177,11 @@ Pixmap dtb_create_greyed_pixmap(
 void dtb_save_toplevel_widget(
     Widget	toplevel
 );
-Widget dtb_get_toplevel_widget();
+Widget dtb_get_toplevel_widget(void);
 void dtb_save_command(
     char	*argv0
 );
-char *  dtb_get_command();
+char *dtb_get_command(void);
 String dtb_get_exe_dir(void);
 void dtb_more_help_dispatch(
     Widget 	widget,
@@ -221,7 +221,7 @@ void dtb_session_save(
     XtPointer 	clientData,
     XtPointer 	callData
 );
-DtbClientSessionSaveCB dtb_get_client_session_saveCB();
+DtbClientSessionSaveCB dtb_get_client_session_saveCB(void);
 
 
 #define dtb_cvt_string_to_pixel(parent, str) \

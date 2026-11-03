@@ -158,6 +158,25 @@ probes compile these interfaces with GCC and Clang in C23 mode and with G++ and
 Clang++ in C++17 mode; the corresponding ToolTalk, DtSvc, DtMmdb, dtspcd,
 dtfile and dtdocbook consumers build and link in both C23 configurations.
 
+The editor, calculator, print-display manager, terminal primitive layer and
+selected calendar/mail interfaces are qualified with GCC and Clang C23 as
+well. `dtpad` uses `XtCallbackProc` and the complete ToolTalk contract for its
+file workflow; `dtcalc` registers its X error handler without a cast and keeps
+its button dispatch explicitly parameterless; and `dtpdm` publishes explicit
+no-argument constructors. DtTerm's parser action table and cleanup entry points
+now carry their actual arguments, while dtmail's generated utility accessors
+state that they take no arguments.
+
+The calendar storage containers use concrete key, comparison, enumeration,
+destruction and tree-action callback types. Their v4/v5 adapters recover the
+typed appointment or entry key from the container's opaque key argument, and
+the v4 result callback uses one explicit output-slot contract instead of a
+function-pointer cast. The caller keeps each concrete appointment result in a
+separately typed local. The affected libcsa and calendar-server objects compile
+with both C23 toolchains. The legacy heterogeneous RPC dispatch table remains
+outside this focused result and must be converted through typed adapters before
+the complete calendar server can be claimed C23-clean.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh
@@ -169,6 +188,9 @@ make -j4 -C lib/DtMmdb LEX=flex
 make -j4 -C programs/dtspcd
 make -j4 -C programs/dtfile
 make -j4 -C programs/dtdocbook LEX=flex
+make -j4 -C programs/dtcalc
+make -j4 -C programs/dtpad
+make -j4 -C programs/dtpdm
 ```
 
 This focused result does not imply that the rest of CDE is C23-clean. The

@@ -1112,7 +1112,6 @@ static int HitListAddFound (
    _DtHelpGlobSrchHit * srcHit;
    _DtHelpGlobSrchVol * vol;
    int               newKey;
-   extern _CEStrcollProc _DtHelpCeGetStrcollProc();
    _CEStrcollProc strcollfn = _DtHelpCeGetStrcollProc();
    
    if (NULL == curFile) return -1;                 /* RETURN */

@@ -35,7 +35,7 @@
 int _DtTermPrimGetPty(char **ptySlave, char **ptyMaster);
 int _DtTermPrimSetupPty(char *ptySlave, int ptyFd);
 void _DtTermPrimReleasePty(char *ptySlave);
-void _DtTermPrimPtyCleanup();
+void _DtTermPrimPtyCleanup(void);
 int _DtTermPrimGetPty(char **ptySlave, char **ptyMaster);
 void _DtTermPrimReleasePty(char *ptySlave);
 

@@ -46,8 +46,9 @@
  *****************************************************************************/
 
 extern _DtCmsComparisonResult
-_DtCmsCompareEntry(cms_key *key, caddr_t data)
+_DtCmsCompareEntry(caddr_t key_data, caddr_t data)
 {
+	cms_key *key = (cms_key *)key_data;
 	cms_entry *entry = (cms_entry *)data;
 
 	/* check the time only if it's not zero */
@@ -66,8 +67,9 @@ _DtCmsCompareEntry(cms_key *key, caddr_t data)
 }
 
 extern _DtCmsComparisonResult
-_DtCmsCompareRptEntry(cms_key *key, caddr_t data)
+_DtCmsCompareRptEntry(caddr_t key_data, caddr_t data)
 {
+	cms_key *key = (cms_key *)key_data;
 	cms_entry *entry = (cms_entry *)data;
 
 	if (key->id < entry->key.id)

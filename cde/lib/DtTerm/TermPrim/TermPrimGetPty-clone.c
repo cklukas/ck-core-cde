@@ -158,7 +158,7 @@ _DtTermPrimReleasePty(char *ptySlave)
 }
 
 void
-_DtTermPrimPtyCleanup()
+_DtTermPrimPtyCleanup(void)
 {
     return;
 }

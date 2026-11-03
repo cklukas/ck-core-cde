@@ -156,8 +156,8 @@ HelpHelpCB(
 void
 HelpOpenDialogCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FILE_OPEN_DIALOG_HELP,
 			     (char *) NULL);
@@ -166,8 +166,8 @@ HelpOpenDialogCB(
 void
 HelpIncludeDialogCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FILE_INCLUDE_DIALOG_HELP,
 			     (char *) NULL);

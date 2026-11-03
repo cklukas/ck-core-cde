@@ -71,7 +71,7 @@ typedef struct _PdmXp
 /*
  * PdmXp public methods
  */
-extern PdmXp* PdmXpNew();
+extern PdmXp* PdmXpNew(void);
 extern Display* PdmXpOpen(PdmXp* me,
 			  char* display_spec,
 			  char* context_str);

@@ -78,15 +78,15 @@ static void FileDoXpPrint(
         Boolean silent);
 static void FileOpenOkCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 static void IncludeFile(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 static Boolean SaveUnsaved(
 	Editor* pPad,
-	void (*callingFunc)() );
+	XtCallbackProc callingFunc );
 static Boolean FileExitWP(
 	XtPointer client_data);
 
@@ -99,8 +99,8 @@ static Boolean FileExitWP(
 void
 FileCascadingCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     Arg al[1];
@@ -125,8 +125,8 @@ FileCascadingCB(
 void
 FileNewCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
 
@@ -156,8 +156,8 @@ FileNewCB(
 void
 FileOpenCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     FileStuff *pStuff = &pPad->fileStuff;
@@ -192,8 +192,8 @@ FileOpenCB(
 void
 FileIncludeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     FileStuff *pStuff = &pPad->fileStuff;
@@ -221,11 +221,11 @@ FileIncludeCB(
 void
 FileSaveCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
-    void (*pFunc)();
+    XtCallbackProc pFunc;
     DtEditorErrorCode errorCode;
     Boolean addNewlines = pPad->xrdb.wordWrap == True &&
 			  pPad->fileStuff.saveWithNewlines == True;
@@ -250,7 +250,7 @@ FileSaveCB(
 	_DtTurnOffHourGlass(pPad->app_shell);
 	if (errorCode != DtEDITOR_NO_ERRORS) {
 	    PostSaveError(pPad, pPad->fileStuff.fileName, errorCode);
-	    pPad->fileStuff.pendingFileFunc = (void(*)()) NULL;
+	    pPad->fileStuff.pendingFileFunc = NULL;
 	    TTfailPendingSave(pPad);
 	    return;
 	}
@@ -279,7 +279,7 @@ FileSaveCB(
 			TTfailPendingQuit(pPad);
 		    }
 		    TTfailPendingSave(pPad);
-		    pPad->fileStuff.pendingFileFunc = (void(*)()) NULL;
+		    pPad->fileStuff.pendingFileFunc = NULL;
 		    return;	/* deposit failed */
 		}
 	    } else {	/* TT request without fileName and contents */
@@ -300,8 +300,8 @@ FileSaveCB(
 	}
     }
 
-    if ((pFunc = pPad->fileStuff.pendingFileFunc) != (void (*)())NULL)  {
-	pPad->fileStuff.pendingFileFunc = (void(*)()) NULL;
+    if ((pFunc = pPad->fileStuff.pendingFileFunc) != NULL)  {
+	pPad->fileStuff.pendingFileFunc = NULL;
 	if (pFunc != FileSaveCB) {
 	    (*pFunc)(w, client_data, call_data);
 	}
@@ -316,8 +316,8 @@ FileSaveCB(
 void
 FileSaveAsCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     SaveAs *pSaveAs = &pPad->fileStuff.fileWidgets.saveAs;
@@ -389,8 +389,8 @@ PrintActionCB(
 void
 FilePrintCB(
 	Widget w,
-	caddr_t client_data,
-	caddr_t call_data)
+	XtPointer client_data,
+	XtPointer call_data)
 {
     Editor *pPad = (Editor *) client_data;
     DtActionArg *actionArgp = (DtActionArg *) XtCalloc(2,sizeof(DtActionArg));
@@ -562,8 +562,8 @@ static void FileDoXpPrint(Editor *pPad, Boolean silent)
 void
 FileXpPrintCB(
 	Widget w,
-	caddr_t client_data,
-	caddr_t call_data)
+	XtPointer client_data,
+	XtPointer call_data)
 {
     Editor *pPad = (Editor *) client_data;
     FileDoXpPrint(pPad, FALSE);
@@ -577,8 +577,8 @@ FileXpPrintCB(
 void
 FileExitCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Editor *pPad = (Editor *)client_data;
 
@@ -711,8 +711,8 @@ FileExitWP(XtPointer client_data)
 
     pPad->saveRestore = False;
 
-    pPad->fileStuff.pendingFileFunc = (void (*)())NULL;
-    pPad->fileStuff.pendingFileHelpFunc = (void (*)())NULL;
+    pPad->fileStuff.pendingFileFunc = NULL;
+    pPad->fileStuff.pendingFileHelpFunc = NULL;
     pPad->fileStuff.fileExists = False;
     pPad->fileStuff.saveWithNewlines = True;
     pPad->fileStuff.readOnly = False;
@@ -756,8 +756,8 @@ FileExitWP(XtPointer client_data)
 void
 oldFileExitCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Editor *pPad = (Editor *)client_data;
     Tt_status status;
@@ -853,8 +853,8 @@ oldFileExitCB(
 
     pPad->saveRestore = False;
 
-    pPad->fileStuff.pendingFileFunc = (void (*)())NULL;
-    pPad->fileStuff.pendingFileHelpFunc = (void (*)())NULL;
+    pPad->fileStuff.pendingFileFunc = NULL;
+    pPad->fileStuff.pendingFileHelpFunc = NULL;
     pPad->fileStuff.fileExists = False;
     pPad->fileStuff.saveWithNewlines = True;
     pPad->fileStuff.readOnly = False;
@@ -896,21 +896,21 @@ oldFileExitCB(
 void
 NoSaveCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
-    void (*pFunc)();
+    XtCallbackProc pFunc;
 
     XtUnmanageChild(pPad->fileStuff.fileWidgets.select.save_warning);
 
 
-    if ((pFunc = pPad->fileStuff.pendingFileFunc) != (void(*)()) NULL)  {
+    if ((pFunc = pPad->fileStuff.pendingFileFunc) != NULL)  {
 	/* -----> don't clear the pending function if it calls SaveUnsaved() */
 	if (pPad->fileStuff.pendingFileFunc != FileNewCB &&
 	  pPad->fileStuff.pendingFileFunc != FileOpenCB &&
 	  pPad->fileStuff.pendingFileFunc != FileExitCB) {
-	    pPad->fileStuff.pendingFileFunc = (void(*)()) NULL;
+	    pPad->fileStuff.pendingFileFunc = NULL;
 	}
 	if (pFunc != FileSaveCB) {
 	    (*pFunc)(w, client_data, call_data);
@@ -926,13 +926,13 @@ NoSaveCB(
 void
 CancelFileSelectCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
 
-    pPad->fileStuff.pendingFileFunc = (void(*)()) NULL;
-    pPad->fileStuff.pendingFileHelpFunc = (void(*)()) NULL;
+    pPad->fileStuff.pendingFileFunc = NULL;
+    pPad->fileStuff.pendingFileHelpFunc = NULL;
 
     /* popdown the file selection box */
     XtUnmanageChild (w);
@@ -952,8 +952,8 @@ CancelFileSelectCB(
 static void
 FileOpenOkCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor 	*pPad = (Editor *)client_data;
     FileStuff 	*pStuff = &pPad->fileStuff;
@@ -1004,8 +1004,8 @@ FileOpenOkCB(
 static void
 IncludeFile(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor 	*pPad = (Editor *)client_data;
     XmFileSelectionBoxCallbackStruct *cb = (XmFileSelectionBoxCallbackStruct *)
@@ -1057,7 +1057,7 @@ IncludeFile(
 static Boolean
 SaveUnsaved(
 	Editor* pPad,
-	void (*callingFunc)() )
+	XtCallbackProc callingFunc )
 {
     Boolean addNewlines;
     Tt_message m;
@@ -1101,7 +1101,7 @@ SaveUnsaved(
 		     * choose to not save changes in order to exit. */
 		    pPad->xrdb.saveOnClose = False;
 		}
-		pPad->fileStuff.pendingFileFunc = (void(*)()) NULL;
+		pPad->fileStuff.pendingFileFunc = NULL;
 		return True;	/* don't finish calling func */
 	    } else {
 		if (pPad->ttEditReq.contract) {
@@ -1119,7 +1119,7 @@ SaveUnsaved(
 		/* We've already did AskIfSave but the user responded
 		 * "No" so lets not keep asking (NoSaveCB does not clear
 		 * pPad->fileStuff.pendingFileFunc). */
-		pPad->fileStuff.pendingFileFunc = (void(*)()) NULL;
+		pPad->fileStuff.pendingFileFunc = NULL;
 		pPad->ttEditReq.returnBufContents = False;
 	    } else {
 		/* AskIfSave assigns either FileSaveAsCB or FileSaveCB to the
@@ -1164,12 +1164,12 @@ SaveNewLinesCB(
 void
 SaveAsOkCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     SaveAs *pSaveAs = &pPad->fileStuff.fileWidgets.saveAs;
-    void (*pFunc)();
+    XtCallbackProc pFunc;
     Widget textField = XmFileSelectionBoxGetChild(
 		    pPad->fileStuff.fileWidgets.saveAs.saveAs_form,
 		    XmDIALOG_TEXT);
@@ -1236,7 +1236,7 @@ SaveAsOkCB(
         PostSaveError(pPad, pPad->fileStuff.savingName, errorCode);
 	XtFree(pPad->fileStuff.savingName);
 	pPad->fileStuff.savingName = (char *)NULL;
-	pPad->fileStuff.pendingFileFunc = (void(*)()) NULL;
+	pPad->fileStuff.pendingFileFunc = NULL;
     } else {
 	if (pPad->ttEditReq.contract) {
 	    /* ZZZ -----> Create and send Saved notice */
@@ -1263,8 +1263,8 @@ SaveAsOkCB(
     XtUnmanageChild (pSaveAs->saveAs_form);
     _DtTurnOffHourGlass(pSaveAs->saveAs_form);
     _DtTurnOffHourGlass(pPad->app_shell);
-    if ((pFunc = pPad->fileStuff.pendingFileFunc) != (void (*)())NULL)  {
-	pPad->fileStuff.pendingFileFunc = (void(*)()) NULL;
+    if ((pFunc = pPad->fileStuff.pendingFileFunc) != NULL)  {
+	pPad->fileStuff.pendingFileFunc = NULL;
 	(*pFunc)(w, client_data, call_data);
     }
 }
@@ -1285,11 +1285,11 @@ SaveAsOkCB(
 void
 AlrdyExistsOkCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
-    void (*pFunc)();
+    XtCallbackProc pFunc;
     DtEditorErrorCode errorCode;
     Boolean addNewlines = pPad->xrdb.wordWrap == True &&
 			  pPad->fileStuff.saveWithNewlines == True;
@@ -1346,8 +1346,8 @@ AlrdyExistsOkCB(
 	XtFree(pPad->fileStuff.savingName);
     pPad->fileStuff.savingName = (char *)NULL;
 
-    if ((pFunc = pPad->fileStuff.pendingFileFunc) != (void (*)())NULL)  {
-	pPad->fileStuff.pendingFileFunc = (void(*)()) NULL;
+    if ((pFunc = pPad->fileStuff.pendingFileFunc) != NULL)  {
+	pPad->fileStuff.pendingFileFunc = NULL;
 	(*pFunc)(w, client_data, call_data);
     }
 }
@@ -1360,14 +1360,14 @@ AlrdyExistsOkCB(
 void
 SaveAsCancelCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *) client_data;
 
     XtUnmanageChild ((Widget) pPad->fileStuff.fileWidgets.saveAs.saveAs_form);
-    pPad->fileStuff.pendingFileFunc = (void (*)())NULL;
-    pPad->fileStuff.pendingFileHelpFunc = (void (*)())NULL;
+    pPad->fileStuff.pendingFileFunc = NULL;
+    pPad->fileStuff.pendingFileHelpFunc = NULL;
 }
 
 
@@ -1378,15 +1378,15 @@ SaveAsCancelCB(
 void
 AlrdyExistsCancelCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     XtUnmanageChild ((Widget) pPad->fileStuff.fileWidgets.saveAs.alrdy_exist);
     XtFree(pPad->fileStuff.savingName);
     pPad->fileStuff.savingName = (char *) NULL;
-    pPad->fileStuff.pendingFileFunc = (void (*)())NULL;
-    pPad->fileStuff.pendingFileHelpFunc = (void (*)())NULL;
+    pPad->fileStuff.pendingFileFunc = NULL;
+    pPad->fileStuff.pendingFileHelpFunc = NULL;
 }
 
 
@@ -1397,8 +1397,8 @@ AlrdyExistsCancelCB(
 void
 AskIfSaveCancelCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
 
@@ -1406,7 +1406,7 @@ AskIfSaveCancelCB(
     if (pPad->fileStuff.pendingFileFunc == FileExitCB) {
 	TTfailPendingQuit(pPad);
     }
-    pPad->fileStuff.pendingFileFunc = (void (*)())NULL;
-    pPad->fileStuff.pendingFileHelpFunc = (void (*)())NULL;
+    pPad->fileStuff.pendingFileFunc = NULL;
+    pPad->fileStuff.pendingFileHelpFunc = NULL;
 }
 

@@ -48,8 +48,6 @@ typedef struct {
 	caddr_t	private;	/* for internal tool state */
 } Hc_list;
 
-typedef int(*Destroy_proc)(caddr_t);
-
 #define	hc_lookup_next(p_node)		(p_node)->rlink
 #define	hc_lookup_previous(p_node)	(p_node)->llink
 
@@ -57,7 +55,7 @@ extern Rb_Status	hc_check_list(Hc_list*);
 extern Hc_list*		hc_create(_DtCmsGetKeyProc, _DtCmsCompareProc);
 extern List_node	*hc_delete(Hc_list*, caddr_t key);
 extern List_node	*hc_delete_node(Hc_list*, List_node*);
-extern void		hc_destroy(Hc_list*, Destroy_proc);
+extern void		hc_destroy(Hc_list*, _DtCmsDestroyProc);
 extern void		hc_enumerate_down(Hc_list*, _DtCmsEnumerateProc);
 extern Rb_Status	hc_enumerate_up(Hc_list*, _DtCmsEnumerateProc);
 extern Rb_Status	hc_insert(Hc_list*, caddr_t data, caddr_t key,

@@ -379,7 +379,7 @@ _DtTermPrimReleasePty(char *ptySlave)
 }
 
 void
-_DtTermPrimPtyCleanup()
+_DtTermPrimPtyCleanup(void)
 {
     DebugF('s', 10, fprintf(stderr, ">>_DtTermPrimPtyCleanup() starting\n"));
     while (ptyInfoHead->next && ptyInfoHead->next->ptyName) {

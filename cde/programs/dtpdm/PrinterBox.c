@@ -272,7 +272,7 @@ static void OrientCtlInitPixmapList(OrientCtl* me);
 /*
  * Plex Control methods
  */
-static PlexCtl* PlexCtlNew();
+static PlexCtl *PlexCtlNew(void);
 static void PlexCtlDelete(PlexCtl* me);
 static void PlexCtlCreate(PlexCtl* me,
 			  Widget parent,
@@ -317,7 +317,7 @@ static void TrayCtlSelectCB(Widget w, XtPointer client_d, XtPointer call_d);
 /*
  * Size Control methods
  */
-static SizeCtl* SizeCtlNew();
+static SizeCtl *SizeCtlNew(void);
 static void SizeCtlDelete(SizeCtl* me);
 static int SizeCtlStrColl(const void* e1, const void* e2);
 static void SizeCtlSetSizeLists(PdmOidList** oids,

@@ -90,9 +90,9 @@ extern CSA_return_code _DtCmsInsertApptAndLog(
 			_DtCmsCalendar	*cal,
 			Appt_4		*appt);
 
-extern _DtCmsComparisonResult _DtCmsCompareAppt(Id_4 *key, caddr_t data);
+extern _DtCmsComparisonResult _DtCmsCompareAppt(caddr_t key, caddr_t data);
 
-extern _DtCmsComparisonResult _DtCmsCompareRptAppt(Id_4 *key, caddr_t data);
+extern _DtCmsComparisonResult _DtCmsCompareRptAppt(caddr_t key, caddr_t data);
 
 extern caddr_t _DtCmsGetApptKey(caddr_t data);
 
@@ -100,6 +100,12 @@ extern CSA_return_code v4_transact_log(
 			char		*calendar,
 			Appt_4		*a,
 			_DtCmsLogOps	op);
+
+typedef boolean_t (*_DtCmsMatchApptProc)(
+			Appt_4		*appt,
+			uint		num_attrs,
+			cms_attribute	*attrs,
+			CSA_enum	*ops);
 
 extern CSA_return_code _DtCmsLookupRangeV4(
 			_DtCmsCalendar	*cal,
@@ -109,7 +115,7 @@ extern CSA_return_code _DtCmsLookupRangeV4(
 			boolean_t	no_end_time_range,
 			long		end1,
 			long		end2,
-			boolean_t	(*match_func)(),
+			_DtCmsMatchApptProc match_func,
 			uint		num_attrs,
 			cms_attribute	*attrs,
 			CSA_enum	*ops,
@@ -127,7 +133,7 @@ extern CSA_return_code _DtCmsLookupKeyrangeV4(
 			time_t		end1,
 			time_t		end2,
 			long		id,
-			boolean_t	(*match_func)(),
+			_DtCmsMatchApptProc match_func,
 			uint		num_attrs,
 			cms_attribute	*attrs,
 			CSA_enum	*ops,
@@ -138,13 +144,19 @@ extern CSA_return_code _AddToLinkedAppts(
 			Appt_4	*p_appt,
 			char	*user,
 			uint	access,
-			caddr_t	*ilp);
+			void	*result);
 
 extern CSA_return_code _AddToLinkedAbbrAppts(
 			Appt_4	*p_appt,
 			char	*user,
 			uint	access,
-			caddr_t	*ilp);
+			void	*result);
+
+typedef CSA_return_code (*_DtCmsAddListProc)(
+			Appt_4	*p_appt,
+			char	*user,
+			uint	access,
+			void	*result);
 
 extern Privacy_Level_4 _GetAccessLevel(
 			char	*user,

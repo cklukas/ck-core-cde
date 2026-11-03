@@ -42,7 +42,7 @@ void _DtTermPrimUtmpAddEntry
 char *_DtTermPrimUtmpGetUtLine(int pty, char *ptyName);
 char *_DtTermPrimUtmpEntryCreate(Widget w, pid_t pid, char *utmpLine);
 void _DtTermPrimUtmpEntryDestroy(Widget w, char *utId);
-void _DtTermPrimUtmpCleanup();
+void _DtTermPrimUtmpCleanup(void);
 
 #endif	/* _Dt_TermPrimSetUtmp_h */
 /* DON'T ADD ANYTHING AFTER THIS #endif... */

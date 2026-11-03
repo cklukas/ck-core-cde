@@ -136,10 +136,10 @@ PostAlreadyExistsDlg(
 	XtSetValues(pSaveAs->alrdy_exist, args, n);
 
 	XtAddCallback (pSaveAs->alrdy_exist, XmNokCallback,
-			(XtCallbackProc) AlrdyExistsOkCB,
+			AlrdyExistsOkCB,
 			(XtPointer) pPad);
 	XtAddCallback (pSaveAs->alrdy_exist, XmNcancelCallback,
-			(XtCallbackProc) AlrdyExistsCancelCB,
+			AlrdyExistsCancelCB,
 			(XtPointer) pPad);
 	XtAddCallback (pSaveAs->alrdy_exist, XmNhelpCallback,
 			(XtCallbackProc) HelpFileAlreadyExistsCB,
@@ -349,11 +349,11 @@ CreateSaveAsDialog(Editor *pPad)
     /* -----> Add the FSB cancel, ok, and help callbacks */
     XtAddCallback(pSaveAs->saveAs_form,
 			XmNcancelCallback,
-			(XtCallbackProc) SaveAsCancelCB,
+			SaveAsCancelCB,
 			(XtPointer) pPad);
     XtAddCallback(pSaveAs->saveAs_form,
 			XmNokCallback,
-			(XtCallbackProc) SaveAsOkCB,
+			SaveAsOkCB,
 			(XtPointer) pPad);
     XtAddCallback(pSaveAs->saveAs_form,
 			XmNhelpCallback,
@@ -459,14 +459,14 @@ GetFileName(
     /* -----> set the FSB "ok" and "help" button callbacks */
     XtRemoveAllCallbacks(pSelect->file_dialog, XmNokCallback);
     XtAddCallback(pSelect->file_dialog, XmNokCallback,
-			(XtCallbackProc) pStuff->pendingFileFunc,
+			pStuff->pendingFileFunc,
 			(XtPointer)pPad);
-    pStuff->pendingFileFunc = (void(*)())NULL;
+    pStuff->pendingFileFunc = NULL;
     XtRemoveAllCallbacks(pSelect->file_dialog, XmNhelpCallback);
     XtAddCallback(pSelect->file_dialog, XmNhelpCallback,
-			(XtCallbackProc) pStuff->pendingFileHelpFunc,
+			pStuff->pendingFileHelpFunc,
 			(XtPointer)pPad);
-    pStuff->pendingFileHelpFunc = (void (*)())NULL;
+    pStuff->pendingFileHelpFunc = NULL;
 
     /* -----> seed FSB directory from either fileName */
     if(type == OPEN) {
@@ -576,7 +576,7 @@ CreateFileSelectionDialog(
     XmStringFree(tmpStr);
 
     XtAddCallback(pSelect->file_dialog, XmNcancelCallback,
-			(XtCallbackProc) CancelFileSelectCB, (XtPointer)pPad );
+			CancelFileSelectCB, (XtPointer)pPad );
 
     XtRealizeWidget (pSelect->file_dialog);
     XSync(pPad->display, 0);
@@ -738,9 +738,9 @@ CreateSaveWarning(
      *        (the [Yes] XmNokCallback is set in AskIfSave() based on whether
      *        or not a file name has been specified among other things) */
     XtAddCallback(pSelect->save_warning, XmNapplyCallback,
-		(XtCallbackProc) NoSaveCB, (XtPointer) pPad);
+		NoSaveCB, (XtPointer) pPad);
     XtAddCallback(pSelect->save_warning, XmNcancelCallback,
-		(XtCallbackProc) AskIfSaveCancelCB, (XtPointer) pPad);
+		AskIfSaveCancelCB, (XtPointer) pPad);
     XtAddCallback(pSelect->save_warning, XmNhelpCallback,
 		(XtCallbackProc) HelpAskIfSaveDialogCB, (XtPointer) pPad);
 
@@ -925,7 +925,7 @@ AskIfSave(
 				strlen(pPad->ttEditReq.docName) + 4);
 	sprintf(tmp,SAVE_CH_DOC, pPad->ttEditReq.docName);
 	XtAddCallback(pSelect->save_warning, XmNokCallback,
-			(XtCallbackProc) FileSaveCB, (XtPointer) pPad);
+			FileSaveCB, (XtPointer) pPad);
     } else if (pPad->fileStuff.fileName && *pPad->fileStuff.fileName) {
 	/* -----> TT or non-TT filename given, so ask:
 	 *	  "Save changes to <file>?" */
@@ -933,21 +933,21 @@ AskIfSave(
 				strlen(pPad->fileStuff.fileName) + 4);
 	sprintf(tmp,SAVE_CH, pPad->fileStuff.fileName);
 	XtAddCallback(pSelect->save_warning, XmNokCallback,
-			(XtCallbackProc) FileSaveCB, (XtPointer) pPad);
+			FileSaveCB, (XtPointer) pPad);
     } else if (pPad->ttEditReq.contract && pPad->ttEditReq.contents) {
 	/* -----> TT buffer being edited w/o a docName, so simply ask:
 	 *	  "Save Changes?" */
 	tmp = (char *)XtMalloc(strlen(SAVE_CH_BUF) + 4);
 	sprintf(tmp,"%s",SAVE_CH_BUF);
 	XtAddCallback(pSelect->save_warning, XmNokCallback,
-			(XtCallbackProc) FileSaveCB, (XtPointer) pPad);
+			FileSaveCB, (XtPointer) pPad);
     } else {
 	/* -----> no file/doc name (and not a TT buffer), so ask:
 	 *	  "File has no name. Do you wash to save it?" */
 	tmp = (char *)XtMalloc(strlen(SAVE_CH_NONAME) + 4);
 	sprintf(tmp,"%s",SAVE_CH_NONAME);
 	XtAddCallback(pSelect->save_warning, XmNokCallback,
-			(XtCallbackProc) FileSaveAsCB, (XtPointer) pPad);
+			FileSaveAsCB, (XtPointer) pPad);
     }
 
     tmpStr = XmStringCreateLocalized(tmp);

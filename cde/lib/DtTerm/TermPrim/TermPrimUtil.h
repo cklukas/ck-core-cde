@@ -47,7 +47,7 @@ extern void _DtTermCloseLog(Widget w) ;
 extern void _DtTermPrimFlushLog(Widget w);
 extern void _DtTermPrimLogFileCleanup(void);
 
-extern void _DtTermPrimRemoveSuidRoot();
+extern void _DtTermPrimRemoveSuidRoot(void);
 extern void _DtTermPrimToggleSuidRoot(Boolean root);
 extern void _DtTermPrimStartLog(Widget w);
 extern void _DtTermPrimCloseLog(Widget w);

@@ -724,7 +724,7 @@ dtb_save_toplevel_widget(
 
 
 Widget
-dtb_get_toplevel_widget()
+dtb_get_toplevel_widget(void)
 {
 	return(dtb_project_toplevel_widget);
 }
@@ -756,7 +756,7 @@ dtb_save_command(
 
 
 char * 
-dtb_get_command() 
+dtb_get_command(void)
 {
     return(dtb_save_command_str); 
 }
@@ -1075,7 +1075,7 @@ dtb_session_save(
  * dtb_get_client_session_saveCB()
  */
 DtbClientSessionSaveCB
-dtb_get_client_session_saveCB()
+dtb_get_client_session_saveCB(void)
 {
     return(dtb_client_session_saveCB);
 

@@ -44,9 +44,8 @@ Synopsis:
 
 	   void ** _DtCmDelHash(void * tbl, unsigned char * key)
 
-	   int _DtCmOperateHash(void * tbl, void (*op_func)(), void * usr_arg)
-
-	   void _DtCmDestroyHash(void * tbl, int (*des_func)(), void * usr_arg)
+	   void _DtCmDestroyHash(void *tbl,
+		_DtCmHashDestroyProc des_func, void *user_arg)
 
 
  Description: 
@@ -205,7 +204,10 @@ void ** _DtCmFindHash(void * t, const unsigned char * key)
   return(NULL);
 }
 
-void _DtCmDestroyHash(void * t, int (*ptr)(void *, void *, unsigned char *), void * usr_arg)
+void _DtCmDestroyHash(
+    void *t,
+    _DtCmHashDestroyProc ptr,
+    void *usr_arg)
 {
   hash * tbl = (hash *) t;
   hash_entry * tmp = tbl->start, * prev;

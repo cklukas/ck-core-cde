@@ -37,11 +37,11 @@
 #include "repeat.h"
 
 extern _DtCmsComparisonResult _DtCmsCompareEntry(
-				cms_key *key,
+				caddr_t key,
 				caddr_t data);
 
 extern _DtCmsComparisonResult _DtCmsCompareRptEntry(
-				cms_key *key,
+				caddr_t key,
 				caddr_t data);
 
 extern caddr_t _DtCmsGetEntryKey(caddr_t data);

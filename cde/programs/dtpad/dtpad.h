@@ -207,8 +207,8 @@ typedef struct {
 } FileWidgets;
 
 typedef struct {
-    void (*pendingFileFunc)();
-    void (*pendingFileHelpFunc)();
+    XtCallbackProc pendingFileFunc;
+    XtCallbackProc pendingFileHelpFunc;
     Boolean fileExists,
 	    saveWithNewlines,
 	    readOnly;
@@ -528,72 +528,72 @@ typedef struct print_job {
  ************************************************************************/
 extern void FileCascadingCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FileNewCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FileOpenCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FileIncludeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FileSaveCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FileSaveAsCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FilePrintCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FileXpPrintCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FileExitCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void NoSaveCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void CancelFileSelectCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void SaveNewLinesCB(
         Widget w,
         XtPointer client_data,
         XtPointer call_data);
 extern void SaveAsOkCB(
 	Widget w,
-	caddr_t client_data,
-	caddr_t call_data);
+	XtPointer client_data,
+	XtPointer call_data);
 extern void AlrdyExistsOkCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void SaveAsCancelCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void AlrdyExistsCancelCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void AskIfSaveCancelCB(
 	Widget w,
-	caddr_t client_data,
-	caddr_t call_data);
+	XtPointer client_data,
+	XtPointer call_data);
 
 /************************************************************************
  *			functions in fileDlg.c
@@ -892,12 +892,12 @@ extern void HelpHelpCB(
 
 extern void HelpOpenDialogCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpIncludeDialogCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpSaveAsDialogCB(
         Widget w,
         caddr_t client_data,
@@ -1017,7 +1017,7 @@ extern void PrintJobExecute(
 extern void PrintJobCancel(
 	PrintJob *pJob);
 
-extern Display * PrintJobGetErrorPrintDisplay();
+extern Display * PrintJobGetErrorPrintDisplay(void);
 extern void PrintJobSetErrorPrintDisplay(Display *display);
 extern Boolean PrintJobIsActivePrintDisplay(Display *display);
 
