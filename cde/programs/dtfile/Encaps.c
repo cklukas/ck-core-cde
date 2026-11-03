@@ -206,7 +206,8 @@ int topPositionOffset = 20;
 static void DialogStructureNotifyHandler(
                         Widget w,
                         XtPointer client_data,
-                        XEvent *event );
+                        XEvent *event,
+                        Boolean *continue_to_dispatch );
 static void SetIconifyState(
                         Widget shell,
                         Boolean iconify) ;
@@ -818,7 +819,7 @@ _DtShowDialog(
    XtAddEventHandler( XtParent( dialog->dialog_widget ),
                       StructureNotifyMask,
                       False,
-                      (XtEventHandler)DialogStructureNotifyHandler,
+                      DialogStructureNotifyHandler,
                       NULL );
 }
 
@@ -2410,7 +2411,8 @@ static void
 DialogStructureNotifyHandler(
        Widget w,
        XtPointer client_data,
-       XEvent *event )
+       XEvent *event,
+       Boolean *continue_to_dispatch )
 {
   if( event->type == MapNotify )
   {
