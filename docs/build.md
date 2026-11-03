@@ -470,6 +470,8 @@ its apply and filesystem-specific launcher operations as native
 `XtCallbackProc` implementations.
 The Filter dialog class likewise implements its generic method-table contracts
 directly and casts only opaque data back to its concrete records internally.
+The Preferences class completes the same method-table conversion and registers
+its apply and OK operations as exact Xt callbacks.
 DtPad exposes its editor, help, formatting, option, session and print callbacks
 through `XtCallbackProc` directly, and routes panic signals through a typed
 signal adapter. DtAction likewise registers its custom text actions and

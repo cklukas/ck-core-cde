@@ -111,30 +111,30 @@ static void Create(
                         Widget *return_widget,
                         XtPointer *dialog) ;
 static void InstallChange(
-                        PreferencesRec *preferences_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void InstallClose(
-                        PreferencesRec *preferences_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void Destroy(
-                        PreferencesRec *preferences_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetValues(
-                        PreferencesRec *preferences_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetDefaultValues( void ) ;
 static XtPointer GetResourceValues(
                         XrmDatabase data_base,
                         char **name_list) ;
 static void SetValues(
-                        PreferencesRec *preferences_rec,
-                        PreferencesData *preferences_data) ;
+                        XtPointer dialog,
+                        XtPointer values) ;
 static void WriteResourceValues(
                         DialogData *values,
                         int fd,
                         char **name_list) ;
 static void FreeValues(
-                        PreferencesData *preferences_data) ;
+                        XtPointer values) ;
 static void ResetCallback(
                         Widget w,
                         XtPointer client_data,
@@ -145,11 +145,11 @@ static void ToggleCallback(
                         XtPointer call_data) ;
 static void OkCallback(
                         Widget w,
-                        PreferencesApply *apply_data,
+                        XtPointer client_data,
                         XtPointer call_data) ;
 static void ApplyCallback(
                         Widget w,
-                        PreferencesApply *apply_data,
+                        XtPointer client_data,
                         XtPointer call_data) ;
 static void GetPreferencesValues(
                         PreferencesRec *preferences_rec,
@@ -231,16 +231,16 @@ static DialogClass preferencesClassRec =
    resources,
    XtNumber(resources),
    Create,
-   (DialogInstallChangeProc) InstallChange,
-   (DialogInstallCloseProc) InstallClose,
-   (DialogDestroyProc) Destroy,
-   (DialogGetValuesProc) GetValues,
+   InstallChange,
+   InstallClose,
+   Destroy,
+   GetValues,
    GetDefaultValues,
    GetResourceValues,
-   (DialogSetValuesProc) SetValues,
+   SetValues,
    WriteResourceValues,
-   (DialogFreeValuesProc) FreeValues,
-   (DialogMapWindowProc) _DtGenericMapWindow,
+   FreeValues,
+   _DtGenericMapWindow,
    NULL,
 };
 
@@ -1048,10 +1048,11 @@ Create(
 
 static void
 InstallChange(
-        PreferencesRec *preferences_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   PreferencesRec *preferences_rec = dialog;
    PreferencesApply * apply_data;
 
 
@@ -1069,10 +1070,10 @@ InstallChange(
    /*  Add the callbacks for list item insertion.  */
 
    XtAddCallback (preferences_rec->apply, XmNactivateCallback, 
-                  (XtCallbackProc)ApplyCallback, (XtPointer) apply_data);
+                  ApplyCallback, (XtPointer) apply_data);
 
    XtAddCallback (preferences_rec->ok, XmNactivateCallback, 
-                  (XtCallbackProc)OkCallback, (XtPointer) apply_data);
+                  OkCallback, (XtPointer) apply_data);
 }
 
 
@@ -1086,10 +1087,11 @@ InstallChange(
 
 static void
 InstallClose(
-        PreferencesRec *preferences_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   PreferencesRec *preferences_rec = dialog;
    Atom delete_window_atom;
 
    XtAddCallback (preferences_rec->close,
@@ -1113,8 +1115,9 @@ InstallClose(
 
 static void
 Destroy(
-        PreferencesRec *preferences_rec )
+        XtPointer dialog )
 {
+   PreferencesRec *preferences_rec = dialog;
    XtDestroyWidget (preferences_rec->shell);
    XtFree ((char *) preferences_rec->apply_data);
    XtFree ((char *) preferences_rec);
@@ -1131,8 +1134,9 @@ Destroy(
 
 static XtPointer
 GetValues(
-        PreferencesRec *preferences_rec )
+        XtPointer dialog )
 {
+   PreferencesRec *preferences_rec = dialog;
    PreferencesData * preferences_data;
    Arg args[4];
 
@@ -1230,9 +1234,11 @@ GetResourceValues(
 
 static void
 SetValues(
-        PreferencesRec *preferences_rec,
-        PreferencesData *preferences_data )
+        XtPointer dialog,
+        XtPointer values )
 {
+   PreferencesRec *preferences_rec = dialog;
+   PreferencesData *preferences_data = values;
    Arg true_args[1];
    Arg false_args[1];
    unsigned char *viewP;
@@ -1491,8 +1497,9 @@ WriteResourceValues(
 
 static void
 FreeValues(
-        PreferencesData *preferences_data )
+        XtPointer values )
 {
+   PreferencesData *preferences_data = values;
    XtFree ((char *) preferences_data);
 }
 
@@ -1763,9 +1770,10 @@ ToggleCallback(
 static void
 OkCallback(
         Widget w,
-        PreferencesApply *apply_data,
+        XtPointer client_data,
         XtPointer call_data )
 {
+   PreferencesApply *apply_data = client_data;
    PreferencesRec * preferences_rec;
    DialogData * dialog_data;
 
@@ -1791,9 +1799,10 @@ OkCallback(
 static void
 ApplyCallback(
         Widget w,
-        PreferencesApply *apply_data,
+        XtPointer client_data,
         XtPointer call_data )
 {
+   PreferencesApply *apply_data = client_data;
    (*(apply_data->callback)) (w, apply_data->client_data, NULL);
 }
 

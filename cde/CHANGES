@@ -13,7 +13,9 @@
   the method boundary. The Modify Attributes class now follows the same exact
   method contracts, including its apply callback and filesystem-specific
   launcher callback. The Filter dialog class also stores exact generic methods
-  and recovers its concrete dialog/value records internally.
+  and recovers its concrete dialog/value records internally. The Preferences
+  dialog completes this conversion and exposes apply/OK handlers through the
+  native Xt callback contract.
 - DtImsStart: register window-manager callbacks and the host-return action with
   their exact Xt contracts, using a typed adapter for the no-argument shutdown
   routine.
