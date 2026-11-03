@@ -1,4 +1,7 @@
 2026-11-03
+- dtfile_sync: bind rename review to the selected object, basename and side;
+  require fresh review after intent changes, preserve setup on failed profile
+  preparation, and report allocation failure without dropping rename input.
 - dtfile_sync: explain the selected comparison policy, swap folder roles without
   changing path bytes, clear optional filters, and focus invalid setup fields
   with specific byte/date and missing-folder guidance before worker startup.
