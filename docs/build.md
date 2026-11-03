@@ -161,7 +161,8 @@ the checked-in per-product entities to the source tree.
 
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
-use complete prototypes; the conversion regression test also compiles const
+use complete prototypes, including the legacy client-facing declaration set;
+the conversion regression test also compiles const
 encoded input buffers through those interfaces and verifies integer, floating
 point and fixed-width character round trips.
 

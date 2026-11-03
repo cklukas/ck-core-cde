@@ -1,4 +1,7 @@
 2026-11-03
+- ToolTalk and DtMmdb: complete the remaining cross-language no-argument and
+  mini-ISAM conversion declarations. Modernize the standalone `prolatex`
+  utility's entry point and replacement helper to explicit C23 prototypes.
 - DtPrint: represent procedure-resource defaults as addresses of typed
   `DtPrintSetupProc` values. A valid typed sentinel now distinguishes an
   unspecified procedure from an explicit null without integer/function or

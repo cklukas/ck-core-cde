@@ -892,7 +892,7 @@ extern _Tt_isam_results *_tt_addsession_1(_Tt_session_args*, CLIENT*);
 extern _Tt_isam_results *_tt_delsession_1(_Tt_session_args*, CLIENT*);
 extern _Tt_spec_props *_tt_gettype_1(_Tt_spec_props*, CLIENT*);
 
-extern clnt_stat _tt_get_rpc_result();
+extern clnt_stat _tt_get_rpc_result(void);
 extern _tt_auth_level_results *_tt_get_min_auth_level_1(void *, CLIENT *);
 extern _tt_file_partition_results *_tt_get_file_partition_1(char **, CLIENT *);
 extern _tt_db_cache_results *_tt_create_file_1(_tt_create_file_args *, CLIENT *);

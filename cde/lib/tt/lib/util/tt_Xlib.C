@@ -55,7 +55,7 @@ _Tt_xt _tt_xt;
 // from it. 
 // 
 int
-_tt_load_xlib()
+_tt_load_xlib(void)
 {
 	static int	loaded = 0;
 
@@ -109,7 +109,7 @@ _tt_load_xlib()
 }
 
 int
-_tt_load_xt()
+_tt_load_xt(void)
 {
 	static int	loaded = 0;
 
@@ -253,13 +253,13 @@ load_xt_fns_from_handle(void *xt_handle)
  */
 
 int
-_tt_load_xlib()
+_tt_load_xlib(void)
 {
 	return 1;
 }
 
 int
-_tt_load_xt()
+_tt_load_xt(void)
 {
 	return 1;
 }

@@ -159,7 +159,7 @@ extern struct tt_trace_svf tt_trace_svec[], *tt_trace_bgin;
 #define input _tt_trace_input
 #define unput(c) _tt_trace_unput(c)
 
-extern int _tt_trace_input();
+extern int _tt_trace_input(void);
 extern void _tt_trace_unput(int);
 
 static char* fname_chars = "/0123456789:;=@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_,.";

@@ -122,7 +122,7 @@ typedef struct {
 #	define XTSYM(sym) sym
 #endif
 
-extern int		_tt_load_xlib();
-extern int		_tt_load_xt();
+extern int		_tt_load_xlib(void);
+extern int		_tt_load_xt(void);
 
 #endif
