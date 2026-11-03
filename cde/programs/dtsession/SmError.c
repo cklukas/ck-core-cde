@@ -75,9 +75,9 @@ NlsStrings   		smNLS;
  */
 
 static int LibError( Display *, XErrorEvent *) ;
-static int LibIOError( void ) ;
+static int LibIOError( Display *) ;
 static void ToolkitWarning( char *) ;
-static void ToolkitError( char *) ;
+static void ToolkitError( char *) _X_NORETURN ;
 
 
 
@@ -109,7 +109,7 @@ void
 InitErrorHandler( void )
 {
     XSetErrorHandler(LibError);
-    XSetIOErrorHandler( (IOErrorHandlerProc) LibIOError);
+    XSetIOErrorHandler(LibIOError);
     XtSetWarningHandler(ToolkitWarning);
     XtSetErrorHandler(ToolkitError);
 }
@@ -198,7 +198,7 @@ LibError(
  * 
  *************************************<->***********************************/
 static int 
-LibIOError( void )
+LibIOError( Display *display )
 {
     PrintError(DtError, GETMESSAGE(8, 1, "Connection to server lost - exiting."));
     SM_EXIT(-1);
@@ -273,6 +273,7 @@ ToolkitError(
 
     PrintError(DtError, message);
     SM_EXIT(-1);
+    _exit(-1);
 }
 
 

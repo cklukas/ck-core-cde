@@ -117,7 +117,12 @@ system interfaces directly. `dtexec` relies on the standard and POSIX headers
 instead of shadowing them with unspecified-argument declarations; `dtaction`
 timer callbacks use the Xt timeout signature; and `dtsession` declares its
 XSMP, ICE, save-state, signal and UI routines with complete prototypes. The
-`dsdm` X error and recursive-window callbacks and the `dticon` X error hooks
+session manager's client- and window-manager readiness hooks implement the
+complete four-argument `XtEventHandler` contract at add/remove registration.
+Its X I/O hook accepts the display directly, while its fatal Xt hook is marked
+non-returning and has an unconditional `_exit` fallback if orderly session
+shutdown is not yet permitted.
+The `dsdm` X error and recursive-window callbacks and the `dticon` X error hooks
 likewise use their exact Xlib contracts without function-pointer casts.
 
 The icon editor's remaining cross-file interfaces are fully prototyped as

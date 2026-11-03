@@ -133,10 +133,6 @@ extern char *_DtGetMessage(char *filename, int set, int n, char *s);
     string
 #endif
 
-typedef int (*IOErrorHandlerProc)(
-	Display *
-);
-
 /* 
  * typedef statements 
  */

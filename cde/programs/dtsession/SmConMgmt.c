@@ -113,7 +113,7 @@ static int clientTimeout;
  */
 
 static void HandleClientMessage(Widget smWidget, XtPointer dummy, 
-				XEvent *event);
+				XEvent *event, Boolean *continue_to_dispatch);
 static void WaitClientTimeout(XtPointer, XtIntervalId *);
 
 
@@ -280,7 +280,7 @@ WaitForClientMap( void )
     XtAddEventHandler(smGD.topLevelWid,
 		      0,
 		      True,
-		      (XtEventHandler)HandleClientMessage,
+		      HandleClientMessage,
 		      (XtPointer) NULL);
     
     /*
@@ -303,7 +303,7 @@ WaitForClientMap( void )
     XtRemoveEventHandler(smGD.topLevelWid,
 		      0,
 		      True,
-		      (XtEventHandler)HandleClientMessage,
+		      HandleClientMessage,
 		      (XtPointer) NULL);
     return;
 }
@@ -357,7 +357,8 @@ WaitClientTimeout(
 static void 
 HandleClientMessage( Widget smWidget,
 		    XtPointer dummy,
-		    XEvent *event)
+		    XEvent *event,
+		    Boolean *continue_to_dispatch)
 {
     if (event->type == ClientMessage)
     {
