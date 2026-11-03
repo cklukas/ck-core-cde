@@ -80,6 +80,8 @@
   event handlers the complete Xt contract without registration casts.
 - C23: replace ambiguous system, signal, Xt, ICE and Xlib declarations in
   dtexec, dtaction, dtsession, dsdm and dticon with their exact interfaces;
+  share the exact dsdm interest-property and drag-and-drop proxy contract
+  across its translation units;
   remove callback casts that concealed mismatched timer and handler contracts,
   including dtsession's client-message and X I/O handlers; make its fatal Xt
   hook unconditionally non-returning as required by the toolkit.

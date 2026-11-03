@@ -143,8 +143,9 @@ complete four-argument `XtEventHandler` contract at add/remove registration.
 Its X I/O hook accepts the display directly, while its fatal Xt hook is marked
 non-returning and has an unconditional `_exit` fallback if orderly session
 shutdown is not yet permitted.
-The `dsdm` X error and recursive-window callbacks and the `dticon` X error hooks
-likewise use their exact Xlib contracts without function-pointer casts.
+The `dsdm` X error and recursive-window callbacks, interest-property reader and
+drag-and-drop proxy boundary use exact shared Xlib contracts; the `dticon` X
+error hooks likewise avoid function-pointer casts.
 
 The icon editor's remaining cross-file interfaces are fully prototyped as
 well. Its ToolTalk contract and media callbacks use the toolkit-defined
