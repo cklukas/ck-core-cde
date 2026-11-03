@@ -67,6 +67,7 @@
 #include <locale.h>
 
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <Xm/XmP.h>             /* for XmeGetHomeDirName */
 #include <signal.h>
@@ -157,7 +158,8 @@ static MaskTableEntry modifierStrings[] = {
 typedef struct {
    char         *event;
    unsigned int  eventType;
-   Boolean       (*parseProc)();
+   Boolean       (*parseProc)(unsigned char **, unsigned int,
+                              unsigned int *);
    unsigned int  closure;
    Boolean       fClick;
 } EventTableEntry;
@@ -178,10 +180,9 @@ static Boolean ParseWmFuncNoArg (unsigned char **linePP, WmFunction wmFunction,
 				 String *pArgs);
 void FreeMenuItem (MenuItem *menuItem);
 static Boolean ParseWmFuncGrpArg (unsigned char **linePP, 
-				  WmFunction wmFunction, GroupArg *pGroup);
+				  WmFunction wmFunction, String *pArgs);
 static Boolean ParseWmFuncNbrArg (unsigned char **linePP, 
-				  WmFunction wmFunction, 
-				  unsigned long *pNumber);
+				  WmFunction wmFunction, String *pArgs);
 void ParseButtonStr (WmScreenData *pSD, unsigned char *buttonStr);
 static void ParseButtonSet (WmScreenData *pSD, unsigned char *lineP);
 static Boolean ParseContext (unsigned char **linePP, Context *context, 
@@ -267,14 +268,14 @@ static EventTableEntry buttonEvents[] = {
     {"btn9up",      ButtonRelease,  ParseImmed,    Button9,  FALSE},
     {"btn9click",   ButtonRelease,  ParseImmed,    Button9,  TRUE},
     {"btn9click2",  ButtonPress,    ParseImmed,    Button9,  TRUE},
-    { NULL, 0, (Boolean(*)())NULL,  0, FALSE}
+    { NULL, 0, NULL,  0, FALSE}
 };
 
 
 static EventTableEntry keyEvents[] = {
 
     {"key",         KeyPress,    ParseKeySym,    0,  FALSE},
-    { NULL,         0,    (Boolean(*)())NULL,    0,  FALSE}
+    { NULL,         0,    NULL,    0,  FALSE}
 };
 
 typedef struct _ConfigFileStackEntry {
@@ -311,7 +312,7 @@ typedef struct {
    unsigned int   resource;
    long           mgtMask;
    WmFunction     wmFunction;
-   Boolean       (*parseProc)();
+   WmFunctionArgParser parseProc;
 } FunctionTableEntry;
 
 
@@ -3215,11 +3216,12 @@ void FreeMenuItem (MenuItem *menuItem)
  *************************************<->***********************************/
 
 static Boolean ParseWmFuncGrpArg (unsigned char **linePP, 
-				  WmFunction wmFunction, GroupArg *pGroup)
+				  WmFunction wmFunction, String *pArgs)
 {
     unsigned char  *lineP = *linePP;
     unsigned char  *startP;
     unsigned char   grpStr[MAX_GROUP_STRLEN+1];
+    GroupArg        group = 0;
     int    len;
 
 
@@ -3227,7 +3229,6 @@ static Boolean ParseWmFuncGrpArg (unsigned char **linePP,
      * Parse groups while each is followed by "|".
      */
 
-    *pGroup = 0;
     while (1)
     {
         /* 
@@ -3240,14 +3241,14 @@ static Boolean ParseWmFuncGrpArg (unsigned char **linePP,
         if (startP == lineP)
         /* Group missing => use default or complain */
 	{
-	    if (*pGroup)
+	    if (group)
 	    {
                 PWarning (((char *)GETMESSAGE(60, 18, "Missing group specification")));
                 return (FALSE);
 	    }
 	    else
 	    {
-                *pGroup = F_GROUP_DEFAULT;
+                group = F_GROUP_DEFAULT;
 		break;
 	    }
         }
@@ -3263,15 +3264,15 @@ static Boolean ParseWmFuncGrpArg (unsigned char **linePP,
 
         if (!strcmp ("icon", (char *)grpStr))
         {
-            *pGroup |= F_GROUP_ICON;
+            group |= F_GROUP_ICON;
         }
         else if (!strcmp ("window", (char *)grpStr))
         {
-            *pGroup |= F_GROUP_WINDOW;
+            group |= F_GROUP_WINDOW;
         }
         else if (!strcmp ("transient", (char *)grpStr))
         {
-            *pGroup |= F_GROUP_TRANSIENT;
+            group |= F_GROUP_TRANSIENT;
         }
         else 
         /* Unknown group name */
@@ -3298,6 +3299,7 @@ static Boolean ParseWmFuncGrpArg (unsigned char **linePP,
     }
 
     *linePP = lineP;
+    *pArgs = (String) (uintptr_t) group;
     return (TRUE);
 
 } /* END OF FUNCTION ParseWmFuncGrpArg */
@@ -3335,8 +3337,8 @@ static Boolean ParseWmFuncGrpArg (unsigned char **linePP,
  *************************************<->***********************************/
 
 static Boolean ParseWmFuncNbrArg (unsigned char **linePP, 
-				  WmFunction wmFunction, 
-				  unsigned long *pNumber)
+				  WmFunction wmFunction,
+				  String *pArgs)
 {
     int  val;
 
@@ -3344,11 +3346,11 @@ static Boolean ParseWmFuncNbrArg (unsigned char **linePP,
     if (val == -1)
     {
         PWarning (((char *)GETMESSAGE(60, 20, "Invalid number specification")));
-        *pNumber = 0;
+        *pArgs = NULL;
         return (FALSE);
     }
 
-    *pNumber = val;
+    *pArgs = (String) (uintptr_t) (unsigned int) val;
     return (TRUE);
 
 } /* END OF FUNCTION ParseWmFuncNbrArg */
@@ -5334,7 +5336,7 @@ ParseWmFunctionArg (
 		unsigned char **linePP,
 		int ix, 
 		WmFunction wmFunc, 
-		void **ppArg,
+		String *pArg,
 		String sClientName,
 		String sTitle)
 {
@@ -5367,7 +5369,7 @@ ParseWmFunctionArg (
      * Apply the function argument parser.
      */
     if ((functionTable[ix].wmFunction != wmFunc) ||
-	!(*(functionTable [ix].parseProc)) (&lineP, wmFunc, ppArg))
+	!(*(functionTable [ix].parseProc)) (&lineP, wmFunc, pArg))
     {
 	bValidArg = False;
     }
@@ -5375,9 +5377,9 @@ ParseWmFunctionArg (
     /*
      * Add the exec parms if this is an f.action
      */
-    if ((wmFunc == F_Action) && ppArg && *ppArg)
+    if ((wmFunc == F_Action) && pArg && *pArg)
     {
-	WmActionArg *pAP = (WmActionArg *) *ppArg;
+	WmActionArg *pAP = (WmActionArg *) *pArg;
 	int totLen = 0;
 
 	/*
@@ -6034,13 +6036,14 @@ static String
 GetNetworkFileName (char *pchFile)
 {
     char *pch;
-    char *host_part; 
-    char *file_part; 
+    const char *host_part;
+    const char *file_part;
     char *netfile;
     char *sName = NULL;
     char *pchName = NULL;
+    char *expanded_name;
     int count;
-    char **pchTok;
+    const char *const *pchTok;
     String sReturn = NULL;
     char *homeDir;
     int len;
@@ -6053,7 +6056,7 @@ GetNetworkFileName (char *pchFile)
 	/*
 	 * Expand special chars and find matching file.
 	 */
-	pchTok = (char **)shellscan (pchFile, &count, 0);
+	pchTok = shellscan (pchFile, &count, 0);
 
 	if ((count == 1) || (count == 2))
 	{
@@ -6109,15 +6112,16 @@ GetNetworkFileName (char *pchFile)
 		homeDir = XmeGetHomeDirName();
 		len = strlen (host_part) + 1 +
 		      strlen (homeDir) + strlen (file_part) + 1;
-		pch = (char *) XtMalloc (len);
-		strcpy (pch, sName);
-		host_part = pch;
+		expanded_name = (char *) XtMalloc (len);
+		strcpy (expanded_name, sName);
+		host_part = expanded_name;
+		pch = expanded_name;
 		pch += strlen (pch) + 1;
 		strcpy (pch, homeDir);
 		strcat (pch, file_part+1);
 		file_part = pch;
 		XtFree (sName);
-		sName = host_part;
+		sName = expanded_name;
 	    }
 	}
 	else

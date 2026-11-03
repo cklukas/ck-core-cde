@@ -11,6 +11,13 @@
   remove callback casts that concealed mismatched timer and handler contracts.
 - dticon: give ToolTalk, UI-constructor, dialog-management and selection-timer
   callbacks complete prototypes; remove unused legacy externs and timer casts.
+- dtwm: make workspace-presence, front-panel, icon-box, popup, embedded-client
+  and timeout callbacks implement their Xt contracts directly; type window
+  manager function and resource-parser tables without unspecified arguments;
+  expose read-only shell-scan tokens and type the shared desktop callbacks
+  used by the window manager.
+- DtWidget: publish the complete `_DtCreateView` factory prototype and remove
+  its redundant unspecified-argument declaration.
 
 2026-11-02
 - dtinfo: match typed DtHelp hyperlink/resize callback interfaces in the C++

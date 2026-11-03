@@ -64,6 +64,7 @@ SOFTWARE.
 */
 
 #include <stdio.h>
+#include <math.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <Xm/GadgetP.h>
@@ -321,7 +322,6 @@ ClockTick(
         XtIntervalId *id )
 {
 	DtClockGadget		w = 	(DtClockGadget)client_data;	
-	struct tm *	localtime ();
 	struct tm 	tm; 
 	time_t		time_value;
 	char *		time_ptr;
@@ -464,8 +464,6 @@ DrawLine (
 {
 	double dblank_length = (double)blank_length, dlength = (double)length;
 	double angle, cosangle, sinangle;
-	double cos ();
-	double sin ();
 	int cx = w->clock.centerX, cy = w->clock.centerY, x1, y1, x2, y2;
 
 	/*
@@ -511,8 +509,6 @@ DrawHand(
 	double angle, cosangle, sinangle;
 	double ws, wc;
 	Position x, y, x1, y1, x2, y2;
-	double cos ();
-	double sin ();
 
 	/*  A full circle is 2 PI radians.
 	 *  Angles are measured from 12 o'clock, clockwise increasing.
@@ -803,7 +799,7 @@ SetValues(
 				XtAppAddTimeOut (
 					XtWidgetToApplicationContext (new_w),
 					G_ClockInterval (new)*1000,
-					(XtTimerCallbackProc) ClockTick, 
+					ClockTick,
 					(XtPointer)new_w);
 	}
 

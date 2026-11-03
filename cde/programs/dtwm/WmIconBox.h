@@ -33,8 +33,8 @@
 
 extern void AddIconBoxForWorkspace (WmWorkspaceData *pWS);
 extern void AddNewBox (WmWorkspaceData *pWS, IconBoxData *pIBD);
-extern void ChangeActiveIconboxIconText (Widget icon, caddr_t dummy, 
-					 XFocusChangeEvent *event);
+extern void ChangeActiveIconboxIconText (Widget icon, XtPointer client_data,
+					 XEvent *event, Boolean *continue_dispatch);
 extern void CheckIconBoxResize (ClientData *pCD, unsigned int changedValues, 
 				int newWidth, int newHeight);
 extern Boolean CheckIconBoxSize (IconBoxData *pIBD);
@@ -48,14 +48,14 @@ extern void FindNewPosition (Cardinal *newPosition, IconPlacementData *pIPD,
 			     int newPlace);
 extern MenuItem *GetIconBoxMenuItems (WmScreenData *pSD);
 extern void GetIconBoxIconRootXY (ClientData *pCD, int *pX, int *pY);
-extern void HandleIconBoxButtonMotion (Widget icon, caddr_t client_data, 
-				       XEvent *pev);
-extern void HandleIconBoxIconKeyPress (Widget icon, caddr_t dummy, 
-				       XKeyEvent *keyEvent);
-extern void IconScrollVisibleCallback (Widget w, caddr_t client_data, 
-				  XmAnyCallbackStruct *call_data);
-extern void IconActivateCallback (Widget w, caddr_t client_data, 
-				  XmAnyCallbackStruct *call_data);
+extern void HandleIconBoxButtonMotion (Widget icon, XtPointer client_data,
+				       XEvent *event, Boolean *continue_dispatch);
+extern void HandleIconBoxIconKeyPress (Widget icon, XtPointer client_data,
+				       XEvent *event, Boolean *continue_dispatch);
+extern void IconScrollVisibleCallback (Widget w, XtPointer client_data,
+				       XtPointer call_data);
+extern void IconActivateCallback (Widget w, XtPointer client_data,
+				  XtPointer call_data);
 extern void IconBoxPopUp (WmWorkspaceData *pWS, Boolean up);
 extern Boolean IconBoxShowing (WmWorkspaceData *pWS);
 extern Boolean IconVisible (ClientData *pCD);
@@ -91,7 +91,7 @@ extern void SetIconBoxInfo (WmWorkspaceData *pWS, ClientData *pCD);
 extern void SetNewBounds (IconBoxData *pIBD);
 extern void ShowClientIconState (ClientData *pCD, int newState);
 extern void UnmapIconBoxes (WmWorkspaceData *pWS);
-extern void UpdateIncrements (Widget sWidget, IconBoxData *pIBD, 
-			      XConfigureEvent *event);
+extern void UpdateIncrements (Widget sWidget, XtPointer client_data,
+			      XEvent *event, Boolean *continue_dispatch);
 extern String WmXmStringToString (XmString xmString);
 

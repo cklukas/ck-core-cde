@@ -57,17 +57,17 @@ extern void _DtMessage(
                         char *title,
                         char *message_text,
                         XtPointer helpIdStr,
-                        void (*helpCallback)()) ;
+                        XtCallbackProc helpCallback) ;
 extern Widget _DtMessageDialog(
                         Widget w,
                         char *title,
                         char *message_text,
                         XtPointer helpIdStr,
                         Boolean cancel_btn,
-                        void (*cancel_callback)(),
-                        void (*ok_callback)(),
-                        void (*close_callback)(),
-                        void (*help_callback)(),
+                        XtCallbackProc cancel_callback,
+                        XtCallbackProc ok_callback,
+                        XtEventHandler close_callback,
+                        XtCallbackProc help_callback,
                         Boolean deleteOnClose,
                         int dialogType) ;
 extern void _DtMessageOK(
@@ -77,7 +77,8 @@ extern void _DtMessageOK(
 extern void _DtMessageClose(
                         Widget w,
                         XtPointer client_data,
-                        XEvent *event) ;
+                        XEvent *event,
+                        Boolean *continue_dispatch) ;
 
 /********    End Public Function Declarations    ********/
 

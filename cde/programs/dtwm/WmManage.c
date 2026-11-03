@@ -84,8 +84,9 @@ Boolean IsPushRecallClient (
     WmFpPushRecallClientData **ppPRCD);
 static void HandleSubstructEvents(
         Widget w,
-        caddr_t ptr,
-        XEvent *event );
+        XtPointer client_data,
+        XEvent *event,
+        Boolean *continue_dispatch );
 Boolean UpdateEmbeddedClientsProperty(
         WmScreenData *pSD );
 static void ForceSubpanelWMState(Window win);
@@ -797,7 +798,7 @@ void UnManageWindow (ClientData *pCD)
 	XtRemoveEventHandler(XtWindowToWidget (DISPLAY1, pECD->winParent),
 		(SubstructureRedirectMask | SubstructureNotifyMask),
 	        False,
-		(XtEventHandler)HandleSubstructEvents,
+		HandleSubstructEvents,
 		(XtPointer)(pCD));
 
 	pECD->pCD = NULL;
@@ -2176,7 +2177,7 @@ ManageEmbeddedClient (
     XtAddEventHandler(XtWindowToWidget (DISPLAY1, pECD->winParent),
 		(SubstructureRedirectMask | SubstructureNotifyMask),
 	        False,
-		(XtEventHandler)HandleSubstructEvents,
+		HandleSubstructEvents,
 		(XtPointer)(pCD));
 
     /* 
@@ -2310,13 +2311,13 @@ ReparentEmbeddedClient (
 	XtRemoveEventHandler(XtWindowToWidget (DISPLAY1, pECD->winParent),
 		(SubstructureRedirectMask | SubstructureNotifyMask),
 	        False,
-		(XtEventHandler)HandleSubstructEvents,
+		HandleSubstructEvents,
 		(XtPointer)(pCD));
 
 	XtAddEventHandler(XtWindowToWidget (DISPLAY1, newWin),
 		(SubstructureRedirectMask | SubstructureNotifyMask),
 	        False,
-		(XtEventHandler)HandleSubstructEvents,
+		HandleSubstructEvents,
 		(XtPointer)(pCD));
     }
 
@@ -2677,7 +2678,9 @@ CheckPushRecallClient(
 
 /******************************<->*************************************
  *
- *  static void HandleSubstructEvents (Widget w, caddr_t pCD, XEvent *event)
+ *  static void HandleSubstructEvents (Widget w, XtPointer client_data,
+ *                                     XEvent *event,
+ *                                     Boolean *continue_dispatch)
  *
  *
  *  Description:
@@ -2709,10 +2712,11 @@ CheckPushRecallClient(
 static void 
 HandleSubstructEvents(
         Widget w,
-        caddr_t ptr,
-        XEvent *event )
+        XtPointer client_data,
+        XEvent *event,
+        Boolean *continue_dispatch )
 {
-	struct _ClientData *pCD = (struct _ClientData *)ptr;
+	struct _ClientData *pCD = (struct _ClientData *) client_data;
 
         switch (event->type)
 	{

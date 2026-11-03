@@ -44,4 +44,5 @@ extern void WmCvtStringToSize (XrmValue *args, Cardinal numArgs, XrmValue *fromV
 extern void WmCvtStringToShowFeedback (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
 extern void WmCvtStringToUsePPosition (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
 extern unsigned char *NextToken (unsigned char *pchIn, int *pLen, unsigned char **ppchNext);
+extern long DecStrToL (unsigned char *str, unsigned char **ptr);
 extern Boolean StringsAreEqual (unsigned char *pch1, unsigned char *pch2, int len);

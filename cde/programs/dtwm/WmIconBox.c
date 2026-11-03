@@ -480,12 +480,12 @@ void MakeScrolledWindow (WmWorkspaceData *pWS, IconBoxData *pIBD)
 					(ArgList)setArgs, i);
 
     XtAddCallback(pIBD->scrolledWidget, XmNtraverseObscuredCallback,
-		  (XtCallbackProc) IconScrollVisibleCallback, (caddr_t)NULL);
+		  IconScrollVisibleCallback, (XtPointer)NULL);
 
     XtAddEventHandler(pIBD->scrolledWidget, 
 			StructureNotifyMask, 
 			False, 
-			(XtEventHandler)UpdateIncrements, 
+			UpdateIncrements,
 			(XtPointer) pIBD);
 
 
@@ -1915,25 +1915,25 @@ Boolean InsertIconIntoBox (IconBoxData *pIBD, ClientData *pCD)
 	    pWsc->iconFrameWin = XtWindow (iconWidget); 
 
 	    XtAddCallback (iconWidget, XmNactivateCallback, 
-			   (XtCallbackProc)IconActivateCallback, 
+			   IconActivateCallback,
 			   (XtPointer)NULL);
 
 	    XtAddEventHandler(iconWidget, 
 			      SELECT_BUTTON_MOTION_MASK, 
 			      False, 
-			      (XtEventHandler)HandleIconBoxButtonMotion, 
+			      HandleIconBoxButtonMotion,
 			      (XtPointer)NULL);
 
 	    XtAddEventHandler(iconWidget, 
 			      DMANIP_BUTTON_MOTION_MASK, 
 			      False, 
-			      (XtEventHandler)HandleIconBoxButtonMotion, 
+			      HandleIconBoxButtonMotion,
 			      (XtPointer)NULL);
 
             XtAddEventHandler(iconWidget,
 			      KeyPressMask,
 			      False,
-			      (XtEventHandler)HandleIconBoxIconKeyPress,
+			      HandleIconBoxIconKeyPress,
 			      (XtPointer)NULL);
 
 	    
@@ -1943,7 +1943,7 @@ Boolean InsertIconIntoBox (IconBoxData *pIBD, ClientData *pCD)
 	    XtAddEventHandler(iconWidget, 
 			      FocusChangeMask, 
 			      False, 
-			      (XtEventHandler)ChangeActiveIconboxIconText, 
+			      ChangeActiveIconboxIconText,
 			      (XtPointer)NULL);
 
 		if (pCD->pSD->activeLabelParent != pCD->pSD->rootWindow)
@@ -3169,7 +3169,7 @@ void ShowClientIconState (ClientData *pCD, int newState)
  * 
  *************************************<->***********************************/
 
-void IconScrollVisibleCallback (Widget w, caddr_t client_data, XmAnyCallbackStruct *call_data)
+void IconScrollVisibleCallback (Widget w, XtPointer client_data, XtPointer call_data)
 {
     XmTraverseObscuredCallbackStruct *vis_data;
 
@@ -3195,7 +3195,7 @@ void IconScrollVisibleCallback (Widget w, caddr_t client_data, XmAnyCallbackStru
  * 
  *************************************<->***********************************/
 
-void IconActivateCallback (Widget w, caddr_t client_data, XmAnyCallbackStruct *call_data)
+void IconActivateCallback (Widget w, XtPointer client_data, XtPointer call_data)
 {
     ClientData    	*pCD;
     Window		theIcon;
@@ -3229,8 +3229,10 @@ void IconActivateCallback (Widget w, caddr_t client_data, XmAnyCallbackStruct *c
  * 
  *************************************<->***********************************/
 
-void UpdateIncrements (Widget sWidget, IconBoxData *pIBD, XConfigureEvent *event)
+void UpdateIncrements (Widget sWidget, XtPointer client_data, XEvent *event,
+                       Boolean *continue_dispatch)
 {
+    IconBoxData *pIBD = (IconBoxData *) client_data;
     ResetArrowButtonIncrements (pIBD->pCD_iconBox);    
   
 } /* END OF FUNCTION UpdateIncrements */
@@ -3270,9 +3272,11 @@ void ResetArrowButtonIncrements (ClientData *pCD)
  * 
  *************************************<->***********************************/
 
-void ChangeActiveIconboxIconText (Widget icon, caddr_t dummy, XFocusChangeEvent *event)
+void ChangeActiveIconboxIconText (Widget icon, XtPointer client_data,
+                                  XEvent *event,
+                                  Boolean *continue_dispatch)
 {
-
+    XFocusChangeEvent *focus_event = &event->xfocus;
     ClientData    	*pCD;
     Window		theIcon;
 
@@ -3290,16 +3294,16 @@ void ChangeActiveIconboxIconText (Widget icon, caddr_t dummy, XFocusChangeEvent 
 	P_ICON_BOX(pCD)->pCD_iconBox &&
 	P_ICON_BOX(pCD)->pCD_iconBox->clientState !=  MINIMIZED_STATE)
     {
-	if (event->type == FocusIn) 
+	if (focus_event->type == FocusIn)
 	{
-	    if (event->send_event)
+	    if (focus_event->send_event)
 	    {
 	       ShowActiveIconText (pCD);
 	    }
 	}
 	else
 	{
-	    if (event->send_event)
+	    if (focus_event->send_event)
 	    {
 	        HideActiveIconText (pCD->pSD);
 	    }
@@ -3322,9 +3326,11 @@ void ChangeActiveIconboxIconText (Widget icon, caddr_t dummy, XFocusChangeEvent 
  *
  *************************************<->***********************************/
 
-void HandleIconBoxIconKeyPress (Widget icon, caddr_t dummy, XKeyEvent *keyEvent)
+void HandleIconBoxIconKeyPress (Widget icon, XtPointer client_data,
+                                XEvent *event,
+                                Boolean *continue_dispatch)
 {
-    
+    XKeyEvent *keyEvent = &event->xkey;
     Context context; 
     ClientData          *pCD; 
     Window              theIcon;
@@ -3392,7 +3398,9 @@ void HandleIconBoxIconKeyPress (Widget icon, caddr_t dummy, XKeyEvent *keyEvent)
  * 
  *************************************<->***********************************/
 
-void HandleIconBoxButtonMotion (Widget icon, caddr_t client_data, XEvent *pev)
+void HandleIconBoxButtonMotion (Widget icon, XtPointer client_data,
+                                XEvent *event,
+                                Boolean *continue_dispatch)
 {
 
 } /* END OF FUNCTION HandleIconBoxButtonMotion */

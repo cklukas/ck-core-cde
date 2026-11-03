@@ -179,7 +179,7 @@ _DtMessage(
         char *title,
         char *message_text,
         XtPointer helpIdStr,
-        void (*helpCallback)() )
+        XtCallbackProc helpCallback )
 
 {
    _DtMessageDialog(w, title, message_text, helpIdStr, False,
@@ -201,10 +201,10 @@ _DtMessageDialog(
         char *message_text,
         XtPointer helpIdStr,
         Boolean cancel_btn,
-        void (*cancel_callback)(),
-        void (*ok_callback)(),
-        void (*close_callback)(),
-        void (*help_callback)(),
+        XtCallbackProc cancel_callback,
+        XtCallbackProc ok_callback,
+        XtEventHandler close_callback,
+        XtCallbackProc help_callback,
         Boolean deleteOnClose,
         int dialogType )
 
@@ -308,7 +308,7 @@ _DtMessageDialog(
          close_callback = _DtMessageClose;
 
       XtAddEventHandler(XtParent (message), StructureNotifyMask, True,
-                         (XtEventHandler)close_callback, message);
+                         close_callback, message);
    }
 
    XmStringFree(okString);
@@ -353,13 +353,14 @@ void
 _DtMessageClose(
         Widget w,
         XtPointer client_data,
-        XEvent *event )
+        XEvent *event,
+        Boolean *continue_dispatch )
 
 {
    if (event->type == UnmapNotify)
    {
       XtRemoveEventHandler(XtParent(client_data), StructureNotifyMask, 
-                            True, (XtEventHandler)_DtMessageClose, client_data);
+                            True, _DtMessageClose, client_data);
 
       XtUnmanageChild(client_data);
       XtDestroyWidget(w);

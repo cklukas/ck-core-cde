@@ -32,6 +32,8 @@
 
 #include <stdio.h>
 
+typedef Boolean (*WmFunctionArgParser)(unsigned char **, WmFunction, String *);
+
 
 extern void            ProcessWmFile (WmScreenData *pSD, Boolean bNested);
 extern void ProcessCommandLine (int argc,  char *argv[]);
@@ -90,7 +92,7 @@ extern Boolean ParseWmFunctionArg (
 		unsigned char **linePP,
 		int ix, 
 		WmFunction wmFunc, 
-		void **ppArg,
+		String *pArg,
 		String sClientName,
 		String sTitle);
 extern Boolean ParseWmFuncMaybeStrArg (unsigned char **linePP, 

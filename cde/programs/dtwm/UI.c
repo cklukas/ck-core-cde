@@ -104,7 +104,7 @@ extern void DeleteControlActionList (ControlData *);
 extern Boolean CheckOtherMonitorsOn (SubpanelData *);
 
 static void   Initialize (DtPanelShellWidget);
-static void   BoxCreate ();
+static void   BoxCreate (void);
 static Widget PanelControlCreate (Widget, char *, String);
 static void   MainControlCreate (int);
 static void   SwitchCreate (BoxData *);
@@ -312,24 +312,24 @@ FrontPanelCreate (Widget toplevel)
 
       XtOverrideTranslations(panel.left_handle, handle_translations);
       XtAddCallback (panel.left_handle, XmNinputCallback,
-                     (XtCallbackProc) HandleInputCB, NULL);
+                     HandleInputCB, NULL);
       XtAddCallback (panel.left_handle, XmNhelpCallback,
-                     (XtCallbackProc) GeneralTopicHelpCB, PANEL_HANDLE);
+                     GeneralTopicHelpCB, PANEL_HANDLE);
 
       XtOverrideTranslations(panel.right_handle, handle_translations);
       XtAddCallback (panel.right_handle, XmNinputCallback,
-                     (XtCallbackProc) HandleInputCB, NULL);
+                     HandleInputCB, NULL);
       XtAddCallback (panel.right_handle, XmNhelpCallback,
-                     (XtCallbackProc) GeneralTopicHelpCB, PANEL_HANDLE);
+                     GeneralTopicHelpCB, PANEL_HANDLE);
 
       if ((intptr_t) panel.element_values[PANEL_DISPLAY_MENU].parsed_value)
       {
          panel.menu = PanelControlCreate (panel.form, "menu", menu_normal_image);
 
          XtAddCallback (panel.menu, XmNinputCallback,
-                        (XtCallbackProc) MenuInputCB, NULL);
+                        MenuInputCB, NULL);
          XtAddCallback (panel.menu, XmNhelpCallback,
-                     (XtCallbackProc) GeneralTopicHelpCB, PANEL_MENU);
+                     GeneralTopicHelpCB, PANEL_MENU);
 
          ac = 0;
          XtSetArg (al[ac], XmNtopAttachment, XmATTACH_FORM);  ac++;
@@ -384,9 +384,9 @@ FrontPanelCreate (Widget toplevel)
 	    PanelControlCreate (panel.form, "minimize", minimize_normal_image);
 
          XtAddCallback (panel.iconify, XmNinputCallback,
-                        (XtCallbackProc) MinimizeInputCB, NULL);
+                        MinimizeInputCB, NULL);
          XtAddCallback (panel.iconify, XmNhelpCallback,
-                     (XtCallbackProc) GeneralTopicHelpCB, PANEL_ICONIFY);
+                     GeneralTopicHelpCB, PANEL_ICONIFY);
 
          ac = 0;
          XtSetArg (al[ac], XmNtopAttachment, XmATTACH_FORM);  ac++;
@@ -919,7 +919,7 @@ BoxCreate (void)
          XtManageChild (box_data->switch_form);
 
          XtAddCallback (box_data->switch_form, XmNhelpCallback,
-                        (XtCallbackProc) SwitchTopicHelpCB,
+                        SwitchTopicHelpCB,
                         box_data->switch_data);
 
          if (box_data->control_data_count == 0) 
@@ -1010,7 +1010,7 @@ BoxCreate (void)
 	       XtManageChild (box_data->right_arrow_form);
 
 	    XtAddCallback (box_data->right_arrow_form, XmNhelpCallback,
-			   (XtCallbackProc) GeneralTopicHelpCB,
+			   GeneralTopicHelpCB,
 			   SUBPANEL_ACCESS_AREA);
 
 	    ac = 0;
@@ -1087,7 +1087,7 @@ BoxCreate (void)
 	 XtManageChild (box_data->left_arrow_form);
 
       XtAddCallback (box_data->left_arrow_form, XmNhelpCallback,
-		     (XtCallbackProc) GeneralTopicHelpCB,
+		     GeneralTopicHelpCB,
 		     SUBPANEL_ACCESS_AREA);
 
 
@@ -1310,7 +1310,7 @@ BoxCreate (void)
          /* Event handler for posting popup menu */
 
          XtAddEventHandler(box_data->left_control_form, ButtonPressMask, False,
-                           (XtEventHandler) PostPopupMenu, (XtPointer) NULL);
+                           PostPopupMenu, (XtPointer) NULL);
       }
 
       if (box_data->right_control_form != NULL)
@@ -1325,7 +1325,7 @@ BoxCreate (void)
          /* Event handler for posting popup menu */
 
          XtAddEventHandler(box_data->right_control_form, ButtonPressMask,False,
-                           (XtEventHandler) PostPopupMenu, (XtPointer) NULL);
+                           PostPopupMenu, (XtPointer) NULL);
       }
    }
 
@@ -1362,7 +1362,7 @@ BoxCreate (void)
 
              XtAddEventHandler (box_data->switch_form, ButtonPressMask,
 			        False,
-				(XtEventHandler) PostWorkspacePopupMenu,
+				PostWorkspacePopupMenu,
 			        (XtPointer) NULL);
          }
       }
@@ -1946,10 +1946,10 @@ ControlCreateAndRegister (Widget        parent,
    }
 
    XtManageChild (icon);
-   XtAddCallback (icon, XmNcallback, (XtCallbackProc) PushCB, control_data);
+   XtAddCallback (icon, XmNcallback, PushCB, control_data);
 
    XtAddCallback (icon, XmNhelpCallback,
-                     (XtCallbackProc) ControlTopicHelpCB, control_data);
+                     ControlTopicHelpCB, control_data);
 
    if (!main_copy)
       control_data->icon = icon;
@@ -2456,10 +2456,10 @@ SwitchButtonCreate (SwitchData * switch_data,
       XtManageChild (switch_data->buttons[i]);
 
       XtAddCallback (switch_data->buttons[i], XmNcallback,
-                     (XtCallbackProc) SwitchButtonCB, NULL);
+                     SwitchButtonCB, NULL);
 
       XtAddCallback (switch_data->buttons[i], XmNhelpCallback,
-                  (XtCallbackProc) GeneralTopicHelpCB, SWITCH_BUTTON);
+                  GeneralTopicHelpCB, SWITCH_BUTTON);
 
       XmStringFree (label_string);
    }
@@ -2859,7 +2859,7 @@ SubpanelCreate (ControlData  * main_control_data,
    XtManageChild (subpanel_data->form);
 
    XtAddCallback (subpanel_data->form, XmNhelpCallback,
-                  (XtCallbackProc) SubpanelTopicHelpCB, subpanel_data);
+                  SubpanelTopicHelpCB, subpanel_data);
 
    if (panel.popup_data == NULL || panel.popup_data->popup == NULL)
       CreatePopupMenu (subpanel_data->form);
@@ -2870,7 +2870,7 @@ SubpanelCreate (ControlData  * main_control_data,
    /* Event handler for posting popup menu */
 
    XtAddEventHandler (subpanel_data->form, ButtonPressMask, False,
-                      (XtEventHandler) PostPopupMenu, (XtPointer) NULL);
+                      PostPopupMenu, (XtPointer) NULL);
 
 
    /*  If the value for subpanel control install is true, create  */
@@ -2917,7 +2917,7 @@ SubpanelCreate (ControlData  * main_control_data,
       XmStringFree (icon_label);
 
       XtAddCallback (subpanel_data->dropzone, XmNhelpCallback,
-                     (XtCallbackProc) GeneralTopicHelpCB, INSTALL_ZONE);
+                     GeneralTopicHelpCB, INSTALL_ZONE);
 
 
       /*  Set the drop zone for the install area.  */
@@ -3018,7 +3018,7 @@ SubpanelCreate (ControlData  * main_control_data,
    /*  Add the callback for handling subpanel unmaps from the system menu  */
 
    XtAddCallback (subpanel_data->form, XmNunmapCallback,
-                  (XtCallbackProc) SubpanelUnmapCB,
+                  SubpanelUnmapCB,
                   (XtPointer) main_control_data);
 
 
@@ -3173,7 +3173,7 @@ SubpanelControlCreate (SubpanelData * subpanel_data,
       XtManageChild (control_data->indicator);
 
       XtAddCallback (control_data->indicator, XmNhelpCallback,
-                  (XtCallbackProc) GeneralTopicHelpCB, MONITOR_INDICATOR);
+                  GeneralTopicHelpCB, MONITOR_INDICATOR);
 
       XtSetSensitive (control_data->indicator, False);
    }
@@ -3755,29 +3755,29 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
       /*  the main panel icon copy.                                 */
       
       XtRemoveCallback (main_control_data->icon, XmNcallback, 
-                        (XtCallbackProc) PushCB, subpanel_control_data);
+                        PushCB, subpanel_control_data);
 
       XtRemoveCallback (main_control_data->icon, XmNhelpCallback,
-                        (XtCallbackProc) ControlTopicHelpCB, subpanel_control_data);
+                        ControlTopicHelpCB, subpanel_control_data);
       
       XtAddCallback (main_control_data->icon, XmNcallback, 
-                     (XtCallbackProc) PushCB, main_control_data);
+                     PushCB, main_control_data);
 
       XtAddCallback (main_control_data->icon, XmNhelpCallback,
-                     (XtCallbackProc) ControlTopicHelpCB, main_control_data);
+                     ControlTopicHelpCB, main_control_data);
 
       
       XtRemoveCallback (subpanel_data->main_panel_icon_copy, XmNcallback, 
-                        (XtCallbackProc) PushCB, subpanel_control_data);
+                        PushCB, subpanel_control_data);
 
       XtRemoveCallback (subpanel_data->main_panel_icon_copy, XmNhelpCallback,
-                        (XtCallbackProc) ControlTopicHelpCB, subpanel_control_data);
+                        ControlTopicHelpCB, subpanel_control_data);
       
       XtAddCallback (subpanel_data->main_panel_icon_copy, XmNcallback, 
-                     (XtCallbackProc) PushCB, main_control_data);
+                     PushCB, main_control_data);
 
       XtAddCallback (subpanel_data->main_panel_icon_copy, XmNhelpCallback,
-                     (XtCallbackProc) ControlTopicHelpCB, main_control_data);
+                     ControlTopicHelpCB, main_control_data);
 
 
 

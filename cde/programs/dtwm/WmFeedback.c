@@ -2072,7 +2072,7 @@ int FeedbackGetSnapAction (WmScreenData *pSD, int rootX, int rootY)
  * 
  *************************************<->***********************************/
 
-static void OkCB (Widget w, caddr_t client_data, caddr_t call_data)
+static void OkCB (Widget w, XtPointer client_data, XtPointer call_data)
 {
     WithdrawDialog (w);
 
@@ -2110,7 +2110,7 @@ static void OkCB (Widget w, caddr_t client_data, caddr_t call_data)
  * 
  *************************************<->***********************************/
 
-static void CancelCB (Widget w, caddr_t client_data, caddr_t call_data)
+static void CancelCB (Widget w, XtPointer client_data, XtPointer call_data)
 {
     WithdrawDialog (w);
 
@@ -2267,9 +2267,9 @@ void ConfirmAction (WmScreenData *pSD, int nbr)
         XtSetValues ( XmMessageBoxGetChild (pSD->confirmboxW[nbr], 
 			    XmDIALOG_CANCEL_BUTTON), args, n);
         XtAddCallback (pSD->confirmboxW[nbr], XmNokCallback, 
-	    (XtCallbackProc)OkCB, (XtPointer)pSD); 
+	    OkCB, (XtPointer)pSD);
         XtAddCallback (pSD->confirmboxW[nbr], XmNcancelCallback, 
-	    (XtCallbackProc)CancelCB, (XtPointer)NULL); 
+	    CancelCB, (XtPointer)NULL);
 
         XtUnmanageChild
 	    (XmMessageBoxGetChild (pSD->confirmboxW[nbr], 

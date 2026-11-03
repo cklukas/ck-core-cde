@@ -121,6 +121,18 @@ and dialog-management operations accept a single `Widget`. The selection
 flash timer implements `XtTimerCallbackProc` directly, so registrations do not
 cast around an incompatible client-data parameter.
 
+The window manager likewise registers callbacks without disguising their
+types. Workspace-presence and front-panel callbacks receive `XtPointer`
+payloads, event handlers include Xt's `Boolean *` dispatch parameter, and
+icon-box and window-manager timers implement their framework contracts
+directly. The window-manager command table and its argument-parser table use
+the concrete signatures shared by their implementations, including explicit
+encoding of legacy numeric command arguments instead of writing through an
+incompatible pointer type. Supporting desktop APIs now preserve the read-only
+tokens returned by `shellscan`, distinguish shared Xt callbacks from event
+handlers, and publish the complete four-argument `_DtCreateView` factory
+prototype.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh

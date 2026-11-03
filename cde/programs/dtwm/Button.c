@@ -86,7 +86,7 @@ static Boolean VisualChange(
                         Widget current_w,
                         Widget new_w) ;
 static void ArmTimeout( 
-                        Widget w,
+                        XtPointer client_data,
                         XtIntervalId *id) ;
 static void Enter( 
                         Widget wid,
@@ -713,22 +713,22 @@ ArmAndActivate(
       bg->button.timer = XtAppAddTimeOut(
 			XtWidgetToApplicationContext((Widget)bg),
                         (unsigned long) DELAY_DEFAULT,
-                        (XtTimerCallbackProc)ArmTimeout,
-                        (caddr_t)bg);
+                        ArmTimeout,
+                        (XtPointer)bg);
    }
 }
 
 /* ARGSUSED */
 static void 
 ArmTimeout(
-        Widget w,
+        XtPointer client_data,
         XtIntervalId *id )
 {
-    DtButtonGadget bg = (DtButtonGadget) w ;
+    DtButtonGadget bg = (DtButtonGadget) client_data;
 
     bg -> button.timer = 0;
     if (XtIsRealized ((Widget)bg) && XtIsManaged ((Widget)bg)) {
-       Redisplay ( w, NULL, FALSE); 
+       Redisplay ((Widget) bg, NULL, FALSE);
        XFlush (XtDisplay (bg));
     }
     return;

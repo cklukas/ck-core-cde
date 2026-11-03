@@ -657,7 +657,8 @@ DeleteSubpanelCB (Widget    w,
 void
 PostWorkspacePopupMenu (Widget      w,
                         XtPointer   client_data,
-                        XEvent    * event)
+                        XEvent    * event,
+                        Boolean   * continue_dispatch)
 
 
 {
@@ -694,7 +695,8 @@ PostWorkspacePopupMenu (Widget      w,
 void
 PostPopupMenu (Widget      w,
                XtPointer   client_data,
-               XEvent    * event)
+               XEvent    * event,
+               Boolean   * continue_dispatch)
 
 
 {

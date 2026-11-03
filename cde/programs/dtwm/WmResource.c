@@ -69,7 +69,7 @@
 /*
  * Function Declarations:
  */
-XmColorData *_WmGetDefaultColors ();
+XmColorData *_WmGetDefaultColors (Screen *, Colormap, String);
 
 void _WmTopShadowPixmapDefault (Widget widget, int offset, XrmValue *value);
 void _WmIconImageFDefault (Widget widget, int offset, XrmValue *value);

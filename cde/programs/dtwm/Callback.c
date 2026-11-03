@@ -1701,7 +1701,7 @@ PushCB (Widget    w,
                      s1 = XtNewString (push_action->action_name);
 
                   ParseWmFunctionArg ((unsigned char **) &s1, function_index, 
-		                      wm_func, (void **) &func_arg, 
+		                      wm_func, &func_arg,
 				      client_name, client_name);
 
 
@@ -1993,7 +1993,7 @@ SubpanelUnmapCB (Widget    w,
    /*  Remove the event handler from the subpanel  */
 
    XtRemoveEventHandler (subpanel_data->shell, StructureNotifyMask, False,
-                         (XtEventHandler) SubpanelTornEventHandler,
+                         SubpanelTornEventHandler,
                          (XtPointer) main_control_data);
 
 

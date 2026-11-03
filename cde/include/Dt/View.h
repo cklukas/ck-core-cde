@@ -104,7 +104,11 @@ extern "C" {
 #endif /* XmIsView */
 
 
-extern Widget _DtCreateView(); 
+extern Widget _DtCreateView(
+        Widget parent,
+        String name,
+        ArgList arglist,
+        Cardinal argcount);
 
 extern WidgetClass dtViewWidgetClass;
 

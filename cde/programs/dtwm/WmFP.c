@@ -85,8 +85,8 @@ extern void WorkspaceAdjustPanelPosition (Position x,
                               Dimension width,
                               Dimension height);
 
-static void PushRecallSetData ();
-static void EmbeddedClientSetData ();
+static void PushRecallSetData (void);
+static void EmbeddedClientSetData (void);
 static void EmbeddedClientSetGeometry (WmFpEmbeddedClientData *);
 
 
@@ -1021,7 +1021,7 @@ WmSubpanelPosted (Display * display,
             subpanel_data->posted_x = XtX (subpanel_data->shell);
 
             XtAddEventHandler (subpanel_data->shell, StructureNotifyMask, False,
-                               (XtEventHandler) SubpanelTornEventHandler,
+                               SubpanelTornEventHandler,
                                (XtPointer) main_control_data);
             break;
 	 }

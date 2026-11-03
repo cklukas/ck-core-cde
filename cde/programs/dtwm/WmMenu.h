@@ -38,8 +38,8 @@
 #define CREATE_MENU_WIDGET(pSD, pCD, mName, parent, fTLP, tSpec, moreItems) \
 	CreateMenuWidget(pSD, mName, parent, fTLP, tSpec, moreItems)
 
-extern void ActivateCallback (Widget w, caddr_t client_data, 
-			      caddr_t call_data);
+extern void ActivateCallback (Widget w, XtPointer client_data,
+			      XtPointer call_data);
 extern Widget CreateMenuWidget (WmScreenData *pSD,
 				String menuName, Widget parent,
 				Boolean fTopLevelPane, MenuSpec *topMenuSpec,

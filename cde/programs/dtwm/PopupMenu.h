@@ -39,9 +39,9 @@
 
 
 extern void CreatePopupMenu ( Widget );
-extern void PostPopupMenu ( Widget, XtPointer, XEvent * );
+extern void PostPopupMenu ( Widget, XtPointer, XEvent *, Boolean * );
 extern void CreateWorkspacePopupMenu ( Widget , SwitchData *);
-extern void PostWorkspacePopupMenu ( Widget, XtPointer, XEvent * );
+extern void PostWorkspacePopupMenu ( Widget, XtPointer, XEvent *, Boolean * );
 
 
 #endif /* _popup_menu_h */

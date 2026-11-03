@@ -59,8 +59,6 @@
 
 WidgetClass	dtViewWidgetClass;
 
-Widget		_DtCreateView ();
-
 
 
 /*-------------------------------------------------------------

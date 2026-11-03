@@ -68,7 +68,7 @@
 #include "Dt/Wsm.h"
 
 #include <Xm/RowColumnP.h> /* for MS_LastManagedMenuTime */
-extern XmMenuState _XmGetMenuState();
+extern XmMenuState _XmGetMenuState(Widget);
 
 /*
  * FUNCTION PARSER TABLE
@@ -80,7 +80,7 @@ typedef struct {
    unsigned int   resource;
    long           mgtMask;
    WmFunction     wmFunction;
-   Boolean       (*parseProc)();
+   WmFunctionArgParser parseProc;
 } FunctionTableEntry;
 
 
@@ -1251,7 +1251,7 @@ Boolean HandleKeyPress (XKeyEvent *keyEvent,
 		  wmGD.passKeysKeySpec = keySpecs;
 		}
 	      if (!(keySpecs->wmFunction (keySpecs->wmFuncArgs,
-					  functionClient, keyEvent)))
+					  functionClient, (XEvent *) keyEvent)))
 		{
 		  /*
 		   * The window manager function return indicates that further
@@ -1555,7 +1555,7 @@ Boolean CheckForButtonAction (XButtonEvent *buttonEvent, Context context, Contex
 		}
 
 	        if (!(buttonSpec->wmFunction (buttonSpec->wmFuncArgs, pCD,
-					      buttonEvent)))
+					      (XEvent *) buttonEvent)))
 		{
 		    /*
 		     * The window manager function return indicates that

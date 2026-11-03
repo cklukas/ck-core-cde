@@ -1198,7 +1198,7 @@ Widget CreateMenuWidget (WmScreenData *pSD,
 	             */
 
 	            XtAddCallback (children[n], XmNactivateCallback,
-			    (XtCallbackProc)ActivateCallback, 
+			    ActivateCallback,
 			    (XtPointer) menuItem);
 
                     fUseTitleSep = TRUE;
@@ -1530,7 +1530,7 @@ void UnpostMenu (MenuSpec *menuSpec)
  * 
  *************************************<->***********************************/
 
-void ActivateCallback (Widget w, caddr_t client_data, caddr_t call_data)
+void ActivateCallback (Widget w, XtPointer client_data, XtPointer call_data)
 {
     WmScreenData *pSD;
 

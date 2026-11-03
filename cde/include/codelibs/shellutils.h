@@ -39,7 +39,8 @@ extern "C"
 	    unsigned opts = 0);
 }
 #else
-    extern char **shellscan();
+    extern char const *const *shellscan(char const *str, int *argc,
+                                        unsigned opts);
 #endif
 
 #define SHX_NOGLOB	0x0001

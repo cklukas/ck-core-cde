@@ -92,7 +92,7 @@ static void wspLayout(
                         PtrWsPresenceData pPres) ;
 static void wspOkCB( 
                         Widget buttonW,
-                        WmScreenData *pSD,
+                        XtPointer client_data,
                         XtPointer call_data) ;
 static void wspHelpCB( 
                         Widget buttonW,
@@ -100,8 +100,8 @@ static void wspHelpCB(
                         XtPointer call_data) ;
 static void wspAllWsCB( 
                         Widget buttonW,
-                        WmScreenData *pSD,
-                        XmToggleButtonCallbackStruct *xmTbcs) ;
+                        XtPointer client_data,
+                        XtPointer call_data) ;
 static void wspCancelCB( 
                         Widget buttonW,
                         XtPointer client_data,
@@ -109,7 +109,7 @@ static void wspCancelCB(
 static void wspExtendedSelectCB(
 			Widget w,
 			XtPointer client_data,
-			XmListCallbackStruct *cb );
+			XtPointer call_data );
 static Dimension wspCharWidth (
 			XmFontList xmfl);
 
@@ -468,7 +468,7 @@ wspCreateWidgets(
 		  ((unsigned char *)GETMESSAGE(52, 4, "All Workspaces")))) 
 		!= NULL);
 	XtAddCallback (pPres->allWsW, XmNvalueChangedCallback, 
-			(XtCallbackProc)wspAllWsCB, (XtPointer)pSD); 
+			wspAllWsCB, (XtPointer)pSD);
     }
 
     if (rval)
@@ -496,7 +496,7 @@ wspCreateWidgets(
 	XtSetValues (pPres->formW, args, n);
 
 	XtAddCallback (pPres->OkW, XmNactivateCallback, 
-		(XtCallbackProc) wspOkCB, (XtPointer)pSD); 
+		wspOkCB, (XtPointer)pSD);
     }
 
     if (rval)
@@ -512,7 +512,7 @@ wspCreateWidgets(
 	XmStringFree(tmpXmString);
 #endif
 	XtAddCallback (pPres->CancelW, XmNactivateCallback, 
-		(XtCallbackProc) wspCancelCB, (XtPointer)pSD); 
+		wspCancelCB, (XtPointer)pSD);
 
 	/* set the cancel button (for KCancel) */
 	n = 0;
@@ -873,10 +873,10 @@ wspCreateWorkspaceList(
     }
 
     XtAddCallback (listW, XmNextendedSelectionCallback,
-		(XtCallbackProc) wspExtendedSelectCB, (XtPointer)pSD);
+		wspExtendedSelectCB, (XtPointer)pSD);
     /* Handle the double-click just like if the Ok button was pressed */
     XtAddCallback (listW, XmNdefaultActionCallback,
-		(XtCallbackProc) wspOkCB, (XtPointer)pSD); 
+		wspOkCB, (XtPointer)pSD);
 
 
     return (listW);
@@ -1412,9 +1412,10 @@ wspLayout(
 static void 
 wspOkCB(
         Widget buttonW,
-        WmScreenData *pSD,
+        XtPointer client_data,
         XtPointer call_data )
 {
+    WmScreenData *pSD = (WmScreenData *) client_data;
     Arg args[20];
     int n, j;
     int selectedItemCount;
@@ -1502,9 +1503,12 @@ wspOkCB(
 static void 
 wspAllWsCB(
         Widget buttonW,
-        WmScreenData *pSD,
-        XmToggleButtonCallbackStruct *xmTbcs )
+        XtPointer client_data,
+        XtPointer call_data )
 {
+    WmScreenData *pSD = (WmScreenData *) client_data;
+    XmToggleButtonCallbackStruct *xmTbcs =
+        (XmToggleButtonCallbackStruct *) call_data;
     PtrWsPresenceData pPres = &pSD->presence;
     int wsnum;
     XmString *pxmsSelected;
@@ -1574,9 +1578,10 @@ static void
 wspExtendedSelectCB(
         Widget w,
         XtPointer client_data,
-        XmListCallbackStruct *cb )
+        XtPointer call_data )
 {
     WmScreenData *pSD = (WmScreenData *) client_data;
+    XmListCallbackStruct *cb = (XmListCallbackStruct *) call_data;
     PtrWsPresenceData pPres = &pSD->presence;
     int n;
     Arg args[5];

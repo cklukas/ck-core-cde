@@ -90,7 +90,7 @@ void    WmPanelistShow (Widget);
 void    WmPanelistSetWorkspace (Widget, int);
 void    WmFrontPanelSetBusy (Boolean);
 Widget  WmPanelistWindowToSubpanel (Display *, Window);
-void    WmFrontPanelSessionSaveData ();
+void    WmFrontPanelSessionSaveData (void);
 
 
 
