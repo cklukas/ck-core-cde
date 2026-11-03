@@ -1,4 +1,7 @@
 2026-11-03
+- dtksh: register its two-argument legacy command implementations through one
+  exact three-argument ksh93 builtin adapter and typed descriptors, replacing
+  hundreds of incompatible callback casts.
 - dtsession: give the contention-management resource converter Xt's actual
   `XtConverter` prototype and register it directly without a function cast.
 - Calendar RPC: adapt legacy callback handlers to `registerrpc`'s actual

@@ -72,6 +72,30 @@
 #include "xmcmds.h"
 #include <locale.h>
 
+typedef int (*DtkshLegacyBuiltinProc)(int argc, char *argv[]);
+
+typedef struct {
+    DtkshLegacyBuiltinProc function;
+} DtkshLegacyBuiltin;
+
+static int
+InvokeLegacyBuiltin(int argc, char *argv[], Shbltin_t *context)
+{
+    DtkshLegacyBuiltin *builtin = context ? context->ptr : NULL;
+
+    if (!builtin || !builtin->function)
+        return 1;
+    return builtin->function(argc, argv);
+}
+
+#define ADDBUILTIN(name_, function_)                                      \
+    do {                                                                  \
+        static DtkshLegacyBuiltin builtin_ = {                            \
+            .function = (function_)                                       \
+        };                                                                \
+        (void)sh_addbuiltin((name_), InvokeLegacyBuiltin, &builtin_);      \
+    } while (0)
+
 
 static void PendingDestroy( 
                         Widget w,
