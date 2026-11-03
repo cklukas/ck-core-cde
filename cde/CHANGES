@@ -1,4 +1,9 @@
 2026-11-03
+- DtInfo: preprocess the aggregate message input from the shadow build
+  directory where it is generated, and materialize the preprocessor stream
+  before running the catalog converter. A missing generated input now fails
+  the build instead of being masked by a successful downstream pipeline, and
+  the final catalog is replaced atomically only after both stages succeed.
 - build: keep Autoconf's Flex link probe valid under strict C23 by selecting
   the POSIX declaration level required by generated scanners. Configure now
   checks the usable `LEX` result rather than merely the discovered executable,

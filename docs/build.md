@@ -106,8 +106,11 @@ write all merged locale data to the build tree. App Manager category
 directories are created there before their generated action entries. DtInfo's
 resource and message generators likewise use source-qualified templates, so a
 clean shadow build cannot silently turn a missing relative input into an empty
-application-default file. The maintained merge utility is compiled as C23 with
-a standard `int main` entry point under both GCC and Clang.
+application-default file. Its final catalog preprocessor resolves the generated
+message aggregate from the shadow directory, checks that stage before invoking
+the catalog converter, and publishes the result atomically. The maintained
+merge utility is compiled as C23 with a standard `int main` entry point under
+both GCC and Clang.
 
 The DtHelp generator and print helper search generated build interfaces before
 the checked-in private DtHelp headers. This preserves generated overrides while
