@@ -205,7 +205,10 @@ These paths register directly without function-pointer casts. In dtlogin, the
 network-address helpers are
 declared once in the shared interface, optional authentication initializers
 match the dispatch table's `void` contract, and chooser callbacks carry their
-complete Xt types. Dtappbuilder's browser, editor and generated-application
+complete Xt types. Local socket, chooser and XDMCP code relies on those shared
+host/address prototypes instead of shadowing them with `f()` declarations;
+dtcreate no longer retains an unused untyped signal-function pointer.
+Dtappbuilder's browser, editor and generated-application
 utilities now state their real contracts instead of relying on implicit
 arguments or an untyped undo slot. Its object verifier also installs a real
 `int`-argument signal handler for guarded memory probes, while its callable

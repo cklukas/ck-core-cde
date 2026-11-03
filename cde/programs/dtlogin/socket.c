@@ -112,7 +112,7 @@ int
 CreateWellKnownSockets (void)
 {
     struct sockaddr_in	sock_addr;
-    char		*name, *localHostname();
+    char		*name;
 
     if (request_port == 0)
 	    return 0;

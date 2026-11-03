@@ -53,7 +53,6 @@ extern void UxDoEditPixmap(Widget wid, char *fname);
 /* Initialize global values.                                                  */
 /******************************************************************************/
 Boolean bRegisteredSignal = FALSE;
-int     (*sigchildRoutine)();
 
 /******************************************************************************/
 /* activateCB_open_FindSet - Callback for the "Find Set" button on            */

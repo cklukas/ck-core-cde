@@ -199,7 +199,7 @@ FormatChooserArgument (
 	{
 	    char *port;
 	    int portlen;
-	    ARRAY8Ptr localAddress, getLocalAddress ();
+	    ARRAY8Ptr localAddress;
 
 	    port = NetaddrPort((XdmcpNetaddr)addr_buf, &portlen);
 	    result_buf[0] = netfamily >> 8;

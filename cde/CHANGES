@@ -12,7 +12,9 @@
   registrations, type its icon-selector callback table and directory filter,
   type dtlogin's saved X I/O and signal handlers and language enumerator table,
   and use its shared
-  environment/address interfaces consistently; use the standard stdio
+  environment/address interfaces consistently, remove redundant local
+  shadow declarations for its shared host/address helpers, and drop an unused
+  untyped dtcreate signal-function slot; use the standard stdio
   declarations and exact non-returning Xt error-handler contract there;
   make dtcreate's generated registrations and callback boundaries use
   `XtCallbackProc` directly instead of casting toolkit-specific record types;

@@ -472,7 +472,7 @@ NetworkAddressToName(CARD16 connectionType, ARRAY8Ptr connectionAddress, CARD16 
 	    CARD8		*data;
 	    struct hostent	*hostent;
 	    char		*name;
-	    char		*localhost, *localHostname();
+	    char		*localhost;
 
 	    data = connectionAddress->data;
 	    hostent = gethostbyaddr ((char *)data,
