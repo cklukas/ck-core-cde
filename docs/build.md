@@ -446,6 +446,8 @@ data directly, so all help registrations use typed callback entries without
 casts.
 DtCm's menus, editors, browsers and dialogs likewise register the shared
 calendar help callback directly through its exact Xt contract.
+Its appointment, group, to-do and standalone-editor drag-motion hooks carry
+Xt's complete event-handler contract.
 DtWidget's editor translation table stores its complete four-argument Xt action
 implementations directly, allowing the compiler to check every public and
 internal editor action.

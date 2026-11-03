@@ -1218,7 +1218,7 @@ ge_quit_handler(Widget w, XtPointer cdata, XtPointer data) {
 
 static void
 FormGroupApptDragMotionHandler(Widget dragInitiator, XtPointer clientData,
-			       XEvent *event) {
+			       XEvent *event, Boolean *continueToDispatch) {
         int             diffX, diffY;
         Calendar        *c = (Calendar *) clientData;
         GEditor         *ge = (GEditor *) c->geditor;
@@ -1514,7 +1514,7 @@ ge_make_editor(Calendar *c) {
 	XmStringFree(xmstr);
 
         XtAddEventHandler(XtParent(ge->drag_source), Button1MotionMask, False,
-                (XtEventHandler)FormGroupApptDragMotionHandler, (XtPointer) c);
+                FormGroupApptDragMotionHandler, (XtPointer) c);
 
 	XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(c->frame)), 
 			"enableBtn1Transfer",   &btn1_transfer, 
@@ -1524,7 +1524,7 @@ ge_make_editor(Calendar *c) {
 	if ((Boolean)btn1_transfer != True)
         	XtAddEventHandler(XtParent(ge->drag_source), 
 				Button2MotionMask, False,
-                		(XtEventHandler)FormGroupApptDragMotionHandler,
+					FormGroupApptDragMotionHandler,
 				(XtPointer) c);
 
         if (p->drag_icon_xbm)

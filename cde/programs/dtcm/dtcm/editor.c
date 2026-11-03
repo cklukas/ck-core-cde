@@ -675,7 +675,8 @@ void
 FormApptDragMotionHandler(
         Widget          dragInitiator,
         XtPointer       clientData,
-        XEvent         *event)
+        XEvent         *event,
+        Boolean        *continueToDispatch)
 {
         int             diffX, diffY;
         Calendar	*c = (Calendar *) clientData;
@@ -967,7 +968,7 @@ e_make_editor(Calendar *c)
 	XmStringFree(xmstr);
 
         XtAddEventHandler(XtParent(e->drag_source), Button1MotionMask, False,
-                (XtEventHandler)FormApptDragMotionHandler, (XtPointer) c);
+                FormApptDragMotionHandler, (XtPointer) c);
 
 	XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(c->frame)), 
 		"enableBtn1Transfer", 	&btn1_transfer, 
@@ -977,7 +978,7 @@ e_make_editor(Calendar *c)
 	if ((Boolean)btn1_transfer != True) {
         	XtAddEventHandler(XtParent(e->drag_source), 
 				Button2MotionMask, False, 
-				(XtEventHandler)FormApptDragMotionHandler, 
+				FormApptDragMotionHandler,
 				(XtPointer) c);
 	}
 
