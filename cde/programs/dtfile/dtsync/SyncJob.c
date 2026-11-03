@@ -224,6 +224,13 @@ static ckfe_api_status open_root(ckfe_engine *engine, const char *path,
 static int private_journal(SyncJob *s, SyncView *v, unsigned char id[16])
 {
     if (!s->home || s->home[0]!='/') return 0;
+    char journal[sizeof(v->journal)];
+    int length=snprintf(journal,sizeof(journal),"%s/.dtfile-operations",s->home);
+    if (length<0 || (size_t)length>=sizeof(journal)) {
+        v->journal[0]=0;
+        snprintf(v->error,sizeof(v->error),"Operation journal directory path is too long.");
+        return 0;
+    }
     int random=open("/dev/urandom",O_RDONLY|O_CLOEXEC);
     if (random<0) return 0;
     size_t got=0;
@@ -246,8 +253,8 @@ static int private_journal(SyncJob *s, SyncView *v, unsigned char id[16])
     if (close(state)!=0) safe=0;
     if (close(home)!=0) safe=0;
     if (!safe) return 0;
-    int n=snprintf(v->journal,sizeof(v->journal),"%s/.dtfile-operations",s->home);
-    return n>0 && (size_t)n<sizeof(v->journal);
+    memcpy(v->journal,journal,(size_t)length+1);
+    return 1;
 }
 static void *worker(void *arg)
 {

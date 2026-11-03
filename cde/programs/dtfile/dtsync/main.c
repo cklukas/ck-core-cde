@@ -42,7 +42,7 @@ static nl_catd catalog=(nl_catd)-1;
 #endif
 typedef struct {
     XtAppContext context;
-    Widget shell, notebook, setup, source, destination, list, details, status, rules_list;
+    Widget shell, notebook, setup, source, destination, list, details, diagnostics, status, rules_list;
     Widget compare, review, execute, pause, cancel, previous, next, remove_rule;
     Widget new_name, zero, retain, size_min, size_max, date_after, date_before;
     Widget choice_menu[23], class_menu[15];
@@ -59,7 +59,7 @@ typedef struct {
     uint64_t rename_row;
     unsigned rename_selection_count;
     Widget rule_page;
-    char last_error[512], command_notice[512];
+    char command_notice[512], diagnostics_text[12288];
     uint64_t command_notice_generation;
     uint64_t feedback_selection[SYNC_PAGE_SIZE];
     unsigned feedback_selection_count;
@@ -82,6 +82,7 @@ typedef struct {
 static const uint32_t profiles[]={CKFSP_COMPARE,CKFSP_COPY,CKFSP_UPDATE,CKFSP_MISSING_ONLY,CKFSP_SYNC,CKFSP_MIRROR};
 static unsigned selected_rows(SyncWindow *,uint64_t [SYNC_PAGE_SIZE],int *);
 static void render_rules(SyncWindow *);
+static void render_diagnostics(SyncWindow *);
 static const char *choice_label(unsigned n)
 {
     static const char *const names[]={"Ask / defer","Use source / replace target","Keep target / skip existing",
@@ -154,6 +155,7 @@ static void clear_command_notice(SyncWindow *w)
     w->command_notice[0]=0; w->command_notice_generation=0;
     if (visible && !w->job && !w->closing && w->status)
         notify(w,M(78,"Choose folders and an operation, then compare. Review matching rules before applying changes."));
+    if (visible && !w->job) render_diagnostics(w);
 }
 static void command_notice(SyncWindow *w,const char *text)
 {
@@ -162,12 +164,14 @@ static void command_notice(SyncWindow *w,const char *text)
     int first;
     w->feedback_selection_count=w->list?selected_rows(w,w->feedback_selection,&first):0;
     if (command_notice_ready(w)) notify(w,w->command_notice);
+    if (!w->job) render_diagnostics(w);
 }
 static void progress_notice(SyncWindow *w,const char *message)
 {
     char text[1024];
     const char *recovery=w->job && w->view->snapshot.recovery_required?M(242,"Recovery required"):"";
     snprintf(text,sizeof(text),"%s%s%s",message,*recovery?"\n":"",recovery); notify(w,text);
+    render_diagnostics(w);
 }
 static void rule_input_changed(Widget widget,XtPointer data,XtPointer call)
 {
@@ -408,6 +412,56 @@ static void detail_line(char *text,size_t capacity,const char *title,const char 
     size_t used=strlen(text);
     if (used<capacity) snprintf(text+used,capacity-used,"%s: %s\n",title,value);
 }
+/* A full worker journal fits after worst-case escaping, including when a
+ * snapshot lacks a terminator. Display text is never passed back as a path. */
+static void journal_text(const SyncView *view,char out[SYNC_DISPLAY_PATH*4+1])
+{
+    static const char hex[]="0123456789abcdef";
+    size_t used=0,n=strnlen(view->journal,sizeof(view->journal));
+    for (size_t i=0;i<n;++i) {
+        unsigned char byte=(unsigned char)view->journal[i];
+        if (byte>=32 && byte<127 && byte!='\\') out[used++]=(char)byte;
+        else { out[used++]='\\'; out[used++]='x'; out[used++]=hex[byte>>4]; out[used++]=hex[byte&15]; }
+    }
+    out[used]=0;
+}
+static void render_diagnostics(SyncWindow *w)
+{
+    if (!w->diagnostics) return;
+    const SyncView *v=w->view;
+    char text[sizeof(w->diagnostics_text)]={0};
+    if (!w->job) {
+        snprintf(text,sizeof(text),"%s\n",w->closing?M(313,"Closing - finishing safe cleanup..."):
+            M(317,"No operation is running. Compare folders to obtain operation diagnostics."));
+        if (!w->closing && w->command_notice[0]) detail_line(text,sizeof(text),M(318,"Input message"),w->command_notice);
+    } else {
+        const char *state=v->snapshot.state<CKFET_COMPLETE && v->snapshot.paused?
+            M(38,"Paused"):state_label(v->snapshot.state);
+        int pause_pending=0;
+        if (w->closing) state=M(313,"Closing - finishing safe cleanup...");
+        else if (w->recompare) state=M(260,"Preparing a fresh comparison...");
+        else if ((w->cancel_requested || v->settling) && !v->finished && !v->stopped)
+            state=M(35,"Cancelling - finishing safe cleanup...");
+        else if (v->snapshot.state>=CKFET_COMPLETE && !v->drained && !v->stopped)
+            state=M(257,"Finalizing the operation and releasing native resources...");
+        else pause_pending=v->snapshot.state<CKFET_COMPLETE && v->snapshot.pause_requested && !v->snapshot.paused;
+        char shown_state[1024];
+        snprintf(shown_state,sizeof(shown_state),"%s%s",state,pause_pending?M(39," (pause requested)"):"");
+        detail_line(text,sizeof(text),M(320,"Operation state"),shown_state);
+        if (v->snapshot.recovery_required) detail_line(text,sizeof(text),M(242,"Recovery required"),M(248,"Yes"));
+        if (v->error[0]) detail_line(text,sizeof(text),M(321,"Operation message"),v->error);
+        if (v->journal[0]) {
+            char journal[SYNC_DISPLAY_PATH*4+1]; journal_text(v,journal);
+            detail_line(text,sizeof(text),M(14,"Journal directory"),journal);
+        }
+    }
+    /* Preserve selection, insertion position and scrolling while polling an
+     * unchanged report. Row inspection has no ownership of this text. */
+    if (strcmp(w->diagnostics_text,text)) {
+        snprintf(w->diagnostics_text,sizeof(w->diagnostics_text),"%s",text);
+        XmTextSetString(w->diagnostics,text);
+    }
+}
 static void selection_changed(Widget widget,XtPointer data,XtPointer call)
 {
     (void)widget; SyncWindow *w=data; uint64_t ids[SYNC_PAGE_SIZE]; int first;
@@ -463,7 +517,8 @@ static void selection_changed(Widget widget,XtPointer data,XtPointer call)
     }
     if (r->recovery_required) detail_line(text,sizeof(text),M(242,"Recovery required"),M(248,"Yes"));
     if (r->has_journal || r->has_retention_journal || row->journal_name[0] || row->staging_name[0] || r->recovery_required) {
-        detail_line(text,sizeof(text),M(14,"Journal directory"),w->view->journal);
+        char journal[SYNC_DISPLAY_PATH*4+1]; journal_text(w->view,journal);
+        detail_line(text,sizeof(text),M(14,"Journal directory"),journal);
         if (r->has_journal) detail_line(text,sizeof(text),M(246,"Operation journal identifier"),journal_id);
         if (r->has_retention_journal) detail_line(text,sizeof(text),M(247,"Retained-target journal identifier"),retention_id);
     }
@@ -604,10 +659,11 @@ static void reset_result_view(SyncWindow *w)
         if (w->rules[i].scope==CKFET_SCOPE_JOB) w->rules[reusable++]=w->rules[i];
         else free(w->rules[i].subtree);
     }
-    w->rule_count=reusable; w->have_rendered=0; w->displayed_count=0; w->pause_requested=0; w->cancel_requested=0; w->last_error[0]=0;
+    w->rule_count=reusable; w->have_rendered=0; w->displayed_count=0; w->pause_requested=0; w->cancel_requested=0;
     w->rename_selection_count=0; w->rename_row=0; w->feedback_selection_count=0;
     w->dirty=1; w->setup_dirty=0; w->review_pending=0; w->execute_pending=0;
     memset(w->view,0,sizeof(*w->view));
+    render_diagnostics(w);
     XmListDeleteAllItems(w->rules_list); XmListDeleteAllItems(w->list);
     label(w->plan_summary,M(275,"Plan totals are not yet available."));
     label(w->page_info,M(286,"Comparison results are not yet available."));
@@ -944,7 +1000,7 @@ static void help(Widget widget,XtPointer data,XtPointer call)
     Widget dialog=XmCreateInformationDialog(w->shell,"folderHelp",NULL,0);
     XmString title=XmStringCreateLocalized((char *)M(281,"Help"));
     XtVaSetValues(dialog,XmNdialogTitle,title,NULL); XmStringFree(title);
-    const char *body=M(280,"Choose two folders and an operation, then Compare. Inspect the plan totals\nand select rows to see both versions and the proposed names.\n\nUse matching rules for one item, selected rows, a subtree or the whole job.\nReview rules after every edit. Saved profiles store preferences only;\nloading one always requires a fresh comparison and review.\n\nDisplayed \\xNN escapes retain original folder bytes until the field is edited.\nDate-only bounds use local midnight; UTC timestamps preserve exact bounds.\nPause and Cancel are requests. Closing waits for safe worker shutdown.");
+    const char *body=M(280,"Choose two folders and an operation, then Compare. Inspect the plan totals\nand select rows to see both versions and the proposed names.\n\nUse matching rules for one item, selected rows, a subtree or the whole job.\nReview rules after every edit. Saved profiles store preferences only;\nloading one always requires a fresh comparison and review.\n\nDisplayed \\xNN escapes retain original folder bytes until the field is edited.\nDate-only bounds use local midnight; UTC timestamps preserve exact bounds.\nOperation diagnostics keeps operation messages and the journal location separate\nfrom row details. Pause and Cancel are requests. Closing waits for safe shutdown.");
     XmString text=XmStringCreateLocalized((char *)body);
     XtVaSetValues(dialog,XmNmessageString,text,XmNautoUnmanage,False,NULL); XmStringFree(text);
     XtUnmanageChild(XmMessageBoxGetChild(dialog,XmDIALOG_HELP_BUTTON));
@@ -1031,16 +1087,9 @@ static void tick(XtPointer data,XtIntervalId *id)
             w->rendered_names_valid=v->names_valid; w->have_rendered=1;
         }
         char text[1024],backend_error[1024]={0};
-        if (v->error[0]) {
+        if (v->error[0])
             snprintf(backend_error,sizeof(backend_error),"%s\n%s",
-                M(98,"Operation needs attention. See details and recovery information."),v->error);
-            if (strcmp(w->last_error,v->error)) {
-                char details[4096];
-                if (v->journal[0]) snprintf(details,sizeof(details),"%s\n\n%s: %s",v->error,M(14,"Journal directory"),v->journal);
-                else snprintf(details,sizeof(details),"%s",v->error);
-                XmTextSetString(w->details,details); snprintf(w->last_error,sizeof(w->last_error),"%s",v->error);
-            }
-        }
+                M(319,"Operation needs attention. Open Operation diagnostics."),v->error);
         const char *recovery=v->snapshot.recovery_required?M(242,"Recovery required"):"";
         if (w->closing)
             snprintf(text,sizeof(text),"%s%s%s",M(313,"Closing - finishing safe cleanup..."),*recovery?"\n":"",recovery);
@@ -1066,6 +1115,7 @@ static void tick(XtPointer data,XtIntervalId *id)
         notify(w,text);
         if (w->recompare && !w->closing && v->stopped) { SyncJobDestroy(w->job); w->job=NULL; w->recompare=0; compare(NULL,w,NULL); }
     }
+    render_diagnostics(w);
     profile_controls(w);
     if (w->closing) {
         if (w->job && SyncJobDestroy(w->job)) w->job=NULL;
@@ -1116,15 +1166,22 @@ int main(int argc,char **argv)
         XmNtopAttachment,XmATTACH_WIDGET,XmNtopWidget,profile_bar,XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,
         XmNbottomAttachment,XmATTACH_WIDGET,XmNbottomWidget,w.status,XmNbackPagePlacement,XmTOP_RIGHT,
         XmNorientation,XmVERTICAL,XmNbindingType,XmNONE,XmNcurrentPageNumber,1,NULL);
-    const char *tabs[]={M(86,"Folders and options"),M(87,"Comparison and results"),M(88,"Matching rules")};
-    Widget pages_widgets[3];
-    for (int page=1;page<=3;++page) {
-        Widget viewport=XtVaCreateManagedWidget("pageViewport",xmScrolledWindowWidgetClass,w.notebook,
-            XmNnotebookChildType,XmPAGE,XmNpageNumber,page,XmNscrollingPolicy,XmAUTOMATIC,
-            XmNvisualPolicy,XmCONSTANT,XmNscrollBarDisplayPolicy,XmAS_NEEDED,NULL);
-        if (page==1) w.setup_viewport=viewport;
-        pages_widgets[page-1]=XtVaCreateManagedWidget("page",xmRowColumnWidgetClass,viewport,
-            XmNmarginWidth,8,XmNmarginHeight,8,NULL);
+    const char *tabs[]={M(86,"Folders and options"),M(87,"Comparison and results"),M(88,"Matching rules"),M(316,"Operation diagnostics")};
+    Widget pages_widgets[4];
+    for (int page=1;page<=4;++page) {
+        if (page==4) {
+            /* The report uses its own scrollbars and fills the available page,
+             * rather than nesting a small preferred-size text inside a viewport. */
+            pages_widgets[page-1]=XtVaCreateManagedWidget("diagnosticsPage",xmFormWidgetClass,w.notebook,
+                XmNnotebookChildType,XmPAGE,XmNpageNumber,page,XmNmarginWidth,8,XmNmarginHeight,8,NULL);
+        } else {
+            Widget viewport=XtVaCreateManagedWidget("pageViewport",xmScrolledWindowWidgetClass,w.notebook,
+                XmNnotebookChildType,XmPAGE,XmNpageNumber,page,XmNscrollingPolicy,XmAUTOMATIC,
+                XmNvisualPolicy,XmCONSTANT,XmNscrollBarDisplayPolicy,XmAS_NEEDED,NULL);
+            if (page==1) w.setup_viewport=viewport;
+            pages_widgets[page-1]=XtVaCreateManagedWidget("page",xmRowColumnWidgetClass,viewport,
+                XmNmarginWidth,8,XmNmarginHeight,8,NULL);
+        }
         Widget tab=XtVaCreateManagedWidget("tab",xmPushButtonWidgetClass,w.notebook,XmNnotebookChildType,XmMAJOR_TAB,XmNpageNumber,page,NULL);
         label(tab,tabs[page-1]);
     }
@@ -1221,6 +1278,15 @@ int main(int argc,char **argv)
     XtSetArg(args[n],XmNeditMode,XmMULTI_LINE_EDIT);++n;
     XtSetArg(args[n],XmNwordWrap,True);++n; XtSetArg(args[n],XmNscrollHorizontal,False);++n;
     w.details=XmCreateScrolledText(comparison,"details",args,n); XtManageChild(w.details);
+    /* Independent, selectable operation report; inspecting a row never replaces it. */
+    n=0; XtSetArg(args[n],XmNrows,16);++n; XtSetArg(args[n],XmNcolumns,90);++n;
+    XtSetArg(args[n],XmNeditable,False);++n; XtSetArg(args[n],XmNeditMode,XmMULTI_LINE_EDIT);++n;
+    XtSetArg(args[n],XmNwordWrap,True);++n; XtSetArg(args[n],XmNscrollHorizontal,False);++n;
+    w.diagnostics=XmCreateScrolledText(pages_widgets[3],"operationDiagnostics",args,n);
+    XtVaSetValues(XtParent(w.diagnostics),XmNtopAttachment,XmATTACH_FORM,XmNbottomAttachment,XmATTACH_FORM,
+        XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,NULL);
+    XtManageChild(w.diagnostics);
+    render_diagnostics(&w);
     notify(&w,M(78,"Choose folders and an operation, then compare. Review matching rules before applying changes."));
     set_native_path(&w,w.source,source); set_native_path(&w,w.destination,destination);
     w.compare=button(actions,"compare",M(60,"Compare folders"),compare,&w);

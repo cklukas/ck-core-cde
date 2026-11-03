@@ -1,4 +1,8 @@
 2026-11-03
+- dtfile_sync: keep operation messages and journal locations on a separate
+  diagnostics page while inspecting rows; preserve text selection during idle
+  polling, escape native journal names, and reject oversized journal paths
+  without reporting a truncated recovery location.
 - dtfile_sync: load and delete the selected saved profile independently of the
   editable Save name; preserve selection by name through preferences refreshes
   and keep unavailable profile actions disabled while workers are busy.

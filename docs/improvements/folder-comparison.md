@@ -16,9 +16,10 @@ perform file operations through the existing copy/move helper. Choosing **Copy**
 in this comparison window selects a proposed policy; it does not run that legacy
 copy command.
 
-![Native folder comparison with paged results and a disabled Apply action](../images/dtfile-folder-comparison.png)
+![Native comparison retains row details after a rejected rule review](../images/dtfile-folder-comparison.png)
 
-Read-only comparison in the native helper. Apply remains disabled.
+A rejected rule review leaves the comparison and row details available.
+Apply remains disabled.
 
 ## Enable the optional helper
 
@@ -201,6 +202,25 @@ unreadable or unsafe stores are reported and retained, not silently reset. A pos
 failure reports uncertain durability. Volumes mounted with ownership disabled
 are refused for preferences; this does not imply that every filesystem's
 security semantics have been qualified.
+
+## Operation diagnostics
+
+![Operation diagnostics remain available after inspecting another row](../images/dtfile-operation-diagnostics.png)
+
+The **Operation diagnostics** page keeps the current operation state, worker
+message, recovery requirement and reported journal directory separate from row
+details. Selecting another row or clearing the row selection does not erase this
+report. Unchanged polling preserves text selection and scrolling so you can
+copy a message. A new comparison starts a fresh report; a successful new review
+replaces an older rejection with the current state.
+
+Journal directories use the same unambiguous `\xNN` byte escaping as other
+native paths. These labels are display text, never paths to paste back into a
+file operation without understanding the escapes. The journal directory path
+currently supports at most 2,047 native bytes, including the
+`/.dtfile-operations` suffix.
+A longer path fails before creating that journal container and does not display
+a truncated location as recovery information.
 
 ## Native names and cancellation
 

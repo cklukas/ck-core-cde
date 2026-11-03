@@ -1,0 +1,138 @@
+{
+  "topic": "Keep operation diagnostics separate from row inspection and report journal locations reliably",
+  "base_revision": "cda076f58a1073ed3a6b97893e87bc81c7da6f9f",
+  "native_sdk_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "native_sdk_version": "0.3.0",
+  "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "native_regression": {
+    "build_start_utc": "2026-11-03T18:56:24.239747+00:00",
+    "build_end_utc": "2026-11-03T18:56:25.313097+00:00",
+    "build_seconds": 1.0733805119525641,
+    "run_start_utc": "2026-11-03T18:56:25.313713+00:00",
+    "run_end_utc": "2026-11-03T18:56:36.562477+00:00",
+    "run_seconds": 11.248786081094295,
+    "exit_code": 0,
+    "passed": true,
+    "fixture_unchanged": true,
+    "timeout_failures": [],
+    "source_hashes": {
+      "SyncDates.h": "dd6d805135b1b1f2d6119ba8048ad4b905c63b06b86e25ad03f5c74dc2e00060",
+      "dtfile_sync.msg": "ea4e92638621b0dfb1e83947cdd6111f4cb71478a34b4a976b8f711cb387edca",
+      "SyncProfiles.c": "6634274984eadaa5a90f5823a2dee775c5cf4b1f8a1fe7be0d3505564234bb56",
+      "SyncProfiles.h": "2fe33ff5a6715867613561e73f4ee604ce4cfbe9e27b1090a2579339577ab340",
+      "main.c": "c79a3e21c093fa126a68978bf8391ccfc0c82217ae1cf524ec88dace1b1e1b4e",
+      "SyncPrivateStorage.h": "be908fd817a30ccebd919acedb28c5d7ba23844320e8ce18e1ebcf2f5c5ef4ae",
+      "SyncJob.h": "955ea1f34200ed74ec190416c31c5ec56edd1f421da3df52722f0c596c6a0451",
+      "SyncJob.c": "33d55a39cad430f97011a72e264d0d6e34420bda0c3f77a6108bdb0990d78f1d"
+    }
+  },
+  "baseline_control": {
+    "revision": "cda076f58a1073ed3a6b97893e87bc81c7da6f9f",
+    "exit_code": 1,
+    "expected_failures": [
+      "Operation errors replace row details and no independent diagnostics page exists",
+      "Overlong HOME publishes a truncated journal location after creating its container"
+    ]
+  },
+  "sanitizer": {
+    "start": "2026-11-03T18:56:36.646172+00:00",
+    "end": "2026-11-03T18:56:52.519572+00:00",
+    "seconds": 15.873402540106326,
+    "exit": 0,
+    "fixture_unchanged": true,
+    "build_seconds": 3.3785890000872314,
+    "run_seconds": 12.22125234385021,
+    "source_hashes": {
+      "SyncDates.h": "dd6d805135b1b1f2d6119ba8048ad4b905c63b06b86e25ad03f5c74dc2e00060",
+      "dtfile_sync.msg": "ea4e92638621b0dfb1e83947cdd6111f4cb71478a34b4a976b8f711cb387edca",
+      "SyncProfiles.c": "6634274984eadaa5a90f5823a2dee775c5cf4b1f8a1fe7be0d3505564234bb56",
+      "SyncProfiles.h": "2fe33ff5a6715867613561e73f4ee604ce4cfbe9e27b1090a2579339577ab340",
+      "main.c": "c79a3e21c093fa126a68978bf8391ccfc0c82217ae1cf524ec88dace1b1e1b4e",
+      "SyncPrivateStorage.h": "be908fd817a30ccebd919acedb28c5d7ba23844320e8ce18e1ebcf2f5c5ef4ae",
+      "SyncJob.h": "955ea1f34200ed74ec190416c31c5ec56edd1f421da3df52722f0c596c6a0451",
+      "SyncJob.c": "33d55a39cad430f97011a72e264d0d6e34420bda0c3f77a6108bdb0990d78f1d"
+    },
+    "result_path": "/home/klukas/.cde-validation-20261102-01/operation-diagnostics-asan-layout-01/result.json",
+    "result_sha256": "5299d8a7a06956eb0903c52875b63a7fbbf6317250cc29249834feb35d6bb000",
+    "log_sha256": "c577bfc31418d6312ed24ba951e3c0c89f1f2d73785ecabb5a45546de3a7cf87"
+  },
+  "sanitizer_scope": "CDE UI and worker sources instrumented; installed SDK/Motif unchanged. Toolkit process-wide leak detection disabled; address/undefined errors fatal.",
+  "controller_profiles": {
+    "start": "2026-11-03T18:51:57.084376+00:00",
+    "end": "2026-11-03T18:52:08.873413+00:00",
+    "seconds": 11.789061407092959,
+    "exit": 0,
+    "log_sha256": "41eb4f3c6a008e63cb1cc6fd237750f87c1f2c044e8a4960480e5da754cbc892"
+  },
+  "coverage": [
+    "Real SDK rejects incompatible Copy name-side review; error and journal remain accessible after inspecting another row",
+    "Row details stay independent while real scheduled polling preserves diagnostic text selection",
+    "Successful new review, fresh comparison and no-HOME admission failure replace old operation context",
+    "Private HOME with newline, backslash and UTF-8 bytes keeps raw worker bytes while diagnostics display escaped bytes",
+    "Real existing 2118-byte HOME is refused before journal container creation; no truncated recovery location is published",
+    "All previous saved-profile identity, atomic load, rename review, feedback, setup and retry regressions remain",
+    "Controller/profile checkpoint: 70 actual ordinary copies with content/mode/mtime, cancellation, drain, private storage and persistence checks"
+  ],
+  "deep_home_fixture": {
+    "kind": "actual",
+    "native_path_max": 4096,
+    "home_bytes": 2118,
+    "materialized": true
+  },
+  "script_sha256": "f51b20c740ac220a7b6ca9db4842d957090d4e963094e9d2f04097969731e63c",
+  "scope": "CDE UI and journal admission only. Installed backend/toolkit unchanged, UI Apply remains disabled; controller operations use isolated disposable fixtures.",
+  "checks": [
+    "Native candidate PASS; exact baseline expected FAIL",
+    "Consumer ASan/UBSan UI PASS with no timeouts",
+    "Controller and preferences checkpoint PASS",
+    "Strict docs: 16 pages PASS; Python/catalog/diff checks PASS",
+    "Final read-only review: no actionable findings"
+  ],
+  "layout_validation": "The normal window revealed a small preferred-size report viewport. The final Form page fills the available notebook area; the affected native UI and sanitizer checks were rerun. Unchanged worker/controller results retained.",
+  "normal_ui": {
+    "actual_process_runtime_maps_verified": true,
+    "executable_sha256": "f94e6238eb4fcb5620a3bd71aaa67e0ceb09aac5067d1553d62b88fc80dafab0",
+    "catalog_sha256": "0322759f1e801cbe801c55a31ca6ac4eca42ad7712403df4965218a67c0d8e77",
+    "main_inspected": [
+      "operation-diagnostics-after-row-browse.png",
+      "operation-diagnostics-800x600.png",
+      "comparison-return-preserved.png"
+    ],
+    "screenshots": {
+      "operation-diagnostics-after-row-browse.png": "b706f9f094182aebe6398c393abc87f340cc9fbe559831de1f631bbf49d6d400",
+      "operation-diagnostics-800x600.png": "c0124354fb6deefca15fcfeba0a9aafb8ba452ac4624c37f42a186c8fb62335c",
+      "comparison-return-preserved.png": "5c043397e6133c26dbe6d624ba803a3ea41c50faad8fcf0c01371991390000be"
+    },
+    "full_area_and_800x600_inspected": true,
+    "fixture_files_unchanged": 71,
+    "graceful_exit": 0,
+    "own_helper_wm_xvfb_gone": true,
+    "other_xvfb_preserved": true,
+    "final_receipt_sha256": "f005b8f82027f9e7b9e7804af45d22bc4b69694d5eb8a581aec16896e5fb830c"
+  },
+  "incremental_build": {
+    "start": "2026-11-03T18:57:32.720232+00:00",
+    "end": "2026-11-03T18:57:33.321243+00:00",
+    "elapsed_seconds": 0.600992590887472,
+    "jobs": 1,
+    "inputs": {
+      "SyncProfiles.c": "6634274984eadaa5a90f5823a2dee775c5cf4b1f8a1fe7be0d3505564234bb56",
+      "SyncJob.h": "955ea1f34200ed74ec190416c31c5ec56edd1f421da3df52722f0c596c6a0451",
+      "SyncPrivateStorage.h": "be908fd817a30ccebd919acedb28c5d7ba23844320e8ce18e1ebcf2f5c5ef4ae",
+      "SyncDates.h": "dd6d805135b1b1f2d6119ba8048ad4b905c63b06b86e25ad03f5c74dc2e00060",
+      "main.c": "c79a3e21c093fa126a68978bf8391ccfc0c82217ae1cf524ec88dace1b1e1b4e",
+      "SyncProfiles.h": "2fe33ff5a6715867613561e73f4ee604ce4cfbe9e27b1090a2579339577ab340",
+      "dtfile_sync.msg": "ea4e92638621b0dfb1e83947cdd6111f4cb71478a34b4a976b8f711cb387edca",
+      "SyncJob.c": "33d55a39cad430f97011a72e264d0d6e34420bda0c3f77a6108bdb0990d78f1d"
+    },
+    "outputs": {
+      "/home/klukas/tmp/cde-hardening-20261102-01/operation-diagnostics-layout-native-20261103-02/normal-gui-build/dtfile_sync": "f94e6238eb4fcb5620a3bd71aaa67e0ceb09aac5067d1553d62b88fc80dafab0",
+      "/home/klukas/tmp/cde-hardening-20261102-01/operation-diagnostics-layout-native-20261103-02/normal-gui-build/dtfile_sync.cat": "0322759f1e801cbe801c55a31ca6ac4eca42ad7712403df4965218a67c0d8e77"
+    },
+    "closure": "Final layout compiled main.c and relinked only; verified identical SyncJob and SyncProfiles objects and catalog reused. Initial worker change was separately rebuilt and passed controller/profile checks."
+  },
+  "documentation_images": {
+    "docs/images/dtfile-folder-comparison.png": "5c043397e6133c26dbe6d624ba803a3ea41c50faad8fcf0c01371991390000be",
+    "docs/images/dtfile-operation-diagnostics.png": "b706f9f094182aebe6398c393abc87f340cc9fbe559831de1f631bbf49d6d400"
+  }
+}
