@@ -1,0 +1,21 @@
+{
+  "topic": "Discard stale comparison authority after failed replacement startup",
+  "base_revision": "45f02f940b9beda222045b54fdd7c9f794c21cff",
+  "regression_sha256": "88c42c1d1a08787e7b879f580adc56b60213c0fe941e9f747f6f8e13658c316d",
+  "baseline_expected_failure": true,
+  "candidate_passed": true,
+  "build_seconds": {
+    "control": 0.7670659271534532,
+    "candidate": 0.7169321409892291
+  },
+  "run_seconds": {
+    "control": 0.5147813048679382,
+    "candidate": 0.76523811602965
+  },
+  "timeouts": [],
+  "fixture_bytes_unchanged": true,
+  "native_gui_qualification": "comparison-retry-native-20261103-01/comparison-retry-final-qualification.json",
+  "sdk_version": "0.3.0",
+  "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "scope": "Preview startup and retry only. Apply remains disabled; no Root0.4 qualification."
+}

@@ -242,3 +242,5 @@ $set 1
 280 Choose two folders and an operation, then Compare. Inspect the plan totals\nand select rows to see both versions and the proposed names.\n\nUse matching rules for one item, selected rows, a subtree or the whole job.\nReview rules after every edit. Saved profiles store preferences only;\nloading one always requires a fresh comparison and review.\n\nDisplayed \\xNN escapes retain original folder bytes until the field is edited.\nDate-only bounds use local midnight; UTC timestamps preserve exact bounds.\nPause and Cancel are requests. Closing waits for safe worker shutdown.
 281 Help
 282 Cannot read the selected folder name.
+286 Comparison results are not yet available.
+287 No comparison has started.

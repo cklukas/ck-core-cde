@@ -11,7 +11,8 @@ bin_PROGRAMS = dtfile
 EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/trash-metadata.c tests/check-copy-transfer.py tests/copy-transfer.c \
              tests/copy-paths.c tests/check-operation-outcome.py \
-             tests/check-sync-controller.py tests/sync-controller.c SyncFeature.h.in
+             tests/check-sync-controller.py tests/sync-controller.c \
+             tests/check-sync-retry-ui.py SyncFeature.h.in
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-writer.py

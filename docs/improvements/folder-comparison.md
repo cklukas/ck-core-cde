@@ -73,6 +73,13 @@ the actual screen so the bottom action buttons remain visible.
    names. Plan totals describe proposed copies, new folders, replacements,
    removals, skipped/protected objects and bytes; incomplete totals are labelled.
 
+Starting another comparison clears the previous plan, rows, page information,
+details and row-scoped rules after the old worker has stopped. Reusable job
+preferences are retained and require a fresh review. If setup validation or
+worker startup fails, the folder options and **Compare folders** remain
+available so you can correct the problem and retry; old results are not shown
+as the failed attempt's results.
+
 Comparison reads source/destination contents and metadata. A missing attribute,
 unreadable object or unsupported capability is reported as unknown or
 unsupported. Equal size/time is not a claim of identical content; inspect the
@@ -182,6 +189,22 @@ The installed-library controller fixture verifies native inventory and paging,
 review receipts, transport failures, cancellation and an actual ordinary copy
 inside disposable fixtures. The profile fixture exercises the production
 parser, concurrent saves, privacy and atomic persistence.
+
+The native retry regression additionally needs Xvfb, `xvfb-run`, `xauth` and the
+installed Motif and filesystem SDK prefixes. From the configured `cde/`
+directory, run it on a private X display with a new work directory:
+
+```sh
+xvfb-run -a python3 programs/dtfile/tests/check-sync-retry-ui.py \
+  --fs-prefix /path/to/filesystem-prefix \
+  --motif-prefix /path/to/motif-prefix \
+  --work-dir "$TMPDIR/dtfile-retry-check"
+```
+
+It uses real widgets, production callbacks and the installed backend to compare,
+fail a Copy preview with `HOME` absent, and retry Compare. The checks include
+cleared rows/details/actions and retaining only reusable job preferences. It
+does not apply filesystem changes; `result.json` and logs record the run.
 
 Set `TMPDIR` explicitly. Private test homes must be on an ownership-enforcing
 filesystem with trusted ancestors; if that differs from the build's temporary

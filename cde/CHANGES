@@ -1,4 +1,8 @@
 2026-11-03
+- dtfile_sync: clear the previous comparison and row-scoped rules before
+  validating a replacement comparison; keep folder options and Compare usable
+  after startup fails, while retaining reusable job preferences for fresh review.
+  Exercise failure and retry through native Xt callbacks in the optional SDK CI.
 - DtHelp: give image-pipeline initialization, cleanup, destruction, execution,
   conversion and object-lifecycle callbacks exact C23 contracts; correct legacy
   cleanup routines that were declared with parameters different from the

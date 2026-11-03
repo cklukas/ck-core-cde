@@ -100,6 +100,10 @@ jobs:
           (cd cde && ./configure --with-ck-core-fs CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0' && \
             make -j4 -C programs/dtfile && \
             make -j1 -C programs/localized/C/msg dtfile_sync.cat && \
-            make -j1 -C programs/dtfile check)
+            make -j1 -C programs/dtfile check && \
+            xvfb-run -a -s '-screen 0 1280x900x24 -nolisten tcp' \
+              python3 programs/dtfile/tests/check-sync-retry-ui.py \
+                --fs-prefix "$fs_prefix" --motif-prefix "$motif_prefix" \
+                --work-dir "$private_fixture/retry-ui")
 pages:
   path: public
