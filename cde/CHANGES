@@ -1,4 +1,7 @@
 2026-11-03
+- CI: make network-isolated rpi4 jobs independent of the runner host's Git
+  system configuration, keeping checkout metadata and archive creation inside
+  the job sandbox.
 - dtksh: ship the checksum-pinned upstream ksh93 archive in Git checkouts as
   well as source distributions, allowing network-isolated builds and CI lanes
   to prepare the dependency without a download.

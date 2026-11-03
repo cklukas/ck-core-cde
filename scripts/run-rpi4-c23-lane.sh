@@ -2,6 +2,10 @@
 
 set -eu
 
+# Hosted jobs need no machine-wide Git policy, and their sandbox may deny
+# access to the runner host's system configuration path.
+export GIT_CONFIG_NOSYSTEM=1
+
 if test "$#" -ne 3; then
     echo "usage: $0 CC CXX LANE" >&2
     exit 2

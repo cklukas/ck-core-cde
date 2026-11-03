@@ -14,6 +14,7 @@ jobs:
     steps:
       - name: documentation-site
         script: |
+          export GIT_CONFIG_NOSYSTEM=1
           test -n "$TMPDIR"
           test -n "$CKGIT_SISTER_CK_GIT_HOSTING"
           run_id="$(git rev-parse HEAD)"
@@ -30,11 +31,13 @@ jobs:
     steps:
       - name: build-and-test-gcc-c23
         script: |
+          export GIT_CONFIG_NOSYSTEM=1
           scripts/run-rpi4-c23-lane.sh gcc-14 g++-14 gcc14
   - name: build-clang-c23
     steps:
       - name: build-and-test-clang-c23
         script: |
+          export GIT_CONFIG_NOSYSTEM=1
           scripts/run-rpi4-c23-lane.sh clang-19 clang++-19 clang19
 pages:
   path: public
