@@ -699,8 +699,6 @@ indirectAlias(
 }
 
 
-ARRAY8Ptr IndirectChoice ();
-
 int 
 ForEachMatchingIndirectHost(
         ARRAY8Ptr clientAddress,

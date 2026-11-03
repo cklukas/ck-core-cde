@@ -1,6 +1,6 @@
 MAINTAINERCLEANFILES = Makefile.in
 
-ABINCLUDES = ../include
+ABINCLUDES = $(top_srcdir)/programs/dtappbuilder/src/include
 
 EXTRA_DEFINES =  -D_POSIX_SOURCE=1
 
@@ -20,7 +20,8 @@ bin_PROGRAMS = dtcodegen
 
 noinst_DATA = dtcodegen.cat
 
-dtcodegen_CFLAGS = $(EXTRA_DEFINES) -I$(ABINCLUDES) -I../libABil
+dtcodegen_CFLAGS = $(EXTRA_DEFINES) -I$(ABINCLUDES) -I../libABil \
+	-I$(top_srcdir)/programs/dtappbuilder/src/libABil
 
 dtcodegen_LDADD = ../libABil/libABil.a  \
 		  ../libABobjXm/libABobjXm.a  \

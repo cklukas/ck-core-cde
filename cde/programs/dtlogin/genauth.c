@@ -264,9 +264,7 @@ GenerateAuthData (char *auth, int len)
     }
 #else
     {
-	long    time ();
-
-	ldata[0] = time ((long *) 0);
+	ldata[0] = time ((Time_t *) 0);
 	ldata[1] = getpid ();
     }
 #endif /* ITIMER_REAL */
@@ -411,9 +409,7 @@ InitCryptoKey( void )
       }
 #else
       {
-	long    time ();
-	
-	key[0] = time ((long *) 0);
+	key[0] = time ((Time_t *) 0);
 	key[1] = getpid ();
       }
 #endif

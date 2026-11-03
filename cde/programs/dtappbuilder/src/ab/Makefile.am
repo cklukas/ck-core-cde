@@ -4,7 +4,9 @@ MAINTAINERCLEANFILES = Makefile.in
 
 appdefaultsdir = $(CDE_INSTALLATION_TOP)/app-defaults/C
 
-ABINCLUDES = -I../include -I../include/ab_private -I../libABil
+ABINCLUDES = -I$(top_srcdir)/programs/dtappbuilder/src/include \
+	-I$(top_srcdir)/programs/dtappbuilder/src/include/ab_private \
+	-I$(top_srcdir)/programs/dtappbuilder/src/libABil
 
 bin_PROGRAMS = dtbuilder
 

@@ -31,11 +31,11 @@ CLEANFILES = $(CPP_TARGETS)
 cfgdir = $(CDE_INSTALLATION_TOP)/config
 dist_cfg_DATA = dtterm.ti
 
-Dtterm.ad: Dtterm.ad.src
+Dtterm.ad: $(srcdir)/Dtterm.ad.src
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=# $< > $@
 
-DtTermFallBackResources.c.src: Dtterm.ad.src
+DtTermFallBackResources.c.src: $(srcdir)/Dtterm.ad.src
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=# -DFALLBACK_RESOURCES $< > $@
 
@@ -43,9 +43,10 @@ DtTermFallBackResources.c: DtTermFallBackResources.c.src
 	$(RM) $@
 	./mkfallbk < DtTermFallBackResources.c.src > $@
 
-dtterm.ti: terminfoChecklist
+dtterm.ti: $(srcdir)/terminfoChecklist $(srcdir)/terminfoCreate
 	$(RM) $@
-	CPP="$(GENCPP)" $(SHELL) terminfoCreate < terminfoChecklist > $@
+	CPP="$(GENCPP)" $(SHELL) $(srcdir)/terminfoCreate \
+		< $(srcdir)/terminfoChecklist > $@
 
 install-exec-hook:
 if !HAS_UTEMPTER_LIBRARY

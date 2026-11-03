@@ -58,6 +58,9 @@
 #include <errno.h>
 #include <pwd.h>
 #include <string.h>
+#if defined(__linux__)
+#include <crypt.h>
+#endif
 #include <fcntl.h>
 
 #ifdef SIA
@@ -1696,7 +1699,6 @@ localAuthenticate(
 {
     struct passwd *pwent = NULL;
     char *p, *q;
-    char *crypt();
     Boolean rc = True;
     Boolean done = False;
     struct spwd *sp = NULL;
@@ -1788,7 +1790,6 @@ localAuthenticate(
 {
     register struct passwd *pwent;
     char *p, *q;
-    char *crypt();
     Boolean rc = True;
     Boolean done = False;
 
@@ -1940,7 +1941,6 @@ Authenticate(
 {
     register struct passwd *pwent;
     char *p, *q;
-    char *crypt();
     Boolean rc = True;
     Boolean done = False;
 

@@ -663,7 +663,10 @@ extern struct display * FindDisplayBySessionID(
 			CARD32 sessionID) ;
 
 extern void ForEachDisplay(
-			void (*f)()) ;
+			void (*f)(struct display *display)) ;
+extern ARRAY8Ptr IndirectChoice(
+			ARRAY8Ptr clientAddress,
+			CARD16 connectionType) ;
 extern struct display * NewDisplay(
 			char *name,
 			char *class) ;

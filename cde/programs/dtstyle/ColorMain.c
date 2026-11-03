@@ -226,7 +226,7 @@ static void colorEditorCB(
 
 static void allocNewColors(void);
 static Boolean ValidName( char *name) ;
-void loadDatabase();
+void loadDatabase(void);
 
 
 
