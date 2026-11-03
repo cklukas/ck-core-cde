@@ -150,30 +150,30 @@ static void Create(
                         Widget *return_widget,
                         XtPointer *dialog) ;
 static void InstallChange(
-                        FilterRec *filter_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void InstallClose(
-                        FilterRec *filter_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void Destroy(
-                        FilterRec *filter_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetValues(
-                        FilterRec *filter_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetDefaultValues( void ) ;
 static XtPointer GetResourceValues(
                         XrmDatabase data_base,
                         char **name_list) ;
 static void SetValues(
-                        FilterRec *filter_rec,
-                        FilterData *filter_data) ;
+                        XtPointer dialog,
+                        XtPointer values) ;
 static void WriteResourceValues(
                         DialogData *values,
                         int fd,
                         char **name_list) ;
 static void FreeValues(
-                        FilterData *filter_data) ;
+                        XtPointer values) ;
 static void DefaultCallback(
                         Widget w,
                         XtPointer client_data,
@@ -220,16 +220,16 @@ static DialogClass filterClassRec =
    resources,
    XtNumber(resources),
    Create,
-   (DialogInstallChangeProc) InstallChange,
-   (DialogInstallCloseProc) InstallClose,
-   (DialogDestroyProc) Destroy,
-   (DialogGetValuesProc) GetValues,
+   InstallChange,
+   InstallClose,
+   Destroy,
+   GetValues,
    GetDefaultValues,
    GetResourceValues,
-   (DialogSetValuesProc) SetValues,
+   SetValues,
    WriteResourceValues,
-   (DialogFreeValuesProc) FreeValues,
-   (DialogMapWindowProc) _DtGenericMapWindow,
+   FreeValues,
+   _DtGenericMapWindow,
    NULL,
 };
 
@@ -619,10 +619,11 @@ Create(
 
 static void
 InstallChange(
-        FilterRec *filter_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   FilterRec *filter_rec = dialog;
    FilterApply * apply_data;
 
 
@@ -655,10 +656,11 @@ InstallChange(
 
 static void
 InstallClose(
-        FilterRec *filter_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   FilterRec *filter_rec = dialog;
    Atom delete_window_atom;
 
    XtAddCallback(filter_rec->close, XmNactivateCallback, callback, client_data);
@@ -680,8 +682,9 @@ InstallClose(
 
 static void
 Destroy(
-        FilterRec *filter_rec )
+        XtPointer dialog )
 {
+   FilterRec *filter_rec = dialog;
    XtDestroyWidget (filter_rec->shell);
    XtFree ((char *) filter_rec->apply_data);
    XtFree ((char *) filter_rec);
@@ -698,8 +701,9 @@ Destroy(
 
 static XtPointer
 GetValues(
-        FilterRec *filter_rec )
+        XtPointer dialog )
 {
+   FilterRec *filter_rec = dialog;
    FilterData * filter_data;
 
   if( filter_rec->cancel
@@ -845,9 +849,11 @@ CopyFilterData(
 
 static void
 SetValues(
-        FilterRec *filter_rec,
-        FilterData *filter_data )
+        XtPointer dialog,
+        XtPointer values )
 {
+   FilterRec *filter_rec = dialog;
+   FilterData *filter_data = values;
    Arg args[20];
    int n, i, count;
    XmManagerWidget mgr = (XmManagerWidget)filter_rec->file_window;
@@ -1125,8 +1131,9 @@ WriteResourceValues(
 
 static void
 FreeValues(
-        FilterData *filter_data )
+        XtPointer values )
 {
+   FilterData *filter_data = values;
    int i;
 
    for( i = 0; i < filter_data->count; i++)
