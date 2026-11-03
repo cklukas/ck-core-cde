@@ -232,9 +232,12 @@ assigns `SIG_IGN` through the native signal-handler type. Project, module,
 browser and modal-prompt chooser arrays store exact `XtCallbackProc`
 implementations rather than cast functions specialized to a Motif callback
 record. Those implementations accept `XtPointer` at the toolkit boundary and
-recover `XmSelectionBoxCallbackStruct` only inside the callback. The final
-application also includes the parser header from the sibling build directory
-rather than depending on an in-source generated copy. Dtterm resolves its
+recover `XmSelectionBoxCallbackStruct` only inside the callback. App Builder's
+generated message-dialog runtime uses the same direct callback entries, and
+the code emitter writes plain null callback values instead of generated
+function-pointer casts. The final application also includes the parser header
+from the sibling build directory rather than depending on an in-source
+generated copy. Dtterm resolves its
 terminfo and fallback-resource generation scripts and inputs through
 `$(srcdir)`, while its compile includes cover both generated build headers and
 the checked-in private terminal headers.

@@ -1850,18 +1850,18 @@ dtb_show_message(
 	return;
 
     /* Add Callbacks if necessary */
-    if (mbr->action1_callback != (XtCallbackProc) NULL)
+    if (mbr->action1_callback != NULL)
         XtAddCallback(msg_dlg, XmNokCallback, mbr->action1_callback, NULL);
-    if (mbr->cancel_callback != (XtCallbackProc) NULL)
+    if (mbr->cancel_callback != NULL)
         XtAddCallback(msg_dlg, XmNcancelCallback, mbr->cancel_callback, NULL);
-    if (mbr->action2_callback != (XtCallbackProc) NULL)
+    if (mbr->action2_callback != NULL)
     {
 	action_btn = dtb_MessageBoxGetActionButton(msg_dlg, DTB_ACTION2_BUTTON);
 	if (action_btn != NULL)
             XtAddCallback(action_btn, XmNactivateCallback,
 			  mbr->action2_callback, NULL);
     }
-    if (mbr->action3_callback != (XtCallbackProc) NULL)
+    if (mbr->action3_callback != NULL)
     {
         action_btn = dtb_MessageBoxGetActionButton(msg_dlg, DTB_ACTION3_BUTTON);        if (action_btn != NULL)
             XtAddCallback(action_btn, XmNactivateCallback,
@@ -1909,12 +1909,12 @@ dtb_show_modal_message(
     DtbObjectHelpData		help_data_copy = (DtbObjectHelpData)NULL;
     DTB_MODAL_ANSWER		answer = DTB_ANSWER_NONE;
     XtCallbackRec ok_callback[] = {
-            {(XtCallbackProc)modal_dlgCB, (XtPointer) DTB_ANSWER_ACTION1},
-            {(XtCallbackProc) NULL, (XtPointer) NULL}
+            {modal_dlgCB, (XtPointer) DTB_ANSWER_ACTION1},
+            {NULL, (XtPointer) NULL}
     };
     XtCallbackRec cancel_callback[] = {
-            {(XtCallbackProc)modal_dlgCB, (XtPointer) DTB_ANSWER_CANCEL},
-            {(XtCallbackProc) NULL, (XtPointer) NULL}
+            {modal_dlgCB, (XtPointer) DTB_ANSWER_CANCEL},
+            {NULL, (XtPointer) NULL}
     };
 
     if (override_help != (DtbObjectHelpData) NULL)
