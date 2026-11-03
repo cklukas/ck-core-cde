@@ -65,7 +65,7 @@ void LogFinish(int noFork, int sessions);
 void LogBumpSessionCount(int count);
 static void doLog(int noFork, char *msg);
 static void ding(int sig);
-static void autoLogFinish();
+static void autoLogFinish(void);
 
 static time_t startTime;
 static char *id = (char *) 0;
@@ -213,7 +213,7 @@ LogFinish(int noFork, int sessions)
 }
 
 static void
-autoLogFinish()
+autoLogFinish(void)
 {
     (void) LogFinish(savedNoFork, sessionCount);
 }

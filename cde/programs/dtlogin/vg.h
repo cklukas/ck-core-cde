@@ -373,7 +373,7 @@ LogError((unsigned char *)"VG_TRACE:  %s\n", str)
 extern void ChangeBell( char *string) ;
 extern void CleanupAndExit( Widget w, int exit_code) ;
 extern void ClearCB( Widget w, XtPointer client_data, XtPointer call_data) ;
-extern void CloseCatalog();
+extern void CloseCatalog(void);
 extern void CopyrightCB( Widget w, XtPointer client_data, XtPointer call_data) ;
 extern void EditPasswdCB( Widget w, XtPointer client, XtPointer call_data) ;
 extern void FakeFocusIn( Widget focus_widget, XtPointer client_data,
@@ -392,7 +392,7 @@ extern void MakeLangMenu( void ) ;
 extern void MakeLogo( void ) ;
 extern void MakeOptionsMenu( void ) ;
 extern void MenuItemCB( Widget w, XtPointer client_data, XtPointer call_data) ;
-extern void OpenCatalog();
+extern void OpenCatalog(void);
 extern void OptionsUnmapCB( Widget wd, XtPointer client_data, XtPointer call_data) ;
 extern void PingServerCB( XtPointer call_data, XtIntervalId *id) ;
 extern void PostMenuCB( Widget w, XtPointer client_data, XtPointer call_data);

@@ -69,7 +69,7 @@ static int	pam_debug = 0;
 static int		load_modules(pam_handle_t *, int, char *);
 #ifdef sun
 static void 		*open_module(char *);
-static int		load_function(void *, char *, int (**func)());
+static int		load_function(void *, char *, pam_sm_func *);
 #endif
 
 /* functions to read and store the pam.conf configuration file */
@@ -1285,7 +1285,7 @@ open_module(char *module_so)
  */
 #ifdef sun
 static int
-load_function(void *lfd, char *name, int (**func)())
+load_function(void *lfd, char *name, pam_sm_func *func)
 {
 #endif
 	char *errmsg = NULL;
@@ -1298,7 +1298,7 @@ load_function(void *lfd, char *name, int (**func)())
 	 * and hence the ifdef platform
 	 */
 #ifdef sun
-	*func = (int (*)())dlsym(lfd, name);
+	*func = (pam_sm_func)dlsym(lfd, name);
 	if (*func == NULL) {
 		if (pam_debug) {
 			errmsg = (char *) dlerror();

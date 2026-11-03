@@ -48,7 +48,7 @@
 
 #include "bilP.h"
 
-extern ISTRING bilP_get_string();
+extern ISTRING bilP_get_string(void);
 extern STRING bilP_load_att_class(BIL_TOKEN);
 extern STRING bilP_load_att_class_name(BIL_TOKEN);
 extern STRING bilP_load_att_children_begin(void);

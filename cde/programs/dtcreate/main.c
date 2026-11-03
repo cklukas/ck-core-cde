@@ -62,9 +62,12 @@ extern XmWidgetExtData _XmGetWidgetExtData(
 #endif /* NeedWidePrototypes */
 
 #include "dtcreate.h"
+#include "AddFiletype.h"
 #include "ca_aux.h"
 #include "cmnrtns.h"
 #include "ErrorDialog.h"
+#include "FileCharacteristics.h"
+#include "OpenFile.h"
 #include "fileio.h"
 
 #ifdef __TOOLTALK
@@ -1351,11 +1354,6 @@ main(int argc, char *argv[])
 #endif
 
         Widget          mainIface;
-        extern swidget  create_AddFiletype();
-        extern swidget  create_FileCharacteristics();
-        extern swidget  create_OpenFile();
-        extern swidget  create_Confirmed();
-        extern Widget   create_ErrorDialog();
         int             rc;
         Atom            xa_WM_SAVE_YOURSELF;
         char            *ptr;

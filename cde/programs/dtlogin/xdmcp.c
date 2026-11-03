@@ -103,7 +103,7 @@ from the X Consortium.
 
 #ifdef X_NOT_STDC_ENV
 #define Time_t long
-extern Time_t time ();
+extern Time_t time (Time_t *timer);
 #else
 #include <time.h>
 #define Time_t time_t
@@ -115,8 +115,7 @@ extern Time_t time ();
  * interface to policy routines
  */
 
-extern ARRAY8Ptr	ChooseAuthentication ();
-extern int		SelectConnectionTypeIndex ();
+/* policy interfaces are declared in dm.h */
 
 void query_respond (struct sockaddr *from, int fromlen, int length);
 void broadcast_respond (struct sockaddr *from, int fromlen, int length);
@@ -212,9 +211,6 @@ sendForward (CARD16 connectionType, ARRAY8Ptr address, char *closure)
     XdmcpFlush (xdmcpFd, &buffer, (XdmcpNetaddr)addr, addrlen);
     return;
 }
-
-extern char *NetaddrAddress();
-extern char *NetaddrPort();
 
 static void
 ClientAddress (struct sockaddr *from, ARRAY8Ptr addr, ARRAY8Ptr port, CARD16 *type)
@@ -967,8 +963,6 @@ manage (struct sockaddr *from, int fromlen, int length)
 	    d = FindDisplayByName (name);
 	    if (d)
 	    {
-		extern void StopDisplay ();
-
 		Debug ("Terminating active session for %s\n", d->name);
 		StopDisplay (d);
 	    }

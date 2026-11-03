@@ -73,7 +73,7 @@
 **       Private Function Declarations                                  **
 **                                                                      **
 **************************************************************************/
-static Vwr	create_proj_struct();
+static Vwr	create_proj_struct(void);
 
 static void	create_proj_ui_handles(
 		    Vwr		v

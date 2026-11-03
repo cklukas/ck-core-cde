@@ -85,8 +85,8 @@ extern void		conn_test_mode_initialize(
 extern void		conn_test_mode_cleanup(
 			    ABObj	project
 			);
-extern void		conn_init();
-extern void		conn_strings_init();
+extern void		conn_init(void);
+extern void		conn_strings_init(void);
 
 extern void		conn_override_default_when(
 			    AB_WHEN	when
@@ -96,6 +96,6 @@ extern void		conn_reset_default_action(void);
 extern void		conn_override_default_action_type(
 			    AB_FUNC_TYPE	func_type
 			);
-extern void		conn_reset_default_action_type();
+extern void		conn_reset_default_action_type(void);
 
 #endif /* _CONN_H_ */

@@ -118,7 +118,7 @@ static int	panedwin_prop_apply(
 static BOOL     panedwin_prop_pending(
                     AB_PROP_TYPE type
 		);
-static void 	panedwinEdP_init();
+static void 	panedwinEdP_init(void);
 static BOOL 	pw_child_test_func(
 		    ABObj test_obj
 		);

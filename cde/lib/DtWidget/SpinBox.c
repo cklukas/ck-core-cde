@@ -114,7 +114,7 @@ express or implied warranty.
 static XmOffsetPtr ipot; /* Instance part offset table */
 static XmOffsetPtr cpot; /* Constraint part offset table */
 
-static void	ClassInitialize ();
+static void	ClassInitialize (void);
 static void	Initialize (DtSpinBoxWidget request, 
 			       DtSpinBoxWidget new, ArgList given_args, 
 			       Cardinal *num_args);

@@ -30,8 +30,8 @@
 
 #include "excutil.h"
 #include "FaLib.h"
-void addcharptn();
-void setcodelists();
+static void addcharptn(Exc_data *ed);
+static void setcodelists(ListData *ld, int code_num, int *code_list);
 
 extern ListData	*ld;
 extern int num_gr;
@@ -130,7 +130,8 @@ void getcharcd(Exc_data * ed)
     addcharptn(ed);
 }
 
-void addcharptn(Exc_data * ed)
+static void
+addcharptn(Exc_data *ed)
 {
     int i;
     int ans;
@@ -172,7 +173,8 @@ void addcharptn(Exc_data * ed)
     excterminate(ed);
 }
 
-void setcodelists(ListData *ld, int code_num, int *code_list)
+static void
+setcodelists(ListData *ld, int code_num, int *code_list)
 {
     int		*c1, *c2;
     int		i;

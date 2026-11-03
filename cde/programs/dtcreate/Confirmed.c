@@ -73,7 +73,7 @@ void display_confirmed_message (Widget parent, char *message)
   XtUnmanageChild (XmMessageBoxGetChild (Confirmed, XmDIALOG_HELP_BUTTON));
 
   XtAddCallback( Confirmed, XmNokCallback,
-          (XtCallbackProc) activateCB_Confirmed_OkButton,
+          activateCB_Confirmed_OkButton,
           (XtPointer) NULL );
 
   XtVaSetValues (Confirmed,

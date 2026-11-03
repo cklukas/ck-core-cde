@@ -345,11 +345,6 @@ typedef struct
 
 
 /*
- * External variables
- */
-extern	char	*_dtsessionMG();
-
-/*
  * Files that the session manager saves sessions to and restores sessions
  * from.  allocated in SmStrDef.c
  */

@@ -38,27 +38,6 @@
 #define EXCERRMALLOC	101
 #define EXCERRNOUDC	102
 
-void	Ecs();
-void	Ecd();
-/*void	getpcffn();*/
-void	getbdffn();
-void	selcharcd();
-void	getcharcd();
-void	createbdf();
-int	bigger();
-int	smaller();
-int	c2h();
-char	*renge2num();
-void	freeExcdata();
-void	checkdata();
-void	excexit();
-void	excterminate();
-void	freeld();
-void	getexistcode();
-void	AskUser();
-void	excerror();
-Widget	excCreatePushButton();
-
 typedef struct {
     char * charset;
     char * udcrenge;
@@ -94,6 +73,29 @@ typedef struct {
     char	**existcode_c;
     Exc_data	*ed;
 } ListData;
+
+void Ecs(char *string);
+void Ecd(int data);
+void getbdffn(Exc_data *ed);
+void selcharcd(Exc_data *ed);
+void getcharcd(Exc_data *ed);
+void createbdf(Exc_data *ed);
+int bigger(int num1, int num2);
+int smaller(int num1, int num2);
+int c2h(char *num);
+char *renge2num(char *renge);
+void freeExcdata(Exc_data *ed);
+void checkdata(Exc_data *ed);
+void excexit(Exc_data *ed);
+void excterminate(Exc_data *ed);
+void freeld(ListData *ld);
+void getexistcode(ListData *ld);
+void AskUser(Widget parent, Exc_data *ed, char *msg, int *result,
+             char *type);
+void excerror(Exc_data *ed, int excerrno, char *funcname, char *func);
+Widget excCreatePushButton(Widget parent, String name, String label,
+                           XtCallbackProc callback_func,
+                           XtPointer client_data);
 
 #ifndef NO_MESSAGE_CATALOG
 # define _CLIENT_CAT_NAME "dtudcexch"

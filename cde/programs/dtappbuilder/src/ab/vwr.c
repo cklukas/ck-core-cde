@@ -65,15 +65,6 @@
 #include <Xm/Xm.h>
 #include <ab_private/vwr.h>
 
-/*
- * Some internal functions.
-static ViewerNode	*r_locate_node();
- */
-static void		erase_node();
-static int		child_of_selected_node();
-static void		draw_icon();
-static void		draw_arrow();
-
 /*************************************
 	ADT of the browser structure
  *************************************/

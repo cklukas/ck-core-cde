@@ -136,7 +136,7 @@ static SIGVAL Terminate( int arg ) ;
 static char * GetLangName( char * label );
 static void MakeAltDtButtons( void );	
 static void DebugWidgetResources(Widget w);
-static char * GetDisplayName();
+static char * GetDisplayName(void);
 
 
 

@@ -187,6 +187,19 @@ ToolTalk load callbacks, session helpers and standalone entry points likewise
 use their exact contracts. As a result, clean libcsa, libDtCmP, `rpc.cmsd` and
 calendar-program builds link under both GCC and Clang C23.
 
+The next maintained-program tranche removes unspecified argument lists from
+the remaining small DtHelp, DtTerm and DtWidget helpers and from dtcreate,
+dtlogin, dtsession and dtstyle. In dtlogin, the network-address helpers are
+declared once in the shared interface, optional authentication initializers
+match the dispatch table's `void` contract, and chooser callbacks carry their
+complete Xt types. Dtappbuilder's browser, editor and generated-application
+utilities now state their real contracts instead of relying on implicit
+arguments or an untyped undo slot. Dtudcexch similarly publishes complete BDF
+conversion and utility interfaces; its primary UI and file-selection callbacks
+accept `XtPointer` client data directly, without callback casts. The bundled
+PAM dispatcher uses one exact module-function type, while the font loader uses
+the system `<dlfcn.h>` declarations and `RTLD_*` flags.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh
@@ -205,6 +218,9 @@ make -j4 -C programs/dtpdm
 make -j4 -C programs/dtcm/libDtCmP
 make -j4 -C programs/dtcm/server
 make -j4 -C programs/dtcm/dtcm
+make -j4 -C programs/dtappbuilder
+make -j4 -C programs/dtudcexch
+make -j4 -C programs/dtlogin
 ```
 
 This focused result does not imply that the rest of CDE is C23-clean. The

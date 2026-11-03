@@ -160,7 +160,7 @@ Willing(
     static char	statusBuf[256];
     int		ret;
 #if 0
-    extern char	*localHostname ();
+    extern char	*localHostname (void);
 #endif
     ret = AcceptableDisplayAddress (addr, connectionType, type);
     if (!ret)

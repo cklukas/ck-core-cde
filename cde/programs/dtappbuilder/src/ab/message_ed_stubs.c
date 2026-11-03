@@ -153,6 +153,7 @@ static int 	msg_editor_clear(
  * General routines
  */
 static void     turnoff_changebars(
+                void
                 );
 static void 	setup_button_fields(
 		    AB_MESSAGE_TYPE mtype
@@ -164,7 +165,7 @@ static void 	setup_btn_lbl_field(
 static void 	set_msg_textp_label(
 		    AB_MESSAGE_TYPE mtype
 		);
-static void 	msgEdP_init();
+static void 	msgEdP_init(void);
 
 static int 	msgEdP_msgpane_init(
 		   DtbMessageEdDialogInfo      cgen
@@ -187,10 +188,10 @@ static int 	build_module_opmenu(
 		   DtbMessageEdDialogInfo      cgen
 		);
 
-static BOOL 	verify_name(); 
-static BOOL 	verify_default_btn();
-static BOOL 	verify_label();
-static BOOL 	verify_buttons();
+static BOOL 	verify_name(void);
+static BOOL 	verify_default_btn(void);
+static BOOL 	verify_label(void);
+static BOOL 	verify_buttons(void);
 
 static int 	update_mod_opmenu(
 		    MOD_OP      op,
@@ -201,6 +202,7 @@ static int 	update_mod_opmenu(
 		);
 
 static void	msgEdP_strings_init(
+		void
 		);
 
 /*               

@@ -241,7 +241,7 @@ static int	brwsP_obj_updateOCB(
 /*
  * Private functions within this file
  */
-static ABBrowser	create_browser_struct();
+static ABBrowser	create_browser_struct(void);
 static void		destroy_browser_struct(
                             ABBrowser	b
 			);
@@ -254,7 +254,7 @@ static void		destroy_browser_ui_handles(
                             ABBrowser	b
                         );
 
-static BrowserProps	aob_create_props();
+static BrowserProps	aob_create_props(void);
 
 static void		aob_destroy_ui_obj(
 		    	    Vwr		b

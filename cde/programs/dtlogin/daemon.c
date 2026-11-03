@@ -47,14 +47,12 @@
  */
 
 #include <X11/Xos.h>
+#include <stdlib.h>
 #include <sys/ioctl.h>
 
 #ifdef SVR4
 #include <termio.h>
 #endif
-
-extern void exit ();
-
 
 void
 BecomeDaemon( void )

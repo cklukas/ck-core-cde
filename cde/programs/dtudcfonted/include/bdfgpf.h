@@ -455,7 +455,7 @@ extern	void	fatal_err_msg(
     char*	/* prog_name */
 );
 
-extern	void	ChatchSig() ;
+extern void ChatchSig(void);
 
 extern	void	Put_File_Create_Err_Msg(
     int		/* msg_level */,

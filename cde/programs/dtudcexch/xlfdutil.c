@@ -64,7 +64,7 @@
 /*
  * parameters
  */
-static char* skipSpace() ;
+static char *skipSpace(char *str, int skipcnt);
 
 extern	FalFontDataList		*font_L ;
 extern	FalxFontDataBuff	KeyBuff ;

@@ -97,7 +97,7 @@ static	int	*codeset_list_sav = NULL ;
 static	int	codeset_list_num = 0 ;
 
 /* declaration of inner functions */
-char	*fal_get_base_name();
+char *fal_get_base_name(char *str);
 
 static	FILE	*open_fonts_list() ;
 static	int	falGetGlyph() ;
@@ -120,10 +120,10 @@ static	int	CR_to_NULL() ;
 static	int	fal_cmp_data() ;
 static	int	new_target() ;
 
-int	set_struct() ;
-int	fal_eq_data() ;
+int set_struct(FalFontData *tmp_data, char *elm[]);
+int fal_eq_data(FalFontData data, FalFontData tmp_data);
 
-void	set_errfile_str() ;
+void set_errfile_str(char *obuf, char *ibuf);
 
 static	int	fal_init() ;
 static	int	fal_add_fidinf() ;

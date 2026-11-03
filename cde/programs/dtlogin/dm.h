@@ -566,6 +566,13 @@ extern int  ConvertAddr(
                         int *len,                   /* return */
                         char **addr);               /* return */
 
+extern char * NetaddrAddress(
+                        XdmcpNetaddr netaddr,
+                        int *len);
+extern char * NetaddrPort(
+                        XdmcpNetaddr netaddr,
+                        int *len);
+
 extern int  ConvertFamily(
 			int sockfamily);
 

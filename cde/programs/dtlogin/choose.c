@@ -176,8 +176,6 @@ IsIndirectClient (
     return 0;
 }
 
-extern char *NetaddrPort();
-
 static int
 FormatChooserArgument (
     char    *buf,

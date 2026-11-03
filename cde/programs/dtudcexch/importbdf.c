@@ -63,18 +63,23 @@
         } \
 }
 
-static impFileConvInit();
-static impGetGpfInf();
-static impReadBdfHeaderAndPut();
-static impMergePtn();
-static impModifyPtn();
-static impInsertPtn();
-static impWriteSnf();
-static int impWritePtnToBdf();
-static int impPutDefaultChars();
-static int impReadBdfToMemory();
+static int impFileConvInit(struct btophead *r_udc,
+                           struct btophead *r_gpf,
+                           struct ptobhead *w_gpf);
+static int impGetGpfInf(struct btophead *r_gpf,
+                        struct ptobhead *w_gpf, char *buf,
+                        int bdf_codenum);
+static int impReadBdfHeaderAndPut(struct btophead *r_gpf,
+                                  struct ptobhead *w_gpf, char *buf);
+static int impMergePtn(struct btophead *r_udc, struct btophead *r_gpf,
+                       char *buf, int bdf_codenum, int *bdf_codelist);
+static int impModifyPtn(struct btophead *r_udc, struct btophead *r_gpf,
+                        char *buf, int ix);
+static int impInsertPtn(struct btophead *r_udc, struct btophead *r_gpf,
+                        char *buf, int code, int ix);
+static int impWriteSnf(struct btophead *r_gpf, struct ptobhead *w_gpf);
 
-extern	int  expCheckCode();
+extern int expCheckCode(unsigned int code, int code_num, int *code_list);
 
 
 static struct ptobhead WriteGpf;
@@ -356,7 +361,7 @@ int	*bdf_codelist
 * sub functions
 */
 
-static
+static int
 impFileConvInit(
 struct btophead	*r_udc,
 struct btophead	*r_gpf,
@@ -470,7 +475,7 @@ struct ptobhead	*w_gpf
 
 
 
-static
+static int
 impGetGpfInf(
 struct btophead *r_gpf,
 struct ptobhead *w_gpf,
@@ -499,7 +504,7 @@ int		bdf_codenum
 
 
 
-static
+static int
 impReadBdfHeaderAndPut(
 struct btophead *r_gpf,
 struct ptobhead *w_gpf,
@@ -550,7 +555,7 @@ char	*buf
 }
 
 
-static
+static int
 impMergePtn(
 struct	btophead *r_udc,
 struct	btophead *r_gpf,
@@ -611,7 +616,7 @@ int	*bdf_codelist
 	return	0;
 }
 
-static
+static int
 impModifyPtn(struct btophead *r_udc, struct btophead *r_gpf, char *buf, int ix)
 {
 	int 	mwidth, msize, rtn;
@@ -636,7 +641,7 @@ impModifyPtn(struct btophead *r_udc, struct btophead *r_gpf, char *buf, int ix)
 	return	0;
 }
 
-static
+static int
 impInsertPtn(
 struct btophead *r_udc,
 struct btophead *r_gpf,
@@ -681,7 +686,7 @@ int 	ix
 	return(0);
 }
 
-static
+static int
 impWriteSnf(struct btophead *r_gpf, struct ptobhead *w_gpf)
 {
 	w_gpf->zoomf = 0;

@@ -164,46 +164,25 @@ struct pam_handle {
  * the function_ptr field in struct pamtab
  * will point to one of these modules
  */
+typedef int (*pam_sm_func)(pam_handle_t *pamh, int flags, int argc,
+                           const char **argv);
+
 struct auth_module {
-	int			(*pam_sm_authenticate)(
-					pam_handle_t *pamh,
-					int flags,
-					int argc,
-					const char **argv);
-	int			(*pam_sm_setcred)(
-					pam_handle_t *pamh,
-					int flags,
-					int argc,
-					const char **argv);
+	pam_sm_func		pam_sm_authenticate;
+	pam_sm_func		pam_sm_setcred;
 };
 
 struct password_module {
-	int			(*pam_sm_chauthtok)(
-					pam_handle_t *pamh,
-					int flags,
-					int argc,
-					const char **argv);
+	pam_sm_func		pam_sm_chauthtok;
 };
 
 struct session_module {
-	int			(*pam_sm_open_session)(
-					pam_handle_t *pamh,
-					int flags,
-					int argc,
-					const char **argv);
-	int			(*pam_sm_close_session)(
-					pam_handle_t *pamh,
-					int flags,
-					int argc,
-					const char **argv);
+	pam_sm_func		pam_sm_open_session;
+	pam_sm_func		pam_sm_close_session;
 };
 
 struct account_module {
-	int			(*pam_sm_acct_mgmt)(
-					pam_handle_t *pamh,
-					int flags,
-					int argc,
-					const char **argv);
+	pam_sm_func		pam_sm_acct_mgmt;
 };
 
 #ifdef __cplusplus

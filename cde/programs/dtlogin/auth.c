@@ -139,13 +139,37 @@ extern int errno;
 #include <net/if.h>
 
 #ifdef SECURE_RPC
-extern int	SecureRPCInitAuth ();
-extern Xauth	*SecureRPCGetAuth ();
+extern void SecureRPCInitAuth(
+#if NeedWidePrototypes
+                        unsigned int name_len,
+#else
+                        unsigned short name_len,
+#endif
+                        char *name);
+extern Xauth *SecureRPCGetAuth(
+#if NeedWidePrototypes
+                        unsigned int name_len,
+#else
+                        unsigned short name_len,
+#endif
+                        char *name);
 #endif
 
 #ifdef K5AUTH
-extern int	Krb5InitAuth ();
-extern Xauth	*Krb5GetAuth ();
+extern void Krb5InitAuth(
+#if NeedWidePrototypes
+                        unsigned int name_len,
+#else
+                        unsigned short name_len,
+#endif
+                        char *name);
+extern Xauth *Krb5GetAuth(
+#if NeedWidePrototypes
+                        unsigned int name_len,
+#else
+                        unsigned short name_len,
+#endif
+                        char *name);
 #endif
 
 struct AuthProtocol {

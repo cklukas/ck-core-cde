@@ -213,8 +213,6 @@ static ABClipboardRec	ABClipboard = NULL;
 static ABUndoRec	ABUndo = NULL;
 static ABUndoRec	ABUndo_backup = NULL;
 
-static void		(*Undo_func)();
-
 BOOL			in_undo = FALSE;
 
 /*************************************************************************

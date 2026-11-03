@@ -61,7 +61,7 @@ static AbilGetLineNumberCallback	getLineNumberCB = NULL;
 
 int	abilP_err_line_number = -1;
 
-static int abil_load_errmsg_table();
+static int abil_load_errmsg_table(void);
 
 /*
  * Build a status message including the current object, the current

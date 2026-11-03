@@ -35,7 +35,7 @@
 #include <Xm/Form.h>
 #include <Xm/Label.h>
 
-void	setselectedcode();
+static void setselectedcode(ListData *ld);
 
 extern char *maintitle;
 
@@ -194,7 +194,8 @@ void selcharcd(Exc_data * ed)
     XtManageChild(mainw);
 }
 
-void setselectedcode(ListData *ld)
+static void
+setselectedcode(ListData *ld)
 {
     int		*position_list;
     int		position_count;

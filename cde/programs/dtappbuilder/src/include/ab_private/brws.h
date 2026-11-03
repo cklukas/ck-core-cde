@@ -347,7 +347,7 @@ extern void		setup_vwr_graphics(
 			    Vwr		v
 			);
 
-extern BrowserUiObj	aob_create_ui_obj();
+extern BrowserUiObj	aob_create_ui_obj(void);
 
 extern void		brws_switch_module(
 			    Widget	widget,

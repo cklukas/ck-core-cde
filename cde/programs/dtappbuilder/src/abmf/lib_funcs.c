@@ -235,7 +235,7 @@ void dtb_save_toplevel_widget(
     Widget 	toplevel
 );
 
-Widget dtb_get_toplevel_widget();
+Widget dtb_get_toplevel_widget(void);
 
 void dtb_remove_sash_focus(
     Widget	panedwindow
@@ -245,7 +245,7 @@ void dtb_save_command(
     char *command
 );
 
-char *  dtb_get_command();
+char *  dtb_get_command(void);
 
 void dtb_help_dispatch(
     Widget 	widget,
@@ -262,7 +262,7 @@ void dtb_more_help_dispatch(
     XtPointer	clientData,
     XtPointer	callData
 );
-void dtb_do_onitem_help();
+void dtb_do_onitem_help(void);
 void dtb_show_help_volume_info(
     char	*volume_name,
     char	*location_id
@@ -320,7 +320,7 @@ void dtb_session_save(
     XtPointer	clientData,
     XtPointer	callData
 );
-DtbClientSessionSaveCB dtb_get_client_session_saveCB();
+DtbClientSessionSaveCB dtb_get_client_session_saveCB(void);
 
 void dtb_set_client_session_saveCB(
     DtbClientSessionSaveCB session_saveCB
@@ -333,7 +333,7 @@ void dtb_set_client_session_restoreCB(
     DtbClientSessionRestoreCB session_restoreCB
 );
 
-DtbClientSessionRestoreCB dtb_get_client_session_restoreCB();
+DtbClientSessionRestoreCB dtb_get_client_session_restoreCB(void);
 
 void dtb_set_tt_msg_quitCB(
     DtbTTMsgHandlerCB msg_quitCB
@@ -353,7 +353,7 @@ Tt_message dtb_tt_contractCB(
     Tt_message 		contract
 );
 
-void dtb_tt_close();
+void dtb_tt_close(void);
 
 
 #define dtb_cvt_string_to_pixel(parent, str) \
@@ -1025,7 +1025,7 @@ dtb_save_toplevel_widget(
 }
 
 Widget
-dtb_get_toplevel_widget()
+dtb_get_toplevel_widget(void)
 {
 	return(dtb_project_toplevel_widget);
 }
@@ -1083,7 +1083,7 @@ dtb_save_command(
 
 
 char * 
-dtb_get_command() 
+dtb_get_command(void)
 {
     return(dtb_save_command_str); 
 }
@@ -1297,7 +1297,7 @@ dtb_more_help_dispatch(
 ** main menubar's "Help" menu.
 */
 void
-dtb_do_onitem_help()
+dtb_do_onitem_help(void)
 {
     Widget	target;
 
@@ -1526,7 +1526,7 @@ dtb_session_save(
  * dtb_get_client_session_saveCB()
  */
 DtbClientSessionSaveCB
-dtb_get_client_session_saveCB()
+dtb_get_client_session_saveCB(void)
 {
     return(dtb_client_session_saveCB);
 
@@ -1610,7 +1610,7 @@ dtb_set_client_session_restoreCB(
  * dtb_get_client_session_restoreCB()
  */
 DtbClientSessionRestoreCB
-dtb_get_client_session_restoreCB()
+dtb_get_client_session_restoreCB(void)
 {
     return(dtb_client_session_restoreCB);
 
@@ -4302,7 +4302,7 @@ dtb_tt_contractCB(
  * Close ToolTalk Connection
  */
 void
-dtb_tt_close()
+dtb_tt_close(void)
 {
     ttdt_close(NULL, NULL, True);
 }

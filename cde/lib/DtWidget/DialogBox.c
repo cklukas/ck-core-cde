@@ -137,7 +137,7 @@ static void ButtonCallback(
 #define WARN_CHILD_TYPE		_DtMsgDialogBox_0000
 #define WARN_BUTTON_CHILD	_DtMsgDialogBox_0001
 
-extern void 	_DtRegisterNewConverters ();
+extern void 	_DtRegisterNewConverters (void);
 
 
 /*-------------------------------------------------------------

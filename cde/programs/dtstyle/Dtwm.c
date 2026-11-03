@@ -116,7 +116,7 @@ static void formLayoutCB ( Widget, XtPointer, XtPointer ) ;
 static void _DtmapCB_dtwmDlg ( Widget, XtPointer, XtPointer ) ;
 static void systemDefaultCB ( Widget, XtPointer, XtPointer ) ;
 static void ButtonCB ( Widget, XtPointer, XtPointer ) ;
-static void getDtwmValues ( ) ;
+static void getDtwmValues (void) ;
 static void _DtWmParseToLower (unsigned char  *string) ;
 static void okWarnCB ( Widget, XtPointer, XtPointer ) ;
 static void cancelWarnCB ( Widget, XtPointer, XtPointer ) ;
