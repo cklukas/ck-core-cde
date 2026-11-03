@@ -246,7 +246,7 @@ DtDndDropRegister(
 
 		dsInfo = (DtDropSiteInfo *)XtMalloc(sizeof(DtDropSiteInfo));
 
-		dsInfo->dropProc 		= (XtCallbackProc)NULL;
+		dsInfo->dropProc 		= NULL;
 		dsInfo->operations		= XmDROP_NOOP;
 		dsInfo->importTargets		= NULL;
 		dsInfo->numImportTargets	= 0;

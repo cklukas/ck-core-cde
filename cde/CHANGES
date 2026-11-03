@@ -1,4 +1,8 @@
 2026-11-03
+- ToolTalk: implement the desktop timeout hook through its exact
+  `XtTimerCallbackProc` contract and register it directly.
+- DtSvc: initialize an optional preserved drop callback with a typed null value
+  instead of a function-pointer cast.
 - DtCm: register the shared calendar help callback directly throughout menus,
   editors, browsers and dialogs through its exact `XtCallbackProc` contract.
   Appointment, group, to-do and standalone-editor drag-motion hooks now
