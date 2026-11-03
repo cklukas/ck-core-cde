@@ -206,6 +206,9 @@ line-font and terminal headers from the source tree, and its generated line
 table reads the checked-in data file there.
 App Builder resolves each private include from `$(top_srcdir)`, and dtterm
 resolves its resource-generation scripts and inputs through `$(srcdir)`.
+Dtcreate uses the ToolTalk toolkit's input handler for Xt dispatch and reserves
+its exact three-argument contract callback for `ttdt_session_join`, avoiding an
+incompatible callback cast and a duplicate ToolTalk connection.
 Dtstyle registers dedicated `int`-argument signal handlers rather than casting
 Xt callbacks or no-argument helpers to the signal ABI.
 
