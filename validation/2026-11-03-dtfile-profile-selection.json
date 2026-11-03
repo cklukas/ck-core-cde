@@ -1,0 +1,116 @@
+{
+  "topic": "Bind profile Load and Delete to the selected saved entry",
+  "base_revision": "5ebc5b9c9db163ca4e17bcd8b18a22051852c4be",
+  "native_sdk_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "native_sdk_version": "0.3.0",
+  "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "dependency_selection": "Fetched the latest published Motif at batch start; unchanged revision and verified library bytes reuse the retained prefix.",
+  "native_regression": {
+    "build_start_utc": "2026-11-03T18:32:15.546741+00:00",
+    "build_end_utc": "2026-11-03T18:32:16.823499+00:00",
+    "build_seconds": 1.2767899099271744,
+    "run_start_utc": "2026-11-03T18:32:16.824255+00:00",
+    "run_end_utc": "2026-11-03T18:32:25.811877+00:00",
+    "run_seconds": 8.987656632903963,
+    "exit_code": 0,
+    "passed": true,
+    "fixture_unchanged": true,
+    "timeout_failures": [],
+    "source_hashes": {
+      "SyncDates.h": "dd6d805135b1b1f2d6119ba8048ad4b905c63b06b86e25ad03f5c74dc2e00060",
+      "dtfile_sync.msg": "e02e611187d650193db8045f1c48fcd7e81b675152633f16b4771f57def867c7",
+      "SyncProfiles.c": "6634274984eadaa5a90f5823a2dee775c5cf4b1f8a1fe7be0d3505564234bb56",
+      "SyncProfiles.h": "2fe33ff5a6715867613561e73f4ee604ce4cfbe9e27b1090a2579339577ab340",
+      "main.c": "8a35c39eac7a368b02f245150302ce81597ae7cc44810dffa4f9d9a56aafb618",
+      "SyncPrivateStorage.h": "be908fd817a30ccebd919acedb28c5d7ba23844320e8ce18e1ebcf2f5c5ef4ae",
+      "SyncJob.h": "955ea1f34200ed74ec190416c31c5ec56edd1f421da3df52722f0c596c6a0451",
+      "SyncJob.c": "3a14f5567f147dd9338c29b8bc6b8c5e774622ee841da2098570cb600713c5f0"
+    }
+  },
+  "baseline_control": {
+    "revision": "5ebc5b9c9db163ca4e17bcd8b18a22051852c4be",
+    "exit_code": 1,
+    "build_seconds": 3.2362829491030425,
+    "run_seconds": 2.1778184240683913,
+    "fixture_unchanged": true,
+    "expected_failures": [
+      "Load and default action use edited Save name B despite selected A",
+      "Load/Delete remain available without a selection",
+      "Worker refresh loses selection instead of preserving exact name through index changes",
+      "Delete confirmation and execution address edited B instead of selected A"
+    ]
+  },
+  "coverage": [
+    "Actual worker saves and actual list selection; Load and list default action address selected A after editing Save name B",
+    "No-selection callbacks preserve setup and review authority",
+    "Real cooperative lock contention publishes busy state; Load disabled while selection is retained",
+    "Deleting an earlier entry shifts indexes; selection remains bound by exact name and Save text remains unchanged",
+    "Delete confirmation names A; Cancel preserves both entries; acceptance removes A and retains B",
+    "All prior transactional profile load, rename review, retained feedback, capacity, setup and retry regressions remain"
+  ],
+  "script_sha256": "8382cf78d36a646e52843b81713b41274297a44898a14b1b35e7356e7a69b359",
+  "checks": [
+    "Native regression PASS with no timeouts; exact previous UI expected FAIL",
+    "Strict documentation check: 16 pages PASS",
+    "Python parse and unique catalog IDs PASS",
+    "Read-only implementation and harness review PASS"
+  ],
+  "scope": "Saved preferences and UI authority; compared file trees unchanged. No file-operation execution, SDK upgrade or Apply enablement.",
+  "normal_ui": {
+    "actual_process_runtime_maps_verified": true,
+    "executable_sha256": "ce90c6abbd20e4a01ba8043eaf31a8f525c3dff01b711b973ef69577bb2d1b59",
+    "catalog_sha256": "d806d78a247ce59d1e4631e6f4610db813802bec6ed10134471989db4c031075",
+    "main_inspected": [
+      "selected-A-typed-B-before-load.png",
+      "load-selected-A-typed-B.png",
+      "delete-confirms-A-typed-B.png",
+      "cancel-preserves-A-B-loaded-paths.png"
+    ],
+    "screenshots": {
+      "selected-A-typed-B-before-load.png": "d83df2d0823d315fb21da3c590b80ab31de27d9738c9bbf64fcf27ec0a65f6d8",
+      "load-selected-A-typed-B.png": "0b587fdb90d0b1b51fcf673850a6b5744c5b09a9f3cf79ddd1e08f91defbe964",
+      "delete-confirms-A-typed-B.png": "59c1d4b83b4beafdcf2b12394decc7164d46fcac20b6eca25a3281714f899367",
+      "cancel-preserves-A-B-loaded-paths.png": "60b80b09027d911da288e8d9ee9c979fbf8d3b1a63141d6bb69ef79b709b69ac"
+    },
+    "fixture_files_unchanged": 71,
+    "graceful_exit": 0,
+    "own_helper_wm_xvfb_gone": true,
+    "other_xvfb_preserved": true,
+    "final_receipt_sha256": "ccbde0a0e2dcef95d20a72f958409732a735ce3704e1f59732cdbd6605777dcc"
+  },
+  "incremental_build": {
+    "start": "2026-11-03T18:32:55.642482+00:00",
+    "end": "2026-11-03T18:33:02.202230+00:00",
+    "elapsed_seconds": 6.559752796078101,
+    "jobs": 1,
+    "inputs": {
+      "SyncProfiles.c": "6634274984eadaa5a90f5823a2dee775c5cf4b1f8a1fe7be0d3505564234bb56",
+      "SyncJob.h": "955ea1f34200ed74ec190416c31c5ec56edd1f421da3df52722f0c596c6a0451",
+      "SyncPrivateStorage.h": "be908fd817a30ccebd919acedb28c5d7ba23844320e8ce18e1ebcf2f5c5ef4ae",
+      "SyncDates.h": "dd6d805135b1b1f2d6119ba8048ad4b905c63b06b86e25ad03f5c74dc2e00060",
+      "main.c": "8a35c39eac7a368b02f245150302ce81597ae7cc44810dffa4f9d9a56aafb618",
+      "SyncProfiles.h": "2fe33ff5a6715867613561e73f4ee604ce4cfbe9e27b1090a2579339577ab340",
+      "dtfile_sync.msg": "e02e611187d650193db8045f1c48fcd7e81b675152633f16b4771f57def867c7",
+      "SyncJob.c": "3a14f5567f147dd9338c29b8bc6b8c5e774622ee841da2098570cb600713c5f0"
+    },
+    "outputs": {
+      "/home/klukas/tmp/cde-hardening-20261102-01/profile-selection-native-20261103-01/normal-gui-build/dtfile_sync": "ce90c6abbd20e4a01ba8043eaf31a8f525c3dff01b711b973ef69577bb2d1b59",
+      "/home/klukas/tmp/cde-hardening-20261102-01/profile-selection-native-20261103-01/normal-gui-build/dtfile_sync.cat": "d806d78a247ce59d1e4631e6f4610db813802bec6ed10134471989db4c031075"
+    },
+    "recompile_reasons": {
+      "main": [
+        "main.c",
+        "SyncPrivateStorage.h"
+      ],
+      "SyncJob": [
+        "SyncPrivateStorage.h"
+      ],
+      "SyncProfiles": [
+        "SyncProfiles.c",
+        "SyncPrivateStorage.h"
+      ]
+    },
+    "closure": "main.c and catalog changed. The retained normal worker objects predate the qualified private-storage header, requiring both dependent worker objects to be rebuilt. No full CDE or SDK rebuild.",
+    "timing_assessment": "6.560 seconds; three recorded compilation commands, link and catalog all succeeded with no warnings. Input/output hashes verified before launch. The previous main-only build took 1.102 seconds; no identical-input baseline exists for this dependency closure. Concurrent retained full-stack compilation was active on the same host."
+  }
+}

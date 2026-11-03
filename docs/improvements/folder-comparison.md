@@ -171,9 +171,14 @@ private operation state.
 
 ## Save, load and delete preferences
 
-Enter a profile name and select **Save preferences**. Select an existing entry
-and use **Load selected preferences** to restore it. **Delete profile** asks for
-confirmation and removes only the named preferences, never the compared files.
+Enter a name in **Save as profile** and select **Save preferences**. Select an
+existing entry and use **Load selected preferences** to restore that entry.
+Editing the Save name does not change which entry Load or **Delete selected
+profile** addresses. Deletion asks for confirmation naming the selected entry
+and removes only its preferences, never the compared files.
+Selection is preserved by name when the preferences list refreshes; removing the
+selected entry clears selection. Load and Delete require a selection and an idle
+preferences worker. Loading also waits for operation cleanup or pending review.
 The status line reports asynchronous load/save/delete completion or failure.
 Saving an existing name updates that entry.
 
@@ -245,7 +250,10 @@ trusted, non-group-writable ancestors. UI allocation faults verify atomic
 profile loading and aborting an unreadable rename input; real review receipts
 verify side and selected-row invalidation. It also checks retained input feedback,
 selection-based clearing, updates at the 64-rule limit, profile availability,
-and cancellation/Close feedback priority. `result.json` and logs record the run.
+and cancellation/Close feedback priority. Real saved profiles also exercise
+selected-entry identity independently of the Save name, list refresh during a
+held cooperative lock, index changes, and cancelled/accepted deletion.
+`result.json` and logs record the run.
 
 Set `TMPDIR` explicitly. Private test homes must be on an ownership-enforcing
 filesystem with trusted ancestors; if that differs from the build's temporary
