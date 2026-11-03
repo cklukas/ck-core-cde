@@ -42,11 +42,12 @@ CLEANFILES = $(AB_MAKEFILES) *.res *_ui.c *_ui.h .dtcodegen.log *.delta \
 
 BIL_INPUTS = $(notdir $(wildcard $(srcdir)/*.bil)) dtbuilder.bip
 
-.bil-inputs.stamp: $(addprefix $(srcdir)/,$(BIL_INPUTS))
+.bil-inputs.stamp: $(addprefix $(srcdir)/,$(BIL_INPUTS)) $(srcdir)/dtbuilder.h
 	@if test "$(srcdir)" != "."; then \
 	  for input in $(BIL_INPUTS); do \
 	    test -e "$$input" || $(LN_S) "$(abs_srcdir)/$$input" "$$input"; \
 	  done; \
+	  $(CP) "$(srcdir)/dtbuilder.h" dtbuilder.h; \
 	fi
 	$(AM_V_at)touch $@
 
