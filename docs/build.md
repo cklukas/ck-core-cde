@@ -650,8 +650,10 @@ address. The Clang lane therefore leaves `-Wcast-function-type-strict` as a
 warning while retaining the other function-pointer errors.
 `scripts/check-clang-cast-warnings.py` audits the build log and accepts that
 warning only when its source line uses an Xt/Motif inherit entry or compares a
-class method with `_XtInherit` while propagating it. Any CDE callback cast,
-converter cast or other occurrence still fails the lane.
+class method with `_XtInherit` while propagating it. It also recognizes the
+precise `bool_t (XDR *, T *)` to variadic `xdrproc_t` conversion emitted by
+rpcgen and required by libtirpc. Any CDE callback cast, converter cast, or
+other occurrence still fails the lane.
 
 Configure validates the lexer it will use while already in the selected C
 language mode. Its generated-scanner probe selects the POSIX declaration level

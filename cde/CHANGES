@@ -30,7 +30,8 @@
   verified build's timing, compiler, source revisions and dtwm fingerprint.
   Clang's stricter function-cast subgroup is warning-only for Xt/Motif's
   required `_XtInherit` sentinels; synchronized build logs are audited so every
-  warning outside an inherit entry or method-propagation comparison fails.
+  warning outside an inherit entry, method-propagation comparison, or rpcgen's
+  exact typed-XDR to variadic-libtirpc boundary fails.
 - dtksh: replace the embedded ksh93 tree with a checksum-pinned upstream
   maintenance revision. Keep CDE built-ins and patches separate, support
   verified offline archive builds, install the upstream license and notices,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject Clang function-cast warnings except Xt/Motif inherit sentinels."""
+"""Reject Clang function-cast warnings outside documented framework ABIs."""
 
 from pathlib import Path
 import re
@@ -13,6 +13,10 @@ WARNING = re.compile(
 INHERIT_SENTINEL = re.compile(
     r"\b(?:(?:Xt|Xm|Dt)Inherit[A-Za-z_]+|_XtInherit)\b"
 )
+XDRPROC_ADAPTER = re.compile(
+    r"warning: cast from 'bool_t \(\*\)\(XDR \*, .*\)' .*"
+    r"to 'xdrproc_t' .*\[-Wcast-function-type-strict\]$"
+)
 
 
 def main() -> int:
@@ -22,11 +26,19 @@ def main() -> int:
 
     log_path = Path(sys.argv[1])
     rejected: list[str] = []
-    accepted = 0
+    accepted_inherit = 0
+    accepted_xdr = 0
 
     for diagnostic in log_path.read_text(errors="replace").splitlines():
         match = WARNING.match(diagnostic)
         if match is None:
+            continue
+
+        # rpcgen deliberately emits typed serializers and passes them through
+        # libtirpc's variadic xdrproc_t.  Accept only that precise bool_t/XDR
+        # conversion, not arbitrary casts merely written as xdrproc_t.
+        if XDRPROC_ADAPTER.search(diagnostic):
+            accepted_xdr += 1
             continue
 
         source_path = Path(match.group("path"))
@@ -42,7 +54,7 @@ def main() -> int:
             continue
 
         if INHERIT_SENTINEL.search(source_line):
-            accepted += 1
+            accepted_inherit += 1
         else:
             rejected.append(diagnostic)
 
@@ -51,7 +63,10 @@ def main() -> int:
         print("\n".join(rejected), file=sys.stderr)
         return 1
 
-    print(f"approved {accepted} Xt/Motif inherit-sentinel diagnostics")
+    print(
+        f"approved {accepted_inherit} Xt/Motif inherit-sentinel and "
+        f"{accepted_xdr} rpcgen/libtirpc XDR diagnostics"
+    )
     return 0
 
 
