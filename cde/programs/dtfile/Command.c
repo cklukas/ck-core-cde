@@ -201,20 +201,20 @@ UpdateActionMenuPane(
             XtAddCallback (child, XmNactivateCallback, DTActionCallback,
                                                     (XtPointer)desktopWindow);
             XtAddCallback(child, XmNhelpCallback,
-                          (XtCallbackProc)DTHelpRequestCB, NULL);
+                          DTHelpRequestCB, NULL);
          }
          else if(type == FM_POPUP)
          {
             XtAddCallback (child, XmNactivateCallback, ActionCallback, NULL);
             XtAddCallback(child, XmNhelpCallback,
-                          (XtCallbackProc)HelpRequestCB, NULL);
+                          HelpRequestCB, NULL);
          }
          else
          {
             XtAddCallback (child, XmNactivateCallback, ActionCallback,
                                                     (XtPointer)file_mgr_rec);
             XtAddCallback(child, XmNhelpCallback,
-                          (XtCallbackProc)HelpRequestCB, NULL);
+                          HelpRequestCB, NULL);
          }
          XtManageChild (child);
       }

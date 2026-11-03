@@ -995,7 +995,7 @@ SetValues(
             XtSetValues(icon_widget, args, n);
          }
          XtAddCallback(icon_widget, XmNhelpCallback,
-                       (XtCallbackProc)HelpRequestCB, NULL);
+                       HelpRequestCB, NULL);
       }
       XtAddCallback (icon_widget, XmNcallback, NewFileTypeSelected,
                                                     (XtPointer)filter_rec);

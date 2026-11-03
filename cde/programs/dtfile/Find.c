@@ -410,7 +410,7 @@ Create(
    XtSetArg (args[n], XmNshadowType, XmSHADOW_OUT);			n++;
    XtSetArg (args[n], XmNautoUnmanage, False);			n++;
    form = XmCreateForm (shell, "form", args, n);
-   XtAddCallback(form, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(form, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
    label_string = XmStringCreateLocalized ((GETMESSAGE(15,47, "Fill in one or more fields to specify which items to find:")));
@@ -437,7 +437,7 @@ Create(
    filterLabel = XmCreateLabelGadget (form, "file_name_label", args, n);
    XtManageChild (filterLabel);
    XmStringFree (label_string);
-   XtAddCallback(filterLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(filterLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
    n = 0;
@@ -451,7 +451,7 @@ Create(
    XtSetArg (args[n], XmNrightOffset, 10);				n++;
    filterText = XmCreateTextField (form, "file_name_text", args, n);
    XtManageChild (filterText);
-   XtAddCallback(filterText, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(filterText, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
    /* set up translations in the filter text edit widget */
@@ -469,7 +469,7 @@ Create(
    contentLabel = XmCreateLabelGadget (form, "content_label", args, n);
    XtManageChild (contentLabel);
    XmStringFree (label_string);
-   XtAddCallback(contentLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(contentLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
    n = 0;
@@ -483,7 +483,7 @@ Create(
    XtSetArg (args[n], XmNrightOffset, 10);				n++;
    contentText = XmCreateTextField (form, "content_text", args, n);
    XtManageChild (contentText);
-   XtAddCallback(contentText, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(contentText, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
 #if defined(sun)
@@ -533,7 +533,7 @@ Create(
    XtSetArg(args[n], XmNmenuHistory, find_rec->widgArry[OFF]); n++;
    followLink = XmCreateOptionMenu(form1, "fLink", args, n);
    XtManageChild (followLink);
-   XtAddCallback(followLink, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(followLink, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
 #endif
@@ -565,7 +565,7 @@ Create(
    dirLabel = XmCreateLabelGadget (form, "folder_name_label", args, n);
    XtManageChild (dirLabel);
    XmStringFree (label_string);
-   XtAddCallback(dirLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(dirLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
    n = 0;
@@ -579,7 +579,7 @@ Create(
    XtSetArg (args[n], XmNtopOffset, 10);				n++;
    dirName = XmCreateTextField (form, "folder_name_text", args, n);
    XtManageChild (dirName);
-   XtAddCallback(dirName, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(dirName, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
    /* set up translations in the search directory text edit widget */
@@ -608,7 +608,7 @@ Create(
    listLabel = XmCreateLabelGadget (form, "files_found", args, n);
    XtManageChild (listLabel);
    XmStringFree (label_string);
-   XtAddCallback(listLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(listLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
    n = 0;
@@ -623,7 +623,7 @@ Create(
    XtAddCallback (scrolledList, XmNdefaultActionCallback,
                                               NewView, (XtPointer) find_rec);
    XtAddCallback(XtParent(scrolledList), XmNhelpCallback,
-                 (XtCallbackProc)HelpRequestCB,
+                 HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
 
@@ -650,7 +650,7 @@ Create(
    form2 = XmCreateForm (form, "form2", args, n);
    XtManageChild (form2);
 /*
-   XtAddCallback(form2, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(form2, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 */
 
@@ -669,7 +669,7 @@ Create(
    newFM = XmCreatePushButtonGadget (form2, "new_view", args, n);
    XtManageChild (newFM);
    XtAddCallback (newFM, XmNactivateCallback, NewView, (XtPointer) find_rec);
-   XtAddCallback(newFM, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(newFM, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
    XmStringFree (label_string);
 
@@ -692,7 +692,7 @@ Create(
    XtManageChild (putOnDT);
    XtAddCallback (putOnDT, XmNactivateCallback, FindPutOnDesktop,
                   (XtPointer) find_rec);
-   XtAddCallback(putOnDT, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(putOnDT, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
    XmStringFree (label_string);
 
@@ -726,7 +726,7 @@ Create(
    start = XmCreatePushButtonGadget (form, "start", args, n);
    XtAddCallback (start, XmNactivateCallback, StartCallback,
 							(XtPointer) find_rec);
-   XtAddCallback(start, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(start, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
    XtManageChild (start);
    XmStringFree (label_string);
@@ -745,7 +745,7 @@ Create(
    stop = XmCreatePushButton (form, "stop", args, n);
    XtAddCallback (stop, XmNactivateCallback, StopCallback,
 						   (XtPointer) find_rec);
-   XtAddCallback(stop, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(stop, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
    XtManageChild (stop);
    XtSetSensitive (stop, False);
@@ -763,7 +763,7 @@ Create(
    XtSetArg (args[n], XmNmarginHeight, 4);				n++;
    close = XmCreatePushButtonGadget (form, "close", args, n);
    XtManageChild (close);
-   XtAddCallback(close, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(close, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
 
@@ -779,9 +779,9 @@ Create(
    XtSetArg (args[n], XmNmarginHeight, 4);				n++;
    help = XmCreatePushButton (form, "help", args, n);
    XtManageChild (help);
-   XtAddCallback(help, XmNactivateCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(help, XmNactivateCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
-   XtAddCallback(help, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(help, XmNhelpCallback, HelpRequestCB,
                  HELP_FIND_DIALOG_STR);
 
 

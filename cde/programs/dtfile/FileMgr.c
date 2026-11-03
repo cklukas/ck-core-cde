@@ -1697,7 +1697,7 @@ Create(
          XmCreateForm (mainWidget, "header_frame", args, n);
 
    XtAddCallback(header_frame, XmNhelpCallback,
-                    (XtCallbackProc)HelpRequestCB,
+                    HelpRequestCB,
                     HELP_FILE_MANAGER_VIEW_STR);
 
    /*  Create the current directory line only if not in showFilesystem.  */
@@ -1913,7 +1913,7 @@ Create(
       XtAddCallback(file_mgr_rec->current_directory_text, XmNactivateCallback,
                                  ChangeToNewDir, file_mgr_rec);
       XtAddCallback(file_mgr_rec->current_directory_text, XmNhelpCallback,
-                    (XtCallbackProc)HelpRequestCB,
+                    HelpRequestCB,
                     HELP_FILE_MANAGER_VIEW_STR);
 #ifdef FOO
       /* This code is here so the Text Path (used to be Fast Change Dir
@@ -1979,11 +1979,11 @@ Create(
    XtManageChild (file_mgr_rec->scroll_window);
    if(TrashView)
       XtAddCallback(file_mgr_rec->scroll_window, XmNhelpCallback,
-                    (XtCallbackProc)HelpRequestCB,
+                    HelpRequestCB,
                      HELP_TRASH_OVERVIEW_TOPIC_STR);
    else
       XtAddCallback(file_mgr_rec->scroll_window, XmNhelpCallback,
-                    (XtCallbackProc)HelpRequestCB,
+                    HelpRequestCB,
                     HELP_FILE_MANAGER_VIEW_STR);
 
    /*  Get the 2 scrollbars and reset their foreground to the proper color  */
@@ -9832,7 +9832,7 @@ CreateFmPopup (Widget w)
    XtAddCallback(XtParent(fileMgrPopup.menu), XmNpopdownCallback,
                  FilePopupPopdownCB, NULL);
    XtAddCallback(fileMgrPopup.menu, XmNhelpCallback,
-                       (XtCallbackProc)HelpRequestCB,
+                       HelpRequestCB,
                        HELP_POPUP_MENU_STR);
 
 
@@ -9856,7 +9856,7 @@ CreateFmPopup (Widget w)
    fileMgrPopup.wsPopup[BTN_PROPERTIES] = popupBtns[i] =
           XmCreatePushButtonGadget (fileMgrPopup.menu, "permissions", args, 2);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                  (XtCallbackProc)HelpRequestCB,
+                                  HelpRequestCB,
                                   HELP_POPUP_MENU_STR);
 
    XmStringFree (label_string);
@@ -9873,7 +9873,7 @@ CreateFmPopup (Widget w)
    XtAddCallback (popupBtns[i], XmNactivateCallback,
                                 ShowFindDialog, (XtPointer) FM_POPUP);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                  (XtCallbackProc)HelpRequestCB,
+                                  HelpRequestCB,
                                   HELP_FILE_MENU_STR);
 
    XmStringFree (label_string);
@@ -9890,7 +9890,7 @@ CreateFmPopup (Widget w)
    XtAddCallback (popupBtns[i], XmNactivateCallback,
                                 CleanUp, (XtPointer) FM_POPUP);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                  (XtCallbackProc)HelpRequestCB,
+                                  HelpRequestCB,
                                   HELP_CLEAN_UP_COMMAND_STR);
 
    XmStringFree (label_string);
@@ -9907,7 +9907,7 @@ CreateFmPopup (Widget w)
    XtAddCallback (popupBtns[i], XmNactivateCallback,
                                 SelectAll, (XtPointer) FM_POPUP);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                  (XtCallbackProc)HelpRequestCB,
+                                  HelpRequestCB,
                                   HELP_SELECT_ALL_COMMAND_STR);
 
    XmStringFree (label_string);
@@ -9924,7 +9924,7 @@ CreateFmPopup (Widget w)
    XtAddCallback (popupBtns[i], XmNactivateCallback,
                                 UnselectAll, (XtPointer) FM_POPUP);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                  (XtCallbackProc)HelpRequestCB,
+                                  HelpRequestCB,
                                   HELP_UNSELECT_ALL_COMMAND_STR);
 
    XmStringFree (label_string);
@@ -9941,7 +9941,7 @@ CreateFmPopup (Widget w)
    XtAddCallback (popupBtns[i], XmNvalueChangedCallback,
                                 ShowHiddenFiles, (XtPointer) FM_POPUP);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                  (XtCallbackProc)HelpRequestCB,
+                                  HelpRequestCB,
                                   HELP_SHOW_HIDDEN_COMMAND_STR);
 
    XmStringFree (label_string);
@@ -9968,7 +9968,7 @@ CreateFmPopup (Widget w)
    fileMgrPopup.objPopup[BTN_PROPERTIES] = popupBtns[i] =
           XmCreatePushButtonGadget (fileMgrPopup.menu, "permissions", args, 2);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                  (XtCallbackProc)HelpRequestCB,
+                                  HelpRequestCB,
                                   HELP_POPUP_MENU_STR);
 
    XmStringFree (label_string);
@@ -9983,7 +9983,7 @@ CreateFmPopup (Widget w)
    fileMgrPopup.objPopup[BTN_STORAGE_SIZE] = popupBtns[i] =
           XmCreatePushButtonGadget (fileMgrPopup.menu, "storageSize", args, 2);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                  (XtCallbackProc)HelpRequestCB,
+                                  HelpRequestCB,
                                   HELP_POPUP_MENU_STR);
 
    XmStringFree (label_string);
@@ -9998,7 +9998,7 @@ CreateFmPopup (Widget w)
    fileMgrPopup.objPopup[BTN_PUTON] = popupBtns[i] =
           XmCreatePushButtonGadget (fileMgrPopup.menu, "putInWorkspace", args, 2);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                  (XtCallbackProc)HelpRequestCB,
+                                  HelpRequestCB,
                                   HELP_POPUP_MENU_STR);
 
    XmStringFree (label_string);
@@ -10013,7 +10013,7 @@ CreateFmPopup (Widget w)
    fileMgrPopup.objPopup[BTN_TRASH] = popupBtns[i] =
           XmCreatePushButtonGadget (fileMgrPopup.menu, "trash", args, 2);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                 (XtCallbackProc)HelpRequestCB,
+                                 HelpRequestCB,
                                  HELP_POPUP_MENU_STR);
 
    XmStringFree (label_string);
@@ -10027,7 +10027,7 @@ CreateFmPopup (Widget w)
    fileMgrPopup.objPopup[BTN_ADD_TO_SHELF] = popupBtns[i] =
           XmCreatePushButtonGadget (fileMgrPopup.menu, "addToShelf", args, 2);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                 (XtCallbackProc)HelpRequestCB,
+                                 HelpRequestCB,
                                  HELP_POPUP_MENU_STR);
 
    XmStringFree (label_string);
@@ -10041,7 +10041,7 @@ CreateFmPopup (Widget w)
    fileMgrPopup.objPopup[BTN_HELP] = popupBtns[i] =
           XmCreatePushButtonGadget (fileMgrPopup.menu, "popupHelp", args, 2);
    XtAddCallback (popupBtns[i++], XmNhelpCallback,
-                                 (XtCallbackProc)HelpRequestCB,
+                                 HelpRequestCB,
                                  HELP_HELP_MENU_STR);
 
    XmStringFree (label_string);
@@ -10054,7 +10054,7 @@ CreateFmPopup (Widget w)
    fileMgrPopup.trash_objPopup[BTN_RESTORE] = popupBtns[i] =
           XmCreatePushButtonGadget (fileMgrPopup.menu, "putBack", args, 2);
    XtAddCallback(popupBtns[i++], XmNhelpCallback,
-                                 (XtCallbackProc)HelpRequestCB,
+                                 HelpRequestCB,
                                  HELP_TRASH_DIALOG_STR);
    XmStringFree (label_string);
 
@@ -10067,7 +10067,7 @@ CreateFmPopup (Widget w)
    fileMgrPopup.trash_objPopup[BTN_REMOVE] = popupBtns[i] =
           XmCreatePushButtonGadget (fileMgrPopup.menu, "shred", args, 2);
    XtAddCallback(popupBtns[i++], XmNhelpCallback,
-                                 (XtCallbackProc)HelpRequestCB,
+                                 HelpRequestCB,
                                  HELP_TRASH_DIALOG_STR);
    XmStringFree (label_string);
 

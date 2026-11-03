@@ -376,7 +376,7 @@ ShowCopyFileDialog(
 #endif
    XtSetArg (args[n], XmNuserData, file_mgr_rec);        n++;
    form = XmCreateForm (shell, "form", args, n);
-   XtAddCallback(form, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(form, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
 
 
@@ -393,7 +393,7 @@ ShowCopyFileDialog(
    XtSetArg (args[n], XmNtraversalOn, False);               n++;
    current_name = XmCreateLabelGadget (form, "current_name", args, n);
    XtManageChild (current_name);
-   XtAddCallback(current_name, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(current_name, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
 
    XmStringFree (label_string);
@@ -410,7 +410,7 @@ ShowCopyFileDialog(
    XtSetArg(args[n], XmNmarginWidth, 5);                            n++;
    file_type_box = XmCreateFrame (form, "file_type_box", args, n);
    XtManageChild (file_type_box);
-   XtAddCallback(file_type_box, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(file_type_box, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
 
 
@@ -424,7 +424,7 @@ ShowCopyFileDialog(
    XtSetArg (args[n], XmNtraversalOn, False);                 n++;
    file_type = _DtCreateIcon (file_type_box, "file_type", args, n);
    XtManageChild (file_type);
-   XtAddCallback(file_type, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(file_type, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
 
    XmStringFree (label_string);
@@ -463,7 +463,7 @@ ShowCopyFileDialog(
    XtSetArg (args[n], XmNtraversalOn, False);                n++;
    dir_label = XmCreateLabelGadget (dir_form, "new_name", args, n);
    XtManageChild (dir_label);
-   XtAddCallback(dir_label, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(dir_label, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
 
    XmStringFree (label_string);
@@ -480,7 +480,7 @@ ShowCopyFileDialog(
                strlen(file_view_data->file_data->file_name));  n++;
    dir_text = XmCreateTextField (dir_form, "new_text", args, n);
    XtManageChild (dir_text);
-   XtAddCallback(dir_text, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(dir_text, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
    XmTextFieldInsert(dir_text, 0, directory_name);
 
@@ -513,7 +513,7 @@ ShowCopyFileDialog(
    XtSetArg (args[n], XmNtraversalOn, False);                n++;
    file_label = XmCreateLabelGadget (file_form, "new_name", args, n);
    XtManageChild (file_label);
-   XtAddCallback(file_label, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(file_label, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
 
    XmStringFree (label_string);
@@ -530,7 +530,7 @@ ShowCopyFileDialog(
                strlen(file_view_data->file_data->file_name)); n++;
    file_text = XmCreateTextField (file_form, "new_text", args, n);
    XtManageChild (file_text);
-   XtAddCallback(file_text, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(file_text, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
    XmTextFieldInsert(file_text, 0, file_view_data->file_data->file_name);
 
@@ -616,7 +616,7 @@ ShowCopyFileDialog(
    XtManageChild (ok);
 
    XtAddCallback (ok, XmNactivateCallback, RenameOk, (XtPointer) call_struct);
-   XtAddCallback(ok, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(ok, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
 
 
@@ -647,7 +647,7 @@ ShowCopyFileDialog(
 
    XtAddCallback (cancel, XmNactivateCallback, DialogCancel,
                                                    (XtPointer) call_struct);
-   XtAddCallback(cancel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(cancel, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
 
 
@@ -672,7 +672,7 @@ ShowCopyFileDialog(
    XmStringFree (label_string);
    XtAddCallback (preview, XmNactivateCallback, FileTypePreviewCB,
                                                    (XtPointer) call_struct);
-   XtAddCallback(preview, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(preview, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
    tmpStr = XtNewString(file_view_data->file_data->file_name);
    FileTypePreview (preview, tmpStr, (XtPointer) call_struct, NULL);
@@ -693,9 +693,9 @@ ShowCopyFileDialog(
    help = XmCreatePushButtonGadget (form, "help", args, n);
    XtManageChild (help);
 
-   XtAddCallback(help, XmNactivateCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(help, XmNactivateCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
-   XtAddCallback(help, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(help, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
 
 
@@ -848,7 +848,7 @@ ShowMoveFileDialog(
 #endif
    XtSetArg (args[n], XmNuserData, file_mgr_rec);        n++;
    form = XmCreateForm (shell, "form", args, n);
-   XtAddCallback(form, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(form, XmNhelpCallback, HelpRequestCB,
                  HELP_MOVE_DIALOG_STR);
 
 
@@ -865,7 +865,7 @@ ShowMoveFileDialog(
    XtSetArg (args[n], XmNtraversalOn, False);			n++;
    current_name = XmCreateLabelGadget (form, "current_name", args, n);
    XtManageChild (current_name);
-   XtAddCallback(current_name, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(current_name, XmNhelpCallback, HelpRequestCB,
                  HELP_MOVE_DIALOG_STR);
 
    XmStringFree (label_string);
@@ -883,7 +883,7 @@ ShowMoveFileDialog(
    XtSetArg (args[n], XmNtraversalOn, False);			n++;
    new_name = XmCreateLabelGadget (form, "new_name", args, n);
    XtManageChild (new_name);
-   XtAddCallback(new_name, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(new_name, XmNhelpCallback, HelpRequestCB,
                  HELP_MOVE_DIALOG_STR);
 
    XmStringFree (label_string);
@@ -903,7 +903,7 @@ ShowMoveFileDialog(
                strlen(file_view_data->file_data->file_name));	n++;
    new_text = XmCreateTextField (form, "new_text", args, n);
    XtManageChild (new_text);
-   XtAddCallback(new_text, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(new_text, XmNhelpCallback, HelpRequestCB,
                  HELP_MOVE_DIALOG_STR);
 
    /*  The data sent to the Text, Ok and Cancel callbacks  */
@@ -963,7 +963,7 @@ ShowMoveFileDialog(
    XtManageChild (ok);
 
    XtAddCallback (ok, XmNactivateCallback, RenameOk, (XtPointer) call_struct);
-   XtAddCallback(ok, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(ok, XmNhelpCallback, HelpRequestCB,
                  HELP_MOVE_DIALOG_STR);
 
 
@@ -994,7 +994,7 @@ ShowMoveFileDialog(
 
    XtAddCallback (cancel, XmNactivateCallback, DialogCancel,
                                                    (XtPointer) call_struct);
-   XtAddCallback(cancel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(cancel, XmNhelpCallback, HelpRequestCB,
                  HELP_MOVE_DIALOG_STR);
 
 
@@ -1014,9 +1014,9 @@ ShowMoveFileDialog(
    help = XmCreatePushButtonGadget (form, "help", args, n);
    XtManageChild (help);
 
-   XtAddCallback(help, XmNactivateCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(help, XmNactivateCallback, HelpRequestCB,
                  HELP_MOVE_DIALOG_STR);
-   XtAddCallback(help, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(help, XmNhelpCallback, HelpRequestCB,
                  HELP_MOVE_DIALOG_STR);
 
 
@@ -1170,7 +1170,7 @@ ShowLinkFileDialog(
 #endif
    XtSetArg (args[n], XmNuserData, file_mgr_rec);        n++;
    form = XmCreateForm (shell, "form", args, n);
-   XtAddCallback(form, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(form, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
 
 
@@ -1188,7 +1188,7 @@ ShowLinkFileDialog(
    XtSetArg (args[n], XmNtraversalOn, False);               n++;
    current_name = XmCreateLabelGadget (form, "current_name", args, n);
    XtManageChild (current_name);
-   XtAddCallback(current_name, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(current_name, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
 
    XmStringFree (label_string);
@@ -1204,7 +1204,7 @@ ShowLinkFileDialog(
    XtSetArg(args[n], XmNmarginWidth, 5);                            n++;
    file_type_box = XmCreateFrame (form, "file_type_box", args, n);
    XtManageChild (file_type_box);
-   XtAddCallback(file_type_box, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(file_type_box, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
 
 
@@ -1218,7 +1218,7 @@ ShowLinkFileDialog(
    XtSetArg (args[n], XmNtraversalOn, False);                 n++;
    file_type = _DtCreateIcon (file_type_box, "file_type", args, n);
    XtManageChild (file_type);
-   XtAddCallback(file_type, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(file_type, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
 
    XmStringFree (label_string);
@@ -1239,7 +1239,7 @@ ShowLinkFileDialog(
                strlen(file_view_data->file_data->file_name));  n++;
    dir_text = XmCreateTextField (form, "new_text", args, n);
    XtManageChild (dir_text);
-   XtAddCallback(dir_text, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(dir_text, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
    XmTextFieldInsert(dir_text, 0, directory_name);
 
@@ -1257,7 +1257,7 @@ ShowLinkFileDialog(
    XtSetArg (args[n], XmNtraversalOn, False);                n++;
    dir_label = XmCreateLabelGadget (form, "new_name", args, n);
    XtManageChild (dir_label);
-   XtAddCallback(dir_label, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(dir_label, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
 
    XmStringFree (label_string);
@@ -1274,7 +1274,7 @@ ShowLinkFileDialog(
                strlen(file_view_data->file_data->file_name));          n++;
    file_text = XmCreateTextField (form, "new_text", args, n);
    XtManageChild (file_text);
-   XtAddCallback(file_text, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(file_text, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
    XmTextFieldInsert(file_text, 0, file_view_data->file_data->file_name);
 
@@ -1291,7 +1291,7 @@ ShowLinkFileDialog(
    XtSetArg (args[n], XmNtraversalOn, False);                   n++;
    file_label = XmCreateLabelGadget (form, "new_name", args, n);
    XtManageChild (file_label);
-   XtAddCallback(file_label, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(file_label, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
 
    XmStringFree (label_string);
@@ -1354,7 +1354,7 @@ ShowLinkFileDialog(
    XtManageChild (ok);
 
    XtAddCallback (ok, XmNactivateCallback, RenameOk, (XtPointer) call_struct);
-   XtAddCallback(ok, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(ok, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
 
 
@@ -1385,7 +1385,7 @@ ShowLinkFileDialog(
 
    XtAddCallback (cancel, XmNactivateCallback, DialogCancel,
                                                    (XtPointer) call_struct);
-   XtAddCallback(cancel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(cancel, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
 
 
@@ -1410,7 +1410,7 @@ ShowLinkFileDialog(
    XmStringFree (label_string);
    XtAddCallback (preview, XmNactivateCallback, FileTypePreviewCB,
                                                    (XtPointer) call_struct);
-   XtAddCallback(preview, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(preview, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
    tmpStr = XtNewString(file_view_data->file_data->file_name);
    FileTypePreview (preview, tmpStr, (XtPointer) call_struct, NULL);
@@ -1431,9 +1431,9 @@ ShowLinkFileDialog(
    help = XmCreatePushButtonGadget (form, "help", args, n);
    XtManageChild (help);
 
-   XtAddCallback(help, XmNactivateCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(help, XmNactivateCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
-   XtAddCallback(help, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(help, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
 
 
@@ -2285,52 +2285,52 @@ ShowMakeFileDialog(
 
    if (w == *create_directoryBtn)
    {
-      XtAddCallback(form, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(form, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
-      XtAddCallback(new_name, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(new_name, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
-      XtAddCallback(new_text, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(new_text, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
-      XtAddCallback(help, XmNactivateCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(help, XmNactivateCallback, HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
-      XtAddCallback(file_type_box,XmNhelpCallback,(XtCallbackProc)HelpRequestCB,
+      XtAddCallback(file_type_box,XmNhelpCallback,HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
-      XtAddCallback(file_type, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(file_type, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
-      XtAddCallback(ok, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(ok, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
-      XtAddCallback(apply, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(apply, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
-      XtAddCallback(cancel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(cancel, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
-      XtAddCallback(preview, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(preview, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
-      XtAddCallback(help, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(help, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_DIR_DIALOG_STR);
    }
    else
    {
-      XtAddCallback(form, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(form, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
-      XtAddCallback(new_name, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(new_name, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
-      XtAddCallback(new_text, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(new_text, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
-      XtAddCallback(help, XmNactivateCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(help, XmNactivateCallback, HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
-      XtAddCallback(file_type_box,XmNhelpCallback,(XtCallbackProc)HelpRequestCB,
+      XtAddCallback(file_type_box,XmNhelpCallback,HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
-      XtAddCallback(file_type, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(file_type, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
-      XtAddCallback(ok, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(ok, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
-      XtAddCallback(apply, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(apply, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
-      XtAddCallback(cancel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(cancel, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
-      XtAddCallback(preview, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(preview, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
-      XtAddCallback(help, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+      XtAddCallback(help, XmNhelpCallback, HelpRequestCB,
                     HELP_CREATE_FILE_DIALOG_STR);
    }
 

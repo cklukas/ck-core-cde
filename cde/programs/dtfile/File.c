@@ -3546,7 +3546,7 @@ CreateNameChangeDialog (
       text = XmCreateTextField(parent, "nameChangeT_DT", args, n);
       XtAddCallback (text, XmNactivateCallback, ChangeIconNameDT,
                                                  (XtPointer)desktopWindow);
-      XtAddCallback(text, XmNhelpCallback, (XtCallbackProc)DTHelpRequestCB,
+      XtAddCallback(text, XmNhelpCallback, DTHelpRequestCB,
                     HELP_NAMECHANGE_DIALOG_STR);
       desktopWindow->text = text;
 
@@ -3571,7 +3571,7 @@ CreateNameChangeDialog (
          XtAddCallback(text, XmNactivateCallback,
                         (XtCallbackProc)ChangeIconName,
                         (XtPointer)file_mgr_data);
-         XtAddCallback(text, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+         XtAddCallback(text, XmNhelpCallback, HelpRequestCB,
                        HELP_NAMECHANGE_DIALOG_STR);
       }
    }
@@ -6184,7 +6184,7 @@ UpdateOneFileIcon(
          XtSetValues (icon_widget, args, i);
       }
       XtAddCallback(icon_widget, XmNhelpCallback,
-                    (XtCallbackProc)HelpRequestCB, NULL);
+                    HelpRequestCB, NULL);
       file_view_data->registered = False;
    }
 

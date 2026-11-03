@@ -453,7 +453,8 @@ shutdown routine.
 DtFile's core window registers its close and timeout callbacks directly. Its
 directory-entry and restricted-text callbacks accept opaque Xt call data and
 recover the Motif callback record internally, while drag-motion and window
-map/resize handlers carry Xt's complete event-handler contract.
+map/resize handlers carry Xt's complete event-handler contract. All shared
+file-manager and desktop help callbacks are also registered directly.
 The Change Directory dialog class also implements the generic dialog-method
 typedefs directly, recovering its concrete dialog and values records inside the
 methods rather than casting the function table.
