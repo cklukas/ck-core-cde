@@ -1,4 +1,9 @@
 2026-11-03
+- CI: select GCC 14 explicitly for the GitHub C23 lane and reconfigure each
+  already-qualified GitHub and rpi4 CDE tree for the optional filesystem
+  consumer. This keeps generated tools and library prerequisites available to
+  the focused dtfile build and launches its Xvfb regression with the selected
+  compiler.
 - Validation: pass clean GCC and Clang C23 builds, both complete check suites,
   the Xvfb dtksh widget callback test, installed private-ksh resolution, and an
   installed uConsole desktop smoke session using the pinned CK Core Motif.

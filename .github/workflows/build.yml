@@ -28,8 +28,8 @@ jobs:
       matrix:
         include:
           - compiler: GCC
-            cc: gcc
-            cxx: g++
+            cc: gcc-14
+            cxx: g++-14
             clang_cast_policy: ''
           - compiler: Clang
             cc: clang
@@ -73,7 +73,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            autoconf automake bison build-essential clang cmake fakeroot flex ksh libatspi2.0-dev \
+            autoconf automake bison build-essential clang cmake fakeroot flex gcc-14 g++-14 ksh libatspi2.0-dev \
             libdbus-1-dev libharfbuzz-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
             librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
             libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
@@ -164,9 +164,9 @@ jobs:
           export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
           export LD_LIBRARY_PATH="$prefix/lib:$fs_prefix/lib"
           export PKG_CONFIG_PATH="$fs_prefix/lib/pkgconfig"
-          cde_fs_build="$RUNNER_TEMP/cde-filesystem-${{ matrix.cc }}"
+          cde_fs_build="$RUNNER_TEMP/cde-build-${{ matrix.cc }}"
           cde_fs_log="$RUNNER_TEMP/cde-filesystem-${{ matrix.cc }}.log"
-          mkdir "$cde_fs_build"
+          test -x "$cde_fs_build/util/tradcpp/tradcpp"
           cd "$cde_fs_build"
           "$GITHUB_WORKSPACE/cde-source/cde/configure" --with-ck-core-fs \
             CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
@@ -182,6 +182,6 @@ jobs:
           make -j1 -C programs/localized/C/msg dtfile_sync.cat
           make -j1 -C programs/dtfile check
           xvfb-run -a -s '-screen 0 1280x900x24 -nolisten tcp' \
-            CC='${{ matrix.cc }}' python3 "$GITHUB_WORKSPACE/cde-source/cde/programs/dtfile/tests/check-sync-retry-ui.py" \
+            env CC='${{ matrix.cc }}' python3 "$GITHUB_WORKSPACE/cde-source/cde/programs/dtfile/tests/check-sync-retry-ui.py" \
               --fs-prefix "$fs_prefix" --motif-prefix "$prefix" \
               --work-dir "$private_fixture/retry-ui"

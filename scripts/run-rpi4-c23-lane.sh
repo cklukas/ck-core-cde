@@ -141,8 +141,8 @@ cmake --install "$fs_build"
 
 export LD_LIBRARY_PATH="$motif_prefix/lib:$fs_prefix/lib"
 export PKG_CONFIG_PATH="$fs_prefix/lib/pkgconfig"
-cde_fs_build=$root/cde-filesystem-build
-mkdir -p "$cde_fs_build"
+cde_fs_build=$cde_build
+test -x "$cde_fs_build/util/tradcpp/tradcpp"
 cd "$cde_fs_build"
 if ! "$cde_source/cde/configure" --with-ck-core-fs \
     CC="$cc" CXX="$cxx" CFLAGS="$strict_cflags" CXXFLAGS='-O1 -g0'; then

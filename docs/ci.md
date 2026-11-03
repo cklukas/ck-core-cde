@@ -7,8 +7,11 @@ description: Continuous builds and documentation publishing.
 
 GitHub Actions checks out the batch revision in `.ckgit/motif-revision`, builds
 an isolated ABI 9 toolkit prefix, and compiles and tests CDE against that exact
-prefix. The CDE configure checks prevent a system Motif library from satisfying
-the build accidentally.
+prefix with GCC 14 and Clang. The CDE configure checks prevent a system Motif
+library from satisfying the build accidentally. The optional CK Core FS
+consumer reconfigures the completed compiler-specific CDE tree in both GitHub
+and rpi4 lanes, so its focused dtfile qualification retains the generated tools
+and libraries established by the full build.
 
 The rpi4 sister checkout is pinned to the same revision, and its build checks
 that the pin matches the recorded file. Advance both pins only when starting
@@ -16,7 +19,7 @@ the next repair batch, so concurrent toolkit changes do not alter validation
 of a batch already in progress.
 
 Documentation builds use published ckdocs `master` revision
-`1f46455b702bc955a2eab63824afe2e062fb04a4` on both GitHub and rpi4. A push to
+`7e3ee5eb57a2cef2e07f9e9fe5c4e2822502d322` on both GitHub and rpi4. A push to
 `master` publishes the verified site to GitHub Pages and the rpi4 Pages service.
 
 Pull requests build the same documentation without deploying it.
