@@ -234,6 +234,8 @@ callbacks.
 DtSearch uses typed exit adapters for database and shared-memory cleanup rather
 than treating unrelated no-argument routines as exit hooks. Its string and file
 readers also implement the parser's shared opaque-argument callback directly.
+The dtsrcreate utility uses the same typed adapter contract for emergency
+database cleanup.
 DtWidget's ComboBox, Control and DialogBox class records use full Xt/Motif
 method signatures and recover their concrete widget types inside each method.
 The same rule applies to Editor, Icon, SpinBox and TitleBox methods, action
@@ -483,4 +485,6 @@ interfaces directly. Its callbacks accept the interface's opaque display/client
 pointers and recover the concrete viewer objects inside the callback. They do
 not cast through unspecified-argument function-pointer aliases. Rebuilding
 `programs/dtinfo/dtinfo/src/Agents/libAgents_a-NodeWindowAgentMotif.o` checks this
-consumer against the actual private DtHelp declarations.
+consumer against the actual private DtHelp declarations. The DtInfo launcher
+registers its action-completion callback and timeout routine through their
+native CDE and Xt contracts without function-pointer casts.

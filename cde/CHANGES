@@ -1,4 +1,8 @@
 2026-11-03
+- DtInfo: register the launcher action-completion and timeout routines through
+  their native callback types instead of casting a by-value timeout identifier.
+- DtSearch: route dtsrcreate's emergency database close through a typed exit
+  adapter rather than casting the no-argument database routine.
 - App Builder: give project, browser and object translation actions their exact
   `XtActionProc` argument contracts. Resize event handlers and double-click
   timers now implement their Xt callback types directly, without registration

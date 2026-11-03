@@ -96,7 +96,7 @@ static void ActionDoneCallback (
 
 static void Exit (
 	XtPointer		client_data,
-	XtIntervalId		id);
+	XtIntervalId		*id);
 
 static Tt_status ConnectToMessageServer (
 	char			* prog_name);
@@ -238,7 +238,7 @@ InvokeAction (
 				    exec_host,
 				    NULL,
 				    True,
-        			    (DtActionCallbackProc) ActionDoneCallback,
+				    ActionDoneCallback,
 				    prog_name);
 
 #if defined(DEBUG)
@@ -255,7 +255,7 @@ InvokeAction (
 	if (!action_id) {
 		XtAppAddTimeOut (app_context,
 				 10, 
-				 (XtTimerCallbackProc) Exit,
+				 Exit,
 				 NULL);
 	}
 
@@ -310,7 +310,7 @@ ActionDoneCallback (
 				 	 "Action returned %s\n", status_name);
 #endif
 			XtAppAddTimeOut(app_context, 10 * time_out, 
-					(XtTimerCallbackProc) Exit,
+					Exit,
 	      				NULL);
 
         	case DtACTION_INVOKED:
@@ -324,7 +324,7 @@ ActionDoneCallback (
 				 	 "Action returned %s\n", status_name);
 #endif
 			XtAppAddTimeOut(app_context, 10 * time_out, 
-					(XtTimerCallbackProc) Exit,
+					Exit,
 	      				NULL);
 	}
 }
@@ -630,7 +630,7 @@ DieFromToolTalkError(Widget parent, char *errfmt, Tt_status status)
 static void
 Exit (
 	XtPointer		client_data,
-	XtIntervalId		id)
+	XtIntervalId		*id)
 {
 	/*
 	 * The following code to determine if DtActionInvoke
@@ -642,7 +642,7 @@ Exit (
 
 	XtAppAddTimeOut (app_context, 
 			 time_out, 
-			 (XtTimerCallbackProc) Exit, 
+			 Exit,
 			 NULL);
 
 }
