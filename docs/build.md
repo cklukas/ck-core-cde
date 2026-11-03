@@ -468,6 +468,8 @@ DtMail registers its list, message-drag, icon, text and editres hooks through
 their complete Xt contracts. Sendmail completion crosses the frontend boundary
 through a typed Xt input adapter, while the mail transport exposes a neutral
 completion operation instead of returning an untyped function address.
+DtPdm also treats an absent optional menu callback as a typed null value without
+a function-pointer cast.
 DtWidget's editor translation table stores its complete four-argument Xt action
 implementations directly, allowing the compiler to check every public and
 internal editor action.
