@@ -247,6 +247,9 @@ The same rule applies to Editor, Icon, SpinBox and TitleBox methods, action
 tables, synthetic resources and gadget dispatch hooks. Project-owned methods
 and converters are stored directly; casts that remain in these records are
 toolkit-defined inheritance sentinels or typed null initializers.
+DtPrint procedure resources follow the Intrinsics default-value contract as
+well: their defaults are addresses of typed `DtPrintSetupProc` values, with a
+valid typed sentinel preserving the difference between unspecified and null.
 
 DtHelp's image library uses exact callback types for pipeline initialization,
 cleanup, destruction and execution, conversion records, and image-object

@@ -86,11 +86,6 @@
 			      w == PSUB_HelpButton(psub))
 
 /*
- * value to indicate initially unspecified resources
- */
-#define DtUNSPECIFIED (~0)
-
-/*
  * limits
  */
 #define MAX_COPIES MAXINT
@@ -250,6 +245,9 @@ static void Initialize(
 		       Widget nw,
 		       ArgList args,
 		       Cardinal *num_args);
+static XtEnum UnspecifiedPrintSetupProc(
+		       Widget w,
+		       DtPrintSetupData *print_data);
 static void InsertChild(
 			Widget child);
 static Boolean IsSetupRequired(
@@ -329,6 +327,11 @@ static void ValidateWorkAreaLocation(
  * Static Global Variable Definitions
  *
  */
+
+static DtPrintSetupProc unspecified_print_setup_proc =
+    UnspecifiedPrintSetupProc;
+static DtPrintSetupProc default_select_file_proc =
+    _DtPrintSetupBoxSelectFileProc;
 
 /*  
  * Synthetic Resource Definitions
@@ -455,7 +458,7 @@ static XtResource resources[] =
 	DtRPrintSetupProc, sizeof(DtPrintSetupProc), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.printer_info_proc), 
-	XmRImmediate, (XtPointer)DtUNSPECIFIED
+	DtRPrintSetupProc, &unspecified_print_setup_proc
     },
     {
 	DtNprinterName,	DtCPrinterName,
@@ -476,14 +479,14 @@ static XtResource resources[] =
 	DtRPrintSetupProc, sizeof(DtPrintSetupProc), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.select_file_proc), 
-	XmRImmediate, (XtPointer) _DtPrintSetupBoxSelectFileProc
+	DtRPrintSetupProc, &default_select_file_proc
     },
     {
 	DtNselectPrinterProc, DtCSelectPrinterProc,
 	DtRPrintSetupProc, sizeof(DtPrintSetupProc), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.select_printer_proc), 
-	XmRImmediate, (XtPointer)DtUNSPECIFIED
+	DtRPrintSetupProc, &unspecified_print_setup_proc
     },
     {
 	DtNsetupCallback, DtCSetupCallback,
@@ -497,7 +500,7 @@ static XtResource resources[] =
 	DtRPrintSetupProc, sizeof(DtPrintSetupProc), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.verify_printer_proc), 
-	XmRImmediate, (XtPointer)DtUNSPECIFIED
+	DtRPrintSetupProc, &unspecified_print_setup_proc
     },
     {
 	DtNworkAreaLocation, DtCWorkAreaLocation,
@@ -1816,6 +1819,27 @@ GetPrintAttributes(
 
 /*
  * ------------------------------------------------------------------------
+ * Name: UnspecifiedPrintSetupProc
+ *
+ * Description:
+ *
+ *     Typed sentinel used only while resolving procedure resource defaults.
+ *
+ * Return value:
+ *
+ *     DtPRINT_FAILURE if a caller invokes an unresolved sentinel.
+ *
+ */
+static XtEnum
+UnspecifiedPrintSetupProc(Widget w, DtPrintSetupData *print_data)
+{
+    (void)w;
+    (void)print_data;
+    return DtPRINT_FAILURE;
+}
+
+/*
+ * ------------------------------------------------------------------------
  * Name: Initialize - Core class method
  *
  * Description:
@@ -1846,11 +1870,11 @@ Initialize(
      */
     if(PSUB_PrintSetupMode(new_w) == DtPRINT_SETUP_XP)
     {
-	if(PSUB_PrinterInfoProc(new_w) == (DtPrintSetupProc)DtUNSPECIFIED)
+	if(PSUB_PrinterInfoProc(new_w) == UnspecifiedPrintSetupProc)
 	    PSUB_PrinterInfoProc(new_w) = _DtPrintSetupBoxXPrinterInfoProc;
-	if(PSUB_SelectPrinterProc(new_w) == (DtPrintSetupProc)DtUNSPECIFIED)
+	if(PSUB_SelectPrinterProc(new_w) == UnspecifiedPrintSetupProc)
 	    PSUB_SelectPrinterProc(new_w) = _DtPrintSetupBoxSelectXPrinterProc;
-	if(PSUB_VerifyPrinterProc(new_w) == (DtPrintSetupProc)DtUNSPECIFIED)
+	if(PSUB_VerifyPrinterProc(new_w) == UnspecifiedPrintSetupProc)
 	    PSUB_VerifyPrinterProc(new_w) = _DtPrintSetupBoxVerifyXPrinterProc;
     }
     else
@@ -1859,12 +1883,12 @@ Initialize(
 	 * for the plain setup mode, unspecified procedure resources
 	 * default to NULL
 	 */
-	if(PSUB_PrinterInfoProc(new_w) == (DtPrintSetupProc)DtUNSPECIFIED)
-	    PSUB_PrinterInfoProc(new_w) = (DtPrintSetupProc)NULL;
-	if(PSUB_SelectPrinterProc(new_w) == (DtPrintSetupProc)DtUNSPECIFIED)
-	    PSUB_SelectPrinterProc(new_w) = (DtPrintSetupProc)NULL;
-	if(PSUB_VerifyPrinterProc(new_w) == (DtPrintSetupProc)DtUNSPECIFIED)
-	    PSUB_VerifyPrinterProc(new_w) = (DtPrintSetupProc)NULL;
+	if(PSUB_PrinterInfoProc(new_w) == UnspecifiedPrintSetupProc)
+	    PSUB_PrinterInfoProc(new_w) = NULL;
+	if(PSUB_SelectPrinterProc(new_w) == UnspecifiedPrintSetupProc)
+	    PSUB_SelectPrinterProc(new_w) = NULL;
+	if(PSUB_VerifyPrinterProc(new_w) == UnspecifiedPrintSetupProc)
+	    PSUB_VerifyPrinterProc(new_w) = NULL;
     }
     /*
      * initialize internal flags

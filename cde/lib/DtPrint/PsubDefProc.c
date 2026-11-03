@@ -1791,7 +1791,7 @@ SelectPrinterInfoCB(
 
     CloseSelectPrinterInfoConnection(dpd);
     XtVaGetValues(psub, DtNprinterInfoProc, &info_proc, NULL);
-    if((DtPrintSetupProc)NULL != info_proc)
+    if(info_proc != NULL)
     {
 	String printer_spec;
 	
