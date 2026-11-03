@@ -159,7 +159,7 @@ static int      pw_obj_renamedOCB(
 static void 	pw_panelist_selectCB(
 		    Widget      	widget,
 		    XtPointer   	client_data,
-		    XmListCallbackStruct *listdata
+		    XtPointer   	call_data
 		);
 
 /*************************************************************************
@@ -268,7 +268,7 @@ panedwin_prop_init(
 	 */
         XtAddCallback(cgen->panelist,
                 XmNbrowseSelectionCallback,
-                (XtCallbackProc)pw_panelist_selectCB, (XtPointer)type);
+                pw_panelist_selectCB, (XtPointer)type);
 
         if (type == AB_PROP_REVOLVING)
                 XtVaSetValues(parent,
@@ -595,9 +595,10 @@ static void
 pw_panelist_selectCB(
     Widget      widget,
     XtPointer   client_data,
-    XmListCallbackStruct *listdata
+    XtPointer   call_data
 )
 {
+    XmListCallbackStruct *listdata = call_data;
     ABObj               module = NULL;
     ABObj               selected_obj = NULL;
     STRING              name = NULL;

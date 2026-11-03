@@ -284,7 +284,7 @@ drawp_prop_init(
 
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNvalueChangedCallback,
-                        (XtCallbackProc)scroll_stateCB, (XtPointer)type);
+                        scroll_stateCB, (XtPointer)type);
 
         /* Border Frame */
         n = 0;

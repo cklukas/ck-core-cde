@@ -140,9 +140,9 @@ ttalk_show_dialog(
         /* These will go away when connections work */
         {
            XtAddCallback(tooltalk_tooltalk_editor.ok_button,
-             XmNactivateCallback,(XtCallbackProc)ttalk_applyCB,(XtPointer)NULL);
+             XmNactivateCallback,ttalk_applyCB,(XtPointer)NULL);
            XtAddCallback(tooltalk_tooltalk_editor.cancel_button,
-             XmNactivateCallback,(XtCallbackProc)ttalk_cancelCB,
+             XmNactivateCallback,ttalk_cancelCB,
 	     (XtPointer)NULL); 
         }
 	/* This will go away with inactive initial states work */

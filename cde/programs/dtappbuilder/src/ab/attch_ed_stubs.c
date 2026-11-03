@@ -206,7 +206,7 @@ static BOOL	attch_childrenlist_test_func(
 static void	attch_objlist_selectCB(
 		    Widget      widget,
 		    XtPointer   client_data,
-		    XmListCallbackStruct *listdata
+		    XtPointer   call_data
 		);
 
 static int	attch_obj_geom_changedCB(
@@ -522,7 +522,7 @@ attch_editor_props_init(
 
 
 	XtAddCallback(attch_ed_cgen->objlist, XmNbrowseSelectionCallback,
-		    (XtCallbackProc)attch_objlist_selectCB, (XtPointer)NULL);
+		    attch_objlist_selectCB, (XtPointer)NULL);
 
      	/* 
 	 * Hook widgets up to Attachment Editor
@@ -2019,9 +2019,10 @@ static void
 attch_objlist_selectCB(
     Widget      widget,
     XtPointer   client_data,
-    XmListCallbackStruct *listdata
+    XtPointer   call_data
 )
 {
+    XmListCallbackStruct *listdata = call_data;
     ABObj               module;
     ABObj               selected_obj;
     STRING              name;

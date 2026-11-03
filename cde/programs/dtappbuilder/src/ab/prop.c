@@ -282,9 +282,9 @@ static void	invoke_help_editorCB(
                     XtPointer   calldata
                 );
 static void	objlist_selectCB(
-    		    Widget      widget,
-    		    XtPointer   client_data,
-    		    XmListCallbackStruct *listdata
+		    Widget      widget,
+		    XtPointer   client_data,
+		    XtPointer   call_data
 		);
 static void     ok_propsCB(
                     Widget      w,
@@ -595,7 +595,7 @@ prop_fixed_dialog_init(
                 NULL);
 
     XtAddCallback(objlist, XmNbrowseSelectionCallback,
-            (XtCallbackProc)objlist_selectCB, (XtPointer)AB_PROP_FIXED);
+            objlist_selectCB, (XtPointer)AB_PROP_FIXED);
 
 }
 
@@ -1755,7 +1755,7 @@ prop_label_field_init(
 
     for(i=0; i < num_items; i++)
         XtAddCallback(labeltype_items[i], XmNactivateCallback,
-                (XtCallbackProc)propP_labeltypeCB, (XtPointer)label_pfs);
+                propP_labeltypeCB, (XtPointer)label_pfs);
 
 }
 
@@ -2869,7 +2869,7 @@ revolv_objectspane_init(
 		tearoff_propsCB, NULL);
 
     XtAddCallback(cgen->objlist, XmNbrowseSelectionCallback,
-            (XtCallbackProc)objlist_selectCB,
+            objlist_selectCB,
 		(XtPointer)AB_PROP_REVOLVING);
 
     /* Setup Object List Label */
@@ -3913,9 +3913,10 @@ static void
 objlist_selectCB(
     Widget	widget,
     XtPointer	client_data,
-    XmListCallbackStruct *listdata
+    XtPointer   call_data
 )
 {
+    XmListCallbackStruct *listdata = call_data;
     AB_PROP_TYPE 	type = (AB_PROP_TYPE)client_data;
     PropStateInfo	*pstate;
     PalItemInfo		*palitem = NULL;

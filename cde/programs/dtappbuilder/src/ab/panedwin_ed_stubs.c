@@ -186,13 +186,13 @@ panedwin_ed_show_dialog(
 	/* Add Callback to load panedWin object when selected from list */
 	XtAddCallback(dtb_panedwin_ed_dialog.objlist, 
 		XmNbrowseSelectionCallback,
-		(XtCallbackProc)pw_objlist_selectCB, (XtPointer)NULL);
+		pw_objlist_selectCB, (XtPointer)NULL);
 
 	/* Add Callback to load panes when a paned window obj is
 	 * selected from list. */
 	XtAddCallback(dtb_panedwin_ed_dialog.panelist, 
 		XmNbrowseSelectionCallback,
-		(XtCallbackProc)pw_panelist_selectCB, (XtPointer)NULL);
+		pw_panelist_selectCB, (XtPointer)NULL);
 
         /*
          * Setup dialog to participate in dtbuilder window protocol

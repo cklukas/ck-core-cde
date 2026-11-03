@@ -163,9 +163,9 @@ static int	dnd_obj_was_updated(
 		);
 
 static void	dnd_select_instanceCB(
-    			Widget widget,
-    			XtPointer client_data,
-    			XmListCallbackStruct *listdata
+			Widget widget,
+			XtPointer client_data,
+			XtPointer call_data
 		);
 
 static void	dnd_prevent_closeCB(
@@ -331,7 +331,7 @@ dnd_ed_editor_init(
 
     /* Register Dnd Editor callbacks */
     XtAddCallback(dds->objList, XmNsingleSelectionCallback,
-            (XtCallbackProc)dnd_select_instanceCB, (XtPointer)NULL);
+            dnd_select_instanceCB, (XtPointer)NULL);
 
     /*
      * Setup dialog to participate in dtbuilder window protocol
@@ -560,9 +560,10 @@ static void
 dnd_select_instanceCB(
     Widget widget,
     XtPointer client_data,
-    XmListCallbackStruct *listdata
+    XtPointer call_data
 )
 {
+    XmListCallbackStruct *listdata = call_data;
     ABObj        		module = NULL;
     ABObj        		selected_obj = NULL;
     STRING       		name = NULL;

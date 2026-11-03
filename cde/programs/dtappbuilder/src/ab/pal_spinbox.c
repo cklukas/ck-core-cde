@@ -144,7 +144,7 @@ static int	spinbox_obj_destroy_CB(
 static void     spinbox_typeCB(
                     Widget   widget,
                     XtPointer clientdata,
-                    XmToggleButtonCallbackStruct *state
+                    XtPointer calldata
                 );
 
 /*************************************************************************
@@ -301,7 +301,7 @@ spinbox_prop_init(
                        cgen->spinboxtype_cb);
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNvalueChangedCallback,
-                        (XtCallbackProc)spinbox_typeCB, (XtPointer)type);
+                        spinbox_typeCB, (XtPointer)type);
 
         /* Label, Type, Position */
         n = 0;
@@ -833,9 +833,10 @@ static void
 spinbox_typeCB(
     Widget   	item,
     XtPointer 	clientdata,
-    XmToggleButtonCallbackStruct *state
+    XtPointer calldata
 )
 {
+    XmToggleButtonCallbackStruct *state = calldata;
     AB_PROP_TYPE	   type = (AB_PROP_TYPE)clientdata;
     PropSpinboxSettingsRec *pss = &(prop_spinbox_settings_rec[type]);
     int    		   value;

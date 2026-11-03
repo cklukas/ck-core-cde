@@ -152,7 +152,7 @@ static void	help_attr_chgCB(
 static void	select_instanceCB(
 		    Widget      widget,
 		    XtPointer   client_data,
-		    XmListCallbackStruct *listdata
+		    XtPointer   call_data
 		);
 
 static int	object_was_created(
@@ -298,7 +298,7 @@ ab_popup_help(
 
 	/* Register Help Editor callbacks */
 	XtAddCallback(HelpObjList,XmNsingleSelectionCallback,
-		(XtCallbackProc)select_instanceCB, (XtPointer)NULL);
+		select_instanceCB, (XtPointer)NULL);
 
 	/* Initialize settings data structure */
 	hes->prop_sheet = help_ed->text_panel;
@@ -431,8 +431,9 @@ static void
 select_instanceCB(
     Widget widget,
     XtPointer client_data,
-    XmListCallbackStruct *listdata)
+    XtPointer call_data)
 {
+    XmListCallbackStruct *listdata = call_data;
     ABObj        module;
     ABObj        selected_obj;
     STRING       name;

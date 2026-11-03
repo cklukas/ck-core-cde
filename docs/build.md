@@ -235,9 +235,12 @@ record. Those implementations accept `XtPointer` at the toolkit boundary and
 recover `XmSelectionBoxCallbackStruct` only inside the callback. App Builder's
 generated message-dialog runtime uses the same direct callback entries, and
 the code emitter writes plain null callback values instead of generated
-function-pointer casts. The final application also includes the parser header
-from the sibling build directory rather than depending on an in-source
-generated copy. Dtterm resolves its
+function-pointer casts. Palette and editor registrations likewise store their
+callbacks directly. List and toggle callbacks accept Xt's opaque call-data
+argument and recover the concrete Motif callback record inside the function;
+the callback-map helper returns a typed null without a function-pointer cast.
+The final application also includes the parser header from the sibling build
+directory rather than depending on an in-source generated copy. Dtterm resolves its
 terminfo and fallback-resource generation scripts and inputs through
 `$(srcdir)`, while its compile includes cover both generated build headers and
 the checked-in private terminal headers.

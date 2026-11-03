@@ -135,7 +135,7 @@ static void	setup_direction_setting(
 static void     orientCB(
                     Widget   widget,
                     XtPointer clientdata,
-                    XmToggleButtonCallbackStruct *state
+                    XtPointer calldata
                 );
 
 /*************************************************************************
@@ -347,7 +347,7 @@ scale_prop_init(
 
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNvalueChangedCallback,
-                        (XtCallbackProc)orientCB, (XtPointer)type);
+                        orientCB, (XtPointer)type);
 
         /* Direction */
         n = 0;
@@ -801,9 +801,10 @@ static void
 orientCB(
     Widget   	item,
     XtPointer 	clientdata,
-    XmToggleButtonCallbackStruct *state
+    XtPointer calldata
 )
 {
+    XmToggleButtonCallbackStruct *state = calldata;
     AB_PROP_TYPE	type = (AB_PROP_TYPE)clientdata;
     PropScaleSettingsRec *pss = &(prop_scale_settings_rec[type]);
     int    		value;

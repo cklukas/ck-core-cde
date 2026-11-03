@@ -375,7 +375,7 @@ populate_src_menu(
 		    ConnP_conn_objs[i].label, strlen(ConnP_conn_objs[i].label)+1,
 		NULL);
 	XtAddCallback(w, XmNactivateCallback,
-			(XtCallbackProc)change_src_type,
+			change_src_type,
 			(XtPointer)&(ConnP_conn_objs[i]));
     }
 }
@@ -409,7 +409,7 @@ populate_target_menu(
 				strlen(ConnP_conn_objs[i].label)+1,
 				NULL);
 	    XtAddCallback(w, XmNactivateCallback,
-			(XtCallbackProc)change_target_type,
+			change_target_type,
 			(XtPointer)&(ConnP_conn_objs[i]));
 	}
     }

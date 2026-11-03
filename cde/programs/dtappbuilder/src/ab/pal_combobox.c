@@ -348,7 +348,7 @@ combo_box_prop_init(
 
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNvalueChangedCallback,
-                        (XtCallbackProc)prop_size_policyCB, (XtPointer)&(pcs->wth));
+                        prop_size_policyCB, (XtPointer)&(pcs->wth));
 
         prop_geomfield_init(&(pcs->wth), cgen->wpolicy_rbox_label,
                             NULL, NULL, NULL, NULL,

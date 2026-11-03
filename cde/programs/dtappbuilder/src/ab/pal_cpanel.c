@@ -318,7 +318,7 @@ cpanel_prop_init(
 
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNvalueChangedCallback,
-                        (XtCallbackProc)prop_size_policyCB, (XtPointer)&(pcs->geometry));
+                        prop_size_policyCB, (XtPointer)&(pcs->geometry));
 
 	/* Geometry Setting */
 	prop_geomfield_init(&(pcs->geometry), cgen->geom_label,
