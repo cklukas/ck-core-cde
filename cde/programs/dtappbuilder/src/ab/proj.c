@@ -1101,14 +1101,15 @@ void
 proj_open_proj_okCB(
     Widget      widget,
     XtPointer   client_data,
-    XmSelectionBoxCallbackStruct *call_data
+    XtPointer   call_data
 )
 {
+    XmSelectionBoxCallbackStruct *selection_data = call_data;
     STRING      	proj_filename = (STRING) NULL;
     XmString		xm_buf = (XmString) NULL;
     DtbObjectHelpData	help_data = NULL;
 
-    proj_filename = (STRING)objxm_xmstr_to_str(call_data->value);
+    proj_filename = (STRING)objxm_xmstr_to_str(selection_data->value);
 
     /* If the file chooser selection text field is empty, return */
     if ( util_strempty(proj_filename) )
@@ -1169,20 +1170,21 @@ void
 proj_import_okCB(
     Widget              		widget,
     XtPointer				client_data,
-    XmSelectionBoxCallbackStruct	*call_data
+    XtPointer                           call_data
 )
 {
+    XmSelectionBoxCallbackStruct *selection_data = call_data;
     STRING 	file_name = (STRING) NULL;
     XmString	xm_buf = (XmString) NULL;
     BOOL	read_OK, write_OK;
     DtbObjectHelpData	help_data = NULL;
 
-    if (call_data->reason != XmCR_OK)
+    if (selection_data->reason != XmCR_OK)
     {
         return;
     }
 
-    file_name = (STRING)objxm_xmstr_to_str(call_data->value);
+    file_name = (STRING)objxm_xmstr_to_str(selection_data->value);
 
     /* If the file chooser selection text field is empty,
      * return, leaving the chooser up to give the user 

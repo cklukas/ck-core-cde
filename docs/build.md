@@ -239,8 +239,11 @@ function-pointer casts. Palette and editor registrations likewise store their
 callbacks directly. List and toggle callbacks accept Xt's opaque call-data
 argument and recover the concrete Motif callback record inside the function;
 the callback-map helper returns a typed null without a function-pointer cast.
-The final application also includes the parser header from the sibling build
-directory rather than depending on an in-source generated copy. Dtterm resolves its
+The maintained generated application source also initializes project-open and
+import chooser arrays with the direct callbacks. Their shared implementations
+recover the selection-box record internally. The final application also
+includes the parser header from the sibling build directory rather than
+depending on an in-source generated copy. Dtterm resolves its
 terminfo and fallback-resource generation scripts and inputs through
 `$(srcdir)`, while its compile includes cover both generated build headers and
 the checked-in private terminal headers.
