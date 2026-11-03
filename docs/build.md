@@ -177,6 +177,8 @@ help-tag headers. Their DTD, delimiter and context inputs are source-qualified;
 generated parser tables remain confined to the build tree. Generator fragment
 lookups use the same build-first/source-second ordering, and their file-opening
 interface accepts const path and mode strings without casts. Generated
+pass1 element-definition tables are completed before their consumers compile,
+matching the canon1 and pass2 generators in parallel builds. Generated
 interface-value macros explicitly end an earlier token definition before
 reusing its name, and integer trie payloads cross the generic pointer boundary
 through `intptr_t` rather than a width-truncating cast.
