@@ -72,6 +72,17 @@ therefore override their source counterparts when present, while a clean
 out-of-tree build still finds the checked-in private interfaces without copying
 them into the build tree.
 
+The same build-before-source rule covers dtprintinfo's private UI, object and
+utility header trees. Its catalog generator resolves the checked-in shell and
+AWK helpers and message input through `$(srcdir)`, so generated catalog headers
+remain build outputs without requiring source files to be staged beside them.
+The icon and work-area widgets' initialization, destruction, resize, expose,
+set-values, geometry, constraint, action and timeout methods implement their Xt
+contracts directly. The C++ help, main-window, container and drag-and-drop
+adapters are registered without function-pointer casts as well. Icon geometry
+returns Motif's negotiated result, and the registered fatal Xt handler is
+non-returning even if delivery of the requested core-dump signal fails.
+
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
 use complete prototypes; the conversion regression test also compiles const

@@ -125,13 +125,13 @@ DtDND::DtDND(MotifUI *_obj, DNDCallback _dndCB, boolean _can_drop_on_root)
 
       // Set up Drag on Button1
       XtAddEventHandler(obj->BaseWidget(), Button1MotionMask,  False, 
-                        (XtEventHandler)DragMotionHandler, (XtPointer)this);
+                        DragMotionHandler, (XtPointer)this);
 
       // Set up Drag on Button2 if not using it for BMenu already
       if (MotifUI::bMenuButton != Button2)
        {
          XtAddEventHandler(obj->BaseWidget(), Button2MotionMask,  False, 
-                        (XtEventHandler)DragMotionHandler, (XtPointer)this);
+                        DragMotionHandler, (XtPointer)this);
        }
     }
    else

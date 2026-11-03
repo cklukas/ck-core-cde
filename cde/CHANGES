@@ -1,4 +1,11 @@
 2026-11-03
+- dtprintinfo: search both build and maintained source directories for its
+  private UI, object and utility headers, and resolve message-generator scripts
+  and inputs from the source tree during clean out-of-tree builds; give the
+  icon and work-area widgets' Xt class methods, actions and timeout their exact
+  callback contracts; register the C++ action, callback and event adapters
+  directly; return the icon's negotiated geometry result; and make the fatal
+  Xt handler explicitly non-returning.
 - dtsearchpath: let `dtsearchpath` and `dtappgather` resolve the private
   libCliSrv interfaces from both their build and maintained source directories,
   so clean out-of-tree qualification does not depend on copied headers.

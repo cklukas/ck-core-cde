@@ -180,19 +180,19 @@ static void GetTopLabelString(Widget, int, XtArgVal *);
 static void GetBottomLabelString(Widget, int, XtArgVal *);
 static void HighlightBorder(Widget);
 static void UnhighlightBorder(Widget);
-static void Initialize(IconWidget, IconWidget, ArgList, Cardinal *);
-static void Redisplay(IconWidget, XEvent *, Region);
-static void Resize(IconWidget);
+static void Initialize(Widget, Widget, ArgList, Cardinal *);
+static void Redisplay(Widget, XEvent *, Region);
+static void Resize(Widget);
 static Dimension CalculateSize(IconWidget, Boolean);
 static void CalculateNewField(Widget w, Dimension name_width,
    int index, Dimension field_width);
-static void Destroy(IconWidget);
-static Boolean SetValues(Widget, Widget, IconWidget, ArgList, Cardinal *);
+static void Destroy(Widget);
+static Boolean SetValues(Widget, Widget, Widget, ArgList, Cardinal *);
 static void CreateGC(IconWidget);
 static void CreateMaskGC(IconWidget);
 static void CreateStateMaskGC(IconWidget);
 static void SetRegions(Widget, int, int, int, int);
-static XtGeometryResult QueryGeometry(IconWidget, XtWidgetGeometry *,
+static XtGeometryResult QueryGeometry(Widget, XtWidgetGeometry *,
     XtWidgetGeometry *);
 static void SingleClickCB(Widget, XEvent *, String *, Cardinal *);
 static void DoubleClickCB(Widget, XEvent *, String *, Cardinal *);
@@ -209,10 +209,10 @@ static char defaultTranslations[] =
 static XtActionsRec actionsList[] = 
 {
     {
-    "SingleClickCB", (XtActionProc) SingleClickCB
+    "SingleClickCB", SingleClickCB
     },
     {
-    "DoubleClickCB", (XtActionProc) DoubleClickCB
+    "DoubleClickCB", DoubleClickCB
     },
 
 };
@@ -416,7 +416,7 @@ IconClassRec iconClassRec =
     ClassInitialize,                    /* class_initialize     */
     NULL,                               /* class_part_initialize*/
     False,                              /* class_inited         */
-    (XtInitProc)Initialize,             /* initialize           */
+    Initialize,                         /* initialize           */
     NULL,                               /* initialize_notify    */
     XtInheritRealize,                   /* realize              */
     actionsList,                        /* actions              */
@@ -428,10 +428,10 @@ IconClassRec iconClassRec =
     True,                               /* compress_exposure    */
     True,                               /* compress_enterleave  */
     False,                              /* visible_interest     */
-    (XtWidgetProc)Destroy,              /* destroy              */
-    (XtWidgetProc)Resize,               /* resize               */
-    (XtExposeProc)Redisplay,            /* expose               */
-    (XtSetValuesFunc)SetValues,         /* set_values           */
+    Destroy,                            /* destroy              */
+    Resize,                             /* resize               */
+    Redisplay,                          /* expose               */
+    SetValues,                          /* set_values           */
     NULL,                               /* set_values_hook      */
     XtInheritSetValuesAlmost,           /* set_values_almost    */
     NULL,                               /* get_values_hook      */
@@ -439,7 +439,7 @@ IconClassRec iconClassRec =
     XtVersionDontCheck,                 /* version              */
     NULL,                               /* callback_private     */
     defaultTranslations,                /* tm_table             */
-    (XtGeometryHandler)QueryGeometry,   /* query_geometry       */
+    QueryGeometry,                      /* query_geometry       */
     NULL,                               /* disp accelerator     */
     NULL                                /* extension            */
     },
@@ -505,7 +505,7 @@ GuiIconGetFieldNameWidth(
         XmeWarning(w, "Cannot get field name width of non-subclass of GuiIcon");
         return 0;
       }
-    if (fields = Fields(w))
+    if ((fields = Fields(w)))
 	return fields->name_width;
     else
 	return 0;
@@ -533,7 +533,7 @@ GuiIconSetField(
         XmeWarning(w, "Cannot set icon fields of non-subclass of GuiIcon");
         return;
       }
-    if (fields = Fields(w))
+    if ((fields = Fields(w)))
       {
 	if (index >= 0 && index < fields->n_fields)
 	  {
@@ -602,7 +602,7 @@ GuiIconGetField(
         XmeWarning(w, "Cannot get icon fields of non-subclass of GuiIcon");
         return;
       }
-    if (fields = Fields(w))
+    if ((fields = Fields(w)))
       {
 	if (index >= 0 && index < fields->n_fields)
 	  {
@@ -717,12 +717,13 @@ ClassInitialize(
  */
 static void
 Initialize(
-   IconWidget request,
-   IconWidget new,
+   Widget request_widget,
+   Widget new_widget,
    ArgList args,
    Cardinal *num_args
    )
 {
+    IconWidget new = (IconWidget)new_widget;
     unsigned char       stringDirection;
     Arg                 new_args[1];
     int                 n;
@@ -832,7 +833,7 @@ Initialize(
     ShadowRegion(new) = _XmRegionCreate();
     HighlightRegion(new) = _XmRegionCreate();
     OldShrinkOutline(new) = ShrinkOutline(new);
-    Resize(new);
+    Resize(new_widget);
 }
 
 /*
@@ -953,9 +954,10 @@ CreateMaskGC(
  */
 static void
 Destroy(
-   IconWidget w
+   Widget widget
    )
 {
+    IconWidget w = (IconWidget)widget;
     if (Label(w))
         XmStringFree(Label(w));
     if (TopLabel(w))
@@ -1002,9 +1004,10 @@ Destroy(
  */
 static void
 Resize(
-   IconWidget w
+   Widget widget
    )
 {
+    IconWidget w = (IconWidget)widget;
     (void) CalculateSize(w, True);
 }
 
@@ -1457,11 +1460,12 @@ SetRegions(
  */
 static void
 Redisplay(
-   IconWidget w,
+   Widget widget,
    XEvent *event,
    Region region
    )
 {
+    IconWidget w = (IconWidget)widget;
     XRectangle  pixmap_rect;
     XRectangle  label_rect;
     GC		label_gc;
@@ -1736,11 +1740,12 @@ static Boolean
 SetValues(
    Widget cur,
    Widget req,
-   IconWidget new,
+   Widget new_widget,
    ArgList args,
    Cardinal *num_args
    )
 {
+    IconWidget new = (IconWidget)new_widget;
     Boolean flag = False;
     Boolean newstring = False;
     Boolean CleanupFontFlag = False;
@@ -1996,11 +2001,12 @@ SetValues(
  */
 static XtGeometryResult
 QueryGeometry(
-   IconWidget w,
+   Widget widget,
    XtWidgetGeometry *intended,
    XtWidgetGeometry *desired
    )
 {
+    IconWidget w = (IconWidget)widget;
     Dimension width = 0, width1, height = 0, height1;
     Boolean show_fields = False;
 
@@ -2024,14 +2030,20 @@ QueryGeometry(
       {
 	int i;
 	if (Fields(w)->draw_fields)
+	  {
 	    for (i = 0; i < Fields(w)->n_fields; i++)
+	      {
 		if (Fields(w)->draw_fields[i])
 		  {
 		    show_fields = True;
 		    break;
 		  }
+	      }
+	  }
 	else
+	  {
 	    show_fields = True;
+	  }
       }
     if (ResizeWidth(w) == False || show_fields)
 	desired->width = XtWidth(w);
@@ -2049,6 +2061,7 @@ QueryGeometry(
 	desired->width = 1;
     if (desired->height == 0)
 	desired->height = 1;
+    return XmeReplyToQueryGeometry(widget, intended, desired);
 }
 
 /*
@@ -2110,7 +2123,7 @@ SingleClickCB(
         XtSetArg(args[0], XmNlabelString, &call_value.string);
         XtGetValues(widget, args, 1);
         Selected(widget) = True;
-        Redisplay((IconWidget)widget, NULL, NULL);
+        Redisplay(widget, NULL, NULL);
         XtCallCallbackList((Widget) w, callback, &call_value);
         XmStringFree(call_value.string);
       }
@@ -2165,7 +2178,7 @@ DoubleClickCB(
         XtSetArg(args[0], XmNlabelString, &call_value.string);
         XtGetValues(widget, args, 1);
         Selected(widget) = True;
-        Redisplay((IconWidget)widget, NULL, NULL);
+        Redisplay(widget, NULL, NULL);
         XtCallCallbackList((Widget) w, w->icon.double_click_callback,
             &call_value);
         XmStringFree(call_value.string);

@@ -71,27 +71,27 @@ const char gui_workarea_strings[] =
 #define superclass (&xmManagerClassRec)
 
 static void ClassInitialize(void);
-static void Initialize(WorkAreaWidget, WorkAreaWidget);
+static void Initialize(Widget, Widget, ArgList, Cardinal *);
 static void Realize(Widget w, XtValueMask *, XSetWindowAttributes *);
-static void ConstraintInitialize(Widget, Widget);
-static Boolean SetValues(WorkAreaWidget, WorkAreaWidget, WorkAreaWidget);
-static Boolean ConstraintSetValues(Widget, Widget, Widget);
+static void ConstraintInitialize(Widget, Widget, ArgList, Cardinal *);
+static Boolean SetValues(Widget, Widget, Widget, ArgList, Cardinal *);
+static Boolean ConstraintSetValues(Widget, Widget, Widget, ArgList, Cardinal *);
 static void InsertNewNode(Widget, Widget);
 static void DeleteNode(Widget, Widget);
 static void ConstraintDestroy(Widget);
 static XtGeometryResult GeometryManager(Widget, XtWidgetGeometry *,
                                         XtWidgetGeometry *);
-static void ChangeManaged(WorkAreaWidget);
-static void Redisplay(WorkAreaWidget, XEvent *, Region);
+static void ChangeManaged(Widget);
+static void Redisplay(Widget, XEvent *, Region);
 static void CreateGC(WorkAreaWidget);
 static void NewLayout(WorkAreaWidget);
 static void ComputePositions(WorkAreaWidget, Widget, Dimension *, Dimension *,
                             Dimension, Dimension, int *, int *, int, int *);
 static void SetPositions(WorkAreaWidget, Widget);
 static int OpenedSubnodes(Widget);
-static void Resize(WorkAreaWidget);
+static void Resize(Widget);
 static void MakeChildVisible(Widget, XtPointer, XtPointer);
-static void ResizeTimeOut(Widget w, XtIntervalId *id);
+static void ResizeTimeOut(XtPointer, XtIntervalId *);
 static void ResizeSW(Widget, XtPointer, XtPointer);
 static void DestroyParent(Widget, XtPointer, XtPointer);
 
@@ -201,7 +201,7 @@ WorkAreaClassRec workAreaClassRec =
    ClassInitialize,                       /* class_init              */
    NULL,                                  /* class_part_init         */
    FALSE,                                 /* class_inited            */
-   (XtInitProc)Initialize,                /* initialize              */
+   Initialize,                            /* initialize              */
    NULL,                                  /* initialize_hook         */
    Realize,                               /* realize                 */
    NULL,                                  /* actions                 */
@@ -214,9 +214,9 @@ WorkAreaClassRec workAreaClassRec =
    TRUE,                                  /* compress_enterleave     */
    FALSE,                                 /* visible_interest        */
    NULL,                                  /* destroy                 */
-   (XtWidgetProc)Resize,                  /* resize                  */
-   (XtExposeProc)Redisplay,               /* expose                  */
-   (XtSetValuesFunc)SetValues,            /* set_values              */
+   Resize,                                /* resize                  */
+   Redisplay,                             /* expose                  */
+   SetValues,                             /* set_values              */
    NULL,                                  /* set_values_hook         */
    XtInheritSetValuesAlmost,              /* set_values_almost       */
    NULL,                                  /* get_values_hook         */
@@ -231,7 +231,7 @@ WorkAreaClassRec workAreaClassRec =
   {
    /* composite_class fields */
    GeometryManager,                       /* geometry_manager        */
-   (XtWidgetProc)ChangeManaged,           /* change_managed          */
+   ChangeManaged,                         /* change_managed          */
    XtInheritInsertChild,                  /* insert_child            */
    XtInheritDeleteChild,                  /* delete_child            */
    NULL,                                  /* extension               */
@@ -241,9 +241,9 @@ WorkAreaClassRec workAreaClassRec =
    workAreaConstraintResources,           /* subresources            */
    XtNumber(workAreaConstraintResources), /* subresource_count       */
    sizeof(WorkAreaConstraintsRec),        /* constraint_size         */
-   (XtInitProc)ConstraintInitialize,      /* initialize              */
+   ConstraintInitialize,                  /* initialize              */
    ConstraintDestroy,                     /* destroy                 */
-   (XtSetValuesFunc)ConstraintSetValues,  /* set_values              */
+   ConstraintSetValues,                   /* set_values              */
    NULL,                                  /* extension               */
   },
   {
@@ -379,7 +379,7 @@ GuiWorkAreaReorderChildren(
          sizeof(Widget) * n_subnodes);
       workArea_const->workArea.n_sub_nodes = n_subnodes;
       NewLayout((WorkAreaWidget)XtParent(parent_subnode));
-      Redisplay((WorkAreaWidget)XtParent(parent_subnode), NULL, NULL);
+      Redisplay(XtParent(parent_subnode), NULL, NULL);
     }
    else
     {
@@ -420,7 +420,7 @@ GuiWorkAreaEnableRedisplay(
     {
       workArea->workArea.delay_layout = FALSE;
       NewLayout(workArea);
-      Redisplay(workArea, NULL, NULL);
+      Redisplay((Widget)workArea, NULL, NULL);
     }
    else
       XmeWarning(w, "Cannot set EnableRedisplay of non-subclass of WorkArea");
@@ -452,9 +452,13 @@ ClassInitialize(
  */
 static void
 Initialize(
-   WorkAreaWidget request,
-   WorkAreaWidget new)
+   Widget request_widget,
+   Widget new_widget,
+   ArgList args,
+   Cardinal *num_args)
 {
+   WorkAreaWidget request = (WorkAreaWidget)request_widget;
+   WorkAreaWidget new = (WorkAreaWidget)new_widget;
    Arg             wargs[3];
    WorkAreaConstraints workArea_const;
 
@@ -573,7 +577,9 @@ Realize(
 static void
 ConstraintInitialize(
    Widget request,
-   Widget new)
+   Widget new,
+   ArgList args,
+   Cardinal *num_args)
 {
    WorkAreaConstraints workArea_const = WORKAREA_CONSTRAINT(new);
    WorkAreaWidget workArea = (WorkAreaWidget) new->core.parent;
@@ -606,10 +612,14 @@ ConstraintInitialize(
  */
 static Boolean
 SetValues(
-   WorkAreaWidget current,
-   WorkAreaWidget request,
-   WorkAreaWidget new)
+   Widget current_widget,
+   Widget request_widget,
+   Widget new_widget,
+   ArgList args,
+   Cardinal *num_args)
 {
+   WorkAreaWidget current = (WorkAreaWidget)current_widget;
+   WorkAreaWidget new = (WorkAreaWidget)new_widget;
    int redraw = FALSE;
 
    /* If the fg color has changed, redo the GC's and indicate a redraw.  */
@@ -667,7 +677,9 @@ static Boolean
 ConstraintSetValues(
    Widget current,
    Widget request,
-   Widget new)
+   Widget new,
+   ArgList args,
+   Cardinal *num_args)
 {
    WorkAreaConstraints newconst = WORKAREA_CONSTRAINT(new);
    WorkAreaConstraints current_const = WORKAREA_CONSTRAINT(current);
@@ -863,8 +875,9 @@ GeometryManager(
  */
 static void
 ChangeManaged(
-   WorkAreaWidget workArea)
+   Widget widget)
 {
+   WorkAreaWidget workArea = (WorkAreaWidget)widget;
    NewLayout(workArea);
 }
 
@@ -875,10 +888,11 @@ ChangeManaged(
  */
 static void
 Redisplay(
-   WorkAreaWidget w, 
+   Widget widget,
    XEvent *event, 
    Region region)
 {
+   WorkAreaWidget w = (WorkAreaWidget)widget;
    int i, j;
    WorkAreaConstraints workArea_const;
    Widget child;
@@ -1303,8 +1317,9 @@ OpenedSubnodes(
  */
 static void
 Resize(
-   WorkAreaWidget w)
+   Widget widget)
 {
+   WorkAreaWidget w = (WorkAreaWidget)widget;
    NewLayout(w);
    w->workArea.old_width = w->core.width;
    w->workArea.old_height = w->core.height;
@@ -1347,7 +1362,7 @@ ResizeSW(
       updated.  Instead, add a sufficient timeout to calculate the resize
       after the scroll bar has updated it's XmNvalue resource */
    XtAppAddTimeOut(XtWidgetToApplicationContext(w), 300,
-                   (XtTimerCallbackProc) ResizeTimeOut, client_data);
+                   ResizeTimeOut, client_data);
 }
 
 /*
@@ -1371,9 +1386,10 @@ DestroyParent(
  */
 static void
 ResizeTimeOut(
-   Widget workArea, 
+   XtPointer client_data,
    XtIntervalId *id)
 {
+   Widget workArea = (Widget)client_data;
    Arg args[1];
    int width = workArea->core.parent->core.width;
    WorkAreaWidget w = (WorkAreaWidget) workArea;

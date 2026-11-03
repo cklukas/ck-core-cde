@@ -41,14 +41,14 @@ class Container : public MotifUI {
    friend void MakeChildVisible(Widget, XtPointer, XtPointer);
    friend void ResizeTimeOut(void *, XtIntervalId *id);
    friend void ResizeSW(Widget, XtPointer, XtPointer);
-   friend void ResizeRC(Widget, XEvent *, String *, int *);
+   friend void ResizeRC(Widget, XEvent *, String *, Cardinal *);
 
 
    static void UpdateAreaMessage(Widget, XtPointer, XEvent *, Boolean *);
    static void MakeChildVisible(Widget, XtPointer, XtPointer);
    static void ResizeTimeOut(void *, XtIntervalId *id);
    static void ResizeSW(Widget, XtPointer, XtPointer);
-   static void ResizeRC(Widget, XEvent *, String *, int *);
+   static void ResizeRC(Widget, XEvent *, String *, Cardinal *);
 
  protected:
 

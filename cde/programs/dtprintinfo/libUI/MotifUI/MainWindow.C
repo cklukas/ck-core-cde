@@ -40,7 +40,7 @@
 
 XtActionsRec MainWindow::actions[] =
 {
-  {"PopupMenu", (XtActionProc) &MainWindow::KeyboardPopupMenu}
+  {"PopupMenu", &MainWindow::KeyboardPopupMenu}
 };
 
 class PopupMenuContainer : public MotifUI
