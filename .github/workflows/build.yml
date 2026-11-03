@@ -113,9 +113,12 @@ jobs:
           export CPPFLAGS="-I$prefix/include $(pkg-config --cflags xft)"
           export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
           export LD_LIBRARY_PATH="$prefix/lib"
-          cd cde-source/cde
-          ./autogen.sh
-          if ! ./configure CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
+          (cd cde-source/cde && ./autogen.sh)
+          cde_build="$RUNNER_TEMP/cde-build-${{ matrix.cc }}"
+          mkdir "$cde_build"
+          cd "$cde_build"
+          if ! "$GITHUB_WORKSPACE/cde-source/cde/configure" \
+            CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
             CFLAGS='-O1 -g0 -std=c23' CXXFLAGS='-O1 -g0'; then
             tail -n 200 config.log
             exit 1
@@ -144,8 +147,10 @@ jobs:
           export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
           export LD_LIBRARY_PATH="$prefix/lib:$fs_prefix/lib"
           export PKG_CONFIG_PATH="$fs_prefix/lib/pkgconfig"
-          cd cde-source/cde
-          ./configure --with-ck-core-fs \
+          cde_fs_build="$RUNNER_TEMP/cde-filesystem-${{ matrix.cc }}"
+          mkdir "$cde_fs_build"
+          cd "$cde_fs_build"
+          "$GITHUB_WORKSPACE/cde-source/cde/configure" --with-ck-core-fs \
             CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
             CFLAGS='-O1 -g0 -std=c23' CXXFLAGS='-O1 -g0'
           make -j4 -C programs/dtfile

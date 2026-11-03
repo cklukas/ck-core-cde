@@ -11,5 +11,5 @@ include Classlist.mk
 BUILT_SOURCES = Messages.msg
 CLEANFILES = $(BUILT_SOURCES)
 
-Messages.msg:
-	cat $(Messages_MSGS) > $@
+Messages.msg: $(addprefix $(srcdir)/,$(Messages_MSGS))
+	cat $^ > $@

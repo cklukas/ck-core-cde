@@ -18,7 +18,8 @@ noinst_PROGRAMS = \
 
 noinst_SCRIPTS = dtdocbook2man dtdocbook2sdl
 
-AM_CXXFLAGS = -DCDE_NEXT -I$(top_builddir)/lib/DtMmdb
+AM_CXXFLAGS = -DCDE_NEXT -I$(top_builddir)/lib/DtMmdb \
+	-I$(top_srcdir)/lib/DtMmdb
 AM_LDFLAGS = $(DTCLIENTLIBS) $(XTOOLLIB)
 
 dtdcbk_datarootdir = $(abs_top_srcdir)/programs/dtdocbook

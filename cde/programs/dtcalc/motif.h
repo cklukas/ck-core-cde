@@ -49,7 +49,6 @@ typedef struct Xobject {            /* Motif/Xlib graphics object. */
   Widget errParent, errDialog;
   Widget baseWidgArry[4], numWidgArry[3], ttypeWidgArry[3];
 
-  struct cW_struct *Pappearance, *Pdisplay;
   struct tW_struct *Api_text, *CFpi_cftext, *CFpi_dtext, *CFpi_vtext ;
 
   enum menu_type CFtype ;

@@ -18,5 +18,5 @@ libDtSR_a_AR = $(LD) -r -o
 BUILT_SOURCES = DtSR.msg
 CLEANFILES = $(BUILT_SOURCES)
 
-DtSR.msg:
-	cat $(DtSR_MSGS) > $@
+DtSR.msg: $(addprefix $(srcdir)/,$(DtSR_MSGS))
+	cat $^ > $@

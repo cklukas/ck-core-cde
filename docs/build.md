@@ -443,7 +443,13 @@ same qualified GCC output is staged into an isolated uConsole CDE session which
 must open the Front Panel, Style Manager, Terminal and File Manager, accept a
 command typed through the visible terminal, pass the native dtwm property
 client, and map every captured desktop process to CK Core Motif ABI 9. The CI
-workflow preserves both compiler lanes with explicit `-std=c23` flags.
+workflow preserves both compiler lanes with explicit `-std=c23` flags. Each CI
+lane configures in an empty out-of-tree directory. Generated public headers in
+that directory take precedence, with the maintained source header tree as the
+fallback. ToolTalk applies the same build-first/source-second order to its
+private library interfaces, and the named Dt, DtI, ToolTalk, Xm, CSA and SPC
+include groups preserve that order for consumers using unqualified private
+header names. No lane may depend on headers copied by an earlier build.
 
 The DtInfo C++ viewer also consumes the typed DtHelp hyperlink and resize
 interfaces directly. Its callbacks accept the interface's opaque display/client

@@ -5,7 +5,7 @@ TT_VERSION_DEFINE = -DTT_VERSION_STRING=\"$(TT_VERSION)\"
 
 bin_PROGRAMS = ttmv ttrm ttcp ttrmdir
 
-AM_CXXFLAGS = -I../../lib $(TT_VERSION_DEFINE)
+AM_CXXFLAGS = -I../../lib -I$(top_srcdir)/lib/tt/lib $(TT_VERSION_DEFINE)
 
 LDADD = $(LIBTT) $(TIRPCLIB) $(XTOOLLIB)
 

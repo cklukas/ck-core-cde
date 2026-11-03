@@ -19,5 +19,5 @@ libMMDB_a_AR = $(LD) -r -o
 BUILT_SOURCES = MMDB.msg
 CLEANFILES = $(BUILT_SOURCES)
 
-MMDB.msg:
-	cat $(MMDB_MSGS) > $@
+MMDB.msg: $(addprefix $(srcdir)/,$(MMDB_MSGS))
+	cat $^ > $@

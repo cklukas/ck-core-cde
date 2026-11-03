@@ -17,5 +17,5 @@ libOther_a_AR = $(LD) -r -o
 BUILT_SOURCES = Other.msg
 CLEANFILES = $(BUILT_SOURCES)
 
-Other.msg:
-	cat $(Other_MSGS) > $@
+Other.msg: $(addprefix $(srcdir)/,$(Other_MSGS))
+	cat $^ > $@

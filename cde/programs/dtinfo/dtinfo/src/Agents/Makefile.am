@@ -17,5 +17,5 @@ libAgents_a_AR = $(LD) -r -o
 BUILT_SOURCES = Agents.msg
 CLEANFILES = $(BUILT_SOURCES)
 
-Agents.msg:
-	cat $(Agents_MSGS) > $@
+Agents.msg: $(addprefix $(srcdir)/,$(Agents_MSGS))
+	cat $^ > $@

@@ -40,6 +40,11 @@ AS_CASE([" $CFLAGS "],
   [*" -std="*], [],
   [CFLAGS="$CFLAGS -std=c23"])
 
+dnl Recursive shadow builds search generated public headers in top_builddir
+dnl first.  Add the maintained source header tree as the fallback so a fresh
+dnl out-of-tree build never depends on headers copied by an earlier build.
+CPPFLAGS="$CPPFLAGS -I\$(top_srcdir)/include"
+
 LT_INIT
 AC_PREFIX_DEFAULT(/usr/dt)
 
@@ -262,12 +267,12 @@ AC_SUBST(DTCLIENTLIBS, '$(LIBPRINT) $(LIBHELP) $(LIBWIDGET) $(LIBSVC) \
 $(LIBTT) $(LIBXIN)')
 
 dnl set up come convenience replacements for global include dirs
-AC_SUBST(DT_INCDIR, '-I$(top_builddir)/include/Dt')
-AC_SUBST(DTI_INCDIR, '-I$(top_builddir)/include/DtI')
-AC_SUBST(TT_INCDIR, '-I$(top_builddir)/include/Tt')
-AC_SUBST(XM_INCDIR, '-I$(top_builddir)/include/Xm')
-AC_SUBST(CSA_INCDIR, '-I$(top_builddir)/include/csa')
-AC_SUBST(SPC_INCDIR, '-I$(top_builddir)/include/SPC')
+AC_SUBST(DT_INCDIR, '-I$(top_builddir)/include/Dt -I$(top_srcdir)/include/Dt')
+AC_SUBST(DTI_INCDIR, '-I$(top_builddir)/include/DtI -I$(top_srcdir)/include/DtI')
+AC_SUBST(TT_INCDIR, '-I$(top_builddir)/include/Tt -I$(top_srcdir)/include/Tt')
+AC_SUBST(XM_INCDIR, '-I$(top_builddir)/include/Xm -I$(top_srcdir)/include/Xm')
+AC_SUBST(CSA_INCDIR, '-I$(top_builddir)/include/csa -I$(top_srcdir)/include/csa')
+AC_SUBST(SPC_INCDIR, '-I$(top_builddir)/include/SPC -I$(top_srcdir)/include/SPC')
 
 dnl language enables
 

@@ -18,5 +18,5 @@ libOnlineRender_a_AR = $(LD) -r -o
 BUILT_SOURCES = OnlineRender.msg
 CLEANFILES = $(BUILT_SOURCES)
 
-OnlineRender.msg:
-	cat $(OnlineRender_MSGS) > $@
+OnlineRender.msg: $(addprefix $(srcdir)/,$(OnlineRender_MSGS))
+	cat $^ > $@

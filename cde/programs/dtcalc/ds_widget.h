@@ -45,20 +45,8 @@
 #include <Xm/PushB.h>
 #include <Xm/TextF.h>
 
-enum choice_type { CH_ACTIVE, CH_VALUE } ;    /* Choice operations. */
-
 /* Text widget operations. */
 enum text_type   { T_ACTIVE, T_CARET, T_LABEL, T_VALUE } ;
-
-struct cW_struct {                 /* Choice widget structure. */
-  Widget lmanager ;                /* xmRowColumnWidget Class. */
-  Widget label ;                   /* xmLabelWidgetClass. */
-  Widget cmanager ;                /* xmRowColumnWidgetClass. */
-  Widget *choices ;                /* xmToggleButtonWidgetClass. */
-  int maxno ;                      /* Number of choice elements. */
-  int isexclusive ;                /* Exclusive choice. */
-  void (*func)() ;                 /* Callback (if any) for this choice. */
-} ;
 
 struct tW_struct {                 /* Text widget structure. */
   Widget manager ;                 /* xmRowColumnWidgetClass. */
@@ -66,10 +54,6 @@ struct tW_struct {                 /* Text widget structure. */
   Widget textfield ;               /* xmTextWidgetClass. */
 } ;
 
-int get_choice(struct cW_struct *, enum choice_type);
-
-struct cW_struct *make_choiceW(Widget, char *, char **, int, int,
-                                   int, void (*)());
 struct tW_struct *make_textW(Widget,  char *);
  
 Widget make_butW(Widget, char *);
@@ -77,8 +61,6 @@ Widget make_labelW(Widget,  char *);
 Widget make_manW(char *, Widget, int, int);
 Widget make_toggleW(Widget, char *);
 
-void set_choice(struct cW_struct *, enum choice_type, int);
-void set_choice_help(struct cW_struct *, char *);
 void set_text_help(struct tW_struct *, char *);
 void set_text_str(struct tW_struct *, enum text_type, char *);
 

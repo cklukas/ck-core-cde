@@ -11,7 +11,8 @@ endif
 
 
 # USe CPPFLAGS so it will apply to both C and C++ components
-libDtSvc_la_CPPFLAGS = -I./include -DMULTIBYTE -DNLS16 -I../include \
+libDtSvc_la_CPPFLAGS = -I./include -I$(srcdir)/include \
+	-DMULTIBYTE -DNLS16 -I../include \
 	@DT_INCDIR@ -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\" \
        -DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\"
 

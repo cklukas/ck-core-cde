@@ -38,7 +38,10 @@ invalidating unrelated consumers.
 CI builds the recorded batch Motif dependency in an isolated prefix, checks
 its ABI, compiles CDE and verifies that `dtwm` links to `libXm.so.9`. Separate
 ARM64 GCC and Clang jobs compile maintained C sources as C23 and run the full
-test suite; embedded compatibility sources retain their scoped older mode.
+test suite; embedded compatibility sources retain their scoped older mode. CDE
+and its optional filesystem integration are configured in fresh shadow build
+directories, with generated headers preferred over maintained source headers,
+so reused build-tree state cannot make a CI lane pass.
 
 ## Automated suite
 

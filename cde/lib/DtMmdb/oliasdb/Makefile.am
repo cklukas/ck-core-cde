@@ -2,7 +2,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 noinst_LTLIBRARIES = liboliasdb.la
 
-liboliasdb_la_CXXFLAGS = -DNO_DB_LOCK -I..
+liboliasdb_la_CXXFLAGS = -DNO_DB_LOCK -I.. -I$(top_srcdir)/lib/DtMmdb
 
 liboliasdb_la_SOURCES = asciiIn_filters.C \
 			collectionIterator.C \

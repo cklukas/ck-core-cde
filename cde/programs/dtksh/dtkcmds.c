@@ -9632,7 +9632,7 @@ stdVerifyPrinterProc(
 	return stdPrintSetupProc(VERIFY_PRINTER_PROC, widget, callData);
 }
 
-void dtksh_init()
+void dtksh_init(void)
 {
 	ADDBUILTIN("XtMainLoop", do_XtMainLoop);
 	ADDBUILTIN("DtLoadWidget", do_DtLoadWidget);
