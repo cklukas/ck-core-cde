@@ -212,8 +212,10 @@ message catalog from source-qualified inputs, and stages read-only links to its
 BIL project inputs when generating code outside the source tree. It seeds the
 build with the maintained generated header so application-resource additions
 survive code generation, and its exit path assigns `SIG_IGN` through the native
-signal-handler type. Dtterm resolves its resource-generation scripts and inputs
-through `$(srcdir)`.
+signal-handler type. The final application also includes the parser header from
+the sibling build directory rather than depending on an in-source generated
+copy. Dtterm resolves its resource-generation scripts and inputs through
+`$(srcdir)`.
 Dtcreate uses the ToolTalk toolkit's input handler for Xt dispatch and reserves
 its exact three-argument contract callback for `ttdt_session_join`, avoiding an
 incompatible callback cast and a duplicate ToolTalk connection. Its help-dialog

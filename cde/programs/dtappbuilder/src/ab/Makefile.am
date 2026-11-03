@@ -6,7 +6,8 @@ appdefaultsdir = $(CDE_INSTALLATION_TOP)/app-defaults/C
 
 ABINCLUDES = -I$(top_srcdir)/programs/dtappbuilder/src/include \
 	-I$(top_srcdir)/programs/dtappbuilder/src/include/ab_private \
-	-I$(top_srcdir)/programs/dtappbuilder/src/libABil
+	-I$(top_srcdir)/programs/dtappbuilder/src/libABil \
+	-I../libABil
 
 bin_PROGRAMS = dtbuilder
 
