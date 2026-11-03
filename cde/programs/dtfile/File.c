@@ -7541,7 +7541,7 @@ do_this_entry:
       for (k = 0; k < changeCount; k++)
       {
          SetHotRects(change[k],
-                     (XtCallbackProc) DropOnObject,
+                     DropOnObject,
                      (XtPointer) change[k]);
       }
    }
@@ -9457,7 +9457,7 @@ RegisterDesktopHotspots (
              icon->core.y < ey + eht)
          {
             SetHotRects(file_view_data,
-                        (XtCallbackProc) DropOnObject,
+                        DropOnObject,
                         (XtPointer) file_view_data);
          }
       }

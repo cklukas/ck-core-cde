@@ -1131,7 +1131,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    display = XtDisplay (toplevel);
 #ifdef HAVE_EDITRES
     XtAddEventHandler(toplevel, 0, True,
-                      (XtEventHandler) _XEditResCheckMessages,
+                      _XEditResCheckMessages,
                       (XtPointer) NULL);
 #endif
 
