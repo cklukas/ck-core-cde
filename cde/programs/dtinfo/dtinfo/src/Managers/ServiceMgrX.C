@@ -85,11 +85,6 @@ extern char g_top_locator[];
 
 ServiceMgr::ServiceMgr()
 {
-#if 0
-  // We need to wait for the window to be mapped before doing anything
-  XtAddEventHandler (window_system().toplevel(), StructureNotifyMask, False,
-		     (XtEventHandler) handle_toplevel_mapped, this);
-#endif
 }
 
 

@@ -61,7 +61,7 @@ InputMgrX::receive (WantInputReady &msg, void *client_data) {
     newData->fMsg = msg;
     newData->fObj = this;
     newData->fId = XtAppAddInput(window_system().app_context(), msg.fChannel, (XtPointer) XtInputReadMask,
-				(XtInputCallbackProc) InputMgrX::inputHandler, 
+				InputMgrX::inputHandler,
 				(XtPointer) newData);
     fWantList.insert (newData);
     request(msg.fReceiver);
@@ -93,7 +93,8 @@ InputMgrX::receive (WantInputReadyCancel &msg, void *client_data) {
 }
 
 void
-InputMgrX::inputHandler(InputMgrData *data, int *, XtInputId *) {
+InputMgrX::inputHandler(XtPointer client_data, int *, XtInputId *) {
+    InputMgrData *data = (InputMgrData *)client_data;
     InputReady msg;
     msg.fChannel = data->fMsg.fChannel;
     data->fObj->send_message (msg);

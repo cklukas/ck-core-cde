@@ -127,7 +127,7 @@ QueryGroupView::QueryGroupView (QueryGroup *group, Widget parent)
 	}
       
       XtAddEventHandler (DtinfoXtParent((Widget)f_restraint), StructureNotifyMask, False,
-			 (XtEventHandler) &QueryGroupView::resize,
+			 &QueryGroupView::resize,
 			 (Widget) f_restraint);
       // Store the min width in UserData...
       f_restraint.UserData ((XtPointer)(size_t) f_restraint.Width());
@@ -185,30 +185,32 @@ void QueryGroupView::re_load_terms(QueryGroup* group)
 // /////////////////////////////////////////////////////////////////
 
 void
-QueryGroupView::resize (Widget, Widget w,
-			XConfigureEvent *event)
+QueryGroupView::resize (Widget, XtPointer client_data, XEvent *event,
+			Boolean *)
 {
   if (event->type != ConfigureNotify)
     return;
 
+  Widget w = (Widget) client_data;
+  XConfigureEvent *configure_event = &event->xconfigure;
   WRestraint restraint (w);
   Dimension min_width = (Dimension) (size_t) restraint.UserData();
 
-  ON_DEBUG(printf ("Group Form Resized: (event %d)\n", event->type));
+  ON_DEBUG(printf ("Group Form Resized: (event %d)\n", configure_event->type));
 
-  ON_DEBUG(printf ("min_width = %d -- sized to %d\n", min_width, event->width));
+  ON_DEBUG(printf ("min_width = %d -- sized to %d\n", min_width, configure_event->width));
   /* Width shouldn't be zero, but for some reason it is... */
-  if (event->width == 0)
+  if (configure_event->width == 0)
     return;
 
   // If the parent is bigger than the min size, grow to match it.
-  if (event->width >= min_width)
+  if (configure_event->width >= min_width)
     {
-      ON_DEBUG(printf ("  resizing group to event size: %d\n", event->width));
-      restraint.Width (event->width);
+      ON_DEBUG(printf ("  resizing group to event size: %d\n", configure_event->width));
+      restraint.Width (configure_event->width);
     }
   // If the parent is smaller, make it the min_width.
-  else if (event->width < min_width)
+  else if (configure_event->width < min_width)
     {
       /* This shouldn't happen now because the editor sets the min shell
 	 width not to allow sizes this small. */

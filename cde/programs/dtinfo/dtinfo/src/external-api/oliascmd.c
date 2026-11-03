@@ -74,6 +74,15 @@ activate (Widget w, XtPointer client_data, XtPointer call_data)
 /*  puts ("** Returned from API **"); */
 }
 
+static void
+quit_callback (Widget w, XtPointer client_data, XtPointer call_data)
+{
+  (void) w;
+  (void) client_data;
+  (void) call_data;
+  exit (0);
+}
+
 
 /* **************************************************************
  * main
@@ -91,7 +100,7 @@ main (int argc, char *argv[])
    XtVaAppInitialize (&app_context, "OliasCmd", NULL, 0, &argc, argv, NULL, 0);
 
   XtAddEventHandler(toplevel, (EventMask) 0, TRUE,
-		    (XtEventHandler) _XEditResCheckMessages, NULL);
+		    _XEditResCheckMessages, NULL);
 
 #define WIDGET  XtVaCreateWidget
 #define WIDGETM XtVaCreateManagedWidget
@@ -109,7 +118,7 @@ main (int argc, char *argv[])
   loc   = WIDGETM ("loc_field", xmTextFieldWidgetClass,  fform,    NULL);
   
   XtAddCallback (send, XmNactivateCallback, activate, toplevel);
-  XtAddCallback (quit, XmNactivateCallback, (XtCallbackProc) exit, toplevel);
+  XtAddCallback (quit, XmNactivateCallback, quit_callback, toplevel);
 
   XtVaSetValues (form, XmNdefaultButton, send, NULL);
 

@@ -1725,7 +1725,7 @@ SearchScopeAgent::remove_infolib(UAS_Pointer<UAS_Common> &lib)
 
 /* work procedure */
 // Set current scope after callback has finished
-bool
+Boolean
 current_scope(XtPointer client_data)
 {
   SearchScopeAgent* agent = (SearchScopeAgent*)client_data;
@@ -1851,7 +1851,7 @@ SearchScopeAgent::update_option_menu(UAS_String &scope_name)
 
   fill_option_menu();
 
-  XtAppAddWorkProc(window_system().app_context(), (XtWorkProc)current_scope, this);
+  XtAppAddWorkProc(window_system().app_context(), current_scope, this);
 #if EAM
   // need to set current scope to a valid scope.
   // see if the former "current scope" is still around.

@@ -78,7 +78,7 @@ SessionMgr::SessionMgr() : sid(NULL),
                              XInternAtom(
                                  XtDisplay(window_system().toplevel()),
                                 "WM_SAVE_YOURSELF", False ),
-                             (XtCallbackProc)SaveSession_cb, this );
+                             SaveSession_cb, this );
 }
 
 

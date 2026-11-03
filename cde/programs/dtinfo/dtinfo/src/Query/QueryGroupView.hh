@@ -91,7 +91,7 @@ public:
   void traverse_here();
 
 private: // functions
-  static void resize (Widget, Widget, XConfigureEvent *);
+  static void resize (Widget, XtPointer, XEvent *, Boolean *);
 
 private: // variables
   QueryGroup       *f_query_group;

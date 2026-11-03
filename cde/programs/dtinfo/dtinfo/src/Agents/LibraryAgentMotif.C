@@ -897,11 +897,11 @@ LibraryAgent::create_ui()
   WXmTextField *search_text = (WXmTextField*)(Widget)
       WXmTextField (search_area, "text", WAutoManage, args, n);
   XtAddEventHandler (*search_text, EnterWindowMask, False,
-		     (XtEventHandler) search_help, (XtPointer) this);
+		     search_help, (XtPointer) this);
   XtAddEventHandler (*search_text, LeaveWindowMask, False,
-		     (XtEventHandler) search_help, (XtPointer) this);
+		     search_help, (XtPointer) this);
   XtAddEventHandler (*search_text, FocusChangeMask, False,
-		     (XtEventHandler) search_help, (XtPointer) this);
+		     search_help, (XtPointer) this);
   ON_ACTIVATE (*search_text,		text_callback);
   help_agent().add_help_cb((Widget)search_text);
 
@@ -1809,7 +1809,7 @@ LibraryAgent::destCB(Widget w, XtPointer client_data, XtPointer call_data)
 #endif
 
     XmTransferValue(cs->transfer_id, XA_TARGETS(XtDisplay(w)),
-		    (XtCallbackProc)transferCB, client_data,
+		    transferCB, client_data,
 		    XtLastTimestampProcessed(XtDisplay(w)));
 }
 
@@ -1946,7 +1946,7 @@ LibraryAgent::transferCB(Widget w, XtPointer client_data, XtPointer call_data)
 	}
 
 	XmTransferValue(cs->transfer_id, best_target,
-			(XtCallbackProc)transferCB, client_data,
+			transferCB, client_data,
 			XtLastTimestampProcessed(XtDisplay(w)));
 	return;
     }

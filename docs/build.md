@@ -460,7 +460,10 @@ DtPad registers its X editres hook through the complete Xt event-handler
 contract, while DtIcon uses a typed timeout adapter around its reusable polygon
 click-state reset helper.
 DtInfo's WWL member-callback and timeout bridges use Xt's exact opaque-pointer
-and interval-ID contracts at the toolkit boundary.
+and interval-ID contracts at the toolkit boundary. Its query-resize, search
+help, selection-transfer, input-readiness, deferred-scope, session-save,
+client-event, editres and command-exit hooks likewise register through exact
+typed boundaries.
 DtWidget's editor translation table stores its complete four-argument Xt action
 implementations directly, allowing the compiler to check every public and
 internal editor action.

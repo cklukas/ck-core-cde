@@ -32,7 +32,7 @@ class WXmRadioBox : public WXmRowColumn {
 public :
 		WXmRadioBox (WComposite& father, char* name = NULL, ArgList args = NULL, Cardinal card = 0)
 		  : WXmRowColumn (XmCreateRadioBox (Widget(father), name, args, card)) { }
-	WXmToggleButtonGadget	AddToggleButton (char* name, XtCallbackProc proc = (XtCallbackProc)NULL, caddr_t closure = NULL, ArgList args = NULL, Cardinal card = 0);
+	WXmToggleButtonGadget	AddToggleButton (char* name, XtCallbackProc proc = NULL, caddr_t closure = NULL, ArgList args = NULL, Cardinal card = 0);
 	WXmToggleButtonGadget	AddToggleButton (char* name, WWL*, WWL_FUN, ArgList args = NULL, Cardinal card = 0);
 };
 
