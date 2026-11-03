@@ -236,7 +236,7 @@ static Widget  mainHelpDialog = NULL;
 /*                                                                            */
 /******************************************************************************/
 void closeCB_mainHelpDialog(Widget wid, XtPointer client_data,
-                           XtPointer *cbs)
+                           XtPointer call_data)
 {
   XtDestroyWidget(wid);
   mainHelpDialog = NULL;
