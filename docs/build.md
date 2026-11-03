@@ -46,17 +46,70 @@ The complete desktop also needs the X11, PAM, ToolTalk, RPC, JPEG, LMDB, Tcl,
 terminal, font, and document-processing development packages listed by the
 Debian package metadata under `cde/debian/control`.
 
+## Desktop KornShell dependency
+
+CK Core CDE builds `dtksh` from the ksh93/ksh `1.0` maintenance line. The
+exact commit, archive SHA-256 and ordered patches are recorded in
+`cde/programs/dtksh/ksh93.mk`. The desktop built-ins and widget bindings remain
+CDE source. The CDE entry point registers them through ksh's startup callback,
+and the bindings use the generated headers for the same pinned library. The
+dependency retains its upstream compiler settings; CDE glue follows the
+configured C language mode.
+
+The build installs ksh's private shared libraries under
+`lib/dtksh/ksh93/`, allowing `builtin -f` and `DtLoadWidget` to load widget
+classes at runtime. Native plug-ins must be built against the pinned headers.
+The `test-widget.c` fixture includes `ast.h` before `shcmd.h` and uses `SHLIB`
+to advertise the matching plug-in ABI.
+
+A normal build prepares the dependency automatically. A configured CDE build
+can also prepare it explicitly:
+
+```sh
+make -C programs/dtksh prepare-ksh
+```
+
+Preparation requires Python 3, tar and patch. A Git checkout downloads the
+pinned archive from GitHub on first use. For a verified offline build, supply
+the absolute path to a local copy of the same archive:
+
+```sh
+make -j4 KSH93_ARCHIVE=/absolute/path/to/ksh-REVISION.tar.gz
+```
+
+Preparation verifies the archive checksum before extraction or patching. The
+verified archive and patched source live in the private build directory under
+`programs/dtksh/ksh-work/`. Source distributions include the original upstream
+archive, integration manifest and patches so release builds can run offline.
+Installation includes the upstream EPL-2.0 license and copyright notices under
+`share/licenses/dtksh/`.
+
+To update ksh, select an upstream maintenance commit, update the commit and
+checksum together, and review every patch against the new source. Production
+patches are limited to the platform probe and desktop shell build options. Test
+patches apply to a temporary copy of the upstream suite: they synchronize
+pipeline checks, scope the version check to exclude ToolTalk commands, measure
+signal and command-substitution deadlines inside the child interpreter, and
+bound PTY dialogues. Run the upstream POSIX and UTF-8 suites through the linked
+`dtksh`, then exercise the installed-style widget callback under Xvfb:
+
+```sh
+make -j4 -C programs/dtksh check
+xvfb-run -a make -j1 -C programs/dtksh check-widget
+```
+
+For a focused rerun, pass a space-separated list of upstream test names, for
+example `KSH93_TEST_CASES="basic signal subshell"`, to the same `make check`
+command.
+
 ## C23 build contract
 
 C23 is the default language mode for maintained CDE C sources. Configure keeps
-an explicit `-std=` mode supplied by a packager or developer; the embedded
-ksh93 sources and genuinely historical utilities remain explicit GNU17
-compatibility components.
-The dtksh build copies its vendored ksh93 tree into the private build directory
-and passes `-std=gnu17` only to that package build; the maintained dtksh glue
-continues to inherit the enclosing C23 qualification flags. This also keeps
-generated ksh93 objects out of the source checkout. The compatibility build
-uses the lane's configured compiler, so both GCC and Clang exercise GNU17.
+an explicit `-std=` mode supplied by a packager or developer. Genuinely
+historical utilities retain their scoped compatibility modes. The external
+ksh93 dependency uses its supported upstream dialect while maintained dtksh
+glue inherits the enclosing C23 qualification flags. Both GCC and Clang build
+the dependency and strict C23 glue in their respective lanes.
 Generated dtksh scripts likewise name their source-tree prerequisites
 explicitly, allowing the check and install targets to run out of tree.
 The maintained dtksh command layer is compiled in the enclosing C23 mode. Its

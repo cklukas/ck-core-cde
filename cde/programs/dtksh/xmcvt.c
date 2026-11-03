@@ -55,7 +55,6 @@
 #include <Dt/Help.h>
 #include <Dt/EnvControlP.h>
 #include <Tt/tttk.h>
-#include "hash.h"
 #include "stdio.h"
 #include "dtksh.h"
 #include "xmksh.h"

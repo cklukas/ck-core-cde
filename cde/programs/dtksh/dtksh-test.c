@@ -10,25 +10,34 @@
 int
 main(int argc, char **argv)
 {
-    char executable[sizeof(DTKSH_TEST_BUILDDIR) + sizeof("/.libs/dtksh")];
-    char libraries[sizeof(DTKSH_TEST_BUILDDIR) * 6 + 512];
-    const char *inherited;
+    static const char executable[] = DTKSH_TEST_BUILDDIR "/.libs/dtksh";
+    static const char paths[] =
+        DTKSH_TEST_BUILDDIR "/ksh-work/lib:"
+        DTKSH_TEST_BUILDDIR "/../../lib/DtPrint/.libs:"
+        DTKSH_TEST_BUILDDIR "/../../lib/DtHelp/.libs:"
+        DTKSH_TEST_BUILDDIR "/../../lib/DtWidget/.libs:"
+        DTKSH_TEST_BUILDDIR "/../../lib/DtSvc/.libs:"
+        DTKSH_TEST_BUILDDIR "/../../lib/tt/lib/.libs:"
+        DTKSH_TEST_BUILDDIR "/../../lib/DtXinerama/.libs";
+    const char *inherited = getenv("LD_LIBRARY_PATH");
+    const size_t length = sizeof(paths) - 1;
 
     (void)argc;
-    snprintf(executable, sizeof(executable), "%s/.libs/dtksh",
-             DTKSH_TEST_BUILDDIR);
-    inherited = getenv("LD_LIBRARY_PATH");
-    snprintf(libraries, sizeof(libraries),
-             "%s/../../lib/DtPrint/.libs:%s/../../lib/DtHelp/.libs:"
-             "%s/../../lib/DtWidget/.libs:%s/../../lib/DtSvc/.libs:"
-             "%s/../../lib/tt/lib/.libs:%s/../../lib/DtXinerama/.libs%s%s",
-             DTKSH_TEST_BUILDDIR, DTKSH_TEST_BUILDDIR,
-             DTKSH_TEST_BUILDDIR, DTKSH_TEST_BUILDDIR,
-             DTKSH_TEST_BUILDDIR, DTKSH_TEST_BUILDDIR,
-             inherited ? ":" : "", inherited ? inherited : "");
-    if (setenv("LD_LIBRARY_PATH", libraries, 1) < 0) {
-        perror("setenv LD_LIBRARY_PATH");
-        return 127;
+    if (!inherited || strncmp(inherited, paths, length) != 0 ||
+        (inherited[length] && inherited[length] != ':')) {
+        size_t capacity = sizeof(paths) + (inherited ? strlen(inherited) + 1 : 0);
+        char *libraries = malloc(capacity);
+        if (!libraries) {
+            perror("allocate dtksh library path");
+            return 127;
+        }
+        snprintf(libraries, capacity, "%s%s%s", paths,
+                 inherited && *inherited ? ":" : "", inherited ? inherited : "");
+        if (setenv("LD_LIBRARY_PATH", libraries, 1) < 0) {
+            perror("setenv LD_LIBRARY_PATH");
+            return 127;
+        }
+        free(libraries);
     }
     execv(executable, argv);
     perror("exec dtksh");

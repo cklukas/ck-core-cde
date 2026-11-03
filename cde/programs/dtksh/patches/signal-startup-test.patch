@@ -1,0 +1,87 @@
+--- a/src/cmd/ksh93/tests/signal.sh
++++ b/src/cmd/ksh93/tests/signal.sh
+@@ -236,54 +236,60 @@
+ 
+ # Exit status, output and timing tests
+ (
+-	float s
++	# Measure from the first command in the child to its return, so loading
++	# the interpreter and its shared libraries is outside the trap deadline.
++	stamp='printf "%(%s.%N)T\n" now > "$tmp/signal-start"; '
++	check_time()
++	{
++		float started elapsed
++		if	read -r started < "$tmp/signal-start"
++		then	(( elapsed = $(printf '%(%s.%N)T' now) - started ))
++			(( elapsed >= 0 && elapsed <= .35 )) || print "\\err_exit $1 'took $elapsed seconds, expected around .2'"
++		else	print "\\err_exit $1 'missing signal start time'"
++		fi
++		rm -f "$tmp/signal-start"
++	}
+ 	redirect > parallel_3.err
+ 
+-	s=SECONDS
+-	"$SHELL" 2>/dev/null -c 'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; (sleep .5); print finished' > $tmp/sig
++	"$SHELL" 2>/dev/null -c "$stamp"'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; (sleep .5); print finished' > $tmp/sig
+ 	e=$?
+ 	[[ $e == 3 ]] || print "\\err_exit $LINENO 'exit status failed -- expected 3, got $e'"
+ 	x=$(<$tmp/sig)
+ 	[[ $x == done ]] || print "\\err_exit $LINENO 'output failed -- expected '\\''done'\\'', got '\\''$x'\\'"
+-	(( (SECONDS - s) > .35 )) && print "\\err_exit $LINENO 'took $SECONDS seconds, expected around .2'"
+-
+-	s=SECONDS
+-	"$SHELL" 2>/dev/null -c 'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; sleep .5; print finished' > $tmp/sig
++	check_time "$LINENO"
++
++	"$SHELL" 2>/dev/null -c "$stamp"'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; sleep .5; print finished' > $tmp/sig
+ 	e=$?
+ 	[[ $e == 3 ]] || print "\\err_exit $LINENO 'exit status failed -- expected 3, got $e'"
+ 	x=$(<$tmp/sig)
+ 	[[ $x == done ]] || print "\\err_exit $LINENO 'output failed -- expected '\\''done'\\'', got '\\''$x'\\'"
+-	(( (SECONDS - s) > .35 )) && print "\\err_exit $LINENO 'took $SECONDS seconds, expected around .2'"
+-
+-	s=SECONDS
+-	{ "$SHELL" 2>/dev/null -c 'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; (sleep .5); print finished' > $tmp/sig ;} 2>/dev/null
++	check_time "$LINENO"
++
++	{ "$SHELL" 2>/dev/null -c "$stamp"'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; (sleep .5); print finished' > $tmp/sig ;} 2>/dev/null
+ 	e=$?
+ 	[[ $e == 3 ]] || print "\\err_exit $LINENO 'exit status failed -- expected 3, got $e'"
+ 	x=$(<$tmp/sig)
+ 	[[ $x == done ]] || print "\\err_exit $LINENO 'output failed -- expected '\\''done'\\'', got '\\''$x'\\'"
+-	(( (SECONDS - s) > .35 )) && print "\\err_exit $LINENO 'took $SECONDS seconds, expected around .2'"
+-
+-	s=SECONDS
+-	{ "$SHELL" 2>/dev/null -c 'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; sleep .5; print finished' > $tmp/sig ;} 2>/dev/null
++	check_time "$LINENO"
++
++	{ "$SHELL" 2>/dev/null -c "$stamp"'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; sleep .5; print finished' > $tmp/sig ;} 2>/dev/null
+ 	e=$?
+ 	[[ $e == 3 ]] || print "\\err_exit $LINENO 'exit status failed -- expected 3, got $e'"
+ 	x=$(<$tmp/sig)
+ 	[[ $x == done ]] || print "\\err_exit $LINENO 'output failed -- expected '\\''done'\\'', got '\\''$x'\\'"
+-	(( (SECONDS - s) > .35 )) && print "\\err_exit $LINENO 'took $SECONDS seconds, expected around .2'"
+-
+-	s=SECONDS
+-	x=$("$SHELL" 2>/dev/null -c 'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; (sleep .5); print finished')
++	check_time "$LINENO"
++
++	x=$("$SHELL" 2>/dev/null -c "$stamp"'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; (sleep .5); print finished')
+ 	e=$?
+ 	[[ $e == 3 ]] || print "\\err_exit $LINENO 'exit status failed -- expected 3, got $e'"
+ 	[[ $x == done ]] || print "\\err_exit $LINENO 'output failed -- expected '\\''done'\\'', got '\\''$x'\\'"
+-	(( (SECONDS - s) > .35 )) && print "\\err_exit $LINENO 'took $SECONDS seconds, expected around .2'"
+-
+-	s=SECONDS
+-	x=$("$SHELL" 2>/dev/null -c 'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; sleep .5; print finished')
++	check_time "$LINENO"
++
++	x=$("$SHELL" 2>/dev/null -c "$stamp"'sleep .2 && kill $$ & trap "print done; exit 3" EXIT; sleep .5; print finished')
+ 	e=$?
+ 	[[ $e == 3 ]] || print "\\err_exit $LINENO 'exit status failed -- expected 3, got $e'"
+ 	[[ $x == done ]] || print "\\err_exit $LINENO 'output failed -- expected '\\''done'\\'', got '\\''$x'\\'"
+-	(( (SECONDS - s) > .35 )) && print "\\err_exit $LINENO 'took $SECONDS seconds, expected around .2'"
++	check_time "$LINENO"
+ ) &
+ parallel_3=$!
+ 

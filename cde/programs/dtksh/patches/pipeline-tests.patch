@@ -1,0 +1,44 @@
+--- a/src/cmd/ksh93/tests/basic.sh
++++ b/src/cmd/ksh93/tests/basic.sh
+@@ -106,11 +106,23 @@
+ 	exec 3> /dev/null
+ 	file=$tmp/parallel_5
+ 	cat > $file <<- \EOF
+-		myfilter() { x=$(print ok | cat); print  -r -- "$SECONDS"; }
++		myfilter()
++		{
++			x=$(print ok | cat)
++			[[ $x == ok ]] && : > "$tmp/filter-complete"
++		}
+ 		set -o pipefail
+-		sleep .3 | myfilter
++		# The substitution must finish while its upstream producer is alive.
++		# Bound the wait so a regression fails instead of hanging the suite.
++		{
++			for ((i=0; i<250; i++))
++			do	[[ -e $tmp/filter-complete ]] && exit 0
++				sleep .02
++			done
++			exit 1
++		} | myfilter
+ 	EOF
+-	(( $("$SHELL" $file) <= .2 ))
++	"$SHELL" "$file"
+ } &
+ parallel_5=$!
+ 
+@@ -128,13 +140,12 @@
+ # early termination not causing broken pipe
+ {
+ 	"$binsleep" 0  # avoid OS caching delay on first launch
+-	float s=SECONDS
+ 	set -o pipefail
+ 	for ((i=0; i < 30; i++))
+ 	do	print hello
+ 		sleep .02
+ 	done | "$binsleep" .2
+-	(( (SECONDS - s) < .4 ))
++	[[ $(kill -l "$?") == PIPE ]]
+ } &
+ parallel_7=$!
+ 

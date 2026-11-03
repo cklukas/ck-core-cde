@@ -10,3 +10,8 @@ Project Website: http://cdesktopenv.sourceforge.net/
 
 CDE, the Common Desktop Environment, is released under the terms of
 the GNU LGPL, please see the file COPYING for more details.
+
+Desktop KornShell includes ksh 93u+m under the Eclipse Public License 2.0.
+Its license, additional notices and revision manifest are installed in
+licenses/dtksh under the CDE data directory. The matching CDE source
+distribution contains the archive, build inputs and patches under programs/dtksh.

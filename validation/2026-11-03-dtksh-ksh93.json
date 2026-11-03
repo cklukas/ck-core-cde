@@ -1,0 +1,101 @@
+{
+  "scope": "Desktop KornShell dependency replacement, ARM64 Linux",
+  "cde_base": "9c29f88f5bdb605d60680b2947d4cab2e777f544",
+  "upstream": {
+    "project": "ksh93/ksh",
+    "branch": "1.0",
+    "revision": "d8d2be2b1bf18144ea5dc32d91539368f1a5c9aa",
+    "reported_version": "Version AJM 93u+m/1.0.25-beta 2026-11-01",
+    "archive": "https://codeload.github.com/ksh93/ksh/tar.gz/d8d2be2b1bf18144ea5dc32d91539368f1a5c9aa",
+    "archive_sha256": "5009000cd012d239360021d923f2f7fa9dec2a36d1dc6ba510b8f6363cfa364b",
+    "licenses": "EPL-2.0, including BSD-3-Clause portions and upstream COPYRIGHT notices",
+    "tracked_engine_files_removed": 1152,
+    "patch_sha256": {
+      "desktop-shell-options.patch": "35c762054629b1887e67de4021c321ee97098d6f0b1658e24b3d4b0871b8b849",
+      "pipeline-tests.patch": "5d4b8895d9e327b7d083de2c4d7b40df6504f024d2095c209c3d629695762d41",
+      "pty-jobs.patch": "53551bfe47344a1b1dc8ad61f790ecd51a293fdae2e8c5509e41a8508d3ffd25",
+      "signal-startup-test.patch": "7c1213579e3e8840a7adde041ecd130e7b9e256ae6e4ddf716a60f71f6d29194",
+      "struct-stat-probe.patch": "3f5547f053bb281dfe5aca56f25d28d426143f76d123b15655f2cb7ab4907952",
+      "subshell-startup-test.patch": "16388d8e8c6cf5798044ad0c31d1454255b01bf536f56f2dd72629435e75a78d",
+      "tooltalk-version-test.patch": "7b00dc0ddf00316b24bddcb62f591be8a5d712ccf8268adab9326597bc44b594"
+    }
+  },
+  "build": {
+    "host": "rpi4, Linux aarch64",
+    "cde_compiler": "GCC 12.4.0, CFLAGS=-O1 -g0",
+    "cde_configuration": "out of tree, --disable-docs, private prefix, KSH93_ARCHIVE pointing at the verified archive",
+    "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+    "libXm.so.9.0.0_sha256": "fa218a0cc54a67111365cab94428262a4292369a4d697ba57213423ccdf9937c",
+    "source_coverage": "All tracked files in the dtksh component plus cde/configure.ac and cde/Makefile.am, in sorted path order, verified on both native source trees",
+    "input_files": 66,
+    "input_sha256_manifest_digest": "9878d4db658d4e21546d501de2c9881adfb27c28487815fe01b621677836a31a",
+    "target": "dtksh, dtksh-test, test-widget.la in clean component build (reused unchanged CDE libraries)",
+    "started": "2026-11-03T09:38:50,050383742+01:00",
+    "finished": "2026-11-03T09:47:32,232684879+01:00",
+    "elapsed_seconds": 522.182,
+    "upstream_jobs": 3,
+    "upstream_clean_build_seconds": 501,
+    "comparison": "Earlier clean dependency builds on the same host took 629 seconds with 3 jobs and 1141 seconds with 2 jobs. No prior project baseline for this pin. Final log includes compilation of the engine and shared libraries.",
+    "executable": "/home/klukas/tmp/cde-ksh.GmHUNB/final-build/programs/dtksh/.libs/dtksh",
+    "latest_build": "Incremental relink after adding the PTY concurrency test patch. The executable and all four private libraries matched the clean-build SHA-256 values.",
+    "incremental_build_started": "2026-11-03T10:16:40.592289690+01:00",
+    "executable_mtime": "2026-11-03T10:17:10.355278272+01:00",
+    "installed_executable": "/home/klukas/tmp/cde-ksh.GmHUNB/delivery-stage/home/klukas/tmp/cde-ksh.GmHUNB/cde-prefix/bin/dtksh",
+    "binary_sha256": {
+      ".libs/dtksh": "f52667a35ab71664bde3961838457b9dcfed512a01af594ac0370899272f5ef3",
+      "ksh-work/lib/libast.so": "5ddda0662550918abdbf6b017010978ea017c6e73a8000a9649b4775a00a5351",
+      "ksh-work/lib/libcmd.so": "e7a6e70ba3c8dddcfb5dbe375044299ccbc04889cff51ca85e0096eb2a6a8346",
+      "ksh-work/lib/libdll.so": "a5b47f691083875c34d06bc0206ed30a95540bff16b0f35826989cb1a43ea1b2",
+      "ksh-work/lib/libshell.so": "adc319832218d54e4b58c61368589cfade4f9789ddfe769a9f44ca958f80a956"
+    },
+    "installed_executable_matches_build_tree": true,
+    "runtime": "Verified /proc/self/maps and /proc/PID/exe for build-tree and installed shells with LD_LIBRARY_PATH unset. Each resolves its own private libshell, libcmd, libast and libdll and the pinned libXm.so.9.",
+    "build_log_sha256": "bda3381e6c56dd5a1cf7c2e66489333547b697a56b397b0547e24c5c45bfd785"
+  },
+  "shell_regressions": {
+    "command": "make -j1 -C programs/dtksh check (shtests --posix --utf8 via the linked dtksh)",
+    "environment": "real 24x80 PTY, TERM=xterm, Japanese UTF-8 locale available",
+    "started": "2026-11-03T10:43:47,501415404+01:00",
+    "finished": "2026-11-03T11:05:37,412674910+01:00",
+    "upstream_scripts": 57,
+    "passed_script_locale_runs": 113,
+    "upstream_reported_cases": 11197,
+    "errors": 0,
+    "earlier_signal_result": "One preceding full run yielded SIGABRT instead of SIGPIPE in the C-locale signal.sh case. Its C.UTF-8 counterpart passed. The isolated case returned SIGPIPE for all 250 runs of dtksh and all 250 runs of the same standalone dynamic upstream ksh. Five further runs of the complete signal suite passed in both locales. No assertion or production code was changed after this event. Its cause remains unconfirmed.",
+    "log_sha256": "98196e2a7a04a632fb0333238674433dd8ff02c3ea401405f2f16c92d79b3e9c",
+    "mode": "C and C.UTF-8. The locale script selects its own locales.",
+    "test_patch_scope": [
+      "Two pipeline tests synchronize with producer readiness and check SIGPIPE.",
+      "The version-option test omits the desktop ToolTalk commands from its standalone version contract.",
+      "Signal and subshell timing checks start after the interpreter has loaded and retain the original deadlines.",
+      "Limit simultaneous PTY dialogues to 2 on the four-core test host. The original harness allowed 32 and timed out waiting for the first prompt under load. All PTY predicates and timeouts are unchanged."
+    ]
+  },
+  "desktop_integration": {
+    "command": "xvfb-run -a make -j1 -C programs/dtksh check-widget",
+    "build_tree": "passed",
+    "installed": "passed with LD_LIBRARY_PATH unset",
+    "coverage": "Load a widget class module through builtin -f and DtLoadWidget. Create and realize a form and button, invoke a shell callback, verify CB_WIDGET, the changed label, class registration and inherited constraint resources.",
+    "registered_classes": {
+      "Motif": 35,
+      "Xt": 7,
+      "CDE": [
+        "DtHelpDialog",
+        "DtHelpQuickDialog",
+        "DtPrintSetupBox"
+      ]
+    }
+  },
+  "packaging": {
+    "component_distdir": "Verified exact upstream archive, runtime patches, test patches and runner in the Automake source distribution directory.",
+    "offline": "Prepared the bundled archive in a network-isolated namespace. Compared patched sources and original test files. Verified offline reuse of the cache after make clean.",
+    "integrity": "Rejected an older corrupt KSH93_ARCHIVE override and preserved the previous receipt.",
+    "installation": "Installed license, COPYRIGHT, pin manifest, executable and private libraries match source/build bytes. Uninstall preserved an unrelated file. Distclean removed the cache.",
+    "installed_notice_sha256": {
+      "COPYRIGHT": "a552eb8e94d438a91dbe88dbe6b5ad49e3010d44937f4e82e23fd829fece728e",
+      "LICENSE.md": "d913a9e22678015d30b8b506a46d932a6e100aebf03c697532b7964b0b52679d"
+    }
+  },
+  "c23": "GCC 14.2 and Clang 19.1.7 each passed the CI check-dtksh-c23 target for dtksh-main.c, msgs.c, dtksh-test.c and test-widget.c. Flags were -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=incompatible-pointer-types -Werror=implicit-function-declaration. Full C23 desktop/compiler-matrix qualification belongs to the integration branch.",
+  "documentation": "ckdocs strict check and build passed for 16 pages, with the dependency section, offline override and focused test option verified in rendered HTML."
+}

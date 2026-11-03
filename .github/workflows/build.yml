@@ -76,7 +76,7 @@ jobs:
             librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
             libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
             m4 ncompress opensp pkg-config python3 rpcsvc-proto tcl-dev x11-xserver-utils \
-            xbitmaps xfonts-utils
+            xbitmaps xfonts-utils curl patch xvfb xauth
       - name: Build CK Core Motif ABI 9
         run: |
           set -eu
@@ -124,8 +124,13 @@ jobs:
             tail -n 200 config.log
             exit 1
           fi
+          make -j1 -C programs/dtksh prepare-ksh
           make -j4
+          make -j1 -C programs/dtksh -f Makefile \
+            -f "$GITHUB_WORKSPACE/cde-source/scripts/check-dtksh-c23.mk" \
+            CC='${{ matrix.cc }}' check-dtksh-c23
           make -j4 check
+          xvfb-run -a make -j1 -C programs/dtksh check-widget
           readelf -dW programs/dtwm/.libs/dtwm | grep -F 'libXm.so.9'
       - name: Build installed filesystem C API and test dtfile workflows
         run: |

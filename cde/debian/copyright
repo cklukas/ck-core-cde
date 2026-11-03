@@ -39,6 +39,17 @@ Copyright: 1993 - 1999 Hewlett-Packard Company
            2012 - 2016 William Schaub <wschaub@genesi-tech.com>
 License: LGPL-2+
 
+Files: programs/dtksh/ksh-*.tar.gz programs/dtksh/patches/*.patch
+Copyright: 1986-2014 AT&T Intellectual Property
+           2020-2026 Contributors to ksh 93u+m
+           1979-2012 The Regents of the University of California (BSD portions)
+License: EPL-2.0 and BSD-3-clause
+ The upstream archive includes its complete LICENSE.md and COPYRIGHT notices.
+ These files are also installed under the CDE data directory in licenses/dtksh.
+ .
+ The archive revision, checksum and local patches are listed in
+ programs/dtksh/ksh93.mk.
+
 Files: programs/dtinfo/DtMmdb/btree_berkeley/*.h
        programs/dtinfo/DtMmdb/btree_berkeley/bt_close.c
        programs/dtinfo/DtMmdb/btree_berkeley/bt_conv.c

@@ -5,6 +5,11 @@
   the same strict C boundary. The rpi4 runner uses separate isolated,
   out-of-tree lanes with pinned Motif and filesystem revisions and records each
   verified build's timing, compiler, source revisions and dtwm fingerprint.
+- dtksh: replace the embedded ksh93 tree with a checksum-pinned upstream
+  maintenance revision. Keep CDE built-ins and patches separate, support
+  verified offline archive builds, install the upstream license and notices,
+  and retain the engine's own supported compiler dialect while the CDE glue
+  follows the configured C standard.
 - DtTerm: load the Solaris interactive-session hook through its documented
   four-argument function contract instead of an unprototyped `void (*)()`
   cast. App Builder drops a disabled, structurally obsolete matrix renderer

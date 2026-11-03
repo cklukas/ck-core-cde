@@ -108,8 +108,12 @@ if ! "$cde_source/cde/configure" CC="$cc" CXX="$cxx" \
     tail -n 200 config.log
     exit 1
 fi
+make -j1 -C programs/dtksh prepare-ksh
 make -j4
+make -j1 -C programs/dtksh -f Makefile \
+    -f "$cde_source/scripts/check-dtksh-c23.mk" CC="$cc" check-dtksh-c23
 make -j4 check
+xvfb-run -a make -j1 -C programs/dtksh check-widget
 readelf -dW programs/dtwm/.libs/dtwm | grep -F 'libXm.so.9'
 
 fs_prefix=$root/fs-prefix

@@ -47,7 +47,6 @@
 #include <ctype.h>
 #include <Xm/Xm.h>
 #include <Xm/Protocols.h>
-#include "hash.h"
 #include "stdio.h"
 #include "dtksh.h"
 #include "xmksh.h"
