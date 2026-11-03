@@ -248,13 +248,13 @@ static void SelectionListToString(
 static Boolean StringToBranchList(
                         Display *display,
                         XrmValue *args,
-                        Cardinal num_args,
+                        Cardinal *num_args,
                         XrmValue *from_val,
                         XrmValue *to_val,
                         XtPointer *converter_data );
 static void StringToSelectionList(
                         XrmValue *args,
-                        Cardinal num_args,
+                        Cardinal *num_args,
                         XrmValue *from_val,
                         XrmValue *to_val) ;
 static void GetFileData(
@@ -2354,10 +2354,10 @@ GetResourceValues(
       XtAppAddConverter (XtWidgetToApplicationContext (toplevel), XmRString,
                          RANDOM, StringToRandom, NULL, 0);
       XtAppSetTypeConverter (XtWidgetToApplicationContext (toplevel), XmRString,
-                             BRANCH_LIST, (XtTypeConverter)StringToBranchList,
+                             BRANCH_LIST, StringToBranchList,
                              NULL, 0, XtCacheNone, NULL);
       XtAppAddConverter (XtWidgetToApplicationContext (toplevel), XmRString,
-                         SELECTION_LIST, (XtConverter)StringToSelectionList,
+                         SELECTION_LIST, StringToSelectionList,
                          NULL, 0);
    }
 
@@ -3681,7 +3681,7 @@ static Boolean
 StringToBranchList(
         Display *display,
         XrmValue *args,
-        Cardinal num_args,
+        Cardinal *num_args,
         XrmValue *from_val,
         XrmValue *to_val,
         XtPointer *converter_data)
@@ -3742,7 +3742,7 @@ StringToBranchList(
 static void
 StringToSelectionList(
         XrmValue *args,
-        Cardinal num_args,
+        Cardinal *num_args,
         XrmValue *from_val,
         XrmValue *to_val )
 {

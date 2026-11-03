@@ -6,7 +6,9 @@
   concrete records inside each method. The Find dialog follows the same method
   boundary and uses complete Xt event-handler contracts for its stop-button
   transitions. The main File Manager dialog also stores its set/free/focus
-  methods through their native generic contracts and uses typed null entries.
+  methods through their native generic contracts and uses typed null entries;
+  its branch and selection resource converters now implement the native modern
+  and legacy Xt converter signatures.
 - DtImsStart: register window-manager callbacks and the host-return action with
   their exact Xt contracts, using a typed adapter for the no-argument shutdown
   routine.

@@ -460,7 +460,9 @@ methods rather than casting the function table.
 The Find dialog uses the same generic method boundary and gives its stop-button
 enter/leave handlers the full Xt event signature.
 The main File Manager class similarly implements its set/free/focus methods at
-the generic boundary and initializes unsupported methods with typed nulls.
+the generic boundary and initializes unsupported methods with typed nulls. Its
+branch-list and selection-list resource converters implement the actual modern
+and legacy Xt converter contracts directly.
 DtPad exposes its editor, help, formatting, option, session and print callbacks
 through `XtCallbackProc` directly, and routes panic signals through a typed
 signal adapter. DtAction likewise registers its custom text actions and
