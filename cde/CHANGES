@@ -52,6 +52,10 @@
   maintained public, utility, RFC and Help headers in clean out-of-tree builds;
   use Autoconf's complete X compiler flags instead of emitting a bare `-I` when
   X needs no nonstandard include directory.
+- dtksh: stage the embedded ksh93 source into the private out-of-tree build,
+  correct the libshell dependency, and compile that vendored compatibility
+  component with explicit GNU17 while the maintained dtksh glue remains on the
+  enclosing compiler mode.
 - public interfaces: replace unspecified-argument ToolTalk, DtSvc service,
   action, multimedia database, symbolic-table and event-loop declarations
   with their exact C/C++ contracts; type Instant's remaining initialization,

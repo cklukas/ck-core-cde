@@ -13,9 +13,11 @@ kshdir = ${libdir}/dtksh
 
 dist_ksh_SCRIPTS = DtFuncs.dtsh
 
-KSH93SRC = ./ksh93
+KSH93SOURCE = $(abs_srcdir)/ksh93
+KSH93SRC = $(abs_builddir)/ksh93
 
 KSH93LIBSHELL = $(KSH93SRC)/lib/libshell.a
+KSH93_COMPAT_CFLAGS = -std=gnu17
 
 bin_PROGRAMS = dtksh
 
@@ -63,23 +65,31 @@ dtksh_SOURCES = init.c \
                 extra.c \
                 msgs.c
 
-ksh93/bin/ksh:
-	ksh93/bin/package flat make CCFLAGS='$(KSH93_SHOPTS)'
+$(KSH93SRC)/.source-copy: $(KSH93SOURCE)/bin/package
+	$(RM) -r $(KSH93SRC)
+	$(MKDIR_P) $(KSH93SRC)
+	$(CP) -R $(KSH93SOURCE)/. $(KSH93SRC)/
+	touch $@
 
-init.c: ksh93/bin/ksh
-	$(CP) ksh93/src/cmd/ksh93/sh/init.c ./
+$(KSH93SRC)/bin/ksh: $(KSH93SRC)/.source-copy
+	cd $(KSH93SRC) && bin/package flat make CC='$(CC)' \
+		CCFLAGS='$(KSH93_COMPAT_CFLAGS) $(KSH93_SHOPTS)'
 
-libshell.a: $(KSH93SLIBSHELL) dtksh-init.o
+init.c: $(KSH93SRC)/bin/ksh
+	$(CP) $(KSH93SRC)/src/cmd/ksh93/sh/init.c ./
+
+libshell.a: $(KSH93LIBSHELL) dtksh-init.o
 	$(CP) $(KSH93LIBSHELL) libshell.a; \
 	$(AR) d libshell.a init.o; \
 	$(AR) cq libshell.a dtksh-init.o
 
 check-local:
 	$(abs_builddir)/dtksh-test -c true && \
-		ksh93/bin/shtests --posix --utf8 SHELL=$(abs_builddir)/dtksh-test
+		$(KSH93SRC)/bin/shtests --posix --utf8 \
+			SHELL=$(abs_builddir)/dtksh-test
 
 clean-local:
-	ksh93/bin/package clean
+	$(RM) -r $(KSH93SRC)
 
 DtFuncs.dtsh:
 	$(CP) DtFuncs.sh DtFuncs.dtsh

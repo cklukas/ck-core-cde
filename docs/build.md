@@ -51,6 +51,11 @@ Debian package metadata under `cde/debian/control`.
 CDE is being qualified subsystem by subsystem before C23 becomes the default
 language mode. The embedded ksh93 sources and genuinely historical utilities
 remain explicit GNU17 compatibility components during this work.
+The dtksh build copies its vendored ksh93 tree into the private build directory
+and passes `-std=gnu17` only to that package build; the maintained dtksh glue
+continues to inherit the enclosing C23 qualification flags. This also keeps
+generated ksh93 objects out of the source checkout. The compatibility build
+uses the lane's configured compiler, so both GCC and Clang exercise GNU17.
 
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
