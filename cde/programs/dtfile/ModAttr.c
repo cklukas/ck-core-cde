@@ -220,8 +220,8 @@ static Boolean _LoadFileAttributes(
                         unsigned long mask) ;
 static void displayFSDialog(
                             Widget                        w,
-                            dtFSData                    * fileSystem,
-                            XmPushButtonCallbackStruct  * cbs);
+                            XtPointer                     client_data,
+                            XtPointer                     call_data);
 static void DontChangeCB(
                         Widget w,
                         XtPointer client_data,
@@ -1657,7 +1657,7 @@ SetValues(
      }
      XtAddCallback(modAttr_rec->fsPushButton,
                    XmNactivateCallback,
-                   (XtCallbackProc)displayFSDialog,
+                   displayFSDialog,
                    &modAttr_rec->fileSystem);
      XtManageChild (modAttr_rec->fsPushButton);
    }
@@ -2337,11 +2337,12 @@ LoadFileAttributes(
  
 
 static void 
-displayFSDialog (Widget                      w,
-                 dtFSData                    *fileSystem,       
-                 XmPushButtonCallbackStruct  *cbs)
+displayFSDialog (Widget      w,
+                 XtPointer   client_data,
+                 XtPointer   call_data)
 
 { 
+   dtFSData *fileSystem = client_data;
    static char *pname = "displayFSDialog";
    pid_t     pid;
    int       n;  

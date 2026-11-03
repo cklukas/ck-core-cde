@@ -466,7 +466,8 @@ and legacy Xt converter contracts directly.
 The Help dialog class also stores exact generic methods and typed null entries,
 recovering its concrete help records only inside the method implementation.
 The Modify Attributes class uses that same generic method boundary and exposes
-its apply operation as a native `XtCallbackProc`.
+its apply and filesystem-specific launcher operations as native
+`XtCallbackProc` implementations.
 DtPad exposes its editor, help, formatting, option, session and print callbacks
 through `XtCallbackProc` directly, and routes panic signals through a typed
 signal adapter. DtAction likewise registers its custom text actions and
