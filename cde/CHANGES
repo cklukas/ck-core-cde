@@ -16,7 +16,8 @@
   launcher callback. The Filter dialog class also stores exact generic methods
   and recovers its concrete dialog/value records internally. The Preferences
   dialog completes this conversion and exposes apply/OK handlers through the
-  native Xt callback contract.
+  native Xt callback contract. DtFile's text actions and nine legacy resource
+  converters now implement their complete Xt contracts directly.
 - DtImsStart: register window-manager callbacks and the host-return action with
   their exact Xt contracts, using a typed adapter for the no-argument shutdown
   routine.

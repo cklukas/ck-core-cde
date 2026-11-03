@@ -640,13 +640,13 @@ extern void ProcessAction ( char *action,
 extern void VFTextChangeSpace(
                         Widget text,
                         XEvent *event,
-                        XtPointer params,
-                        XtPointer num_params ) ;
+                        String *params,
+                        Cardinal *num_params ) ;
 extern void CancelOut(
                         Widget widget,
                         XEvent *event,
-                        XtPointer params,
-                        XtPointer num_params ) ;
+                        String *params,
+                        Cardinal *num_params ) ;
 extern void AddString(
                         String *buf,
                         int *size,

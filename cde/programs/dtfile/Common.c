@@ -185,8 +185,8 @@ void
 VFTextChangeSpace(
         Widget text,
         XEvent *event,
-        XtPointer params,
-        XtPointer num_params)
+        String *params,
+        Cardinal *num_params)
 {
    char *value;
    char *currentDirectoryText;
@@ -295,8 +295,8 @@ void
 CancelOut(
         Widget widget,
         XEvent *event,
-        XtPointer params,
-        XtPointer num_params)
+        String *params,
+        Cardinal *num_params)
 {
    FileMgrData *file_mgr_data;
    FileMgrRec *file_mgr_rec;
