@@ -56,6 +56,8 @@ typedef struct {
     uint64_t previous_receipt;
     uint64_t review_serial, execute_serial;
     uint64_t local_rules_revision, reviewed_rules_revision;
+    uint64_t rename_row;
+    unsigned rename_selection_count;
     Widget rule_page;
     char last_error[512];
     uint64_t displayed_ids[SYNC_PAGE_SIZE];
@@ -75,6 +77,8 @@ typedef struct {
     XFontStruct *font;
 } SyncWindow;
 static const uint32_t profiles[]={CKFSP_COMPARE,CKFSP_COPY,CKFSP_UPDATE,CKFSP_MISSING_ONLY,CKFSP_SYNC,CKFSP_MIRROR};
+static unsigned selected_rows(SyncWindow *,uint64_t [SYNC_PAGE_SIZE],int *);
+static void render_rules(SyncWindow *);
 static const char *choice_label(unsigned n)
 {
     static const char *const names[]={"Ask / defer","Use source / replace target","Keep target / skip existing",
@@ -176,22 +180,42 @@ static void clear_filters(Widget widget,XtPointer data,XtPointer call)
     XmTextFieldSetString(w->date_after,""); XmTextFieldSetString(w->date_before,"");
     setup_changed(NULL,w,NULL);
 }
-static int set_native_path(SyncWindow *w,Widget field,const char *path)
+typedef struct { char *native, *display; } PreparedPath;
+static void clear_prepared_path(PreparedPath *path)
+{
+    free(path->native); free(path->display); path->native=path->display=NULL;
+}
+static int prepare_native_path(SyncWindow *w,const char *path,PreparedPath *prepared)
 {
     size_t n=strnlen(path,SYNC_PROFILE_PATH_MAX+1);
     if (n>SYNC_PROFILE_PATH_MAX) { notify(w,M(222,"Folder path is too long.")); return 0; }
-    char *native=strdup(path),*display=malloc(n*4+1);
-    if (!native || !display) { free(native); free(display); notify(w,M(223,"Not enough memory.")); return 0; }
+    prepared->native=strdup(path); prepared->display=malloc(n*4+1);
+    if (!prepared->native || !prepared->display) {
+        clear_prepared_path(prepared); notify(w,M(223,"Not enough memory.")); return 0;
+    }
     size_t j=0; static const char hex[]="0123456789abcdef";
     for (size_t i=0;i<n;++i) {
         unsigned char byte=(unsigned char)path[i];
-        if (byte>=32 && byte<127 && byte!='\\') display[j++]=(char)byte;
-        else { display[j++]='\\'; display[j++]='x'; display[j++]=hex[byte>>4]; display[j++]=hex[byte&15]; }
+        if (byte>=32 && byte<127 && byte!='\\') prepared->display[j++]=(char)byte;
+        else { prepared->display[j++]='\\'; prepared->display[j++]='x'; prepared->display[j++]=hex[byte>>4]; prepared->display[j++]=hex[byte&15]; }
     }
-    display[j]=0;
+    prepared->display[j]=0; return 1;
+}
+/* Commit consumes the prepared native allocation. Path callbacks stay silent;
+ * the caller invalidates setup once the complete UI operation has committed. */
+static void commit_native_path(SyncWindow *w,Widget field,PreparedPath *prepared)
+{
     char **owned=field==w->source?&w->native_source:&w->native_destination;
-    free(*owned); *owned=native; w->setting_paths=1;
-    XmTextFieldSetString(field,display); w->setting_paths=0; free(display); setup_changed(field,w,NULL); return 1;
+    free(*owned); *owned=prepared->native; prepared->native=NULL;
+    unsigned setting=w->setting_paths; w->setting_paths=1;
+    XmTextFieldSetString(field,prepared->display); w->setting_paths=setting;
+}
+static int set_native_path(SyncWindow *w,Widget field,const char *path)
+{
+    PreparedPath prepared={0};
+    if (!prepare_native_path(w,path,&prepared)) return 0;
+    commit_native_path(w,field,&prepared); clear_prepared_path(&prepared);
+    setup_changed(field,w,NULL); return 1;
 }
 static void path_edited(Widget field,XtPointer data,XtPointer call)
 {
@@ -207,7 +231,12 @@ static void mark_dirty(SyncWindow *w)
     if (w->execute) XtSetSensitive(w->execute,False);
 }
 static void name_changed(Widget widget,XtPointer data,XtPointer call)
-{ (void)widget;(void)call; mark_dirty((SyncWindow *)data); }
+{
+    (void)widget;(void)call; SyncWindow *w=data; uint64_t ids[SYNC_PAGE_SIZE]; int first;
+    w->rename_selection_count=selected_rows(w,ids,&first);
+    w->rename_row=w->rename_selection_count==1?ids[0]:0;
+    mark_dirty(w); if (w->rules_list) render_rules(w);
+}
 static Widget button(Widget parent,const char *name,const char *text,XtCallbackProc callback,SyncWindow *w)
 {
     Widget b=XtVaCreateManagedWidget(name,xmPushButtonWidgetClass,parent,NULL);
@@ -338,6 +367,12 @@ static void selection_changed(Widget widget,XtPointer data,XtPointer call)
 {
     (void)widget; SyncWindow *w=data; uint64_t ids[SYNC_PAGE_SIZE]; int first;
     unsigned n=selected_rows(w,ids,&first);
+    uint64_t rename_row=n==1?ids[0]:0;
+    int rename_selection_changed=n!=w->rename_selection_count || rename_row!=w->rename_row;
+    w->rename_selection_count=n; w->rename_row=rename_row;
+    if (rename_selection_changed && w->new_name && XmTextFieldGetLastPosition(w->new_name)>0) {
+        mark_dirty(w); if (w->rules_list) render_rules(w);
+    }
     if (call && first>=0 && w->view->rows[first].observed.conflict_class<15) {
         w->kind=w->view->rows[first].observed.conflict_class; option_selected(w->class_option,w->kind);
     }
@@ -516,6 +551,7 @@ static void reset_result_view(SyncWindow *w)
         else free(w->rules[i].subtree);
     }
     w->rule_count=reusable; w->have_rendered=0; w->displayed_count=0; w->pause_requested=0; w->cancel_requested=0; w->last_error[0]=0;
+    w->rename_selection_count=0; w->rename_row=0;
     w->dirty=1; w->setup_dirty=0; w->review_pending=0; w->execute_pending=0;
     memset(w->view,0,sizeof(*w->view));
     XmListDeleteAllItems(w->rules_list); XmListDeleteAllItems(w->list);
@@ -639,6 +675,7 @@ static void load_profile(Widget widget,XtPointer data,XtPointer call)
     if (!w->preferences || (w->job && !w->view->finished &&
         (w->view->snapshot.state!=CKFET_AWAITING_REVIEW || w->review_pending || w->execute_pending))) return;
     char *name=XmTextFieldGetString(w->profile_name);
+    if (!name) { notify(w,M(223,"Not enough memory.")); return; }
     SyncProfile *profile=calloc(1,sizeof(*profile));
     if (!profile) { XtFree(name); notify(w,M(223,"Not enough memory.")); return; }
     SyncProfilesResult result=SyncProfilesGetProfile(w->preferences,name,profile); XtFree(name);
@@ -651,7 +688,14 @@ static void load_profile(Widget widget,XtPointer data,XtPointer call)
         (profile->filters.has_modified_before && !SyncFormatDate(&profile->filters.modified_before,before))) {
         free(profile); label(w->profile_status,M(229,"This profile has options or dates this window cannot represent.")); return;
     }
-    if (!set_native_path(w,w->source,profile->source) || !set_native_path(w,w->destination,profile->destination)) { free(profile); return; }
+    PreparedPath source={0},destination={0};
+    if (!prepare_native_path(w,profile->source,&source) || !prepare_native_path(w,profile->destination,&destination)) {
+        clear_prepared_path(&source); clear_prepared_path(&destination); free(profile); return;
+    }
+    /* No application allocation or option/date validation remains after both
+     * paths are ready. Toolkit setters copy their supplied display strings. */
+    commit_native_path(w,w->source,&source); commit_native_path(w,w->destination,&destination);
+    clear_prepared_path(&source); clear_prepared_path(&destination);
     w->profile_index=mode; w->metadata=profile->metadata_scope;
     option_selected(w->operation_option,mode); option_selected(w->metadata_option,w->metadata);
     operation_explanation(w);
@@ -712,11 +756,13 @@ static void review(Widget widget,XtPointer data,XtPointer call)
     if (w->setup_dirty) { notify(w,M(261,"Folder options changed. Compare again before reviewing or applying changes.")); return; }
     uint64_t ids[SYNC_PAGE_SIZE]; int first; unsigned n=selected_rows(w,ids,&first);
     char *name=XmTextFieldGetString(w->new_name);
-    if (name && *name && (n!=1 || strchr(name,'/') || !strcmp(name,".") || !strcmp(name,".."))) {
+    if (!name) { notify(w,M(223,"Not enough memory.")); return; }
+    if (*name && (n!=1 || strchr(name,'/') || !strcmp(name,".") || !strcmp(name,".."))) {
         notify(w,M(31,"For a reviewed rename, select one row and enter one basename.")); XtFree(name); return;
     }
+    w->rename_selection_count=n; w->rename_row=n==1?ids[0]:0;
     uint64_t serial=SyncJobReview(w->job,w->view->snapshot.plan_generation,w->rules,w->rule_count,NULL,0,
-        n==1?ids[0]:0,name && *name?name:NULL,w->name_side?CKFET_NAME_TARGET:CKFET_NAME_INCOMING);
+        n==1?ids[0]:0,*name?name:NULL,w->name_side?CKFET_NAME_TARGET:CKFET_NAME_INCOMING);
     XtFree(name); w->dirty=1; w->review_pending=serial!=0; w->review_serial=serial;
     w->previous_receipt=w->view->snapshot.receipt_id;
     w->reviewed_rules_revision=w->local_rules_revision;
@@ -850,6 +896,7 @@ static void tick(XtPointer data,XtIntervalId *id)
                 XmTextSetString(w->details,details); snprintf(w->last_error,sizeof(w->last_error),"%s",v->error);
             }
         }
+        else if (w->dirty && awaiting) snprintf(text,sizeof(text),"%s",M(221,"Not reviewed"));
         else snprintf(text,sizeof(text),"%s%s\n%" PRIu64 " %s, %" PRIu64 " %s, %" PRIu64 " %s; %" PRIu64 "/%" PRIu64 " %s%s",
             v->snapshot.paused?M(38,"Paused"):state_label(v->snapshot.state),
             v->snapshot.pause_requested && !v->snapshot.paused?M(39," (pause requested)"):"",
@@ -994,6 +1041,10 @@ int main(int argc,char **argv)
     XtAddCallback(w.new_name,XmNvalueChangedCallback,name_changed,&w);
     const char *name_sides[]={M(254,"Incoming object"),M(255,"Existing target")};
     w.name_side_option=option(rule_page,"nameSide",M(256,"Name applies to:"),name_sides,2,&w.name_side,NULL);
+    Widget name_pane=NULL; WidgetList name_items=NULL; Cardinal name_count=0;
+    XtVaGetValues(w.name_side_option,XmNsubMenuId,&name_pane,NULL);
+    XtVaGetValues(name_pane,XmNchildren,&name_items,XmNnumChildren,&name_count,NULL);
+    for (Cardinal i=0;i<name_count;++i) XtAddCallback(name_items[i],XmNactivateCallback,name_changed,&w);
     Widget rule_buttons=XtVaCreateManagedWidget("ruleButtons",xmRowColumnWidgetClass,rule_page,XmNorientation,XmHORIZONTAL,NULL);
     button(rule_buttons,"addRule",M(76,"Add / update matching rule"),add_rule,&w);
     w.remove_rule=button(rule_buttons,"removeRule",M(77,"Remove selected rule"),remove_rule,&w);

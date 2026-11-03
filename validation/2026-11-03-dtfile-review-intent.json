@@ -1,0 +1,66 @@
+{
+  "topic": "Preserve complete rename intent and atomic profile loading",
+  "base_revision": "1c8a1214f7870ea19e14d63bb1ddb55f2cf97571",
+  "native_sdk_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "native_sdk_version": "0.3.0",
+  "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "native_regression": {
+    "baseline_expected_failure": "Second destination path allocation failure leaves mixed paths in the old UI",
+    "baseline_exit": 1,
+    "candidate_passed": true,
+    "candidate_run_seconds": 3.7134575929958373,
+    "candidate_build_seconds": 1.430658568162471,
+    "fixture_unchanged": true,
+    "timeouts": [],
+    "source_hashes": {
+      "SyncDates.h": "dd6d805135b1b1f2d6119ba8048ad4b905c63b06b86e25ad03f5c74dc2e00060",
+      "dtfile_sync.msg": "1266a35e65a6b613415502847a4b5c81d25fedc9b7e3d2ec8157e4cb635d24d3",
+      "SyncProfiles.c": "308664f90ce90373623779a0d6f859c407e53c3c075277bb49712d5b93806432",
+      "SyncProfiles.h": "2fe33ff5a6715867613561e73f4ee604ce4cfbe9e27b1090a2579339577ab340",
+      "main.c": "591035341c0c2436c4b1d54d010e0aca8e3917d9351d25a59b88cb14c178bec3",
+      "SyncPrivateStorage.h": "2b51afc697073ad374843d8b4579f3d66c6891b52b3662493cd3a1fb5626bfea",
+      "SyncJob.h": "955ea1f34200ed74ec190416c31c5ec56edd1f421da3df52722f0c596c6a0451",
+      "SyncJob.c": "3a14f5567f147dd9338c29b8bc6b8c5e774622ee841da2098570cb600713c5f0"
+    },
+    "script_sha256": "20f3b39fdbea8a6485967675b7de74efec2c3e6451a21cbcbfdc865c3cd026f7"
+  },
+  "coverage": [
+    "Actual private preferences worker saves and loads profiles; UI-only destination strdup failure preserves all setup fields/options/rules/review state; retry loads the full replacement",
+    "UI-only NULL basename getter queues no review and preserves intent",
+    "Actual ordinary Copy preview with Keep Both rule establishes a real review receipt; changing name side or selected row invalidates it",
+    "Unchanged render polling preserves the reviewed state",
+    "Existing setup validation, raw-byte swapping, filter clearing and failed-start retry regressions remain"
+  ],
+  "scope": "Preview and UI authority only. No file-operation execution, Root0.4 upgrade or Apply enablement.",
+  "normal_ui": {
+    "actual_process_runtime_maps_verified": true,
+    "normal_executable_sha256": "f01f5ef1c3bb916329bcf5faaa9261336e6c2d528a49f17d0b6f3acafae694d7",
+    "catalog_sha256": "87a3e5f09bcab70aa7d378e4bda640a1e641261761025022d3c047a62e4b7447",
+    "accepted_review_counts_then_row_only_invalidation_inspected_by_main": true,
+    "screenshots": {
+      "reviewed-counts-proof.png": "28a3517b2d0835b513fd1f583bf4e9591a765017f63e553b118ba6e22f7a58c4",
+      "row-change-not-reviewed.png": "cc2cffdaed640b45add7961ac5bae37c7879951d1a6aec8f3d818ac14861fea7"
+    },
+    "side_change_semantic_coverage": "Real production callback regression; the initial normal side-menu reactivation did not visibly change the side and is not claimed as distinct-side proof.",
+    "excluded_evidence": "An incompatible target-side review rejection is retained as a rejected driver attempt, not accepted row-invalidation evidence.",
+    "fixture_bytes_unchanged": 71,
+    "graceful_exit": 0,
+    "own_helper_wm_xvfb_gone": true,
+    "other_xvfb_preserved": true,
+    "final_receipt_sha256": "49c07bd6249f28f050f18c500f9f04d91ed8ef8f689cdc92122829ed6963348a"
+  },
+  "incremental_build": {
+    "start": "2026-11-03T15:00:57.868848+00:00",
+    "end": "2026-11-03T15:00:58.671444+00:00",
+    "seconds": 0.8025777188595384,
+    "closure": "main.c only, relink and unchanged catalog; verified unchanged worker objects reused",
+    "expected_duration_evidence": "Previous comparable main-only incremental build 0.4867 seconds; current commands and source/output identities verified independently of timing."
+  },
+  "checks": [
+    "Native regression: PASS, no timeouts",
+    "Actual normal window and loaded dependency identity inspected",
+    "Strict documentation check: 16 pages PASS",
+    "Python parse and diff whitespace checks PASS"
+  ],
+  "fixture_control": "The shared group-writable temporary ancestor fixture was refused by the real profile worker; accepted runs use the existing private fixture parent. No permission check or deadline was relaxed."
+}

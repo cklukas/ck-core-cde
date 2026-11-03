@@ -138,6 +138,12 @@ then select **Review rules** to obtain backend counts and consequences. Editing
 or removing a rule requires review again; only actions offered for that class
 and scope can be selected.
 
+A reviewed rename belongs to its selected object, basename and incoming/target
+side. Changing any part requires review again, including choosing a different
+row while a basename is entered. Repainting an unchanged selection does not
+require another review. An allocation failure while reading rename input aborts
+the review request instead of dropping the rename.
+
 “Resolved” in a rule count means that the rule resolved a matching case in the
 **proposed plan**. It does not mean files were changed. Keep Both, reviewed rename and
 preservation controls describe proposals; they do not perform retention or
@@ -164,7 +170,9 @@ Profiles preserve the exact source/destination path bytes, operation and metadat
 choices, filter bounds and reusable job-wide rules. Saving is refused while
 item, selection or subtree decisions are in the rule list. Profiles contain no
 row identities, comparison generations, execution receipts or synchronization
-history. Loading one always requires a fresh comparison and review.
+history. Loading one always requires a fresh comparison and review. Loading
+prepares both folder names before applying the profile. If preparation fails,
+the current folders, options and rules remain unchanged.
 
 The store supports at most 64 profiles, names of 1–64 UTF-8 bytes, 64 job-wide
 rules per profile and 65,536 bytes per native folder path. Limits are reported
@@ -213,14 +221,18 @@ directory, run it on a private X display with a new work directory:
 xvfb-run -a python3 programs/dtfile/tests/check-sync-retry-ui.py \
   --fs-prefix /path/to/filesystem-prefix \
   --motif-prefix /path/to/motif-prefix \
-  --work-dir "$TMPDIR/dtfile-retry-check"
+  --work-dir "${DTFILE_PRIVATE_TEST_ROOT:-$TMPDIR}/dtfile-retry-check"
 ```
 
 It uses real widgets, production callbacks and the installed backend to check
 policy explanations, byte-preserving swaps, clearing filters and focused setup
 validation. It then compares, fails a Copy preview with `HOME` absent and retries
 Compare, checking cleared rows/details/actions and retained job preferences. It
-does not apply filesystem changes; `result.json` and logs record the run.
+does not apply file operations to either tree. Its real preferences worker
+writes only inside a disposable private fixture; the work directory needs
+trusted, non-group-writable ancestors. UI allocation faults verify atomic
+profile loading and aborting an unreadable rename input; real review receipts
+verify side and selected-row invalidation. `result.json` and logs record the run.
 
 Set `TMPDIR` explicitly. Private test homes must be on an ownership-enforcing
 filesystem with trusted ancestors; if that differs from the build's temporary

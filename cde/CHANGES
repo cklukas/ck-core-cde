@@ -1,4 +1,7 @@
 2026-11-03
+- dtfile_sync: bind rename review to the selected object, basename and side;
+  require fresh review after intent changes, preserve setup on failed profile
+  preparation, and report allocation failure without dropping rename input.
 - dtfile: recognize the already-opened filesystem root as the trusted system
   boundary when a user namespace exposes its owner as an unmapped UID. Ordinary
   ancestors and private storage retain their strict ownership, mode, link and

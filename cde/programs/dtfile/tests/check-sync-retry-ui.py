@@ -2,8 +2,10 @@
 """Native Xt retry regression, with production callbacks and the real FS SDK.
 
 Run under a private X display (for example xvfb-run). No backend faults, UI
-reset substitutes, pixel matching, or mutation commands are used. The wrapper
-only retains the realized shell and supplies a bounded Xt event loop.
+reset substitutes, pixel matching, or file-operation execution commands are used. The wrapper
+retains the realized shell and supplies a bounded Xt event loop. Two UI-only
+faults return a NULL basename getter and fail one destination-path strdup.
+The SDK and profile worker remain real and receive no injected faults.
 """
 import argparse
 from datetime import datetime, timezone
@@ -18,6 +20,38 @@ import time
 
 HARNESS = r'''
 #include <Xm/Xm.h>
+#include "SyncJob.h"
+#include "SyncDates.h"
+#include "SyncProfiles.h"
+#include <Xm/Form.h>
+#include <Xm/RowColumn.h>
+#include <Xm/Label.h>
+#include <Xm/PushB.h>
+#include <Xm/ToggleB.h>
+#include <Xm/TextF.h>
+#include <Xm/Text.h>
+#include <Xm/List.h>
+#include <Xm/Notebook.h>
+#include <Xm/ScrolledW.h>
+#include <Xm/FileSB.h>
+#include <Xm/MessageB.h>
+#include <Xm/Protocols.h>
+#include <nl_types.h>
+#include <locale.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <errno.h>
+#include <time.h>
+#include <unistd.h>
+/* Define seams only after every production C/Xm header. They affect this UI
+ * translation unit, never the separately compiled SDK/profile worker. */
+static char *test_text_get(Widget);
+static char *test_ui_strdup(const char *);
+#define XmTextFieldGetString test_text_get
+#define strdup test_ui_strdup
 static void test_realize(Widget);
 static void test_loop(XtAppContext);
 #define main application_main
@@ -27,6 +61,26 @@ static void test_loop(XtAppContext);
 #undef main
 #undef XtRealizeWidget
 #undef XtAppMainLoop
+#undef XmTextFieldGetString
+#undef strdup
+
+static Widget null_basename_field;
+static unsigned null_basename_once,null_basename_hits,path_strdup_once,path_strdup_hits;
+static const char *fail_path;
+static char *test_text_get(Widget field)
+{
+    if (null_basename_once && field==null_basename_field) {
+        null_basename_once=0; ++null_basename_hits; return NULL;
+    }
+    return XmTextFieldGetString(field);
+}
+static char *test_ui_strdup(const char *text)
+{
+    if (path_strdup_once && fail_path && !strcmp(text,fail_path)) {
+        path_strdup_once=0; ++path_strdup_hits; return NULL;
+    }
+    return strdup(text);
+}
 
 static Widget test_shell;
 static int test_failed;
@@ -59,7 +113,7 @@ static void assertion(int ok,const char *message)
 {
     if (!ok) { fprintf(stderr,"FAIL: %s\n",message); test_failed=1; }
 }
-enum WaitFor { REPORT, ADMISSION_FAILURE, EXIT };
+enum WaitFor { REPORT, ADMISSION_FAILURE, EXIT, PREFERENCES_READY, REVIEWED };
 static int wait_for(SyncWindow *w,enum WaitFor event)
 {
     long long end=milliseconds()+15000;
@@ -69,6 +123,20 @@ static int wait_for(SyncWindow *w,enum WaitFor event)
         if (event==REPORT && w->job && !w->recompare && w->view->ready &&
             w->view->snapshot.state==CKFET_AWAITING_REVIEW &&
             item_count(w->list)>0 && XtIsSensitive(w->compare)) return 1;
+        SyncProfilesSnapshot preferences;
+        if (event==PREFERENCES_READY && w->preferences &&
+            SyncProfilesGetSnapshot(w->preferences,&preferences)==SYNC_PROFILES_OK) {
+            if (preferences.state==SYNC_PROFILES_ERROR || preferences.state==SYNC_PROFILES_FINISHED) {
+                fprintf(stderr,"PROFILE FAILURE: state=%u result=%u: %s\n",
+                        preferences.state,preferences.result,preferences.error);
+                assertion(0,"private profile fixture must satisfy the real storage contract"); return 0;
+            }
+            if (preferences.state==SYNC_PROFILES_READY && preferences.result==SYNC_PROFILES_OK &&
+                preferences.submitted==preferences.completed && XtIsSensitive(w->profile_load)) return 1;
+        }
+        if (event==REVIEWED && w->review_serial && !w->review_pending && !w->dirty &&
+            w->view->snapshot.receipt_id && w->view->review_submission==w->review_serial &&
+            SyncJobViewCoherent(w->view)) return 1;
         char *status=label_text(w->status);
         int failed=event==ADMISSION_FAILURE && !w->job && !w->recompare &&
                    profiles[w->profile_index]==CKFSP_COPY && getenv("HOME")==NULL && status[0];
@@ -77,6 +145,7 @@ static int wait_for(SyncWindow *w,enum WaitFor event)
         struct timespec delay={0,5000000}; nanosleep(&delay,NULL);
     } while (milliseconds()<end);
     fprintf(stderr,"TIMEOUT: native event wait %d after15000ms\n",event);
+    assertion(0,"bounded native event wait timed out");
     return 0;
 }
 static void choose_option(Widget option,unsigned index)
@@ -91,14 +160,14 @@ static void choose_option(Widget option,unsigned index)
     XtVaSetValues(option,XmNmenuHistory,items[index],NULL);
     XtCallCallbacks(items[index],XmNactivateCallback,NULL);
 }
-static Widget scope_option(SyncWindow *w)
+static Widget rule_option(SyncWindow *w,const char *name)
 {
     Widget editor=XtNameToWidget(w->rule_page,"*ruleEditor");
     WidgetList children=NULL;
     Cardinal count=0;
     XtVaGetValues(editor,XmNchildren,&children,XmNnumChildren,&count,NULL);
     for (Cardinal i=0;i<count;++i) {
-        if (!strcmp(XtName(children[i]),"scope")) {
+        if (!strcmp(XtName(children[i]),name)) {
             unsigned char type=0;
             XtVaGetValues(children[i],XmNrowColumnType,&type,NULL);
             if (type==XmMENU_OPTION) return children[i];
@@ -246,6 +315,185 @@ static void setup_cases(SyncWindow *w)
      * filters restores the original unfiltered70-object retry regression. */
     XmTextFieldSetString(w->size_min,"10"); XmTextFieldSetString(w->size_max,"10");
 }
+
+static void pump_ticks(SyncWindow *w)
+{
+    long long end=milliseconds()+300;
+    do {
+        while (XtAppPending(w->context)) XtAppProcessEvent(w->context,XtIMAll);
+        struct timespec delay={0,5000000}; nanosleep(&delay,NULL);
+    } while (milliseconds()<end);
+}
+static int review_receipt(SyncWindow *w)
+{
+    XtCallCallbacks(w->review,XmNactivateCallback,NULL);
+    if (wait_for(w,REVIEWED)) return 1;
+    fprintf(stderr,"UNCERTAIN: real SDK Copy-preview manual-basename review did not establish a clean receipt: %s\n",
+            w->view->error);
+    assertion(0,"rename-intent checks require a real accepted SDK review; no synthetic clean state");
+    return 0;
+}
+static void review_intent_cases(SyncWindow *w)
+{
+    /* Compare-only does not accept manual-name decisions. Establish a real
+     * ordinary Copy preview, with a real private journal and explicit Keep Both
+     * rule, as in the existing controller qualification. Apply stays OFF. */
+    const char *home=getenv("DTFILE_UI_TEST_PREFERENCES_HOME");
+    assertion(home && getenv("HOME")==NULL,"rename preview starts with absent process HOME");
+    if (!home) return;
+    assertion(setenv("HOME",home,1)==0,"private HOME supplied for Copy preview admission");
+    choose_option(w->operation_option,1); choose_option(w->metadata_option,1);
+    XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
+    int ready=wait_for(w,REPORT);
+    assertion(unsetenv("HOME")==0,"process HOME restored after real Copy preview admission");
+    if (!ready) return;
+    XmListDeselectAllItems(w->list); XmListSelectPos(w->list,1,True);
+    Widget choice=rule_option(w,"choice"),scope=rule_option(w,"scope");
+    assertion(choice && scope,"actual rule choices exist for rename preview");
+    if (!choice || !scope) return;
+    choose_option(scope,0); choose_option(choice,CKFET_KEEP_BOTH_INCOMING);
+    activate(w,"*addRule");
+    assertion(w->rule_count==1 && w->rules[0].choice==CKFET_KEEP_BOTH_INCOMING,
+              "actual UI rule permits incoming Keep Both naming");
+    XmTextFieldSetString(w->new_name,"review-intent-name");
+    choose_option(w->name_side_option,0);
+    uint64_t serial=w->review_serial,completed=w->view->completed_submission;
+    unsigned original_dirty=w->dirty;
+    null_basename_field=w->new_name; null_basename_once=1;
+    XtCallCallbacks(w->review,XmNactivateCallback,NULL);
+    assertion(null_basename_hits==1 && !null_basename_once && w->review_serial==serial && !w->review_pending,
+              "NULL basename getter aborts before queueing a review submission");
+    pump_ticks(w);
+    assertion(w->view->completed_submission==completed && w->dirty==original_dirty,
+              "NULL basename getter never reaches the backend or changes dirty authority");
+    if (!review_receipt(w)) return;
+    uint64_t revision=w->local_rules_revision,receipt=w->view->snapshot.receipt_id;
+    pump_ticks(w);
+    assertion(!w->dirty && w->local_rules_revision==revision && w->view->snapshot.receipt_id==receipt,
+              "unchanged real polling with a nonempty basename does not redirty review");
+    choose_option(w->name_side_option,1);
+    assertion(w->name_side==1 && w->dirty && w->local_rules_revision>revision && !XtIsSensitive(w->execute),
+              "actual name-side callback invalidates the reviewed rename tuple");
+    choose_option(w->name_side_option,0);
+    if (!review_receipt(w)) return;
+    revision=w->local_rules_revision;
+    uint64_t selected[SYNC_PAGE_SIZE]; int first;
+    assertion(selected_rows(w,selected,&first)==1,"reviewed rename has one selected row");
+    uint64_t row=selected[0];
+    XmListDeselectAllItems(w->list); XmListSelectPos(w->list,2,True);
+    assertion(selected_rows(w,selected,&first)==1 && selected[0]!=row && w->dirty &&
+              w->local_rules_revision>revision && !XtIsSensitive(w->execute),
+              "actual row selection invalidates a reviewed nonempty basename binding");
+    XmTextFieldSetString(w->new_name,"");
+    XmListDeselectAllItems(w->list);
+    XmListSelectPos(w->rules_list,1,False); activate(w,"*removeRule");
+    assertion(!w->rule_count,"rename-only rule removed through the actual UI");
+    choose_option(choice,CKFET_ASK); choose_option(scope,0);
+    choose_option(w->operation_option,0); choose_option(w->metadata_option,0);
+    XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
+    assertion(wait_for(w,REPORT),"fresh Compare-only report restored after rename checks");
+}
+static int save_preferences(SyncWindow *w,SyncProfile *profile)
+{
+    SyncProfilesResult result=SyncProfilesSave(w->preferences,profile);
+    assertion(result==SYNC_PROFILES_OK,"real private profile save is admitted");
+    return result==SYNC_PROFILES_OK && wait_for(w,PREFERENCES_READY);
+}
+static void profile_load_fault(SyncWindow *w)
+{
+    Paths original=save_paths(w);
+    char *original_name=XmTextFieldGetString(w->profile_name),error[512]={0};
+    const char *home=getenv("DTFILE_UI_TEST_PREFERENCES_HOME");
+    assertion(home && !w->job && !w->preferences && getenv("HOME")==NULL,
+              "profile test starts before jobs using explicit private fixture, not process HOME");
+    if (!home || w->job || w->preferences) goto done;
+    w->preferences=SyncProfilesStart(home,error,sizeof(error));
+    assertion(w->preferences!=NULL,"actual private profile worker starts");
+    if (!w->preferences || !wait_for(w,PREFERENCES_READY)) goto done;
+    XmTextFieldSetString(w->profile_name,"initial-settings");
+    activate(w,"*saveProfile");
+    if (!wait_for(w,PREFERENCES_READY)) goto done;
+    SyncProfile *initial=calloc(1,sizeof(*initial)),*saved=calloc(1,sizeof(*saved));
+    assertion(initial && saved,"bounded profile payload allocations succeed");
+    if (!initial || !saved) { free(initial); free(saved); goto done; }
+    assertion(SyncProfilesGetProfile(w->preferences,"initial-settings",initial)==SYNC_PROFILES_OK,
+              "saved initial settings are read from the actual profile cache");
+    *saved=*initial;
+    strcpy(saved->name,"original-settings");
+    strcpy(saved->source,"/profile/original\\\001"); strcpy(saved->destination,"/profile/original-target\\\002");
+    saved->profile=CKFSP_UPDATE; saved->metadata_scope=1;
+    saved->filters.has_minimum_size=saved->filters.has_maximum_size=1;
+    saved->filters.minimum_size=11; saved->filters.maximum_size=22;
+    saved->rule_count=1; saved->rules[0]=(SyncProfileRule){0,CKFET_ASK,CKFET_ASK,1,1};
+    if (!save_preferences(w,saved)) goto free_profiles;
+    XmTextFieldSetString(w->profile_name,"original-settings"); activate(w,"*loadProfile");
+    assertion(w->rule_count==1 && w->native_source && !strcmp(w->native_source,saved->source),
+              "actual Load establishes nontrivial original paths/options/rule state");
+    strcpy(saved->name,"replacement-settings");
+    strcpy(saved->source,"/profile/replacement-source"); strcpy(saved->destination,"/profile/replacement-target");
+    saved->profile=CKFSP_COPY; saved->metadata_scope=0;
+    saved->filters.minimum_size=3; saved->filters.maximum_size=7;
+    saved->rules[0]=(SyncProfileRule){0,CKFET_KEEP_TARGET,CKFET_ASK,0,0};
+    if (!save_preferences(w,saved)) goto free_profiles;
+    XmTextFieldSetString(w->profile_name,"replacement-settings");
+    Paths before=save_paths(w);
+    Widget fields[]={w->size_min,w->size_max,w->date_after,w->date_before,w->new_name,w->profile_name};
+    char *values[XtNumber(fields)];
+    for (unsigned i=0;i<XtNumber(fields);++i) values[i]=XmTextFieldGetString(fields[i]);
+    unsigned operation=w->profile_index,metadata=w->metadata,count=w->rule_count;
+    unsigned dirty=w->dirty,setup_dirty=w->setup_dirty,review_pending=w->review_pending,execute_pending=w->execute_pending;
+    uint64_t revision=w->local_rules_revision,reviewed_revision=w->reviewed_rules_revision;
+    uint64_t serial=w->review_serial,execute_serial=w->execute_serial,receipt=w->view->snapshot.receipt_id;
+    SyncRule preference={0}; if (count==1) preference=w->rules[0];
+    Widget operation_item=NULL,metadata_item=NULL;
+    XtVaGetValues(w->operation_option,XmNmenuHistory,&operation_item,NULL);
+    XtVaGetValues(w->metadata_option,XmNmenuHistory,&metadata_item,NULL);
+    char *explanation=label_text(XtNameToWidget(w->shell,"*operationExplanation"));
+    fail_path=saved->destination; path_strdup_once=1;
+    activate(w,"*loadProfile");
+    assertion(path_strdup_hits==1 && !path_strdup_once,"UI-only destination raw-path allocation fault was reached");
+    fail_path=NULL;
+    check_paths(w,&before,0); free_paths(&before);
+    for (unsigned i=0;i<XtNumber(fields);++i) {
+        char *actual=XmTextFieldGetString(fields[i]);
+        assertion(!strcmp(actual,values[i]),"failed Load leaves every editable field unchanged");
+        XtFree(actual); XtFree(values[i]);
+    }
+    Widget operation_after=NULL,metadata_after=NULL;
+    XtVaGetValues(w->operation_option,XmNmenuHistory,&operation_after,NULL);
+    XtVaGetValues(w->metadata_option,XmNmenuHistory,&metadata_after,NULL);
+    char *actual_explanation=label_text(XtNameToWidget(w->shell,"*operationExplanation"));
+    assertion(w->profile_index==operation && w->metadata==metadata && operation_after==operation_item &&
+              metadata_after==metadata_item && !strcmp(actual_explanation,explanation) && w->rule_count==count &&
+              count==1 && same_job_preference(&w->rules[0],&preference),
+              "failed Load leaves option models/widgets, explanation and all original rules unchanged");
+    XtFree(explanation); XtFree(actual_explanation);
+    assertion(!w->job && w->dirty==dirty && w->setup_dirty==setup_dirty && w->review_pending==review_pending &&
+              w->execute_pending==execute_pending && w->local_rules_revision==revision &&
+              w->reviewed_rules_revision==reviewed_revision && w->review_serial==serial &&
+              w->execute_serial==execute_serial && w->view->snapshot.receipt_id==receipt,
+              "failed Load preserves original dirty/review/receipt authority transactionally");
+    activate(w,"*loadProfile");
+    assertion(w->native_source && w->native_destination && !strcmp(w->native_source,saved->source) &&
+              !strcmp(w->native_destination,saved->destination) && w->profile_index==1 && w->metadata==0 &&
+              w->rule_count==1 && w->rules[0].choice==CKFET_KEEP_TARGET && !w->rules[0].protect_nonempty &&
+              !w->rules[0].retain_replaced && w->dirty && w->setup_dirty,
+              "retry Load commits both paths and the complete replacement profile");
+    const char *expected[]={"3","7","",""};
+    for (unsigned i=0;i<4;++i) {
+        char *actual=XmTextFieldGetString(fields[i]);
+        assertion(!strcmp(actual,expected[i]),"retry Load commits all four filter fields"); XtFree(actual);
+    }
+    XmTextFieldSetString(w->profile_name,"initial-settings"); activate(w,"*loadProfile");
+    check_paths(w,&original,0);
+    assertion(!w->rule_count && w->profile_index==0 && w->metadata==0 && getenv("HOME")==NULL,
+              "initial setup and absent process HOME restored before the existing retry regression");
+free_profiles:
+    free(initial); free(saved);
+done:
+    XmTextFieldSetString(w->profile_name,original_name); XtFree(original_name); free_paths(&original);
+}
+
 static void test_loop(XtAppContext context)
 {
     (void)context;
@@ -257,6 +505,8 @@ static void test_loop(XtAppContext context)
     SyncWindow *w=callbacks[0].closure;
     assertion(getenv("HOME")==NULL,"HOME is genuinely absent");
     assertion(!XtIsSensitive(w->execute),"Apply starts disabled");
+    profile_load_fault(w);
+    if (test_failed) goto close;
     setup_cases(w);
     if (test_failed) goto close;
     XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
@@ -267,11 +517,13 @@ static void test_loop(XtAppContext context)
     if (!wait_for(w,REPORT)) { assertion(0,"initial real Compare completes"); goto close; }
     assertion(w->view->total_rows==70 && item_count(w->list)==64,"real Compare has70 objects,64 first-page rows");
     assertion(XtIsSensitive(w->list),"fresh report rows are selectable");
+    review_intent_cases(w);
+    if (test_failed) goto close;
     XmListSelectPos(w->list,1,True);
     char *old_details=XmTextGetString(w->details);
     assertion(strstr(old_details,"file-000")!=NULL,"selected real row populated details before retry");
     XtFree(old_details);
-    Widget scope=scope_option(w),add=XtNameToWidget(w->rule_page,"*addRule");
+    Widget scope=rule_option(w,"scope"),add=XtNameToWidget(w->rule_page,"*addRule");
     assertion(scope && add && XtIsSensitive(add),"actual scope and Add-rule controls are usable");
     if (!scope || !add) goto close;
     choose_option(scope,0); /* Job preference, then a decision tied to the selected row. */
@@ -333,7 +585,7 @@ close:
 int main(int argc,char **argv)
 {
     int result=application_main(argc,argv);
-    if (!result && !test_failed) puts("PASS: setup explanations, byte-preserving swap, filter clearing, focused validation and comparison retry");
+    if (!result && !test_failed) puts("PASS: transactional profile loading, reviewed rename intent, setup validation and comparison retry");
     return result ? result : test_failed;
 }
 '''
@@ -358,9 +610,10 @@ def main():
             for root in (Path("/Volumes/S8T"), Path("/Volumes/PRO-BLADE"))):
         parser.error("Mac scratch must use a mounted approved temporary volume")
     work.mkdir(parents=True, mode=0o700)
-    for name in ("tmp", "source", "target", "cache", "config", "data", "runtime"):
+    for name in ("tmp", "source", "target", "cache", "config", "data", "runtime", "preferences-home"):
         (work / name).mkdir(mode=0o700)
-    env = dict(os.environ, TMPDIR=str(work / "tmp"), LANG="C", LC_ALL="C")
+    env = dict(os.environ, TMPDIR=str(work / "tmp"), LANG="C", LC_ALL="C",
+               DTFILE_UI_TEST_PREFERENCES_HOME=str(work / "preferences-home"))
     env.pop("HOME", None)
     env.pop("LD_PRELOAD", None)
     for key, name in (("XDG_CACHE_HOME", "cache"), ("XDG_CONFIG_HOME", "config"),
@@ -381,7 +634,7 @@ def main():
     xft_cflags = shlex.split(subprocess.check_output(["pkg-config", "--cflags", "xft"], env=env, text=True))
     command = [*shlex.split(os.environ.get("CC", "cc")), "-std=c11", "-O0", "-g", "-Wall", "-Wextra", "-Werror", *xft_cflags,
                "-D_POSIX_C_SOURCE=200809L", "-D_DEFAULT_SOURCE=1", "-D_XOPEN_SOURCE=700",
-               f"-I{args.fs_prefix}/include", f"-I{args.motif_prefix}/include", str(wrapper),
+               f"-I{args.fs_prefix}/include", f"-I{args.motif_prefix}/include", f"-I{source}", str(wrapper),
                str(source / "SyncJob.c"), str(source / "SyncProfiles.c"),
                f"-L{args.fs_prefix}/lib", f"-L{args.motif_prefix}/lib",
                "-lck-core-fs-lib", "-lXm", "-lXt", "-lX11", "-pthread", "-o", str(work / "sync-retry-ui")]
