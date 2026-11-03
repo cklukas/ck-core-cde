@@ -714,11 +714,47 @@ static void remove_rule(Widget widget,XtPointer data,XtPointer call)
     free(w->rules[i].subtree); memmove(w->rules+i,w->rules+i+1,(w->rule_count-i-1)*sizeof(SyncRule)); --w->rule_count;
     mark_dirty(w); render_rules(w); command_notice(w,M(30,"Rule removed. Review the changed rule list before execution."));
 }
+/* List positions address this window's owned snapshot, never the editable
+ * Save name. Copy the identity before callbacks or a new snapshot replace it. */
+static int selected_profile(SyncWindow *w,char name[SYNC_PROFILE_NAME_MAX+1])
+{
+    int *positions=NULL,count=0,found=0;
+    if (w->profile_list && XmListGetSelectedPos(w->profile_list,&positions,&count) && count==1 &&
+        positions[0]>0 && (unsigned)positions[0]<=w->preferences_view.count) {
+        memcpy(name,w->preferences_view.names[positions[0]-1],SYNC_PROFILE_NAME_MAX+1);
+        found=1;
+    }
+    XtFree((char *)positions); return found;
+}
+static int preferences_ready(const SyncWindow *w)
+{
+    return w->preferences && !w->closing &&
+        (w->preferences_view.state==SYNC_PROFILES_READY || w->preferences_view.state==SYNC_PROFILES_ERROR) &&
+        w->preferences_view.completed==w->preferences_view.submitted;
+}
+static int profile_setup_ready(const SyncWindow *w)
+{
+    if (!preferences_ready(w) || w->recompare || w->review_pending || w->execute_pending) return 0;
+    if (!w->job) return 1;
+    const SyncView *v=w->view;
+    if (v->settling || v->snapshot.recovery_required) return 0;
+    if (v->finished || v->stopped) return v->drained || v->stopped;
+    return !w->cancel_requested && v->ready && v->snapshot.state==CKFET_AWAITING_REVIEW &&
+        v->snapshot.command_state!=CKFET_COMMAND_PENDING && SyncJobViewCoherent(v);
+}
+static void profile_controls(SyncWindow *w)
+{
+    char name[SYNC_PROFILE_NAME_MAX+1]; int selected=selected_profile(w,name);
+    XtSetSensitive(w->profile_save,preferences_ready(w));
+    XtSetSensitive(w->profile_load,selected && profile_setup_ready(w));
+    XtSetSensitive(w->profile_delete,selected && preferences_ready(w));
+}
 static void profile_selected(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget; SyncWindow *w=data; XmListCallbackStruct *selection=call;
-    if (selection->item_position>0 && (unsigned)selection->item_position<=w->preferences_view.count)
-        XmTextFieldSetString(w->profile_name,w->preferences_view.names[selection->item_position-1]);
+    (void)widget; (void)call; SyncWindow *w=data; char name[SYNC_PROFILE_NAME_MAX+1];
+    clear_command_notice(w);
+    if (selected_profile(w,name)) XmTextFieldSetString(w->profile_name,name);
+    profile_controls(w);
 }
 static void save_profile(Widget widget,XtPointer data,XtPointer call)
 {
@@ -756,13 +792,12 @@ static void load_profile(Widget widget,XtPointer data,XtPointer call)
     SyncWindow *w=data;
     if (w->closing) return;
     clear_command_notice(w);
-    if (!w->preferences || (w->job && !w->view->finished &&
-        (w->view->snapshot.state!=CKFET_AWAITING_REVIEW || w->review_pending || w->execute_pending))) return;
-    char *name=XmTextFieldGetString(w->profile_name);
-    if (!name) { command_notice(w,M(223,"Not enough memory.")); return; }
+    if (!profile_setup_ready(w)) return;
+    char name[SYNC_PROFILE_NAME_MAX+1];
+    if (!selected_profile(w,name)) { label(w->profile_status,M(228,"Choose an available saved profile.")); return; }
     SyncProfile *profile=calloc(1,sizeof(*profile));
-    if (!profile) { XtFree(name); command_notice(w,M(223,"Not enough memory.")); return; }
-    SyncProfilesResult result=SyncProfilesGetProfile(w->preferences,name,profile); XtFree(name);
+    if (!profile) { command_notice(w,M(223,"Not enough memory.")); return; }
+    SyncProfilesResult result=SyncProfilesGetProfile(w->preferences,name,profile);
     if (result!=SYNC_PROFILES_OK) { free(profile); label(w->profile_status,M(228,"Choose an available saved profile.")); return; }
     char after[40]="",before[40]=""; unsigned mode=0;
     for (;mode<sizeof(profiles)/sizeof(profiles[0]);++mode) if (profiles[mode]==profile->profile) break;
@@ -819,11 +854,11 @@ static void delete_profile(Widget widget,XtPointer data,XtPointer call)
     if (w->closing) return;
     clear_command_notice(w);
     if (!w->preferences) { command_notice(w,M(236,"Saved preferences are unavailable.")); return; }
-    char *name=XmTextFieldGetString(w->profile_name);
-    if (!name || !*name || strlen(name)>SYNC_PROFILE_NAME_MAX) { XtFree(name); label(w->profile_status,M(228,"Choose an available saved profile.")); return; }
+    if (!preferences_ready(w)) return;
+    char name[SYNC_PROFILE_NAME_MAX+1];
+    if (!selected_profile(w,name)) { label(w->profile_status,M(228,"Choose an available saved profile.")); return; }
     ProfileDeletion *choice=calloc(1,sizeof(*choice));
     if (choice) choice->name=strdup(name);
-    XtFree(name);
     if (!choice || !choice->name) { if (choice) free(choice); command_notice(w,M(223,"Not enough memory.")); return; }
     choice->window=w;
     char question[256]; snprintf(question,sizeof(question),M(252,"Delete saved profile '%s'?\nThis removes preferences only."),choice->name);
@@ -923,7 +958,7 @@ static void close_window(Widget widget,XtPointer data,XtPointer call)
     if (w->job) SyncJobStop(w->job);
     if (w->preferences) SyncProfilesStop(w->preferences);
     Widget controls[]={w->setup,w->compare,w->review,w->execute,w->rule_page,w->pause,w->cancel,
-        w->previous,w->next,w->profile_save};
+        w->previous,w->next,w->profile_save,w->profile_load,w->profile_delete};
     for (unsigned i=0;i<XtNumber(controls);++i) XtSetSensitive(controls[i],False);
     progress_notice(w,M(313,"Closing - finishing safe cleanup..."));
 }
@@ -942,14 +977,15 @@ static void tick(XtPointer data,XtIntervalId *id)
     if (w->preferences) {
         SyncProfilesSnapshot snapshot;
         if (SyncProfilesGetSnapshot(w->preferences,&snapshot)==SYNC_PROFILES_OK && snapshot.revision!=w->preferences_view.revision) {
+            char selected[SYNC_PROFILE_NAME_MAX+1]; int have_selected=selected_profile(w,selected);
             w->preferences_view=snapshot; XmListDeleteAllItems(w->profile_list);
             for (unsigned i=0;i<snapshot.count;++i) {
                 XmString item=XmStringCreateLocalized(snapshot.names[i]); XmListAddItemUnselected(w->profile_list,item,0); XmStringFree(item);
+                if (have_selected && !strcmp(selected,snapshot.names[i]))
+                    XmListSelectPos(w->profile_list,(int)i+1,False);
             }
-            int ready=snapshot.state==SYNC_PROFILES_READY || snapshot.state==SYNC_PROFILES_ERROR;
-            XtSetSensitive(w->profile_save,ready && !w->closing);
-            XtSetSensitive(w->profile_load,ready && !w->closing);
-            XtSetSensitive(w->profile_delete,ready && !w->closing);
+            /* Preserve by exact name, not old index. A removed profile leaves
+             * no selection; refreshing never overwrites a typed Save name. */
             if (snapshot.error[0]) label(w->profile_status,snapshot.error);
             else if (snapshot.state==SYNC_PROFILES_SAVING) label(w->profile_status,M(226,"Saving profile preferences..."));
             else if (snapshot.state==SYNC_PROFILES_READY) label(w->profile_status,M(231,"Profile preferences ready."));
@@ -1030,6 +1066,7 @@ static void tick(XtPointer data,XtIntervalId *id)
         notify(w,text);
         if (w->recompare && !w->closing && v->stopped) { SyncJobDestroy(w->job); w->job=NULL; w->recompare=0; compare(NULL,w,NULL); }
     }
+    profile_controls(w);
     if (w->closing) {
         if (w->job && SyncJobDestroy(w->job)) w->job=NULL;
         if (w->preferences && SyncProfilesDestroy(w->preferences)) w->preferences=NULL;
@@ -1063,7 +1100,7 @@ int main(int argc,char **argv)
     Widget profile_bar=XtVaCreateManagedWidget("profileBar",xmRowColumnWidgetClass,root,
         XmNtopAttachment,XmATTACH_FORM,XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,NULL);
     Widget profile_entry=XtVaCreateManagedWidget("profileEntry",xmRowColumnWidgetClass,profile_bar,XmNorientation,XmHORIZONTAL,NULL);
-    w.profile_name=field(profile_entry,"profileName",M(232,"Profile name:"),"",28);
+    w.profile_name=field(profile_entry,"profileName",M(314,"Save as profile:"),"",28);
     XtVaSetValues(w.profile_name,XmNmaxLength,SYNC_PROFILE_NAME_MAX,NULL);
     XtAddCallback(w.profile_name,XmNvalueChangedCallback,rule_input_changed,&w);
     w.profile_save=button(profile_entry,"saveProfile",M(233,"Save preferences"),save_profile,&w);
@@ -1098,7 +1135,7 @@ int main(int argc,char **argv)
     XtAddCallback(w.profile_list,XmNdefaultActionCallback,load_profile,&w);
     Widget profile_buttons=XtVaCreateManagedWidget("profileButtons",xmRowColumnWidgetClass,w.setup,XmNorientation,XmHORIZONTAL,NULL);
     w.profile_load=button(profile_buttons,"loadProfile",M(235,"Load selected preferences"),load_profile,&w); XtSetSensitive(w.profile_load,False);
-    w.profile_delete=button(profile_buttons,"deleteProfile",M(253,"Delete profile"),delete_profile,&w);
+    w.profile_delete=button(profile_buttons,"deleteProfile",M(315,"Delete selected profile"),delete_profile,&w);
     XtSetSensitive(w.profile_delete,False);
     w.source=folder_field(&w,"source",M(43,"Source folder:"),"");
     w.destination=folder_field(&w,"destination",M(44,"Destination folder:"),"");

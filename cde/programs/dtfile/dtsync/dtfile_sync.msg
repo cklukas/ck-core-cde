@@ -270,3 +270,5 @@ $set 1
 311 Select one rule to remove.
 312 Choose a matching-rule scope.
 313 Closing - finishing safe cleanup...
+314 Save as profile:
+315 Delete selected profile

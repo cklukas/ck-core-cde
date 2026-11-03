@@ -46,6 +46,8 @@ HARNESS = r'''
 #include <errno.h>
 #include <time.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/file.h>
 /* Define seams only after every production C/Xm header. They affect this UI
  * translation unit, never the separately compiled SDK/profile worker. */
 static char *test_text_get(Widget);
@@ -134,7 +136,8 @@ static int wait_for(SyncWindow *w,enum WaitFor event)
                 assertion(0,"private profile fixture must satisfy the real storage contract"); return 0;
             }
             if (preferences.state==SYNC_PROFILES_READY && preferences.result==SYNC_PROFILES_OK &&
-                preferences.submitted==preferences.completed && XtIsSensitive(w->profile_load)) return 1;
+                preferences.submitted==preferences.completed &&
+                w->preferences_view.revision==preferences.revision && XtIsSensitive(w->profile_save)) return 1;
         }
         if (event==REVIEWED && w->review_serial && !w->review_pending && !w->dirty &&
             w->view->snapshot.receipt_id && w->view->review_submission==w->review_serial &&
@@ -542,6 +545,130 @@ static int save_preferences(SyncWindow *w,SyncProfile *profile)
     assertion(result==SYNC_PROFILES_OK,"real private profile save is admitted");
     return result==SYNC_PROFILES_OK && wait_for(w,PREFERENCES_READY);
 }
+/* Select via the real worker's names and actual list, never a new UI identity
+ * member or the editable Save-as field. Read widget labels back independently. */
+static int test_profile_position(SyncWindow *w,const char *name)
+{
+    SyncProfilesSnapshot snapshot;
+    if (SyncProfilesGetSnapshot(w->preferences,&snapshot)!=SYNC_PROFILES_OK) return 0;
+    for (unsigned i=0;i<snapshot.count;++i) if (!strcmp(snapshot.names[i],name)) return (int)i+1;
+    return 0;
+}
+static int test_selected_profile(SyncWindow *w,const char *name)
+{
+    int *positions=NULL,count=0,match=0,items_count=0; XmStringTable items=NULL;
+    XtVaGetValues(w->profile_list,XmNitems,&items,XmNitemCount,&items_count,NULL);
+    if (XmListGetSelectedPos(w->profile_list,&positions,&count) && count==1 &&
+        positions[0]>0 && positions[0]<=items_count) {
+        char *text=XmStringUnparse(items[positions[0]-1],NULL,XmCHARSET_TEXT,XmCHARSET_TEXT,NULL,0,XmOUTPUT_ALL);
+        match=text && !strcmp(text,name); XtFree(text);
+    }
+    XtFree((char *)positions); return match;
+}
+static void test_select_profile(SyncWindow *w,const char *name)
+{
+    int position=test_profile_position(w,name);
+    assertion(position>0,"saved profile exists in the real worker snapshot");
+    if (!position) return;
+    XmListDeselectAllItems(w->profile_list); XmListSelectPos(w->profile_list,position,True);
+    assertion(test_selected_profile(w,name),"actual profile list selects the requested saved name");
+}
+static Widget test_delete_dialog(SyncWindow *w,const char *name)
+{
+    activate(w,"*deleteProfile");
+    Widget dialog=XtNameToWidget(w->shell,"*deleteProfile_popup*deleteProfile");
+    assertion(dialog && XtIsSubclass(dialog,xmMessageBoxWidgetClass),"actual Delete opens its confirmation dialog");
+    if (dialog) {
+        XmString message=NULL; XtVaGetValues(dialog,XmNmessageString,&message,NULL);
+        char *text=message?XmStringUnparse(message,NULL,XmCHARSET_TEXT,XmCHARSET_TEXT,NULL,0,XmOUTPUT_ALL):NULL;
+        char quoted[SYNC_PROFILE_NAME_MAX+3]; snprintf(quoted,sizeof(quoted),"'%s'",name);
+        assertion(text && strstr(text,quoted),"Delete confirmation identifies the selected profile, not edited Save name");
+        XtFree(text);
+    }
+    return dialog;
+}
+static void profile_selection_cases(SyncWindow *w,SyncProfile *initial)
+{
+    SyncProfile *probe=calloc(1,sizeof(*probe));
+    assertion(probe!=NULL,"allocate bounded selected-profile assertion payload");
+    if (!probe) return;
+    test_select_profile(w,"original-settings");
+    XmTextFieldSetString(w->profile_name,"replacement-settings");
+    activate(w,"*loadProfile");
+    assertion(SyncProfilesGetProfile(w->preferences,"original-settings",probe)==SYNC_PROFILES_OK &&
+              w->native_source && w->native_destination && !strcmp(w->native_source,probe->source) &&
+              !strcmp(w->native_destination,probe->destination) && profiles[w->profile_index]==probe->profile &&
+              w->metadata==probe->metadata_scope,
+              "select A, edit Save name B, Load still loads A's paths and options");
+    test_select_profile(w,"replacement-settings"); activate(w,"*loadProfile");
+    test_select_profile(w,"original-settings");
+    XmTextFieldSetString(w->profile_name,"replacement-settings");
+    XtCallCallbacks(w->profile_list,XmNdefaultActionCallback,NULL);
+    assertion(w->native_source && w->native_destination && !strcmp(w->native_source,probe->source) &&
+              !strcmp(w->native_destination,probe->destination) && profiles[w->profile_index]==probe->profile &&
+              w->metadata==probe->metadata_scope,
+              "actual list default action loads selected A after B was loaded and its Save name edited");
+    XmListDeselectAllItems(w->profile_list);
+    /* Notify the production browse callback of a real empty selection. */
+    XmListCallbackStruct empty={0}; empty.reason=XmCR_BROWSE_SELECT;
+    XtCallCallbacks(w->profile_list,XmNbrowseSelectionCallback,&empty);
+    pump_ticks(w);
+    assertion(!XtIsSensitive(w->profile_load) && !XtIsSensitive(XtNameToWidget(w->shell,"*deleteProfile")),
+              "without a list selection Load and Delete are unavailable despite a valid typed Save name");
+    Paths before=save_paths(w); uint64_t revision=w->local_rules_revision;
+    XtCallCallbacks(w->profile_load,XmNactivateCallback,NULL); /* Defensive no-selection invocation. */
+    check_paths(w,&before,0); free_paths(&before);
+    assertion(w->local_rules_revision==revision,"no-selection Load leaves review authority unchanged");
+    test_select_profile(w,"original-settings");
+    XmTextFieldSetString(w->profile_name,"replacement-settings");
+    int old_position=test_profile_position(w,"original-settings");
+    /* Real cooperative contention, not a worker substitute: deleting the
+     * preceding initial profile changes A's index after the held lock releases. */
+    char lock_path[4096]; snprintf(lock_path,sizeof(lock_path),"%s/.dtfile-sync/.profiles.lock",
+                                  getenv("DTFILE_UI_TEST_PREFERENCES_HOME"));
+    int lock=open(lock_path,O_RDWR|O_NOFOLLOW|O_CLOEXEC);
+    int held=lock>=0 && flock(lock,LOCK_EX|LOCK_NB)==0;
+    assertion(held,"hold the real fixture profile lock for deterministic busy refresh");
+    if (!held && lock>=0) { close(lock); lock=-1; }
+    if (held) {
+        SyncProfilesResult result=SyncProfilesDelete(w->preferences,"initial-settings");
+        assertion(result==SYNC_PROFILES_OK,"real index-shifting profile deletion is queued");
+        if (result==SYNC_PROFILES_OK) {
+            pump_ticks(w);
+            SyncProfilesSnapshot busy={0};
+            assertion(SyncProfilesGetSnapshot(w->preferences,&busy)==SYNC_PROFILES_OK && busy.submitted!=busy.completed,
+                      "real worker remains busy behind the held cooperative lock");
+            assertion(test_selected_profile(w,"original-settings") && !XtIsSensitive(w->profile_load),
+                      "busy snapshot retains selected A and disables Load");
+        }
+        flock(lock,LOCK_UN); close(lock);
+        if (!wait_for(w,PREFERENCES_READY)) goto done;
+        assertion(test_profile_position(w,"original-settings")!=old_position && test_selected_profile(w,"original-settings"),
+                  "completed snapshot preserves selected A by name after its list index changes");
+        char *typed=XmTextFieldGetString(w->profile_name);
+        assertion(!strcmp(typed,"replacement-settings"),"busy and completed refresh never overwrite edited Save name B"); XtFree(typed);
+        if (!save_preferences(w,initial)) goto done;
+    }
+    test_select_profile(w,"original-settings");
+    XmTextFieldSetString(w->profile_name,"replacement-settings");
+    Widget dialog=test_delete_dialog(w,"original-settings");
+    if (dialog) XtCallCallbacks(dialog,XmNcancelCallback,NULL);
+    assertion(SyncProfilesGetProfile(w->preferences,"original-settings",probe)==SYNC_PROFILES_OK &&
+              SyncProfilesGetProfile(w->preferences,"replacement-settings",probe)==SYNC_PROFILES_OK,
+              "Cancel confirmation preserves both selected A and edited-name B");
+    dialog=test_delete_dialog(w,"original-settings");
+    if (dialog) {
+        XtCallCallbacks(dialog,XmNokCallback,NULL);
+        if (!wait_for(w,PREFERENCES_READY)) goto done;
+        assertion(SyncProfilesGetProfile(w->preferences,"original-settings",probe)==SYNC_PROFILES_NOT_FOUND &&
+                  SyncProfilesGetProfile(w->preferences,"replacement-settings",probe)==SYNC_PROFILES_OK,
+                  "accepted Delete removes selected A and retains edited-name B");
+        assertion(!test_selected_profile(w,"replacement-settings") && !XtIsSensitive(w->profile_load),
+                  "removing selected A does not rebind selection to another profile");
+    }
+done:
+    free(probe);
+}
 static void profile_load_fault(SyncWindow *w)
 {
     Paths original=save_paths(w);
@@ -554,8 +681,8 @@ static void profile_load_fault(SyncWindow *w)
     assertion(w->preferences!=NULL,"actual private profile worker starts");
     if (!w->preferences || !wait_for(w,PREFERENCES_READY)) goto done;
     Widget delete_profile_button=XtNameToWidget(w->shell,"*deleteProfile");
-    assertion(delete_profile_button && XtIsSensitive(delete_profile_button),
-              "Delete profile becomes available after the real preferences worker is ready");
+    assertion(delete_profile_button && !XtIsSensitive(delete_profile_button),
+              "Delete profile remains disabled for a ready worker with an empty profile list");
     XmTextFieldSetString(w->profile_name,"initial-settings");
     activate(w,"*saveProfile");
     if (!wait_for(w,PREFERENCES_READY)) goto done;
@@ -572,7 +699,10 @@ static void profile_load_fault(SyncWindow *w)
     saved->filters.minimum_size=11; saved->filters.maximum_size=22;
     saved->rule_count=1; saved->rules[0]=(SyncProfileRule){0,CKFET_ASK,CKFET_ASK,1,1};
     if (!save_preferences(w,saved)) goto free_profiles;
-    XmTextFieldSetString(w->profile_name,"original-settings"); activate(w,"*loadProfile");
+    test_select_profile(w,"original-settings");
+    assertion(XtIsSensitive(w->profile_load) && XtIsSensitive(delete_profile_button),
+              "selecting a real saved profile enables Load and Delete");
+    activate(w,"*loadProfile");
     assertion(w->rule_count==1 && w->native_source && !strcmp(w->native_source,saved->source),
               "actual Load establishes nontrivial original paths/options/rule state");
     strcpy(saved->name,"replacement-settings");
@@ -581,7 +711,7 @@ static void profile_load_fault(SyncWindow *w)
     saved->filters.minimum_size=3; saved->filters.maximum_size=7;
     saved->rules[0]=(SyncProfileRule){0,CKFET_KEEP_TARGET,CKFET_ASK,0,0};
     if (!save_preferences(w,saved)) goto free_profiles;
-    XmTextFieldSetString(w->profile_name,"replacement-settings");
+    test_select_profile(w,"replacement-settings");
     Paths before=save_paths(w);
     Widget fields[]={w->size_min,w->size_max,w->date_after,w->date_before,w->new_name,w->profile_name};
     char *values[XtNumber(fields)];
@@ -630,7 +760,8 @@ static void profile_load_fault(SyncWindow *w)
         char *actual=XmTextFieldGetString(fields[i]);
         assertion(!strcmp(actual,expected[i]),"retry Load commits all four filter fields"); XtFree(actual);
     }
-    XmTextFieldSetString(w->profile_name,"initial-settings"); activate(w,"*loadProfile");
+    profile_selection_cases(w,initial);
+    test_select_profile(w,"initial-settings"); activate(w,"*loadProfile");
     check_paths(w,&original,0);
     assertion(!w->rule_count && w->profile_index==0 && w->metadata==0 && getenv("HOME")==NULL,
               "initial setup and absent process HOME restored before the existing retry regression");
