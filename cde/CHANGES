@@ -22,6 +22,8 @@
   `XtTimerCallbackProc` directly instead of treating client data as a widget
   parameter in the function type. Dialog-cache structure notifications use the
   complete `XtEventHandler` signature.
+  Rename verification and tree-button activation recover concrete Motif
+  callback records inside exact `XtCallbackProc` boundaries.
 - DtImsStart: register window-manager callbacks and the host-return action with
   their exact Xt contracts, using a typed adapter for the no-argument shutdown
   routine.

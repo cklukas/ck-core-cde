@@ -339,7 +339,7 @@ static void CreateTreeIcons(
 static void TreeBtnCallback(
                         Widget w,
                         XtPointer clientData,
-                        XmAnyCallbackStruct * callData );
+                        XtPointer callData );
 static void LayoutDesktopIcons(
                         FileMgrRec *file_mgr_rec,
                         FileMgrData *file_mgr_data,
@@ -3563,13 +3563,13 @@ CreateNameChangeDialog (
       if(file_mgr_data) {
          file_mgr_data->renaming = file_view_data;
          XtAddCallback(text, XmNmotionVerifyCallback,
-                       (XtCallbackProc)ChangeIconName,
+                       ChangeIconName,
                        (XtPointer)file_mgr_data);
          XtAddCallback(text, XmNmodifyVerifyCallback,
-                        (XtCallbackProc)ChangeIconName,
+                        ChangeIconName,
                         (XtPointer)file_mgr_data);
          XtAddCallback(text, XmNactivateCallback,
-                        (XtCallbackProc)ChangeIconName,
+                        ChangeIconName,
                         (XtPointer)file_mgr_data);
          XtAddCallback(text, XmNhelpCallback, HelpRequestCB,
                        HELP_NAMECHANGE_DIALOG_STR);
@@ -6274,7 +6274,7 @@ UpdateOneFileIcon(
                                              "tree_button", args, n);
      }
      XtAddCallback(btn_widget, XmNactivateCallback,
-                    (XtCallbackProc)TreeBtnCallback, file_view_data);
+                    TreeBtnCallback, file_view_data);
 
      file_view_data->treebtn = btn_widget;
    }
@@ -8417,8 +8417,9 @@ static void
 TreeBtnCallback(
         Widget w,
         XtPointer clientData,
-        XmAnyCallbackStruct *callData )
+        XtPointer callbackData )
 {
+  XmAnyCallbackStruct *callData = callbackData;
   FileMgrRec *file_mgr_rec;
   FileMgrData *file_mgr_data;
   FileViewData *file_view_data = (FileViewData *)clientData;

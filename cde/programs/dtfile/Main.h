@@ -1505,7 +1505,7 @@ extern void FileOpError(
 extern void ChangeIconName(
                         Widget w,
                         XtPointer client_data,
-                        XmTextVerifyCallbackStruct *call_data) ;
+                        XtPointer call_data) ;
 extern void ChangeIconNameDT(
                         Widget w,
                         XtPointer client_data,
