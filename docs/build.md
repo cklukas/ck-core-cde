@@ -218,6 +218,9 @@ depending on an in-source generated copy. Dtterm resolves its
 terminfo and fallback-resource generation scripts and inputs through
 `$(srcdir)`, while its compile includes cover both generated build headers and
 the checked-in private terminal headers.
+Dtstyle's fatal Xt error hook carries Xt's non-returning contract, and its map
+and window-manager reparent handlers implement `XtEventHandler` directly
+without casts at registration or removal sites.
 Dtcreate uses the ToolTalk toolkit's input handler for Xt dispatch and reserves
 its exact three-argument contract callback for `ttdt_session_join`, avoiding an
 incompatible callback cast and a duplicate ToolTalk connection. Its help-dialog

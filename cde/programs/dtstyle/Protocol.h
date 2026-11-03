@@ -56,7 +56,8 @@ extern Window   smWindow;
 extern void MwmReparentNotify(
                             Widget w,
                             XtPointer client_data,
-                            XEvent *event ) ;
+                            XEvent *event,
+                            Boolean *continue_to_dispatch ) ;
 extern void InitDtstyleProtocol( void ) ;
 extern void GetSessionSaveMode(  unsigned char **mode ) ;
 extern void SetWindowProperties( void ) ;

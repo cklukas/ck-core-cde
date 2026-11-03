@@ -291,7 +291,8 @@ void
 MwmReparentNotify(
         Widget w,
         XtPointer client_data,
-        XEvent *event )
+        XEvent *event,
+        Boolean *continue_to_dispatch )
 {
     if ((event->type == ReparentNotify) &&
         (event->xreparent.parent != style.root))

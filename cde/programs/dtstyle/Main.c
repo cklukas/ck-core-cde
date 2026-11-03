@@ -116,11 +116,12 @@ static int IOErrorHandler(
                         Display *disp ) ;
 
 static void ToolkitErrorHandler(
-                        char *message) ;
+                        char *message) _X_NORETURN ;
 static void errParentMap( 
                         Widget w,
                         XtPointer client_data,
-                        XEvent *event) ;
+                        XEvent *event,
+                        Boolean *continue_to_dispatch) ;
 static void UnmanageCB( 
                         Widget w,
                         XtPointer client_data,
@@ -297,7 +298,7 @@ ErrDialog(
     else
     {
         XtAddEventHandler(XtParent(style.errParent), StructureNotifyMask, 0,
-                          (XtEventHandler)errParentMap, NULL);
+                          errParentMap, NULL);
     }
 
 }
@@ -308,7 +309,8 @@ static void
 errParentMap(
         Widget w,
         XtPointer client_data,
-        XEvent *event )
+        XEvent *event,
+        Boolean *continue_to_dispatch )
 {
     if (event->type == MapNotify)
     {
@@ -316,7 +318,7 @@ errParentMap(
         /* ring the bell (PM behavior) */
         XBell(style.display, 0);
         XtRemoveEventHandler(XtParent(style.errParent), StructureNotifyMask,
-                             0, (XtEventHandler)errParentMap, NULL);
+                             0, errParentMap, NULL);
     }
 }
 
@@ -532,7 +534,7 @@ malloc_trace(0);
     XtAppSetErrorHandler(XtWidgetToApplicationContext(style.shell),
                          ToolkitErrorHandler);
     XtAddEventHandler(style.shell, StructureNotifyMask, 0,
-                         (XtEventHandler)MwmReparentNotify, NULL);
+                         MwmReparentNotify, NULL);
 
     /* set up resolution dependent layout variables */
     switch (_DtGetDisplayResolution(style.display, style.screenNum))
