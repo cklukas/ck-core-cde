@@ -114,7 +114,7 @@ static void CatchClose (
 
   /* Current Help Dialog Window */
   XmAddWMProtocolCallback(XtParent(widget),wm_delete_window,
-                          (XtCallbackProc)CloseAndExitCB, (XtPointer)widget);
+                          CloseAndExitCB, (XtPointer)widget);
   XtSetValues(XtParent(widget), args, 1);
   
 } 

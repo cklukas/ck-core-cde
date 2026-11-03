@@ -453,6 +453,7 @@ and input callbacks use separate exact adapters around shared event processing,
 and canvas help uses its native Xt callback contract throughout day views.
 DtLogin's login-field insert and backspace translation actions likewise use
 their complete four-argument Xt action contracts directly.
+DtHelp's help-view close hook uses its native Xt callback boundary directly.
 DtWidget's editor translation table stores its complete four-argument Xt action
 implementations directly, allowing the compiler to check every public and
 internal editor action.
