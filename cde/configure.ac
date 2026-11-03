@@ -33,6 +33,13 @@ dnl These must be up here for the compiler search list to actually work
 AC_PROG_CC([cc gcc clang])
 AC_PROG_CXX([c++ g++ clang++])
 
+dnl Maintained C sources use C23 by default.  Preserve an explicit language
+dnl mode supplied by a packager or developer; compatibility components select
+dnl their older standard in their own build rules.
+AS_CASE([" $CFLAGS "],
+  [*" -std="*], [],
+  [CFLAGS="$CFLAGS -std=c23"])
+
 LT_INIT
 AC_PREFIX_DEFAULT(/usr/dt)
 

@@ -1,4 +1,11 @@
 2026-11-03
+- build: make C23 the default for maintained C sources after complete GCC and
+  Clang ARM64 builds, both full `make check` runs and the uConsole desktop
+  smoke suite passed against CK Core Motif ABI 9. Explicit caller-selected
+  language modes remain honored, while embedded compatibility components keep
+  their scoped GNU17 rules.
+- CI: run the ARM64 native build, full check suite, Motif ABI verification and
+  installed filesystem integration in explicit GCC and Clang C23 lanes.
 - localization: regenerate app defaults, configuration, desktop types/actions,
   palettes, backdrops and App Manager entries in clean out-of-tree builds by
   resolving maintained translation templates from the source tree, generated

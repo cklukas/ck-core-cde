@@ -46,11 +46,12 @@ The complete desktop also needs the X11, PAM, ToolTalk, RPC, JPEG, LMDB, Tcl,
 terminal, font, and document-processing development packages listed by the
 Debian package metadata under `cde/debian/control`.
 
-## C23 qualification
+## C23 build contract
 
-CDE is being qualified subsystem by subsystem before C23 becomes the default
-language mode. The embedded ksh93 sources and genuinely historical utilities
-remain explicit GNU17 compatibility components during this work.
+C23 is the default language mode for maintained CDE C sources. Configure keeps
+an explicit `-std=` mode supplied by a packager or developer; the embedded
+ksh93 sources and genuinely historical utilities remain explicit GNU17
+compatibility components.
 The dtksh build copies its vendored ksh93 tree into the private build directory
 and passes `-std=gnu17` only to that package build; the maintained dtksh glue
 continues to inherit the enclosing C23 qualification flags. This also keeps
@@ -436,13 +437,13 @@ make -j4 -C programs/dtudcexch
 make -j4 -C programs/dtlogin
 ```
 
-This focused result does not imply that the rest of CDE is C23-clean. The
-listed legacy component directories currently provide little or no executable
-`make check` coverage, so successful dual-compiler builds and header probes are
-qualification evidence for this batch, not a replacement for the project-wide
-test gate. The project will select C23 by default only after the complete
-build, `make check`,
-and the uConsole desktop smoke suite pass with the same qualified source.
+The final default-language gate uses ARM64 shadow builds with both GCC
+and Clang, followed by the complete `make check` suite in each build tree. The
+same qualified GCC output is staged into an isolated uConsole CDE session which
+must open the Front Panel, Style Manager, Terminal and File Manager, accept a
+command typed through the visible terminal, pass the native dtwm property
+client, and map every captured desktop process to CK Core Motif ABI 9. The CI
+workflow preserves both compiler lanes with explicit `-std=c23` flags.
 
 The DtInfo C++ viewer also consumes the typed DtHelp hyperlink and resize
 interfaces directly. Its callbacks accept the interface's opaque display/client
