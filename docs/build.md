@@ -421,11 +421,11 @@ make -j4 -C lib/tt/mini_isam check
 make -j4 -C lib/tt/lib/api/dnd
 make -j4 -C lib/DtHelp/il
 make -j4 -C lib/DtSvc
-make -j4 -C lib/DtMmdb LEX=flex
+make -j4 -C lib/DtMmdb
 make -j4 -C lib/csa
 make -j4 -C programs/dtspcd
 make -j4 -C programs/dtfile
-make -j4 -C programs/dtdocbook LEX=flex
+make -j4 -C programs/dtdocbook
 make -j4 -C programs/dtcalc
 make -j4 -C programs/dtpad
 make -j4 -C programs/dtpdm
@@ -450,6 +450,13 @@ fallback. ToolTalk applies the same build-first/source-second order to its
 private library interfaces, and the named Dt, DtI, ToolTalk, Xm, CSA and SPC
 include groups preserve that order for consumers using unqualified private
 header names. No lane may depend on headers copied by an earlier build.
+
+Configure validates the lexer it will use while already in the selected C
+language mode. Its generated-scanner probe selects the POSIX declaration level
+needed by Flex, and configuration fails early when no usable lexer exists.
+DtMmdb and DocBook builds therefore use the configured `LEX` directly; a clean
+shadow build does not require a command-line override or a generated scanner
+left behind by an earlier build.
 
 The DtInfo C++ viewer also consumes the typed DtHelp hyperlink and resize
 interfaces directly. Its callbacks accept the interface's opaque display/client

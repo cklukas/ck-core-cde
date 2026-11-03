@@ -410,8 +410,16 @@ if test -z "$ac_cv_prog_YACC"; then
    MISSING_PROGS="[bison or byacc] ${MISSING_PROGS}"
 fi
 
+dnl Flex 2.6.x calls the POSIX fileno() interface from its generated scanner.
+dnl In strict C23 mode glibc exposes that declaration only when a POSIX feature
+dnl level is selected.  Keep the feature definition local to Autoconf's lexer
+dnl link probe; otherwise AC_PROG_LEX finds flex but replaces LEX with ':' after
+dnl its generated scanner fails to compile.
+cde_lex_save_CPPFLAGS=$CPPFLAGS
+CPPFLAGS="$CPPFLAGS -D_POSIX_C_SOURCE=200809L"
 AC_PROG_LEX(noyywrap)
-if test -z "$ac_cv_prog_LEX"; then
+CPPFLAGS=$cde_lex_save_CPPFLAGS
+if test "x$LEX" = x:; then
    MISSING_PROGS="[flex or lex] ${MISSING_PROGS}"
 fi
 

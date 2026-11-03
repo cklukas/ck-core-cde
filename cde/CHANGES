@@ -1,4 +1,9 @@
 2026-11-03
+- build: keep Autoconf's Flex link probe valid under strict C23 by selecting
+  the POSIX declaration level required by generated scanners. Configure now
+  checks the usable `LEX` result rather than merely the discovered executable,
+  so a missing or unusable lexer is reported before a clean DtMmdb build can
+  silently run a no-op generator and fail on an absent generated source.
 - build: make fresh out-of-tree builds search generated public headers first
   and the maintained source header tree second, removing their hidden
   dependency on headers copied into a reused build directory. ToolTalk's
