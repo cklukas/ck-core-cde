@@ -77,6 +77,10 @@ out-of-tree C23 qualification directory. The ToolTalk session server uses the
 same source-aware include contract for its private session, message and utility
 headers.
 
+The DtMrm resource-registration library searches both build and source trees
+for the private DtHelp and DtTerm headers included by its widget-private
+interfaces, rather than relying on an in-tree sibling layout.
+
 The `dtimsstart` desktop input-method launcher is also qualified at the
 translation-unit level with GCC and Clang in C23 mode. Its module interface and
 private functions use complete prototypes, Xt callbacks use `XtCallbackProc`,

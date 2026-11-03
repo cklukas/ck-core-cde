@@ -46,6 +46,8 @@
   hooks, dtpdm constructors, dtmail utility
   accessors, libcsa hash destruction, and dtcm calendar match/list/container
   callbacks; avoid the C23 `bool` keyword in the calendar tree checker.
+- DtMrm: let clean out-of-tree builds resolve private DtHelp and DtTerm headers
+  from their maintained source directories.
 - public interfaces: replace unspecified-argument ToolTalk, DtSvc service,
   action, multimedia database, symbolic-table and event-loop declarations
   with their exact C/C++ contracts; type Instant's remaining initialization,
