@@ -6223,7 +6223,7 @@ UpdateOneFileIcon(
 
    file_view_data->file_data->is_broken = False;
    file_view_data->widget = icon_widget;
-   XtAddCallback (icon_widget, XmNcallback, (XtCallbackProc)IconCallback,
+   XtAddCallback (icon_widget, XmNcallback, IconCallback,
                   file_view_data);
 
    XmStringFree (icon_label);

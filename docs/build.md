@@ -481,6 +481,8 @@ Dialog-cache structure notifications likewise use the complete Xt event
 handler boundary.
 Rename verification and tree-button activation accept opaque Xt call data and
 recover their concrete Motif records inside the callback.
+Map, help, icon activation and iconic-path handlers are registered directly
+where their implementations already match Xt's callback and event contracts.
 DtPad exposes its editor, help, formatting, option, session and print callbacks
 through `XtCallbackProc` directly, and routes panic signals through a typed
 signal adapter. DtAction likewise registers its custom text actions and

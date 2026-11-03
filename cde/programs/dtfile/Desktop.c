@@ -411,7 +411,7 @@ RegisterIconDropsDT(
    XtRemoveAllCallbacks(desktopWindow->iconGadget, XmNcallback);
    XtAddCallback (desktopWindow->iconGadget,
                   XmNcallback,
-                  (XtCallbackProc)IconCallback,
+                  IconCallback,
                   desktopWindow->file_view_data);
 }
 

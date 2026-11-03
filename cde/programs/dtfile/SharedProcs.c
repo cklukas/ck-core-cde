@@ -728,7 +728,7 @@ _DtMappedCB(
    if (!disableDialogAutoPlacement)
       _DtmapCB(w,client_data,call_data);
 
-   XtRemoveCallback(w, XmNpopupCallback, (XtCallbackProc)_DtMappedCB, client_data);
+   XtRemoveCallback(w, XmNpopupCallback, _DtMappedCB, client_data);
 }
 
 
@@ -744,7 +744,7 @@ _DtGenericMapWindow (
    GenericRecord * genericRecord = (GenericRecord *) recordPtr;
 
    XtAddCallback (genericRecord->shell, XmNpopupCallback,
-                  (XtCallbackProc)_DtMappedCB, (XtPointer) parent);
+                  _DtMappedCB, (XtPointer) parent);
 }
 
 

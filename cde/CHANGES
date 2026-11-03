@@ -24,6 +24,8 @@
   complete `XtEventHandler` signature.
   Rename verification and tree-button activation recover concrete Motif
   callback records inside exact `XtCallbackProc` boundaries.
+  Map, help, icon activation and iconic-path event handlers are registered
+  directly through their already-exact Xt contracts.
 - DtImsStart: register window-manager callbacks and the host-return action with
   their exact Xt contracts, using a typed adapter for the no-argument shutdown
   routine.

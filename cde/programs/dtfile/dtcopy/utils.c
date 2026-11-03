@@ -289,9 +289,9 @@ Get_Help_Dialog(void)
         dialog = DtCreateHelpDialog(G_toplevel, "helpDlg",  args, n);
 
         XtAddCallback(dialog, DtNhyperLinkCallback,
-                      (XtCallbackProc)help_hyperyperlink_callback, NULL);
+                      help_hyperyperlink_callback, NULL);
         XtAddCallback(dialog, DtNcloseCallback,
-                      (XtCallbackProc)help_close_callback, NULL);
+                      help_close_callback, NULL);
         return dialog;
 }
 
@@ -334,9 +334,9 @@ Help(
         G_help_dialog = DtCreateHelpDialog(G_toplevel, "helpDlg", args, n);
 
         XtAddCallback(G_help_dialog, DtNhyperLinkCallback,
-                      (XtCallbackProc)help_hyperyperlink_callback, NULL);
+                      help_hyperyperlink_callback, NULL);
         XtAddCallback(G_help_dialog, DtNcloseCallback,
-                      (XtCallbackProc)help_close_callback, NULL);
+                      help_close_callback, NULL);
 
         XtManageChild(G_help_dialog);
     }

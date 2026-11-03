@@ -703,7 +703,7 @@ ShowCopyFileDialog(
    XtSetArg (args[0], XmNcancelButton, cancel);
    XtSetValues (form, args, 1);
 
-   XtAddCallback (shell, XmNpopupCallback, (XtCallbackProc)_DtmapCB,
+   XtAddCallback (shell, XmNpopupCallback, _DtmapCB,
                                              (XtPointer) XtParent(shell));
 
    delete_window_atom = XmInternAtom (XtDisplay(shell), "WM_DELETE_WINDOW", True);
@@ -1024,7 +1024,7 @@ ShowMoveFileDialog(
    XtSetArg (args[0], XmNcancelButton, cancel);
    XtSetValues (form, args, 1);
 
-   XtAddCallback (shell, XmNpopupCallback, (XtCallbackProc)_DtmapCB,
+   XtAddCallback (shell, XmNpopupCallback, _DtmapCB,
                                              (XtPointer) XtParent(shell));
 
    delete_window_atom = XmInternAtom (XtDisplay(shell), "WM_DELETE_WINDOW", True);
@@ -1441,7 +1441,7 @@ ShowLinkFileDialog(
    XtSetArg (args[0], XmNcancelButton, cancel);
    XtSetValues (form, args, 1);
 
-   XtAddCallback (shell, XmNpopupCallback, (XtCallbackProc)_DtmapCB,
+   XtAddCallback (shell, XmNpopupCallback, _DtmapCB,
                                              (XtPointer) XtParent(shell));
 
    delete_window_atom = XmInternAtom (XtDisplay(shell), "WM_DELETE_WINDOW", True);
@@ -2338,7 +2338,7 @@ ShowMakeFileDialog(
    XtSetArg (args[0], XmNcancelButton, cancel);
    XtSetValues (form, args, 1);
 
-   XtAddCallback (shell, XmNpopupCallback, (XtCallbackProc)_DtmapCB,
+   XtAddCallback (shell, XmNpopupCallback, _DtmapCB,
                   (XtPointer) XtParent(shell));
 
    delete_window_atom = XmInternAtom (XtDisplay(shell), "WM_DELETE_WINDOW", True);

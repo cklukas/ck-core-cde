@@ -1643,7 +1643,7 @@ Initialize(
     new_w->iconic_path.gc = None;
 
     XtAddEventHandler((Widget)new_w, ButtonReleaseMask, False,
-                      (XtEventHandler)IconicPathButtonPressHandler, NULL);
+                      IconicPathButtonPressHandler, NULL);
 
     Update(new_w, file_mgr_rec, NULL);
 
