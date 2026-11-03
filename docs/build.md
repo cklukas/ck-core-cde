@@ -198,7 +198,9 @@ arguments or an untyped undo slot. Dtudcexch similarly publishes complete BDF
 conversion and utility interfaces; its primary UI and file-selection callbacks
 accept `XtPointer` client data directly, without callback casts. The bundled
 PAM dispatcher uses one exact module-function type, while the font loader uses
-the system `<dlfcn.h>` declarations and `RTLD_*` flags.
+the system `<dlfcn.h>` declarations and `RTLD_*` flags. DtHelp's parent library
+also searches the image library and JPEG helper source include directories, so
+a clean out-of-tree build does not depend on headers left in the build tree.
 
 To repeat that focused qualification from a configured C23 build tree:
 

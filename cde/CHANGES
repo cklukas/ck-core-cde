@@ -3,7 +3,8 @@
   dtsession and dtstyle no-argument interfaces; give dtlogin network,
   authentication and Xt hooks exact contracts; type dtappbuilder utilities,
   dtudcexch conversion routines and callbacks, and PAM module dispatch; use
-  the platform dynamic-loader declarations in the bundled font layer.
+  the platform dynamic-loader declarations in the bundled font layer; let a
+  clean out-of-tree DtHelp build find its image and JPEG helper headers.
 - C23: remove the calendar RPC headers' obsolete K&R declaration fallbacks;
   give dtcm parsing, UI, ToolTalk and helper callbacks exact contracts; make
   clean out-of-tree calendar builds resolve generated and checked-in headers
