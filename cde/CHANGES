@@ -28,6 +28,9 @@
   the same strict C boundary. The rpi4 runner uses separate isolated,
   out-of-tree lanes with pinned Motif and filesystem revisions and records each
   verified build's timing, compiler, source revisions and dtwm fingerprint.
+  Clang's stricter function-cast subgroup is warning-only for Xt/Motif's
+  required `_XtInherit` sentinels; synchronized build logs are audited so every
+  warning outside an inherit entry or method-propagation comparison fails.
 - dtksh: replace the embedded ksh93 tree with a checksum-pinned upstream
   maintenance revision. Keep CDE built-ins and patches separate, support
   verified offline archive builds, install the upstream license and notices,

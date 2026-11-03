@@ -643,6 +643,16 @@ private library interfaces, and the named Dt, DtI, ToolTalk, Xm, CSA and SPC
 include groups preserve that order for consumers using unqualified private
 header names. No lane may depend on headers copied by an earlier build.
 
+Clang diagnoses the Xt and Motif class-record inheritance sentinels more
+broadly than GCC: the toolkit ABI deliberately represents every typed
+`XtInherit*` and `XmInherit*` entry with the generic `_XtInherit` function
+address. The Clang lane therefore leaves `-Wcast-function-type-strict` as a
+warning while retaining the other function-pointer errors.
+`scripts/check-clang-cast-warnings.py` audits the build log and accepts that
+warning only when its source line uses an Xt/Motif inherit entry or compares a
+class method with `_XtInherit` while propagating it. Any CDE callback cast,
+converter cast or other occurrence still fails the lane.
+
 Configure validates the lexer it will use while already in the selected C
 language mode. Its generated-scanner probe selects the POSIX declaration level
 needed by Flex, and configuration fails early when no usable lexer exists.

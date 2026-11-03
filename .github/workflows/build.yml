@@ -30,9 +30,11 @@ jobs:
           - compiler: GCC
             cc: gcc
             cxx: g++
+            clang_cast_policy: ''
           - compiler: Clang
             cc: clang
             cxx: clang++
+            clang_cast_policy: '-Wno-error=cast-function-type-strict'
     steps:
       - uses: actions/checkout@v5
         with:
@@ -115,17 +117,25 @@ jobs:
           export LD_LIBRARY_PATH="$prefix/lib"
           (cd cde-source/cde && ./autogen.sh)
           cde_build="$RUNNER_TEMP/cde-build-${{ matrix.cc }}"
+          cde_build_log="$RUNNER_TEMP/cde-build-${{ matrix.cc }}.log"
+          strict_cflags='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type -Werror=incompatible-pointer-types -Werror=implicit-function-declaration ${{ matrix.clang_cast_policy }}'
           mkdir "$cde_build"
           cd "$cde_build"
           if ! "$GITHUB_WORKSPACE/cde-source/cde/configure" \
             CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
-            CFLAGS='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type -Werror=incompatible-pointer-types -Werror=implicit-function-declaration' \
+            CFLAGS="$strict_cflags" \
             CXXFLAGS='-O1 -g0'; then
             tail -n 200 config.log
             exit 1
           fi
           make -j1 -C programs/dtksh prepare-ksh
-          make -j4
+          if ! make --output-sync=target -j4 > "$cde_build_log" 2>&1; then
+            cat "$cde_build_log"
+            exit 1
+          fi
+          cat "$cde_build_log"
+          python3 "$GITHUB_WORKSPACE/cde-source/scripts/check-clang-cast-warnings.py" \
+            "$cde_build_log"
           make -j1 -C programs/dtksh -f Makefile \
             -f "$GITHUB_WORKSPACE/cde-source/scripts/check-dtksh-c23.mk" \
             CC='${{ matrix.cc }}' check-dtksh-c23
@@ -135,6 +145,7 @@ jobs:
       - name: Build installed filesystem C API and test dtfile workflows
         run: |
           set -eu
+          strict_cflags='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type -Werror=incompatible-pointer-types -Werror=implicit-function-declaration ${{ matrix.clang_cast_policy }}'
           export TMPDIR="$RUNNER_TEMP/cde-tests"
           fs_prefix="$RUNNER_TEMP/filesystem"
           private_fixture="$(mktemp -d "$HOME/.cde-sync-test.XXXXXXXX")"
@@ -154,12 +165,19 @@ jobs:
           export LD_LIBRARY_PATH="$prefix/lib:$fs_prefix/lib"
           export PKG_CONFIG_PATH="$fs_prefix/lib/pkgconfig"
           cde_fs_build="$RUNNER_TEMP/cde-filesystem-${{ matrix.cc }}"
+          cde_fs_log="$RUNNER_TEMP/cde-filesystem-${{ matrix.cc }}.log"
           mkdir "$cde_fs_build"
           cd "$cde_fs_build"
           "$GITHUB_WORKSPACE/cde-source/cde/configure" --with-ck-core-fs \
             CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
-            CFLAGS='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type -Werror=incompatible-pointer-types -Werror=implicit-function-declaration' \
+            CFLAGS="$strict_cflags" \
             CXXFLAGS='-O1 -g0'
-          make -j4 -C programs/dtfile
+          if ! make --output-sync=target -j4 -C programs/dtfile > "$cde_fs_log" 2>&1; then
+            cat "$cde_fs_log"
+            exit 1
+          fi
+          cat "$cde_fs_log"
+          python3 "$GITHUB_WORKSPACE/cde-source/scripts/check-clang-cast-warnings.py" \
+            "$cde_fs_log"
           make -j1 -C programs/localized/C/msg dtfile_sync.cat
           make -j1 -C programs/dtfile check

@@ -54,6 +54,11 @@ mkdir -p "$root"
 started_epoch=$(date +%s)
 started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 strict_cflags='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type -Werror=incompatible-pointer-types -Werror=implicit-function-declaration'
+clang_cast_policy=
+if "$cc" -dM -E - </dev/null | grep -q '^#define __clang__ '; then
+    clang_cast_policy='-Wno-error=cast-function-type-strict'
+    strict_cflags="$strict_cflags $clang_cast_policy"
+fi
 
 echo "CDE source revision: $source_revision"
 echo "CK Core Motif revision: $motif_revision"
@@ -109,7 +114,13 @@ if ! "$cde_source/cde/configure" CC="$cc" CXX="$cxx" \
     exit 1
 fi
 make -j1 -C programs/dtksh prepare-ksh
-make -j4
+cde_build_log=$root/cde-build.log
+if ! make --output-sync=target -j4 > "$cde_build_log" 2>&1; then
+    cat "$cde_build_log"
+    exit 1
+fi
+cat "$cde_build_log"
+python3 "$cde_source/scripts/check-clang-cast-warnings.py" "$cde_build_log"
 make -j1 -C programs/dtksh -f Makefile \
     -f "$cde_source/scripts/check-dtksh-c23.mk" CC="$cc" check-dtksh-c23
 make -j4 check
@@ -138,7 +149,13 @@ if ! "$cde_source/cde/configure" --with-ck-core-fs \
     tail -n 200 config.log
     exit 1
 fi
-make -j4 -C programs/dtfile
+cde_fs_log=$root/cde-filesystem-build.log
+if ! make --output-sync=target -j4 -C programs/dtfile > "$cde_fs_log" 2>&1; then
+    cat "$cde_fs_log"
+    exit 1
+fi
+cat "$cde_fs_log"
+python3 "$cde_source/scripts/check-clang-cast-warnings.py" "$cde_fs_log"
 make -j1 -C programs/localized/C/msg dtfile_sync.cat
 make -j1 -C programs/dtfile check
 
