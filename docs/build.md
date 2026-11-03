@@ -217,6 +217,9 @@ Dtlogin retains X I/O and alarm handlers through their native function-pointer
 types and restores X's default error handler with `NULL`, without handler casts.
 Its language enumerator table carries the exact next/end method contracts, and
 chooser/XDMCP code uses the shared typed environment and opaque-address APIs.
+Dialog file access comes from `<stdio.h>` rather than local `fopen()`
+redeclarations, and the fatal Xt error callback carries Xt's non-returning
+contract.
 Dtstyle registers dedicated `int`-argument signal handlers rather than casting
 Xt callbacks or no-argument helpers to the signal ABI.
 

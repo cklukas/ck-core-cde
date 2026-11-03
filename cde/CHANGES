@@ -9,8 +9,9 @@
   inputs; correct dtcreate's ToolTalk and help callback registrations, type
   its icon-selector callback table and directory filter, type dtlogin's saved
   X I/O and signal handlers and language enumerator table, and use its shared
-  environment/address interfaces consistently; correct dtstyle signal
-  handlers.
+  environment/address interfaces consistently; use the standard stdio
+  declarations and exact non-returning Xt error-handler contract there;
+  correct dtstyle signal handlers.
 - C23: remove the calendar RPC headers' obsolete K&R declaration fallbacks;
   give dtcm parsing, UI, ToolTalk and helper callbacks exact contracts; make
   clean out-of-tree calendar builds resolve generated and checked-in headers
