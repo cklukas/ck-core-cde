@@ -153,6 +153,8 @@ shutdown is not yet permitted.
 The `dsdm` X error and recursive-window callbacks, interest-property reader and
 drag-and-drop proxy boundary use exact shared Xlib contracts; the `dticon` X
 error hooks likewise avoid function-pointer casts.
+The welcome-screen timeout likewise registers its existing `void(int)` alarm
+handler directly rather than casting it to a no-argument function type.
 
 The icon editor's remaining cross-file interfaces are fully prototyped as
 well. Its ToolTalk contract and media callbacks use the toolkit-defined

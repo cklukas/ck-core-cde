@@ -83,7 +83,8 @@
   correct dialog map return types and give menu, message and display-area
   event handlers the complete Xt contract without registration casts.
 - C23: replace ambiguous system, signal, Xt, ICE and Xlib declarations in
-  dtexec, dtaction, dtsession, dsdm and dticon with their exact interfaces;
+  dtexec, dtaction, dtsession, dsdm, dthello and dticon with their exact
+  interfaces; register dthello's alarm handler without an incompatible cast;
   share the exact dsdm interest-property and drag-and-drop proxy contract
   across its translation units;
   remove callback casts that concealed mismatched timer and handler contracts,
