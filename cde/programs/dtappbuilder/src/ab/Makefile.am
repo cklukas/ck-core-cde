@@ -10,7 +10,7 @@ ABINCLUDES = -I$(top_srcdir)/programs/dtappbuilder/src/include \
 
 bin_PROGRAMS = dtbuilder
 
-BUILT_SOURCES = dtbuilder.h dtbuilder.c about_box_ui.h appfw_ui.h \
+BUILT_SOURCES = .bil-inputs.stamp dtbuilder.h dtbuilder.c about_box_ui.h appfw_ui.h \
 		attch_ed_ui.h brws_ui.h button_ui.h cgen_env_ui.h \
 		choice_ui.h color_chooser_ui.h combobox_ui.h conn_ui.h \
 		cpanel_ui.h custdlg_ui.h dnd_ed_ui.h drawp_ui.h fchooser_ui.h \
@@ -37,7 +37,25 @@ AB_MAKEFILES = \
         Makefile.netbsd \
         Makefile.openbsd
 
-CLEANFILES = $(AB_MAKEFILES) *.res *_ui.c *_ui.h .dtcodegen.log *.delta dtbuilder.c dtbuilder.msg
+CLEANFILES = $(AB_MAKEFILES) *.res *_ui.c *_ui.h .dtcodegen.log *.delta \
+	dtbuilder.c dtbuilder.msg .bil-inputs.stamp
+
+BIL_INPUTS = $(notdir $(wildcard $(srcdir)/*.bil)) dtbuilder.bip
+
+.bil-inputs.stamp: $(addprefix $(srcdir)/,$(BIL_INPUTS))
+	@if test "$(srcdir)" != "."; then \
+	  for input in $(BIL_INPUTS); do \
+	    test -e "$$input" || $(LN_S) "$(abs_srcdir)/$$input" "$$input"; \
+	  done; \
+	fi
+	$(AM_V_at)touch $@
+
+clean-local:
+	@if test "$(srcdir)" != "."; then \
+	  for input in $(BIL_INPUTS); do \
+	    test ! -L "$$input" || $(RM) "$$input"; \
+	  done; \
+	fi
 
 SOURCES.msg = \
                 dtbuilder.msg   \
