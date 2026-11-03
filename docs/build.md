@@ -121,6 +121,8 @@ interface accepts const path and mode strings without casts. Generated
 interface-value macros explicitly end an earlier token definition before
 reusing its name, and integer trie payloads cross the generic pointer boundary
 through `intptr_t` rather than a width-truncating cast.
+The maintained help viewer also uses the C-standard `int main` entry-point
+contract under both compilers.
 
 The Motif manual guide resolves its shared link definitions from the source
 tree and replaces an earlier generated link atomically enough for repeated

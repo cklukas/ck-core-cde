@@ -19,6 +19,8 @@
 - DtHelp: keep generated interface parameter macros warning-free when they
   intentionally replace parser token names, preserve glossary trie payloads
   through `intptr_t`, and give the pass2 parser a conforming `int main`.
+- DtHelp: give the maintained help viewer a conforming `int main` entry point
+  accepted by both GCC and Clang in C23 mode.
 - Documentation: make the Motif manual-link input repeatable and usable from
   clean shadow builds by linking its source-qualified file, and invoke the
   generated DocBook-to-man wrapper and compiled converter from the build tree.

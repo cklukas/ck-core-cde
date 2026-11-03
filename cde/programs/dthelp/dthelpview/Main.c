@@ -214,7 +214,7 @@ static void GlobalInit(void)
  * Main Line Program:
  *
  ***************************************************************************/
-void main(
+int main(
     int argc,
     char **argv)
 {
@@ -315,6 +315,7 @@ void main(
     Usage (argv);    
 
   XtMainLoop();
+  return 0;
 }
 
 
