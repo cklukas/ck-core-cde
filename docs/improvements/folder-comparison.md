@@ -61,13 +61,21 @@ the actual screen so the bottom action buttons remain visible.
    Folders...**. The current view supplies the source, independently of selected
    objects. The command is unavailable in restricted/toolbox views.
 2. In **Folders and options**, choose a destination with **Browse...**, or enter
-   absolute source and destination paths.
+   absolute source and destination paths. **Swap folders** reverses their roles
+   without moving either folder or changing the selected policy. Folder names
+   retain their original native bytes when swapped, including escaped names
+   selected through Browse or loaded from a saved profile.
 3. Keep **Compare only**, or choose a policy to inspect its proposed plan.
    **Copy**, **Update: protect destination-newer**, **Copy missing only**,
    **Synchronize one way** and **Mirror** are preview modes here. Even proposed
-   mirror removals are never executed.
+   mirror removals are never executed. The explanation below the operation menu
+   describes the selected policy and its direction before you compare.
 4. Choose the metadata scope and optional byte/date bounds, then select
-   **Compare folders**. Changing these options requires another comparison.
+   **Compare folders**. **Clear filters** removes the four byte/date bounds
+   while keeping the folders, operation, metadata scope and matching rules.
+   Changing folder options requires another comparison. Existing results remain
+   available to inspect with an earlier-options notice; rule review stays
+   disabled until the new comparison completes.
 5. In **Comparison and results**, use **Previous page** and **Next page** and
    select a row to inspect both versions, the reason and applicable proposed
    names. Plan totals describe proposed copies, new folders, replacements,
@@ -95,13 +103,20 @@ precision where known. Neither selection promises that an unsupported provider
 can preserve metadata, and selecting the ordinary scope does not grant a
 metadata-loss override or enable writes.
 
-Minimum/maximum byte fields accept nonnegative integer byte counts. Empty fields
-leave the corresponding bound unset. **Modified on/after** is inclusive;
-**Modified before** is exclusive. Bounds accept a local calendar date such as
+Byte/date bounds select regular files; they do not apply to other object kinds.
+Minimum/maximum byte fields are inclusive and accept decimal byte counts from
+`0` through `18446744073709551615`, without signs, spaces or unit suffixes.
+Equal minimum/maximum sizes are valid. Empty fields leave the corresponding bound
+unset. **Modified on/after** is inclusive; **Modified before** is exclusive.
+Bounds accept a local calendar date such as
 `2026-11-02`, or an exact UTC timestamp such as
 `2026-11-02T12:34:56.123456789Z`. A date alone means local midnight. Saved bounds
 reload as UTC timestamps with their fractional precision, so changing the time
-zone does not move the saved interval. Invalid or reversed bounds are rejected.
+zone does not move the saved interval. Invalid or reversed bounds are rejected
+before a worker starts. The window returns to **Folders and options**, explains
+the specific problem and selects the field to correct. Both folder fields must
+be filled in with absolute paths. Filesystem availability and capabilities are
+assessed by the backend during comparison.
 
 The current window uses all object kinds and a fixed recursion-depth limit of
 1024. Pattern editors, mount-boundary controls and configurable depth are not
@@ -190,8 +205,8 @@ review receipts, transport failures, cancellation and an actual ordinary copy
 inside disposable fixtures. The profile fixture exercises the production
 parser, concurrent saves, privacy and atomic persistence.
 
-The native retry regression additionally needs Xvfb, `xvfb-run`, `xauth` and the
-installed Motif and filesystem SDK prefixes. From the configured `cde/`
+The native setup and retry regression additionally needs Xvfb, `xvfb-run`,
+`xauth` and the installed Motif and filesystem SDK prefixes. From the configured `cde/`
 directory, run it on a private X display with a new work directory:
 
 ```sh
@@ -201,9 +216,10 @@ xvfb-run -a python3 programs/dtfile/tests/check-sync-retry-ui.py \
   --work-dir "$TMPDIR/dtfile-retry-check"
 ```
 
-It uses real widgets, production callbacks and the installed backend to compare,
-fail a Copy preview with `HOME` absent, and retry Compare. The checks include
-cleared rows/details/actions and retaining only reusable job preferences. It
+It uses real widgets, production callbacks and the installed backend to check
+policy explanations, byte-preserving swaps, clearing filters and focused setup
+validation. It then compares, fails a Copy preview with `HOME` absent and retries
+Compare, checking cleared rows/details/actions and retained job preferences. It
 does not apply filesystem changes; `result.json` and logs record the run.
 
 Set `TMPDIR` explicitly. Private test homes must be on an ownership-enforcing

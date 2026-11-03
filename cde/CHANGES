@@ -1,4 +1,7 @@
 2026-11-03
+- dtfile_sync: explain the selected comparison policy, swap folder roles without
+  changing path bytes, clear optional filters, and focus invalid setup fields
+  with specific byte/date and missing-folder guidance before worker startup.
 - dtfile_sync: clear the previous comparison and row-scoped rules before
   validating a replacement comparison; keep folder options and Compare usable
   after startup fails, while retaining reusable job preferences for fresh review.

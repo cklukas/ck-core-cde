@@ -244,3 +244,25 @@ $set 1
 282 Cannot read the selected folder name.
 286 Comparison results are not yet available.
 287 No comparison has started.
+288 Compare only: inspect differences in file contents and metadata.\nNo file changes are proposed or applied. This is not two-way synchronization.
+289 Copy preview: propose adding missing source objects to the destination.\nExisting destination objects need conflict-policy review.\nNewer targets are not implicitly protected. Preview only; Apply is unavailable.\nThis is not two-way synchronization.
+290 Update preview: add missing objects and consider source-newer files.\nRounded timestamps determine order; destination-newer files are skipped.\nEqual-time differences need review. Preview only; Apply is unavailable.\nThis is not two-way synchronization.
+291 Copy missing only preview: propose adding objects absent from the destination.\nExisting destination objects are kept; inspect conflicts and unavailable assessments.\nPreview only: Apply is unavailable. This is not two-way synchronization.
+292 Synchronize one way preview: make included destination files match the source.\nMay propose replacing destination-newer files; destination-only objects remain.\nPreview only: Apply is unavailable. This is not two-way synchronization.
+293 Mirror preview: also propose removing destination-only objects in scope.\nWarning: the plan can contain deletions, which require separate review.\nPreview only: mirror execution and two-way synchronization are unavailable.
+294 Swap folders
+295 Clear filters
+296 These results use earlier folder options.\nCompare again before reviewing rules.
+297 Choose a source folder.
+298 Choose a destination folder.
+299 Enter an absolute source folder path, starting with /.
+300 Enter an absolute destination folder path, starting with /.
+301 The source folder path is too long.
+302 The destination folder path is too long.
+303 Minimum bytes must be empty or digits from 0 through 18446744073709551615.\nSigns and spaces are not allowed.
+304 Maximum bytes must be empty or digits from 0 through 18446744073709551615.\nSigns and spaces are not allowed.
+305 Maximum bytes must be at least minimum bytes.\nBoth bounds are inclusive for regular files.
+306 Modified on/after: enter a valid local YYYY-MM-DD date or ISO UTC timestamp,\nor leave empty. This bound is inclusive for regular files.
+307 Modified before: enter a valid local YYYY-MM-DD date or ISO UTC timestamp,\nor leave empty. This bound is exclusive for regular files.
+308 Modified before must be later than modified on/after.\nThe lower bound is inclusive and the upper bound exclusive.
+309 Byte and date bounds filter regular files only; comparison reads contents.\nUnknown required size, time or precision stays unknown; it is not excluded.
