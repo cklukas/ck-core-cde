@@ -15,6 +15,9 @@ endif
 dtterm_CFLAGS = -I$(top_builddir)/lib/DtTerm/TermPrim	\
 	-I$(top_builddir)/lib/DtTerm/Term			\
 	-I$(top_builddir)/lib/DtTerm/TermView	\
+	-I$(top_srcdir)/lib/DtTerm/TermPrim	\
+	-I$(top_srcdir)/lib/DtTerm/Term	\
+	-I$(top_srcdir)/lib/DtTerm/TermView	\
 	$(DT_INCDIR) \
 	-DSUN_TERMINAL_SERVER
 
