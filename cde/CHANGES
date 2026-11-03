@@ -1,4 +1,6 @@
 2026-11-03
+- dtsession: give the contention-management resource converter Xt's actual
+  `XtConverter` prototype and register it directly without a function cast.
 - Calendar RPC: adapt legacy callback handlers to `registerrpc`'s actual
   one-argument procedure contract and provide an exact `xdrproc_t` no-payload
   serializer instead of casting `xdr_void` or service functions.
