@@ -219,7 +219,7 @@ static void DataCloseCallback(
                         XtPointer client_data,
                         XtPointer call_data) ;
 static void TimerEvent(
-                        Widget widget,
+                        XtPointer client_data,
                         XtIntervalId *id) ;
 static void IntDialogGetResources(
                         XrmDatabase database,
@@ -278,8 +278,8 @@ _DtInitializeEncapsulation(
 
    timerState = TIMER_STARTUP_STATE;
    timerId = XtAppAddTimeOut(XtWidgetToApplicationContext(encap_parent_shell),
-                             initialTimeoutLength, (XtTimerCallbackProc)
-                             TimerEvent, (caddr_t) encap_parent_shell);
+                             initialTimeoutLength, TimerEvent,
+                             (XtPointer) encap_parent_shell);
 
    /* Allocate a buffer for writing out resource values */
    resourceBuf = XtMalloc(20);
@@ -550,7 +550,7 @@ _DtShowDialog(
       timerState = TIMER_ACTIVE_STATE;
       timerId = XtAppAddTimeOut(
                  XtWidgetToApplicationContext(encap_parent_shell),
-                 activeTimeoutLength, (XtTimerCallbackProc) TimerEvent,
+                 activeTimeoutLength, TimerEvent,
                  (XtPointer) encap_parent_shell);
    }
 
@@ -1571,10 +1571,11 @@ DataCloseCallback(
 /* ARGSUSED */
 static void
 TimerEvent(
-        Widget widget,
+        XtPointer client_data,
         XtIntervalId *id )
 
 {
+   Widget widget = client_data;
    int i;
    Dialog * dialog;
    Dialog * prev_dialog;
@@ -1627,7 +1628,7 @@ TimerEvent(
          timerState = TIMER_ACTIVE_STATE;
          timerId = XtAppAddTimeOut(XtWidgetToApplicationContext(widget),
                                    activeTimeoutLength,
-                                   (XtTimerCallbackProc) TimerEvent,
+                                   TimerEvent,
                                    (XtPointer) widget);
 
          return;
@@ -1682,7 +1683,7 @@ TimerEvent(
    timerState = TIMER_IDLE_STATE;
    timerId = XtAppAddTimeOut(XtWidgetToApplicationContext(widget),
                              idleTimeoutLength,
-                             (XtTimerCallbackProc)TimerEvent,
+                             TimerEvent,
                              (XtPointer)widget);
 }
 
@@ -2433,7 +2434,7 @@ DialogStructureNotifyHandler(
 
         timerId = XtAppAddTimeOut( XtWidgetToApplicationContext( w ),
                                    timeOut,
-                                   (XtTimerCallbackProc)TimerEvent,
+                                   TimerEvent,
                                    (XtPointer)w );
       }
     }

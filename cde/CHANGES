@@ -18,6 +18,9 @@
   dialog completes this conversion and exposes apply/OK handlers through the
   native Xt callback contract. DtFile's text actions and nine legacy resource
   converters now implement their complete Xt contracts directly.
+  Command, dialog-cache and Change Directory timeouts now implement
+  `XtTimerCallbackProc` directly instead of treating client data as a widget
+  parameter in the function type.
 - DtImsStart: register window-manager callbacks and the host-return action with
   their exact Xt contracts, using a typed adapter for the no-argument shutdown
   routine.

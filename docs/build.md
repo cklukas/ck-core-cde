@@ -475,6 +475,8 @@ The Preferences class completes the same method-table conversion and registers
 its apply and OK operations as exact Xt callbacks.
 DtFile's text-field actions and legacy resource converters also expose the
 complete `XtActionProc` and `XtConverter` contracts directly.
+Its command, dialog-cache and Change Directory timeouts use the native
+`XtTimerCallbackProc` contract and recover widgets from opaque client data.
 DtPad exposes its editor, help, formatting, option, session and print callbacks
 through `XtCallbackProc` directly, and routes panic signals through a typed
 signal adapter. DtAction likewise registers its custom text actions and

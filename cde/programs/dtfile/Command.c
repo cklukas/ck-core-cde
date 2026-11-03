@@ -84,7 +84,7 @@ static void ActionCallback( Widget w,
                             XtPointer client_data,
                             XtPointer call_data) ;
 static void TimerEvent(
-                        Widget widget,
+                        XtPointer client_data,
                         XtIntervalId *id) ;
 void ProcessBufferDropOnFolder (
                                 char *command,
@@ -1223,7 +1223,7 @@ ProcessAction (
 
    /* Add timer event to turn off hour glass */
    XtAppAddTimeOut(XtWidgetToApplicationContext(w), 1500,
-                   (XtTimerCallbackProc) TimerEvent, (XtPointer) w);
+                   TimerEvent, (XtPointer) w);
 
 
    XtFree(pwd_host);
@@ -1242,9 +1242,10 @@ ProcessAction (
 
 static void
 TimerEvent(
-        Widget widget,
+        XtPointer client_data,
         XtIntervalId *id )
 {
+   Widget widget = client_data;
    _DtTurnOffHourGlass (widget);
 }
 

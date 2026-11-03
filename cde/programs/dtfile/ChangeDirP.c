@@ -565,7 +565,7 @@ CurrentDirSelected(
       doubleClick = True;
       TimerId = XtAppAddTimeOut (XtWidgetToApplicationContext (w), 
                                  XtGetMultiClickTime(XtDisplay(w)),
-                                 (XtTimerCallbackProc) TimerEvent, 
+                                 TimerEvent,
                                  (XtPointer) file_mgr_rec);
    }
 }
