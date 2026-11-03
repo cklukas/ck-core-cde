@@ -202,7 +202,8 @@ the system `<dlfcn.h>` declarations and `RTLD_*` flags. DtHelp's parent library
 also searches the image library and JPEG helper source include directories, so
 a clean out-of-tree build does not depend on headers left in the build tree.
 DtTerm's utility, terminal and view libraries likewise resolve their private
-line-font and terminal headers from the source tree.
+line-font and terminal headers from the source tree, and its generated line
+table reads the checked-in data file there.
 App Builder resolves each private include from `$(top_srcdir)`, and dtterm
 resolves its resource-generation scripts and inputs through `$(srcdir)`.
 Dtstyle registers dedicated `int`-argument signal handlers rather than casting
