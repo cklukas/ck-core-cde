@@ -299,7 +299,10 @@ encoding of legacy numeric command arguments instead of writing through an
 incompatible pointer type. Supporting desktop APIs now preserve the read-only
 tokens returned by `shellscan`, distinguish shared Xt callbacks from event
 handlers, and publish the complete four-argument `_DtCreateView` factory
-prototype.
+prototype. Resource converters accept Xt's argument-count pointer directly,
+and the front-panel button and clock gadget records store their exact class
+method contracts; remaining casts in those records are toolkit-defined
+inheritance sentinels rather than project callbacks.
 
 The File Manager and the DtSvc dependency path now link as complete
 executables and shared libraries with GCC and Clang in C23 mode. Converted File

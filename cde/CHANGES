@@ -14,6 +14,10 @@
 - App Builder: store object-notification callbacks in a typed union and dispatch
   each event through its matching public callback contract instead of a
   cast-to-`void *` function table.
+- DtWm: give all resource converters the native `XtConverter` argument-count
+  pointer contract. Button and clock gadget class records now store exact
+  initialization, redisplay, set-values, dispatch, drawing and graphics-context
+  methods without project-function casts.
 - DtCm: register the shared calendar help callback directly throughout menus,
   editors, browsers and dialogs through its exact `XtCallbackProc` contract.
   Appointment, group, to-do and standalone-editor drag-motion hooks now
