@@ -119,7 +119,8 @@ jobs:
           cd "$cde_build"
           if ! "$GITHUB_WORKSPACE/cde-source/cde/configure" \
             CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
-            CFLAGS='-O1 -g0 -std=c23' CXXFLAGS='-O1 -g0'; then
+            CFLAGS='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type' \
+            CXXFLAGS='-O1 -g0'; then
             tail -n 200 config.log
             exit 1
           fi
@@ -152,7 +153,8 @@ jobs:
           cd "$cde_fs_build"
           "$GITHUB_WORKSPACE/cde-source/cde/configure" --with-ck-core-fs \
             CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
-            CFLAGS='-O1 -g0 -std=c23' CXXFLAGS='-O1 -g0'
+            CFLAGS='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type' \
+            CXXFLAGS='-O1 -g0'
           make -j4 -C programs/dtfile
           make -j1 -C programs/localized/C/msg dtfile_sync.cat
           make -j1 -C programs/dtfile check
