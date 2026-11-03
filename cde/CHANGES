@@ -1,4 +1,11 @@
 2026-11-03
+- dtfile: type resource serializers, file-operation dispatch, menu-data
+  callbacks and selected signal and X/Xt callbacks without unspecified
+  argument lists or compatibility casts; link the complete File Manager with
+  GCC and Clang C23.
+- DtSvc: type command invocation, hash traversal and destruction, workspace
+  notifications, marquee selection and dynamically loaded Help entry points;
+  avoid the C23 `bool` keyword in checkpoint event state.
 - ToolTalk DND: expose complete C and C++ callback interfaces and type the
   transfer/reply callbacks used by the C23 implementation; remove the obsolete
   K&R declaration fallback and an unused internal declaration.

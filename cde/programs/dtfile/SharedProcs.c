@@ -125,6 +125,7 @@ extern XmWidgetExtData _XmGetWidgetExtData(
 #include <Dt/SharedProcs.h>
 
 #include <Tt/tttk.h>
+#include <codelibs/pathutils.h>
 
 #include "Encaps.h"
 #include "FileMgr.h"
@@ -132,9 +133,6 @@ extern XmWidgetExtData _XmGetWidgetExtData(
 #include "Common.h"
 #include "Main.h"
 #include "SharedProcs.h"
-
-extern char *pathcollapse();
-
 
 /* Defines */
 #define RW_ALL S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH

@@ -139,12 +139,23 @@ tokens returned by `shellscan`, distinguish shared Xt callbacks from event
 handlers, and publish the complete four-argument `_DtCreateView` factory
 prototype.
 
+The File Manager and the DtSvc dependency path now link as complete
+executables and shared libraries with GCC and Clang in C23 mode. Converted File
+Manager resource serialization, file-operation dispatch, menu construction,
+signal handling and X/Xt callback paths use their exact contracts. DtSvc's
+command invoker, hash traversal and destruction callbacks, workspace and marquee
+notifications, and dynamically loaded Help entry points are typed at their
+definitions and call sites. Both linked File Manager executables resolve
+`libXm.so.9` from the pinned CK Core Motif qualification prefix.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh
 make -j4 -C lib/tt/mini_isam check
 make -j4 -C lib/tt/lib/api/dnd
 make -j4 -C lib/DtHelp/il
+make -j4 -C lib/DtSvc
+make -j4 -C programs/dtfile
 ```
 
 This focused result does not imply that the rest of CDE is C23-clean. The

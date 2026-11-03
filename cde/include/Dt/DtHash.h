@@ -26,16 +26,21 @@
 
 typedef void * DtHashTbl;
 
+typedef void (*DtHashOperateFunc)(
+        void *data,
+        void *usr_arg,
+        const unsigned char *key);
+typedef DtHashOperateFunc DtHashDestroyFunc;
+
 DtHashTbl	 _DtUtilMakeHash(int size);
 DtHashTbl 	_DtUtilMakeIHash(int size);
 void ** 	  _DtUtilGetHash(DtHashTbl tbl, const unsigned char * key);
 void ** 	 _DtUtilFindHash(DtHashTbl tbl,const unsigned char * key);
 void * 		  _DtUtilDelHash(DtHashTbl tbl, const unsigned char * key);
-int    	      _DtUtilOperateHash(DtHashTbl tbl, void (*op_func)(), void * usr_arg);
-void   	      _DtUtilDestroyHash(DtHashTbl tbl, int (*des_func)(), void * usr_arg);
-
-typedef void (*DtHashOperateFunc)();
-typedef int  (*DtHashDestroyFunc)();
+int    	      _DtUtilOperateHash(DtHashTbl tbl, DtHashOperateFunc op_func,
+                                 void *usr_arg);
+void   	      _DtUtilDestroyHash(DtHashTbl tbl, DtHashDestroyFunc des_func,
+                                 void *usr_arg);
 
 #endif /* _DtHash_h */
 

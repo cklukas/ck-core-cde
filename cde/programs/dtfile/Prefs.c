@@ -1881,17 +1881,18 @@ GetPreferencesValues(
 void
 ShowTypeToString(
         int fd,
-        unsigned char *value,
+        const void *resource_value,
         char *out_buf )
 {
-   char * buf = NULL;
+   const unsigned char *value = resource_value;
+   const char *buf = NULL;
 
    if (*value == SINGLE_DIRECTORY)
       buf = Single_directory;
    else if (*value == MULTIPLE_DIRECTORY)
       buf = DirectoryTree;
 
-   _DtStringToString(fd, (char **)&buf, out_buf);
+   _DtStringToString(fd, &buf, out_buf);
 }
 
 
@@ -1942,10 +1943,11 @@ StringToShowType(
 void
 TreeFilesToString(
         int fd,
-        unsigned char *value,
+        const void *resource_value,
         char *out_buf )
 {
-   char * buf = NULL;
+   const unsigned char *value = resource_value;
+   const char *buf = NULL;
 
    if (*value == TREE_FILES_NEVER)
       buf = Tree_files_never;
@@ -1954,7 +1956,7 @@ TreeFilesToString(
    else if (*value == TREE_FILES_ALWAYS)
       buf = Tree_files_always;
 
-   _DtStringToString(fd, (char **)&buf, out_buf);
+   _DtStringToString(fd, &buf, out_buf);
 }
 
 
@@ -2007,10 +2009,11 @@ StringToTreeFiles(
 void
 ViewToString(
         int fd,
-        unsigned char *value,
+        const void *resource_value,
         char *out_buf )
 {
-   char * buf = NULL;
+   const unsigned char *value = resource_value;
+   const char *buf = NULL;
 
    if (*value == BY_NAME)
       buf = By_name;
@@ -2023,7 +2026,7 @@ ViewToString(
    else if (*value == BY_ATTRIBUTES)
       buf = By_attributes;
 
-   _DtStringToString(fd, (char **)&buf, out_buf);
+   _DtStringToString(fd, &buf, out_buf);
 }
 
 
@@ -2081,10 +2084,11 @@ StringToView(
 void
 OrderToString(
         int fd,
-        unsigned char *value,
+        const void *resource_value,
         char *out_buf )
 {
-   char * buf = NULL;
+   const unsigned char *value = resource_value;
+   const char *buf = NULL;
 
    if (*value == ORDER_BY_FILE_TYPE)
       buf = Order_by_file_type;
@@ -2095,7 +2099,7 @@ OrderToString(
    else if (*value == ORDER_BY_SIZE)
       buf = Order_by_size;
 
-   _DtStringToString(fd, (char **)&buf, out_buf);
+   _DtStringToString(fd, &buf, out_buf);
 }
 
 
@@ -2150,17 +2154,18 @@ StringToOrder(
 void
 DirectionToString(
         int fd,
-        unsigned char *value,
+        const void *resource_value,
         char *out_buf )
 {
-   char * buf = NULL;
+   const unsigned char *value = resource_value;
+   const char *buf = NULL;
 
    if (*value == DIRECTION_ASCENDING)
       buf = Direction_ascending;
    else if (*value == DIRECTION_DESCENDING)
       buf = Direction_descending;
 
-   _DtStringToString(fd, (char **)&buf, out_buf);
+   _DtStringToString(fd, &buf, out_buf);
 }
 
 
@@ -2174,17 +2179,18 @@ DirectionToString(
 void
 RandomToString(
         int fd,
-        unsigned char *value,
+        const void *resource_value,
         char *out_buf )
 {
-   char * buf = NULL;
+   const unsigned char *value = resource_value;
+   const char *buf = NULL;
 
    if (*value == RANDOM_ON)
       buf = Random_on;
    else if (*value == RANDOM_OFF)
       buf = Random_off;
 
-   _DtStringToString(fd, (char **)&buf, out_buf);
+   _DtStringToString(fd, &buf, out_buf);
 }
 
 

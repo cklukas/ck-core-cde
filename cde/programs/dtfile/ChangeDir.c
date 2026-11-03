@@ -146,15 +146,17 @@ static void WriteResourceValues( DialogData *values,
                                  int fd,
                                  char **name_list) ;
 static void FreeValues( ChangeDirData *change_dir_data) ;
+typedef void (*ChangeDirViewProc)(FileMgrData *file_mgr_data,
+                                  char *directory);
 static Boolean TryToChangeDir( Boolean isFromDialog,
                                char * incoming_string,
                                FileMgrData * file_mgr_data,
                                FileMgrRec * file_mgr_rec,
                                ChangeDirData * change_dir_data,
                                Widget selection_box,
-                               ChangeDirApply * apply_data,
-                               XmSelectionBoxCallbackStruct * callback_data,
-                               void (*callback)()) ;
+                               XtCallbackProc dialog_callback,
+                               XtPointer dialog_client_data,
+                               ChangeDirViewProc view_callback) ;
 static void OkCallback( Widget selection_box,
                         ChangeDirApply *apply_data,
                         XmSelectionBoxCallbackStruct *callback_data) ;
@@ -699,9 +701,9 @@ TryToChangeDir(
        FileMgrRec * file_mgr_rec,
        ChangeDirData * change_dir_data,
        Widget selection_box,
-       ChangeDirApply * apply_data,
-       XmSelectionBoxCallbackStruct * callback_data,
-       void (*callback)())
+       XtCallbackProc dialog_callback,
+       XtPointer dialog_client_data,
+       ChangeDirViewProc view_callback)
 {
   char * new_directory;
   char * host;
@@ -854,9 +856,9 @@ TryToChangeDir(
 
        /*  Call the encapsulation change data callback  */
        if (isFromDialog)
-         (*callback)(selection_box, apply_data->client_data, path);
+         dialog_callback(selection_box, dialog_client_data, path);
        else
-         (*callback)(file_mgr_data, path);
+         view_callback(file_mgr_data, path);
      }
    }
    else
@@ -968,8 +970,8 @@ OkCallback(
    if (result == 0)
    {
       TryToChangeDir(True, (char *)strValue, file_mgr_data,
-                     file_mgr_rec, change_dir_data, selection_box, apply_data,
-                     callback_data, apply_data->callback);
+                     file_mgr_rec, change_dir_data, selection_box,
+                     apply_data->callback, apply_data->client_data, NULL);
    }
 
    XtFree(value);

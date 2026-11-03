@@ -147,6 +147,7 @@
  ************************************<+>*************************************/
 
 #include <string.h>
+#include <stdint.h>
 #include <locale.h>
 #include <ctype.h>
 #include <fnmatch.h>
@@ -249,29 +250,29 @@ extern Widget _DtDuplicateIcon ( Widget, Widget, XmString, String, XtPointer, Bo
 /********    Static Function Declarations    ********/
 
 static int FileNameAscending(
-                        FileViewData **t1,
-                        FileViewData **t2) ;
+                        const void *value1,
+                        const void *value2) ;
 static int FileNameDescending(
-                        FileViewData **t1,
-                        FileViewData **t2) ;
+                        const void *value1,
+                        const void *value2) ;
 static int FileTypeAscending(
-                        FileViewData **t1,
-                        FileViewData **t2) ;
+                        const void *value1,
+                        const void *value2) ;
 static int FileTypeDescending(
-                        FileViewData **t1,
-                        FileViewData **t2) ;
+                        const void *value1,
+                        const void *value2) ;
 static int FileSizeAscending(
-                        FileViewData **t1,
-                        FileViewData **t2) ;
+                        const void *value1,
+                        const void *value2) ;
 static int FileSizeDescending(
-                        FileViewData **t1,
-                        FileViewData **t2) ;
+                        const void *value1,
+                        const void *value2) ;
 static int FileDateAscending(
-                        FileViewData **t1,
-                        FileViewData **t2) ;
+                        const void *value1,
+                        const void *value2) ;
 static int FileDateDescending(
-                        FileViewData **t1,
-                        FileViewData **t2) ;
+                        const void *value1,
+                        const void *value2) ;
 static void CompressObjectList (
                         ObjectPosition ** object_positions,
                         int num_objects,
@@ -508,8 +509,8 @@ GetStrcollProc(void)
 
 static Boolean
 SpecialCases(
-             FileViewData **t1,
-             FileViewData **t2,
+             FileViewData *const *t1,
+             FileViewData *const *t2,
              int *rc )
 {
   /* Tree mode */
@@ -578,9 +579,11 @@ SpecialCases(
 
 static int
 FileNameAscending(
-        FileViewData **t1,
-        FileViewData **t2 )
+        const void *value1,
+        const void *value2 )
 {
+  FileViewData *const *t1 = value1;
+  FileViewData *const *t2 = value2;
   int rc;
 
   if( SpecialCases( t1, t2, &rc ) )
@@ -610,9 +613,11 @@ FileNameAscending(
 
 static int
 FileNameDescending(
-        FileViewData **t1,
-        FileViewData **t2 )
+        const void *value1,
+        const void *value2 )
 {
+   FileViewData *const *t1 = value1;
+   FileViewData *const *t2 = value2;
    int rc;
 
    if( SpecialCases( t1, t2, &rc ) )
@@ -648,9 +653,11 @@ FileNameDescending(
 
 static int
 FileTypeAscending(
-        FileViewData **t1,
-        FileViewData **t2 )
+        const void *value1,
+        const void *value2 )
 {
+  FileViewData *const *t1 = value1;
+  FileViewData *const *t2 = value2;
   int rc;
 
   if( SpecialCases( t1, t2, &rc ) )
@@ -665,9 +672,11 @@ FileTypeAscending(
 
 static int
 FileTypeDescending(
-        FileViewData **t1,
-        FileViewData **t2 )
+        const void *value1,
+        const void *value2 )
 {
+  FileViewData *const *t1 = value1;
+  FileViewData *const *t2 = value2;
   int rc;
 
   if( SpecialCases( t1, t2, &rc ) )
@@ -688,9 +697,11 @@ FileTypeDescending(
 
 static int
 FileSizeAscending(
-        FileViewData **t1,
-        FileViewData **t2 )
+        const void *value1,
+        const void *value2 )
 {
+  FileViewData *const *t1 = value1;
+  FileViewData *const *t2 = value2;
   int rc;
 
   if( SpecialCases( t1, t2, &rc ) )
@@ -707,9 +718,11 @@ FileSizeAscending(
 
 static int
 FileSizeDescending(
-        FileViewData **t1,
-        FileViewData **t2 )
+        const void *value1,
+        const void *value2 )
 {
+  FileViewData *const *t1 = value1;
+  FileViewData *const *t2 = value2;
   int rc;
 
   if( SpecialCases( t1, t2, &rc ) )
@@ -726,9 +739,11 @@ FileSizeDescending(
 
 static int
 FileDateAscending(
-        FileViewData **t1,
-        FileViewData **t2 )
+        const void *value1,
+        const void *value2 )
 {
+  FileViewData *const *t1 = value1;
+  FileViewData *const *t2 = value2;
   int rc;
 
   if( SpecialCases( t1, t2, &rc ) )
@@ -745,9 +760,11 @@ FileDateAscending(
 
 static int
 FileDateDescending(
-        FileViewData **t1,
-        FileViewData **t2 )
+        const void *value1,
+        const void *value2 )
 {
+  FileViewData *const *t1 = value1;
+  FileViewData *const *t2 = value2;
 
   int rc;
 
@@ -782,8 +799,8 @@ OrderFiles(
    FileViewData ** file_view_data;
    int             file_count;
    FileViewData ** order_list;
-   int * sort = NULL;
-   int * sub_sort;
+   int (*sort)(const void *, const void *) = NULL;
+   int (*sub_sort)(const void *, const void *);
    int i;
    int start;
 
@@ -818,37 +835,37 @@ OrderFiles(
    {
       if (file_mgr_data->direction == DIRECTION_ASCENDING)
       {
-         sort = (int *) FileTypeAscending;
-         sub_sort = (int *) FileNameAscending;
+         sort = FileTypeAscending;
+         sub_sort = FileNameAscending;
       }
       else
       {
-         sort = (int *) FileTypeDescending;
-         sub_sort = (int *) FileNameDescending;
+         sort = FileTypeDescending;
+         sub_sort = FileNameDescending;
 
       }
    }
    else if (file_mgr_data->order == ORDER_BY_ALPHABETICAL)
    {
       if (file_mgr_data->direction == DIRECTION_ASCENDING)
-         sort = (int *) FileNameAscending;
+         sort = FileNameAscending;
       else
-         sort = (int *) FileNameDescending;
+         sort = FileNameDescending;
    }
    else if (file_mgr_data->order == ORDER_BY_DATE)
    {
       if (file_mgr_data->direction == DIRECTION_ASCENDING)
-         sort = (int *) FileDateAscending;
+         sort = FileDateAscending;
       else
-         sort = (int *) FileDateDescending;
+         sort = FileDateDescending;
 
    }
    else if (file_mgr_data->order == ORDER_BY_SIZE)
    {
       if (file_mgr_data->direction == DIRECTION_ASCENDING)
-         sort = (int *) FileSizeAscending;
+         sort = FileSizeAscending;
       else
-         sort = (int *) FileSizeDescending;
+         sort = FileSizeDescending;
    }
    else
    {
@@ -858,7 +875,7 @@ OrderFiles(
 
    /*  Sort the files and if the sub_sort function is non-null,  */
    /*  sort sets of the files broken according to file type.     */
-   qsort (order_list, file_count, sizeof (FileViewData *), (int (*)())sort);
+   qsort(order_list, file_count, sizeof(FileViewData *), sort);
 
    if (sub_sort != NULL)
    {
@@ -870,16 +887,15 @@ OrderFiles(
          if (order_list[start]->file_data->logical_type !=
              order_list[i]->file_data->logical_type)
          {
-            qsort (order_list + start, i - start,
-                   sizeof (FileViewData *), (int (*)())sub_sort);
+            qsort(order_list + start, i - start,
+                  sizeof(FileViewData *), sub_sort);
             start = i;
          }
 
          i++;
       }
 
-      qsort (order_list + start, i - start, sizeof (FileViewData *),
-                                                         (int (*)())sub_sort);
+      qsort(order_list + start, i - start, sizeof(FileViewData *), sub_sort);
    }
 }
 
@@ -5616,9 +5632,14 @@ AddFileIcons(
 
 /* compare function for qsort and bsearch */
 static int
-WidgetCmp(Widget *w1, Widget *w2)
+WidgetCmp(const void *value1, const void *value2)
 {
-  return *w1 - *w2;
+  const Widget *w1 = value1;
+  const Widget *w2 = value2;
+  uintptr_t address1 = (uintptr_t)*w1;
+  uintptr_t address2 = (uintptr_t)*w2;
+
+  return (address1 > address2) - (address1 < address2);
 }
 
 static void
@@ -5651,7 +5672,7 @@ MakeReuseList(
      /* create a sorted list of children */
      sorted_chilren = (Widget *)XtMalloc(num_children * sizeof(Widget));
      memcpy(sorted_chilren, children, num_children * sizeof(Widget));
-     qsort(sorted_chilren, num_children, sizeof(Widget), (int (*)())WidgetCmp);
+     qsort(sorted_chilren, num_children, sizeof(Widget), WidgetCmp);
 
      /* create reuse flags; initially assume all children can be reused */
      reuse = (Boolean *)XtMalloc(num_children * sizeof(Boolean));
@@ -5684,7 +5705,7 @@ MakeReuseList(
 	       {
 		 p = bsearch(&order_list[i]->widget,
 			     sorted_chilren, num_children, sizeof(Widget),
-			     (int (*)())WidgetCmp);
+			     WidgetCmp);
 		 if (p)
 		   {
 		     /* don't reuse this widget for any other file */
@@ -5707,7 +5728,7 @@ MakeReuseList(
 	       {
 		 p = bsearch(&order_list[i]->treebtn,
 			     sorted_chilren, num_children, sizeof(Widget),
-			     (int (*)())WidgetCmp);
+			     WidgetCmp);
 		 if (p)
 		   {
 		     /* don't reuse this widget for any other file */

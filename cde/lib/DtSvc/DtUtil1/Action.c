@@ -94,6 +94,7 @@
 #include <Dt/ActionUtilP.h>
 #include <Dt/ActionDb.h>
 #include <Dt/ActionFind.h>
+#include <Dt/CmdInv.h>
 #include <Tt/tttk.h>
 
 #include <Dt/Action.h>
@@ -119,9 +120,9 @@ extern int _DtActionCommandInvoke(
     char * execHost,
     char * procId,
     char * tmpFiles,
-    void (*success_proc)(),
+    DtCmdInvExecuteProc success_proc,
     void *success_data,
-    void (*failure_proc)(),
+    DtCmdInvExecuteProc failure_proc,
     void *failure_data);
 
 

@@ -55,6 +55,14 @@ typedef struct {
    Widget widget;
 } MenuDesc;
 
+typedef void (*MenuDataProc)(
+                        Widget mbar,
+                        XtPointer *mainRecordPtr,
+                        MenuDesc **menuDescPtr,
+                        int *menuItemCountPtr,
+                        unsigned int **globalMenuStatesPtr,
+                        unsigned int **viewMenuStatesPtr);
+
 
 /********    Public Function Declarations    ********/
 
@@ -66,9 +74,9 @@ extern Widget _DtCreateMenuSystem(
                         Boolean createSharedComponents,
                         MenuDesc * menuDesc,
                         int numMenuComponents,
-                        void (*getMenuDataProc)(),
-                        void (*setMenuSensitivity)(),
-                        void (*restoreMenuSensitivity)()) ;
+                        MenuDataProc getMenuDataProc,
+                        XtCallbackProc setMenuSensitivity,
+                        XtCallbackProc restoreMenuSensitivity) ;
 extern void _DtGlobalUpdateMenuItemState(
                         Widget btn,
                         unsigned int mask,

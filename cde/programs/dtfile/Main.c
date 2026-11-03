@@ -196,7 +196,11 @@ extern void UpdateFilterAfterDBReread (DialogData * dialog_data);
 /* From ToolTalk.c */
 extern int InitializeToolTalkSession( Widget topLevel, int ttFd );
 extern Tt_status InitializeToolTalkProcid( int *ttFd, Widget topLevel, Boolean sendStarted );
-extern void FinalizeToolTalkSession();
+extern void FinalizeToolTalkSession(void);
+extern Tt_message FileCallback(Tt_message msg, Tttk_op op, char *file,
+                               void *client_data, int trust, int self);
+extern Tt_message SessionCallback(Tt_message msg, void *client_data,
+                                  Tt_message contract);
 /* From Trash.c */
 void CloseTrash(Widget w, XtPointer client_data, XtPointer call_data) ;
 
@@ -284,7 +288,7 @@ static ApplicationArgs application_args;
 
 /********    Static Function Declarations    ********/
 
-static void ErrorHandler(
+static int ErrorHandler(
                         Display *disp,
                         XErrorEvent *event) ;
 _X_NORETURN static void ToolkitErrorHandler(
@@ -293,7 +297,7 @@ static void Usage(
                         char **argv) ;
 static void RestrictModeUsage(
                         char **argv) ;
-static void Stop( void ) ;
+static void Stop( int signal_number ) ;
 static void RestoreSettingsFile( void ) ;
 static void MoveDefaultSettings(
                         int mode) ;
@@ -431,15 +435,14 @@ static void MarqueeSelect (
                         Dimension height,
                         XtPointer client_data);
 static void WaitForResponseAndExit( void ) ;
-static void ExitApp(
-                        XtPointer clientData,
-                        String *words,
-                        int num_fields) ;
+static Tt_callback_action ExitApp(
+                        Tt_message message,
+                        Tt_pattern pattern) ;
 static Widget post_dialog(
 			Widget parent,
 			char *title,
 			char *msg,
-			void (*callback)());
+			XtCallbackProc callback);
 static void DtErrExitCB(
 			Widget widget,
 			XtPointer client_data,
@@ -1050,7 +1053,7 @@ main(
    printf("  Start\n");
    gettimeofday(&update_time_ss, NULL);
 #endif
-   (void) signal (SIGINT, (void (*)())Stop);
+   (void) signal (SIGINT, Stop);
 
    /* We don't want any zombie children, do we? */
 #if defined(CSRG_BASED)
@@ -1180,7 +1183,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    XmAddWMProtocolCallback(toplevel, save_yourself_atom, SaveSessionCallback,
                            NULL);
 
-   XSetErrorHandler ((int (*)())ErrorHandler);
+   XSetErrorHandler (ErrorHandler);
    XtAppSetErrorHandler (XtWidgetToApplicationContext(toplevel),
                          ToolkitErrorHandler);
 
@@ -1337,7 +1340,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
       {
 	 msg = tttk_message_create( 0, TT_REQUEST, TT_SESSION, 0,
 				    "DtFileSession_Run",
-				    (Tt_message_callback)ExitApp );
+				    ExitApp );
 	 tt_message_file_set( msg, application_args.session );
 	 tt_message_send( msg );
       }
@@ -1345,7 +1348,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
       {
 	 msg = tttk_message_create( 0, TT_REQUEST, TT_SESSION, 0,
 				    "DtFolder_Show",
-				    (Tt_message_callback)ExitApp );
+				    ExitApp );
 	 tt_message_file_set( msg, application_args.directories );
          SetupSendRequestArgs( application_args, msg );
 	 tt_message_send( msg );
@@ -1359,14 +1362,14 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
          {
 	    msg = tttk_message_create( 0, TT_REQUEST, TT_SESSION, 0,
 				       "DtFolder_Show",
-				       (Tt_message_callback)ExitApp );
+				       ExitApp );
 	    tt_message_file_set( msg, current_directory );
          }
          else
          {
 	    msg = tttk_message_create( 0, TT_REQUEST, TT_SESSION, 0,
 				       "DtHome_Show",
-				       (Tt_message_callback)ExitApp );
+				       ExitApp );
          }
          SetupSendRequestArgs( application_args, msg );
 	 tt_message_send( msg );
@@ -1446,7 +1449,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    /* Setup the settings file if any to setup */
 
    _DtWsmAddMarqueeSelectionCallback(toplevel,
-                                     (DtWsmMarqueeSelectionProc) MarqueeSelect,
+                                     MarqueeSelect,
                                      NULL);
 
 #ifdef DT_PERFORMANCE
@@ -1856,7 +1859,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
  *
  ************************************************************************/
 
-static void
+static int
 ErrorHandler(
         Display *disp,
         XErrorEvent *event )
@@ -1870,6 +1873,7 @@ ErrorHandler(
 
   /* We do not want to exit here lets try to continue... */
 
+  return 0;
 }
 
 _X_NORETURN static void
@@ -2001,8 +2005,9 @@ RestrictModeUsage(
  ************************************************************************/
 
 static void
-Stop( void )
+Stop( int signal_number )
 {
+  (void)signal_number;
   FinalizeToolTalkSession( );
   exit(0);
 }
@@ -3208,9 +3213,6 @@ ViewAccept(
    View *view,
    Tt_message msg)
 {
-   extern Tt_message FileCallback();
-   extern Tt_message SessionCallback();
-
    if ((msg == 0) || tt_is_err( tt_ptr_error( msg ))) {
       return;
    }
@@ -6261,13 +6263,14 @@ WaitForResponseAndExit( void )
    XtMainLoop();
 }
 
-static void
+static Tt_callback_action
 ExitApp(
-        XtPointer clientData,
-        DtString words[],
-        int num_fields )
+        Tt_message message,
+        Tt_pattern pattern )
 
 {
+  (void)message;
+  (void)pattern;
   FinalizeToolTalkSession( );
   exit(0);
 }
@@ -6279,7 +6282,7 @@ ExitApp(
  */
 
 static Widget
-post_dialog(Widget parent, char *title, char *msg, void (*DtErrExitCB)())
+post_dialog(Widget parent, char *title, char *msg, XtCallbackProc callback)
 {
    Widget dialog, dialogShell;
    XmString message_text, ok;
@@ -6299,7 +6302,7 @@ post_dialog(Widget parent, char *title, char *msg, void (*DtErrExitCB)())
    XtSetArg(args[n], XmNuseAsyncGeometry, True); n++;
 
    dialog = XmCreateErrorDialog (parent, title, args, n);
-   XtAddCallback (dialog, XmNokCallback, DtErrExitCB, NULL);
+   XtAddCallback (dialog, XmNokCallback, callback, NULL);
    XtUnmanageChild (XmMessageBoxGetChild (dialog, XmDIALOG_CANCEL_BUTTON));
    XtUnmanageChild (XmMessageBoxGetChild (dialog, XmDIALOG_HELP_BUTTON));
 

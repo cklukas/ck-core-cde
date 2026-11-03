@@ -241,6 +241,14 @@ typedef struct
 /* Used by File.c */
 typedef int (*StrcollProc) (const char *,const char *);
 
+typedef void (*FileOpFinishProc)(XtPointer callback_data, int status);
+typedef void (*MakeFileFinishProc)(XtPointer callback_data,
+                                   char *full_name,
+                                   int status);
+typedef void (*FileOperationErrorProc)(Widget w,
+                                       char *message,
+                                       char *path);
+
 /* Global strings */
 extern char DESKTOP_DIR[];
 extern char DTFILE_CLASS_NAME[];
@@ -832,7 +840,7 @@ extern Boolean FileMoveCopy(
                         char **file_set,
                         int file_count,
                         unsigned int modifiers,
-                        void (*finish_callback)(),
+                        FileOpFinishProc finish_callback,
                         XtPointer callback_data);
 extern void RepositionIcons(
                         FileMgrData *file_mgr_data,
@@ -986,7 +994,7 @@ extern Boolean FileManip(
                         char *from,
                         char *to,
                         Boolean isContainer,
-                        void (*errorHandler)(),
+                        FileOperationErrorProc errorHandler,
                         Boolean checkForBusyDir,
                         int type);
 extern int CheckAccess(
@@ -1242,7 +1250,7 @@ extern void ShowModAttrDialog(
 
 extern void ShowTypeToString(
                         int fd,
-                        unsigned char *value,
+                        const void *value,
                         char *out_buf) ;
 extern void StringToShowType(
                         XrmValuePtr args,
@@ -1251,7 +1259,7 @@ extern void StringToShowType(
                         XrmValue *to_val) ;
 extern void TreeFilesToString(
                         int fd,
-                        unsigned char *value,
+                        const void *value,
                         char *out_buf) ;
 extern void StringToTreeFiles(
                         XrmValuePtr args,
@@ -1260,7 +1268,7 @@ extern void StringToTreeFiles(
                         XrmValue *to_val) ;
 extern void ViewToString(
                         int fd,
-                        unsigned char *value,
+                        const void *value,
                         char *out_buf) ;
 extern void StringToView(
                         XrmValuePtr args,
@@ -1269,7 +1277,7 @@ extern void StringToView(
                         XrmValue *to_val) ;
 extern void OrderToString(
                         int fd,
-                        unsigned char *value,
+                        const void *value,
                         char *out_buf) ;
 extern void StringToOrder(
                         XrmValuePtr args,
@@ -1278,11 +1286,11 @@ extern void StringToOrder(
                         XrmValue *to_val) ;
 extern void DirectionToString(
                         int fd,
-                        unsigned char *value,
+                        const void *value,
                         char *out_buf) ;
 extern void RandomToString(
                         int fd,
-                        unsigned char *value,
+                        const void *value,
                         char *out_buf) ;
 extern void StringToDirection(
                         XrmValuePtr args,
@@ -1384,7 +1392,7 @@ extern Boolean FileMoveCopyDesktop(
                         int file_count,
                         unsigned int modifiers,
                         DesktopRec *desktopWindow,
-                        void (*finish_callback)(),
+                        FileOpFinishProc finish_callback,
                         XtPointer callback_data);
 extern void SaveDesktopInfo(
                         int session) ;
@@ -1504,7 +1512,7 @@ extern void MakeFile(
                         char *directory_name,
                         char *new_name,
                         unsigned char type,
-                        void (*finish_callback)(),
+                        MakeFileFinishProc finish_callback,
                         XtPointer callback_data) ;
 extern Boolean MakeFilesFromBuffers(
                              FileMgrData *file_mgr_data,
@@ -1514,7 +1522,7 @@ extern Boolean MakeFilesFromBuffers(
                              char **host_set,
                              BufferInfo *buffer_set,
                              int num_of_buffers,
-                             void (*finish_callback)(),
+                             FileOpFinishProc finish_callback,
                              XtPointer callback_data); 
 extern Boolean MakeFilesFromBuffersDT(
                              FileViewData *file_view_data,
@@ -1524,7 +1532,7 @@ extern Boolean MakeFilesFromBuffersDT(
                              BufferInfo *buffer_set,
                              int num_of_buffers,
                              DesktopRec *desktopWindow,
-                             void (*finish_callback)(),
+                             FileOpFinishProc finish_callback,
                              XtPointer callback_data); 
 
 /* prototype for fsDialog.c */

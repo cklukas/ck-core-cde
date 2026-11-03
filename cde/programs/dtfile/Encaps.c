@@ -1700,10 +1700,12 @@ TimerEvent(
 void
 _DtIntToString(
         int fd,
-        int *value,
+        const void *resource_value,
         char *out_buf )
 
 {
+   const int *value = resource_value;
+
    (void) sprintf (resourceBuf, "%d", *value);
    _DtStringToString( fd, &resourceBuf, out_buf );
 }
@@ -1712,11 +1714,13 @@ _DtIntToString(
 void
 _DtShortToString(
         int fd,
-        short *value,
+        const void *resource_value,
         char *out_buf )
 
 
 {
+   const short *value = resource_value;
+
    (void) sprintf (resourceBuf, "%d", *value);
    _DtStringToString( fd, &resourceBuf, out_buf );
 }
@@ -1726,10 +1730,12 @@ _DtShortToString(
 void
 _DtPositionToString(
         int fd,
-        Position *value,
+        const void *resource_value,
         char *out_buf )
 
 {
+   const Position *value = resource_value;
+
    (void) sprintf (resourceBuf, "%d", *value);
    _DtStringToString( fd, &resourceBuf, out_buf );
 }
@@ -1739,10 +1745,12 @@ _DtPositionToString(
 void
 _DtDimensionToString(
         int fd,
-        Dimension *value,
+        const void *resource_value,
         char *out_buf )
 
 {
+   const Dimension *value = resource_value;
+
    (void) sprintf (resourceBuf, "%d", *value);
    _DtStringToString( fd, &resourceBuf, out_buf );
 }
@@ -1752,27 +1760,29 @@ _DtDimensionToString(
 void
 _DtBooleanToString(
         int fd,
-        Boolean *value,
+        const void *resource_value,
         char *out_buf )
 
 {
-   char * buf;
+   const Boolean *value = resource_value;
+   const char *buf;
 
    if (*value == True)
       buf = "True";
    else
       buf = "False";
-   _DtStringToString( fd, (char **)&buf, out_buf );
+   _DtStringToString( fd, &buf, out_buf );
 }
 
 
 void
 _DtXmStringToString(
         int fd,
-        XmString *value,
+        const void *resource_value,
         char *out_buf )
 
 {
+   const XmString *value = resource_value;
    char *out_value = NULL;
 
    if (*value != NULL)
@@ -1796,10 +1806,11 @@ _DtXmStringToString(
 void
 _DtXmStringTableToString(
         int fd,
-        XmStringTable *value,
+        const void *resource_value,
         char *out_buf )
 
 {
+   const XmStringTable *value = resource_value;
    int i;
    char *out_value = NULL;
    Boolean first = True;
@@ -1840,10 +1851,12 @@ _DtXmStringTableToString(
 void
 _DtStringToString(
         int fd,
-        char **value,
+        const void *resource_value,
         char *out_buf )
 
 {
+   const char *const *value = resource_value;
+
    if (*value == NULL || strlen (*value) == 0)
       ;
    else

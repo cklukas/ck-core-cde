@@ -444,7 +444,7 @@ static int RestoreObject(
         char *source,
         char *target,
         Boolean  isContainer,
-        void (*errorHandler)(),
+        FileOperationErrorProc errorHandler,
         Boolean checkForBusyDir,
         int type ,
         Boolean CheckedAlready);
@@ -5065,7 +5065,7 @@ RestoreObject(
         char *source,
         char *target,
         Boolean  isContainer,
-        void (*errorHandler)(),
+        FileOperationErrorProc errorHandler,
         Boolean checkForBusyDir,
         int type ,
         Boolean CheckedAlready)

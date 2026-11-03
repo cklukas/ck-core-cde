@@ -44,7 +44,9 @@
 
 #define NOT_AN_INDEX 0
 
-static int build_it(int * data, void * usr_arg, int key);
+static void build_it(void *data, void *usr_arg, const unsigned char *key);
+static void free_hash_data(void *data, void *usr_arg,
+                           const unsigned char *key);
 
 typedef struct inttab {
   int key;
@@ -137,7 +139,7 @@ _DtShmProtoCopyInttab(DtShmProtoInttab intlist, void * destination)
 
   build.inttab_ptr->key = build.intlist_ptr->num_entries;
 
-  _DtUtilOperateHash(build.intlist_ptr->tbl, (DtHashOperateFunc)build_it, &build);
+  _DtUtilOperateHash(build.intlist_ptr->tbl, build_it, &build);
 
   return(0);
 }
@@ -146,23 +148,25 @@ int
 _DtShmProtoDestroyInttab(DtShmProtoInttab intlist)
 {
   intlist_t * ptr = (intlist_t *)intlist;
-  _DtUtilDestroyHash(ptr->tbl,  (DtHashDestroyFunc)free, NULL);
+  _DtUtilDestroyHash(ptr->tbl, free_hash_data, NULL);
   free(intlist);
   return(0);
 }
 
-static int build_it(int * data, void * usr_arg, int key)
+static void build_it(void *data, void *usr_arg, const unsigned char *key)
 {
   builder_t * ptr = (builder_t *) usr_arg;
+  int *value = (int *)data;
+  int int_key = (int)(intptr_t)key;
   inttab_t * a;
   inttab_t * b;
   unsigned short * add_ptr;
 
-  int bucket = key % (ptr->intlist_ptr->num_entries) + 1;
+  int bucket = int_key % (ptr->intlist_ptr->num_entries) + 1;
  
   a = ptr->inttab_ptr + ptr->counter;
-  a->key 	= key;
-  a->data	= *data;
+  a->key 	= int_key;
+  a->data	= *value;
   a->next	= NOT_AN_INDEX;
 
   b = ptr->inttab_ptr + bucket;
@@ -177,6 +181,13 @@ static int build_it(int * data, void * usr_arg, int key)
   }
 
   *add_ptr = ptr->counter++;
-  return(0);
+}
+
+static void
+free_hash_data(void *data, void *usr_arg, const unsigned char *key)
+{
+  (void)usr_arg;
+  (void)key;
+  free(data);
 }
 

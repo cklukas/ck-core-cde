@@ -81,18 +81,7 @@ _WsSelectionCB (Tt_message m, Tt_pattern p)
     Position			x, y;
     Dimension			width, height;
 
-    Widget			widget;
-    DtWsmMarqueeSelectionProc	marquee_selection;
-    XtPointer			client_data;
-
-    /*
-     * user data 0: Widget		widget;
-     * user data 1: DtWsmWsModifiedProc	ws_modify;
-     * user data 2: XtPointer		client_data;
-     */
-    widget = (Widget)tt_pattern_user(p, 0);
-    marquee_selection = (DtWsmMarqueeSelectionProc)tt_pattern_user(p, 1);
-    client_data = (XtPointer)tt_pattern_user(p, 2);
+    pCbCtx = (struct _DtWsmCBContext *)tt_pattern_user(p, 0);
 
     /*
      * 0th arg: screen number, string, not used
@@ -111,7 +100,9 @@ _WsSelectionCB (Tt_message m, Tt_pattern p)
     /*
      * Call registered callback function.
      */
-    (*marquee_selection)(widget, type, x, y, width, height, client_data);
+    (*pCbCtx->callback.marquee_selection)(pCbCtx->widget, type, x, y,
+                                          width, height,
+                                          pCbCtx->client_data);
     return TT_CALLBACK_PROCESSED;
 } /* END OF FUNCTION _DtWsmWsModifyHandler */
 
@@ -186,20 +177,31 @@ _DtWsmAddMarqueeSelectionCallback (
     sprintf(sNum, "%d", screen);
     sName = _DtWsmSelectionNameForScreen (screen);
 
+    pCbCtx = (struct _DtWsmCBContext *)
+		XtMalloc(sizeof(struct _DtWsmCBContext));
+    pCbCtx->pattern = pattern;
+    pCbCtx->widget = widget;
+    pCbCtx->callback.marquee_selection = marquee_selection;
+    pCbCtx->client_data = client_data;
+    pCbCtx->nested_context = NULL;
+
     /*
      * Only receive DtMarquee_Selection notice from the screen
      * we registered with.
      */
     status = tt_pattern_arg_add(pattern, TT_IN, Tttk_string, sNum);
     if (status != TT_OK) {
+	XtFree((char *)pCbCtx);
 	return NULL;
     }
 
     if (tt_pattern_op_add(pattern, "DtMarquee_Selection") != TT_OK) {
+	XtFree((char *)pCbCtx);
 	return NULL;
     }
 
     if (tt_pattern_state_add(pattern, TT_SENT) != TT_OK) {
+	XtFree((char *)pCbCtx);
 	return NULL;
     }
 
@@ -207,16 +209,9 @@ _DtWsmAddMarqueeSelectionCallback (
      * Store information needed by the callback in the user data
      * fields of the pattern.
      */
-    status = tt_pattern_user_set(pattern, 0, (void *)widget);
+    status = tt_pattern_user_set(pattern, 0, (void *)pCbCtx);
     if (status != TT_OK) {
-	return NULL;
-    }
-    status = tt_pattern_user_set(pattern, 1, (void *)marquee_selection);
-    if (status != TT_OK) {
-	return NULL;
-    }
-    status = tt_pattern_user_set(pattern, 2, (void *)client_data);
-    if (status != TT_OK) {
+	XtFree((char *)pCbCtx);
 	return NULL;
     }
 
@@ -225,26 +220,14 @@ _DtWsmAddMarqueeSelectionCallback (
      * the user callback.
      */
     if (tt_pattern_callback_add(pattern, _WsSelectionCB) != TT_OK) {
+	XtFree((char *)pCbCtx);
 	return NULL;
     }
 
     if (tt_pattern_register(pattern) != TT_OK) {
+	XtFree((char *)pCbCtx);
 	return NULL;
     }
-
-    /*
-     * Allocate data to remember stuff about this callback
-     */
-    pCbCtx = (struct _DtWsmCBContext * ) 
-		XtMalloc (sizeof(struct _DtWsmCBContext));
-
-    /* 
-     * Save what we want to remember
-     */
-    pCbCtx->pattern = pattern;
-    pCbCtx->widget = widget;
-    pCbCtx->ws_cb = marquee_selection;
-    pCbCtx->client_data = client_data;
 
     XtFree (sName);
 

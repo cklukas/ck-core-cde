@@ -92,8 +92,8 @@ _DtWsmWsChangeHandler (
 	/*
 	 * Call registered callback function.
 	 */
-	(*(pCbCtx->ws_cb)) (pCbCtx->widget, aWS, 
-					pCbCtx->client_data);
+	(*pCbCtx->callback.workspace_change)(pCbCtx->widget, aWS,
+					     pCbCtx->client_data);
     }
     
 } /* END OF FUNCTION _DtWsmWsChangeHandler */
@@ -148,15 +148,15 @@ DtWsmAddCurrentWorkspaceCallback (
      * Save what we want to remember
      */
     pCbCtx->widget = widget;
-    pCbCtx->ws_cb = ws_change;
+    pCbCtx->callback.workspace_change = ws_change;
     pCbCtx->client_data = client_data;
 
     /*
      * Register interest in the workspace change message
      */
     pCbCtx->nested_context = (XtPointer)
-	DtWsmAddWorkspaceModifiedCallback (widget, 
-			      (DtWsmWsModifiedProc)_DtWsmWsChangeHandler, 
+	DtWsmAddWorkspaceModifiedCallback (widget,
+			      _DtWsmWsChangeHandler,
 			      (XtPointer) pCbCtx);
 
     _DtSvcAppUnlock(app);
@@ -198,18 +198,7 @@ _WsModifiedCB (Tt_message m, Tt_pattern p)
     Atom 	aWs;
     DtWsmWsReason	reason;
 
-    Widget		widget;
-    DtWsmWsModifiedProc	ws_modify;
-    XtPointer		client_data;
-
-    /*
-     * user data 0: Widget		widget;
-     * user data 1: DtWsmWsModifiedProc	ws_modify;
-     * user data 2: XtPointer		client_data;
-     */
-    widget = (Widget)tt_pattern_user(p, 0);
-    ws_modify = (DtWsmWsModifiedProc)tt_pattern_user(p, 1);
-    client_data = (XtPointer)tt_pattern_user(p, 2);
+    pCbCtx = (struct _DtWsmCBContext *)tt_pattern_user(p, 0);
 
     /*
      * 0th arg: screen number, string, not used
@@ -228,7 +217,8 @@ _WsModifiedCB (Tt_message m, Tt_pattern p)
     /*
      * Call registered callback function.
      */
-    (*ws_modify)(widget, aWs, reason, client_data);
+    (*pCbCtx->callback.workspace_modified)(pCbCtx->widget, aWs, reason,
+                                           pCbCtx->client_data);
     
     return TT_CALLBACK_PROCESSED;
 } /* END OF FUNCTION _DtWsmWsModifyHandler */
@@ -319,17 +309,27 @@ DtWsmAddWorkspaceModifiedCallback (
     sprintf(sNum, "%d", screen);
     sName = _DtWsmSelectionNameForScreen (screen);
 
+    pCbCtx = (struct _DtWsmCBContext *)
+		XtMalloc(sizeof(struct _DtWsmCBContext));
+    pCbCtx->pattern = pattern;
+    pCbCtx->widget = widget;
+    pCbCtx->callback.workspace_modified = ws_modify;
+    pCbCtx->client_data = client_data;
+    pCbCtx->nested_context = NULL;
+
     /*
      * Only receive DtWorkspace_Modified notice from the screen
      * we registered with.
      */
     status = tt_pattern_arg_add(pattern, TT_IN, Tttk_string, sNum);
     if (status != TT_OK) {
+	XtFree((char *)pCbCtx);
 	_DtSvcAppUnlock(app);
 	return NULL;
     }
 
     if (tt_pattern_op_add(pattern, "DtWorkspace_Modified") != TT_OK) {
+	XtFree((char *)pCbCtx);
 	_DtSvcAppUnlock(app);
 	return NULL;
     }
@@ -338,18 +338,9 @@ DtWsmAddWorkspaceModifiedCallback (
      * Store information needed by the callback in the user data
      * fields of the pattern.
      */
-    status = tt_pattern_user_set(pattern, 0, (void *)widget);
+    status = tt_pattern_user_set(pattern, 0, (void *)pCbCtx);
     if (status != TT_OK) {
-	_DtSvcAppUnlock(app);
-	return NULL;
-    }
-    status = tt_pattern_user_set(pattern, 1, (void *)ws_modify);
-    if (status != TT_OK) {
-	_DtSvcAppUnlock(app);
-	return NULL;
-    }
-    status = tt_pattern_user_set(pattern, 2, (void *)client_data);
-    if (status != TT_OK) {
+	XtFree((char *)pCbCtx);
 	_DtSvcAppUnlock(app);
 	return NULL;
     }
@@ -359,29 +350,16 @@ DtWsmAddWorkspaceModifiedCallback (
      * the user callback.
      */
     if (tt_pattern_callback_add(pattern, _WsModifiedCB) != TT_OK) {
+	XtFree((char *)pCbCtx);
 	_DtSvcAppUnlock(app);
 	return NULL;
     }
 
     if (tt_pattern_register(pattern) != TT_OK) {
+	XtFree((char *)pCbCtx);
 	_DtSvcAppUnlock(app);
 	return NULL;
     }
-
-    /*
-     * Allocate data to remember stuff about this callback
-     */
-    pCbCtx = (struct _DtWsmCBContext * ) 
-		XtMalloc (sizeof(struct _DtWsmCBContext));
-
-    /* 
-     * Save what we want to remember
-     */
-    pCbCtx->pattern = pattern;
-    pCbCtx->widget = widget;
-    pCbCtx->ws_cb = ws_modify;
-    pCbCtx->client_data = client_data;
-    pCbCtx->nested_context = NULL;
 
     XtFree (sName);
 

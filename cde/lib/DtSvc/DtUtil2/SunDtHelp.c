@@ -60,19 +60,20 @@
 #pragma weak DtHelpQuickDialogGetChild = _DtHelpQuickDialogGetChild
 #pragma weak DtHelpReturnSelectedWidgetId = _DtHelpReturnSelectedWidgetId
 
-typedef Widget (*SUNWWidgetProc)();
-typedef int (*SUNWIntProc)();
+typedef Widget (*SUNWCreateHelpDialogProc)(Widget, char *, ArgList, Cardinal);
+typedef Widget (*SUNWHelpQuickDialogGetChildProc)(Widget, unsigned char);
+typedef int (*SUNWHelpReturnSelectedWidgetIdProc)(Widget, Cursor, Widget *);
 
 typedef struct _SUNWHelpProcList {
-    SUNWWidgetProc	DtCreateHelpDialogSym;
-    SUNWWidgetProc	DtCreateHelpQuickDialogSym;
-    SUNWWidgetProc	DtHelpQuickDialogGetChildSym;
-    SUNWIntProc		DtHelpReturnSelectedWidgetIdSym;
+    SUNWCreateHelpDialogProc DtCreateHelpDialogSym;
+    SUNWCreateHelpDialogProc DtCreateHelpQuickDialogSym;
+    SUNWHelpQuickDialogGetChildProc DtHelpQuickDialogGetChildSym;
+    SUNWHelpReturnSelectedWidgetIdProc DtHelpReturnSelectedWidgetIdSym;
 } SUNWHelpProcList;
 
 static SUNWHelpProcList		*pmySUNWProcList = NULL;
 
-int SUNWDtHelpdlopen()
+int SUNWDtHelpdlopen(void)
 {
     void *libDtHelpHandle = NULL;
 
@@ -87,13 +88,15 @@ int SUNWDtHelpdlopen()
 	_DtSvcProcessUnlock();
 	return(FALSE);
     }
-    pmySUNWProcList->DtCreateHelpDialogSym = (SUNWWidgetProc)
+    pmySUNWProcList->DtCreateHelpDialogSym = (SUNWCreateHelpDialogProc)
 			 dlsym(libDtHelpHandle, "DtCreateHelpDialog");
-    pmySUNWProcList->DtCreateHelpQuickDialogSym = (SUNWWidgetProc)
+    pmySUNWProcList->DtCreateHelpQuickDialogSym = (SUNWCreateHelpDialogProc)
 			 dlsym(libDtHelpHandle, "DtCreateHelpQuickDialog");
-    pmySUNWProcList->DtHelpQuickDialogGetChildSym = (SUNWWidgetProc)
+    pmySUNWProcList->DtHelpQuickDialogGetChildSym =
+			 (SUNWHelpQuickDialogGetChildProc)
 			 dlsym(libDtHelpHandle, "DtHelpQuickDialogGetChild");
-    pmySUNWProcList->DtHelpReturnSelectedWidgetIdSym = (SUNWIntProc)
+    pmySUNWProcList->DtHelpReturnSelectedWidgetIdSym =
+			 (SUNWHelpReturnSelectedWidgetIdProc)
 			 dlsym(libDtHelpHandle, "DtHelpReturnSelectedWidgetId");
 
     _DtSvcProcessUnlock();

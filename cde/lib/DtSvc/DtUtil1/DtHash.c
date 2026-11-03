@@ -39,9 +39,11 @@ Synopsis:
 
 	   void ** _DtUtilDelHash(void * tbl, unsigned char * key)
 
-	   int _DtUtilOperateHash(void * tbl, void (*op_func)(), void * usr_arg)
+	   int _DtUtilOperateHash(void * tbl, DtHashOperateFunc op_func,
+	                          void * usr_arg)
 
-	   void _DtUtilDestroyHash(void * tbl, int (*des_func)(), void * usr_arg)
+	   void _DtUtilDestroyHash(void * tbl, DtHashDestroyFunc des_func,
+	                          void * usr_arg)
 
 
  Description: 
@@ -274,7 +276,7 @@ void * _DtUtilDelHash(DtHashTbl t, const unsigned char * key)
   return(tmp->data);	
 }
 
-int _DtUtilOperateHash(DtHashTbl t, void (*ptr)(), void * usr_arg)
+int _DtUtilOperateHash(DtHashTbl t, DtHashOperateFunc ptr, void * usr_arg)
 {
   hash * tbl = (hash *) t;
   hash_entry * tmp = tbl->start;
@@ -289,7 +291,7 @@ int _DtUtilOperateHash(DtHashTbl t, void (*ptr)(), void * usr_arg)
   return(c);
 }
 
-void _DtUtilDestroyHash(DtHashTbl t, int (*ptr)(), void * usr_arg)
+void _DtUtilDestroyHash(DtHashTbl t, DtHashDestroyFunc ptr, void * usr_arg)
 {
   hash * tbl = (hash *) t;
   hash_entry * tmp = tbl->start, * prev;

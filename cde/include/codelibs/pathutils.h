@@ -44,20 +44,11 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifdef	__cplusplus
-extern char *pathcollapse(const char *src, 
-			  char *dst = NULL, 
-			  boolean show_dir = FALSE);
-#elif defined(__STDC__)
-extern char *pathcollapse(const char *src, char *dst, boolean show_dir);
-#else /* old-style C */
-extern char *pathcollapse();
-#endif
-
-#ifdef __cplusplus
+char *pathcollapse(const char *src, char *dst = NULL,
+                   boolean show_dir = FALSE);
 }
+#else
+char *pathcollapse(const char *src, char *dst, boolean show_dir);
 #endif
 
 #endif /* __PATHUTILS_H_ */

@@ -4603,9 +4603,12 @@ CheckDesktop( void )
 /* comparison routine for qsort */
 static int
 CheckListCmp(
-        int *p1,
-        int *p2 )
+        const void *value1,
+        const void *value2 )
 {
+   const int *p1 = value1;
+   const int *p2 = value2;
+
    return directory_set[*p1]->last_check - directory_set[*p2]->last_check;
 }
 
@@ -4698,7 +4701,7 @@ TimerEvent(
     * checked) and schedule backround processes on those dirs that
     * haven't been checked in the longest time.
     */
-   qsort(check_list, n, sizeof(int), (int (*)())CheckListCmp);
+   qsort(check_list, n, sizeof(int), CheckListCmp);
 
    /* arrange for background process to be started */
    for (j = 0; j < n && j < maxRereadProcsPerTick; j++)

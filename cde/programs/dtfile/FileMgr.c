@@ -239,11 +239,11 @@ static void GetSessionDir(
                         FileMgrData *file_mgr_data) ;
 static void BranchListToString(
                         int fd,
-                        char ***value,
+                        const void *value,
                         char *out_buf) ;
 static void SelectionListToString(
                         int fd,
-                        FileViewData ***value,
+                        const void *value,
                         char *out_buf) ;
 static Boolean StringToBranchList(
                         Display *display,
@@ -3574,9 +3574,10 @@ GetPixmapData(
 static void
 BranchListToString(
         int fd,
-        char ***value,
+        const void *resource_value,
         char *out_buf )
 {
+   char *const *const *value = resource_value;
    int i;
    Boolean first = True;
    char * branch_name;
@@ -3618,9 +3619,10 @@ BranchListToString(
 static void
 SelectionListToString(
         int fd,
-        FileViewData ***value,
+        const void *resource_value,
         char *out_buf )
 {
+   FileViewData *const *const *value = resource_value;
    int i;
    Boolean first = True;
    FileViewData * file_view_data;
@@ -3998,7 +4000,7 @@ ShelfMoveCopyLinkToCurrent(FileMgrRec *file_mgr_rec,
    char **file_set;
    char **host_set;
    Boolean result;
-   void (*finish_cb)() = NULL;
+   FileOpFinishProc finish_cb = NULL;
 
    if (file_mgr_rec == NULL || file_mgr_data == NULL || path == NULL)
       return;
@@ -4011,7 +4013,7 @@ ShelfMoveCopyLinkToCurrent(FileMgrRec *file_mgr_rec,
    if (modifiers == 0)
    {
       shelf_move_finish_slot = slot;
-      finish_cb = (void (*)())ShelfMoveFinishCB;
+      finish_cb = ShelfMoveFinishCB;
    }
 
    result = FileMoveCopy(file_mgr_data,
@@ -4820,7 +4822,7 @@ ShelfItemDropCB(
       unsigned int modifiers = 0;
       Boolean result;
       int i;
-      void (*finish_cb)() = NULL;
+      FileOpFinishProc finish_cb = NULL;
 
       if (dropInfo->operation == XmDROP_COPY)
          modifiers = ControlMask;
@@ -4832,7 +4834,7 @@ ShelfItemDropCB(
       if (shelf_drag_active && modifiers == 0)
       {
          shelf_move_finish_slot = shelf_drag_slot;
-         finish_cb = (void (*)())ShelfMoveFinishCB;
+         finish_cb = ShelfMoveFinishCB;
       }
 
       result = FileMoveCopy(file_mgr_data,
@@ -9287,7 +9289,7 @@ CheckMoveType(
    char * workspace_name = NULL;
    Display  *display;
    Boolean value;
-   void (*finish_cb)() = NULL;
+   FileOpFinishProc finish_cb = NULL;
    XtPointer finish_data = NULL;
 
 #ifdef _CHECK_FOR_SPACES
@@ -9598,7 +9600,7 @@ CheckMoveType(
                (shelf_drag_finish_op == XmDROP_COPY ||
                 shelf_drag_finish_op == XmDROP_LINK))
            {
-              finish_cb = (void (*)())ShelfDragOpFinishCB;
+              finish_cb = ShelfDragOpFinishCB;
               finish_data = (XtPointer)(intptr_t)shelf_drag_finish_slot;
            }
            target_host = desktopWindow->host;
@@ -9622,7 +9624,7 @@ CheckMoveType(
                (shelf_drag_finish_op == XmDROP_COPY ||
                 shelf_drag_finish_op == XmDROP_LINK))
            {
-              finish_cb = (void (*)())ShelfDragOpFinishCB;
+              finish_cb = ShelfDragOpFinishCB;
               finish_data = (XtPointer)(intptr_t)shelf_drag_finish_slot;
            }
            target_host = file_mgr_data->host;
@@ -9646,7 +9648,7 @@ CheckMoveType(
                (shelf_drag_finish_op == XmDROP_COPY ||
                 shelf_drag_finish_op == XmDROP_LINK))
            {
-              finish_cb = (void (*)())ShelfDragOpFinishCB;
+              finish_cb = ShelfDragOpFinishCB;
               finish_data = (XtPointer)(intptr_t)shelf_drag_finish_slot;
            }
            target_host = file_mgr_data->host;

@@ -66,12 +66,13 @@ struct strtab_build {
 
 #define NOT_AN_INDEX ((unsigned short) 0xffff)
 
-static void inc_it  (int * a, int * b, unsigned char * key);
-static void build_it(int a, struct strtab_build * ptr, unsigned char * key);
+static void inc_it(void *data, void *usr_arg, const unsigned char *key);
+static void build_it(void *data, void *usr_arg, const unsigned char *key);
+static void free_hash_data(void *data, void *usr_arg,
+                           const unsigned char *key);
 #if !defined(__linux__)
 extern char * strdup(const char *);
 #endif
-typedef	int (*des_func)(void *);
 
 /*
   client routine
@@ -157,7 +158,7 @@ _DtShmProtoDestroyStrtab(DtShmProtoStrtab strlist)
   strlist_t * ptr = (strlist_t *) strlist;
   
   _DtUtilDestroyHash(ptr->sl_hash, NULL, NULL);
-  _DtUtilDestroyHash(ptr->sl_bosons, (des_func)free, NULL);
+  _DtUtilDestroyHash(ptr->sl_bosons, free_hash_data, NULL);
   free(ptr);
   return(0);
 }
@@ -258,10 +259,12 @@ _DtShmProtoCopyStrtab(DtShmProtoStrtab in, void * destination)
   return((DtShmStrtab) destination);
 }
 
-static void build_it(int a, struct strtab_build * ptr, unsigned char * key)
+static void build_it(void *data, void *usr_arg, const unsigned char *key)
 {
+  intptr_t a = (intptr_t)data;
+  struct strtab_build *ptr = (struct strtab_build *)usr_arg;
   unsigned int i,j;
-  unsigned char * s;
+  const unsigned char *s;
   strtab_entry_t * e;
   unsigned short * add_ptr;
 
@@ -297,9 +300,19 @@ static void build_it(int a, struct strtab_build * ptr, unsigned char * key)
 }
 
 /* ARGSUSED */
-static void inc_it(int * a, int * b, unsigned char * key)
+static void inc_it(void *data, void *usr_arg, const unsigned char *key)
 {
+  int *b = (int *)usr_arg;
+  (void)data;
   b[0]++;
   b[1] += strlen((const char *)key) + 1;
+}
+
+static void
+free_hash_data(void *data, void *usr_arg, const unsigned char *key)
+{
+  (void)usr_arg;
+  (void)key;
+  free(data);
 }
 

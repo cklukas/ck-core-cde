@@ -94,10 +94,10 @@ Boolean TurnOnTextName;
 
 /********    Static Function Declarations    ********/
 
-static Boolean CheckForBtnUp(
+static Bool CheckForBtnUp(
                         Display *display,
                         XEvent *event,
-                        XtPointer arg) ;
+                        XPointer arg) ;
 static void GetSelectionRectangle(
                         Display *display,
                         Window window,
@@ -980,11 +980,11 @@ FileWindowInputCallback(
  * operation ended.
  */
 
-static Boolean
+static Bool
 CheckForBtnUp(
         Display *display,
         XEvent *event,
-        XtPointer arg )
+        XPointer arg )
 {
    if ((event->type == ButtonRelease) && (event->xbutton.button == Button1))
       return(True);
@@ -1177,7 +1177,7 @@ GetSelectionRectangle(
           * is slow, then by the time we query the mouse, the button may have
           * been long ago release, and the pointer subsequently moved.
           */
-         if (XPeekIfEvent(display, &btnUpEvent,(Bool (*)())CheckForBtnUp, NULL))
+         if (XPeekIfEvent(display, &btnUpEvent, CheckForBtnUp, NULL))
          {
             x2 = btnUpEvent.xbutton.x;
             y2 = btnUpEvent.xbutton.y;

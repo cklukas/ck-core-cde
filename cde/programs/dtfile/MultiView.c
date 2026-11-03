@@ -92,6 +92,10 @@ static Widget CreateMenuBtn(
                         Boolean isPushButton,
                         MenuDesc * menuDesc,
                         int btnIndex) ;
+static void FreeMenuDataProc(
+                        Widget w,
+                        XtPointer client_data,
+                        XtPointer call_data) ;
 
 /********    End Static Function Declarations    ********/
 
@@ -110,9 +114,9 @@ _DtCreateMenuSystem(
         Boolean createSharedComponents,
         MenuDesc * menuDesc,
         int numMenuComponents,
-        void (*getMenuDataProc)(),
-        void (*setMenuSensitivity)(),
-        void (*restoreMenuSensitivity)() )
+        MenuDataProc getMenuDataProc,
+        XtCallbackProc setMenuSensitivity,
+        XtCallbackProc restoreMenuSensitivity )
 
 {
    int n;
@@ -128,6 +132,7 @@ _DtCreateMenuSystem(
    int pulldownIndex = 1;
    int menuPaneIndex = 1;
    int menuBtnIndex = 1;
+   MenuDataProc *menuData = NULL;
 
    /* Use our own menu control functions, if none specified */
    if (setMenuSensitivity == NULL)
@@ -143,6 +148,12 @@ _DtCreateMenuSystem(
    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM);	n++;
    menubar = XmCreateMenuBar(parent, menuBarName, args, n);
    XtManageChild(menubar);
+   if (getMenuDataProc != NULL)
+   {
+      menuData = XtNew(MenuDataProc);
+      *menuData = getMenuDataProc;
+      XtAddCallback(menubar, XmNdestroyCallback, FreeMenuDataProc, menuData);
+   }
    if (helpCallback)
       XtAddCallback(menubar, XmNhelpCallback, helpCallback, helpData);
 
@@ -191,10 +202,10 @@ _DtCreateMenuSystem(
                {
                   XtAddCallback(XtParent(child), XmNpopupCallback, 
                                 setMenuSensitivity, 
-                                (XtPointer)getMenuDataProc);
+                                menuData);
                   XtAddCallback(XtParent(child), XmNpopdownCallback, 
                                 restoreMenuSensitivity, 
-                                (XtPointer)getMenuDataProc);
+                                menuData);
                   firstMenuPane = False;
                }
 
@@ -252,6 +263,16 @@ _DtCreateMenuSystem(
 }
 
 
+static void
+FreeMenuDataProc(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+   XtFree(client_data);
+}
+
+
 
 /* ARGSUSED */
 void
@@ -264,7 +285,7 @@ _DtGlobalSetMenuSensitivity(
    Arg menuPaneArgs[1];
    Widget mbar;
    XmMenuShellWidget mshell = (XmMenuShellWidget) w;
-   void (*getMenuData)() = (void(*)())client_data;
+   MenuDataProc getMenuData = *(MenuDataProc *)client_data;
    XtPointer mainRecord;
    MenuDesc * menuDesc;
    int menuItemCount;
@@ -273,8 +294,8 @@ _DtGlobalSetMenuSensitivity(
    int i;
 
    _XmGetActiveTopLevelMenu(mshell->composite.children[0], &mbar);
-   (*getMenuData)(mbar, &mainRecord, &menuDesc, &menuItemCount,
-                  &globalMenuStates, &viewMenuStates);
+   getMenuData(mbar, &mainRecord, &menuDesc, &menuItemCount,
+               &globalMenuStates, &viewMenuStates);
    XtSetArg(menuPaneArgs[0], XmNuserData, mainRecord);
 
    for (i = 0; i < menuItemCount; i++)
@@ -317,7 +338,7 @@ _DtGlobalRestoreMenuSensitivity(
 {
    Widget mbar;
    XmMenuShellWidget mshell = (XmMenuShellWidget) w;
-   void (*getMenuData)() = (void (*)())client_data;
+   MenuDataProc getMenuData = *(MenuDataProc *)client_data;
    XtPointer mainRecord;
    MenuDesc * menuDesc;
    int menuItemCount;
@@ -326,8 +347,8 @@ _DtGlobalRestoreMenuSensitivity(
    int i;
 
    _XmGetActiveTopLevelMenu(mshell->composite.children[0], &mbar);
-   (*getMenuData)(mbar, &mainRecord, &menuDesc, &menuItemCount,
-                  &globalMenuStates, &viewMenuStates);
+   getMenuData(mbar, &mainRecord, &menuDesc, &menuItemCount,
+               &globalMenuStates, &viewMenuStates);
 
    for (i = 0; i < menuItemCount; i++)
    {

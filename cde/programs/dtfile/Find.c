@@ -1730,7 +1730,7 @@ ExecuteFind(
    int save_rgid;
 #endif /* SVR4 */
    char *link_path;
-   void (*oldSig)();
+   void (*oldSig)(int);
    Tt_status tt_status;
    int rv;
 

@@ -150,8 +150,11 @@ typedef void (*DialogMapWindowProc)(
  *  Resource write proc and structure used for dialog resources. 
  */
 
-typedef void (*WriteResourceProc)();
-/*  XtPointer resource_val;   */
+typedef void (*WriteResourceProc)(
+    int          fd,
+    const void * resource_value,
+    char       * out_buf
+);
 
 typedef struct 
 {
@@ -273,35 +276,35 @@ extern void _DtDialogPutResources(
                         int resource_count) ;
 extern void _DtIntToString( 
                         int fd,
-                        int *value,
+                        const void *value,
                         char *out_buf) ;
 extern void _DtShortToString( 
                         int fd,
-                        short *value,
+                        const void *value,
                         char *out_buf) ;
 extern void _DtPositionToString( 
                         int fd,
-                        Position *value,
+                        const void *value,
                         char *out_buf) ;
 extern void _DtDimensionToString( 
                         int fd,
-                        Dimension *value,
+                        const void *value,
                         char *out_buf) ;
 extern void _DtBooleanToString( 
                         int fd,
-                        Boolean *value,
+                        const void *value,
                         char *out_buf) ;
 extern void _DtXmStringToString( 
                         int fd,
-                        XmString *value,
+                        const void *value,
                         char *out_buf) ;
 extern void _DtXmStringTableToString( 
                         int fd,
-                        XmStringTable *value,
+                        const void *value,
                         char *out_buf) ;
 extern void _DtStringToString( 
                         int fd,
-                        char **value,
+                        const void *value,
                         char *out_buf) ;
 extern void _DtmapCB(
                         Widget w,

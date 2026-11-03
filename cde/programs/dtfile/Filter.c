@@ -198,8 +198,8 @@ static void filterTypeChanged(
                         XtPointer client_data,
                         XtPointer call_data ) ;
 static int FileTypeAscending(
-                       FTData **t1,
-                       FTData **t2 );
+                       const void *value1,
+                       const void *value2 );
 static void SelectAllFilter(
                        Widget w,
                        XEvent *event,
@@ -1481,7 +1481,7 @@ ReadInFiletypes(
 
    DtDtsFreeDataTypeNames(file_types);
 
-   qsort( filter_data->user_data, count, sizeof( FTData *), (int (*)())FileTypeAscending );
+   qsort(filter_data->user_data, count, sizeof(FTData *), FileTypeAscending);
 
    filtered_types = filter_data->filetypesFiltered;
    for(i = 0; i < filter_data->filetypesFilteredCount; i++)
@@ -1621,9 +1621,12 @@ filterTypeChanged(
 
 static int
 FileTypeAscending(
-        FTData **t1,
-        FTData **t2 )
+        const void *value1,
+        const void *value2 )
 {
+  FTData *const *t1 = value1;
+  FTData *const *t2 = value2;
+
   return strcmp( (*t1)->filetype, (*t2)->filetype );
 }
 
