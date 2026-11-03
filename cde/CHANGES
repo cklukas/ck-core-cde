@@ -1,4 +1,8 @@
 2026-11-03
+- dtksh: give Xt callbacks, work procedures, timers, and input handlers their
+  exact toolkit prototypes, removing the function casts at registration.
+- dtksh: register legacy resource converters through exact `XtTypeConverter`
+  adapters, preserving their behavior without incompatible function casts.
 - dtksh: register its two-argument legacy command implementations through one
   exact three-argument ksh93 builtin adapter and typed descriptors, replacing
   hundreds of incompatible callback casts.

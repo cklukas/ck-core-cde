@@ -423,7 +423,7 @@ DtkshCvtStringToCallback(
    }
 
    cb = (XtCallbackList)XtMalloc(sizeof(XtCallbackRec)*2);
-   cb[0].callback = (XtCallbackProc)stdCB;
+   cb[0].callback = stdCB;
 
    cdata = GetNewCBData((String)fval->addr, w, DTKSHConversionResource, None);
 
@@ -468,7 +468,7 @@ DtkshCvtCallbackToString(
    *p = '\0';
    for (cb = ((XtCallbackList *)(fval->addr))[0]; cb->callback != NULL; cb++) 
    {
-      if (cb->callback == (XtCallbackProc)stdCB) 
+      if (cb->callback == stdCB)
       {
          dtksh_client_data_t *cdata = (dtksh_client_data_t *)cb->closure;
 

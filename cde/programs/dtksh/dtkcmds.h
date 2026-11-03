@@ -321,22 +321,22 @@ extern void RestorePriorEnvVarValues(
                         Namval_t *np2,
                         char *value2) ;
 extern void stdCB( 
-                        void *widget,
-                        caddr_t clientData,
-                        caddr_t callData) ;
+                        Widget widget,
+                        XtPointer clientData,
+                        XtPointer callData) ;
 extern void stdWSCB( 
-                        void *widget,
+                        Widget widget,
                         Atom atom,
-                        caddr_t clientData) ;
+                        XtPointer clientData) ;
 extern void stdInputCB( 
-                        inputrec_t *inp,
+                        XtPointer clientData,
                         int *source,
                         XtInputId *id) ;
-extern int stdWorkProcCB( 
-                        char *clientData) ;
+extern Boolean stdWorkProcCB(
+                        XtPointer clientData) ;
 extern void stdTimerCB( 
-                        char *clientData,
-                        long *id) ;
+                        XtPointer clientData,
+                        XtIntervalId *id) ;
 extern XtEnum stdPrintSetupProc(
                         int proctype,
                         Widget widget,

@@ -106,6 +106,49 @@
 #include <Dt/Print.h>
 #include <Dt/PrintDlgMgrP.h>
 
+#define DEFINE_XT_CONVERTER_ADAPTER(adapter_, converter_)                 \
+static Boolean                                                           \
+adapter_(Display *display, XrmValue *args, Cardinal *numArgs,             \
+         XrmValue *fromVal, XrmValue *toVal, XtPointer *converterData)    \
+{                                                                         \
+   converter_(display, args, numArgs, fromVal, toVal,                     \
+              converterData ? *converterData : NULL);                     \
+   return toVal->addr != NULL;                                             \
+}
+
+DEFINE_XT_CONVERTER_ADAPTER(CvtXmStringToString,
+                            DtkshCvtXmStringToString)
+DEFINE_XT_CONVERTER_ADAPTER(CvtWidgetToString, DtkshCvtWidgetToString)
+DEFINE_XT_CONVERTER_ADAPTER(CvtStringToWidget, DtkshCvtStringToWidget)
+DEFINE_XT_CONVERTER_ADAPTER(CvtStringToCallback, DtkshCvtStringToCallback)
+DEFINE_XT_CONVERTER_ADAPTER(CvtCallbackToString, DtkshCvtCallbackToString)
+DEFINE_XT_CONVERTER_ADAPTER(CvtStringToPrintSetupProc,
+                            DtkshCvtStringToPrintSetupProc)
+DEFINE_XT_CONVERTER_ADAPTER(CvtStringToEventMask,
+                            DtkshCvtStringToEventMask)
+DEFINE_XT_CONVERTER_ADAPTER(CvtStringToMWMDecoration,
+                            DtkshCvtStringToMWMDecoration)
+DEFINE_XT_CONVERTER_ADAPTER(CvtMWMDecorationToString,
+                            DtkshCvtMWMDecorationToString)
+DEFINE_XT_CONVERTER_ADAPTER(CvtStringToMWMFunctions,
+                            DtkshCvtStringToMWMFunctions)
+DEFINE_XT_CONVERTER_ADAPTER(CvtMWMFunctionsToString,
+                            DtkshCvtMWMFunctionsToString)
+DEFINE_XT_CONVERTER_ADAPTER(CvtStringToListItems,
+                            DtkshCvtStringToListItems)
+DEFINE_XT_CONVERTER_ADAPTER(CvtStringToWidgetClass,
+                            DtkshCvtStringToWidgetClass)
+DEFINE_XT_CONVERTER_ADAPTER(CvtStringToPanedWinPosIndex,
+                            DtkshCvtStringToPanedWinPosIndex)
+DEFINE_XT_CONVERTER_ADAPTER(CvtPanedWinPosIndexToString,
+                            DtkshCvtPanedWinPosIndexToString)
+DEFINE_XT_CONVERTER_ADAPTER(CvtListItemsToString,
+                            DtkshCvtListItemsToString)
+DEFINE_XT_CONVERTER_ADAPTER(CvtWidgetClassToString,
+                            DtkshCvtWidgetClassToString)
+
+#undef DEFINE_XT_CONVERTER_ADAPTER
+
 
 
 typedef Widget (*DtkshXmCreateProc)(Widget, char *, ArgList, Cardinal);
@@ -510,90 +553,90 @@ toolkit_initialize(
 	XtAddConverter(XtRString, XmRUnitType,
 		XmCvtStringToUnitType, NULL, 0);
 	XtSetTypeConverter(XmRXmString, XtRString,
-		(XtTypeConverter)DtkshCvtXmStringToString, NULL, 0, 
+		CvtXmStringToString, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRWidget, XtRString,
-		(XtTypeConverter)DtkshCvtWidgetToString, NULL, 0, 
+		CvtWidgetToString, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter("MenuWidget", XtRString,
-		(XtTypeConverter)DtkshCvtWidgetToString, NULL, 0, 
+		CvtWidgetToString, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, XtRWidget,
-		(XtTypeConverter)DtkshCvtStringToWidget, NULL, 0, 
+		CvtStringToWidget, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, "MenuWidget",
-		(XtTypeConverter)DtkshCvtStringToWidget, NULL, 0, 
+		CvtStringToWidget, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, XtRCallback,
-		(XtTypeConverter)DtkshCvtStringToCallback, NULL, 0, 
+		CvtStringToCallback, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRCallback, XtRString,
-		(XtTypeConverter)DtkshCvtCallbackToString, NULL, 0, 
+		CvtCallbackToString, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, DtRPrintSetupProc,
-		(XtTypeConverter)DtkshCvtStringToPrintSetupProc, NULL, 0, 
+		CvtStringToPrintSetupProc, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, "EventMask",
-		(XtTypeConverter)DtkshCvtStringToEventMask, NULL, 0, 
+		CvtStringToEventMask, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, "MWMDecoration",
-		(XtTypeConverter)DtkshCvtStringToMWMDecoration, NULL, 0, 
+		CvtStringToMWMDecoration, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter("MWMDecoration", XtRString,
-		(XtTypeConverter)DtkshCvtMWMDecorationToString, NULL, 0, 
+		CvtMWMDecorationToString, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, "MWMFunctions",
-		(XtTypeConverter)DtkshCvtStringToMWMFunctions, NULL, 0, 
+		CvtStringToMWMFunctions, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter("MWMFunctions", XtRString,
-		(XtTypeConverter)DtkshCvtMWMFunctionsToString, NULL, 0, 
+		CvtMWMFunctionsToString, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, "ListItems",
-		(XtTypeConverter)DtkshCvtStringToListItems, NULL, 0, 
+		CvtStringToListItems, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, "SelectedListItems",
-		(XtTypeConverter)DtkshCvtStringToListItems, NULL, 0, 
+		CvtStringToListItems, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, "SelBoxItems",
-		(XtTypeConverter)DtkshCvtStringToListItems, NULL, 0, 
+		CvtStringToListItems, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, "FSFileItems",
-		(XtTypeConverter)DtkshCvtStringToListItems, NULL, 0, 
+		CvtStringToListItems, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, "FSDirItems",
-		(XtTypeConverter)DtkshCvtStringToListItems, NULL, 0, 
+		CvtStringToListItems, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, XmRWidgetClass,
-		(XtTypeConverter)DtkshCvtStringToWidgetClass, NULL, 0, 
+		CvtStringToWidgetClass, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XtRString, "PanedWinPosIndex",
-		(XtTypeConverter)DtkshCvtStringToPanedWinPosIndex, NULL, 0, 
+		CvtStringToPanedWinPosIndex, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter("PanedWinPosIndex", XtRString,
-		(XtTypeConverter)DtkshCvtPanedWinPosIndexToString, NULL, 0, 
+		CvtPanedWinPosIndexToString, NULL, 0,
                 XtCacheNone, NULL);
 	XtSetTypeConverter("ListItems", XtRString,
-		(XtTypeConverter)DtkshCvtListItemsToString, 
+		CvtListItemsToString,
                 listItemConvertArgs, 1, 
                 XtCacheNone, NULL);
 	XtSetTypeConverter("SelBoxItems", XtRString,
-		(XtTypeConverter)DtkshCvtListItemsToString, 
+		CvtListItemsToString,
                 selBoxItemConvertArgs, 1, 
                 XtCacheNone, NULL);
 	XtSetTypeConverter("SelectedListItems", XtRString,
-		(XtTypeConverter)DtkshCvtListItemsToString, 
+		CvtListItemsToString,
                 selectedListItemConvertArgs, 1, 
                 XtCacheNone, NULL);
 	XtSetTypeConverter("FSFileItems", XtRString,
-		(XtTypeConverter)DtkshCvtListItemsToString, 
+		CvtListItemsToString,
                 fileSelBoxFileConvertArgs, 1, 
                 XtCacheNone, NULL);
 	XtSetTypeConverter("FSDirItems", XtRString,
-		(XtTypeConverter)DtkshCvtListItemsToString, 
+		CvtListItemsToString,
                 fileSelBoxDirConvertArgs, 1, 
                 XtCacheNone, NULL);
 	XtSetTypeConverter(XmRWidgetClass, XtRString,
-		(XtTypeConverter)DtkshCvtWidgetClassToString, 
+		CvtWidgetClassToString,
                 NULL, 0, XtCacheNone, NULL);
 
         /* 

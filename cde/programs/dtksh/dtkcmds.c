@@ -99,10 +99,10 @@ InvokeLegacyBuiltin(int argc, char *argv[], Shbltin_t *context)
 
 static void PendingDestroy( 
                         Widget w,
-                        wtab_t *wtab,
-                        caddr_t callData) ;
+                        XtPointer clientData,
+                        XtPointer callData) ;
 static Boolean WtabDestroy( 
-                        caddr_t callData) ;
+                        XtPointer callData) ;
 typedef Widget (*DtkshCreateWidgetProc)(const char *, WidgetClass, Widget,
                                         ArgList, Cardinal);
 typedef void (*DtkshWidgetProc)(Widget);
@@ -492,21 +492,23 @@ static Boolean workProcAdded = False;
 static void
 PendingDestroy(
         Widget w,
-        wtab_t *wtab,
-        caddr_t callData )
+        XtPointer clientData,
+        XtPointer callData )
 {
+   wtab_t *wtab = clientData;
+
    wtab->mask |= DT_PENDING_DESTROY;
    if (!workProcAdded)
    {
       workProcAdded = True;
-      XtAddWorkProc((XtWorkProc)WtabDestroy, NULL);
+      XtAddWorkProc(WtabDestroy, NULL);
    }
 }
 
 
 static Boolean
 WtabDestroy(
-        caddr_t callData )
+        XtPointer callData )
 {
    int i;
 
@@ -565,7 +567,7 @@ set_up_w(
 	w->widid = strdup(widid);
 	w->w = wid;
 	w->mask = 0;
-	XtAddCallback(wid, XtNdestroyCallback, (XtCallbackProc)PendingDestroy, 
+      XtAddCallback(wid, XtNdestroyCallback, PendingDestroy,
                       (caddr_t)w);
 	return(w);
 }
@@ -1461,10 +1463,10 @@ AddOneCallback(
    cdata = GetNewCBData(kshcmd, w, cbName, propAtom);
 
    if (strcmp(cmd, "XtAddCallback") == 0)
-      XtAddCallback(w->w, cbName, (XtCallbackProc)stdCB, (XtPointer)cdata);
+      XtAddCallback(w->w, cbName, stdCB, (XtPointer)cdata);
    else
    {
-      XmAddWMProtocolCallback(w->w, propAtom, (XtCallbackProc)stdCB, 
+      XmAddWMProtocolCallback(w->w, propAtom, stdCB,
                               (XtPointer)cdata);
    }
 
@@ -1551,10 +1553,10 @@ RemoveOneCallback(
    {
       cdata = cbDataTable[i];
       if (strcmp(cmd, "XtRemoveCallback") == 0)
-         XtRemoveCallback(w->w, cbName, (XtCallbackProc)stdCB,(XtPointer)cdata);
+         XtRemoveCallback(w->w, cbName, stdCB, (XtPointer)cdata);
       else if (strcmp(cmd, "XmRemoveWMProtocolCallback") == 0)
       {
-         XmRemoveWMProtocolCallback(w->w, propAtom, (XtCallbackProc)stdCB, 
+         XmRemoveWMProtocolCallback(w->w, propAtom, stdCB,
                                     (XtPointer)cdata);
       }
       else 
@@ -1938,7 +1940,7 @@ do_XtAddWorkProc(
 
    variable = argv[1];
    cmd = strdup((char *)argv[2]);
-   id = XtAddWorkProc((XtWorkProc)stdWorkProcCB, (XtPointer)cmd);
+   id = XtAddWorkProc(stdWorkProcCB, (XtPointer)cmd);
    RegisterCmdStr(WORKPROC_CMDS, (long)id, cmd);
    sprintf(buf, "0x%lx", (long)id);
    alt_env_set_var(variable, buf);
@@ -2011,7 +2013,7 @@ do_XtAddTimeOut(
    }
 
    cmd = strdup((char *)argv[3]);
-   id = XtAddTimeOut(milliseconds, (XtTimerCallbackProc)stdTimerCB, 
+   id = XtAddTimeOut(milliseconds, stdTimerCB,
                      (XtPointer)cmd);
    RegisterCmdStr(TIMEOUT_CMDS, (long)id, cmd);
    sprintf(buf, "0x%lx", (long)id);
@@ -3421,8 +3423,8 @@ do_XtAddInput(
    inp->lastCharIsBackslash = False;
    inp->lineWasTouched = False;
 
-   id = XtAddInput(fd, (XtPointer)XtInputReadMask, 
-                   (XtInputCallbackProc)stdInputCB, (caddr_t)inp);
+   id = XtAddInput(fd, (XtPointer)XtInputReadMask,
+                   stdInputCB, (XtPointer)inp);
 
    /* 
     * Save a record of this input, so that we can destroy the buffer
@@ -3674,9 +3676,9 @@ RestorePriorEnvVarValues(
 
 void
 stdCB(
-        void *widget,
-        caddr_t clientData,
-        caddr_t callData )
+        Widget widget,
+        XtPointer clientData,
+        XtPointer callData )
 {
    char buf[128];
    dtksh_client_data_t *cdata = (dtksh_client_data_t *)clientData;
@@ -3814,9 +3816,9 @@ stdCB(
  */
 void
 stdWSCB(
-        void *widget,
+        Widget widget,
         Atom atom,
-        caddr_t clientData )
+        XtPointer clientData )
 {
    char buf[128];
    dtksh_client_data_t *cdata = (dtksh_client_data_t *)clientData;
@@ -3864,10 +3866,11 @@ stdWSCB(
 
 void
 stdInputCB(
-        inputrec_t *inp,
+        XtPointer clientData,
         int *source,
         XtInputId *id )
 {
+   inputrec_t *inp = clientData;
    char buf[LINESIZE];
    char cmdbuf[LINESIZE];
    int cmd;
@@ -3970,9 +3973,9 @@ stdInputCB(
    }
 }
 
-int
+Boolean
 stdWorkProcCB(
-        char *clientData )
+        XtPointer clientData )
 {
    int retcode;
    int i;
@@ -3990,13 +3993,13 @@ stdWorkProcCB(
          }
       }
    }
-   return(retcode);
+   return(retcode != 0);
 }
 
 void
 stdTimerCB(
-        char *clientData,
-        long *id )
+        XtPointer clientData,
+        XtIntervalId *id )
 {
 	ksh_eval((char *)clientData);
         RemoveCmdStr(TIMEOUT_CMDS, (long)*id);
