@@ -73,11 +73,35 @@
 **************************************************************************/
 
 
-typedef int (*GenericCallback)(void *);
+typedef enum
+{
+    CALLBACK_ALLOW_GEOMETRY_CHANGE,
+    CALLBACK_ALLOW_REPARENT,
+    CALLBACK_ATT_CHANGE,
+    CALLBACK_CREATE,
+    CALLBACK_DESTROY,
+    CALLBACK_REPARENT,
+    CALLBACK_UPDATE,
+    CALLBACK_UPDATE_WITH_DATA
+} CALLBACK_KIND;
+
+typedef union
+{
+    ObjAllowGeometryChangeCallback allow_geometry_change;
+    ObjAllowReparentCallback       allow_reparent;
+    ObjAttChangeCallback           att_change;
+    ObjCreateCallback              create;
+    ObjDestroyCallback             destroy;
+    ObjReparentCallback            reparent;
+    ObjUpdateCallback              update;
+    ObjUpdateWithDataCallback      update_with_data;
+} CALLBACK_PROC;
 
 typedef struct
 {
-    GenericCallback	callback;
+	CALLBACK_PROC	callback;
+	CALLBACK_KIND	kind;
+	BOOL		occupied;
     OBJEV_ATT_FLAGS	atts;
     ISTRING		name;
 } NAMED_CALLBACK, *NamedCallback;
@@ -92,7 +116,7 @@ typedef NamedCallback NamedCallbackList;
 static int call_callbacks_in_list(NamedCallbackList list, 
 		void *data, ObjEvent event);
 static int add_to_callback_list(NamedCallbackList *list, 
-		GenericCallback callback, OBJEV_ATT_FLAGS atts,
+		CALLBACK_PROC callback, CALLBACK_KIND kind, OBJEV_ATT_FLAGS atts,
 		ISTRING name);
 static int objP_dispatch_event(ObjEvent event);
 static int objP_dispatch_event_batched(ObjEvent event);
@@ -156,7 +180,8 @@ obj_add_allow_geometry_change_callback(ObjAllowGeometryChangeCallback cb,
 		STRING debug_name)
 {
     return add_to_callback_list(&callbacksForAllowGeometryChange, 
-		(GenericCallback)cb, OBJEV_ATT_NONE,
+		(CALLBACK_PROC){.allow_geometry_change = cb},
+		CALLBACK_ALLOW_GEOMETRY_CHANGE, OBJEV_ATT_NONE,
 		istr_create(debug_name));
 }
 
@@ -165,7 +190,8 @@ obj_add_allow_reparent_callback(ObjAllowReparentCallback cb,
 		STRING debug_name)
 {
     return add_to_callback_list(&callbacksForAllowReparent, 
-		(GenericCallback)cb, OBJEV_ATT_NONE,
+		(CALLBACK_PROC){.allow_reparent = cb},
+		CALLBACK_ALLOW_REPARENT, OBJEV_ATT_NONE,
 		istr_create(debug_name));
 }
 
@@ -174,7 +200,7 @@ obj_add_create_callback(ObjCreateCallback cb,
 		STRING debug_name)
 {
     return add_to_callback_list(&callbacksForCreate, 
-		(GenericCallback)cb, OBJEV_ATT_NONE,
+		(CALLBACK_PROC){.create = cb}, CALLBACK_CREATE, OBJEV_ATT_NONE,
 		istr_create(debug_name));
 }
 
@@ -183,7 +209,7 @@ obj_add_destroy_callback(ObjDestroyCallback cb,
 		STRING debug_name)
 {
     return add_to_callback_list(&callbacksForDestroy, 
-		(GenericCallback)cb, OBJEV_ATT_NONE,
+		(CALLBACK_PROC){.destroy = cb}, CALLBACK_DESTROY, OBJEV_ATT_NONE,
 		istr_create(debug_name));
 }
 
@@ -192,7 +218,7 @@ obj_add_geometry_change_callback(ObjAttChangeCallback cb,
 		STRING debug_name)
 {
     return add_to_callback_list(&callbacksForAttChange,
-		(GenericCallback)cb, 
+		(CALLBACK_PROC){.att_change = cb}, CALLBACK_ATT_CHANGE,
 		OBJEV_ATT_GEOMETRY | OBJEV_ATT_POSITION | OBJEV_ATT_SIZE,
 		istr_create(debug_name));
 }
@@ -202,7 +228,8 @@ obj_add_rename_callback(ObjAttChangeCallback cb,
 		STRING debug_name)
 {
     return add_to_callback_list(&callbacksForAttChange,
-		(GenericCallback)cb, OBJEV_ATT_NAME,
+		(CALLBACK_PROC){.att_change = cb}, CALLBACK_ATT_CHANGE,
+		OBJEV_ATT_NAME,
 		istr_create(debug_name));
 }
 
@@ -211,7 +238,7 @@ obj_add_reparent_callback(ObjReparentCallback cb,
 		STRING debug_name)
 {
     return add_to_callback_list(&callbacksForReparent, 
-		(GenericCallback)cb, OBJEV_ATT_NONE,
+		(CALLBACK_PROC){.reparent = cb}, CALLBACK_REPARENT, OBJEV_ATT_NONE,
 		istr_create(debug_name));
 }
 
@@ -220,7 +247,8 @@ obj_add_selected_change_callback(ObjAttChangeCallback cb,
                 STRING debug_name)
 {
     return add_to_callback_list(&callbacksForAttChange,
-                (GenericCallback)cb, OBJEV_ATT_SELECTED,
+		(CALLBACK_PROC){.att_change = cb}, CALLBACK_ATT_CHANGE,
+		OBJEV_ATT_SELECTED,
                 istr_create(debug_name));
 }
 
@@ -229,7 +257,7 @@ obj_add_update_callback(ObjUpdateCallback cb,
 		STRING debug_name)
 {
     return add_to_callback_list(&callbacksForUpdate,
-		(GenericCallback)cb, OBJEV_ATT_NONE,
+		(CALLBACK_PROC){.update = cb}, CALLBACK_UPDATE, OBJEV_ATT_NONE,
 		istr_create(debug_name));
 }
 
@@ -238,7 +266,8 @@ obj_add_update_with_data_callback(ObjUpdateWithDataCallback cb,
 		STRING debug_name)
 {
     return add_to_callback_list(&callbacksForUpdateWithData,
-		(GenericCallback)cb, OBJEV_ATT_NONE,
+		(CALLBACK_PROC){.update_with_data = cb},
+		CALLBACK_UPDATE_WITH_DATA, OBJEV_ATT_NONE,
 		istr_create(debug_name));
 }
 
@@ -1088,7 +1117,8 @@ event_queue_print(void)
 
 static int
 add_to_callback_list(NamedCallbackList *ppsList, 
-	GenericCallback	callback, 
+	CALLBACK_PROC	callback,
+	CALLBACK_KIND	kind,
 	OBJEV_ATT_FLAGS atts,
 	ISTRING		callbackName)
 {
@@ -1103,10 +1133,10 @@ add_to_callback_list(NamedCallbackList *ppsList,
 	{
 	    return ERR_NO_MEMORY;
 	}
-	list[0].callback= NULL;
+	list[0].occupied= FALSE;
     }
 
-    for (iNumEntries= 0; list[iNumEntries].callback != NULL; )
+    for (iNumEntries= 0; list[iNumEntries].occupied; )
     {
 	++iNumEntries;
     }
@@ -1119,9 +1149,11 @@ add_to_callback_list(NamedCallbackList *ppsList,
     }
     list= newList;
     list[iNumEntries-2].callback= callback;
+	list[iNumEntries-2].kind= kind;
+	list[iNumEntries-2].occupied= TRUE;
     list[iNumEntries-2].atts= atts;
     list[iNumEntries-2].name= callbackName;
-    list[iNumEntries-1].callback= NULL;
+	list[iNumEntries-1].occupied= FALSE;
     return 0;
 #undef list
 }
@@ -1133,14 +1165,13 @@ call_callbacks_in_list(NamedCallbackList list, void *data, ObjEvent event)
     int			iRC= 0;		/* return code */
     int			iReturn= 0;	/* our return value */
     int			i= 0;
-    GenericCallback	func= NULL;
 
     if (list == NULL)
     {
 	return 0;
     }
 
-    for (i= 0; list[i].callback != NULL; ++i)
+    for (i= 0; list[i].occupied; ++i)
     {
 	/*
 	 * Only call attribute callbacks where masks match
@@ -1157,8 +1188,36 @@ call_callbacks_in_list(NamedCallbackList list, void *data, ObjEvent event)
 	    event_print(event, stderr, FALSE, istr_string(list[i].name));
 	}
 
-	func= list[i].callback;
-	iRC= func(data);
+	switch (list[i].kind)
+	{
+	    case CALLBACK_ALLOW_GEOMETRY_CHANGE:
+		iRC = list[i].callback.allow_geometry_change(
+			(ObjEvAllowGeometryChangeInfo)data);
+		break;
+	    case CALLBACK_ALLOW_REPARENT:
+		iRC = list[i].callback.allow_reparent(
+			(ObjEvAllowReparentInfo)data);
+		break;
+	    case CALLBACK_ATT_CHANGE:
+		iRC = list[i].callback.att_change((ObjEvAttChangeInfo)data);
+		break;
+	    case CALLBACK_CREATE:
+		iRC = list[i].callback.create((ObjEvCreateInfo)data);
+		break;
+	    case CALLBACK_DESTROY:
+		iRC = list[i].callback.destroy((ObjEvDestroyInfo)data);
+		break;
+	    case CALLBACK_REPARENT:
+		iRC = list[i].callback.reparent((ObjEvReparentInfo)data);
+		break;
+	    case CALLBACK_UPDATE:
+		iRC = list[i].callback.update((ObjEvUpdateInfo)data);
+		break;
+	    case CALLBACK_UPDATE_WITH_DATA:
+		iRC = list[i].callback.update_with_data(
+			(ObjEvUpdateWithDataInfo)data);
+		break;
+	}
 	if ((iRC < 0) && (iReturn >= 0))
 	{
 	    iReturn= iRC;

@@ -404,7 +404,10 @@ the callback-map helper returns a typed null without a function-pointer cast.
 Project, browser and object translation actions likewise implement
 `XtActionProc` directly. External-resize event handlers and the menu-button
 double-click timer use the complete Xt event and timeout callback contracts, so
-their registration sites require no function-pointer casts.
+their registration sites require no function-pointer casts. Object change
+notifications retain their distinct geometry, reparent, attribute, lifecycle
+and update callback types in a tagged union; dispatch selects the matching
+member rather than erasing every callback into one incompatible generic slot.
 The maintained generated application source also initializes project-open and
 import chooser arrays with the direct callbacks. Their shared implementations
 recover the selection-box record internally. The final application also

@@ -11,6 +11,9 @@
   through their exact Xt contracts; use typed null selection-completion and
   language callbacks throughout maintained desktop programs and generated App
   Builder source.
+- App Builder: store object-notification callbacks in a typed union and dispatch
+  each event through its matching public callback contract instead of a
+  cast-to-`void *` function table.
 - DtCm: register the shared calendar help callback directly throughout menus,
   editors, browsers and dialogs through its exact `XtCallbackProc` contract.
   Appointment, group, to-do and standalone-editor drag-motion hooks now
