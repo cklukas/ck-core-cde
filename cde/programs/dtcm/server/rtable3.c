@@ -68,6 +68,7 @@ RPCGEN_ADAPTER(_DtCm_rtable_get_access_3_svc, Access_Args_3)
 RPCGEN_ADAPTER(_DtCm_rtable_abbreviated_lookup_key_range_3_svc, Table_Args_3)
 RPCGEN_ADAPTER(_DtCm_rtable_gmtoff_3_svc, void)
 
+#include "connection.h"
 #include "rtable3_tbl.i"
 
 

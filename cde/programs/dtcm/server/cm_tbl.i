@@ -27,11 +27,11 @@
 struct rpcgen_table tableprog_5_table[] = {
 
 	RPCGEN_ACTION(cms_ping_5_svc),
-	(xdrproc_t)xdr_void,			0,
-	(xdrproc_t)xdr_void,			0,
+	_DtCm_xdr_void,			0,
+	_DtCm_xdr_void,			0,
 
 	RPCGEN_ACTION(cms_list_calendars_5_svc),
-	(xdrproc_t)xdr_void,			0,
+	_DtCm_xdr_void,			0,
 	(xdrproc_t)xdr_cms_list_calendars_res,	sizeof ( cms_list_calendars_res ),
 
 	RPCGEN_ACTION(cms_open_calendar_5_svc),

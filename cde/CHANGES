@@ -10,7 +10,8 @@
   `XtConverter` prototype and register it directly without a function cast.
 - Calendar RPC: adapt legacy callback handlers to `registerrpc`'s actual
   one-argument procedure contract and provide an exact `xdrproc_t` no-payload
-  serializer instead of casting `xdr_void` or service functions.
+  serializer instead of casting `xdr_void` or service functions in client and
+  server code.
 - DtTerm: retain the specified XIC-based input-method callback contracts,
   including preedit-start's integer result, and isolate Xlib's historical
   generic callback transport without incompatible function-pointer casts.

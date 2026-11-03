@@ -35,8 +35,8 @@
 struct rpcgen_table tableprog_2_table[] = {
 
 	RPCGEN_ACTION(_DtCm_rtable_ping_2_svc),
-	(xdrproc_t)xdr_void,			0,
-	(xdrproc_t)xdr_void,			0,
+	_DtCm_xdr_void,			0,
+	_DtCm_xdr_void,			0,
 
 	RPCGEN_ACTION(_DtCm_rtable_lookup_2_svc),
 	(xdrproc_t)_DtCm_xdr_Table_Args_2,		sizeof ( Table_Args_2 ),

@@ -44,8 +44,8 @@ struct rpcgen_table tableprog_4_table[] = {
 
 
 	RPCGEN_ACTION(_DtCm_rtable_ping_4_svc),
-	(xdrproc_t)xdr_void,			0,
-	(xdrproc_t)xdr_void,			0,
+	_DtCm_xdr_void,			0,
+	_DtCm_xdr_void,			0,
 
 	RPCGEN_ACTION(_DtCm_rtable_lookup_4_svc),
 	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
@@ -124,7 +124,7 @@ struct rpcgen_table tableprog_4_table[] = {
 	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_gmtoff_4_svc),
-	(xdrproc_t)xdr_void,			0,
+	_DtCm_xdr_void,			0,
 	(xdrproc_t)xdr_long,			sizeof ( long ),
 
 	RPCGEN_ACTION(_DtCm_rtable_create_4_svc),

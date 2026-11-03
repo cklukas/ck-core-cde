@@ -103,6 +103,7 @@ RPCGEN_ADAPTER(_DtCm_rtable_create_4_svc, Table_Op_Args_4)
 RPCGEN_ADAPTER(_DtCm_rtable_remove_4_svc, Table_Op_Args_4)
 RPCGEN_ADAPTER(_DtCm_rtable_rename_4_svc, Table_Op_Args_4)
 
+#include "connection.h"
 #include "rtable4_tbl.i"
 #include "lookup.h"
 #include "cmsdata.h"

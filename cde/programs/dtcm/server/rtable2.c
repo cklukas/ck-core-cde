@@ -66,6 +66,7 @@ RPCGEN_ADAPTER(_DtCm_deregister_callback_2_svc, Registration_2)
 RPCGEN_ADAPTER(_DtCm_rtable_set_access_2_svc, Access_Args_2)
 RPCGEN_ADAPTER(_DtCm_rtable_get_access_2_svc, Access_Args_2)
 
+#include "connection.h"
 #include "rtable2_tbl.i"
 
 

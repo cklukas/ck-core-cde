@@ -75,6 +75,7 @@ RPCGEN_ADAPTER(cms_insert_entry_5_svc, cms_insert_args)
 RPCGEN_ADAPTER(cms_update_entry_5_svc, cms_update_args)
 RPCGEN_ADAPTER(cms_delete_entry_5_svc, cms_delete_args)
 
+#include "connection.h"
 #include "cm_tbl.i"
 #include "callback.h"
 #include "insert.h"
