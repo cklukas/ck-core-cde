@@ -142,7 +142,7 @@ PostAlreadyExistsDlg(
 			AlrdyExistsCancelCB,
 			(XtPointer) pPad);
 	XtAddCallback (pSaveAs->alrdy_exist, XmNhelpCallback,
-			(XtCallbackProc) HelpFileAlreadyExistsCB,
+			HelpFileAlreadyExistsCB,
 			(XtPointer) pPad);
 
 	XtRealizeWidget (pSaveAs->alrdy_exist);
@@ -357,7 +357,7 @@ CreateSaveAsDialog(Editor *pPad)
 			(XtPointer) pPad);
     XtAddCallback(pSaveAs->saveAs_form,
 			XmNhelpCallback,
-			(XtCallbackProc)HelpSaveAsDialogCB,
+			HelpSaveAsDialogCB,
 		 	(XtPointer) pPad);
 
     /* ----->  Don't show the filter stuff when saving
@@ -742,7 +742,7 @@ CreateSaveWarning(
     XtAddCallback(pSelect->save_warning, XmNcancelCallback,
 		AskIfSaveCancelCB, (XtPointer) pPad);
     XtAddCallback(pSelect->save_warning, XmNhelpCallback,
-		(XtCallbackProc) HelpAskIfSaveDialogCB, (XtPointer) pPad);
+		HelpAskIfSaveDialogCB, (XtPointer) pPad);
 
     /* -----> save the widget id of the Cancel button so that it can be
      *        unmanaged (in AskIfSave) if a "forced" TTDT_QUIT is being

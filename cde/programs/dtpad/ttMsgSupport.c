@@ -928,7 +928,7 @@ TTwarning( Editor *pPad, Tt_status status, char *errsuff )
 
     pFileWidgets = &pPad->fileStuff.fileWidgets;
     XtAddCallback(pFileWidgets->gen_warning, XmNokCallback,
-                  (XtCallbackProc) okCB, (XtPointer) &done);
+                  okCB, (XtPointer) &done);
     XFlush(pPad->display);
     XSync(pPad->display, False);
 

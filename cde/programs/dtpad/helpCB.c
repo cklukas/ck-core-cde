@@ -89,8 +89,8 @@
 void
 HelpMenubarCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, MENUBAR_HELP,
 			     (char *) NULL);
@@ -99,8 +99,8 @@ HelpMenubarCB(
 void
 HelpFileCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FILE_MENU_HELP,
 			     (char *) NULL);
@@ -109,8 +109,8 @@ HelpFileCB(
 void
 HelpEditCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, EDIT_MENU_HELP,
 			     (char *) NULL);
@@ -119,8 +119,8 @@ HelpEditCB(
 void
 HelpFormatCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FORMAT_MENU_HELP,
 			     (char *) NULL);
@@ -129,8 +129,8 @@ HelpFormatCB(
 void
 HelpOptionsCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, OPTIONS_MENU_HELP,
 			     (char *) NULL);
@@ -139,8 +139,8 @@ HelpOptionsCB(
 void
 HelpHelpCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_HELP,
 			     (char *) NULL);
@@ -176,8 +176,8 @@ HelpIncludeDialogCB(
 void
 HelpSaveAsDialogCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *) client_data;
 
@@ -193,8 +193,8 @@ HelpSaveAsDialogCB(
 void
 HelpAskIfSaveDialogCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FILE_ASKIFSAVE_DIALOG_HELP,
 			     (char *) NULL);
@@ -203,8 +203,8 @@ HelpAskIfSaveDialogCB(
 void
 HelpFileAlreadyExistsCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FILE_EXISTS_DIALOG_HELP,
 			     (char *) NULL);
@@ -220,8 +220,8 @@ HelpFileAlreadyExistsCB(
 void
 HelpEditorWidgetCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
 
     DtEditorHelpCallbackStruct *editorHelp = 
@@ -404,8 +404,8 @@ HelpPrintSetupPageMargins(
 void
 HelpOverviewCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_OVERVIEW_HELP,
 			     (char *) NULL);
@@ -414,8 +414,8 @@ HelpOverviewCB(
 void
 HelpTasksCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_TASKS_HELP,
 			     (char *) NULL);
@@ -424,8 +424,8 @@ HelpTasksCB(
 void
 HelpTOCCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_TOC_HELP,
 			     (char *) NULL);
@@ -434,8 +434,8 @@ HelpTOCCB(
 void
 HelpReferenceCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_REFERENCE_HELP,
 			     (char *) NULL);
@@ -444,8 +444,8 @@ HelpReferenceCB(
 void
 HelpOnItemCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     Widget widget;
@@ -476,8 +476,8 @@ HelpOnItemCB(
 void
 HelpUsingHelpCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_USING_HELP_HELP,
 			     HELP_ON_HELP_VOLUME);
@@ -486,8 +486,8 @@ HelpUsingHelpCB(
 void
 HelpAboutCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *) client_data, HELP_MENU_ABOUT_HELP,
 			     (char *) NULL);
@@ -502,8 +502,8 @@ HelpAboutCB(
 void
 HelpHyperlinkCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     DtHelpDialogCallbackStruct *pHyper = 
 	    (DtHelpDialogCallbackStruct *) call_data;
@@ -531,8 +531,8 @@ HelpHyperlinkCB(
 void
 HelpCloseCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     HelpStruct *pHelp;

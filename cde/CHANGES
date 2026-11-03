@@ -1,4 +1,7 @@
 2026-11-03
+- DtPad: expose editor, help, formatting, option, session and print callbacks
+  through `XtCallbackProc` directly, and route panic signals through a typed
+  signal adapter.
 - DtCalc: give help callbacks their exact Xt signatures and use typed callback
   adapters for parameterless ASCII-conversion and exit operations.
 - DtIcon: register help, hyperlink and close callbacks through their exact Xt

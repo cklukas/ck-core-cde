@@ -319,7 +319,10 @@ dtfile and dtdocbook consumers build and link in both C23 configurations.
 The editor, calculator, print-display manager, terminal primitive layer and
 selected calendar/mail interfaces are qualified with GCC and Clang C23 as
 well. `dtpad` uses `XtCallbackProc` and the complete ToolTalk contract for its
-file workflow; `dtcalc` registers its X error handler without a cast and keeps
+file workflow. Its editor, help, formatting, option, session and print
+callbacks all implement the Xt boundary directly, while a dedicated
+integer-argument adapter invokes the parameterless panic-save routine for
+signals. `dtcalc` registers its X error handler without a cast and keeps
 its button dispatch explicitly parameterless. Its help callbacks implement
 `XtCallbackProc` directly, while typed callback adapters invoke the
 parameterless ASCII-conversion and exit operations. `dtpdm` publishes explicit

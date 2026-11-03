@@ -150,9 +150,9 @@ CreateHelpDialog(
 
     dialog = DtCreateHelpDialog(pPad->app_shell, "helpDlg", args, n);
     XtAddCallback(dialog, DtNhyperLinkCallback, 
-                  (XtCallbackProc)HelpHyperlinkCB, pPad);
+                  HelpHyperlinkCB, pPad);
     XtAddCallback(dialog, DtNcloseCallback, 
-                  (XtCallbackProc)HelpCloseCB, pPad);
+                  HelpCloseCB, pPad);
     return dialog;
 }
 
