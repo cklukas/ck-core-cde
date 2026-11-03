@@ -217,7 +217,7 @@ ClientAddress (struct sockaddr *from, ARRAY8Ptr addr, ARRAY8Ptr port, CARD16 *ty
     int length, family;
     char *data;
 
-    data = NetaddrPort(from, &length);
+    data = NetaddrPort((XdmcpNetaddr)from, &length);
     XdmcpAllocARRAY8 (port, length);
     memmove( port->data, data, length);
     port->length = length;

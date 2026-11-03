@@ -415,7 +415,7 @@ void
 RunChooser (
     struct display  *d)
 {
-    char    **args = NULL, **systemEnv();
+    char    **args = NULL;
     char    buf[1024];
     char    **env;
 
