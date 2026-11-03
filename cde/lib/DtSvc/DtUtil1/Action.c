@@ -410,6 +410,12 @@ static Boolean ResolveCommandInvokerMessagePieces(
                         ActionRequest *request,
                         char * relPathHost,
                         char * relPathDir) ;
+
+typedef struct {
+    DtDbReloadCallbackProc proc;
+    XtPointer client_data;
+} _DtDbReloadContext;
+
 static Tt_callback_action _DbReloadCB(Tt_message m, Tt_pattern p);
 static void _DtActTimerCB( XtPointer clientData,
 		XtIntervalId *timerId);
@@ -652,6 +658,7 @@ DtDbReloadNotify( DtDbReloadCallbackProc proc, XtPointer client_data)
     Tt_status	status;
     Tt_pattern	pattern;
     char *	sessId;
+    _DtDbReloadContext *context;
     extern XtAppContext *_DtInitAppContextp;
 
 
@@ -705,17 +712,13 @@ DtDbReloadNotify( DtDbReloadCallbackProc proc, XtPointer client_data)
 	return;
     }
 
-    /*
-     * Store information needed by the callback in the user data
-     * fields of the pattern.
-     */
-    status = tt_pattern_user_set(pattern, 0, (void *)proc);
+    /* Store one typed callback context in the pattern's data slot. */
+    context = XtNew(_DtDbReloadContext);
+    context->proc = proc;
+    context->client_data = client_data;
+    status = tt_pattern_user_set(pattern, 0, context);
     if (status != TT_OK) {
-        _DtSvcAppUnlock(*_DtInitAppContextp);
-	return;
-    }
-    status = tt_pattern_user_set(pattern, 1, (void *)client_data);
-    if (status != TT_OK) {
+        XtFree((char *)context);
         _DtSvcAppUnlock(*_DtInitAppContextp);
 	return;
     }
@@ -725,11 +728,13 @@ DtDbReloadNotify( DtDbReloadCallbackProc proc, XtPointer client_data)
      * the user callback.
      */
     if (tt_pattern_callback_add(pattern, _DbReloadCB) != TT_OK) {
+        XtFree((char *)context);
         _DtSvcAppUnlock(*_DtInitAppContextp);
 	return;
     }
 
     if (tt_pattern_register(pattern) != TT_OK) {
+        XtFree((char *)context);
         _DtSvcAppUnlock(*_DtInitAppContextp);
 	return;
     }
@@ -792,20 +797,15 @@ _DtActIndicatorCB( XtPointer clientData, XtIntervalId *IntId )
 static Tt_callback_action
 _DbReloadCB(Tt_message m, Tt_pattern p)
 {
-    DtDbReloadCallbackProc	proc;
-    XtPointer			client_data;
+    _DtDbReloadContext *context;
 
-    /*
-     * user data 0: DtDbReloadCallbackProc	proc;
-     * user data 1: XtPointer			client_data;
-     */
-    proc = (DtDbReloadCallbackProc)tt_pattern_user(p, 0);
-    client_data = (XtPointer)tt_pattern_user(p, 1);
+    context = tt_pattern_user(p, 0);
 
     /*
      * Call registered callback function.
      */
-    if (proc) (*proc)(client_data);
+    if (context != NULL && context->proc != NULL)
+        context->proc(context->client_data);
 
     return TT_CALLBACK_PROCESSED;
 }

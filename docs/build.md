@@ -283,7 +283,9 @@ non-returning and has an unconditional `_exit` fallback if orderly session
 shutdown is not yet permitted.
 Action-database reload notification likewise uses its public client-data
 callback contract directly, including the session manager's initial explicit
-reload path.
+reload path. DtSvc retains each function and its client data together in a
+typed registration context; ToolTalk user data carries only the context's
+object pointer, never an encoded function pointer.
 The `dsdm` X error and recursive-window callbacks, interest-property reader and
 drag-and-drop proxy boundary use exact shared Xlib contracts; the `dticon` X
 error hooks likewise avoid function-pointer casts.

@@ -1,4 +1,7 @@
 2026-11-03
+- DtSvc: preserve action-database reload functions in a typed ToolTalk
+  registration context rather than converting function pointers to and from
+  object pointers through pattern user-data slots.
 - DtFile, DtStyle and DtSession: store the native collation function and
   workspace callback directly, and give action-database reload notifications
   their complete `DtDbReloadCallbackProc` client-data contract.
