@@ -991,7 +991,7 @@ build_screenDialog(
       }
     XtAddCallback(style.screenDialog, XmNunmapCallback, UnmapCB, shell);
     XtAddCallback(style.screenDialog, XmNhelpCallback,
-		  (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_SCREEN_DIALOG);
+		  HelpRequestCB, (XtPointer)HELP_SCREEN_DIALOG);
     
     /* calculate the max label width for labels */
     if ((LabelWidth = XtWidth(screen.saverLabel)) > MaxLabelWidth) 

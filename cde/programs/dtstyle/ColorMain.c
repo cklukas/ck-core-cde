@@ -1099,7 +1099,7 @@ addPaletteCB(
         XtAddCallback(addDialog, XmNcancelCallback, addCancelCB, 
                                  (XtPointer) NULL);
         XtAddCallback(addDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_ADD_PALETTE_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_ADD_PALETTE_DIALOG);
 
         n = 0;
         XtSetArg (args[n], XmNmwmInputMode,
@@ -1508,7 +1508,7 @@ deletePaletteCB(
 	XtAddCallback(deleteDialog, XmNokCallback, deleteOkCB, 
                       (XtPointer)(paletteList));
         XtAddCallback(deleteDialog, XmNhelpCallback,
-                      (XtCallbackProc)HelpRequestCB, 
+                      HelpRequestCB,
                       (XtPointer)HELP_DELETE_PALETTE_WARNING_DIALOG);
 
 
@@ -1598,7 +1598,7 @@ resourcesCB(
         XtAddCallback(colorUseDialog, XmNcallback, colorUseExitCB, NULL);
         XtAddCallback(colorUseDialog, XmNmapCallback, _DtmapCB_colorUse, NULL);
         XtAddCallback(colorUseDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_COLOR_USE_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_COLOR_USE_DIALOG);
 
         XmStringFree(button_string[0]);
         XmStringFree(button_string[1]);
@@ -2472,7 +2472,7 @@ SameName(
      colorDialog.dlg = XmCreateWarningDialog(style.colorDialog, "QNotice", args, n);
      XtAddCallback(colorDialog.dlg, XmNokCallback, setDlgOkCB, (XtPointer)tmpPalette);
      XtAddCallback(colorDialog.dlg, XmNhelpCallback,
-              (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_ADD_PALETTE_WARNING_DIALOG);
+              HelpRequestCB, (XtPointer)HELP_ADD_PALETTE_WARNING_DIALOG);
 
       n=0;
       XtSetArg (args[n], XmNmwmInputMode,
@@ -2633,7 +2633,7 @@ CreateDialogBoxD(
     XtAddCallback(style.colorDialog, XmNcallback, dialogBoxCB, NULL);
     XtAddCallback(style.colorDialog, XmNmapCallback, _DtmapCB, parent);
     XtAddCallback(style.colorDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_COLOR_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_COLOR_DIALOG);
 
     XmStringFree(button_string[0]);
     XmStringFree(button_string[1]);

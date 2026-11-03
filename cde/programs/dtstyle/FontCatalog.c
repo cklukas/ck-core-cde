@@ -98,7 +98,7 @@ FontCatalogLoad(
         if (!descriptor)
             continue;
 
-        const char *raw = descriptor->raw;
+        char *raw = descriptor->raw;
         if (!raw) {
             raw = font_names[i];
         }
@@ -119,7 +119,7 @@ FontCatalogLoad(
         }
 
         catalog->entries[added].descriptor = descriptor;
-        const char *label_text = descriptor->displayName ? descriptor->displayName : raw;
+        char *label_text = descriptor->displayName ? descriptor->displayName : raw;
         catalog->entries[added].label = XmStringCreateLocalized(label_text ? label_text : "unknown");
         added++;
     }

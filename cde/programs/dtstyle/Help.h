@@ -214,24 +214,24 @@ typedef struct _helpStruct {
 
 extern void HelpRequestCB(
                             Widget w,
-                            caddr_t client_data,
-                            caddr_t call_data ) ;
+                            XtPointer client_data,
+                            XtPointer call_data ) ;
 extern void QuickHelpRequestCB(
                             Widget w,
-                            caddr_t client_data,
-                            caddr_t call_data ) ;
+                            XtPointer client_data,
+                            XtPointer call_data ) ;
 extern void HelpModeCB(
                             Widget w,
-                            caddr_t client_data,
-                            caddr_t call_data ) ;
+                            XtPointer client_data,
+                            XtPointer call_data ) ;
 extern void HelpHyperlinkCB(
                             Widget w,
-                            caddr_t client_data,
-                            caddr_t call_data ) ;
+                            XtPointer client_data,
+                            XtPointer call_data ) ;
 extern void HelpCloseCB(
                             Widget w,
-                            caddr_t client_data,
-                            caddr_t call_data ) ;
+                            XtPointer client_data,
+                            XtPointer call_data ) ;
 extern void Help(
     char *helpVolume,
     char *locationId);

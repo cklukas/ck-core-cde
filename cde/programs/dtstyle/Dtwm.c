@@ -594,7 +594,7 @@ build_dtwmDlg(
     style.dtwmDialog = 
         __DtCreateDialogBoxDialog(shell, "dtwmDialog", save.posArgs, save.poscnt);
     XtAddCallback(style.dtwmDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_DTWM_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_DTWM_DIALOG);
 
     XmStringFree(button_string[0]);
     XmStringFree(button_string[1]);

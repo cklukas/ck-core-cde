@@ -118,7 +118,7 @@ typedef struct {
     const char *name;
     unsigned int fontShape;
     int labelMsg;
-    const char *labelDefault;
+    char *labelDefault;
 } CursorPreviewInfo;
 
 static const CursorPreviewInfo cursorPreviewInfo[CURSOR_PREVIEW_COUNT] = {
@@ -1291,7 +1291,7 @@ build_mouseDialog( Widget shell )
                    save.posArgs, save.poscnt);
     XtAddCallback(style.mouseDialog, XmNcallback, ButtonCB, NULL);
     XtAddCallback(style.mouseDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_MOUSE_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_MOUSE_DIALOG);
 
 
     XmStringFree(button_string[0]);

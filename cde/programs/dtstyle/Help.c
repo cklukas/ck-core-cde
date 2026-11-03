@@ -80,9 +80,9 @@ GetHelpDialog(void)
         DtWsmRemoveWorkspaceFunctions(style.display, 
                 XtWindow(XtParent(pHelp->dialog)));
         XtAddCallback(pHelp->dialog, DtNhyperLinkCallback, 
-                      (XtCallbackProc)HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, NULL);
         XtAddCallback(pHelp->dialog, DtNcloseCallback, 
-                      (XtCallbackProc)HelpCloseCB, pHelpCache);
+                      HelpCloseCB, pHelpCache);
         return pHelp->dialog;
     }
     else
@@ -112,9 +112,9 @@ GetHelpDialog(void)
         DtWsmRemoveWorkspaceFunctions(style.display, 
                       XtWindow(XtParent(pHelp->dialog)));
         XtAddCallback(pHelp->dialog, DtNhyperLinkCallback, 
-                      (XtCallbackProc)HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, NULL);
         XtAddCallback(pHelp->dialog, DtNcloseCallback, 
-                      (XtCallbackProc)HelpCloseCB, pHelpCache);
+                      HelpCloseCB, pHelpCache);
 	return pHelp->dialog;
     }
 }
@@ -162,9 +162,9 @@ Help(
         DtWsmRemoveWorkspaceFunctions(style.display, 
                       XtWindow(XtParent(helpDialog)));
         XtAddCallback(helpDialog, DtNhyperLinkCallback, 
-                      (XtCallbackProc)HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, NULL);
         XtAddCallback(helpDialog, DtNcloseCallback, 
-                      (XtCallbackProc)HelpCloseCB, NULL);
+                      HelpCloseCB, NULL);
 
         XtManageChild(helpDialog);
     }

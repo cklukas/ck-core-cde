@@ -20,7 +20,9 @@
   diagnostics the toolkit's distinct typed callback contracts, preserve its
   maintained generated-header and stub additions in clean builds, and assign
   `SIG_IGN` without an incompatible function cast; correct dtstyle signal,
-  fatal Xt and event-handler contracts without registration casts.
+  fatal Xt, event-handler and callback contracts without registration casts,
+  and preserve legacy Motif/catalog string input types without discarding
+  qualifiers.
 - C23: remove the calendar RPC headers' obsolete K&R declaration fallbacks;
   give dtcm parsing, UI, ToolTalk and helper callbacks exact contracts; make
   clean out-of-tree calendar builds resolve generated and checked-in headers

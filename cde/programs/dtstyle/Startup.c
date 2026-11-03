@@ -88,15 +88,15 @@ static void LayoutCB(
 static void SetCurrentCB( 
                         Widget w,
                         XtPointer client_data,
-                        XmToggleButtonCallbackStruct *call_data) ;
+                        XtPointer call_data) ;
 static void SetHomeCB( 
                         Widget w,
                         XtPointer client_data,
-                        XmToggleButtonCallbackStruct *call_data) ;
+                        XtPointer call_data) ;
 static void SetConfirmCB( 
                         Widget w,
                         XtPointer client_data,
-                        XmToggleButtonCallbackStruct *call_data) ;
+                        XtPointer call_data) ;
 static void SetHomeSession( 
                         Widget w,
                         XtPointer client_data,
@@ -229,7 +229,7 @@ BuildStartup(
     __DtCreateDialogBoxDialog(shell, "startupDlg", save.posArgs, save.poscnt);
   XtAddCallback(style.startupDialog, XmNcallback, ButtonCB, NULL);
   XtAddCallback(style.startupDialog, XmNhelpCallback,
-		(XtCallbackProc)HelpRequestCB, (XtPointer)HELP_STARTUP_DIALOG);
+		HelpRequestCB, (XtPointer)HELP_STARTUP_DIALOG);
   
   XmStringFree(button_string[0]);
   XmStringFree(button_string[1]);
@@ -408,11 +408,11 @@ BuildStartup(
   XtAddCallback(style.startupDialog, XmNmapCallback, MapStartup, shell);
   XtAddCallback(style.startupDialog, XmNmapCallback, LayoutCB, shell);
   XtAddCallback(startup.resumeTgl, XmNvalueChangedCallback, 
-		(XtCallbackProc)SetCurrentCB, NULL);
+		SetCurrentCB, NULL);
   XtAddCallback(startup.homeTgl, XmNvalueChangedCallback, 
-		(XtCallbackProc)SetHomeCB, NULL);
+		SetHomeCB, NULL);
   XtAddCallback(startup.modeYesTgl, XmNvalueChangedCallback, 
-		(XtCallbackProc)SetConfirmCB, NULL);
+		SetConfirmCB, NULL);
   XtAddCallback( widget_list[count-1], XmNactivateCallback, 
 		SetHomeSession, style.startupDialog);
   
@@ -478,9 +478,11 @@ static void
 SetCurrentCB(
         Widget w,
         XtPointer client_data,
-        XmToggleButtonCallbackStruct *call_data )
+        XtPointer call_data )
 {
-    if (call_data->set)
+    XmToggleButtonCallbackStruct *toggle_data = call_data;
+
+    if (toggle_data->set)
         style.smState.smStartState = DtSM_CURRENT_STATE;
 }
 
@@ -493,9 +495,11 @@ static void
 SetHomeCB(
         Widget w,
         XtPointer client_data,
-        XmToggleButtonCallbackStruct *call_data )
+        XtPointer call_data )
 {
-    if (call_data->set)
+    XmToggleButtonCallbackStruct *toggle_data = call_data;
+
+    if (toggle_data->set)
         style.smState.smStartState = DtSM_HOME_STATE;
 }
 
@@ -508,13 +512,14 @@ static void
 SetConfirmCB(
         Widget w,
         XtPointer client_data,
-        XmToggleButtonCallbackStruct *call_data )
+        XtPointer call_data )
 {
+   XmToggleButtonCallbackStruct *toggle_data = call_data;
    int n;
    Arg   args[2];
    Boolean mode;
 
-    if (call_data->set)
+    if (toggle_data->set)
         style.smState.smConfirmMode = DtSM_VERBOSE_MODE;
     else
     { 

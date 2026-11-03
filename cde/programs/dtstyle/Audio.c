@@ -172,7 +172,7 @@ build_audioDlg(
     XtAddCallback(style.audioDialog, XmNmapCallback, _DtmapCB_audioDlg, shell);
     XtAddCallback(style.audioDialog, XmNcallback, ButtonCB, NULL);
     XtAddCallback(style.audioDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_AUDIO_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_AUDIO_DIALOG);
 
     XmStringFree(button_string[0]);
     XmStringFree(button_string[1]);

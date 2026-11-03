@@ -221,6 +221,10 @@ the checked-in private terminal headers.
 Dtstyle's fatal Xt error hook carries Xt's non-returning contract, and its map
 and window-manager reparent handlers implement `XtEventHandler` directly
 without casts at registration or removal sites.
+Its help and startup callbacks likewise implement `XtCallbackProc` at the
+registration boundary, recovering toggle or help records from `call_data` only
+inside the callback. Font and cursor-preview labels retain the mutable string
+type required by the legacy Motif and message-catalog interfaces.
 Dtcreate uses the ToolTalk toolkit's input handler for Xt dispatch and reserves
 its exact three-argument contract callback for `ttdt_session_join`, avoiding an
 incompatible callback cast and a duplicate ToolTalk connection. Its help-dialog
