@@ -387,8 +387,9 @@ record. Those implementations accept `XtPointer` at the toolkit boundary and
 recover `XmSelectionBoxCallbackStruct` only inside the callback. App Builder's
 generated message-dialog runtime uses the same direct callback entries, and
 the code emitter writes plain null callback values instead of generated
-function-pointer casts. Palette and editor registrations likewise store their
-callbacks directly. List and toggle callbacks accept Xt's opaque call-data
+function-pointer casts. Generated popup actions and drag-motion event handlers
+also carry the complete Xt contracts. Palette and editor registrations likewise
+store their callbacks directly. List and toggle callbacks accept Xt's opaque call-data
 argument and recover the concrete Motif callback record inside the function;
 the callback-map helper returns a typed null without a function-pointer cast.
 Project, browser and object translation actions likewise implement

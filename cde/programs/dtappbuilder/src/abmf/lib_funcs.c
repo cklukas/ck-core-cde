@@ -4339,7 +4339,8 @@ dtb_call_help_callback(
 static void     dtb_drag_button1_motion_handler(
                         Widget          dragInitiator,
                         XtPointer       clientData,
-                        XEvent         *event
+                        XEvent         *event,
+                        Boolean        *continueDispatch
 		);
 static int	dtb_drag_start(
 			DtbDragSite dragSite, 
@@ -4373,7 +4374,7 @@ dtb_popup_menu_register(Widget popupMenu, Widget parent)
     static XtTranslations	popupMenuTrans = NULL;
     static XtActionsRec		menuActions[] =
     {
-	{"DtbPopupMenu", (XtActionProc)dtb_popup_menu }
+        {"DtbPopupMenu", dtb_popup_menu }
     };
     int		i = 0;
     Boolean	foundEntry = False;
@@ -4536,7 +4537,7 @@ dtb_drag_site_register(
         dragSite->dragFinishCBRec[0].callback = dtb_drag_finishCB;
     
         XtAddEventHandler(widget, Button1MotionMask, False,
-            (XtEventHandler)dtb_drag_button1_motion_handler, 
+            dtb_drag_button1_motion_handler,
 	    (XtPointer)dragSite);
     }
     
@@ -4640,7 +4641,8 @@ static void
 dtb_drag_button1_motion_handler(
         Widget          dragInitiator,
         XtPointer       clientData,
-        XEvent         *event
+        XEvent         *event,
+        Boolean        *continueDispatch
 )
 {
     int             	diffX, diffY;

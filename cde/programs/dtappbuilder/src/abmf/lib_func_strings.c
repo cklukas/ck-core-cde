@@ -5327,7 +5327,7 @@ static LibFuncRec abmfP_lrc_popup_menu_register =
     "    static XtTranslations	popupMenuTrans = NULL;\n"
     "    static XtActionsRec		menuActions[] =\n"
     "    {\n"
-    "	{\"DtbPopupMenu\", (XtActionProc)dtb_popup_menu }\n"
+    "	{\"DtbPopupMenu\", dtb_popup_menu }\n"
     "    };\n"
     "    int		i = 0;\n"
     "    Boolean	foundEntry = False;\n"
@@ -5548,7 +5548,7 @@ static LibFuncRec abmfP_lrc_drag_site_register =
     "        dragSite->dragFinishCBRec[0].callback = dtb_drag_finishCB;\n"
     "    \n"
     "        XtAddEventHandler(widget, Button1MotionMask, False,\n"
-    "            (XtEventHandler)dtb_drag_button1_motion_handler, \n"
+    "            dtb_drag_button1_motion_handler,\n"
     "	    (XtPointer)dragSite);\n"
     "    }\n"
     "    \n"
@@ -5688,7 +5688,8 @@ static LibFuncRec abmfP_lrc_drag_button1_motion_handler =
     "static void dtb_drag_button1_motion_handler(\n"
     "        Widget          dragInitiator,\n"
     "        XtPointer       clientData,\n"
-    "        XEvent         *event\n"
+    "        XEvent         *event,\n"
+    "        Boolean        *continueDispatch\n"
     ");",
     
     /* def */
@@ -5702,7 +5703,8 @@ static LibFuncRec abmfP_lrc_drag_button1_motion_handler =
     "dtb_drag_button1_motion_handler(\n"
     "        Widget          dragInitiator,\n"
     "        XtPointer       clientData,\n"
-    "        XEvent         *event\n"
+    "        XEvent         *event,\n"
+    "        Boolean        *continueDispatch\n"
     ")\n"
     "{\n"
     "    int             	diffX, diffY;\n"
