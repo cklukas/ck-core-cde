@@ -32,7 +32,8 @@
   exact, typed dispatch adapters; type its lookup and signal callbacks, and
   make libcsa RPC generation work from an out-of-tree build directory.
 - C23: type dtpad file-menu and ToolTalk callbacks, dtcalc button and X error
-  dispatch, DtTerm parser and cleanup hooks, dtpdm constructors, dtmail utility
+  dispatch, DtTerm parser, cleanup, cursor, pointer-blanking and session-save
+  hooks, dtpdm constructors, dtmail utility
   accessors, libcsa hash destruction, and dtcm calendar match/list/container
   callbacks; avoid the C23 `bool` keyword in the calendar tree checker.
 - public interfaces: replace unspecified-argument ToolTalk, DtSvc service,

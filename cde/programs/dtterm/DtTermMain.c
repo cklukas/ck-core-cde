@@ -141,8 +141,8 @@ static void ToggleMenuBar(
 
 static void SaveSessionCB(
 	Widget w,			
-	caddr_t client_data,	
-	caddr_t call_data );
+	XtPointer client_data,
+	XtPointer call_data );
 static Boolean RestoreSession(
 	Widget topDog,
 	Arg *arglist,
@@ -1330,7 +1330,7 @@ main(int argc, char **argv)
     xa_WM_SAVE_YOURSELF = XInternAtom(XtDisplay(topLevel),
                                       "WM_SAVE_YOURSELF", False);
     XmAddWMProtocolCallback(topLevel, xa_WM_SAVE_YOURSELF,
-                           (XtCallbackProc)SaveSessionCB, (XtPointer)NULL);
+                           SaveSessionCB, (XtPointer)NULL);
     
     i = 0;
     (void) XtSetArg(arglist[i], XmNmappedWhenManaged, False); i++;
@@ -1526,8 +1526,8 @@ main(int argc, char **argv)
 static void 
 SaveSessionCB(
         Widget w,			/* widget id */
-        caddr_t client_data,		/* data from application  */
-        caddr_t call_data )		/* data from widget class */
+        XtPointer client_data,		/* data from application  */
+        XtPointer call_data )		/* data from widget class */
 {
     char *longpath, *fileName;
     char bufr[1024];

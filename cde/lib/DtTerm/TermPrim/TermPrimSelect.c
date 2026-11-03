@@ -2527,7 +2527,7 @@ HandleDrop( Widget w, XmDropProcCallbackStruct *cb )
     dd_cb->callback = DropDestroyCB;
     dd_cb->closure = NULL;
     dd_cb++;
-    dd_cb->callback = (XtCallbackProc) NULL;
+    dd_cb->callback = NULL;
     dd_cb->closure = NULL;    
 
     drag_cont = cb->dragContext;

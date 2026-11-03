@@ -212,6 +212,9 @@ a clean out-of-tree build does not depend on headers left in the build tree.
 DtTerm's utility, terminal and view libraries likewise resolve their private
 line-font and terminal headers from the source tree, and its generated line
 table reads the checked-in data file there.
+Its cursor and pointer-blanking timers implement `XtTimerCallbackProc`
+directly, and dtterm's session-save hook uses the exact Xt callback boundary;
+none requires a registration cast.
 App Builder resolves each private include from `$(top_srcdir)`, feeds its
 message catalog from source-qualified inputs, and stages read-only links to its
 BIL project inputs when generating code outside the source tree. It seeds the
