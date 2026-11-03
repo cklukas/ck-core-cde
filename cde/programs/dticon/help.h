@@ -164,10 +164,10 @@
 
 /* help.c */
 void AssignHelpCallbacks(void);
-void HelpTriggerCB(Widget w, caddr_t client_data, caddr_t call_data);
-void HelpOnItemCB(Widget w, caddr_t client_data, caddr_t call_data);
-void HelpHyperlinkCB(Widget w, caddr_t client_data_unused, caddr_t call_data);
-void HelpCloseCB(Widget w, caddr_t client_data, caddr_t call_data_unused);
+void HelpTriggerCB(Widget w, XtPointer client_data, XtPointer call_data);
+void HelpOnItemCB(Widget w, XtPointer client_data, XtPointer call_data);
+void HelpHyperlinkCB(Widget w, XtPointer client_data_unused, XtPointer call_data);
+void HelpCloseCB(Widget w, XtPointer client_data, XtPointer call_data_unused);
 void HelpSetVolAndLocation(int topic);
 void DisplayHelp(char *helpVolume, char *locationId);
 void DisplayNewHelp(char *helpVolume, char *locationId);

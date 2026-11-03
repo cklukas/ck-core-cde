@@ -87,8 +87,8 @@ extern Widget rotateMenu, flipMenu, formatMenu, magnificationMenu;
 extern Widget staticColorsBox, symbolicColorsBox, staticGreysBox;
 extern Widget viewport;
 
-void HelpTriggerCB(Widget w, caddr_t client_data, caddr_t call_data);
-void HelpOnItemCB(Widget w, caddr_t client_data, caddr_t call_data);
+void HelpTriggerCB(Widget w, XtPointer client_data, XtPointer call_data);
+void HelpOnItemCB(Widget w, XtPointer client_data, XtPointer call_data);
 void HelpSetVolAndLocation(int topic);
 void DisplayNewHelp(char *helpVolume, char *locationId);
 void DisplayHelp(char *helpVolume, char *locationId);
@@ -106,214 +106,214 @@ AssignHelpCallbacks( void )
 
 /*** Set Help callbacks for the graphic tools ***/
   XtAddCallback(pointButton, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_POINT_BUTTON);
   XtAddCallback(floodButton, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_FLOOD_BUTTON);
   XtAddCallback(lineButton, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_LINE_BUTTON);
   XtAddCallback(polylineButton, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_POLYLINE_BUTTON);
   XtAddCallback(rectangleButton, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_RECTANGLE_BUTTON);
   XtAddCallback(polygonButton, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_POLYGON_BUTTON);
   XtAddCallback(circleButton, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_CIRCLE_BUTTON);
   XtAddCallback(ellipseButton, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_ELLIPSE_BUTTON);
   XtAddCallback(eraseButton, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_ERASER_BUTTON);
   XtAddCallback(selectButton, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_SELECT_BUTTON);
   XtAddCallback(fillToggle, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_FILL_BUTTON);
 
 /*** Set Help callbacks for the pen groups ***/
   XtAddCallback(staticColorsBox, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_STATIC_COLOR_BUTTON);
   XtAddCallback(staticGreysBox, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_STATIC_GREY_BUTTON);
   XtAddCallback(symbolicColorsBox, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_DYNAMIC_COLOR_BUTTON);
 
 /*** Set Help callbacks for the File menu ***/
   XtAddCallback(fileMenu_top_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_FILE_BUTTON);
   XtAddCallback(fileMenu_new_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_NEW_BUTTON);
   XtAddCallback(fileMenu_open_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_OPEN_BUTTON);
   XtAddCallback(fileMenu_save_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_SAVE_BUTTON);
   XtAddCallback(fileMenu_saveAs_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_SAVE_AS_BUTTON);
   XtAddCallback(fileMenu_quit_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_QUIT_BUTTON);
 
 /*** Set Help callbacks for the Edit menu ***/
   XtAddCallback(editMenu_top_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_EDIT_BUTTON);
   XtAddCallback(editMenu_undo_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_UNDO_BUTTON);
   XtAddCallback(editMenu_cut_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_CUT_BUTTON);
   XtAddCallback(editMenu_copy_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_COPY_BUTTON);
   XtAddCallback(editMenu_paste_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_PASTE_BUTTON);
   XtAddCallback(editMenu_rotate_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_ROTATE_BUTTON);
   XtAddCallback(rotateMenu, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_ROTATE_BUTTON);
   XtAddCallback(editMenu_flip_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_FLIP_BUTTON);
   XtAddCallback(flipMenu, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_FLIP_BUTTON);
   XtAddCallback(editMenu_scale_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_SCALE_BUTTON);
   XtAddCallback(editMenu_resize_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_RESIZE_ICON_BUTTON);
   XtAddCallback(editMenu_addHS_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_ADD_HOTSPOT_BUTTON);
   XtAddCallback(editMenu_deleteHS_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_DELETE_HOTSPOT_BUTTON);
   XtAddCallback(editMenu_grabImage_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_GRAB_BUTTON);
   XtAddCallback(editMenu_clear_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_CLEAR_ICON_BUTTON);
 
 /*** Set Help callbacks for the Options menu ***/
   XtAddCallback(optionsMenu_top_pb, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_OPTIONS_BUTTON);
   XtAddCallback(optionsMenu_grid, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_VISIBLE_GRID_BUTTON);
   XtAddCallback(optionsMenu_format, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_OUTPUT_FORMAT_BUTTON);
   XtAddCallback(formatMenu, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_OUTPUT_FORMAT_BUTTON);
   XtAddCallback(optionsMenu_magnify, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_MAGNIFICATION_BUTTON);
   XtAddCallback(magnificationMenu, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_MAGNIFICATION_BUTTON);
 
 /*** Set Help callbacks for the Help menu (menu items activated) ***/
   XtAddCallback(helpMenu_intro_pb,
                         XmNactivateCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_INTRODUCTION);
   XtAddCallback(helpMenu_tasks_pb,
                         XmNactivateCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_TASKS);
   XtAddCallback(helpMenu_ref_pb,
                         XmNactivateCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_REFERENCE);
   XtAddCallback(helpMenu_item_pb,
                         XmNactivateCallback,
-                        (XtCallbackProc) HelpOnItemCB,
+                        HelpOnItemCB,
                         (XtPointer)HELP_ON_ITEM);
   XtAddCallback(helpMenu_using_pb,
                         XmNactivateCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_USING_HELP);
   XtAddCallback(helpMenu_version_pb,
                         XmNactivateCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_VERSION);
 
 /*** Set Help callbacks for the Help menu (help on menu items themselves) ***/
   XtAddCallback(helpMenu_top_pb,
                         XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_HELP_BUTTON);
   XtAddCallback(helpMenu_intro_pb,
                         XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_HELP_INTRODUCTION);
   XtAddCallback(helpMenu_tasks_pb,
                         XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_HELP_TASKS);
   XtAddCallback(helpMenu_ref_pb,
                         XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_HELP_REFERENCE);
   XtAddCallback(helpMenu_item_pb,
                         XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_HELP_ON_ITEM);
   XtAddCallback(helpMenu_using_pb,
                         XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_HELP_USING_HELP);
   XtAddCallback(helpMenu_version_pb,
                         XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_HELP_VERSION);
 
 /*** Set Help callbacks for other GUI components ***/
   XtAddCallback(menu1, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_MENUBAR);
   XtAddCallback(queryDialog, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_QUERY);
   XtAddCallback(stdErrDialog, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_ERROR);
   XtAddCallback(newIconDialog, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_NEW_ICON);
   XtAddCallback(fileIODialog, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_FILEIO_ICON);
   XtAddCallback(viewport, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_VIEWPORT);
   XtAddCallback(mainWindow, XmNhelpCallback,
-                        (XtCallbackProc) HelpTriggerCB,
+                        HelpTriggerCB,
                         (XtPointer)HELP_MAIN_WINDOW);
 
 #ifdef DEBUG
@@ -326,8 +326,8 @@ AssignHelpCallbacks( void )
 void
 HelpTriggerCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
 #ifdef DEBUG
   if (debug)
@@ -346,8 +346,8 @@ HelpTriggerCB(
 void
 HelpOnItemCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Widget selWidget;
     int    status;
@@ -403,8 +403,8 @@ HelpOnItemCB(
 void
 HelpHyperlinkCB(
         Widget w,
-        caddr_t client_data_unused,
-        caddr_t call_data )
+        XtPointer client_data_unused,
+        XtPointer call_data )
 {
   DtHelpDialogCallbackStruct *pHyper =
                 (DtHelpDialogCallbackStruct *) call_data;
@@ -421,8 +421,8 @@ HelpHyperlinkCB(
 void
 HelpCloseCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data_unused )
+        XtPointer client_data,
+        XtPointer call_data_unused )
 {
     HelpStruct *pHelp = (HelpStruct *)client_data;
 
@@ -822,9 +822,9 @@ CreateHelpDialog (HelpStruct *pHelp)
     helpDialog = DtCreateHelpDialog(dtIconShell, "helpDlg",
                                             args, i);
     XtAddCallback(helpDialog, DtNhyperLinkCallback,
-                      (XtCallbackProc)HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, NULL);
     XtAddCallback(helpDialog, DtNcloseCallback,
-                      (XtCallbackProc)HelpCloseCB, pHelp);
+                      HelpCloseCB, pHelp);
 
 #ifdef DEBUG
   if (debug)

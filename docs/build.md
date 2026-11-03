@@ -436,6 +436,9 @@ redeclarations, and the fatal Xt error callback carries Xt's non-returning
 contract.
 Dtstyle registers dedicated `int`-argument signal handlers rather than casting
 Xt callbacks or no-argument helpers to the signal ABI.
+DtIcon's help, hyperlink and close callbacks accept Xt's opaque client and call
+data directly, so all help registrations use typed callback entries without
+casts.
 
 To repeat that focused qualification from a configured C23 build tree:
 

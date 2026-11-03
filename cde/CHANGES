@@ -1,4 +1,6 @@
 2026-11-03
+- DtIcon: register help, hyperlink and close callbacks through their exact Xt
+  callback signatures instead of casting legacy `caddr_t` functions.
 - App Builder: emit popup actions and drag-motion handlers with their complete
   Xt contracts, keeping generated applications free of callback casts.
 - DtInfo: register the launcher action-completion and timeout routines through
