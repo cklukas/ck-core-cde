@@ -66,6 +66,11 @@
 #include <X11/Xos_r.h>
 
 static void layout_labels(Widget, Widget, Widget, Widget);
+static void find_appts(Widget, XtPointer, XtPointer);
+static void show_appt(Widget, XtPointer, XtPointer);
+static void f_cancel_cb(Widget, XtPointer, XtPointer);
+static void f_searchrange_cb(Widget, XtPointer, XtPointer);
+static void f_searchall_cb(Widget, XtPointer, XtPointer);
 // misc.c
 extern void _i18n_WidestWidget(int num, Widget *ret, Dimension *dim, ...);
 extern void _i18n_HighestWidget(int num, Widget *ret, Dimension *dim, ...);
@@ -83,8 +88,6 @@ make_find(Calendar *c)
 	Tick		 cursor, begin_range, end_range;
 	char		 buffer[50];
 	int		 i;
-	void 		 find_appts(), show_appt(), f_cancel_cb(), 
-			 f_searchrange_cb(), f_searchall_cb();
 	Arg		 args[3];
 	Dimension	 highest;
 	Widget	 	 highest_label;
@@ -487,7 +490,7 @@ f_get_searchdate(Widget widget, Props *p)
 	return(new_date);
 }
 
-void
+static void
 f_searchall_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	Find *f;
@@ -502,7 +505,7 @@ f_searchall_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 	XtSetSensitive(f->search_from, False);
 }
 
-void
+static void
 f_searchrange_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	Find *f;
@@ -558,8 +561,8 @@ fmt_time_what(
         }
 }
 
-void
-find_appts(Widget widget, XtPointer client_data, XmPushButtonCallbackStruct *cbs)
+static void
+find_appts(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	Calendar *c = calendar;
 	Props *p = (Props*)c->properties;
@@ -766,8 +769,8 @@ find_appts(Widget widget, XtPointer client_data, XmPushButtonCallbackStruct *cbs
         return;
 }
 
-void
-show_appt(Widget widget, XtPointer client_data, XmPushButtonCallbackStruct *cbs)
+static void
+show_appt(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	Calendar *c = calendar;
 
@@ -810,11 +813,11 @@ show_appt(Widget widget, XtPointer client_data, XmPushButtonCallbackStruct *cbs)
 
 }
 
-void
+static void
 f_cancel_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
         Calendar *c = calendar;
         Find      *f;

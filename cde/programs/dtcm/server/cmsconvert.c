@@ -48,7 +48,7 @@
 /*
  * forward declaration of functions used in the file
  */
-static Abb_Appt_4 * _MakeAbbrAppt();
+static Abb_Appt_4 * _MakeAbbrAppt(void);
 
 static CSA_return_code _AttrsToAbbrAppt(uint size, cms_attribute *attrs,
 					Abb_Appt_4 *appt);

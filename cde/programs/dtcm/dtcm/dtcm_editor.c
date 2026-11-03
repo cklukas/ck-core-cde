@@ -54,7 +54,8 @@
 #endif
 
 int debug = 0;
-static Tt_message load_cb();
+static Tt_message load_cb(Tt_message, void *, Tttk_op, Tt_status,
+			  unsigned char *, int, char *, char *);
 
 static const char *ptype = "Dt_AppointmentEditor";
 

@@ -52,15 +52,6 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
-#if LATER
-typedef struct {
-        int data_version;
-        char* target;
-} Cdata;
-
-extern Cdata	*get_cdata();
-extern void	free_cd_from_blist();
-#endif
 extern void	reset_values(void);
 extern void	backup_values(void);
 extern void	blist_write_names(void);

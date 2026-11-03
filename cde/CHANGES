@@ -1,4 +1,9 @@
 2026-11-03
+- C23: remove the calendar RPC headers' obsolete K&R declaration fallbacks;
+  give dtcm parsing, UI, ToolTalk and helper callbacks exact contracts; make
+  clean out-of-tree calendar builds resolve generated and checked-in headers
+  from their owning build and source trees; link libcsa, rpc.cmsd, libDtCmP
+  and the calendar programs with GCC and Clang C23.
 - C23: replace the calendar server's heterogeneous RPC function table with
   exact, typed dispatch adapters; type its lookup and signal callbacks, and
   make libcsa RPC generation work from an out-of-tree build directory.

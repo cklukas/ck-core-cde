@@ -83,7 +83,7 @@ extern time_t		monthadd	(time_t, time_t);
 extern time_t		daylcorr	(time_t, time_t);
 extern time_t		cm_getdate	(char*, struct timeb *);
 
-int yylex();
+int yylex(void);
 extern void yyerror(char *s);
 
 #endif

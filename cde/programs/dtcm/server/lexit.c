@@ -533,6 +533,7 @@ strescapes(char *s)
 
 #ifdef TEST
 
+int
 main(int argc, char ** argv)
 {
   FILE * f;
@@ -552,12 +553,12 @@ main(int argc, char ** argv)
     exit(3);
   }
 
-  while(d=yyylex()) {
+  while((d = yyylex()) != 0) {
     if(argc == 2)
       printf("received %d, text <%s>\n", d, parse_buffer);
   }
 
-  exit(0);
+  return 0;
 }
     
 #endif  

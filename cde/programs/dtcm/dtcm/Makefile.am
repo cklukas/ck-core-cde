@@ -2,8 +2,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtcm dtcm_delete dtcm_insert dtcm_lookup dtcm_editor
 
-AM_CFLAGS = $(DT_INCDIR) $(CSA_INCDIR) -I../../../lib/csa	\
--I../libDtCmP
+AM_CFLAGS = $(DT_INCDIR) $(CSA_INCDIR) -I$(top_srcdir)/lib/csa	\
+-I$(top_srcdir)/programs/dtcm/libDtCmP
 
 LDADD = ../libDtCmP/libDtCmP.a $(LIBCSA) $(DTCLIENTLIBS) $(XTOOLLIB)
 

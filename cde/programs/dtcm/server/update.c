@@ -539,8 +539,6 @@ _AdjustStartEndTimeForUpdateEntry(
 	cms_attribute_value *oldaptr, *newaptr, *endaptr;
 	RepeatEvent	*newre;
 
-extern	void _DtCm_rule_parser();
-
 	/* check to make sure repeating type is not changed */
 	oldaptr = olde->attrs[CSA_ENTRY_ATTR_RECURRENCE_RULE_I].value;
 	newaptr = newe->attrs[CSA_ENTRY_ATTR_RECURRENCE_RULE_I].value;

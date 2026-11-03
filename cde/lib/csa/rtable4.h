@@ -366,7 +366,6 @@ typedef enum Registration_Status_4 Registration_Status_4;
 #define	TABLEPROG ((unsigned long)(100068))
 #define	TABLEVERS_4 ((unsigned long)(4))
 
-#if defined(__STDC__) || defined(__cplusplus)
 #define	rtable_ping ((unsigned long)(0))
 extern  void * _DtCm_rtable_ping_4(void *, _DtCm_Connection *);
 extern  void * _DtCm_rtable_ping_4_svc(void *, struct svc_req *);
@@ -441,85 +440,9 @@ extern  Table_Status_4 * _DtCm_rtable_rename_4(Table_Op_Args_4 *, _DtCm_Connecti
 extern  Table_Status_4 * _DtCm_rtable_rename_4_svc(Table_Op_Args_4 *, struct svc_req *);
 extern int tableprog_4_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
-#else /* K&R C */
-#define	rtable_ping ((unsigned long)(0))
-extern  void * _DtCm_rtable_ping_4();
-extern  void * _DtCm_rtable_ping_4_svc();
-#define	rtable_lookup ((unsigned long)(1))
-extern  Table_Res_4 * _DtCm_rtable_lookup_4();
-extern  Table_Res_4 * _DtCm_rtable_lookup_4_svc();
-#define	rtable_lookup_next_larger ((unsigned long)(2))
-extern  Table_Res_4 * _DtCm_rtable_lookup_next_larger_4();
-extern  Table_Res_4 * _DtCm_rtable_lookup_next_larger_4_svc();
-#define	rtable_lookup_next_smaller ((unsigned long)(3))
-extern  Table_Res_4 * _DtCm_rtable_lookup_next_smaller_4();
-extern  Table_Res_4 * _DtCm_rtable_lookup_next_smaller_4_svc();
-#define	rtable_lookup_range ((unsigned long)(4))
-extern  Table_Res_4 * _DtCm_rtable_lookup_range_4();
-extern  Table_Res_4 * _DtCm_rtable_lookup_range_4_svc();
-#define	rtable_abbreviated_lookup_range ((unsigned long)(5))
-extern  Table_Res_4 * _DtCm_rtable_abbreviated_lookup_range_4();
-extern  Table_Res_4 * _DtCm_rtable_abbreviated_lookup_range_4_svc();
-#define	rtable_insert ((unsigned long)(6))
-extern  Table_Res_4 * _DtCm_rtable_insert_4();
-extern  Table_Res_4 * _DtCm_rtable_insert_4_svc();
-#define	rtable_delete ((unsigned long)(7))
-extern  Table_Res_4 * _DtCm_rtable_delete_4();
-extern  Table_Res_4 * _DtCm_rtable_delete_4_svc();
-#define	rtable_delete_instance ((unsigned long)(8))
-extern  Table_Res_4 * _DtCm_rtable_delete_instance_4();
-extern  Table_Res_4 * _DtCm_rtable_delete_instance_4_svc();
-#define	rtable_change ((unsigned long)(9))
-extern  Table_Res_4 * _DtCm_rtable_change_4();
-extern  Table_Res_4 * _DtCm_rtable_change_4_svc();
-#define	rtable_change_instance ((unsigned long)(10))
-extern  Table_Res_4 * _DtCm_rtable_change_instance_4();
-extern  Table_Res_4 * _DtCm_rtable_change_instance_4_svc();
-#define	rtable_lookup_next_reminder ((unsigned long)(11))
-extern  Table_Res_4 * _DtCm_rtable_lookup_next_reminder_4();
-extern  Table_Res_4 * _DtCm_rtable_lookup_next_reminder_4_svc();
-#define	rtable_check ((unsigned long)(12))
-extern  Table_Status_4 * _DtCm_rtable_check_4();
-extern  Table_Status_4 * _DtCm_rtable_check_4_svc();
-#define	rtable_flush_table ((unsigned long)(13))
-extern  Table_Status_4 * _DtCm_rtable_flush_table_4();
-extern  Table_Status_4 * _DtCm_rtable_flush_table_4_svc();
-#define	rtable_size ((unsigned long)(14))
-extern  int * _DtCm_rtable_size_4();
-extern  int * _DtCm_rtable_size_4_svc();
-#define	register_callback ((unsigned long)(15))
-extern  Registration_Status_4 * _DtCm_register_callback_4();
-extern  Registration_Status_4 * _DtCm_register_callback_4_svc();
-#define	deregister_callback ((unsigned long)(16))
-extern  Registration_Status_4 * _DtCm_deregister_callback_4();
-extern  Registration_Status_4 * _DtCm_deregister_callback_4_svc();
-#define	rtable_set_access ((unsigned long)(17))
-extern  Access_Status_4 * _DtCm_rtable_set_access_4();
-extern  Access_Status_4 * _DtCm_rtable_set_access_4_svc();
-#define	rtable_get_access ((unsigned long)(18))
-extern  Access_Args_4 * _DtCm_rtable_get_access_4();
-extern  Access_Args_4 * _DtCm_rtable_get_access_4_svc();
-#define	rtable_abbreviated_lookup_key_range ((unsigned long)(19))
-extern  Table_Res_4 * _DtCm_rtable_abbreviated_lookup_key_range_4();
-extern  Table_Res_4 * _DtCm_rtable_abbreviated_lookup_key_range_4_svc();
-#define	rtable_gmtoff ((unsigned long)(20))
-extern  long * _DtCm_rtable_gmtoff_4();
-extern  long * _DtCm_rtable_gmtoff_4_svc();
-#define	rtable_create ((unsigned long)(21))
-extern  Table_Status_4 * _DtCm_rtable_create_4();
-extern  Table_Status_4 * _DtCm_rtable_create_4_svc();
-#define	rtable_remove ((unsigned long)(22))
-extern  Table_Status_4 * _DtCm_rtable_remove_4();
-extern  Table_Status_4 * _DtCm_rtable_remove_4_svc();
-#define	rtable_rename ((unsigned long)(23))
-extern  Table_Status_4 * _DtCm_rtable_rename_4();
-extern  Table_Status_4 * _DtCm_rtable_rename_4_svc();
-extern int tableprog_4_freeresult();
-#endif /* K&R C */
 
 /* the xdr functions */
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern  bool_t _DtCm_xdr_Buffer_4(XDR *, Buffer_4*);
 extern  bool_t _DtCm_xdr_Interval_4(XDR *, Interval_4*);
 extern  bool_t _DtCm_xdr_Period_4(XDR *, Period_4*);
@@ -555,43 +478,6 @@ extern  bool_t _DtCm_xdr_Table_Op_Args_4(XDR *, Table_Op_Args_4*);
 extern  bool_t _DtCm_xdr_Table_Status_4(XDR *, Table_Status_4*);
 extern  bool_t _DtCm_xdr_Registration_Status_4(XDR *, Registration_Status_4*);
 
-#else /* K&R C */
-extern bool_t _DtCm_xdr_Buffer_4();
-extern bool_t _DtCm_xdr_Interval_4();
-extern bool_t _DtCm_xdr_Period_4();
-extern bool_t _DtCm_xdr_Event_Type_4();
-extern bool_t _DtCm_xdr_Options_4();
-extern bool_t _DtCm_xdr_Tag_4();
-extern bool_t _DtCm_xdr_Privacy_Level_4();
-extern bool_t _DtCm_xdr_Attribute_4();
-extern bool_t _DtCm_xdr_Attr_4();
-extern bool_t _DtCm_xdr_Except_4();
-extern bool_t _DtCm_xdr_Exception_4();
-extern bool_t _DtCm_xdr_Id_4();
-extern bool_t _DtCm_xdr_Uid_4();
-extern bool_t _DtCm_xdr_Appt_Status_4();
-extern bool_t _DtCm_xdr_Appt_4();
-extern bool_t _DtCm_xdr_Abb_Appt_4();
-extern bool_t _DtCm_xdr_Apptid_4();
-extern bool_t _DtCm_xdr_Reminder_4();
-extern bool_t _DtCm_xdr_Table_Res_Type_4();
-extern bool_t _DtCm_xdr_Table_Res_List_4();
-extern bool_t _DtCm_xdr_Access_Status_4();
-extern bool_t _DtCm_xdr_Table_Res_4();
-extern bool_t _DtCm_xdr_Access_Entry_4();
-extern bool_t _DtCm_xdr_Access_Args_4();
-extern bool_t _DtCm_xdr_Range_4();
-extern bool_t _DtCm_xdr_Keyrange_4();
-extern bool_t _DtCm_xdr_Uidopt_4();
-extern bool_t _DtCm_xdr_Table_Args_Type_4();
-extern bool_t _DtCm_xdr_Args_4();
-extern bool_t _DtCm_xdr_Table_Args_4();
-extern bool_t _DtCm_xdr_Registration_4();
-extern bool_t _DtCm_xdr_Table_Op_Args_4();
-extern bool_t _DtCm_xdr_Table_Status_4();
-extern bool_t _DtCm_xdr_Registration_Status_4();
-
-#endif /* K&R C */
 
 #ifdef __cplusplus
 }

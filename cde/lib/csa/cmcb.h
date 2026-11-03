@@ -114,22 +114,14 @@ typedef struct cmcb_update_callback_args cmcb_update_callback_args;
 
 #define	AGENTVERS_2 ((unsigned long)(2))
 
-#if defined(__STDC__) || defined(__cplusplus)
 #define	CMCB_UPDATE_CALLBACK ((unsigned long)(1))
 extern  void * cmcb_update_callback_2(cmcb_update_callback_args *, CLIENT *);
 extern  void * cmcb_update_callback_2_svc(cmcb_update_callback_args *, struct svc_req *);
 extern int agentprog_2_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
-#else /* K&R C */
-#define	CMCB_UPDATE_CALLBACK ((unsigned long)(1))
-extern  void * cmcb_update_callback_2();
-extern  void * cmcb_update_callback_2_svc();
-extern int agentprog_2_freeresult();
-#endif /* K&R C */
 
 /* the xdr functions */
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern  bool_t xdr_cmcb_cal_attr_data(XDR *, cmcb_cal_attr_data*);
 extern  bool_t xdr_cmcb_add_entry_data(XDR *, cmcb_add_entry_data*);
 extern  bool_t xdr_cmcb_delete_entry_data(XDR *, cmcb_delete_entry_data*);
@@ -137,15 +129,6 @@ extern  bool_t xdr_cmcb_update_entry_data(XDR *, cmcb_update_entry_data*);
 extern  bool_t xdr_cmcb_update_data(XDR *, cmcb_update_data*);
 extern  bool_t xdr_cmcb_update_callback_args(XDR *, cmcb_update_callback_args*);
 
-#else /* K&R C */
-extern bool_t xdr_cmcb_cal_attr_data();
-extern bool_t xdr_cmcb_add_entry_data();
-extern bool_t xdr_cmcb_delete_entry_data();
-extern bool_t xdr_cmcb_update_entry_data();
-extern bool_t xdr_cmcb_update_data();
-extern bool_t xdr_cmcb_update_callback_args();
-
-#endif /* K&R C */
 
 #ifdef __cplusplus
 }

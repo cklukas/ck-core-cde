@@ -63,6 +63,8 @@
 #include "misc.h"
 #include "convert4-5.h"
 #include "lutil.h"
+#include "lexer.h"
+#include "parser.h"
 
 extern	int	debug;
 extern	char	*pgname;
@@ -321,10 +323,6 @@ start_log(_DtCmsCalendar *cal, char *filename)
 	int	version;
 	struct stat info;
 	struct passwd *pw;
-	extern void setinput(FILE *);
-	extern int yyyparse();
-	extern int yyywrap(FILE *);
-
 	if (cal == NULL || filename == NULL)
 		return(CSA_E_FAILURE);
 

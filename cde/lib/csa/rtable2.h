@@ -278,7 +278,6 @@ typedef enum Registration_Status_2 Registration_Status_2;
 #define	TABLEPROG ((unsigned long)(100068))
 #define	TABLEVERS_2 ((unsigned long)(2))
 
-#if defined(__STDC__) || defined(__cplusplus)
 #define	rtable_ping ((unsigned long)(0))
 extern  void * _DtCm_rtable_ping_2(void *, _DtCm_Connection *);
 extern  void * _DtCm_rtable_ping_2_svc(void *, struct svc_req *);
@@ -338,70 +337,9 @@ extern  Access_Args_2 * _DtCm_rtable_get_access_2(Access_Args_2 *, _DtCm_Connect
 extern  Access_Args_2 * _DtCm_rtable_get_access_2_svc(Access_Args_2 *, struct svc_req *);
 extern int tableprog_2_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
-#else /* K&R C */
-#define	rtable_ping ((unsigned long)(0))
-extern  void * _DtCm_rtable_ping_2();
-extern  void * _DtCm_rtable_ping_2_svc();
-#define	rtable_lookup ((unsigned long)(1))
-extern  Table_Res_2 * _DtCm_rtable_lookup_2();
-extern  Table_Res_2 * _DtCm_rtable_lookup_2_svc();
-#define	rtable_lookup_next_larger ((unsigned long)(2))
-extern  Table_Res_2 * _DtCm_rtable_lookup_next_larger_2();
-extern  Table_Res_2 * _DtCm_rtable_lookup_next_larger_2_svc();
-#define	rtable_lookup_next_smaller ((unsigned long)(3))
-extern  Table_Res_2 * _DtCm_rtable_lookup_next_smaller_2();
-extern  Table_Res_2 * _DtCm_rtable_lookup_next_smaller_2_svc();
-#define	rtable_lookup_range ((unsigned long)(4))
-extern  Table_Res_2 * _DtCm_rtable_lookup_range_2();
-extern  Table_Res_2 * _DtCm_rtable_lookup_range_2_svc();
-#define	rtable_abbreviated_lookup_range ((unsigned long)(5))
-extern  Table_Res_2 * _DtCm_rtable_abbreviated_lookup_range_2();
-extern  Table_Res_2 * _DtCm_rtable_abbreviated_lookup_range_2_svc();
-#define	rtable_insert ((unsigned long)(6))
-extern  Table_Res_2 * _DtCm_rtable_insert_2();
-extern  Table_Res_2 * _DtCm_rtable_insert_2_svc();
-#define	rtable_delete ((unsigned long)(7))
-extern  Table_Res_2 * _DtCm_rtable_delete_2();
-extern  Table_Res_2 * _DtCm_rtable_delete_2_svc();
-#define	rtable_delete_instance ((unsigned long)(8))
-extern  Table_Res_2 * _DtCm_rtable_delete_instance_2();
-extern  Table_Res_2 * _DtCm_rtable_delete_instance_2_svc();
-#define	rtable_change ((unsigned long)(9))
-extern  Table_Res_2 * _DtCm_rtable_change_2();
-extern  Table_Res_2 * _DtCm_rtable_change_2_svc();
-#define	rtable_change_instance ((unsigned long)(10))
-extern  Table_Res_2 * _DtCm_rtable_change_instance_2();
-extern  Table_Res_2 * _DtCm_rtable_change_instance_2_svc();
-#define	rtable_lookup_next_reminder ((unsigned long)(11))
-extern  Table_Res_2 * _DtCm_rtable_lookup_next_reminder_2();
-extern  Table_Res_2 * _DtCm_rtable_lookup_next_reminder_2_svc();
-#define	rtable_check ((unsigned long)(12))
-extern  Table_Status_2 * _DtCm_rtable_check_2();
-extern  Table_Status_2 * _DtCm_rtable_check_2_svc();
-#define	rtable_flush_table ((unsigned long)(13))
-extern  Table_Status_2 * _DtCm_rtable_flush_table_2();
-extern  Table_Status_2 * _DtCm_rtable_flush_table_2_svc();
-#define	rtable_size ((unsigned long)(14))
-extern  int * _DtCm_rtable_size_2();
-extern  int * _DtCm_rtable_size_2_svc();
-#define	register_callback ((unsigned long)(15))
-extern  Registration_Status_2 * _DtCm_register_callback_2();
-extern  Registration_Status_2 * _DtCm_register_callback_2_svc();
-#define	deregister_callback ((unsigned long)(16))
-extern  Registration_Status_2 * _DtCm_deregister_callback_2();
-extern  Registration_Status_2 * _DtCm_deregister_callback_2_svc();
-#define	rtable_set_access ((unsigned long)(17))
-extern  Access_Status_2 * _DtCm_rtable_set_access_2();
-extern  Access_Status_2 * _DtCm_rtable_set_access_2_svc();
-#define	rtable_get_access ((unsigned long)(18))
-extern  Access_Args_2 * _DtCm_rtable_get_access_2();
-extern  Access_Args_2 * _DtCm_rtable_get_access_2_svc();
-extern int tableprog_2_freeresult();
-#endif /* K&R C */
 
 /* the xdr functions */
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern  bool_t _DtCm_xdr_Buffer_2(XDR *, Buffer_2*);
 extern  bool_t _DtCm_xdr_Transaction_2(XDR *, Transaction_2*);
 extern  bool_t _DtCm_xdr_Period_2(XDR *, Period_2*);
@@ -430,36 +368,6 @@ extern  bool_t _DtCm_xdr_Registration_2(XDR *, Registration_2*);
 extern  bool_t _DtCm_xdr_Table_Status_2(XDR *, Table_Status_2*);
 extern  bool_t _DtCm_xdr_Registration_Status_2(XDR *, Registration_Status_2*);
 
-#else /* K&R C */
-extern bool_t _DtCm_xdr_Buffer_2();
-extern bool_t _DtCm_xdr_Transaction_2();
-extern bool_t _DtCm_xdr_Period_2();
-extern bool_t _DtCm_xdr_Tag_2();
-extern bool_t _DtCm_xdr_Attribute_2();
-extern bool_t _DtCm_xdr_Attr_2();
-extern bool_t _DtCm_xdr_Except_2();
-extern bool_t _DtCm_xdr_Exception_2();
-extern bool_t _DtCm_xdr_Id_2();
-extern bool_t _DtCm_xdr_Uid_2();
-extern bool_t _DtCm_xdr_Appt_2();
-extern bool_t _DtCm_xdr_Abb_Appt_2();
-extern bool_t _DtCm_xdr_Apptid_2();
-extern bool_t _DtCm_xdr_Reminder_2();
-extern bool_t _DtCm_xdr_Table_Res_Type_2();
-extern bool_t _DtCm_xdr_Table_Res_List_2();
-extern bool_t _DtCm_xdr_Access_Status_2();
-extern bool_t _DtCm_xdr_Table_Res_2();
-extern bool_t _DtCm_xdr_Access_Entry_2();
-extern bool_t _DtCm_xdr_Access_Args_2();
-extern bool_t _DtCm_xdr_Range_2();
-extern bool_t _DtCm_xdr_Table_Args_Type_2();
-extern bool_t _DtCm_xdr_Args_2();
-extern bool_t _DtCm_xdr_Table_Args_2();
-extern bool_t _DtCm_xdr_Registration_2();
-extern bool_t _DtCm_xdr_Table_Status_2();
-extern bool_t _DtCm_xdr_Registration_Status_2();
-
-#endif /* K&R C */
 
 #ifdef __cplusplus
 }

@@ -98,7 +98,7 @@ static int cm_beep = 0;			/* beep reminder */
 static int cm_open = 0;			/* open reminder */
 static int cm_mail = 0;			/* mail reminder */
 
-static void cm_args();			/* parse command line */
+static void cm_args(int, char **);	/* parse command line */
 
 static char**
 grab(char **argv,				/* command line arguments */
@@ -246,7 +246,7 @@ prompt_for_insert(Props *p) {
 	
 }
 
-void
+int
 main(int argc, char **argv)
 {
 	int		cnt, status = 0;
@@ -373,5 +373,5 @@ main(int argc, char **argv)
 	free(p);
 	free(uname);
 	free(loc);
-        exit(status);
+	return status;
 }

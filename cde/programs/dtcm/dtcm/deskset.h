@@ -75,6 +75,6 @@ extern int		ds_force_popup_on_screen(Widget, int*, int*);
 extern void		ds_get_screen_size(Widget, int*, int*);
 extern int		ds_position_popup(Widget, Widget,
 							ds_location_op);
-extern char		*ds_relname();
+extern char		*ds_relname(void);
 
 #endif

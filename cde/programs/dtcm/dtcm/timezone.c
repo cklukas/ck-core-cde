@@ -61,6 +61,12 @@
 #include "select.h"
 #include "help.h"
 
+static void tz_customtime_cb(Widget, XtPointer, XtPointer);
+static void tz_mytime_cb(Widget, XtPointer, XtPointer);
+static void tz_apply_cb(Widget, XtPointer, XtPointer);
+static void tz_cancel_cb(Widget, XtPointer, XtPointer);
+static void tz_ok_cb(Widget, XtPointer, XtPointer);
+
 extern caddr_t
 make_timezone(Calendar *c)
 {
@@ -71,8 +77,6 @@ make_timezone(Calendar *c)
 	Arg args[10];
 	char buf[BUFSIZ], tmp_buf[BUFSIZ] = "";
 	char *title;
-	void tz_customtime_cb(), tz_mytime_cb(), 
-			tz_apply_cb(), tz_cancel_cb(), tz_ok_cb();
 
 	if (c->timezone == NULL) {
                 c->timezone = (caddr_t)ckalloc(sizeof(Timezone));
@@ -341,7 +345,7 @@ refresh_timezone(Timezone *t)
     }
 }
 
-void
+static void
 tz_mytime_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	Timezone *t;
@@ -357,7 +361,7 @@ tz_mytime_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 	XtSetSensitive(t->hourlabel, !state->set);
 }
 
-void
+static void
 tz_customtime_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	Timezone *t;
@@ -426,7 +430,7 @@ tz_set_timezone(Calendar *c, Timezone *t)
       add_all_todo((ToDo*)c->todo);
 }
 
-void
+static void
 tz_apply_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	Calendar *c;
@@ -438,7 +442,7 @@ tz_apply_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 }
 
  
-void
+static void
 tz_ok_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	Calendar *c;
@@ -451,7 +455,7 @@ tz_ok_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 	XtPopdown(t->frame);
 }
 
-void
+static void
 tz_cancel_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	Calendar *c;

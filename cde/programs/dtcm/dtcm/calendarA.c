@@ -151,18 +151,13 @@ extern int errno;
 #define NL_CAT_LOCALE       0
 #endif
 
-extern time_t timelocal();	/* LINT */
-extern char * getlogin();	/* LINT */
-extern void(*sigset())();
 extern int cmtt_init(char *, Calendar *, XtAppContext, Widget);
 extern void show_about(Widget, XtPointer, XtPointer);
 
 
 static struct itimerval timer;
-extern u_long gettransient();
 extern void xtcallback(XtPointer, int *, XtInputId *);
 extern int getfdset(fd_set);
-extern Tick prevnday_exacttime();
 extern void quit_handler(Widget, XtPointer, XtPointer);
 static void sig_int_handler(int sig);
 extern void find_cb(Widget, XtPointer, XtPointer);
@@ -189,13 +184,14 @@ static Boolean init_fonts(Calendar *);
 static XFontSet get_bold_font(Widget, String);
 static void logon_retry(XtPointer data, XtIntervalId *dummy);
 static int newXErrorHandler(Display *, XErrorEvent *);
+static void view_appt_cb(Widget, XtPointer, XtPointer);
+static void view_todo_cb(Widget, XtPointer, XtPointer);
+static void init_strings(void);
 
 static int (*oldXErrorHandler)(Display *, XErrorEvent *);
 
 // cmtt.c
 void DieFromToolTalkError(Calendar *c, char *errfmt, Tt_status status);
-
-void init_strings();
 
 int		child;
 int		yyylineno;
@@ -989,7 +985,6 @@ void view_year_cb( Widget w, XtPointer data, XtPointer cbs)
 static void
 make_view_menu(Calendar *c)
 {
-	void view_appt_cb(), view_todo_cb();
         Widget view_menu, day, week, month, year, appt_list, tz,
 		view_btn, sep, find, go_to;
         XmString day_str, week_str, month_str, year_str, tz_str, apptlist_str,
@@ -1149,7 +1144,7 @@ timezone_cb(Widget w, XtPointer item_no, XtPointer cbs)
 	_DtTurnOffHourGlass(c->frame);
 }
 
-void
+static void
 view_appt_cb(Widget w, XtPointer item_no, XtPointer cbs)
 {
 	Calendar	*c = calendar;
@@ -1159,7 +1154,7 @@ view_appt_cb(Widget w, XtPointer item_no, XtPointer cbs)
 	_DtTurnOffHourGlass(c->frame);
 }
 
-void
+static void
 view_todo_cb(Widget w, XtPointer item_no, XtPointer cbs)
 {
 	Calendar	*c = calendar;
@@ -2935,7 +2930,7 @@ today_inrange(Calendar *c, time_t day_in_range) {
         inrange = in_range(start, stop, time(0));
 	return inrange;
 }
-void
+static void
 init_strings(void)
 {
 	char *display_lang="C";

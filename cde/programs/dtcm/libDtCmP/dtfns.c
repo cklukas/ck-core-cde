@@ -83,6 +83,7 @@ static 	char sccsid[] = "@(#)dtfns.c 1.3 94/11/07 Copyr 1993 Sun Microsystems, I
 #include "dtfns.h"
 
 extern char *strdup(const char *);
+extern char *__nis_local_root(void);
 
 /*
  * Names found in the initial context.  Used by isa_helix_name()
@@ -471,7 +472,6 @@ void
 dtfns_myorg_name(char *buf, int len)
 
 {
-	char		*__nis_local_root();
 	static char	*myorg_name;
 	char		*principal_name;
 	char		*host_domain;

@@ -504,7 +504,6 @@ typedef struct cms_delete_args cms_delete_args;
 #define	TABLEPROG ((unsigned long)(100068))
 #define	TABLEVERS ((unsigned long)(5))
 
-#if defined(__STDC__) || defined(__cplusplus)
 #define	CMS_PING ((unsigned long)(0))
 extern  void * cms_ping_5(void *, _DtCm_Connection *);
 extern  void * cms_ping_5_svc(void *, struct svc_req *);
@@ -564,70 +563,9 @@ extern  CSA_return_code * cms_delete_entry_5(cms_delete_args *, _DtCm_Connection
 extern  CSA_return_code * cms_delete_entry_5_svc(cms_delete_args *, struct svc_req *);
 extern int tableprog_5_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
-#else /* K&R C */
-#define	CMS_PING ((unsigned long)(0))
-extern  void * cms_ping_5();
-extern  void * cms_ping_5_svc();
-#define	CMS_LIST_CALENDARS ((unsigned long)(1))
-extern  cms_list_calendars_res * cms_list_calendars_5();
-extern  cms_list_calendars_res * cms_list_calendars_5_svc();
-#define	CMS_OPEN_CALENDAR ((unsigned long)(2))
-extern  cms_open_res * cms_open_calendar_5();
-extern  cms_open_res * cms_open_calendar_5_svc();
-#define	CMS_CREATE_CALENDAR ((unsigned long)(3))
-extern  CSA_return_code * cms_create_calendar_5();
-extern  CSA_return_code * cms_create_calendar_5_svc();
-#define	CMS_REMOVE_CALENDAR ((unsigned long)(4))
-extern  CSA_return_code * cms_remove_calendar_5();
-extern  CSA_return_code * cms_remove_calendar_5_svc();
-#define	CMS_REGISTER ((unsigned long)(5))
-extern  CSA_return_code * cms_register_5();
-extern  CSA_return_code * cms_register_5_svc();
-#define	CMS_UNREGISTER ((unsigned long)(6))
-extern  CSA_return_code * cms_unregister_5();
-extern  CSA_return_code * cms_unregister_5_svc();
-#define	CMS_ENUMERATE_CALENDAR_ATTR ((unsigned long)(7))
-extern  cms_enumerate_calendar_attr_res * cms_enumerate_calendar_attr_5();
-extern  cms_enumerate_calendar_attr_res * cms_enumerate_calendar_attr_5_svc();
-#define	CMS_GET_CALENDAR_ATTR ((unsigned long)(8))
-extern  cms_get_cal_attr_res * cms_get_calendar_attr_5();
-extern  cms_get_cal_attr_res * cms_get_calendar_attr_5_svc();
-#define	CMS_SET_CALENDAR_ATTR ((unsigned long)(9))
-extern  CSA_return_code * cms_set_calendar_attr_5();
-extern  CSA_return_code * cms_set_calendar_attr_5_svc();
-#define	CMS_ARCHIVE ((unsigned long)(10))
-extern  cms_archive_res * cms_archive_5();
-extern  cms_archive_res * cms_archive_5_svc();
-#define	CMS_RESTORE ((unsigned long)(11))
-extern  CSA_return_code * cms_restore_5();
-extern  CSA_return_code * cms_restore_5_svc();
-#define	CMS_LOOKUP_REMINDER ((unsigned long)(12))
-extern  cms_reminder_res * cms_lookup_reminder_5();
-extern  cms_reminder_res * cms_lookup_reminder_5_svc();
-#define	CMS_LOOKUP_ENTRIES ((unsigned long)(13))
-extern  cms_entries_res * cms_lookup_entries_5();
-extern  cms_entries_res * cms_lookup_entries_5_svc();
-#define	CMS_ENUMERATE_SEQUENCE ((unsigned long)(14))
-extern  cms_entries_res * cms_enumerate_sequence_5();
-extern  cms_entries_res * cms_enumerate_sequence_5_svc();
-#define	CMS_GET_ENTRY_ATTR ((unsigned long)(15))
-extern  cms_get_entry_attr_res * cms_get_entry_attr_5();
-extern  cms_get_entry_attr_res * cms_get_entry_attr_5_svc();
-#define	CMS_INSERT_ENTRY ((unsigned long)(16))
-extern  cms_entry_res * cms_insert_entry_5();
-extern  cms_entry_res * cms_insert_entry_5_svc();
-#define	CMS_UPDATE_ENTRY ((unsigned long)(17))
-extern  cms_entry_res * cms_update_entry_5();
-extern  cms_entry_res * cms_update_entry_5_svc();
-#define	CMS_DELETE_ENTRY ((unsigned long)(18))
-extern  CSA_return_code * cms_delete_entry_5();
-extern  CSA_return_code * cms_delete_entry_5_svc();
-extern int tableprog_5_freeresult();
-#endif /* K&R C */
 
 /* the xdr functions */
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern  bool_t xdr_cms_name(XDR *, cms_name*);
 extern  bool_t xdr_buffer(XDR *, buffer*);
 extern  bool_t xdr_cms_access_entry(XDR *, cms_access_entry*);
@@ -662,42 +600,6 @@ extern  bool_t xdr_cms_insert_args(XDR *, cms_insert_args*);
 extern  bool_t xdr_cms_update_args(XDR *, cms_update_args*);
 extern  bool_t xdr_cms_delete_args(XDR *, cms_delete_args*);
 
-#else /* K&R C */
-extern bool_t xdr_cms_name();
-extern bool_t xdr_buffer();
-extern bool_t xdr_cms_access_entry();
-extern bool_t xdr_cms_key();
-extern bool_t xdr_cms_attr_name();
-extern bool_t xdr_cms_attribute();
-extern bool_t xdr_cms_entry();
-extern bool_t xdr_cms_enumerate_calendar_attr_res();
-extern bool_t xdr_cms_list_calendars_res();
-extern bool_t xdr_cms_open_args();
-extern bool_t xdr_cms_open_res();
-extern bool_t xdr_cms_create_args();
-extern bool_t xdr_cms_remove_args();
-extern bool_t xdr_cms_register_args();
-extern bool_t xdr_cms_get_cal_attr_res();
-extern bool_t xdr_cms_get_cal_attr_args();
-extern bool_t xdr_cms_set_cal_attr_args();
-extern bool_t xdr_cms_archive_res();
-extern bool_t xdr_cms_archive_args();
-extern bool_t xdr_cms_restore_args();
-extern bool_t xdr_cms_reminder_ref();
-extern bool_t xdr_cms_reminder_res();
-extern bool_t xdr_cms_reminder_args();
-extern bool_t xdr_cms_entries_res();
-extern bool_t xdr_cms_lookup_entries_args();
-extern bool_t xdr_cms_enumerate_args();
-extern bool_t xdr_cms_get_entry_attr_res_item();
-extern bool_t xdr_cms_get_entry_attr_res();
-extern bool_t xdr_cms_get_entry_attr_args();
-extern bool_t xdr_cms_entry_res();
-extern bool_t xdr_cms_insert_args();
-extern bool_t xdr_cms_update_args();
-extern bool_t xdr_cms_delete_args();
-
-#endif /* K&R C */
 
 #ifdef __cplusplus
 }

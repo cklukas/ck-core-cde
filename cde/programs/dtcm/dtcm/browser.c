@@ -88,6 +88,7 @@ static void mail_cb(Widget, XtPointer, XtPointer);
 static void mb_box_notify(Widget, XtPointer, XtPointer);
 static void mb_update_handler(CSA_session_handle, CSA_flags, CSA_buffer,
 			      CSA_buffer, CSA_extension *);
+static void mb_update_array(char *, Calendar *);
 
 extern void scrub_attr_list(Dtcm_appointment *);
 
@@ -132,7 +133,6 @@ br_display(Calendar *c) {
         Browser		*b = (Browser *)c->browser;
 	BlistData	*bd;
 	Browselist	*bl = (Browselist *)c->browselist;
-	void		mb_update_array();
 
 	if (!b)
 		return;
@@ -1036,7 +1036,7 @@ mb_update_segs(Browser *b, Tick tick, Tick dur, int *start_index, int *end_index
                         b->multi_array[i]--;
 }
 
-void
+static void
 mb_update_array(char *entry_text, Calendar *c)
 {
 	int			start_ind, end_ind, i, r_cnt;

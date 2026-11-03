@@ -176,5 +176,6 @@ typedef struct _RepeatEventState {
 
 extern void _DtCm_free_re(RepeatEvent *);
 extern void _DtCm_free_re_state(RepeatEventState *);
+extern int _DtCm_rule_parser(void);
 
 #endif /* _RERULE_H */

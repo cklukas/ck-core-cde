@@ -86,8 +86,8 @@ static  char sccsid[] = "@(#)tempbr.c 1.48 95/03/28 Copyr 1991 Sun Microsystems,
 #include "cmfns.h"
 #endif
 
-static void tb_cancel_cb();
-static void tb_close_cb();
+static void tb_cancel_cb(Widget, XtPointer, XtPointer);
+static void tb_close_cb(Widget, XtPointer, XtPointer);
 static void tempbr_show_cb(Widget w, XtPointer data, XtPointer cbs);
 #if defined(__linux__)
 #include <string.h>
@@ -400,7 +400,7 @@ static void
 tb_cancel_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
         Calendar *c;
         Tempbr      *tb;

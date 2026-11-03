@@ -102,7 +102,6 @@ extern int	ldom		(Tick);
 extern Tick	lower_bound	(int, Tick);
 extern Tick	lowerbound	(Tick);
 extern boolean_t magic_time	(Tick t);
-extern Tick	midnight	();
 extern int	minutes_to_seconds(int);
 extern int	minute		(Tick);
 extern int	month		(Tick);

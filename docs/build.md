@@ -179,6 +179,13 @@ argument and result types. Its tree/list selection hooks and signal handlers
 are exact as well, so the complete `rpc.cmsd` server builds and links in both
 C23 configurations. The libcsa RPC-generation rules resolve all templates and
 filter scripts through `$(srcdir)`, allowing the same clean out-of-tree build.
+The checked-in calendar RPC v2-v5 headers now expose one typed interface instead
+of retaining alternate K&R declarations. Out-of-tree calendar builds take the
+generated `agent.h` from the build tree while resolving checked-in CSA and
+libDtCmP headers from the source tree. The dtcm parser query hook, Xt callbacks,
+ToolTalk load callbacks, session helpers and standalone entry points likewise
+use their exact contracts. As a result, clean libcsa, libDtCmP, `rpc.cmsd` and
+calendar-program builds link under both GCC and Clang C23.
 
 To repeat that focused qualification from a configured C23 build tree:
 
@@ -195,7 +202,9 @@ make -j4 -C programs/dtdocbook LEX=flex
 make -j4 -C programs/dtcalc
 make -j4 -C programs/dtpad
 make -j4 -C programs/dtpdm
+make -j4 -C programs/dtcm/libDtCmP
 make -j4 -C programs/dtcm/server
+make -j4 -C programs/dtcm/dtcm
 ```
 
 This focused result does not imply that the rest of CDE is C23-clean. The

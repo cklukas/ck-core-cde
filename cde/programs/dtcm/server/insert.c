@@ -91,7 +91,6 @@ _DtCmsInsertEntry(_DtCmsCalendar *cal, cms_entry *entry)
 	cms_attribute	*aptr;
 	RepeatEvent	*re = NULL;
 	RepeatEventState *res = NULL;
-	extern		void _DtCm_rule_parser();
 	uint		count;
 	int		i;
 

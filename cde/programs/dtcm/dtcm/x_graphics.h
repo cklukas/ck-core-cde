@@ -46,7 +46,6 @@
 extern void	x_day_header(void *);
 extern void	x_day_timeslots(void *, int, Boolean);
 extern void	x_finish_printer(void *);
-extern void	x_finish_std_month();
 extern int	x_get_day_lines_per_page(void *);
 extern int	x_get_month_lines_per_page(void *);
 extern int	x_get_week_lines_per_page(void *);

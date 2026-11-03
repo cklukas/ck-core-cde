@@ -85,9 +85,10 @@
 
 static int week_xytoclock(Week *w, int x, int y);
 static int week_xytohour(Week *w, int x, int y);
-static void fill_day();
-static void draw_week();
-static void draw_chart();
+static void fill_day(Calendar *, Week *, int, int, int, Paint_cache *, int,
+		     XRectangle *);
+static void draw_week(Calendar *, XRectangle *, Boundary);
+static void draw_chart(Calendar *, Week *, XRectangle *);
 static void quick_button_cb(Widget, XtPointer, XtPointer);
 static void display_hot_btn(Calendar *, int, int);
 static void clear_hot_btn(Calendar *, int);

@@ -324,7 +324,6 @@ typedef enum Registration_Status_3 Registration_Status_3;
 #define	TABLEPROG ((unsigned long)(100068))
 #define	TABLEVERS_3 ((unsigned long)(3))
 
-#if defined(__STDC__) || defined(__cplusplus)
 #define	rtable_ping ((unsigned long)(0))
 extern  void * _DtCm_rtable_ping_3(void *, _DtCm_Connection *);
 extern  void * _DtCm_rtable_ping_3_svc(void *, struct svc_req *);
@@ -390,76 +389,9 @@ extern  long * _DtCm_rtable_gmtoff_3(void *, _DtCm_Connection *);
 extern  long * _DtCm_rtable_gmtoff_3_svc(void *, struct svc_req *);
 extern int tableprog_3_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
-#else /* K&R C */
-#define	rtable_ping ((unsigned long)(0))
-extern  void * _DtCm_rtable_ping_3();
-extern  void * _DtCm_rtable_ping_3_svc();
-#define	rtable_lookup ((unsigned long)(1))
-extern  Table_Res_3 * _DtCm_rtable_lookup_3();
-extern  Table_Res_3 * _DtCm_rtable_lookup_3_svc();
-#define	rtable_lookup_next_larger ((unsigned long)(2))
-extern  Table_Res_3 * _DtCm_rtable_lookup_next_larger_3();
-extern  Table_Res_3 * _DtCm_rtable_lookup_next_larger_3_svc();
-#define	rtable_lookup_next_smaller ((unsigned long)(3))
-extern  Table_Res_3 * _DtCm_rtable_lookup_next_smaller_3();
-extern  Table_Res_3 * _DtCm_rtable_lookup_next_smaller_3_svc();
-#define	rtable_lookup_range ((unsigned long)(4))
-extern  Table_Res_3 * _DtCm_rtable_lookup_range_3();
-extern  Table_Res_3 * _DtCm_rtable_lookup_range_3_svc();
-#define	rtable_abbreviated_lookup_range ((unsigned long)(5))
-extern  Table_Res_3 * _DtCm_rtable_abbreviated_lookup_range_3();
-extern  Table_Res_3 * _DtCm_rtable_abbreviated_lookup_range_3_svc();
-#define	rtable_insert ((unsigned long)(6))
-extern  Table_Res_3 * _DtCm_rtable_insert_3();
-extern  Table_Res_3 * _DtCm_rtable_insert_3_svc();
-#define	rtable_delete ((unsigned long)(7))
-extern  Table_Res_3 * _DtCm_rtable_delete_3();
-extern  Table_Res_3 * _DtCm_rtable_delete_3_svc();
-#define	rtable_delete_instance ((unsigned long)(8))
-extern  Table_Res_3 * _DtCm_rtable_delete_instance_3();
-extern  Table_Res_3 * _DtCm_rtable_delete_instance_3_svc();
-#define	rtable_change ((unsigned long)(9))
-extern  Table_Res_3 * _DtCm_rtable_change_3();
-extern  Table_Res_3 * _DtCm_rtable_change_3_svc();
-#define	rtable_change_instance ((unsigned long)(10))
-extern  Table_Res_3 * _DtCm_rtable_change_instance_3();
-extern  Table_Res_3 * _DtCm_rtable_change_instance_3_svc();
-#define	rtable_lookup_next_reminder ((unsigned long)(11))
-extern  Table_Res_3 * _DtCm_rtable_lookup_next_reminder_3();
-extern  Table_Res_3 * _DtCm_rtable_lookup_next_reminder_3_svc();
-#define	rtable_check ((unsigned long)(12))
-extern  Table_Status_3 * _DtCm_rtable_check_3();
-extern  Table_Status_3 * _DtCm_rtable_check_3_svc();
-#define	rtable_flush_table ((unsigned long)(13))
-extern  Table_Status_3 * _DtCm_rtable_flush_table_3();
-extern  Table_Status_3 * _DtCm_rtable_flush_table_3_svc();
-#define	rtable_size ((unsigned long)(14))
-extern  int * _DtCm_rtable_size_3();
-extern  int * _DtCm_rtable_size_3_svc();
-#define	register_callback ((unsigned long)(15))
-extern  Registration_Status_3 * _DtCm_register_callback_3();
-extern  Registration_Status_3 * _DtCm_register_callback_3_svc();
-#define	deregister_callback ((unsigned long)(16))
-extern  Registration_Status_3 * _DtCm_deregister_callback_3();
-extern  Registration_Status_3 * _DtCm_deregister_callback_3_svc();
-#define	rtable_set_access ((unsigned long)(17))
-extern  Access_Status_3 * _DtCm_rtable_set_access_3();
-extern  Access_Status_3 * _DtCm_rtable_set_access_3_svc();
-#define	rtable_get_access ((unsigned long)(18))
-extern  Access_Args_3 * _DtCm_rtable_get_access_3();
-extern  Access_Args_3 * _DtCm_rtable_get_access_3_svc();
-#define	rtable_abbreviated_lookup_key_range ((unsigned long)(19))
-extern  Table_Res_3 * _DtCm_rtable_abbreviated_lookup_key_range_3();
-extern  Table_Res_3 * _DtCm_rtable_abbreviated_lookup_key_range_3_svc();
-#define	rtable_gmtoff ((unsigned long)(20))
-extern  long * _DtCm_rtable_gmtoff_3();
-extern  long * _DtCm_rtable_gmtoff_3_svc();
-extern int tableprog_3_freeresult();
-#endif /* K&R C */
 
 /* the xdr functions */
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern  bool_t _DtCm_xdr_Buffer_3(XDR *, Buffer_3*);
 extern  bool_t _DtCm_xdr_Transaction_3(XDR *, Transaction_3*);
 extern  bool_t _DtCm_xdr_Interval_3(XDR *, Interval_3*);
@@ -493,41 +425,6 @@ extern  bool_t _DtCm_xdr_Registration_3(XDR *, Registration_3*);
 extern  bool_t _DtCm_xdr_Table_Status_3(XDR *, Table_Status_3*);
 extern  bool_t _DtCm_xdr_Registration_Status_3(XDR *, Registration_Status_3*);
 
-#else /* K&R C */
-extern bool_t _DtCm_xdr_Buffer_3();
-extern bool_t _DtCm_xdr_Transaction_3();
-extern bool_t _DtCm_xdr_Interval_3();
-extern bool_t _DtCm_xdr_Period_3();
-extern bool_t _DtCm_xdr_Event_Type_3();
-extern bool_t _DtCm_xdr_Tag_3();
-extern bool_t _DtCm_xdr_Privacy_Level_3();
-extern bool_t _DtCm_xdr_Attribute_3();
-extern bool_t _DtCm_xdr_Attr_3();
-extern bool_t _DtCm_xdr_Except_3();
-extern bool_t _DtCm_xdr_Exception_3();
-extern bool_t _DtCm_xdr_Id_3();
-extern bool_t _DtCm_xdr_Uid_3();
-extern bool_t _DtCm_xdr_Appt_Status_3();
-extern bool_t _DtCm_xdr_Appt_3();
-extern bool_t _DtCm_xdr_Abb_Appt_3();
-extern bool_t _DtCm_xdr_Apptid_3();
-extern bool_t _DtCm_xdr_Reminder_3();
-extern bool_t _DtCm_xdr_Table_Res_Type_3();
-extern bool_t _DtCm_xdr_Table_Res_List_3();
-extern bool_t _DtCm_xdr_Access_Status_3();
-extern bool_t _DtCm_xdr_Table_Res_3();
-extern bool_t _DtCm_xdr_Access_Entry_3();
-extern bool_t _DtCm_xdr_Access_Args_3();
-extern bool_t _DtCm_xdr_Range_3();
-extern bool_t _DtCm_xdr_Keyrange_3();
-extern bool_t _DtCm_xdr_Table_Args_Type_3();
-extern bool_t _DtCm_xdr_Args_3();
-extern bool_t _DtCm_xdr_Table_Args_3();
-extern bool_t _DtCm_xdr_Registration_3();
-extern bool_t _DtCm_xdr_Table_Status_3();
-extern bool_t _DtCm_xdr_Registration_Status_3();
-
-#endif /* K&R C */
 
 #ifdef __cplusplus
 }

@@ -41,7 +41,8 @@ extern Tag_4		externTag;
 extern Appt_Status_4	externApptStatus;
 extern Privacy_Level_4	externPrivacy;
 
-extern void		setinput(FILE*);
+extern int		setinput(FILE *);
 extern int		yyylex(void);
+extern int		yyywrap(FILE *);
 
 #endif

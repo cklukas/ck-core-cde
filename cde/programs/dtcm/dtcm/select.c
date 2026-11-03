@@ -70,7 +70,7 @@ static  char sccsid[] = "@(#)select.c 1.24 95/02/21 Copyr 1994 Sun Microsystems,
 #include "datefield.h"
 #include "props.h"
 
-static void select_weekhotbox();
+static void select_weekhotbox(Calendar *);
 
 /* Highlight thickness  - mghis */
 #define	STDTTT		3	/* default */

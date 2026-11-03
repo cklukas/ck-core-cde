@@ -79,13 +79,15 @@ static  char sccsid[] = "@(#)goto.c 1.40 95/03/28 Copyr 1993 Sun Microsystems, I
 #include "goto.h"
 #include "help.h"
 
+static void goto_date(Widget, XtPointer, XtPointer);
+static void g_cancel_cb(Widget, XtPointer, XtPointer);
+
 extern caddr_t
 make_goto(Calendar *c)
 {
 	Goto 		*g;
 	XmString 	xmstr;
 	Widget		separator, button_form;
-	void 		goto_date(), g_cancel_cb();
 	char		*title;
 
 	if (c->goTo == NULL) {
@@ -239,8 +241,8 @@ make_goto(Calendar *c)
 	return(caddr_t)g;
 }
 
-void
-goto_date(Widget widget, XtPointer client_data, XmPushButtonCallbackStruct *cbs)
+static void
+goto_date(Widget widget, XtPointer client_data, XtPointer call_data)
 {
         Calendar *c = calendar;
         Props *p;
@@ -319,11 +321,11 @@ goto_date(Widget widget, XtPointer client_data, XmPushButtonCallbackStruct *cbs)
         }        
 }
 
-void
+static void
 g_cancel_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
         Calendar *c = calendar;
         Goto      *g;

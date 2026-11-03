@@ -97,6 +97,8 @@ typedef enum {
 	VALID_APPT
 } Validate_op;
 
+typedef boolean_t (*DtCmQueryProc)(void *user_data);
+
 /*
  * Enumerated types used to access static strings for appointment information.
  */
@@ -199,7 +201,7 @@ extern void		load_appt_defaults(Dtcm_appointment*, Props*);
 extern void		load_reminder_props(Dtcm_appointment*, Props*);
 extern char		*month_str(Months_op);
 extern Validate_op	parse_appt_from_file(nl_catd, char*, CmDataList*,
-						   Props*, boolean_t(*)(void*), 
+						   Props*, DtCmQueryProc,
 						   void*, int);
 extern char		*parse_attrs_to_string(Dtcm_appointment*, Props*,
 						   char*);
@@ -221,11 +223,11 @@ extern boolean_t	valid_time(Props*, char*);
 extern Validate_op	validate_appt(nl_catd, Dtcm_appointment*, 
 						   char*, char*, char*, int, 
 						   char*, char*, char*,
-						   boolean_t(*)(void*), void*,
+						   DtCmQueryProc, void*,
 						   int);
 extern Validate_op	validate_dssw(Dtcm_appointment*, char*,
 						   char*, char*, int, char*,
-						   boolean_t(*)(void*), void*);
+						   DtCmQueryProc, void*);
 extern Validate_op	validate_rfp(nl_catd, Dtcm_appointment*, 
 						   char*, char*, int);
 extern Validate_op	validate_reminders(Dtcm_appointment*);
