@@ -35,7 +35,7 @@ Prelude.h:
 	$(top_builddir)/programs/dtinfo/tools/misc/pmaker $(CLASSLIBS)
 
 Dtinfo: Dtinfo.res $(RESFILES)
-	$(CPP_PROGRAM) -traditional -nostdinc -C Dtinfo.res | $(TREERES) > $@
+	$(CPP_PROGRAM) -traditional -nostdinc -C $(srcdir)/Dtinfo.res | $(TREERES) > $@
 
 # dtinfo class dfile and hfile building for the modules
 include $(top_srcdir)/programs/dtinfo/dtinfo/src/dtinfo_dfiles_hfiles.mk
@@ -48,7 +48,7 @@ noinst_DATA = dtinfo.msg.updated
 dtinfo.msg.updated:
 	(msgs=; for i in $(MSGS) ; do msgs="$$msgs $$i/$$i.msg"; done; \
 	 cat $$msgs >dtinfo.cpp && \
-	 $(CPP_PROGRAM) -traditional -nostdinc -P -C dtinfo_msg.tmpl | $(MSGSETS) > dtinfo.msg.updated; \
+	 $(CPP_PROGRAM) -traditional -nostdinc -P -C $(srcdir)/dtinfo_msg.tmpl | $(MSGSETS) > dtinfo.msg.updated; \
 	 $(RM) dtinfo.cpp )
 
 CLEANFILES += dtinfo.msg.updated dtinfo.cpp

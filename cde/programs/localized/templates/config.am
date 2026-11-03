@@ -43,37 +43,37 @@ MERGE = $(top_builddir)/programs/localized/util/merge
 
 # these are the real targets
 sys.resources: $(TOP)/dtsession/sys.resources sys.resources.tmsg
-	$(MERGE) -lang $(LANG) $@.tmsg < $< > $@ || $(RM) $@
+	$(MERGE) -lang $(LANG) $(srcdir)/$@.tmsg < $< > $@ || $(RM) $@
 
 sys.session: $(TOP)/dtsession/sys.session sys.session.tmsg
-	$(MERGE) -lang $(LANG) $@.tmsg < $< > $@ || $(RM) $@
+	$(MERGE) -lang $(LANG) $(srcdir)/$@.tmsg < $< > $@ || $(RM) $@
 
 sys.font: $(TOP)/dtsession/sys.font sys.font.tmsg
-	$(MERGE) -lang $(LANG) $@.tmsg < $< > $@ || $(RM) $@
+	$(MERGE) -lang $(LANG) $(srcdir)/$@.tmsg < $< > $@ || $(RM) $@
 
 sys.dtwmrc: $(TOP)/dtwm/sys.dtwmrc sys.dtwmrc.tmsg
-	$(MERGE) -lang $(LANG) $@.tmsg < $< > $@ || $(RM) $@
+	$(MERGE) -lang $(LANG) $(srcdir)/$@.tmsg < $< > $@ || $(RM) $@
 
 Xresources: $(TOP)/dtlogin/config/Xresources Xresources.tmsg
-	$(MERGE) -lang $(LANG) $@.tmsg < $< > $@ || $(RM) $@
+	$(MERGE) -lang $(LANG) $(srcdir)/$@.tmsg < $< > $@ || $(RM) $@
 
 if SOLARIS
 Xresources.ow: $(TOP)/dtlogin/config/Xresources.ow Xresources.ow.tmsg
-	$(MERGE) -lang $(LANG) $@.tmsg < $< > $@ || $(RM) $@
+	$(MERGE) -lang $(LANG) $(srcdir)/$@.tmsg < $< > $@ || $(RM) $@
 endif
 
 dtfile.config: $(TOP)/dtfile/dtfile.config dtfile.config.tmsg
-	$(MERGE) -lang $(LANG) $@.tmsg < $< > $@ || $(RM) $@
+	$(MERGE) -lang $(LANG) $(srcdir)/$@.tmsg < $< > $@ || $(RM) $@
 
-home.session: $(TOP)/dtlogin/config/home.session _common.session.tmsg
-	$(MERGE) -lang $(LANG) _common.session.tmsg < $< > $@ || $(RM) $@
+home.session: $(TOP)/dtlogin/config/home.session $(srcdir)/_common.session.tmsg
+	$(MERGE) -lang $(LANG) $(srcdir)/_common.session.tmsg < $< > $@ || $(RM) $@
 
-current.session: $(TOP)/dtlogin/config/current.session _common.session.tmsg
-	$(MERGE) -lang $(LANG) _common.session.tmsg < $< > $@ || $(RM) $@
+current.session: $(TOP)/dtlogin/config/current.session $(srcdir)/_common.session.tmsg
+	$(MERGE) -lang $(LANG) $(srcdir)/_common.session.tmsg < $< > $@ || $(RM) $@
 
-display.home.session: $(TOP)/dtlogin/config/display.home.session _common.session.tmsg
-	$(MERGE) -lang $(LANG) _common.session.tmsg < $< > $@ || $(RM) $@
+display.home.session: $(TOP)/dtlogin/config/display.home.session $(srcdir)/_common.session.tmsg
+	$(MERGE) -lang $(LANG) $(srcdir)/_common.session.tmsg < $< > $@ || $(RM) $@
 
-display.current.session: $(TOP)/dtlogin/config/display.current.session _common.session.tmsg
-	$(MERGE) -lang $(LANG) _common.session.tmsg < $< > $@ || $(RM) $@
+display.current.session: $(TOP)/dtlogin/config/display.current.session $(srcdir)/_common.session.tmsg
+	$(MERGE) -lang $(LANG) $(srcdir)/_common.session.tmsg < $< > $@ || $(RM) $@
 

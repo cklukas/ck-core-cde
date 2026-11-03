@@ -99,6 +99,15 @@ builds can therefore compile checked-in application and C++ wrapper headers
 without copying them into the build tree, while preserving the normal override
 order for generated interfaces.
 
+The C locale generators keep generated desktop resources in the build tree,
+read checked-in resources and translation templates from the source tree, and
+write all merged locale data to the build tree. App Manager category
+directories are created there before their generated action entries. DtInfo's
+resource and message generators likewise use source-qualified templates, so a
+clean shadow build cannot silently turn a missing relative input into an empty
+application-default file. The maintained merge utility is compiled as C23 with
+a standard `int main` entry point under both GCC and Clang.
+
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
 use complete prototypes; the conversion regression test also compiles const

@@ -84,8 +84,15 @@ appmgr_allfiles = $(desktop_apps_SCRIPTS) $(graphics_SCRIPTS)		\
 	$(media_tools_SCRIPTS) $(education_SCRIPTS)			\
 	$(information_SCRIPTS)
 
-BUILT_SOURCES = $(appmgr_allfiles)
-CLEANFILES = $(BUILT_SOURCES)
+appmgr_dirs = Desktop_Apps Graphics Internet Games TeX Office System	\
+	Desktop_Tools Media_Tools Education Information
 
-$(appmgr_allfiles): $(ACTION)
+BUILT_SOURCES = $(appmgr_allfiles)
+CLEANFILES = $(BUILT_SOURCES) appmanager-directories.stamp
+
+appmanager-directories.stamp:
+	$(MKDIR_P) $(appmgr_dirs)
+	$(AM_V_at)touch $@
+
+$(appmgr_allfiles): $(ACTION) appmanager-directories.stamp
 	$(CP) $(ACTION) $@ || $(RM) $@

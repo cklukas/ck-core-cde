@@ -1,4 +1,12 @@
 2026-11-03
+- localization: regenerate app defaults, configuration, desktop types/actions,
+  palettes, backdrops and App Manager entries in clean out-of-tree builds by
+  resolving maintained translation templates from the source tree, generated
+  resources from the build tree and tracked resources from their source tree.
+- localization: give the maintained merge utility its C-standard `int main`
+  entry point so both GCC and Clang accept it in C23 mode.
+- DtInfo: resolve resource and message templates from the source tree so clean
+  shadow builds do not silently emit an empty application-default file.
 - DtInfo: let clean out-of-tree WWL and application-module builds search their
   generated build headers before the maintained DtInfo, UAS, DtMmdb and C++
   wrapper source interfaces.
