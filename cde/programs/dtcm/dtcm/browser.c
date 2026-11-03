@@ -496,9 +496,9 @@ make_browser(Calendar *c)
                 NULL);
         XmStringFree(xmstr);
         XtAddCallback(b->helpbutton, XmNactivateCallback,
-                (XtCallbackProc)help_cb, COMPARE_CALS_HELP_BUTTON);
+                help_cb, COMPARE_CALS_HELP_BUTTON);
         XtAddCallback(b->action, XmNhelpCallback,
-                (XtCallbackProc)help_cb, (XtPointer) COMPARE_CALS_HELP_BUTTON);
+                help_cb, (XtPointer) COMPARE_CALS_HELP_BUTTON);
 
 	b->message_text = XtVaCreateWidget("message",
 		xmLabelGadgetClass, b->action,

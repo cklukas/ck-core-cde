@@ -289,9 +289,9 @@ e_build_view_popup(Editor *e) {
 					    args, ac);
 
         XtAddCallback(e->view_help_button, XmNactivateCallback, 
-		(XtCallbackProc)help_cb, APPT_LIST_HELP_BUTTON);
+		help_cb, APPT_LIST_HELP_BUTTON);
         XtAddCallback(e->view_form, XmNhelpCallback, 
-		(XtCallbackProc)help_cb, (XtPointer) APPT_LIST_HELP_BUTTON);
+		help_cb, (XtPointer) APPT_LIST_HELP_BUTTON);
 
 	XtManageChild(e->view_list);
 	ManageChildren(e->view_form);
@@ -1037,9 +1037,9 @@ e_make_editor(Calendar *c)
 		NULL);
 
         XtAddCallback(e->help_button, XmNactivateCallback,
-		(XtCallbackProc)help_cb, APPT_EDITOR_HELP_BUTTON);
+		help_cb, APPT_EDITOR_HELP_BUTTON);
         XtAddCallback(e->base_form_mgr, XmNhelpCallback,
-                (XtCallbackProc)help_cb, (XtPointer) APPT_EDITOR_HELP_BUTTON);
+                help_cb, (XtPointer) APPT_EDITOR_HELP_BUTTON);
 
        	XtVaSetValues(e->base_form_mgr, 
 		XmNdefaultButton, 	e->insert_button, 

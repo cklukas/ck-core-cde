@@ -697,9 +697,9 @@ t_build_view_popup(ToDo *t) {
 		NULL);
 
         XtAddCallback(t->view_help_button, XmNactivateCallback,
-                (XtCallbackProc)help_cb, TODO_LIST_HELP_BUTTON);
+                help_cb, TODO_LIST_HELP_BUTTON);
         XtAddCallback(t->view_form, XmNhelpCallback,
-                (XtCallbackProc)help_cb, (XtPointer) TODO_LIST_HELP_BUTTON);
+                help_cb, (XtPointer) TODO_LIST_HELP_BUTTON);
 
 	ManageChildren(t->view_form); 
 	XtManageChild(t->view_sw_mgr);
@@ -1676,9 +1676,9 @@ t_make_todo(Calendar *c)
                 NULL);
 	XmStringFree(xmstr);
 	XtAddCallback(t->help_button, XmNactivateCallback,
-		(XtCallbackProc)help_cb, TODO_EDITOR_HELP_BUTTON);
+		help_cb, TODO_EDITOR_HELP_BUTTON);
         XtAddCallback(t->base_form_mgr, XmNhelpCallback,
-                (XtCallbackProc)help_cb, (XtPointer) TODO_EDITOR_HELP_BUTTON);
+                help_cb, (XtPointer) TODO_EDITOR_HELP_BUTTON);
 
 
 	t->separator2 = XtVaCreateWidget("separator2",

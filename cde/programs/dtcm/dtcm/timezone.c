@@ -282,7 +282,7 @@ make_timezone(Calendar *c)
                 NULL);
 	XmStringFree(xmstr);
 	XtAddCallback(t->helpbutton, XmNactivateCallback,
-				(XtCallbackProc)help_cb, TIMEZONE_HELP_BUTTON);
+				help_cb, TIMEZONE_HELP_BUTTON);
 
 
 	t->timezone_message = XtVaCreateWidget("message",

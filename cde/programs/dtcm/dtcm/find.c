@@ -392,9 +392,9 @@ make_find(Calendar *c)
 		XmNbottomAttachment,	XmATTACH_FORM,
                 NULL);
         XtAddCallback(f->help_button, XmNactivateCallback, 
-		(XtCallbackProc)help_cb, FIND_HELP_BUTTON);
+		help_cb, FIND_HELP_BUTTON);
         XtAddCallback(f->form, XmNhelpCallback, 
-		(XtCallbackProc)help_cb, (XtPointer) FIND_HELP_BUTTON);
+		help_cb, (XtPointer) FIND_HELP_BUTTON);
 	XmStringFree(xmstr);
 
 	XtSetArg(args[0], XmNlistSizePolicy, XmCONSTANT);

@@ -1411,9 +1411,9 @@ ge_make_editor(Calendar *c) {
 					       args, cnt);
 	XmStringFree(xmstr);
         XtAddCallback(ge->help_button, XmNactivateCallback,
-		      (XtCallbackProc)help_cb, GROUP_APPT_EDITOR_HELP_BUTTON);
+		      help_cb, GROUP_APPT_EDITOR_HELP_BUTTON);
         XtAddCallback(ge->base_form_mgr, XmNhelpCallback,
-		      (XtCallbackProc)help_cb, GROUP_APPT_EDITOR_HELP_BUTTON);
+		      help_cb, GROUP_APPT_EDITOR_HELP_BUTTON);
 
 	ManageChildren(ge->button_rc_mgr);
 

@@ -207,9 +207,9 @@ make_goto(Calendar *c)
 		XmNlabelString, 	xmstr,
                 NULL);
 	XtAddCallback(g->helpbutton, XmNactivateCallback, 
-				(XtCallbackProc)help_cb, GOTO_HELP_BUTTON);
+				help_cb, GOTO_HELP_BUTTON);
         XtAddCallback(g->form, XmNhelpCallback,
-                (XtCallbackProc)help_cb, (XtPointer) GOTO_HELP_BUTTON);
+                help_cb, (XtPointer) GOTO_HELP_BUTTON);
 	XmStringFree(xmstr);
 
 	g->goto_message = XtVaCreateWidget("message",

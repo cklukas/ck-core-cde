@@ -757,9 +757,9 @@ make_browselist(Calendar *c)
                 NULL);
 	XmStringFree(label_str);
         XtAddCallback(bl->help_button, XmNactivateCallback, 
-		(XtCallbackProc)help_cb, MENU_EDITOR_HELP_BUTTON);
+		help_cb, MENU_EDITOR_HELP_BUTTON);
         XtAddCallback(bl->form, XmNhelpCallback,
-                (XtCallbackProc)help_cb, (XtPointer) MENU_EDITOR_HELP_BUTTON);
+                help_cb, (XtPointer) MENU_EDITOR_HELP_BUTTON);
 
 	ManageChildren(button_form);
 

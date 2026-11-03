@@ -2534,9 +2534,9 @@ p_make_props_pu(Calendar *c) {
 		NULL);
 	XmStringFree(xmstr);
 	XtAddCallback(p->help_button, XmNactivateCallback,
-		(XtCallbackProc)help_cb, OPTIONS_HELP_BUTTON);
+		help_cb, OPTIONS_HELP_BUTTON);
         XtAddCallback(p->base_form_mgr, XmNhelpCallback, 
-               (XtCallbackProc)help_cb, (XtPointer) OPTIONS_HELP_BUTTON);
+               help_cb, (XtPointer) OPTIONS_HELP_BUTTON);
 
 
 	/*
