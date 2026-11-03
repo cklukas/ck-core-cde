@@ -188,7 +188,7 @@ build_keyboardDlg(
     style.kbdDialog = __DtCreateDialogBoxDialog(shell, "KeyboardDialog", save.posArgs, save.poscnt);
     XtAddCallback(style.kbdDialog, XmNcallback, ButtonCB, NULL);
     XtAddCallback(style.kbdDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_KEYBOARD_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_KEYBOARD_DIALOG);
 
     XmStringFree(button_string[0]);
     XmStringFree(button_string[1]);

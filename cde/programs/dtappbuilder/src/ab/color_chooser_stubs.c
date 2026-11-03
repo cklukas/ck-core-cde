@@ -98,14 +98,14 @@ static void 	helpCB(
 			XtPointer calldata
 		);
 
-static void	create_color_chooser();
+static void	create_color_chooser(void);
 static void	update_color_palette(Widget parent);
 
 static void	create_color_palette(
 		    	Widget parent
 		);
 
-char *display_color_chooser();
+char *display_color_chooser(void);
 
 /* 
 ** The first two colors *MUST* be black and white so things work out

@@ -108,6 +108,13 @@
 #define PROGNAME	"OPENDBLK"
 #define MS_misc		1
 #define MS_oeinit	9
+
+static void
+close_databases_on_exit(int return_code)
+{
+    (void)return_code;
+    (void)d_close();
+}
 #define MS_vista	13
 
 /****************************************/
@@ -296,7 +303,7 @@ DELETE_DB:
 	fprintf (aa_stderr, " --> vista open successful!\n");
 
     /* From here on, emergency exits MUST close the databases */
-    austext_exit_dbms = (void (*) (int)) d_close;
+    austext_exit_dbms = close_databases_on_exit;
 
     free (allnames);
     return TRUE;

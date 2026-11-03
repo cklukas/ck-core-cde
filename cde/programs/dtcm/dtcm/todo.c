@@ -410,7 +410,7 @@ static void
 t_view_cancel_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
 	ToDo		*t = (ToDo *)client_data;
 
@@ -424,7 +424,7 @@ static void
 t_view_apply_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
 	ToDo		*t = (ToDo *)client_data;
 
@@ -437,7 +437,7 @@ static void
 t_view_ok_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
 	ToDo		*t = (ToDo *)client_data;
 
@@ -577,7 +577,7 @@ t_build_view_popup(ToDo *t) {
 	XmStringFree(xmstr);
 
 
-	XtAddCallback(t->view_ok_button, XmNactivateCallback, (XtCallbackProc) t_view_ok_cb, t);
+	XtAddCallback(t->view_ok_button, XmNactivateCallback, t_view_ok_cb, t);
 
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 460, "Apply"));
@@ -594,7 +594,7 @@ t_build_view_popup(ToDo *t) {
       				NULL);
 	XmStringFree(xmstr);
 
-	XtAddCallback(t->view_apply_button, XmNactivateCallback, (XtCallbackProc) t_view_apply_cb, t);
+	XtAddCallback(t->view_apply_button, XmNactivateCallback, t_view_apply_cb, t);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 923, "Cancel"));
 
@@ -611,7 +611,7 @@ t_build_view_popup(ToDo *t) {
 
 	XmStringFree(xmstr);
 
-	XtAddCallback(t->view_cancel_button, XmNactivateCallback, (XtCallbackProc) t_view_cancel_cb, t);
+	XtAddCallback(t->view_cancel_button, XmNactivateCallback, t_view_cancel_cb, t);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 77, "Help"));
 
@@ -697,9 +697,9 @@ t_build_view_popup(ToDo *t) {
 		NULL);
 
         XtAddCallback(t->view_help_button, XmNactivateCallback,
-                (XtCallbackProc)help_cb, TODO_LIST_HELP_BUTTON);
+                help_cb, TODO_LIST_HELP_BUTTON);
         XtAddCallback(t->view_form, XmNhelpCallback,
-                (XtCallbackProc)help_cb, (XtPointer) TODO_LIST_HELP_BUTTON);
+                help_cb, (XtPointer) TODO_LIST_HELP_BUTTON);
 
 	ManageChildren(t->view_form); 
 	XtManageChild(t->view_sw_mgr);
@@ -1452,7 +1452,8 @@ static void
 FormApptDragMotionHandler(
         Widget          dragInitiator,
         XtPointer       clientData,
-        XEvent         *event)
+        XEvent         *event,
+        Boolean        *continueToDispatch)
 {
         int             diffX, diffY;
         Calendar	*c = (Calendar *) clientData;
@@ -1676,9 +1677,9 @@ t_make_todo(Calendar *c)
                 NULL);
 	XmStringFree(xmstr);
 	XtAddCallback(t->help_button, XmNactivateCallback,
-		(XtCallbackProc)help_cb, TODO_EDITOR_HELP_BUTTON);
+		help_cb, TODO_EDITOR_HELP_BUTTON);
         XtAddCallback(t->base_form_mgr, XmNhelpCallback,
-                (XtCallbackProc)help_cb, (XtPointer) TODO_EDITOR_HELP_BUTTON);
+                help_cb, (XtPointer) TODO_EDITOR_HELP_BUTTON);
 
 
 	t->separator2 = XtVaCreateWidget("separator2",
@@ -1817,7 +1818,7 @@ t_make_todo(Calendar *c)
 			NULL );	
 
         XtAddEventHandler(XtParent(t->drag_source), Button1MotionMask, False,
-                (XtEventHandler)FormApptDragMotionHandler, (XtPointer) c);
+                FormApptDragMotionHandler, (XtPointer) c);
 	
         XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(c->frame)), 
                 "enableBtn1Transfer",   &btn1_transfer, 
@@ -1827,7 +1828,7 @@ t_make_todo(Calendar *c)
 	if ((Boolean)btn1_transfer != True)
                 XtAddEventHandler(XtParent(t->drag_source), 
                                 Button2MotionMask, False, 
-                                (XtEventHandler)FormApptDragMotionHandler, 
+                                FormApptDragMotionHandler,
                                 (XtPointer) c);
 
 

@@ -44,100 +44,100 @@ struct rpcgen_table tableprog_4_table[] = {
 
 
 	RPCGEN_ACTION(_DtCm_rtable_ping_4_svc),
-	(xdrproc_t)xdr_void,			0,
-	(xdrproc_t)xdr_void,			0,
+	_DtCm_xdr_void,			0,
+	_DtCm_xdr_void,			0,
 
 	RPCGEN_ACTION(_DtCm_rtable_lookup_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_lookup_next_larger_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_lookup_next_smaller_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_lookup_range_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_abbreviated_lookup_range_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_insert_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_delete_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_delete_instance_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_change_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_change_instance_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_lookup_next_reminder_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_check_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Status_4,		sizeof ( Table_Status_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Status_4),		sizeof ( Table_Status_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_flush_table_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Status_4,		sizeof ( Table_Status_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Status_4),		sizeof ( Table_Status_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_size_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)xdr_int,			sizeof ( int ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(xdr_int),			sizeof ( int ),
 
 	RPCGEN_ACTION(_DtCm_register_callback_4_svc),
-	(xdrproc_t)_DtCm_xdr_Registration_4,		sizeof ( Registration_4 ),
-	(xdrproc_t)_DtCm_xdr_Registration_Status_4,	sizeof ( Registration_Status_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Registration_4),		sizeof ( Registration_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Registration_Status_4),	sizeof ( Registration_Status_4 ),
 
 	RPCGEN_ACTION(_DtCm_deregister_callback_4_svc),
-	(xdrproc_t)_DtCm_xdr_Registration_4,		sizeof ( Registration_4 ),
-	(xdrproc_t)_DtCm_xdr_Registration_Status_4,	sizeof ( Registration_Status_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Registration_4),		sizeof ( Registration_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Registration_Status_4),	sizeof ( Registration_Status_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_set_access_4_svc),
-	(xdrproc_t)_DtCm_xdr_Access_Args_4,		sizeof ( Access_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Access_Status_4,		sizeof ( Access_Status_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Access_Args_4),		sizeof ( Access_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Access_Status_4),		sizeof ( Access_Status_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_get_access_4_svc),
-	(xdrproc_t)_DtCm_xdr_Access_Args_4,		sizeof ( Access_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Access_Args_4,		sizeof ( Access_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Access_Args_4),		sizeof ( Access_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Access_Args_4),		sizeof ( Access_Args_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_abbreviated_lookup_key_range_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Args_4,		sizeof ( Table_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Res_4,		sizeof ( Table_Res_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Args_4),		sizeof ( Table_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4),		sizeof ( Table_Res_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_gmtoff_4_svc),
-	(xdrproc_t)xdr_void,			0,
-	(xdrproc_t)xdr_long,			sizeof ( long ),
+	_DtCm_xdr_void,			0,
+	DTCM_XDR_PROC(xdr_long),			sizeof ( long ),
 
 	RPCGEN_ACTION(_DtCm_rtable_create_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Op_Args_4,		sizeof ( Table_Op_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Status_4,		sizeof ( Table_Status_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Op_Args_4),		sizeof ( Table_Op_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Status_4),		sizeof ( Table_Status_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_remove_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Op_Args_4,		sizeof ( Table_Op_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Status_4,		sizeof ( Table_Status_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Op_Args_4),		sizeof ( Table_Op_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Status_4),		sizeof ( Table_Status_4 ),
 
 	RPCGEN_ACTION(_DtCm_rtable_rename_4_svc),
-	(xdrproc_t)_DtCm_xdr_Table_Op_Args_4,		sizeof ( Table_Op_Args_4 ),
-	(xdrproc_t)_DtCm_xdr_Table_Status_4,		sizeof ( Table_Status_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Op_Args_4),		sizeof ( Table_Op_Args_4 ),
+	DTCM_XDR_PROC(_DtCm_xdr_Table_Status_4),		sizeof ( Table_Status_4 ),
 };
 int tableprog_4_nproc =
 	sizeof(tableprog_4_table)/sizeof(tableprog_4_table[0]);

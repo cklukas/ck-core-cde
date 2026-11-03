@@ -129,14 +129,14 @@ static void MyInsert( Widget w, XEvent *event, char **params,
 static void MyBackspace( Widget w, XEvent *event, char **params,
                         Cardinal *num_params) ;
 static int  ErrorHandler( Display *dpy, XErrorEvent *event) ;
-static void xtErrorHandler( String msg ) ;
+static void xtErrorHandler( String msg ) _X_NORETURN;
 static void xtWarningHandler( String msg ) ;
 static void MakeOptionsProc( XtPointer data, XtIntervalId *id) ;
 static SIGVAL Terminate( int arg ) ;
 static char * GetLangName( char * label );
 static void MakeAltDtButtons( void );	
 static void DebugWidgetResources(Widget w);
-static char * GetDisplayName();
+static char * GetDisplayName(void);
 
 
 
@@ -268,8 +268,8 @@ Widget session_menu = NULL;     /* cascading menu on "Session" option     */
  ***************************************************************************/
 
 static XtActionsRec textActions[] = {
-        {"my-insert", (XtActionProc)MyInsert},
-        {"my-bksp", (XtActionProc)MyBackspace},
+        {"my-insert", MyInsert},
+        {"my-bksp", MyBackspace},
     };
 
 static char textEventBindings[] = {
@@ -1163,7 +1163,7 @@ MakeDialog( DialogType dtype )
 
     int		width;
     
-    FILE	*fp, *fopen();
+    FILE	*fp;
     char	buffer[128];
 
     Widget	w = NULL, text;

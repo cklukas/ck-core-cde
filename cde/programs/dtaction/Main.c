@@ -218,8 +218,8 @@ void UnknownUserCallback(
  ***************************************************************************/
 
 XtActionsRec textActions[] = {
-        {"my-insert", (XtActionProc)MyInsert},
-        {"my-cancel", (XtActionProc)MyCancel},
+        {"my-insert", MyInsert},
+        {"my-cancel", MyCancel},
 };
 
 char textEventBindings[] = {
@@ -370,7 +370,7 @@ main(
         appArgs.execHost,
         appArgs.contextDir,
         True,			/* use indicator */
-        (DtActionCallbackProc) actionStatusCallback,
+        actionStatusCallback,
         NULL);
 
     /*

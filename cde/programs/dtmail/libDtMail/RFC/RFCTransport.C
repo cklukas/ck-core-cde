@@ -714,17 +714,6 @@ RFCTransport::initTransportData(int fds[2], SubProcessFinishedProc proc,
 	_error_proc = proc;
 }
 
-//
-// Pass a ptr to sendmailReturnProc to SendMsgDialog so that it can
-// call it in XtAppAddInput
-//
-void *
-RFCTransport::getSendmailReturnProc(void)
-{
-	return ((void *)(&RFCTransport::sendmailReturnProc));
-}
-
-
 void
 RFCTransport::launchSendmail(DtMailEnv & error,
                              Buffer & headers,
@@ -866,7 +855,7 @@ RFCTransport::launchSendmail(DtMailEnv & error,
 
 
 void
-RFCTransport::sendmailReturnProc(void)
+RFCTransport::processSendmailReturn(void)
 {
 	pipedata_t 	new_pd;
 	waitentry_t 	* ptr, ** prev;
@@ -880,7 +869,7 @@ RFCTransport::sendmailReturnProc(void)
 		// ERROR - can't read pipe so just return?
 		error.setError (DTME_NoMemory);
 		error.logError(DTM_TRUE,
-		  "RFCTransport: sendmailReturnProc(): Failed to read pipe\n");
+		  "RFCTransport: processSendmailReturn(): Failed to read pipe\n");
 		return; 
 	}
 		

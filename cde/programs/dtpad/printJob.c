@@ -244,10 +244,10 @@ PrintJobExecute(PrintJob *pJob)
 				pJob->documentName,
 				pJob->pPad->xrdb.wordWrap,
 				pJob->pPad,
-				(XtCallbackProc) _pjCancelCB, pJob,
-				(XtCallbackProc) _pjCloseDisplayCB, pJob,
-				(XtCallbackProc) _pjPrintCB, pJob,
-				(XtCallbackProc) _pjPdmSetupCB, pJob);
+				_pjCancelCB, pJob,
+				_pjCloseDisplayCB, pJob,
+				_pjPrintCB, pJob,
+				_pjPdmSetupCB, pJob);
     if (pJob->silent)
     {
 	/*

@@ -116,7 +116,7 @@ static void formLayoutCB ( Widget, XtPointer, XtPointer ) ;
 static void _DtmapCB_dtwmDlg ( Widget, XtPointer, XtPointer ) ;
 static void systemDefaultCB ( Widget, XtPointer, XtPointer ) ;
 static void ButtonCB ( Widget, XtPointer, XtPointer ) ;
-static void getDtwmValues ( ) ;
+static void getDtwmValues (void) ;
 static void _DtWmParseToLower (unsigned char  *string) ;
 static void okWarnCB ( Widget, XtPointer, XtPointer ) ;
 static void cancelWarnCB ( Widget, XtPointer, XtPointer ) ;
@@ -594,7 +594,7 @@ build_dtwmDlg(
     style.dtwmDialog = 
         __DtCreateDialogBoxDialog(shell, "dtwmDialog", save.posArgs, save.poscnt);
     XtAddCallback(style.dtwmDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_DTWM_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_DTWM_DIALOG);
 
     XmStringFree(button_string[0]);
     XmStringFree(button_string[1]);

@@ -202,12 +202,12 @@ char * GetCoreName(char *pszFullName)
 /*                                                                            */
 /* INPUT: Widget wid - OK button on Open File dialog,                         */
 /*        XtPointer client_data                                               */
-/*        XmFileSelectionBoxCallbackStruct *cbs                               */
+/*        XtPointer call_data                                                 */
 /* OUTPUT: none                                                               */
 /*                                                                            */
 /******************************************************************************/
 void load_icons (Widget wid, XtPointer client_data,
-                 XmFileSelectionBoxCallbackStruct *cbs)
+                 XtPointer call_data)
 {
   char          *full_name, *path_and_base_name, *type_name, *size_name;
   char          *base_name;

@@ -125,7 +125,7 @@ int find_msg_in_file(int msg, int file);
 void fatal(char *m, int line, int file);
 void get_option(int *argc, char *argv[]);
 
-void main (int argc, char *argv [])
+int main (int argc, char *argv [])
 {
     int c;
 
@@ -181,7 +181,7 @@ void main (int argc, char *argv [])
     unlink(pFilename);
     unlink(dFilename);
 
-    exit (0);
+    return EXIT_SUCCESS;
 }
 
 /*

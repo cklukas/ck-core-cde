@@ -111,8 +111,9 @@ Widget get_selected_filetype_icon (void)
 /*                                                                            */
 /******************************************************************************/
 void activateCB_filetype_icon (Widget wid, XtPointer client_data,
-                               DtIconCallbackStruct *cbs)
+                               XtPointer call_data)
 {
+  DtIconCallbackStruct *cbs = call_data;
   Time    lts, mct = 0;
   static  Time prev_lts = 0;
 
@@ -149,8 +150,7 @@ void activateCB_filetype_icon (Widget wid, XtPointer client_data,
     printf("DblClick icon callback.\n");
 #endif
 
-    activateCB_edit_icon(wid, (XtPointer)CA_FILETYPE_ICONS,
-	(XmPushButtonCallbackStruct *)cbs /* unused anyway */);
+    activateCB_edit_icon(wid, (XtPointer)CA_FILETYPE_ICONS, cbs);
 
   }
 

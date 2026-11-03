@@ -877,11 +877,11 @@ class DtMail {
 
 	    // SendMsgDialog initiates a send.  It needs to set information
 	    // needed to exec sendmail by calling these init functions.
-	    // getSendmailReturnProc returns a handler so that SendMsgDialog
-	    // can use it in XtAppAddInput.
+	    // SendMsgDialog's Xt input adapter calls this operation when the
+	    // child-status pipe becomes readable.
 	    virtual void initTransportData(int fds[2],
 		SubProcessFinishedProc proc, void *ptr) = 0;
-	    virtual void *getSendmailReturnProc(void) = 0;
+	    virtual void processSendmailReturn(void) = 0;
 
 
 	    virtual void callCallback(DtMailOperationId, void * arg);

@@ -36,12 +36,14 @@
 #include <Xm/ToggleB.h>
 #include <Xm/MessageB.h>
 #include <Xm/MainW.h>
-void callexpCB();
-void callimpCB();
-void exitCB();
-void helpCB();
-void udcexp();
-void udcimp();
+static void callexpCB(Widget widget, XtPointer client_data,
+                      XtPointer call_data);
+static void callimpCB(Widget widget, XtPointer client_data,
+                      XtPointer call_data);
+static void exitCB(Widget widget, XtPointer client_data,
+                   XtPointer call_data);
+void udcexp(Exc_data *ed);
+void udcimp(Exc_data *ed);
 
 #define ERROR_1 errmsg_org[fal_utyerrno & 0xff]
 /*#define ERROR_1 fal_errmsg_org[fal_utyerrno & 0xff]*/
@@ -78,8 +80,7 @@ Widget excCreateRadioButton(Widget parent, String name, String label,
 				     XmNindicatorType, XmONE_OF_MANY,
 				     NULL);
     XtAddCallback(widget, XmNvalueChangedCallback,
-		  (XtCallbackProc) callback_func,
-		  (XtPointer) client_data);
+		  callback_func, client_data);
 
     xms = XmStringCreateLocalized(label);
     XtVaSetValues(widget,
@@ -195,13 +196,13 @@ int main(int argc, char * argv[])
 				  XmNradioAlwaysOne, True,
 				  NULL);
     expfunc = excCreateRadioButton(row, "expfunc", explabel,
-				   (XtCallbackProc) callexpCB, (XtPointer) ed);
+				   callexpCB, (XtPointer) ed);
 
     impfunc = excCreateRadioButton(row, "impfunc", implabel,
-				   (XtCallbackProc) callimpCB, (XtPointer) ed);
+				   callimpCB, (XtPointer) ed);
 
     exit = excCreatePushButton(mainw, "exit", exitlabel,
-			       (XtCallbackProc) exitCB, (XtPointer) ed);
+			       exitCB, (XtPointer) ed);
 
 /*    help = excCreatePushButton(mainw, "help", helplabel,
 			       (XtCallbackProc) helpCB, (XtPointer) ed);
@@ -217,18 +218,27 @@ int main(int argc, char * argv[])
     XtAppMainLoop(app_context);
 }
 
-void callexpCB(Widget widget, Exc_data * ed, XtPointer call_data)
+static void
+callexpCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
+    Exc_data *ed = (Exc_data *)client_data;
+
     XtUnmanageChild(mainw);
     udcexp(ed);
 }
-void callimpCB(Widget widget, Exc_data * ed, XtPointer call_data)
+static void
+callimpCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
+    Exc_data *ed = (Exc_data *)client_data;
+
     XtUnmanageChild(mainw);
     udcimp(ed);
 }
-void exitCB(Widget widget, Exc_data * ed, XtPointer call_data)
+static void
+exitCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
+    Exc_data *ed = (Exc_data *)client_data;
+
     excexit(ed);
 }
 /*void helpCB(Widget widget, Exc_data * ed, XtPointer call_data)

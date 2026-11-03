@@ -730,12 +730,12 @@ char	*jpn_parser (PARG *parg)
 	if (parg->string) {	/* text is query str from search engine */
 	    save_parg_string = parg->string;
 	    readchar_arg = parg->string;
-	    readchar = (READCFP) readchar_string;
+	    readchar = readchar_string;
 	}
 	else {			/* text is from .fzk file in dtsrindex */
 	    save_parg_string = NULL;
 	    readchar_arg = parg;
-	    readchar = (READCFP) readchar_ftext;
+	    readchar = readchar_ftext;
 	}
 
 	if (substrbufsz == 0) {

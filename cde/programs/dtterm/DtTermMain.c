@@ -29,6 +29,7 @@
 
 #ifdef sun
 #include <dlfcn.h>
+#include <stdint.h>
 #endif /* sun */
 #include "TermHeader.h"
 #include "TermPrim.h"
@@ -141,8 +142,8 @@ static void ToggleMenuBar(
 
 static void SaveSessionCB(
 	Widget w,			
-	caddr_t client_data,	
-	caddr_t call_data );
+	XtPointer client_data,
+	XtPointer call_data );
 static Boolean RestoreSession(
 	Widget topDog,
 	Arg *arglist,
@@ -428,13 +429,22 @@ GetSavedUserFontListIndex(long *index_out)
 void
 sunSetupIA(Widget w)
 {
-    int	i, major_op, first_event, first_err;
-    int	*pids;
-    void 	(*IAptr)()=(void (*)())NULL;
+    typedef Bool (*SolarisIASetProcessInfoProc)(Display *, unsigned char *,
+                                                uint32_t, uint32_t);
+    int i, major_op, first_event, first_err;
+    int *pids;
+    void *symbol;
+    SolarisIASetProcessInfoProc set_process_info = NULL;
     DtTermPrimitiveWidget tw;
 
-    if ((IAptr = (void (*)())dlsym(RTLD_NEXT, "XSolarisIASetProcessInfo"))!=NULL) {
+    symbol = dlsym(RTLD_NEXT, "XSolarisIASetProcessInfo");
+    if (symbol != NULL) {
+        _Static_assert(sizeof(set_process_info) == sizeof(symbol),
+                       "dlsym function pointer size mismatch");
+        memcpy(&set_process_info, &symbol, sizeof(set_process_info));
         pids = (int *)malloc(sizeof(int) * (InstanceCount + 1));
+        if (pids == NULL)
+            return;
         pids[0] = getpid();
         for (i = 0; i < InstanceCount; i++) {
 	    tw = (DtTermPrimitiveWidget)instance_list[i]->termview.term;
@@ -442,8 +452,9 @@ sunSetupIA(Widget w)
         }
         if (XQueryExtension(XtDisplay(w), "SolarisIA",
 		        &major_op, &first_event, &first_err))
-            (*IAptr)(XtDisplay(w),pids,
-	         0x1,InstanceCount + 1);
+            (void)set_process_info(XtDisplay(w), (unsigned char *)pids,
+	                           UINT32_C(1),
+                                   (uint32_t)(InstanceCount + 1));
         free(pids);
     }
 }
@@ -1330,7 +1341,7 @@ main(int argc, char **argv)
     xa_WM_SAVE_YOURSELF = XInternAtom(XtDisplay(topLevel),
                                       "WM_SAVE_YOURSELF", False);
     XmAddWMProtocolCallback(topLevel, xa_WM_SAVE_YOURSELF,
-                           (XtCallbackProc)SaveSessionCB, (XtPointer)NULL);
+                           SaveSessionCB, (XtPointer)NULL);
     
     i = 0;
     (void) XtSetArg(arglist[i], XmNmappedWhenManaged, False); i++;
@@ -1526,8 +1537,8 @@ main(int argc, char **argv)
 static void 
 SaveSessionCB(
         Widget w,			/* widget id */
-        caddr_t client_data,		/* data from application  */
-        caddr_t call_data )		/* data from widget class */
+        XtPointer client_data,		/* data from application  */
+        XtPointer call_data )		/* data from widget class */
 {
     char *longpath, *fileName;
     char bufr[1024];

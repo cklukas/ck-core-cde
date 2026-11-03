@@ -47,8 +47,7 @@ Widget excCreatePushButton(Widget parent, String name, String label,
     widget = XmCreatePushButton(parent, name, args, n);
     XmStringFree(xms);
     XtAddCallback(widget, XmNactivateCallback,
-		  (XtCallbackProc) callback_func,
-		  (XtPointer) client_data);
+		  callback_func, client_data);
     XtManageChild(widget);
 
     return (widget);
@@ -69,14 +68,20 @@ void excerror(Exc_data * ed, int excerrno, char * funcname, char * func)
     }
 }
 
-void dialogokCB(Widget widget, int * ans, XtPointer call_data)
+static void
+dialogokCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
+    int *ans = (int *)client_data;
+
     /* ok button pushed */
     *ans = 1;
 }
 
-void dialogcancelCB(Widget widget, int * ans, XtPointer call_data)
+static void
+dialogcancelCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
+    int *ans = (int *)client_data;
+
     /* cancel button pushed */
     *ans = 2;
 }
@@ -111,9 +116,9 @@ void AskUser(Widget parent, Exc_data * ed, char *msg, int *r, char * type)
     }
     XtUnmanageChild(XmMessageBoxGetChild(dialog, XmDIALOG_HELP_BUTTON));
     XmStringFree(message);
-    XtAddCallback(dialog, XmNokCallback, (XtCallbackProc) dialogokCB,
+    XtAddCallback(dialog, XmNokCallback, dialogokCB,
 		  (XtPointer) &ans);
-    XtAddCallback(dialog, XmNcancelCallback, (XtCallbackProc) dialogcancelCB,
+    XtAddCallback(dialog, XmNcancelCallback, dialogcancelCB,
 		  (XtPointer) &ans);
     XtManageChild(dialog);
     while (ans == 0) {

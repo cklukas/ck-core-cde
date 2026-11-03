@@ -632,51 +632,51 @@ extern void AskForConfirmation(
  ************************************************************************/
 extern void EditUndoCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void EditCutCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void EditCopyCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void EditPasteCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void EditClearCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void EditDeleteCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void SelectAllCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FindChangeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void CheckSpellingCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void SetSelectionMenuItems(
         Editor *pPad,
 	Boolean sensitivity);
 extern void TextSelectedCB(
 	Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void TextDeselectedCB(
 	Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 
 
 /************************************************************************
@@ -684,16 +684,16 @@ extern void TextDeselectedCB(
  ************************************************************************/
 extern void FormatCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FormatParaCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void FormatAllCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 
 
 /************************************************************************
@@ -701,22 +701,22 @@ extern void FormatAllCB(
  ************************************************************************/
 extern void OverstrikeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 
 extern void WordWrapCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 
 extern void StatusLineCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 extern void DroppedFilesModeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data);
+        XtPointer client_data,
+        XtPointer call_data);
 
 
 /************************************************************************
@@ -809,12 +809,12 @@ extern void ClearStatusMessage(
  ************************************************************************/
 extern void SaveSessionCB(
 	Widget w,
-	caddr_t client_data,
-	caddr_t call_data );
+	XtPointer client_data,
+	XtPointer call_data );
 extern void closeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void restoreSession(
         Editor *pPad);
 extern void RestorePad(
@@ -866,29 +866,29 @@ extern void DisplayHelpDialog(
  ************************************************************************/
 extern void HelpMenubarCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 
 extern void HelpFileCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpEditCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpFormatCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpOptionsCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpHelpCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 
 extern void HelpOpenDialogCB(
         Widget w,
@@ -900,24 +900,24 @@ extern void HelpIncludeDialogCB(
         XtPointer call_data );
 extern void HelpSaveAsDialogCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpFileSaveNewLinesCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpAskIfSaveDialogCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpFileAlreadyExistsCB(
 	Widget w,
-	caddr_t client_data,
-	caddr_t call_data );
+	XtPointer client_data,
+	XtPointer call_data );
 extern void HelpEditorWidgetCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 
 extern void HelpPrintSetupDialogCB(
         Widget w,
@@ -942,41 +942,41 @@ extern void HelpPrintSetupPageMargins(
 
 extern void HelpOverviewCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpTasksCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpTOCCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpReferenceCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpOnItemCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpUsingHelpCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpAboutCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 
 extern void HelpHyperlinkCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void HelpCloseCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 
 
 /************************************************************************

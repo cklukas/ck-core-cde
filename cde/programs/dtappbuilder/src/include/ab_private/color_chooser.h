@@ -47,4 +47,4 @@
 ** Routine to display the color chooser and return the name of the
 ** color selected.  Returns an empty string if no color is selected.
 */ 
-char *		display_color_chooser();
+char *		display_color_chooser(void);

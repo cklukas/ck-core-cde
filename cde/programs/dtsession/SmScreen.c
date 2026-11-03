@@ -141,7 +141,7 @@ StartScreenSaver( void )
    /*
     * Load actions database.
     */
-    ProcessReloadActionsDatabase();
+    ProcessReloadActionsDatabase(NULL);
     firsttime = 0;
   }
 

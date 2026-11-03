@@ -1528,7 +1528,7 @@ write_msg_init_proc(GenCodeInfo genCodeInfo, ABObj parent)
     
     /* Set the Action1 button callback (Ok callback) */
     abio_printf(codeFile, "%s->action1_callback = ", abmfP_instance_ptr_var_name);
-    abio_printf(codeFile, "%s;\n", okCB? okCB : "(XtCallbackProc) NULL");
+    abio_printf(codeFile, "%s;\n", okCB? okCB : "NULL");
 
     /* Set the Action2 button label (Extra button) */
     abio_printf(codeFile, "%s->action2_label = ", abmfP_instance_ptr_var_name);
@@ -1557,7 +1557,7 @@ write_msg_init_proc(GenCodeInfo genCodeInfo, ABObj parent)
     /* Set the Action2 button callback (Extra button) */
     abio_printf(codeFile,"%s->action2_callback = ",abmfP_instance_ptr_var_name);
     abio_printf(codeFile, "%s;\n", 
-		action2CB? action2CB : "(XtCallbackProc) NULL");
+		action2CB? action2CB : "NULL");
 
     /* Set the Action3 button label (Extra button) */
     abio_printf(codeFile, "%s->action3_label = ", abmfP_instance_ptr_var_name);
@@ -1586,7 +1586,7 @@ write_msg_init_proc(GenCodeInfo genCodeInfo, ABObj parent)
     /* Set the Action3 button callback (Extra button) */
     abio_printf(codeFile,"%s->action3_callback = ",abmfP_instance_ptr_var_name);
     abio_printf(codeFile, "%s;\n",
-                action3CB? action3CB : "(XtCallbackProc) NULL");
+                action3CB? action3CB : "NULL");
  
     /* Set the Cancel button boolean */
     abio_printf(codeFile, "%s->cancel_button = ", abmfP_instance_ptr_var_name);
@@ -1595,7 +1595,7 @@ write_msg_init_proc(GenCodeInfo genCodeInfo, ABObj parent)
 
     /* Set the Cancel button callback */
     abio_printf(codeFile, "%s->cancel_callback = ", abmfP_instance_ptr_var_name);
-    abio_printf(codeFile, "%s;\n", cancelCB? cancelCB:"(XtCallbackProc) NULL");
+    abio_printf(codeFile, "%s;\n", cancelCB? cancelCB:"NULL");
 
     /* Set the Help button boolean */
     abio_printf(codeFile, "%s->help_button = ", abmfP_instance_ptr_var_name);

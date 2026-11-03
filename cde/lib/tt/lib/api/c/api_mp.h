@@ -239,5 +239,5 @@ char	       *_tt_procid_session(const char *);
 Tt_status	_tt_feature_enabled(Tt_feature f);
 Tt_status	_tt_feature_required(Tt_feature f);
 
-void		_tt_internal_init();
+void		_tt_internal_init(void);
 #endif		

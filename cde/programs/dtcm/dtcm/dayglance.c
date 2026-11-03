@@ -1170,7 +1170,7 @@ create_month_panels(Calendar *c)
         XtAddCallback(d->month_panels[0], XmNactivateCallback,
                         day_btn_cb, (XtPointer) c);
 	XtAddCallback(d->month_panels[0], XmNhelpCallback, 
-			(XtCallbackProc)help_view_cb, NULL);
+			help_view_cb, NULL);
 
 	ac=0;
         XtSetArg(al[ac], XmNtopAttachment, XmATTACH_POSITION); ac++;
@@ -1185,7 +1185,7 @@ create_month_panels(Calendar *c)
         XtAddCallback(d->month_panels[1], XmNactivateCallback,
                         day_btn_cb, (XtPointer) c);
 	XtAddCallback(d->month_panels[1], XmNhelpCallback, 
-			(XtCallbackProc)help_view_cb, NULL);
+			help_view_cb, NULL);
 
 	ac=0;
         XtSetArg(al[ac], XmNtopAttachment, XmATTACH_POSITION); ac++;
@@ -1199,7 +1199,7 @@ create_month_panels(Calendar *c)
         XtAddCallback(d->month_panels[2], XmNactivateCallback,
                         day_btn_cb, (XtPointer) c);
 	XtAddCallback(d->month_panels[2], XmNhelpCallback, 
-			(XtCallbackProc)help_view_cb, NULL);
+			help_view_cb, NULL);
 
 	ManageChildren(d->panel_form);
 

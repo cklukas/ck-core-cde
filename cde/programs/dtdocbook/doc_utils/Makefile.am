@@ -18,14 +18,17 @@ noinst_PROGRAMS = \
 
 noinst_SCRIPTS = dtdocbook2man dtdocbook2sdl
 
-AM_CXXFLAGS = -DCDE_NEXT -I$(top_builddir)/lib/DtMmdb
+AM_CXXFLAGS = -DCDE_NEXT -I$(top_builddir)/lib/DtMmdb \
+	-I$(top_srcdir)/lib/DtMmdb
 AM_LDFLAGS = $(DTCLIENTLIBS) $(XTOOLLIB)
 
 dtdcbk_datarootdir = $(abs_top_srcdir)/programs/dtdocbook
+dtdcbk_buildexecdir = $(abs_top_builddir)/programs/dtdocbook
 
 AM_CPPFLAGS = \
 	      -DDTDCBK_DATAROOTDIR=\"$(dtdcbk_datarootdir)\" \
-	      -DINFOLIB_LIBEXECDIR=\"$(PWD)\"
+	      -DDTDCBK_BUILDROOTDIR=\"$(abs_top_builddir)/programs/dtdocbook\" \
+	      -DINFOLIB_LIBEXECDIR=\"$(abs_builddir)\"
 
 validator_SOURCES = validator.C
 validator_LDFLAGS = $(LIBMMDB) $(LMDBLIB)
@@ -58,16 +61,16 @@ valBase$(EXEEXT): $(infolib)/valBase$(EXEEXT)
 
 dtdocbook2man: ../dtdocbook2man
 	echo "#!/bin/sh" > $@ && chmod +x $@
-	echo "dtdcbk_libexecdir=$(dtdcbk_datarootdir) \
+	echo "dtdcbk_libexecdir=$(dtdcbk_buildexecdir) \
 		dtdcbk_datarootdir=$(dtdcbk_datarootdir) \
-		sh $(PWD)/$< \$$@" >> $@
+		sh $(abs_builddir)/$< \$$@" >> $@
 
 dtdocbook2sdl: ../dtdocbook2sdl
 	echo "#!$(KSH)" > $@ && chmod +x $@
 	echo "dtdcbk_libdir=$(dtdcbk_datarootdir) \
-		dtdcbk_libexecdir=$(dtdcbk_datarootdir) \
+		dtdcbk_libexecdir=$(dtdcbk_buildexecdir) \
 		dtdcbk_datarootdir=$(dtdcbk_datarootdir) \
-		$(KSH) $(PWD)/$< \$$@" >> $@
+		$(KSH) $(abs_builddir)/$< \$$@" >> $@
 
 install:
 

@@ -39,7 +39,7 @@ static  const char *SysErrorMsg(int n);
 /* Error Handlers */
 static  int XIOError(Display *dpy);
 static  int XError(Display *dpy, XErrorEvent *event);
-static  void _XtError(String);
+static void _XtError(String) _X_NORETURN;
 
 static Boolean G_DumpCore;
 
@@ -71,6 +71,7 @@ XError(
         kill(getpid(), SIGQUIT);
     else
         exit(1);
+    _exit(1);
 }
 
 /*
@@ -94,6 +95,7 @@ XIOError(
         kill(getpid(), SIGQUIT);
     else
         exit(1);
+    _exit(1);
 }
 
 /*
@@ -255,4 +257,5 @@ _XtError(
         kill(getpid(), SIGQUIT);
     else
         exit(1);
+    _exit(1);
 }

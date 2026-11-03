@@ -176,7 +176,7 @@ extern void     abobjP_track_external_resizes(
                      Widget      widget,
                      XtPointer   client_data,
                      XEvent *event,
-                     Boolean     cont_to_dispatch
+                     Boolean     *cont_to_dispatch
                 );
 
 

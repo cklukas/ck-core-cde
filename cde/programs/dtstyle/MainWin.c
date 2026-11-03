@@ -205,7 +205,7 @@ build_mainWindow(
     XtSetArg(save.posArgs[save.poscnt], XmNresizePolicy, XmRESIZE_NONE); save.poscnt++;
     style.mainWindow= XmCreateMainWindow(shell,"mainWindow",  save.posArgs, save.poscnt);
     XtAddCallback(style.mainWindow, XmNhelpCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_MAIN_WINDOW);
+        HelpRequestCB, (XtPointer)HELP_MAIN_WINDOW);
 
     n = 0;
     tmpStr = (char *)XtMalloc(strlen(GETMESSAGE(4, 1, "Style Manager"))+1);
@@ -219,19 +219,19 @@ build_mainWindow(
     n = 0;
     mainMenu= XmCreateMenuBar(style.mainWindow,"mainMenu", args, n);
     XtAddCallback(mainMenu, XmNhelpCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_MENUBAR);
+        HelpRequestCB, (XtPointer)HELP_MENUBAR);
     XtManageChild(mainMenu);
 
     /* create the pulldown widgets */
     n = 0;
     filePulldown= XmCreatePulldownMenu(mainMenu,"fileMenu", args, n );
     XtAddCallback(filePulldown, XmNhelpCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_FILE_MENU);
+        HelpRequestCB, (XtPointer)HELP_FILE_MENU);
 
     n = 0;
     helpPulldown= XmCreatePulldownMenu(mainMenu, "helpMenu" , args, n );
     XtAddCallback(helpPulldown, XmNhelpCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_HELP_MENU);
+        HelpRequestCB, (XtPointer)HELP_HELP_MENU);
 
     /* create the cascade butons */
     count = 0;
@@ -246,7 +246,7 @@ build_mainWindow(
     WidgList[count++]= 
         XmCreateCascadeButton(mainMenu, "fileCascadeButton", args, n );
     XtAddCallback(WidgList[count-1], XmNhelpCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_FILE_MENU);
+        HelpRequestCB, (XtPointer)HELP_FILE_MENU);
     XmStringFree(labelString);
 
     n = 0;
@@ -259,7 +259,7 @@ build_mainWindow(
     WidgList[count++]= 
         XmCreateCascadeButton(mainMenu, "helpCascadeButton", args, n );
     XtAddCallback(WidgList[count-1], XmNhelpCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_HELP_MENU);
+        HelpRequestCB, (XtPointer)HELP_HELP_MENU);
     XmStringFree(labelString);
 
     n = 0;
@@ -277,7 +277,7 @@ build_mainWindow(
     exitBtn= XmCreatePushButton(filePulldown, "exit", args, n );
     XtAddCallback(exitBtn, XmNactivateCallback, activateCB_exitBtn, NULL);
     XtAddCallback(exitBtn, XmNhelpCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_EXIT);
+        HelpRequestCB, (XtPointer)HELP_EXIT);
     XtManageChild(exitBtn);
     XmStringFree(labelString);
 
@@ -292,7 +292,7 @@ build_mainWindow(
     WidgList[count++]= 
         XmCreatePushButton(helpPulldown, "overview", args, n );
     XtAddCallback(WidgList[count-1], XmNactivateCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_INTRODUCTION);
+        HelpRequestCB, (XtPointer)HELP_INTRODUCTION);
     XmStringFree(labelString);
 
     n = 0;
@@ -306,7 +306,7 @@ build_mainWindow(
     XtSetArg(args[n], XmNlabelString, labelString);  n++;
     WidgList[count++]= XmCreatePushButton(helpPulldown, "tasks", args, n );
     XtAddCallback(WidgList[count-1], XmNactivateCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_TASKS);
+        HelpRequestCB, (XtPointer)HELP_TASKS);
     XmStringFree(labelString);
 
     n = 0;
@@ -316,7 +316,7 @@ build_mainWindow(
     XtSetArg(args[n], XmNlabelString, labelString);  n++;
     WidgList[count++]= XmCreatePushButton(helpPulldown, "reference", args, n );
     XtAddCallback(WidgList[count-1], XmNactivateCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_REFERENCE);
+        HelpRequestCB, (XtPointer)HELP_REFERENCE);
     XmStringFree(labelString);
 
     n = 0;
@@ -326,7 +326,7 @@ build_mainWindow(
     XtSetArg(args[n], XmNlabelString, labelString);  n++;
     WidgList[count++]= XmCreatePushButton(helpPulldown, "onItem", args, n );
     XtAddCallback(WidgList[count-1], XmNactivateCallback,
-        (XtCallbackProc)HelpModeCB, (XtPointer)NULL);
+        HelpModeCB, (XtPointer)NULL);
     XmStringFree(labelString);
 
     n = 0;
@@ -341,7 +341,7 @@ build_mainWindow(
     WidgList[count++]= 
         XmCreatePushButton(helpPulldown, "usingHelp", args, n );
     XtAddCallback(WidgList[count-1], XmNactivateCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_USING);
+        HelpRequestCB, (XtPointer)HELP_USING);
     XmStringFree(labelString);
 
     n = 0;
@@ -355,7 +355,7 @@ build_mainWindow(
     XtSetArg(args[n], XmNlabelString, labelString); n++;
     WidgList[count++]= XmCreatePushButton(helpPulldown, "stylemanager", args, n );
     XtAddCallback(WidgList[count-1], XmNactivateCallback,
-        (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_VERSION);
+        HelpRequestCB, (XtPointer)HELP_VERSION);
     XmStringFree(labelString);
 
     XtManageChildren(WidgList, count);
@@ -564,7 +564,7 @@ ProcessComponentList(
       XtManageChild (componentWidget);
       XtAddCallback(componentWidget, XmNcallback, activateCB, string);
       XtAddCallback(componentWidget, XmNhelpCallback,
-             (XtCallbackProc)HelpRequestCB, (XtPointer) (intptr_t) helpTag);
+             HelpRequestCB, (XtPointer) (intptr_t) helpTag);
       XmStringFree(cmp_string);
       XtFree(dtIcon);
       

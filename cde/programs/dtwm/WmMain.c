@@ -115,7 +115,7 @@ main (int argc, char *argv [], char *environ [])
      {
 	 char * foo = ((char *)GETMESSAGE(44, 1, ""));
      }
-    XtSetLanguageProc (NULL, (XtLanguageProc)NULL, NULL);
+    XtSetLanguageProc (NULL, NULL, NULL);
 
     /*  
      * Get Identity

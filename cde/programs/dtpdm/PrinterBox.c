@@ -2975,7 +2975,7 @@ CreateOptionMenuPulldown(String pulldown_name,
 					 XmNuserData, user_data,
 					 XmNlabelString, item_list[i],
 					 NULL);
-	if(activate_proc != (XtCallbackProc)NULL)
+	if(activate_proc != NULL)
 	    XtAddCallback(button, XmNactivateCallback,
 			  activate_proc, (XtPointer)(XtArgVal)i);
 	if(i == initial_item)

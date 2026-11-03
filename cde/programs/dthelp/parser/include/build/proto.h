@@ -154,7 +154,7 @@ LOGICAL notinlist(STATELIST *item, STATELIST *list);
 
 ELTSTRUCT *ntrelt(M_WCHAR *p);
 
-void m_openchk(FILE **ptr, char *name, char *mode);
+void m_openchk(FILE **ptr, const char *name, const char *mode);
 
 void parout(void);
 

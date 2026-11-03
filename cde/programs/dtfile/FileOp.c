@@ -2892,8 +2892,9 @@ void
 ChangeIconName (
    Widget w,
    XtPointer client_data,
-   XmTextVerifyCallbackStruct * call_data)
+   XtPointer callback_data)
 {
+   XmTextVerifyCallbackStruct *call_data = callback_data;
    int value, size, increment, page;
    Arg args[3];
    FileMgrData *file_mgr_data = (FileMgrData *)client_data;

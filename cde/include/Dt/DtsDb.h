@@ -53,8 +53,8 @@
 
 typedef int	OtBoolean;
 
-/* typedefs for casting comparison functions if needed */
-typedef	int	(*_DtDtsDbFieldCompare)(DtDtsDbField **fld1, DtDtsDbField **fld2);
+/* qsort/bsearch-compatible field comparison function. */
+typedef	int	(*_DtDtsDbFieldCompare)(const void *fld1, const void *fld2);
 
 /* entry of a list of attribute/pairs */
 typedef	struct
@@ -67,8 +67,8 @@ typedef	struct
 	DtDtsDbField		**fieldList;
 } DtDtsDbRecord;
 
-/* typedefs for casting record comparison functions if needed */
-typedef	int	(*_DtDtsDbRecordCompare)(DtDtsDbRecord **rec1, DtDtsDbRecord **rec2);
+/* qsort/bsearch-compatible record comparison function. */
+typedef	int	(*_DtDtsDbRecordCompare)(const void *rec1, const void *rec2);
 
 /* a "database" of a collection of entrys (i.e. OBJECT-TYPE, ACTION, FILE-TYPE 
 	This is a private Structure to the DtDtsDb component.
@@ -120,8 +120,8 @@ extern	void		_DtDtsDbFieldSort(DtDtsDbRecord *record,
  * sort by name.
  *
  */
-extern int _DtDtsDbCompareRecordNames(DtDtsDbRecord **entry1, DtDtsDbRecord **entry2);
-extern int _DtDtsDbCompareFieldNames(DtDtsDbField **entry1, DtDtsDbField **entry2);
+extern int _DtDtsDbCompareRecordNames(const void *entry1, const void *entry2);
+extern int _DtDtsDbCompareFieldNames(const void *entry1, const void *entry2);
 
 /* retrieves the Record that matches the specified entry from the record */
 extern	DtDtsDbField	*_DtDtsDbGetField(DtDtsDbRecord *record,

@@ -442,7 +442,9 @@ for ( ; p ; p = p->next)
 		"/* line %d \"%s\" */\n",
 	        ((PARVAL *) p->data)->line,
 		iffile);
-	fprintf(pvalh, "#define %s \"", mb_cname);
+	fprintf(pvalh,
+	        "#ifdef %s\n#undef %s\n#endif\n#define %s \"",
+	        mb_cname, mb_cname, mb_cname);
 	m_free(mb_cname,"multi-byte string");
 	if ((q = ((PARVAL *) p->data)->value))
 	    for ( ; *q ; q++)

@@ -159,6 +159,7 @@ static int	formlist_append(
 		);
 
 static int	formlist_force_resize(
+		    void
 		);
 
 /*
@@ -178,7 +179,7 @@ static void	popup_menu(
     		    Widget      widget,
     		    XEvent      *event,
     		    String      *params,
-    		    int         num_params
+		    Cardinal    *num_params
 		);
 
 
@@ -194,7 +195,7 @@ static 	  int	 form_list_count = 0;
 static 	  XtTranslations popup_menu_trans = NULL;
 
 static XtActionsRec menu_actions[] = {
-    {"PopupMenu",     (XtActionProc)popup_menu }
+    {"PopupMenu",     popup_menu }
 }; 
  
 static String menu_trans =
@@ -1847,7 +1848,7 @@ popup_menu(
     Widget      widget,
     XEvent      *event,
     String      *params,
-    int         num_params
+    Cardinal    *num_params
 )
 {
     XButtonEvent	*bevent;

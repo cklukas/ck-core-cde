@@ -54,7 +54,7 @@ unsigned static hashing(ISTRING val);
 /*                        EXTERNAL FUNCTIONS                                 */
 /*****************************************************************************/
 
-HASH * hash_create()
+HASH * hash_create(void)
 {
     HASH *table;
     int i,j;

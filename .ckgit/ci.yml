@@ -26,86 +26,15 @@ jobs:
     artifacts:
       name: documentation-evidence
       paths: [docs-evidence]
-  - name: build
+  - name: build-gcc-c23
     steps:
-      - name: build-and-test-batch-motif
+      - name: build-and-test-gcc-c23
         script: |
-          set -eu
-          test -n "$CKGIT_SISTER_CK_CORE_MOTIF"
-          motif_revision="$(git -C "$CKGIT_SISTER_CK_CORE_MOTIF" rev-parse HEAD)"
-          test "$motif_revision" = "$(cat .ckgit/motif-revision)"
-          echo "CK Core Motif revision: $motif_revision"
-          xinerama_probe="$TMPDIR/cde-xinerama-probe"
-          printf '%s\n' \
-            'char XineramaQueryScreens(void);' \
-            'int main(void) { return XineramaQueryScreens(); }' \
-            > "$xinerama_probe.c"
-          cc "$xinerama_probe.c" -lXinerama -o "$xinerama_probe"
-          grep -q '^#define XmABI_VERSION 9$' \
-            "$CKGIT_SISTER_CK_CORE_MOTIF/lib/Xm/Xm.h.in"
-          grep -q 'XmToolkitABI' cde/configure.ac
-          run_id="$(git rev-parse HEAD)"
-          root="$TMPDIR/cde-build-$run_id"
-          motif_source="$root/motif-source"
-          motif_build="$root/motif-build"
-          motif_prefix="$root/motif-prefix"
-          rm -rf "$root"
-          mkdir -p "$motif_source" "$motif_build" "$motif_prefix"
-          git -C "$CKGIT_SISTER_CK_CORE_MOTIF" archive HEAD | tar -x -C "$motif_source"
-          (cd "$motif_source" && autoreconf -fi)
-          (cd "$motif_build" && "$motif_source/configure" \
-            --prefix="$motif_prefix" --disable-demos --disable-static \
-            --enable-xft --enable-unicode-text --enable-atspi --enable-svg \
-            CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0')
-          for component in bindings bitmaps config localized lib include tools/wml clients/uil; do
-            make -j4 -C "$motif_build/$component"
-            make -j1 -C "$motif_build/$component" install
-          done
-          test -e "$motif_prefix/lib/libXm.so.9"
-          test -x "$motif_prefix/bin/uil"
-          export PATH="$motif_prefix/bin:$PATH"
-          export CPPFLAGS="-I$motif_prefix/include $(pkg-config --cflags xft)"
-          export LDFLAGS="-L$motif_prefix/lib -Wl,-rpath,$motif_prefix/lib"
-          export LD_LIBRARY_PATH="$motif_prefix/lib"
-          (cd cde && ./autogen.sh && \
-            if ! ./configure CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0'; then
-              tail -n 200 config.log
-              exit 1
-            fi && make -j1 -C programs/dtksh prepare-ksh &&
-            make -j4 &&
-            for cc in gcc-14 clang-19; do
-              make -j1 -C programs/dtksh -f Makefile -f "$PWD/../scripts/check-dtksh-c23.mk" CC="$cc" check-dtksh-c23 || exit 1
-            done &&
-            make -j4 check &&
-            xvfb-run -a make -j1 -C programs/dtksh check-widget)
-          readelf -dW cde/programs/dtwm/.libs/dtwm | grep -F 'libXm.so.9'
-      - name: test-installed-filesystem-consumer
+          scripts/run-rpi4-c23-lane.sh gcc-14 g++-14 gcc14
+  - name: build-clang-c23
+    steps:
+      - name: build-and-test-clang-c23
         script: |
-          set -eu
-          test -n "$TMPDIR"
-          test -n "$CKGIT_SISTER_CK_CORE_FS_LIB"
-          test "$(git -C "$CKGIT_SISTER_CK_CORE_FS_LIB" rev-parse HEAD)" = "$(cat .ckgit/fs-revision)"
-          run_id="$(git rev-parse HEAD)"
-          root="$TMPDIR/cde-build-$run_id"
-          fs_prefix="$root/fs-prefix"
-          private_fixture="$(mktemp -d "$HOME/.cde-sync-test.XXXXXXXX")"
-          trap 'rm -rf "$private_fixture"' EXIT
-          export DTFILE_PRIVATE_TEST_ROOT="$private_fixture"
-          cmake -S "$CKGIT_SISTER_CK_CORE_FS_LIB" -B "$root/fs-build" \
-            -DCMAKE_INSTALL_PREFIX="$fs_prefix" -DCMAKE_INSTALL_LIBDIR=lib \
-            -DCK_CORE_FS_BUILD_BROWSER=OFF -DBUILD_TESTING=OFF \
-            -DCMAKE_CXX_FLAGS='-O1 -g0'
-          cmake --build "$root/fs-build" --parallel 4
-          cmake --install "$root/fs-build"
-          motif_prefix="$root/motif-prefix"
-          export PATH="$motif_prefix/bin:$PATH"
-          export CPPFLAGS="-I$motif_prefix/include $(pkg-config --cflags xft)"
-          export LDFLAGS="-L$motif_prefix/lib -Wl,-rpath,$motif_prefix/lib"
-          export LD_LIBRARY_PATH="$motif_prefix/lib:$fs_prefix/lib"
-          export PKG_CONFIG_PATH="$fs_prefix/lib/pkgconfig"
-          (cd cde && ./configure --with-ck-core-fs CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0' && \
-            make -j4 -C programs/dtfile && \
-            make -j1 -C programs/localized/C/msg dtfile_sync.cat && \
-            make -j1 -C programs/dtfile check)
+          scripts/run-rpi4-c23-lane.sh clang-19 clang++-19 clang19
 pages:
   path: public

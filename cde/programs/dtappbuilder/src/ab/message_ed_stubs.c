@@ -147,12 +147,14 @@ static int      msg_editor_load(
                     ABObj   project
                 );
 static int 	msg_editor_clear(
+		    void
 		);
 
 /*
  * General routines
  */
 static void     turnoff_changebars(
+                void
                 );
 static void 	setup_button_fields(
 		    AB_MESSAGE_TYPE mtype
@@ -164,7 +166,7 @@ static void 	setup_btn_lbl_field(
 static void 	set_msg_textp_label(
 		    AB_MESSAGE_TYPE mtype
 		);
-static void 	msgEdP_init();
+static void 	msgEdP_init(void);
 
 static int 	msgEdP_msgpane_init(
 		   DtbMessageEdDialogInfo      cgen
@@ -187,10 +189,10 @@ static int 	build_module_opmenu(
 		   DtbMessageEdDialogInfo      cgen
 		);
 
-static BOOL 	verify_name(); 
-static BOOL 	verify_default_btn();
-static BOOL 	verify_label();
-static BOOL 	verify_buttons();
+static BOOL 	verify_name(void);
+static BOOL 	verify_default_btn(void);
+static BOOL 	verify_label(void);
+static BOOL 	verify_buttons(void);
 
 static int 	update_mod_opmenu(
 		    MOD_OP      op,
@@ -201,6 +203,7 @@ static int 	update_mod_opmenu(
 		);
 
 static void	msgEdP_strings_init(
+		void
 		);
 
 /*               
@@ -219,7 +222,7 @@ static void     typeCB(
 static void     buttonCB(
                     Widget   widget,
                     XtPointer clientdata,
-                    XmToggleButtonCallbackStruct *state
+                    XtPointer calldata
                 );
 static int 	obj_updateOCB(
 		    ObjEvUpdateInfo     info
@@ -233,7 +236,7 @@ static int 	obj_renamedOCB(
 static void 	objlist_selectCB(
 		    Widget      widget,
 		    XtPointer   client_data,
-		    XmListCallbackStruct *listdata
+		    XtPointer   call_data
 		);
 static void     change_msg_moduleCB(
                     Widget   widget,
@@ -405,7 +408,7 @@ msg_editor_init(
 	 */
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNactivateCallback,
-                        (XtCallbackProc)typeCB, (XtPointer)NULL);
+                        typeCB, (XtPointer)NULL);
 
 	/* Message textpane label */
 	mes->msg_textp_label = msg_cgen->msg_textp_label;
@@ -426,7 +429,7 @@ msg_editor_init(
 	 * to NULL if the user specifies no button.
 	 */
         XtAddCallback(item[0], XmNvalueChangedCallback,
-                        (XtCallbackProc)buttonCB, (XtPointer)NULL);
+                        buttonCB, (XtPointer)NULL);
  
         /* Action1 (OK) Button Label */
 	prop_field_init(&(mes->action1_label), NULL,
@@ -444,7 +447,7 @@ msg_editor_init(
 	 * to NULL if the user specifies no button.
 	 */
 	XtAddCallback(item[0], XmNvalueChangedCallback,
-                        (XtCallbackProc)buttonCB, (XtPointer)NULL);
+                        buttonCB, (XtPointer)NULL);
  
         /* Action2 (Extra) Button Label */
         prop_field_init(&(mes->action2_label), NULL,
@@ -462,7 +465,7 @@ msg_editor_init(
 	 * to NULL if the user specifies no button.
 	 */
 	XtAddCallback(item[0], XmNvalueChangedCallback,
-                        (XtCallbackProc)buttonCB, (XtPointer)NULL);
+                        buttonCB, (XtPointer)NULL);
  
         /* Action3 (Extra) Button Label */
         prop_field_init(&(mes->action3_label), NULL,
@@ -757,9 +760,10 @@ static void
 buttonCB(
     Widget   item,
     XtPointer clientdata,
-    XmToggleButtonCallbackStruct *state
+    XtPointer calldata
 )
 {
+    XmToggleButtonCallbackStruct *state = calldata;
     int			 button;
     MsgEditorSettingsRec *mes = &msg_editor_settings_rec;
  
@@ -1460,7 +1464,7 @@ msgEdP_msgpane_init(
 
     /* Add Callback to load message object when selected from list */
     XtAddCallback(cgen->msg_list, XmNbrowseSelectionCallback,
-            (XtCallbackProc)objlist_selectCB, (XtPointer)NULL);
+            objlist_selectCB, (XtPointer)NULL);
 
     return (numModItems);
 }
@@ -1520,9 +1524,10 @@ static void
 objlist_selectCB(
     Widget      widget,
     XtPointer   client_data,
-    XmListCallbackStruct *listdata
+    XtPointer   call_data
 )
 {
+    XmListCallbackStruct *listdata = call_data;
     ABObj               	module;
     ABObj               	selected_obj;
     STRING              	name = NULL;

@@ -78,7 +78,7 @@ extern void ProcessClientMessage(XEvent *);
 extern void ProcessScreenSaverMessage(XEvent *);
 extern void RestoreDefaults(Atom) ;
 extern void ProcessPropertyNotify(XEvent *) ;
-extern void ProcessReloadActionsDatabase(void);
+extern void ProcessReloadActionsDatabase(XtPointer);
 extern void ProcessEvent(Widget, XtPointer, XEvent *, Boolean *);
 
 #endif /*_smcommun_h*/

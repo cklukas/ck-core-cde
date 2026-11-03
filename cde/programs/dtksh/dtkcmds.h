@@ -50,8 +50,6 @@
 #define CONVERT_POSTPONED 0
 #define CONVERT_FAILED   -1
 
-#define ADDBUILTIN(a,b) sh_addbuiltin(a, ((int (*)(int, char*[], Shbltin_t*))b), (void*) 0)
-
 extern Widget Toplevel;
 extern char str_nill[];
 extern wtab_t * DTKSHConversionWidget;
@@ -103,7 +101,7 @@ extern int do_XtDestroyWidget(
                         int argc,
                         char *argv[]) ;
 extern int do_single_widget_test_func( 
-                        int (*func)(),
+                        Boolean (*func)(Widget),
                         int argc,
                         char **argv) ;
 extern int do_XtIsSensitive( 
@@ -215,7 +213,7 @@ extern int do_XtClass(
 extern int do_managelist_func( 
                         int argc,
                         char *argv[],
-                        int (*func)()) ;
+                        void (*func)(WidgetList, Cardinal)) ;
 extern int create_standard_gc( 
                         Display *display,
                         Window drawable) ;
@@ -323,40 +321,40 @@ extern void RestorePriorEnvVarValues(
                         Namval_t *np2,
                         char *value2) ;
 extern void stdCB( 
-                        void *widget,
-                        caddr_t clientData,
-                        caddr_t callData) ;
+                        Widget widget,
+                        XtPointer clientData,
+                        XtPointer callData) ;
 extern void stdWSCB( 
-                        void *widget,
+                        Widget widget,
                         Atom atom,
-                        caddr_t clientData) ;
+                        XtPointer clientData) ;
 extern void stdInputCB( 
-                        inputrec_t *inp,
+                        XtPointer clientData,
                         int *source,
                         XtInputId *id) ;
-extern int stdWorkProcCB( 
-                        char *clientData) ;
+extern Boolean stdWorkProcCB(
+                        XtPointer clientData) ;
 extern void stdTimerCB( 
-                        char *clientData,
-                        long *id) ;
-extern void stdPrintSetupProc(
+                        XtPointer clientData,
+                        XtIntervalId *id) ;
+extern XtEnum stdPrintSetupProc(
                         int proctype,
-                        void  *widget,
+                        Widget widget,
                         DtPrintSetupData *callData);
-extern void stdPrinterInfoProc(
-                        void  *widget,
+extern XtEnum stdPrinterInfoProc(
+                        Widget widget,
                         DtPrintSetupData *callData);
-extern void stdSelectFileProc(
-                        void  *widget,
+extern XtEnum stdSelectFileProc(
+                        Widget widget,
                         DtPrintSetupData *callData);
-extern void stdSelectPrinterProc(
-                        void  *widget,
+extern XtEnum stdSelectPrinterProc(
+                        Widget widget,
                         DtPrintSetupData *callData);
-extern void stdSetupProc(
-                        void  *widget,
+extern XtEnum stdSetupProc(
+                        Widget widget,
                         DtPrintSetupData *callData);
-extern void stdVerifyPrinterProc(
-                        void  *widget,
+extern XtEnum stdVerifyPrinterProc(
+                        Widget widget,
                         DtPrintSetupData *callData);
 extern int do_VerifyString( 
                         int argc,
@@ -400,8 +398,8 @@ extern int LocateCBRecord(
                         Atom propAtom,
                         DtWsmCBContext handle) ;
 extern void stdEH( 
-                        void *widget,
-                        caddr_t clientData,
+                        Widget widget,
+                        XtPointer clientData,
                         XEvent *event,
                         Boolean *continueToDispatch) ;
 extern dtksh_event_handler_data_t * GetNewEHData( 

@@ -940,7 +940,7 @@ write_main_i18n_local_vars(
     if (genCodeInfo->i18n_method == ABMF_I18N_XPG4_API)
     {
         abio_puts(codeFile, 
-	    "XtLanguageProc\tlanguage_proc = (XtLanguageProc)NULL;\n");
+	    "XtLanguageProc\tlanguage_proc = NULL;\n");
         abio_puts(codeFile, 
 	    "XtPointer\t\tlanguage_proc_client_data = (XtPointer)NULL;\n");
     }

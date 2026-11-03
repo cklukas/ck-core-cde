@@ -50,51 +50,50 @@
 #define _TT_XLIB_H
 
 #include "tt_options.h"
+#include <X11/Intrinsic.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 
-typedef int (*_Tt_xfn_ptr)(...);
-
 typedef struct {
-	_Tt_xfn_ptr	XOpenDisplay;
-	_Tt_xfn_ptr	XCloseDisplay;
-	_Tt_xfn_ptr	XFlush;
-	_Tt_xfn_ptr	XChangeProperty;
-	_Tt_xfn_ptr	XDeleteProperty;
-	_Tt_xfn_ptr	XGetWindowProperty;
-	_Tt_xfn_ptr	XSetIOErrorHandler;
-	_Tt_xfn_ptr	XInternAtom;
-	_Tt_xfn_ptr	XNextEvent;
-	_Tt_xfn_ptr	XRefreshKeyboardMapping;
-	_Tt_xfn_ptr	XGrabServer;
-	_Tt_xfn_ptr	XUngrabServer;
-	_Tt_xfn_ptr	XGetWindowAttributes;
-	_Tt_xfn_ptr	XTranslateCoordinates;
-	_Tt_xfn_ptr	XMoveResizeWindow;
-	_Tt_xfn_ptr	XRaiseWindow;
-	_Tt_xfn_ptr	XLowerWindow;
-	_Tt_xfn_ptr	XIconifyWindow;
-	_Tt_xfn_ptr	XMapWindow;
-	_Tt_xfn_ptr	XWithdrawWindow;
-	_Tt_xfn_ptr	XSendEvent;
-	_Tt_xfn_ptr	XScreenNumberOfScreen;
-	_Tt_xfn_ptr	XFree;
+	decltype(&::XOpenDisplay)		XOpenDisplay;
+	decltype(&::XCloseDisplay)		XCloseDisplay;
+	decltype(&::XFlush)			XFlush;
+	decltype(&::XChangeProperty)		XChangeProperty;
+	decltype(&::XDeleteProperty)		XDeleteProperty;
+	decltype(&::XGetWindowProperty)		XGetWindowProperty;
+	decltype(&::XSetIOErrorHandler)		XSetIOErrorHandler;
+	decltype(&::XInternAtom)			XInternAtom;
+	decltype(&::XNextEvent)			XNextEvent;
+	decltype(&::XRefreshKeyboardMapping)	XRefreshKeyboardMapping;
+	decltype(&::XGrabServer)			XGrabServer;
+	decltype(&::XUngrabServer)		XUngrabServer;
+	decltype(&::XGetWindowAttributes)	XGetWindowAttributes;
+	decltype(&::XTranslateCoordinates)	XTranslateCoordinates;
+	decltype(&::XMoveResizeWindow)		XMoveResizeWindow;
+	decltype(&::XRaiseWindow)			XRaiseWindow;
+	decltype(&::XLowerWindow)			XLowerWindow;
+	decltype(&::XIconifyWindow)		XIconifyWindow;
+	decltype(&::XMapWindow)			XMapWindow;
+	decltype(&::XWithdrawWindow)		XWithdrawWindow;
+	decltype(&::XSendEvent)			XSendEvent;
+	decltype(&::XScreenNumberOfScreen)	XScreenNumberOfScreen;
+	decltype(&::XFree)			XFree;
 } _Tt_xlib;
 
 typedef struct {
-	_Tt_xfn_ptr	XtVaGetValues;
-	_Tt_xfn_ptr	XtVaSetValues;
-	_Tt_xfn_ptr	XtRemoveInput;
-	_Tt_xfn_ptr	XtDisplay;
-	_Tt_xfn_ptr	XtWindow;
-	_Tt_xfn_ptr	XtIsRealized;
-	_Tt_xfn_ptr	XtIsSubclass;
-	_Tt_xfn_ptr	XtIsSensitive;
-	_Tt_xfn_ptr	XtSetSensitive;
-	_Tt_xfn_ptr	XtAppPending;
-	_Tt_xfn_ptr	XtAppAddTimeOut;
-	_Tt_xfn_ptr	XtRemoveTimeOut;
-	_Tt_xfn_ptr	XtAppProcessEvent;
+	decltype(&::XtVaGetValues)	XtVaGetValues;
+	decltype(&::XtVaSetValues)	XtVaSetValues;
+	decltype(&::XtRemoveInput)	XtRemoveInput;
+	decltype(&::XtDisplay)		XtDisplay;
+	decltype(&::XtWindow)		XtWindow;
+	decltype(&::XtIsRealized)	XtIsRealized;
+	decltype(&::XtIsSubclass)	XtIsSubclass;
+	decltype(&::XtIsSensitive)	XtIsSensitive;
+	decltype(&::XtSetSensitive)	XtSetSensitive;
+	decltype(&::XtAppPending)	XtAppPending;
+	decltype(&::XtAppAddTimeOut)	XtAppAddTimeOut;
+	decltype(&::XtRemoveTimeOut)	XtRemoveTimeOut;
+	decltype(&::XtAppProcessEvent)	XtAppProcessEvent;
 	void	       *applicationShellWidgetClass;
 } _Tt_xt;
 
@@ -123,7 +122,7 @@ typedef struct {
 #	define XTSYM(sym) sym
 #endif
 
-extern int		_tt_load_xlib();
-extern int		_tt_load_xt();
+extern int		_tt_load_xlib(void);
+extern int		_tt_load_xt(void);
 
 #endif

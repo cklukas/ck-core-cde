@@ -85,7 +85,7 @@ ScrollingList::ScrollingList( Widget parent, char *name ) : UIComponent( name )
 
   XtAddCallback( _w,
 		 XmNdefaultActionCallback,
-		 (XtCallbackProc) &ScrollingList::defaultActionCallback,
+		 &ScrollingList::defaultActionCallback,
 		 this ); 
   installDestroyHandler();
 }
@@ -97,9 +97,10 @@ ScrollingList::~ScrollingList ()
 void
 ScrollingList::defaultActionCallback( Widget w,
 			      XtPointer clientData,
-			      XmListCallbackStruct *cbs )
+			      XtPointer callData )
 {
   ScrollingList *obj = ( ScrollingList *) clientData;
+  XmListCallbackStruct *cbs = (XmListCallbackStruct *)callData;
   obj->defaultAction( w, clientData, cbs );
 }
 

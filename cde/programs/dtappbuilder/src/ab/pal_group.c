@@ -252,7 +252,7 @@ static void	get_widest_value_obj(
 static void	grouptypeCB(
 		    Widget   widget,
 		    XtPointer clientdata,
-                    XmToggleButtonCallbackStruct *state
+                    XtPointer calldata
 		);
 
 static void	undo_group(
@@ -772,7 +772,7 @@ group_prop_init(
 
 	for (i=0; i < n; i++)
             XtAddCallback(item[i], XmNvalueChangedCallback,
-                        (XtCallbackProc)grouptypeCB, (XtPointer)type);
+                        grouptypeCB, (XtPointer)type);
 
 	/*
 	ui_set_active(cgen->layout_rbox_items.bitmaps_ggp_rowcol_xbm_item, False);
@@ -1365,9 +1365,10 @@ static void
 grouptypeCB(
     Widget   item,
     XtPointer clientdata,
-    XmToggleButtonCallbackStruct *state
+    XtPointer calldata
 )
 {
+    XmToggleButtonCallbackStruct *state = calldata;
     AB_PROP_TYPE	type = (AB_PROP_TYPE)clientdata;
     AB_GROUP_TYPE	value = AB_GROUP_UNDEF;
 

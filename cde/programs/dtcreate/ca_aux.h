@@ -106,9 +106,8 @@ void activateCB_FileQuit (Widget wid, XtPointer cdata,
 /*                                                                         */
 /***************************************************************************/
 
-void activateCB_ExpertOption (Widget wid, XtPointer client_data, XtPointer *cbs);
-void valueChangedCB_ColorMonoOption (Widget, XtPointer,
-                              XmToggleButtonCallbackStruct *);
+void activateCB_ExpertOption (Widget wid, XtPointer client_data, XtPointer call_data);
+void valueChangedCB_ColorMonoOption (Widget, XtPointer, XtPointer);
 void createCB_ColorMonoOption (Widget);
 
 
@@ -119,11 +118,11 @@ void createCB_ColorMonoOption (Widget);
 /***************************************************************************/
 
 void activateCB_action_icon (Widget wid, XtPointer client_data, 
-			     DtIconCallbackStruct *cbs);
+			     XtPointer call_data);
 void activateCB_add_filetype (Widget wid, XtPointer client_data,
-                              XmPushButtonCallbackStruct *cbs);
+                              XtPointer call_data);
 void activateCB_edit_filetype (Widget wid, XtPointer client_data,
-			       XmPushButtonCallbackStruct *cbs);
+			       XtPointer call_data);
 
 
 #endif /* _CA_AUX_H_INCLUDED */

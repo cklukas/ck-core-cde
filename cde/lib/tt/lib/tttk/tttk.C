@@ -471,7 +471,7 @@ _tttk_block_procid_while(
 void
 _tttk_timed_out(
 	XtPointer	p_timed_out,
-	XtIntervalId
+	XtIntervalId *
 )
 {
 	*(int *)p_timed_out = 1;
@@ -500,7 +500,7 @@ _tttk_block_app_while(
 	if (msTimeOut > 0) {
 		alarm = CALLXT(XtAppAddTimeOut)( app2run,
 					(unsigned long)msTimeOut,
-					(XtTimerCallbackProc)_tttk_timed_out,
+					_tttk_timed_out,
 					&timed_out );
 	}
 	do {

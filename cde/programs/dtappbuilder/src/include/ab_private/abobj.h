@@ -154,9 +154,11 @@ extern void	abobj_sort_sel_list(
 		    int sort);
 
 extern void	abobj_group_selected_objects(
+		    void
 		);
 
 extern void	abobj_ungroup_selected_objects(
+		    void
 		);
 
 extern void	abobj_layout_group(
@@ -169,9 +171,11 @@ extern void	abobj_register_group_expose_handler(
 		);
 
 extern void	abobj_make_panedwin(
+		    void
 		);
 
 extern void 	abobj_unmake_panedwin(
+		    void
 		);
 
 
@@ -457,6 +461,7 @@ extern void	abobj_set_menu_item_state(
 		);
 
 extern void	abobj_strings_init(
+		    void
 		);
 
 extern int 	abobj_project_name_extract(

@@ -77,7 +77,7 @@ TemplateListUiItem::TemplateListUiItem(Widget w,
 
     XtAddCallback(w,
 		  XmNbrowseSelectionCallback, 
-		  (XtCallbackProc)handleTmplSelection,
+		  handleTmplSelection,
 		  (XtPointer)this);
 
 

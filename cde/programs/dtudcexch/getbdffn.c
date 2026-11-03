@@ -43,8 +43,10 @@ extern XtPointer _XmStringUngenerate (XmString string,
                         XmTextType tag_type,
                         XmTextType output_type);
 
-void filesbokCB();
-void filesbcancelCB();
+static void filesbokCB(Widget widget, XtPointer client_data,
+                       XtPointer call_data);
+static void filesbcancelCB(Widget widget, XtPointer client_data,
+                           XtPointer call_data);
 
 extern char *maintitle;
 
@@ -63,10 +65,10 @@ void getbdffn(Exc_data * ed)
     XtSetArg(args[n], XmNselectionLabelString, xms); n++;
     filesb = XmCreateFileSelectionDialog(ed->toplevel, "filesb", args, n);
     XtAddCallback(filesb, XmNokCallback,
-		  (XtCallbackProc) filesbokCB,
+		  filesbokCB,
 		  (XtPointer) ed);
     XtAddCallback(filesb, XmNcancelCallback,
-		  (XtCallbackProc) filesbcancelCB,
+		  filesbcancelCB,
 		  (XtPointer) ed);
     XtUnmanageChild(XmFileSelectionBoxGetChild(filesb, XmDIALOG_HELP_BUTTON));
     XtManageChild(filesb);
@@ -104,8 +106,11 @@ int fopencheck(char *file, char *dir, char *mode)
     return -1;
 }
 
-void filesbcancelCB(Widget widget, Exc_data * ed, XtPointer call_data)
+static void
+filesbcancelCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
+    Exc_data *ed = (Exc_data *)client_data;
+
     excexit(ed);
 }
 
@@ -117,8 +122,10 @@ void freeStrings(char * dir, char * file)
 	XtFree(file);
 }
 
-void filesbokCB(Widget widget, Exc_data * ed, XtPointer call_data)
+static void
+filesbokCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
+    Exc_data *ed = (Exc_data *)client_data;
     XmFileSelectionBoxCallbackStruct	*ptr;
     char				*file = NULL, *dir = NULL, *tmpfile;
     int					r, ans = 0;

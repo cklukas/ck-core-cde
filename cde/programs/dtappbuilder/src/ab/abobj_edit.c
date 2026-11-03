@@ -77,6 +77,7 @@
 **                                                                      **
 **************************************************************************/
 static void	init_clipboard(
+		    void
 		);
 
 static void	verify_clipboard_space(
@@ -142,6 +143,7 @@ static void	init_undo_rec(
 		);
 
 static void	init_undo(
+		    void
 		);
 
 static void	verify_undo_rec_space(
@@ -212,8 +214,6 @@ static DTB_MODAL_ANSWER show_modal_msg_relative_initiator(
 static ABClipboardRec	ABClipboard = NULL;
 static ABUndoRec	ABUndo = NULL;
 static ABUndoRec	ABUndo_backup = NULL;
-
-static void		(*Undo_func)();
 
 BOOL			in_undo = FALSE;
 

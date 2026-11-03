@@ -5,7 +5,7 @@ noinst_PROGRAMS = build
 .NOTPARALLEL:
 
 HELPTAG       = ..
-HELPTAGSRC    = $(HELPTAG)/helptag
+HELPTAGSRC    = $(top_srcdir)/programs/dthelp/parser/pass1/helptag
 HELPPARSERSRC = $(HELPTAG)/parser
 HELPELTDEFSRC = $(HELPTAG)/eltdef
 HELPDTDFILE   = $(HELPTAGSRC)/hptag.dtd
@@ -13,7 +13,10 @@ HELPUTILSRC   = $(HELPTAG)/util
 HELPBUILDSRC  = $(HELPTAG)/build
 HELPUTILLIB   = $(HELPTAG)/util/libutil.a
 
-build_CFLAGS = -DPASS1 -I$(HELPUTILSRC) -I../../include/util -I../../include/build
+build_CFLAGS = -DPASS1 -I$(HELPUTILSRC) \
+	-I$(top_srcdir)/programs/dthelp/parser/pass1/util \
+	-I../../include/util -I$(top_srcdir)/programs/dthelp/parser/include/util \
+	-I../../include/build -I$(top_srcdir)/programs/dthelp/parser/include/build
 
 build_LDADD = ../util/libutil.a
 
@@ -52,6 +55,6 @@ BDONE: ./build $(HELPDTDFILE)
 CDONE: $(HELPUTILSRC)/context $(HELPTAGSRC)/delim.bld context.dat
 	$(RM) $(CPRODS) $(CTRASH)
 	$(CP) $(HELPTAGSRC)/delim.bld delim.dat # appl.-specific delim.dat
-	$(HELPUTILSRC)/context sparse
+	CDE_CONTEXT_DATA=$(srcdir)/context.dat $(HELPUTILSRC)/context sparse
 	touch CDONE
 

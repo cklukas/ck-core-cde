@@ -451,12 +451,12 @@ int open_prot(int min, int def)
    return prot;
 }
 
-int open_file_prot()
+int open_file_prot(void)
 {
    return open_prot(0600,0666);
 }
 
-int open_dir_prot()
+int open_dir_prot(void)
 {
    return open_prot(0700,0777);
 }

@@ -797,11 +797,11 @@ class RFCTransport : public DtMail::Transport {
 
     // SendMsgDialog initiates a send.  It needs to set information
     // needed to exec sendmail by calling these initialization functions.
-    // getSendmailReturnProc returns a handler so that SendMsgDialog
-    // can use it in XtAppAddInput.
+    // SendMsgDialog's Xt input adapter calls this operation when the
+    // child-status pipe becomes readable.
     virtual void initTransportData(int fds[2],
 	SubProcessFinishedProc proc, void *ptr);
-    virtual void *getSendmailReturnProc(void);
+    virtual void processSendmailReturn(void);
 
 
   protected:
@@ -851,8 +851,6 @@ class RFCTransport : public DtMail::Transport {
     void signalRegister(void);
     int startSubprocess(DtMailEnv &error, char * cmd, 
 	Buffer & headers, Buffer & bodies, char **argv);
-    static void sendmailReturnProc(void);
-
     // Store info from SendMsgDialog
     // ptr to SendMsgDialog::SendmaliErrorProc
     SubProcessFinishedProc *_error_proc; 

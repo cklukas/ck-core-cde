@@ -542,7 +542,7 @@ xevent_error_aborter(Display *display, XErrorEvent* error_event)
 void
 WindowSystem::init()
 {
-  XtSetLanguageProc(NULL, (XtLanguageProc)NULL, NULL);
+  XtSetLanguageProc(NULL, NULL, NULL);
 
   _DtEnvControl(DT_ENV_SET);
 
@@ -807,7 +807,7 @@ WindowSystem::register_shell (WShell *shell)
 			     (void *) si);
 
   XtAddEventHandler (*shell, (EventMask) 0, TRUE,
-		     (XtEventHandler) _XEditResCheckMessages, NULL);
+		     _XEditResCheckMessages, NULL);
 }
 
 void
@@ -822,7 +822,7 @@ WindowSystem::register_full_modal_shell (WShell *shell)
 			     (void *) si);
 
   XtAddEventHandler (*shell, (EventMask) 0, TRUE,
-		     (XtEventHandler) _XEditResCheckMessages, NULL);
+		     _XEditResCheckMessages, NULL);
 }
 
 void
@@ -835,7 +835,7 @@ WindowSystem::register_primary_modal_shell (WShell *shell)
 			     (void *) si);
 
   XtAddEventHandler (*shell, (EventMask) 0, TRUE,
-		     (XtEventHandler) _XEditResCheckMessages, NULL);
+		     _XEditResCheckMessages, NULL);
 }
 
 
@@ -1512,7 +1512,7 @@ WindowSystem::show_all_windows()
 	    {
 	      waiting_for_wm = True;
 	      XtAddEventHandler (si->f_shell, PropertyChangeMask, False,
-				 (XtEventHandler) wait_for_wm,
+				 wait_for_wm,
 				 &waiting_for_wm);
 	    }
 	    
@@ -1531,7 +1531,7 @@ WindowSystem::show_all_windows()
 		}
 	      // Get rid of event handler now. 
 	      XtRemoveEventHandler (si->f_shell, PropertyChangeMask, False,
-				    (XtEventHandler) wait_for_wm,
+				    wait_for_wm,
 				    &waiting_for_wm);
 	    }
 

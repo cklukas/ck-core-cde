@@ -53,7 +53,7 @@ typedef struct _lineupList {
 #define	CORRECTION_TEXT_OFFSET	-1
 
 /* private function declarations... */
-extern _DtTermViewLineupList * _DtTermViewLineupListCreate();
+extern _DtTermViewLineupList * _DtTermViewLineupListCreate(void);
 extern void _DtTermViewLineupListAddItem(
     _DtTermViewLineupList *list,
     Widget		  left,

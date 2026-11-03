@@ -178,7 +178,7 @@ static void
 e_view_cancel_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
 	Editor		*e = (Editor *)client_data;
 
@@ -232,7 +232,7 @@ e_build_view_popup(Editor *e) {
       			NULL);
 	XmStringFree(xmstr);
 
-	XtAddCallback(e->view_cancel_button, XmNactivateCallback, (XtCallbackProc) e_view_cancel_cb, e);
+	XtAddCallback(e->view_cancel_button, XmNactivateCallback, e_view_cancel_cb, e);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 77, "Help"));
 	e->view_help_button = XtVaCreateWidget("help",
@@ -289,9 +289,9 @@ e_build_view_popup(Editor *e) {
 					    args, ac);
 
         XtAddCallback(e->view_help_button, XmNactivateCallback, 
-		(XtCallbackProc)help_cb, APPT_LIST_HELP_BUTTON);
+		help_cb, APPT_LIST_HELP_BUTTON);
         XtAddCallback(e->view_form, XmNhelpCallback, 
-		(XtCallbackProc)help_cb, (XtPointer) APPT_LIST_HELP_BUTTON);
+		help_cb, (XtPointer) APPT_LIST_HELP_BUTTON);
 
 	XtManageChild(e->view_list);
 	ManageChildren(e->view_form);
@@ -675,7 +675,8 @@ void
 FormApptDragMotionHandler(
         Widget          dragInitiator,
         XtPointer       clientData,
-        XEvent         *event)
+        XEvent         *event,
+        Boolean        *continueToDispatch)
 {
         int             diffX, diffY;
         Calendar	*c = (Calendar *) clientData;
@@ -967,7 +968,7 @@ e_make_editor(Calendar *c)
 	XmStringFree(xmstr);
 
         XtAddEventHandler(XtParent(e->drag_source), Button1MotionMask, False,
-                (XtEventHandler)FormApptDragMotionHandler, (XtPointer) c);
+                FormApptDragMotionHandler, (XtPointer) c);
 
 	XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(c->frame)), 
 		"enableBtn1Transfer", 	&btn1_transfer, 
@@ -977,7 +978,7 @@ e_make_editor(Calendar *c)
 	if ((Boolean)btn1_transfer != True) {
         	XtAddEventHandler(XtParent(e->drag_source), 
 				Button2MotionMask, False, 
-				(XtEventHandler)FormApptDragMotionHandler, 
+				FormApptDragMotionHandler,
 				(XtPointer) c);
 	}
 
@@ -1037,9 +1038,9 @@ e_make_editor(Calendar *c)
 		NULL);
 
         XtAddCallback(e->help_button, XmNactivateCallback,
-		(XtCallbackProc)help_cb, APPT_EDITOR_HELP_BUTTON);
+		help_cb, APPT_EDITOR_HELP_BUTTON);
         XtAddCallback(e->base_form_mgr, XmNhelpCallback,
-                (XtCallbackProc)help_cb, (XtPointer) APPT_EDITOR_HELP_BUTTON);
+                help_cb, (XtPointer) APPT_EDITOR_HELP_BUTTON);
 
        	XtVaSetValues(e->base_form_mgr, 
 		XmNdefaultButton, 	e->insert_button, 

@@ -319,7 +319,7 @@ static int FillHintBuf(unsigned char *, unsigned char **,
 		       unsigned int, unsigned int *);
 static void WaitForWM( void ) ;
 static void HandleWMClientMessage(Widget smWidget, XtPointer dummy,
-                                XEvent *event);
+                                XEvent *event, Boolean *continue_to_dispatch);
 static void WaitWMTimeout( XtPointer , XtIntervalId *) ;
 static void FixEnvironmentData( void ) ;
 static void ResetScreenInfo(unsigned char **,
@@ -3925,7 +3925,7 @@ WaitForWM( void )
     XtAddEventHandler(smGD.topLevelWid,
                       0,
                       True,
-                      (XtEventHandler)HandleWMClientMessage,
+                      HandleWMClientMessage,
                       (XtPointer) NULL);
 
     /*
@@ -3946,7 +3946,7 @@ WaitForWM( void )
     XtRemoveEventHandler(smGD.topLevelWid,
                       0,
                       True,
-                      (XtEventHandler)HandleWMClientMessage,
+                      HandleWMClientMessage,
                       (XtPointer) NULL);
 
     return;
@@ -4002,7 +4002,8 @@ WaitWMTimeout(
 static void
 HandleWMClientMessage( Widget smWidget,
                     XtPointer dummy,
-                    XEvent *event)
+                    XEvent *event,
+                    Boolean *continue_to_dispatch)
 {
     if (event->type == ClientMessage)
     {

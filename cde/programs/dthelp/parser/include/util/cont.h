@@ -69,7 +69,7 @@ void *m_malloc(int size, char *msg);
 
 void nextcon(LOGICAL sparse);
 
-void m_openchk(FILE **ptr, char *name, char *mode);
+void m_openchk(FILE **ptr, const char *name, const char *mode);
 
 void printval(FILE *file, M_TRIE *value);
 

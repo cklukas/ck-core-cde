@@ -566,6 +566,13 @@ extern int  ConvertAddr(
                         int *len,                   /* return */
                         char **addr);               /* return */
 
+extern char * NetaddrAddress(
+                        XdmcpNetaddr netaddr,
+                        int *len);
+extern char * NetaddrPort(
+                        XdmcpNetaddr netaddr,
+                        int *len);
+
 extern int  ConvertFamily(
 			int sockfamily);
 
@@ -656,7 +663,10 @@ extern struct display * FindDisplayBySessionID(
 			CARD32 sessionID) ;
 
 extern void ForEachDisplay(
-			void (*f)()) ;
+			void (*f)(struct display *display)) ;
+extern ARRAY8Ptr IndirectChoice(
+			ARRAY8Ptr clientAddress,
+			CARD16 connectionType) ;
 extern struct display * NewDisplay(
 			char *name,
 			char *class) ;

@@ -2,7 +2,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = tttrace
 
-tttrace_CXXFLAGS = -I../../lib
+tttrace_CXXFLAGS = -I../../lib -I$(top_srcdir)/lib/tt/lib
 
 tttrace_LDADD = $(LIBTT) $(TIRPCLIB) $(XTOOLLIB)
 

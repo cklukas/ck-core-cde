@@ -324,9 +324,9 @@ make_std_tempbr(Calendar *c)
                 NULL);
 	XmStringFree(label_str);
         XtAddCallback(tb->help_button, XmNactivateCallback,
-                (XtCallbackProc)help_cb, SHOW_OTHER_CAL_HELP_BUTTON);
+                help_cb, SHOW_OTHER_CAL_HELP_BUTTON);
         XtAddCallback(tb->form, XmNhelpCallback,
-                (XtCallbackProc)help_cb, (XtPointer) SHOW_OTHER_CAL_HELP_BUTTON);
+                help_cb, (XtPointer) SHOW_OTHER_CAL_HELP_BUTTON);
 
 #ifdef FNS_SUNDEX_DEMO
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 648,

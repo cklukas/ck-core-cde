@@ -9,5 +9,5 @@ dist_backdrops_DATA = $(BUILT_SOURCES)
 TOP = $(top_builddir)/programs
 MERGE = $(top_builddir)/programs/localized/util/merge
 
-desc.$(LANG): $(TOP)/dtstyle/Backdrops Backdrops.tmsg
-	$(MERGE) -lang $(LANG) Backdrops.tmsg < $< > $@ || $(RM) $@
+desc.$(LANG): $(TOP)/dtstyle/Backdrops $(srcdir)/Backdrops.tmsg
+	$(MERGE) -lang $(LANG) $(srcdir)/Backdrops.tmsg < $< > $@ || $(RM) $@

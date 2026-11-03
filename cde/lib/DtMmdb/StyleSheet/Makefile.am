@@ -2,7 +2,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 noinst_LTLIBRARIES = libStyleSheet.la
 
-libStyleSheet_la_CXXFLAGS = -DEXPAND_TEMPLATES -DCDE_NEXT -I..
+libStyleSheet_la_CXXFLAGS = -DEXPAND_TEMPLATES -DCDE_NEXT -I.. \
+	-I$(top_srcdir)/lib/DtMmdb
 
 libStyleSheet_la_SOURCES = Attribute.C \
 			   AttributeList.C \

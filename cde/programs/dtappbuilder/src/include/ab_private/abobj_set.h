@@ -365,12 +365,15 @@ extern int 	abobj_set_save_needed(
 		); 
 
 extern void 	abobj_disable_save_needed(
+		    void
 		); 
 
 extern void 	abobj_enable_save_needed(
+		    void
 		); 
 
 extern BOOL 	abobj_save_needed_enabled(
+		    void
 		); 
 
 extern void 	abobj_set_pattern_type(

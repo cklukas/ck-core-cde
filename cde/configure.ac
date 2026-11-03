@@ -33,6 +33,18 @@ dnl These must be up here for the compiler search list to actually work
 AC_PROG_CC([cc gcc clang])
 AC_PROG_CXX([c++ g++ clang++])
 
+dnl Maintained C sources use C23 by default.  Preserve an explicit language
+dnl mode supplied by a packager or developer; compatibility components select
+dnl their older standard in their own build rules.
+AS_CASE([" $CFLAGS "],
+  [*" -std="*], [],
+  [CFLAGS="$CFLAGS -std=c23"])
+
+dnl Recursive shadow builds search generated public headers in top_builddir
+dnl first.  Add the maintained source header tree as the fallback so a fresh
+dnl out-of-tree build never depends on headers copied by an earlier build.
+CPPFLAGS="$CPPFLAGS -I\$(top_srcdir)/include"
+
 LT_INIT
 AC_PREFIX_DEFAULT(/usr/dt)
 
@@ -255,12 +267,12 @@ AC_SUBST(DTCLIENTLIBS, '$(LIBPRINT) $(LIBHELP) $(LIBWIDGET) $(LIBSVC) \
 $(LIBTT) $(LIBXIN)')
 
 dnl set up come convenience replacements for global include dirs
-AC_SUBST(DT_INCDIR, '-I$(top_builddir)/include/Dt')
-AC_SUBST(DTI_INCDIR, '-I$(top_builddir)/include/DtI')
-AC_SUBST(TT_INCDIR, '-I$(top_builddir)/include/Tt')
-AC_SUBST(XM_INCDIR, '-I$(top_builddir)/include/Xm')
-AC_SUBST(CSA_INCDIR, '-I$(top_builddir)/include/csa')
-AC_SUBST(SPC_INCDIR, '-I$(top_builddir)/include/SPC')
+AC_SUBST(DT_INCDIR, '-I$(top_builddir)/include/Dt -I$(top_srcdir)/include/Dt')
+AC_SUBST(DTI_INCDIR, '-I$(top_builddir)/include/DtI -I$(top_srcdir)/include/DtI')
+AC_SUBST(TT_INCDIR, '-I$(top_builddir)/include/Tt -I$(top_srcdir)/include/Tt')
+AC_SUBST(XM_INCDIR, '-I$(top_builddir)/include/Xm -I$(top_srcdir)/include/Xm')
+AC_SUBST(CSA_INCDIR, '-I$(top_builddir)/include/csa -I$(top_srcdir)/include/csa')
+AC_SUBST(SPC_INCDIR, '-I$(top_builddir)/include/SPC -I$(top_srcdir)/include/SPC')
 
 dnl language enables
 
@@ -398,8 +410,16 @@ if test -z "$ac_cv_prog_YACC"; then
    MISSING_PROGS="[bison or byacc] ${MISSING_PROGS}"
 fi
 
+dnl Flex 2.6.x calls the POSIX fileno() interface from its generated scanner.
+dnl In strict C23 mode glibc exposes that declaration only when a POSIX feature
+dnl level is selected.  Keep the feature definition local to Autoconf's lexer
+dnl link probe; otherwise AC_PROG_LEX finds flex but replaces LEX with ':' after
+dnl its generated scanner fails to compile.
+cde_lex_save_CPPFLAGS=$CPPFLAGS
+CPPFLAGS="$CPPFLAGS -D_POSIX_C_SOURCE=200809L"
 AC_PROG_LEX(noyywrap)
-if test -z "$ac_cv_prog_LEX"; then
+CPPFLAGS=$cde_lex_save_CPPFLAGS
+if test "x$LEX" = x:; then
    MISSING_PROGS="[flex or lex] ${MISSING_PROGS}"
 fi
 

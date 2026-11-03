@@ -277,7 +277,7 @@ externaldef(xmmenubuttonclassrec)
 	(WidgetClass) &xmLabelClassRec,		/* superclass ptr	*/
 	"DtMenuButton",				/* class_name	*/
 	sizeof(DtMenuButtonPart),		/* size of Pulldown widget */
-	(XtProc)ClassInitialize,		/* class init proc */
+	ClassInitialize,			/* class init proc */
 	NULL,					/* chained class init */
 	FALSE,					/* class is not init'ed */
 	Initialize,				/* widget init proc */

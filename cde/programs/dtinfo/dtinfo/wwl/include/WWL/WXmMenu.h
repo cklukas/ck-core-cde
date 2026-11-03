@@ -44,7 +44,7 @@ public :
    ~WXmPopupMenu () {}
 
    WXmPushButtonGadget
-      AddPushButton (char* name, XtCallbackProc proc = (XtCallbackProc)NULL,
+      AddPushButton (char* name, XtCallbackProc proc = NULL,
 		     caddr_t closure = NULL, ArgList args = NULL,
 		     Cardinal card = 0);
 
@@ -82,7 +82,7 @@ public :
      { Manage(); }
 
    WXmPushButtonGadget
-      AddPushButton (char* name, XtCallbackProc proc = (XtCallbackProc)NULL,
+      AddPushButton (char* name, XtCallbackProc proc = NULL,
 		     caddr_t closure = NULL, ArgList args = NULL,
 		     Cardinal card = 0);
 
@@ -115,7 +115,7 @@ public :
      { Manage(); }
 
    WXmPushButtonGadget
-      AddPushButton (char* name, XtCallbackProc proc = (XtCallbackProc)NULL,
+      AddPushButton (char* name, XtCallbackProc proc = NULL,
 		     caddr_t closure = NULL, ArgList args = NULL,
 		     Cardinal card = 0);
 

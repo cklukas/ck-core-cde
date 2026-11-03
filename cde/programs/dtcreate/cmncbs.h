@@ -44,8 +44,8 @@
 /*                                                                         */
 /***************************************************************************/
 
-void activateCB_open_FindSet (Widget,XtPointer,XmFileSelectionBoxCallbackStruct *);
-void activateCB_edit_icon (Widget,XtPointer,XmPushButtonCallbackStruct *);
+void activateCB_open_FindSet (Widget, XtPointer, XtPointer);
+void activateCB_edit_icon (Widget, XtPointer, XtPointer);
 void DisplayHelpDialog (Widget, XtPointer, XtPointer);
 void helpCB_general (Widget, XtPointer, XtPointer);
 void createCB_IconGadget(Widget wid, Boolean bActionIcons, enum icon_size_range IconSize);

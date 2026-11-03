@@ -339,7 +339,7 @@ static void CreateTreeIcons(
 static void TreeBtnCallback(
                         Widget w,
                         XtPointer clientData,
-                        XmAnyCallbackStruct * callData );
+                        XtPointer callData );
 static void LayoutDesktopIcons(
                         FileMgrRec *file_mgr_rec,
                         FileMgrData *file_mgr_data,
@@ -504,7 +504,7 @@ GetStrcollProc(void)
   if (Clang)
     return StrCaseCmp;
 
-  return ((StrcollProc)strcoll);
+  return strcoll;
 }
 
 static Boolean
@@ -2623,7 +2623,8 @@ void
 FileIconMotion(
                Widget w,
                XtPointer clientData,
-               XEvent *event)
+               XEvent *event,
+               Boolean *continue_to_dispatch)
 {
    int diffX, diffY;
    FileViewData * fileViewData = NULL;
@@ -3545,7 +3546,7 @@ CreateNameChangeDialog (
       text = XmCreateTextField(parent, "nameChangeT_DT", args, n);
       XtAddCallback (text, XmNactivateCallback, ChangeIconNameDT,
                                                  (XtPointer)desktopWindow);
-      XtAddCallback(text, XmNhelpCallback, (XtCallbackProc)DTHelpRequestCB,
+      XtAddCallback(text, XmNhelpCallback, DTHelpRequestCB,
                     HELP_NAMECHANGE_DIALOG_STR);
       desktopWindow->text = text;
 
@@ -3562,15 +3563,15 @@ CreateNameChangeDialog (
       if(file_mgr_data) {
          file_mgr_data->renaming = file_view_data;
          XtAddCallback(text, XmNmotionVerifyCallback,
-                       (XtCallbackProc)ChangeIconName,
+                       ChangeIconName,
                        (XtPointer)file_mgr_data);
          XtAddCallback(text, XmNmodifyVerifyCallback,
-                        (XtCallbackProc)ChangeIconName,
+                        ChangeIconName,
                         (XtPointer)file_mgr_data);
          XtAddCallback(text, XmNactivateCallback,
-                        (XtCallbackProc)ChangeIconName,
+                        ChangeIconName,
                         (XtPointer)file_mgr_data);
-         XtAddCallback(text, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+         XtAddCallback(text, XmNhelpCallback, HelpRequestCB,
                        HELP_NAMECHANGE_DIALOG_STR);
       }
    }
@@ -6183,7 +6184,7 @@ UpdateOneFileIcon(
          XtSetValues (icon_widget, args, i);
       }
       XtAddCallback(icon_widget, XmNhelpCallback,
-                    (XtCallbackProc)HelpRequestCB, NULL);
+                    HelpRequestCB, NULL);
       file_view_data->registered = False;
    }
 
@@ -6222,7 +6223,7 @@ UpdateOneFileIcon(
 
    file_view_data->file_data->is_broken = False;
    file_view_data->widget = icon_widget;
-   XtAddCallback (icon_widget, XmNcallback, (XtCallbackProc)IconCallback,
+   XtAddCallback (icon_widget, XmNcallback, IconCallback,
                   file_view_data);
 
    XmStringFree (icon_label);
@@ -6273,7 +6274,7 @@ UpdateOneFileIcon(
                                              "tree_button", args, n);
      }
      XtAddCallback(btn_widget, XmNactivateCallback,
-                    (XtCallbackProc)TreeBtnCallback, file_view_data);
+                    TreeBtnCallback, file_view_data);
 
      file_view_data->treebtn = btn_widget;
    }
@@ -7540,7 +7541,7 @@ do_this_entry:
       for (k = 0; k < changeCount; k++)
       {
          SetHotRects(change[k],
-                     (XtCallbackProc) DropOnObject,
+                     DropOnObject,
                      (XtPointer) change[k]);
       }
    }
@@ -8416,8 +8417,9 @@ static void
 TreeBtnCallback(
         Widget w,
         XtPointer clientData,
-        XmAnyCallbackStruct *callData )
+        XtPointer callbackData )
 {
+  XmAnyCallbackStruct *callData = callbackData;
   FileMgrRec *file_mgr_rec;
   FileMgrData *file_mgr_data;
   FileViewData *file_view_data = (FileViewData *)clientData;
@@ -9455,7 +9457,7 @@ RegisterDesktopHotspots (
              icon->core.y < ey + eht)
          {
             SetHotRects(file_view_data,
-                        (XtCallbackProc) DropOnObject,
+                        DropOnObject,
                         (XtPointer) file_view_data);
          }
       }

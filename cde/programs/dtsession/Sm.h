@@ -133,10 +133,6 @@ extern char *_DtGetMessage(char *filename, int set, int n, char *s);
     string
 #endif
 
-typedef int (*IOErrorHandlerProc)(
-	Display *
-);
-
 /* 
  * typedef statements 
  */
@@ -343,11 +339,6 @@ typedef struct
 
 } GeneralData;
 
-
-/*
- * External variables
- */
-extern	char	*_dtsessionMG();
 
 /*
  * Files that the session manager saves sessions to and restores sessions

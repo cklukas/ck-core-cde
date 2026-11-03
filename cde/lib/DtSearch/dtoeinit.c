@@ -78,6 +78,13 @@
 
 extern int	debugging_loadlang;
 
+static void
+release_memory_on_exit(int return_code)
+{
+    (void)return_code;
+    release_shm_mem();
+}
+
 /************************************************/
 /*						*/
 /*		     UNMALLOC			*/
@@ -147,7 +154,7 @@ void            oe_initialize (void)
      * OE_sitecnfg_mtime is initialized by oe_initialize() and never reset.
      */
     global_memory_ptr =		NULL;
-    austext_exit_mem =		(void (*) (int)) release_shm_mem;
+    austext_exit_mem =		release_memory_on_exit;
 
     OE_flags =			0L;
     OE_objsize =		0L;

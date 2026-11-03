@@ -348,7 +348,7 @@ _tt_open()
 
 
 void
-_tt_internal_init()
+_tt_internal_init(void)
 {
 	if (! _tt_mp) {
 		if (! _tt_global) {

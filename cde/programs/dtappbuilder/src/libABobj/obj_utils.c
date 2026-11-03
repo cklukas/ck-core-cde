@@ -77,7 +77,7 @@ static volatile BOOL	sig_fault_handler_installed = FALSE;
 static volatile BOOL	mem_fault_occurred = FALSE;
 static int	sig_fault_handler_install(void);
 static int	sig_fault_handler_uninstall(void);
-static void	sig_fault_handler();
+static void	sig_fault_handler(int signal_number);
 static BOOL	objP_is_accessible(ABObj obj);
 static int	build_obj_array(
 			ABObj **objArrayInOut, 
@@ -1602,8 +1602,10 @@ sig_fault_handler_uninstall(void)
 
 
 static void
-sig_fault_handler(void)
+sig_fault_handler(int signal_number)
 {
+    (void)signal_number;
+
     if (mem_fault_occurred)
     {
 	/* We should have cleared this to prepare for a mem fault */

@@ -111,6 +111,7 @@ extern void _DtPerfChkpntMsgSend(
 
 /* End the checkpointing message delivery */
 extern int _DtPerfChkpntEnd(
+    void
 );
 
 /*************************************************************************/

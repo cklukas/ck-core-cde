@@ -364,15 +364,15 @@ static void CreateContinueDialog(
                         PromptEntry *prompts) ;
 static void CancelPromptDialog( 
                         Widget widget,
-                        PromptDialog *dialog,
+                        XtPointer client_data,
                         XtPointer call_data) ;
 static void ProcessPromptDialog( 
                         Widget widget,
-                        PromptDialog *dialog,
+                        XtPointer client_data,
                         XtPointer call_data) ;
 static void ChangePromptTraversal( 
                         Widget widget,
-                        PromptDialog *dialog,
+                        XtPointer client_data,
                         XtPointer call_data) ;
 static void CreatePromptDialog( 
                         Widget w,
@@ -393,8 +393,8 @@ static int LinkToTypeQuark(
 static void CancelOut(
 			Widget w,
 			XEvent *event,
-			XtPointer params,
-			XtPointer num_params);
+			String *params,
+			Cardinal *num_params);
 static void InitiateCommandInvokerRequest(
                         Widget w,
                         ActionRequest *request,
@@ -410,11 +410,17 @@ static Boolean ResolveCommandInvokerMessagePieces(
                         ActionRequest *request,
                         char * relPathHost,
                         char * relPathDir) ;
+
+typedef struct {
+    DtDbReloadCallbackProc proc;
+    XtPointer client_data;
+} _DtDbReloadContext;
+
 static Tt_callback_action _DbReloadCB(Tt_message m, Tt_pattern p);
-static void _DtActTimerCB( XtPointer clientData, 
-		XtIntervalId timerId);
-static void _DtActIndicatorCB( XtPointer clientData, 
-		XtIntervalId timerId);
+static void _DtActTimerCB( XtPointer clientData,
+		XtIntervalId *timerId);
+static void _DtActIndicatorCB( XtPointer clientData,
+		XtIntervalId *timerId);
 
 /********    End Static Function Declarations    ********/
 
@@ -455,7 +461,7 @@ String TtFileArgMapErr;
  * Variables needed to make the "Escape" key remove the prompt dialog.
  */
 static XtActionsRec actionTable [] = {
-   {"Escape", (XtActionProc) CancelOut},
+   {"Escape", CancelOut},
 };
 static char translations_escape[] = "<Key>osfCancel:Escape()";
 
@@ -597,7 +603,7 @@ DtActionInvoke(
       /* Start timer for minimum blink time */
 	XtAppAddTimeOut(XtWidgetToApplicationContext(w),
 	    MIN_INDICATOR_TIME,  
-	    (XtTimerCallbackProc) _DtActIndicatorCB,
+	    _DtActIndicatorCB,
 	    (XtPointer) invp->id );
     }
 
@@ -637,7 +643,7 @@ DtActionInvoke(
     SET_INV_ID_RETURNED(invp->state);
     XtAppAddTimeOut(XtWidgetToApplicationContext(w),
 	0 /* call back immediately */, 
-	(XtTimerCallbackProc) _DtActTimerCB,
+	_DtActTimerCB,
 	(XtPointer) invp->id );
 
     _DtSvcAppUnlock(*_DtInitAppContextp);
@@ -652,6 +658,7 @@ DtDbReloadNotify( DtDbReloadCallbackProc proc, XtPointer client_data)
     Tt_status	status;
     Tt_pattern	pattern;
     char *	sessId;
+    _DtDbReloadContext *context;
     extern XtAppContext *_DtInitAppContextp;
 
 
@@ -705,17 +712,13 @@ DtDbReloadNotify( DtDbReloadCallbackProc proc, XtPointer client_data)
 	return;
     }
 
-    /*
-     * Store information needed by the callback in the user data
-     * fields of the pattern.
-     */
-    status = tt_pattern_user_set(pattern, 0, (void *)proc);
+    /* Store one typed callback context in the pattern's data slot. */
+    context = XtNew(_DtDbReloadContext);
+    context->proc = proc;
+    context->client_data = client_data;
+    status = tt_pattern_user_set(pattern, 0, context);
     if (status != TT_OK) {
-        _DtSvcAppUnlock(*_DtInitAppContextp);
-	return;
-    }
-    status = tt_pattern_user_set(pattern, 1, (void *)client_data);
-    if (status != TT_OK) {
+        XtFree((char *)context);
         _DtSvcAppUnlock(*_DtInitAppContextp);
 	return;
     }
@@ -725,11 +728,13 @@ DtDbReloadNotify( DtDbReloadCallbackProc proc, XtPointer client_data)
      * the user callback.
      */
     if (tt_pattern_callback_add(pattern, _DbReloadCB) != TT_OK) {
+        XtFree((char *)context);
         _DtSvcAppUnlock(*_DtInitAppContextp);
 	return;
     }
 
     if (tt_pattern_register(pattern) != TT_OK) {
+        XtFree((char *)context);
         _DtSvcAppUnlock(*_DtInitAppContextp);
 	return;
     }
@@ -747,14 +752,14 @@ DtDbReloadNotify( DtDbReloadCallbackProc proc, XtPointer client_data)
  *****************************************************************************/
 
 static void
-_DtActTimerCB( XtPointer clientData, XtIntervalId IntId)
+_DtActTimerCB( XtPointer clientData, XtIntervalId *IntId)
 {
         _DtActExecutionLeafNodeCleanup((unsigned long)clientData,
            NULL,0,True);
 }
 
 static void
-_DtActIndicatorCB( XtPointer clientData, XtIntervalId IntId )
+_DtActIndicatorCB( XtPointer clientData, XtIntervalId *IntId )
 {
 	unsigned long invocId  = (unsigned long) clientData;
 	_DtActInvRecT *invRecP = _DtActFindInvRec( invocId );
@@ -792,20 +797,15 @@ _DtActIndicatorCB( XtPointer clientData, XtIntervalId IntId )
 static Tt_callback_action
 _DbReloadCB(Tt_message m, Tt_pattern p)
 {
-    DtDbReloadCallbackProc	proc;
-    XtPointer			client_data;
+    _DtDbReloadContext *context;
 
-    /*
-     * user data 0: DtDbReloadCallbackProc	proc;
-     * user data 1: XtPointer			client_data;
-     */
-    proc = (DtDbReloadCallbackProc)tt_pattern_user(p, 0);
-    client_data = (XtPointer)tt_pattern_user(p, 1);
+    context = tt_pattern_user(p, 0);
 
     /*
      * Call registered callback function.
      */
-    if (proc) (*proc)(client_data);
+    if (context != NULL && context->proc != NULL)
+        context->proc(context->client_data);
 
     return TT_CALLBACK_PROCESSED;
 }
@@ -3935,8 +3935,8 @@ static void
 CancelOut(
         Widget w,
         XEvent *event,
-        XtPointer params,
-        XtPointer num_params)
+        String *params,
+        Cardinal *num_params)
 {
    Arg args[10];
    Widget cancel;
@@ -3959,10 +3959,11 @@ CancelOut(
 static void 
 CancelPromptDialog(
         Widget widget,
-        PromptDialog *dialog,
+        XtPointer client_data,
         XtPointer call_data )
 
 {
+   PromptDialog *dialog = (PromptDialog *)client_data;
    unsigned long evalStatus;
    unsigned long userStatus;
    _DtActInvRecT *invp;
@@ -4008,7 +4009,7 @@ CancelPromptDialog(
 static void 
 ChangePromptTraversal(
         Widget widget,
-        PromptDialog *dialog,
+        XtPointer client_data,
         XtPointer call_data )
 {
    XmProcessTraversal (widget, XmTRAVERSE_NEXT_TAB_GROUP);
@@ -4024,10 +4025,11 @@ ChangePromptTraversal(
 static void 
 ProcessPromptDialog(
         Widget widget,
-        PromptDialog *dialog,
+        XtPointer client_data,
         XtPointer call_data )
 
 {
+   PromptDialog *dialog = (PromptDialog *)client_data;
    int i, j;
    String value;
    Boolean runInTerminal = True;
@@ -4363,7 +4365,7 @@ CreatePromptDialog(
    XtSetArg (args[n], XmNlabelString, labelString);             n++;
    ok = XmCreatePushButtonGadget (form, "ok", args, n);
    XtManageChild(ok);
-   XtAddCallback(ok, XmNactivateCallback, (XtCallbackProc)ProcessPromptDialog, 
+   XtAddCallback(ok, XmNactivateCallback, ProcessPromptDialog,
 		 (XtPointer)dialog);
    XmStringFree(labelString);
 
@@ -4387,12 +4389,12 @@ CreatePromptDialog(
       for (i = 0; i < numPrompts; i++) 
       {
 	 if (i <= (numPrompts - 2))
-	    XtAddCallback(promptDes[i].promptWidget, XmNactivateCallback, 
-			  (XtCallbackProc)ChangePromptTraversal, 
+	    XtAddCallback(promptDes[i].promptWidget, XmNactivateCallback,
+			  ChangePromptTraversal,
 			  (XtPointer)dialog);
 	 else
-	    XtAddCallback(promptDes[i].promptWidget, XmNactivateCallback, 
-			  (XtCallbackProc)ProcessPromptDialog, 
+	    XtAddCallback(promptDes[i].promptWidget, XmNactivateCallback,
+			  ProcessPromptDialog,
 			  (XtPointer)dialog);
       }
    }
@@ -4411,7 +4413,7 @@ CreatePromptDialog(
    XtSetArg (args[n], XmNlabelString, labelString);             n++;
    cancel = XmCreatePushButtonGadget (form, "cancel", args, n);
    XtManageChild(cancel);
-   XtAddCallback(cancel, XmNactivateCallback, (XtCallbackProc)CancelPromptDialog, 
+   XtAddCallback(cancel, XmNactivateCallback, CancelPromptDialog,
                  (XtPointer)dialog);
    XmStringFree(labelString);
 
@@ -4460,7 +4462,7 @@ CreatePromptDialog(
      XInternAtom(XtDisplay(shell), "WM_DELETE_WINDOW", False);
    XmAddWMProtocolCallback(
 		shell, xa_WM_DELETE_WINDOW,
-		(XtCallbackProc) CancelPromptDialog, (XtPointer) dialog);
+		CancelPromptDialog, (XtPointer) dialog);
 
    /* Fill in our instance structure */
    dialog->request = request;

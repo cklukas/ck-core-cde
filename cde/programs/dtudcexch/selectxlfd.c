@@ -103,7 +103,7 @@ int			getmask ;
 FalxFontDataBuff	KeyBuff ;
 
 
-void	PopupSelectXLFD() ;
+void PopupSelectXLFD(Widget top);
 
 Widget	xlfdDialog, xlfdWform,
 	slctBLabel[BUTTONITEMS],slctBText[BUTTONITEMS],	slctButton[BUTTONITEMS],

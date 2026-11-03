@@ -662,7 +662,7 @@ MakeDialog( DialogType dtype )
 
     int		width;
     
-    FILE	*fp = NULL, *fopen();
+    FILE	*fp = NULL;
     char	buffer[128];
     char	*str;
 

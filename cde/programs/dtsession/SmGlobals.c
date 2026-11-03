@@ -118,7 +118,7 @@ static void _SmWaitWmTimeoutDefault (
 
 void SmCvtStringToContManagement (
 	XrmValue *args, 
-	Cardinal numArgs,
+	Cardinal *numArgs,
 	XrmValue *fromVal, 
 	XrmValue *toVal);
 
@@ -417,7 +417,7 @@ InitSMGlobals( void )
      * Get application specific resource values
      */
     XtAppAddConverter (smGD.appCon, XtRString, SmRContManagement,
-                       (XtConverter)SmCvtStringToContManagement, NULL, 0);
+                       SmCvtStringToContManagement, NULL, 0);
     XtGetApplicationResources(smGD.topLevelWid, (XtPointer) &smRes,
                               sessionResources,
                               XtNumber(sessionResources), NULL, 0);
@@ -1736,7 +1736,7 @@ SetSystemReady( void )
  *
  *************************************<->***********************************/
 
-void SmCvtStringToContManagement (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal)
+void SmCvtStringToContManagement (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal)
 {
 
     unsigned char       *pch = (unsigned char *) (fromVal->addr);

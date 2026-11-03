@@ -159,7 +159,7 @@ String _DtHelpGetUserSearchPath(void)
   String path;
   char homedir[MAXPATHLEN];
   String localPath;
-  extern char * _DtCliSrvGetDtUserSession();  /* in libCliSrv */
+  extern char * _DtCliSrvGetDtUserSession(void);  /* in libCliSrv */
 
    localPath = (char *)getenv (DtUSER_FILE_SEARCH_ENV);
    if (localPath  == NULL) 

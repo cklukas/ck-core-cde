@@ -50,14 +50,16 @@
 
 #include "bdfgpf.h"
 
-static	int 	writeBdfHeader();
-static	int 	readBdfToMemory();
-static	void	sigint_out();
+static int writeBdfHeader(struct ptobhead *head, int comment_num,
+                          char **comment_list);
+static int readBdfToMemory(struct btophead *head, char *buf,
+                           int code_num, int *code_list, int make_all);
+static void sigint_out(void);
 static char	buf[BUFSIZE];
 static	struct	ptobhead	w_bdf ;
 
 static	void
-sigint_out()
+sigint_out(void)
 {
     fclose(w_bdf.output) ;
     fclose(w_bdf.input) ;	/* stream */

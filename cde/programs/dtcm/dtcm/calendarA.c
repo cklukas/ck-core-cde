@@ -1069,7 +1069,7 @@ make_view_menu(Calendar *c)
 	XtSetArg(al[ac], XmNsubMenuId, view_menu); ac++;
 	XtSetArg(al[ac], XmNlabelString, view_str); ac++;
 	view_btn = (Widget) XmCreateCascadeButton(c->menu_bar, "view", al, ac);
-        XtAddCallback(view_btn, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(view_btn, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_VIEW_BUTTON);
 
         XmStringFree(day_str);
@@ -1313,7 +1313,7 @@ make_file_menu(Calendar *c)
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 65, "File"));
 	XtSetArg(al[ac], XmNlabelString, xmstr); ac++;
 	file_btn = (Widget) XmCreateCascadeButton(c->menu_bar, "file", al, ac);
-        XtAddCallback(file_btn, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(file_btn, XmNhelpCallback, help_cb,
 					(XtPointer) CALENDAR_HELP_FILE_BUTTON);
 	XmStringFree(xmstr);
 }
@@ -1353,7 +1353,7 @@ make_edit_menu(Calendar *c)
 	XtSetArg(al[ac], XmNsubMenuId, edit_menu); ac++;
 	XtSetArg(al[ac], XmNlabelString, edit_str); ac++;
 	edit_button = XmCreateCascadeButton(c->menu_bar, "edit", al, ac);
-        XtAddCallback(edit_button, XmNhelpCallback, (XtCallbackProc)help_cb,
+        XtAddCallback(edit_button, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_EDIT_BUTTON);
 
 	XmStringFree(appt_str);
@@ -1438,7 +1438,7 @@ make_help_menu(Calendar *c)
 	XtSetArg(al[ac], XmNlabelString, help); ac++;
 	XtSetArg(al[ac], XmNsubMenuId, help_menu); ac++;
 	cascade = (Widget)XmCreateCascadeButton(c->menu_bar, "help", al, ac);
-        XtAddCallback(cascade, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(cascade, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_HELP_BUTTON);
 
 	ac = 0;
@@ -1576,7 +1576,7 @@ make_browse_menu(Calendar *c) {
         XtSetArg(al[ac], XmNsubMenuId, c->browse_menu); ac++;
         XtSetArg(al[ac], XmNlabelString, xmstr); ac++;
         c->browse_button = XmCreateCascadeButton(c->menu_bar, "browse", al, ac);
-        XtAddCallback(c->browse_button, XmNhelpCallback,(XtCallbackProc)help_cb,
+        XtAddCallback(c->browse_button, XmNhelpCallback,help_cb,
 		      (XtPointer)CALENDAR_HELP_BROWSE_BUTTON);
 	XtManageChild(c->browse_button);
 	XmStringFree(xmstr);
@@ -1656,7 +1656,7 @@ make_buttons(Calendar *c)
 	c->today = XmCreatePushButton(toolform, "today", al, ac);
 	XmStringFree(today_str);
         XtAddCallback(calendar->today, XmNactivateCallback, today_button, NULL);
-        XtAddCallback(c->today, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(c->today, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_TODAY_BUTTON);
 
 	/*
@@ -1676,7 +1676,7 @@ make_buttons(Calendar *c)
         XtSetArg(al[ac], XmNnavigationType, XmTAB_GROUP); ac++;
         c->previous = XmCreateArrowButtonGadget(toolform, "previous", al, ac);
         XtAddCallback(c->previous, XmNactivateCallback, prev_button, NULL);
-        XtAddCallback(c->previous, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(c->previous, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_PREV_BUTTON);
 
         ac=0;
@@ -1688,7 +1688,7 @@ make_buttons(Calendar *c)
         XtSetArg(al[ac], XmNnavigationType, XmTAB_GROUP); ac++;
         c->next = XmCreateArrowButtonGadget(toolform, "next", al, ac);
         XtAddCallback(c->next, XmNactivateCallback, next_button, NULL);
-        XtAddCallback(c->next, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(c->next, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_NEXT_BUTTON);
 
 	/* toolbar "editor" buttons */
@@ -1701,7 +1701,7 @@ make_buttons(Calendar *c)
         XtSetArg(al[ac], XmNnavigationType, XmTAB_GROUP); ac++;
         c->appt_btn = XmCreatePushButtonGadget(toolform, "appt", al, ac);
 	XtAddCallback(c->appt_btn, XmNactivateCallback, appt_cb, (XtPointer) 0);
-        XtAddCallback(c->appt_btn, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(c->appt_btn, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_APPT_BUTTON);
 
         ac=0;
@@ -1714,7 +1714,7 @@ make_buttons(Calendar *c)
         XtSetArg(al[ac], XmNnavigationType, XmTAB_GROUP); ac++;
         c->todo_btn = XmCreatePushButtonGadget(toolform, "todo", al, ac);
 	XtAddCallback(c->todo_btn, XmNactivateCallback, appt_cb, (XtPointer) 2);
-        XtAddCallback(c->todo_btn, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(c->todo_btn, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_TODO_BUTTON);
 
 	ac=0;
@@ -1734,7 +1734,7 @@ make_buttons(Calendar *c)
         XtSetArg(al[ac], XmNnavigationType, XmTAB_GROUP); ac++;
         c->day_scope = XmCreateToggleButtonGadget(c->radio, "day", al, ac);
         XtAddCallback(c->day_scope, XmNvalueChangedCallback, day_button, NULL);
-        XtAddCallback(c->day_scope, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(c->day_scope, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_DAY_BUTTON);
 
         ac=0;
@@ -1747,7 +1747,7 @@ make_buttons(Calendar *c)
         c->week_scope = XmCreateToggleButtonGadget(c->radio, "week", al, ac);
         XtAddCallback(c->week_scope, XmNvalueChangedCallback, 
 						week_button, NULL);
-        XtAddCallback(c->week_scope, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(c->week_scope, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_WEEK_BUTTON);
 
         ac=0;
@@ -1760,7 +1760,7 @@ make_buttons(Calendar *c)
         c->month_scope = XmCreateToggleButtonGadget(c->radio, "month", al, ac);
         XtAddCallback(c->month_scope, XmNvalueChangedCallback, 
 			month_button, NULL);
-        XtAddCallback(c->month_scope, XmNhelpCallback, (XtCallbackProc)help_cb,
+        XtAddCallback(c->month_scope, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_MONTH_BUTTON);
 
         ac=0;
@@ -1773,7 +1773,7 @@ make_buttons(Calendar *c)
         c->year_scope = XmCreateToggleButtonGadget(c->radio, "year", al, ac);
         XtAddCallback(c->year_scope, XmNvalueChangedCallback, 
 			year_button, NULL);
-        XtAddCallback(c->year_scope, XmNhelpCallback, (XtCallbackProc)help_cb, 
+        XtAddCallback(c->year_scope, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_YEAR_BUTTON);
 
 	ManageChildren(c->radio);
@@ -2305,10 +2305,9 @@ logon_retry(XtPointer data, XtIntervalId *dummy)
 }
 
 static void
-view_event(Widget w, XtPointer client_data, XtPointer cbs)
+handle_view_event(XEvent *event)
 {
         Calendar *c = calendar;
-	XEvent	*event = (XEvent *) client_data;
 
         if (event == NULL)
                 return;
@@ -2322,6 +2321,21 @@ view_event(Widget w, XtPointer client_data, XtPointer cbs)
         else if (c->view->glance == yearGlance)
                 year_event(event);
 */
+}
+
+static void
+view_event_action(Widget w, XEvent *event, String *params,
+                  Cardinal *num_params)
+{
+        handle_view_event(event);
+}
+
+static void
+view_event_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+        XmDrawingAreaCallbackStruct *callback_data = call_data;
+
+        handle_view_event(callback_data == NULL ? NULL : callback_data->event);
 }
 
 static void
@@ -2485,7 +2499,7 @@ init_calendar(int argc, char **argv)
         	"<Btn1Down>: view_event()               \n\
          	<Btn1Motion>: view_event()";
         static XtActionsRec action_table[] = {
-                {(String) "view_event", (XtActionProc) view_event},
+                {(String) "view_event", view_event_action},
 		{(String) "TranslationDragStart", 
 		   TranslationDragStart},
 		{"dtcm-process-press",
@@ -2668,8 +2682,8 @@ init_calendar(int argc, char **argv)
 	XtSetArg(al[ac], XmNleftOffset, 1); ac++;
       	calendar->canvas = XmCreateDrawingArea(calendar->form, "canvas",
 				al, ac);
-        XtAddCallback(calendar->canvas, XmNhelpCallback, 
-					(XtCallbackProc)help_view_cb, NULL);
+        XtAddCallback(calendar->canvas, XmNhelpCallback,
+					help_view_cb, NULL);
 	ac=0;
 	XtSetArg(al[ac], XmNalignment, XmALIGNMENT_BEGINNING); ac++;
 	XtSetArg(al[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
@@ -2708,7 +2722,7 @@ init_calendar(int argc, char **argv)
 	XtMapWidget(calendar->frame);
 
         XtAddCallback(calendar->canvas, XmNresizeCallback, resize_proc, NULL);
-        XtAddCallback(calendar->canvas, XmNinputCallback, view_event, NULL);
+        XtAddCallback(calendar->canvas, XmNinputCallback, view_event_cb, NULL);
         XtAddCallback(calendar->canvas, XmNexposeCallback, repaint_proc, NULL);
 
 	cm_register_drop_site(calendar, calendar->form);

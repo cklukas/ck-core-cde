@@ -168,8 +168,7 @@ class RoamMenuWindow : public MenuWindow, public AbstractEditorParent
     void	create_new_container(char*);
     Widget	getDragIcon(Widget widget);
     void	load_mailbox(DtMailEnv &mail_error);
-    static XtActionProc
-		msgListDragStart(Widget, XEvent*, String*, Cardinal*);
+    static void msgListDragStart(Widget, XEvent*, String*, Cardinal*);
     		// DND: Drop Site
     static void msgListConvertCallback( Widget, XtPointer, XtPointer);
     void	msgListDropRegister();

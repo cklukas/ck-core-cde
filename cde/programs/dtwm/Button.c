@@ -44,7 +44,9 @@
 
 static void Initialize( 
                         Widget request_w,
-                        Widget new_w) ;
+                        Widget new_w,
+			ArgList args,
+			Cardinal *num_args) ;
 static void GetGCs( 
                         Widget w) ;
 static void UpdateGCs( 
@@ -56,7 +58,9 @@ static void Redisplay(
 static Boolean SetValues( 
                         Widget current_w,
                         Widget request_w,
-                        Widget new_w) ;
+                        Widget new_w,
+			ArgList args,
+			Cardinal *num_args) ;
 static void Arm( 
                         Widget w,
                         XEvent *event,
@@ -79,7 +83,7 @@ static void ArmAndActivate(
                         Cardinal *num_params) ;
 static void InputDispatch(
                         Widget w,
-                        XButtonEvent *event,
+                        XEvent *event,
                         Mask event_mask) ;
 static Boolean VisualChange(
                         Widget w,
@@ -179,7 +183,7 @@ externaldef (dtbuttongadgetclassrec)
       NULL,                             /* class_initialize      */    
       NULL,                             /* class_part_initialize */
       FALSE,                            /* class_inited          */	
-      (XtInitProc) Initialize,          /* initialize	         */	
+      Initialize,                       /* initialize	         */
       NULL,                             /* initialize_hook       */
       NULL,                             /* realize	         */	
       NULL,                             /* actions               */	
@@ -193,8 +197,8 @@ externaldef (dtbuttongadgetclassrec)
       FALSE,                            /* visible_interest      */	
       NULL,                             /* destroy               */	
       NULL,                             /* resize                */
-      (XtExposeProc) Redisplay,         /* expose                */	
-      (XtSetValuesFunc) SetValues,      /* set_values	         */	
+      Redisplay,                        /* expose                */
+      SetValues,                        /* set_values	         */
       NULL,                             /* set_values_hook       */
       XtInheritSetValuesAlmost,         /* set_values_almost     */
       NULL,                             /* get_values_hook       */
@@ -212,7 +216,7 @@ externaldef (dtbuttongadgetclassrec)
       (XtWidgetProc) _XtInherit,   	   /* Gadget border_highlight   */
       (XtWidgetProc) _XtInherit,  	   /* Gadget border_unhighlight */
       ArmAndActivate,    		   /* arm_and_activate          */
-      (XmWidgetDispatchProc)InputDispatch, /* input_dispatch       	*/
+      InputDispatch,                       /* input_dispatch       	*/
       VisualChange,                        /* visual_change        	*/
       NULL,				   /* get resources      	*/
       0,				   /* num get_resources  	*/
@@ -236,7 +240,9 @@ externaldef(dtbuttonwidgetclass) WidgetClass dtButtonGadgetClass =
 static void 
 Initialize(
         Widget request_w,
-        Widget new_w )
+        Widget new_w,
+	ArgList args,
+	Cardinal *num_args )
 {
    DtButtonGadget request = (DtButtonGadget) request_w ;
    DtButtonGadget new_g = (DtButtonGadget) new_w ;
@@ -501,7 +507,9 @@ static Boolean
 SetValues(
         Widget current_w,
         Widget request_w,
-        Widget new_w )
+        Widget new_w,
+	ArgList args,
+	Cardinal *num_args )
 
 {
    DtButtonGadget  current = (DtButtonGadget) current_w;
@@ -742,49 +750,50 @@ ArmTimeout(
 static void
 InputDispatch(
         Widget w,
-        XButtonEvent *event,
+        XEvent *event,
         Mask event_mask )
 {
         DtButtonGadget bg = (DtButtonGadget) w ;
+	XButtonEvent *button_event = &event->xbutton;
 
         if (event_mask & XmARM_EVENT ||
             event_mask & XmMULTI_ARM_EVENT)
         {
-           if (event->button == Button1)
-             Arm (w, (XEvent*) event, (String *)NULL, (Cardinal*)NULL);
+	   if (button_event->button == Button1)
+	     Arm (w, event, (String *)NULL, (Cardinal*)NULL);
         }
         else if (event_mask & XmACTIVATE_EVENT ||
                  event_mask & XmMULTI_ACTIVATE_EVENT)
         {
-                if (event->button == Button1)
+		if (button_event->button == Button1)
                 {
-                   if (event->x >= G_X (bg) &&
-                         event->x <= (Position)(G_X (bg) + G_Width (bg)) &&
-                         event->y >= G_Y (bg) &&
-                         event->y <= (Position)(G_Y (bg) + G_Height (bg)))
+		   if (button_event->x >= G_X (bg) &&
+			 button_event->x <= (Position)(G_X (bg) + G_Width (bg)) &&
+			 button_event->y >= G_Y (bg) &&
+			 button_event->y <= (Position)(G_Y (bg) + G_Height (bg)))
                    {
-                        Activate (w, (XEvent*) event,
+			Activate (w, event,
                                   (String *)NULL, (Cardinal*)NULL);
-                        Disarm (w, (XEvent*) event,
+			Disarm (w, event,
 				  (String *)NULL, (Cardinal*)NULL);
                    }
                    else
-                        Disarm (w, (XEvent*) event,
+			Disarm (w, event,
 				  (String *)NULL, (Cardinal*)NULL);
                 }
         }
         else if (event_mask & XmHELP_EVENT)
-                _XmSocorro (w, (XEvent *)event,
+		_XmSocorro (w, event,
                                      (String *)NULL,(Cardinal*)NULL);
         else if (event_mask & XmENTER_EVENT)
-                Enter (w, (XEvent *)event, (String *)NULL,(Cardinal*)NULL);
+		Enter (w, event, (String *)NULL,(Cardinal*)NULL);
         else if (event_mask & XmLEAVE_EVENT)
-                Leave (w, (XEvent *)event, (String *)NULL,(Cardinal*)NULL);
+		Leave (w, event, (String *)NULL,(Cardinal*)NULL);
         else if (event_mask & XmFOCUS_IN_EVENT)
-                _XmFocusInGadget (w, (XEvent *)event,
+		_XmFocusInGadget (w, event,
                                     (String *)NULL,(Cardinal*)NULL);
         else if (event_mask & XmFOCUS_OUT_EVENT)
-                _XmFocusOutGadget (w, (XEvent *)event,
+		_XmFocusOutGadget (w, event,
                                     (String *)NULL,(Cardinal*)NULL);
 }
 

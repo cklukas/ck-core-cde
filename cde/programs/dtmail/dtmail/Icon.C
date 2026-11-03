@@ -129,7 +129,7 @@ Icon::Icon (
     _w = _DtCreateIcon(parent,"iconGadget", args,n);
 
     XtAddEventHandler(XtParent(_w), Button1MotionMask, FALSE,
-		(XtEventHandler)&Icon::dragMotionHandler,
+		&Icon::dragMotionHandler,
 		(XtPointer)this);
     
     XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(XtParent(_w))),
@@ -138,14 +138,14 @@ Icon::Icon (
 
     if (btn1_transfer != True) {
 	XtAddEventHandler(XtParent(_w), Button2MotionMask, FALSE,
-		(XtEventHandler)&Icon::dragMotionHandler,
+		&Icon::dragMotionHandler,
 		(XtPointer)this);
     }
 
     XtAddCallback(
 	_w, 
 	XmNcallback, 
-	(XtCallbackProc)&Icon::iconCallback,
+	&Icon::iconCallback,
 	(XtPointer)this
     );
 
@@ -175,11 +175,11 @@ Icon::~Icon()
     XtRemoveCallback(
         _w, 
         XmNcallback,
-        (XtCallbackProc)&Icon::iconCallback,
+        &Icon::iconCallback,
         (XtPointer)this
     );
     XtRemoveEventHandler(XtParent(_w), Button1MotionMask, FALSE,
-                (XtEventHandler)&Icon::dragMotionHandler,
+                &Icon::dragMotionHandler,
                 (XtPointer)this);
     
     XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(XtParent(_w))),
@@ -188,7 +188,7 @@ Icon::~Icon()
 
     if (btn1_transfer != True) {
 	XtRemoveEventHandler(XtParent(_w), Button2MotionMask, FALSE,
-		(XtEventHandler)&Icon::dragMotionHandler,
+		&Icon::dragMotionHandler,
 		(XtPointer)this);
     }
 
@@ -256,7 +256,8 @@ void
 Icon::dragMotionHandler(
     Widget	widget,
     XtPointer	clientData,
-    XEvent	*event)
+    XEvent	*event,
+    Boolean	*)
 {
     Icon	*icon = (Icon *) clientData;
 

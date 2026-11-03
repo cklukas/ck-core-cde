@@ -491,7 +491,6 @@ login_defaults(
         struct passwd *p,
 	struct display *d )
 {
-        extern int defcntl();
         int  flags;
         char *ptr;
 	char *Def_path;

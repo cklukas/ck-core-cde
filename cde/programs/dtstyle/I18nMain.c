@@ -417,7 +417,7 @@ BuildI18nDlg(
         __DtCreateDialogBoxDialog(shell, "i18nDialog", save.posArgs, 
 				  save.poscnt);
     XtAddCallback(style.i18nDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_I18N_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_I18N_DIALOG);
 
     XmStringFree(button_string[0]);
     XmStringFree(button_string[1]);

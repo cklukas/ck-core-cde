@@ -106,7 +106,7 @@ typedef struct
 **       Private Function Declarations                                  **
 **                                                                      **
 **************************************************************************/
-static void	init_obj_pixmaps();
+static void	init_obj_pixmaps(void);
 
 static void	rubberband_finish(
 		    Widget	widget,

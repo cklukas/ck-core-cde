@@ -139,11 +139,12 @@ extern Widget chooser_list;
 extern int orig_argc;
 extern char **orig_argv;
 extern int amChooser;
-extern void MakeOptionsProc();
+extern void MakeOptionsProc(XtPointer data, XtIntervalId *id);
 
 static Arg  chooserArgs[25];     /** Hopefully enough args **/
 
-static void	CvtStringToARRAY8();
+static void CvtStringToARRAY8(XrmValuePtr args, Cardinal *num_args,
+                              XrmValuePtr fromVal, XrmValuePtr toVal);
 
 static struct _app_resources {
     ARRAY8Ptr   xdmAddress;

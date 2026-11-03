@@ -72,21 +72,61 @@
 #include "xmcmds.h"
 #include <locale.h>
 
+typedef int (*DtkshLegacyBuiltinProc)(int argc, char *argv[]);
+
+typedef struct {
+    DtkshLegacyBuiltinProc function;
+} DtkshLegacyBuiltin;
+
+static int
+InvokeLegacyBuiltin(int argc, char *argv[], Shbltin_t *context)
+{
+    DtkshLegacyBuiltin *builtin = context ? context->ptr : NULL;
+
+    if (!builtin || !builtin->function)
+        return 1;
+    return builtin->function(argc, argv);
+}
+
+#define ADDBUILTIN(name_, function_)                                      \
+    do {                                                                  \
+        static DtkshLegacyBuiltin builtin_ = {                            \
+            .function = (function_)                                       \
+        };                                                                \
+        (void)sh_addbuiltin((name_), InvokeLegacyBuiltin, &builtin_);      \
+    } while (0)
+
 
 static void PendingDestroy( 
                         Widget w,
-                        wtab_t *wtab,
-                        caddr_t callData) ;
+                        XtPointer clientData,
+                        XtPointer callData) ;
 static Boolean WtabDestroy( 
-                        caddr_t callData) ;
+                        XtPointer callData) ;
+typedef Widget (*DtkshCreateWidgetProc)(const char *, WidgetClass, Widget,
+                                        ArgList, Cardinal);
+typedef void (*DtkshWidgetProc)(Widget);
+typedef Boolean (*DtkshWidgetPredicate)(Widget);
+typedef Display *(*DtkshDisplayProc)(Widget);
+typedef void (*DtkshWidgetListProc)(WidgetList, Cardinal);
+typedef long (*DtkshScreenValueProc)(Screen *);
+typedef void (*DtkshTranslationProc)(Widget, XtTranslations);
+typedef void (*DtkshWsmWindowProc)(Display *, Window);
+typedef Tt_status (*DtkshTtdtSaveProc)(Tt_message, const char *, Tt_scope,
+                                      XtAppContext, int);
+typedef Tt_status (*DtkshMessageProc)(Tt_message);
+typedef Tt_status (*DtkshMessageDispositionProc)(Tt_message, Tt_status,
+                                                 const char *, int);
+typedef char *(*DtkshNetfileProc)(const char *);
+typedef char *(*DtkshHostNetfileProc)(const char *, const char *);
 static int _CreateWidget( 
-                        Widget (*func)(),
+                        DtkshCreateWidgetProc func,
                         int argc,
                         char *argv[]) ;
-static int _DTKSH_XtDestroyWidget( 
+static void _DTKSH_XtDestroyWidget(
                         Widget w) ;
 static int do_single_widget_arg_func( 
-                        int (*func)(),
+                        DtkshWidgetProc func,
                         int argc,
                         char **argv) ;
 static void mainloopsighandler( 
@@ -101,9 +141,12 @@ static void RemoveCmdStr(
                         char type,
                         long id) ;
 static int do_RootWindowCmd( 
-                        int (*func)(),
+                        DtkshScreenValueProc func,
                         int argc,
                         char *argv[]) ;
+static long DtkshRootWindowOfScreen(Screen *screen);
+static long DtkshWidthOfScreen(Screen *screen);
+static long DtkshHeightOfScreen(Screen *screen);
 static int cvtfontstruct( 
                         char *name,
                         XFontStruct **fn) ;
@@ -139,9 +182,9 @@ static int XtSetSensitive_usage(
 static int GetDisplayHandle(
                         int argc,
                         char **argv,
-	                Widget (*func)());
+	                DtkshDisplayProc func);
 static int RegisterTranslations( 
-                        void (*func)(),
+                        DtkshTranslationProc func,
                         int argc,
                         char *argv[]) ;
 static int LocateEHRecord( 
@@ -153,23 +196,23 @@ static int GetWorkspaceList(
                         int argc,
                         char *argv[]) ;
 static int DtTurnOnOrOffHourGlass( 
-                        void (*func)(),
+                        DtkshWidgetProc func,
                         int argc,
                         char *argv[]) ;
 static int WsmCommonProc(
                         int argc,
                         char *argv[],
-	                void (*func)());
+	                DtkshWsmWindowProc func);
 static int ttdt_SaveOrRevert(
-                        Tt_status (*func)(),
+                        DtkshTtdtSaveProc func,
                         int argc,
                         char *argv[] ) ;
 static int message_DestroyOrReply( 
-                        Tt_status (*func)(),
+                        DtkshMessageProc func,
                         int argc,
                         char *argv[] );
 static int message_FailOrReject( 
-                        Tt_status (*func)(),
+                        DtkshMessageDispositionProc func,
                         int argc,
                         char *argv[] );
 static Tt_message TtFileCB(
@@ -179,9 +222,13 @@ static Tt_message TtFileCB(
 	                void * clientData,
 	                int sameEuidEgid,
 	                int sameProcId ) ;
-static int tt_netfile_handler( 
-                        int paramCount,
-                        char * (*func)(),
+static int tt_netfile_handler(
+                        DtkshNetfileProc func,
+                        char *usageMsg,
+                        int argc,
+                        char *argv[]);
+static int tt_host_netfile_handler(
+                        DtkshHostNetfileProc func,
                         char * usageMsg,
                         int argc,
                         char *argv[] ) ;
@@ -445,21 +492,23 @@ static Boolean workProcAdded = False;
 static void
 PendingDestroy(
         Widget w,
-        wtab_t *wtab,
-        caddr_t callData )
+        XtPointer clientData,
+        XtPointer callData )
 {
+   wtab_t *wtab = clientData;
+
    wtab->mask |= DT_PENDING_DESTROY;
    if (!workProcAdded)
    {
       workProcAdded = True;
-      XtAddWorkProc((XtWorkProc)WtabDestroy, NULL);
+      XtAddWorkProc(WtabDestroy, NULL);
    }
 }
 
 
 static Boolean
 WtabDestroy(
-        caddr_t callData )
+        XtPointer callData )
 {
    int i;
 
@@ -518,7 +567,7 @@ set_up_w(
 	w->widid = strdup(widid);
 	w->w = wid;
 	w->mask = 0;
-	XtAddCallback(wid, XtNdestroyCallback, (XtCallbackProc)PendingDestroy, 
+      XtAddCallback(wid, XtNdestroyCallback, PendingDestroy,
                       (caddr_t)w);
 	return(w);
 }
@@ -687,7 +736,7 @@ do_XtInitialize(
 
 static int
 _CreateWidget(
-        Widget (*func)(),
+        DtkshCreateWidgetProc func,
         int argc,
         char *argv[] )
 {
@@ -898,17 +947,16 @@ do_XtPopup(
    return(0);
 }
 
-static int
+static void
 _DTKSH_XtDestroyWidget(
         Widget w )
 {
    XtDestroyWidget(w);
-   return(1);
 }
 
 static int
 do_single_widget_arg_func(
-        int (*func)(),
+        DtkshWidgetProc func,
         int argc,
         char **argv )
 {
@@ -942,7 +990,7 @@ do_XtDestroyWidget(
 
 int
 do_single_widget_test_func(
-        int (*func)(),
+        DtkshWidgetPredicate func,
         int argc,
         char **argv )
 {
@@ -969,7 +1017,7 @@ do_XtIsSensitive(
         int argc,
         char *argv[] )
 {
-   return(do_single_widget_test_func((int(*)())XtIsSensitive, argc, argv));
+   return(do_single_widget_test_func(XtIsSensitive, argc, argv));
 }
 
 
@@ -1004,7 +1052,7 @@ do_XtIsManaged(
         int argc,
         char *argv[] )
 {
-   return(do_single_widget_test_func((int(*)())XtIsManaged, argc, argv));
+   return(do_single_widget_test_func(XtIsManaged, argc, argv));
 }
 
 int
@@ -1012,7 +1060,7 @@ do_XtIsRealized(
         int argc,
         char *argv[] )
 {
-   return(do_single_widget_test_func((int(*)())XtIsRealized, argc, argv));
+   return(do_single_widget_test_func(XtIsRealized, argc, argv));
 }
 
 int
@@ -1020,7 +1068,7 @@ do_XtRealizeWidget(
         int argc,
         char *argv[] )
 {
-   return(do_single_widget_arg_func((int(*)())XtRealizeWidget, argc, argv));
+   return(do_single_widget_arg_func(XtRealizeWidget, argc, argv));
 }
 
 int
@@ -1028,7 +1076,7 @@ do_XtUnrealizeWidget(
         int argc,
         char *argv[] )
 {
-   return(do_single_widget_arg_func((int(*)())XtUnrealizeWidget, argc, argv));
+   return(do_single_widget_arg_func(XtUnrealizeWidget, argc, argv));
 }
 
 /*
@@ -1088,7 +1136,7 @@ do_XtPopdown(
         int argc,
         char **argv )
 {
-   return(do_single_widget_arg_func((int(*)())XtPopdown, argc, argv));
+   return(do_single_widget_arg_func(XtPopdown, argc, argv));
 }
 
 int
@@ -1113,7 +1161,7 @@ do_XtDisplay(
         int argc,
         char **argv )
 {
-   return(GetDisplayHandle(argc, argv, (Widget (*)())XtDisplay));
+   return(GetDisplayHandle(argc, argv, XtDisplay));
 }
 
 
@@ -1122,7 +1170,7 @@ do_XtDisplayOfObject(
         int argc,
         char **argv )
 {
-   return(GetDisplayHandle(argc, argv, (Widget (*)())XtDisplayOfObject));
+   return(GetDisplayHandle(argc, argv, XtDisplayOfObject));
 }
 
 
@@ -1130,7 +1178,7 @@ static int
 GetDisplayHandle(
         int argc,
         char **argv,
-	Widget (*func)())
+	DtkshDisplayProc func)
 {
    wtab_t *w;
    char *arg0 = argv[0];
@@ -1415,10 +1463,10 @@ AddOneCallback(
    cdata = GetNewCBData(kshcmd, w, cbName, propAtom);
 
    if (strcmp(cmd, "XtAddCallback") == 0)
-      XtAddCallback(w->w, cbName, (XtCallbackProc)stdCB, (XtPointer)cdata);
+      XtAddCallback(w->w, cbName, stdCB, (XtPointer)cdata);
    else
    {
-      XmAddWMProtocolCallback(w->w, propAtom, (XtCallbackProc)stdCB, 
+      XmAddWMProtocolCallback(w->w, propAtom, stdCB,
                               (XtPointer)cdata);
    }
 
@@ -1505,10 +1553,10 @@ RemoveOneCallback(
    {
       cdata = cbDataTable[i];
       if (strcmp(cmd, "XtRemoveCallback") == 0)
-         XtRemoveCallback(w->w, cbName, (XtCallbackProc)stdCB,(XtPointer)cdata);
+         XtRemoveCallback(w->w, cbName, stdCB, (XtPointer)cdata);
       else if (strcmp(cmd, "XmRemoveWMProtocolCallback") == 0)
       {
-         XmRemoveWMProtocolCallback(w->w, propAtom, (XtCallbackProc)stdCB, 
+         XmRemoveWMProtocolCallback(w->w, propAtom, stdCB,
                                     (XtPointer)cdata);
       }
       else 
@@ -1584,7 +1632,7 @@ do_XtAddEventHandler(
 
    ehdata = GetNewEHData(argv[4], w, eventMask, nonMaskable);
 
-   XtAddEventHandler(w->w, eventMask, nonMaskable, (XtEventHandler)stdEH, 
+   XtAddEventHandler(w->w, eventMask, nonMaskable, stdEH,
                      (XtPointer)ehdata);
 
    return(0);
@@ -1651,7 +1699,7 @@ do_XtRemoveEventHandler(
       else
          return(1);
 
-      XtRemoveEventHandler (w->w, eventMask, nonMaskable, (XtEventHandler)stdEH,
+      XtRemoveEventHandler (w->w, eventMask, nonMaskable, stdEH,
                             (XtPointer)ehdata);
 
       if ((ehdata->eventMask == 0) && (ehdata->nonMaskable == False))
@@ -1892,7 +1940,7 @@ do_XtAddWorkProc(
 
    variable = argv[1];
    cmd = strdup((char *)argv[2]);
-   id = XtAddWorkProc((XtWorkProc)stdWorkProcCB, (XtPointer)cmd);
+   id = XtAddWorkProc(stdWorkProcCB, (XtPointer)cmd);
    RegisterCmdStr(WORKPROC_CMDS, (long)id, cmd);
    sprintf(buf, "0x%lx", (long)id);
    alt_env_set_var(variable, buf);
@@ -1965,7 +2013,7 @@ do_XtAddTimeOut(
    }
 
    cmd = strdup((char *)argv[3]);
-   id = XtAddTimeOut(milliseconds, (XtTimerCallbackProc)stdTimerCB, 
+   id = XtAddTimeOut(milliseconds, stdTimerCB,
                      (XtPointer)cmd);
    RegisterCmdStr(TIMEOUT_CMDS, (long)id, cmd);
    sprintf(buf, "0x%lx", (long)id);
@@ -2009,7 +2057,7 @@ do_XtUnmanageChildren(
         int argc,
         char *argv[] )
 {
-	return(do_managelist_func(argc, argv, (int (*)())XtUnmanageChildren));
+	return(do_managelist_func(argc, argv, XtUnmanageChildren));
 }
 
 int
@@ -2017,14 +2065,14 @@ do_XtManageChildren(
         int argc,
         char *argv[] )
 {
-	return(do_managelist_func(argc, argv, (int (*)())XtManageChildren));
+	return(do_managelist_func(argc, argv, XtManageChildren));
 }
 
 int
 do_managelist_func(
         int argc,
         char *argv[],
-        int (*func)() )
+        DtkshWidgetListProc func )
 {
 	wtab_t *w;
 	int i;
@@ -2180,9 +2228,30 @@ do_XBell(
    return(0);
 }
 
+static long
+DtkshRootWindowOfScreen(
+        Screen *screen )
+{
+   return (long)XRootWindowOfScreen(screen);
+}
+
+static long
+DtkshWidthOfScreen(
+        Screen *screen )
+{
+   return (long)XWidthOfScreen(screen);
+}
+
+static long
+DtkshHeightOfScreen(
+        Screen *screen )
+{
+   return (long)XHeightOfScreen(screen);
+}
+
 static int
 do_RootWindowCmd(
-        int (*func)(),
+        DtkshScreenValueProc func,
         int argc,
         char *argv[] )
 {
@@ -2220,7 +2289,7 @@ do_XRootWindowOfScreen(
         int argc,
         char *argv[] )
 {
-   return(do_RootWindowCmd((int (*)())XRootWindowOfScreen, argc, argv));
+   return(do_RootWindowCmd(DtkshRootWindowOfScreen, argc, argv));
 }
 
 int
@@ -2228,7 +2297,7 @@ do_XWidthOfScreen(
         int argc,
         char *argv[] )
 {
-   return(do_RootWindowCmd(XWidthOfScreen, argc, argv));
+   return(do_RootWindowCmd(DtkshWidthOfScreen, argc, argv));
 }
 
 int
@@ -2236,7 +2305,7 @@ do_XHeightOfScreen(
         int argc,
         char *argv[] )
 {
-   return(do_RootWindowCmd(XHeightOfScreen, argc, argv));
+   return(do_RootWindowCmd(DtkshHeightOfScreen, argc, argv));
 }
 
 int
@@ -2386,6 +2455,7 @@ CatchNonFatalFontError(
 
 {
    invalidFont = True;
+   return 0;
 }
 
 static int
@@ -2394,7 +2464,7 @@ cvtfont(
         char *name,
         Font *fn )
 {
-   int (*oldHandler)();
+   XErrorHandler oldHandler;
 
    invalidFont = False;
    oldHandler = XSetErrorHandler(CatchNonFatalFontError);
@@ -2480,7 +2550,6 @@ invokeXDrawFunction(
    int i;
    int mode, parse = 0;
    int text = FALSE;
-   int (*func)() = NULL;
    int argtype = 0;
    int polymode = 0;
    int coordmode;
@@ -2524,8 +2593,6 @@ invokeXDrawFunction(
    if (function == COPY_AREA) 
    {
       parse = 0;
-      func = XCopyArea;
-
       destination = (Window)strtoul(argv[3], &sp, 0);
       if (sp == argv[3]) 
       {
@@ -2548,17 +2615,14 @@ invokeXDrawFunction(
    else if (function == DRAW_RECTANGLE) 
    {
       parse = 4;
-      func = XDrawRectangle;
    } 
    else if (function == FILL_RECTANGLE) 
    {
       parse = 4;
-      func = XFillRectangle;
    } 
    else if (function == FILL_POLYGON) 
    {
       parse = PARSE_POINTLIST;
-      func = XFillPolygon;
       argtype = POLYGON_ARGS;
       polymode = Complex;
       coordmode = CoordModeOrigin;
@@ -2587,17 +2651,14 @@ invokeXDrawFunction(
    else if (function == DRAW_LINE) 
    {
       parse = 4;
-      func = XDrawLine;
    } 
    else if (function == DRAW_SEGMENTS) 
    {
       parse = PARSE_SEGMENTLIST;
-      func = XDrawSegments;
    } 
    else if (function == DRAW_LINES) 
    {
       parse = PARSE_POINTLIST;
-      func = XDrawLines;
       argtype = LINE_ARGS;
       coordmode = CoordModeOrigin;
       if (argc > 3)
@@ -2620,33 +2681,27 @@ invokeXDrawFunction(
    {
       parse = 2;
       text = TRUE;
-      func = XDrawString;
    } 
    else if (function == DRAW_IMAGE_STRING) 
    {
       parse = 2;
       text = TRUE;
-      func = XDrawImageString;
    } 
    else if (function == DRAW_ARC) 
    {
       parse = 6;
-      func = XDrawArc;
    } 
    else if (function == FILL_ARC) 
    {
       parse = 6;
-      func = XFillArc;
    } 
    else if (function == DRAW_POINT) 
    {
       parse = 2;
-      func = XDrawPoint;
    } 
    else if (function == DRAW_POINTS) 
    {
       parse = PARSE_POINTLIST;
-      func = XDrawPoints;
       argtype = LINE_ARGS;
       coordmode = CoordModeOrigin;
       if (argc > 3)
@@ -2668,12 +2723,10 @@ invokeXDrawFunction(
    else if (function == CLEAR_WINDOW) 
    {
       parse = 0;
-      func = XClearWindow;
    } 
    else if (function == CLEAR_AREA) 
    {
       parse = PARSE_AREA;
-      func = XClearArea;
    }
 
    if (Standard_GC == NULL)
@@ -2839,13 +2892,19 @@ invokeXDrawFunction(
       {
          case POLYGON_ARGS:
          {
-            (*func)(display, drawable, gc, points, argc/2, polymode, coordmode);
+            XFillPolygon(display, drawable, gc, points, argc / 2,
+                         polymode, coordmode);
             break;
          }
 
          case LINE_ARGS:
          {
-            (*func)(display, drawable, gc, points, argc/2, coordmode);
+            if (function == DRAW_LINES)
+               XDrawLines(display, drawable, gc, points, argc / 2,
+                          coordmode);
+            else
+               XDrawPoints(display, drawable, gc, points, argc / 2,
+                           coordmode);
             break;
          }
       }
@@ -2869,7 +2928,7 @@ invokeXDrawFunction(
          segments[nsegments].y2 = atoi(argv[i+3]);
       }
 
-      (*func)(display, drawable, gc, segments, argc/4);
+      XDrawSegments(display, drawable, gc, segments, argc / 4);
       free(segments);
       argc -= 4*nsegments;
       argv += 4*nsegments;
@@ -2899,7 +2958,7 @@ invokeXDrawFunction(
          argv ++;
       }
 
-      (*func)(display, drawable, p[0], p[1], p[2], p[3], exposures);
+      XClearArea(display, drawable, p[0], p[1], p[2], p[3], exposures);
    }
    else 
    {
@@ -2910,22 +2969,49 @@ invokeXDrawFunction(
 
          if (text) 
          {
-            (*func)(display, drawable, gc, 
-                    p[0], p[1], argv[i], strlen(argv[i]));
+            if (function == DRAW_STRING)
+               XDrawString(display, drawable, gc, p[0], p[1], argv[i],
+                           strlen(argv[i]));
+            else
+               XDrawImageString(display, drawable, gc, p[0], p[1], argv[i],
+                                strlen(argv[i]));
             argc--;
             argv++;
          } 
-         else if (func == XClearWindow)
-            (*func)(display, drawable);
-         else if (func == XCopyArea)
+         else if (function == CLEAR_WINDOW)
+            XClearWindow(display, drawable);
+         else if (function == COPY_AREA)
          {
-            (*func)(display, drawable, destination, gc,
-                    srcX, srcY, width, height, destX, destY);
+            XCopyArea(display, drawable, destination, gc, srcX, srcY,
+                      width, height, destX, destY);
          }
          else
          {
-            (*func)(display, drawable, gc, 
-                    p[0], p[1], p[2], p[3], p[4], p[5]);
+            switch (function)
+            {
+               case DRAW_RECTANGLE:
+                  XDrawRectangle(display, drawable, gc, p[0], p[1],
+                                 p[2], p[3]);
+                  break;
+               case FILL_RECTANGLE:
+                  XFillRectangle(display, drawable, gc, p[0], p[1],
+                                 p[2], p[3]);
+                  break;
+               case DRAW_LINE:
+                  XDrawLine(display, drawable, gc, p[0], p[1], p[2], p[3]);
+                  break;
+               case DRAW_ARC:
+                  XDrawArc(display, drawable, gc, p[0], p[1], p[2], p[3],
+                           p[4], p[5]);
+                  break;
+               case FILL_ARC:
+                  XFillArc(display, drawable, gc, p[0], p[1], p[2], p[3],
+                           p[4], p[5]);
+                  break;
+               case DRAW_POINT:
+                  XDrawPoint(display, drawable, gc, p[0], p[1]);
+                  break;
+            }
          }
 
          argc -= parse;
@@ -3337,8 +3423,8 @@ do_XtAddInput(
    inp->lastCharIsBackslash = False;
    inp->lineWasTouched = False;
 
-   id = XtAddInput(fd, (XtPointer)XtInputReadMask, 
-                   (XtInputCallbackProc)stdInputCB, (caddr_t)inp);
+   id = XtAddInput(fd, (XtPointer)XtInputReadMask,
+                   stdInputCB, (XtPointer)inp);
 
    /* 
     * Save a record of this input, so that we can destroy the buffer
@@ -3590,9 +3676,9 @@ RestorePriorEnvVarValues(
 
 void
 stdCB(
-        void *widget,
-        caddr_t clientData,
-        caddr_t callData )
+        Widget widget,
+        XtPointer clientData,
+        XtPointer callData )
 {
    char buf[128];
    dtksh_client_data_t *cdata = (dtksh_client_data_t *)clientData;
@@ -3730,9 +3816,9 @@ stdCB(
  */
 void
 stdWSCB(
-        void *widget,
+        Widget widget,
         Atom atom,
-        caddr_t clientData )
+        XtPointer clientData )
 {
    char buf[128];
    dtksh_client_data_t *cdata = (dtksh_client_data_t *)clientData;
@@ -3780,10 +3866,11 @@ stdWSCB(
 
 void
 stdInputCB(
-        inputrec_t *inp,
+        XtPointer clientData,
         int *source,
         XtInputId *id )
 {
+   inputrec_t *inp = clientData;
    char buf[LINESIZE];
    char cmdbuf[LINESIZE];
    int cmd;
@@ -3886,9 +3973,9 @@ stdInputCB(
    }
 }
 
-int
+Boolean
 stdWorkProcCB(
-        char *clientData )
+        XtPointer clientData )
 {
    int retcode;
    int i;
@@ -3906,13 +3993,13 @@ stdWorkProcCB(
          }
       }
    }
-   return(retcode);
+   return(retcode != 0);
 }
 
 void
 stdTimerCB(
-        char *clientData,
-        long *id )
+        XtPointer clientData,
+        XtIntervalId *id )
 {
 	ksh_eval((char *)clientData);
         RemoveCmdStr(TIMEOUT_CMDS, (long)*id);
@@ -4080,7 +4167,7 @@ do_XtSetSensitive(
 
 static int
 RegisterTranslations(
-        void (*func)(),
+        DtkshTranslationProc func,
         int argc,
         char *argv[] )
 {
@@ -4339,8 +4426,8 @@ LocateCBRecord(
 
 void
 stdEH(
-        void *widget,
-        caddr_t clientData,
+        Widget widget,
+        XtPointer clientData,
         XEvent *event,
         Boolean *continueToDispatch )
 {
@@ -4661,7 +4748,7 @@ do_DtWsmAddWorkspaceFunctions(
         int argc,
         char *argv[] )
 {
-   return(WsmCommonProc(argc, argv, (void (*)())DtWsmAddWorkspaceFunctions));
+   return(WsmCommonProc(argc, argv, DtWsmAddWorkspaceFunctions));
 }
 
 
@@ -4670,7 +4757,7 @@ do_DtWsmRemoveWorkspaceFunctions(
         int argc,
         char *argv[] )
 {
-   return(WsmCommonProc(argc, argv, (void (*)())DtWsmRemoveWorkspaceFunctions));
+   return(WsmCommonProc(argc, argv, DtWsmRemoveWorkspaceFunctions));
 }
 
 
@@ -4678,7 +4765,7 @@ static int
 WsmCommonProc(
         int argc,
         char *argv[],
-	void (*func)())
+	DtkshWsmWindowProc func)
 {
    wtab_t *w;
    Display * display;
@@ -5058,7 +5145,7 @@ do_DtWsmOccupyAllWorkspaces(
         int argc,
         char *argv[] )
 {
-   return(WsmCommonProc(argc, argv, (void (*)())DtWsmOccupyAllWorkspaces));
+   return(WsmCommonProc(argc, argv, DtWsmOccupyAllWorkspaces));
 }
 
 
@@ -5103,7 +5190,7 @@ do__DtGetHourGlassCursor(
 
 static int
 DtTurnOnOrOffHourGlass(
-        void (*func)(),
+        DtkshWidgetProc func,
         int argc,
         char *argv[] )
 {
@@ -6553,7 +6640,7 @@ do_ttdt_Get_Modified(
  */
 static int
 ttdt_SaveOrRevert(
-        Tt_status (*func)(),
+        DtkshTtdtSaveProc func,
         int argc,
         char *argv[] )
 {
@@ -6666,7 +6753,7 @@ do_tt_error_pointer(
 
 static int
 message_DestroyOrReply( 
-        Tt_status (*func)(),
+        DtkshMessageProc func,
         int argc,
         char *argv[] )
 {
@@ -6731,7 +6818,7 @@ do_tt_message_reply(
 
 static int
 message_FailOrReject( 
-        Tt_status (*func)(),
+        DtkshMessageDispositionProc func,
         int argc,
         char *argv[] )
 {
@@ -6820,9 +6907,8 @@ do_tttk_message_fail(
 
 
 static int
-tt_netfile_handler( 
-        int paramCount,
-        char * (*func)(),
+tt_netfile_handler(
+        DtkshNetfileProc func,
         char * usageMsg,
         int argc,
         char *argv[] )
@@ -6834,16 +6920,13 @@ tt_netfile_handler(
    Cardinal cargc;
    XrmValue cargv[1];
 
-   if (argc != paramCount) 
+   if (argc != 4)
    {
       printerr(str_nill, usageMsg, NULL);
       return(1);
    }
 
-   if (paramCount == 4)
-      convertedName = (char *)(*func)(argv[3]);
-   else
-      convertedName = (char *)(*func)(argv[3], argv[4]);
+   convertedName = func(argv[3]);
 
    /* 
     * Map the ttStatus into a string.  Note that we can't call the XtConvert
@@ -6867,6 +6950,36 @@ tt_netfile_handler(
    return (0);
 }
 
+static int
+tt_host_netfile_handler(
+        DtkshHostNetfileProc func,
+        char *usageMsg,
+        int argc,
+        char *argv[] )
+{
+   XrmValue tval;
+   Tt_status ttStatus;
+   char *statusString;
+   char *convertedName;
+
+   if (argc != 5)
+   {
+      printerr(str_nill, usageMsg, NULL);
+      return 1;
+   }
+
+   convertedName = func(argv[3], argv[4]);
+   ttStatus = tt_ptr_error(convertedName);
+   DtkshCvtTtStatusToString(ttStatus, &tval);
+
+   env_set_var(argv[1], ttStatus == TT_OK ? convertedName : str_nill);
+   statusString = tval.size && tval.addr ? tval.addr : str_nill;
+   env_set_var(argv[2], statusString);
+
+   tt_free(convertedName);
+   return 0;
+}
+
 
 int
 do_tt_file_netfile(
@@ -6878,7 +6991,7 @@ do_tt_file_netfile(
 
    usageMsg = strdup(GETMESSAGE(
              "Usage: tt_file_netfile variable status filename"));
-   results = tt_netfile_handler(4, tt_file_netfile, usageMsg, argc, argv);
+   results = tt_netfile_handler(tt_file_netfile, usageMsg, argc, argv);
    XtFree(usageMsg);
    return(results);
 }
@@ -6894,7 +7007,7 @@ do_tt_netfile_file(
 
    usageMsg = strdup(GETMESSAGE(
              "Usage: tt_netfile_file variable status netfilename"));
-   results = tt_netfile_handler(4, tt_netfile_file, usageMsg, argc, argv);
+   results = tt_netfile_handler(tt_netfile_file, usageMsg, argc, argv);
    XtFree(usageMsg);
    return(results);
 }
@@ -6910,7 +7023,8 @@ do_tt_host_file_netfile(
 
    usageMsg = strdup(GETMESSAGE(
              "Usage: tt_host_file_netfile variable status host filename"));
-   results = tt_netfile_handler(5, tt_host_file_netfile, usageMsg, argc, argv);
+   results = tt_host_netfile_handler(tt_host_file_netfile, usageMsg, argc,
+                                     argv);
    XtFree(usageMsg);
    return(results);
 }
@@ -6926,7 +7040,8 @@ do_tt_host_netfile_file(
 
    usageMsg = strdup(GETMESSAGE(
              "Usage: tt_host_netfile_file variable status host netfilename"));
-   results = tt_netfile_handler(5, tt_host_netfile_file, usageMsg, argc, argv);
+   results = tt_host_netfile_handler(tt_host_netfile_file, usageMsg, argc,
+                                     argv);
    XtFree(usageMsg);
    return(results);
 }
@@ -9396,10 +9511,10 @@ SetTextWCSlen(
  *
  */
 
-void
+XtEnum
 stdPrintSetupProc(
 	int proctype,
-	void  *widget,
+	Widget widget,
 	DtPrintSetupData *callData)
 {
 	wtab_t *w;
@@ -9413,13 +9528,14 @@ stdPrintSetupProc(
 	char *oldCB_CALL_DATA_value = NULL;
 	char *ptr;
 	Namfun_t *clonedDisc;
+	int eval_status = 1;
 
-	w = widget_to_wtab((Widget)widget);
+	w = widget_to_wtab(widget);
 	if (w == NULL)
-		return;
+		return DtPRINT_FAILURE;
 	pinfo = (ProcInfo_t *) w->info;
 	if (pinfo == NULL)
-		return;
+		return DtPRINT_FAILURE;
 
 	nestingLevel++;
 	np2 = GetNameValuePair("CB_WIDGET");
@@ -9461,19 +9577,19 @@ stdPrintSetupProc(
 
 	switch (proctype) {
 	case PRINTER_INFO_PROC:
-		ksh_eval(pinfo->printerInfoProcCommand);
+		eval_status = ksh_eval(pinfo->printerInfoProcCommand);
 		break;
 	case SELECT_FILE_PROC:
-		ksh_eval(pinfo->selectFileProcCommand);
+		eval_status = ksh_eval(pinfo->selectFileProcCommand);
 		break;
 	case SELECT_PRINTER_PROC:
-		ksh_eval(pinfo->selectPrinterProcCommand);
+		eval_status = ksh_eval(pinfo->selectPrinterProcCommand);
 		break;
 	case SETUP_PROC:
-		ksh_eval(pinfo->setupProcCommand);
+		eval_status = ksh_eval(pinfo->setupProcCommand);
 		break;
 	case VERIFY_PRINTER_PROC:
-		ksh_eval(pinfo->verifyPrinterProcCommand);
+		eval_status = ksh_eval(pinfo->verifyPrinterProcCommand);
 		break;
 	}
 
@@ -9490,55 +9606,50 @@ stdPrintSetupProc(
 	FreeNestedVariables();
 	nestingLevel--;
 
-	return;
+	return eval_status == 0 ? DtPRINT_SUCCESS : DtPRINT_FAILURE;
 }
 
-void
+XtEnum
 stdPrinterInfoProc(
-	void  *widget,
+	Widget widget,
     DtPrintSetupData *callData)
 {
-	stdPrintSetupProc(PRINTER_INFO_PROC, widget, callData);
-	return;
+	return stdPrintSetupProc(PRINTER_INFO_PROC, widget, callData);
 }
 
-void
+XtEnum
 stdSelectFileProc(
-	void  *widget,
+	Widget widget,
     DtPrintSetupData *callData)
 {
-	stdPrintSetupProc(SELECT_FILE_PROC, widget, callData);
-	return;
+	return stdPrintSetupProc(SELECT_FILE_PROC, widget, callData);
 }
 
-void
+XtEnum
 stdSelectPrinterProc(
-	void  *widget,
+	Widget widget,
     DtPrintSetupData *psd)
 {
-	stdPrintSetupProc(SELECT_PRINTER_PROC, widget, psd);
-	return;
+	return stdPrintSetupProc(SELECT_PRINTER_PROC, widget, psd);
 }
 
-void
+XtEnum
 stdSetupProc(
-	void  *widget,
+	Widget widget,
     DtPrintSetupData *callData)
 {
-	stdPrintSetupProc(SETUP_PROC, widget, callData);
-	return;
+	return stdPrintSetupProc(SETUP_PROC, widget, callData);
 }
 
-void
+XtEnum
 stdVerifyPrinterProc(
-	void  *widget,
+	Widget widget,
     DtPrintSetupData *callData)
 {
-	stdPrintSetupProc(VERIFY_PRINTER_PROC, widget, callData);
-	return;
+	return stdPrintSetupProc(VERIFY_PRINTER_PROC, widget, callData);
 }
 
-void dtksh_init()
+void dtksh_init(void)
 {
 	ADDBUILTIN("XtMainLoop", do_XtMainLoop);
 	ADDBUILTIN("DtLoadWidget", do_DtLoadWidget);

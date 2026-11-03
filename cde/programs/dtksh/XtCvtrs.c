@@ -233,7 +233,7 @@ void
 RegisterXtOverrideConverters( void )
 {
         XtSetTypeConverter(XtRString, XtRPixel,
-                (XtTypeConverter)DtkshCvtStringToPixel, 
+                DtkshCvtStringToPixel,
                 xtColorConvertArgs, XtNumber(xtColorConvertArgs),
                 XtCacheNone, FreePixel);
 }

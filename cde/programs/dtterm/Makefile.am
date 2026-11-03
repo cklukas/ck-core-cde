@@ -15,6 +15,9 @@ endif
 dtterm_CFLAGS = -I$(top_builddir)/lib/DtTerm/TermPrim	\
 	-I$(top_builddir)/lib/DtTerm/Term			\
 	-I$(top_builddir)/lib/DtTerm/TermView	\
+	-I$(top_srcdir)/lib/DtTerm/TermPrim	\
+	-I$(top_srcdir)/lib/DtTerm/Term	\
+	-I$(top_srcdir)/lib/DtTerm/TermView	\
 	$(DT_INCDIR) \
 	-DSUN_TERMINAL_SERVER
 
@@ -31,21 +34,22 @@ CLEANFILES = $(CPP_TARGETS)
 cfgdir = $(CDE_INSTALLATION_TOP)/config
 dist_cfg_DATA = dtterm.ti
 
-Dtterm.ad: Dtterm.ad.src
+Dtterm.ad: $(srcdir)/Dtterm.ad.src
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=# $< > $@
 
-DtTermFallBackResources.c.src: Dtterm.ad.src
+DtTermFallBackResources.c.src: $(srcdir)/Dtterm.ad.src
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=# -DFALLBACK_RESOURCES $< > $@
 
 DtTermFallBackResources.c: DtTermFallBackResources.c.src
 	$(RM) $@
-	./mkfallbk < DtTermFallBackResources.c.src > $@
+	$(SHELL) $(srcdir)/mkfallbk < DtTermFallBackResources.c.src > $@
 
-dtterm.ti: terminfoChecklist
+dtterm.ti: $(srcdir)/terminfoChecklist $(srcdir)/terminfoCreate
 	$(RM) $@
-	CPP="$(GENCPP)" $(SHELL) terminfoCreate < terminfoChecklist > $@
+	CPP="$(GENCPP)" $(SHELL) $(srcdir)/terminfoCreate \
+		< $(srcdir)/terminfoChecklist > $@
 
 install-exec-hook:
 if !HAS_UTEMPTER_LIBRARY

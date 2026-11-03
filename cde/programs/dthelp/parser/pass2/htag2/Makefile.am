@@ -6,7 +6,7 @@ MAINTAINERCLEANFILES = Makefile.in
 .NOTPARALLEL:
 
 HTAG2       = ..
-HTAG2SRC    = $(HTAG2)/htag2
+HTAG2SRC     = $(top_srcdir)/programs/dthelp/parser/pass2/htag2
 SDLPARSERSRC = $(HTAG2)/parser
 SDLELTDEFSRC = $(HTAG2)/eltdef
 SDLDTDFILE   = $(HTAG2SRC)/sdl.dtd
@@ -15,9 +15,9 @@ SDLBUILDSRC  = $(HTAG2)/build
 SDLUTILLIB   = $(HTAG2)/util/libutil.a
 SDLIFFILE    = $(HTAG2SRC)/help.if
 
-AM_CPPFLAGS = -DPASS2 -I../parser -I../util -I../eltdef \
-	      -I../../include/parser -I../../include/util \
-	      -I../../include/eltdef $(DT_INCDIR)
+AM_CPPFLAGS = -DPASS2 -I../parser -I$(top_srcdir)/programs/dthelp/parser/pass2/parser -I../util -I$(top_srcdir)/programs/dthelp/parser/pass2/util -I../eltdef -I$(top_srcdir)/programs/dthelp/parser/pass2/eltdef \
+	      -I../../include/parser -I$(top_srcdir)/programs/dthelp/parser/include/parser -I../../include/util -I$(top_srcdir)/programs/dthelp/parser/include/util \
+	      -I../../include/eltdef -I$(top_srcdir)/programs/dthelp/parser/include/eltdef $(DT_INCDIR)
 
 # needed by parser/
 noinst_LIBRARIES = libhelptag.a

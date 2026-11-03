@@ -63,7 +63,7 @@ void display_error_message (Widget parent, char *message)
   XtUnmanageChild (XmMessageBoxGetChild (ErrorDialog, XmDIALOG_HELP_BUTTON));
 
   XtAddCallback( ErrorDialog, XmNokCallback,
-          (XtCallbackProc) activateCB_ErrorDialog_OkButton,
+          activateCB_ErrorDialog_OkButton,
           (XtPointer) &ErrorDialog );
 
   XtVaSetValues (ErrorDialog,

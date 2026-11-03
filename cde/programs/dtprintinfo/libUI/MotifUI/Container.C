@@ -80,7 +80,7 @@ void Container::CreateContainer(MotifUI *parent, char * /*name*/,
 
    if (!trans_tbl)
     {
-      action_table[0].proc = (XtActionProc) ResizeRC;
+      action_table[0].proc = ResizeRC;
       trans_tbl = XtParseTranslationTable("<Configure>:ResizeRC()");
       XtAppAddActions(appContext, action_table, XtNumber(action_table));
     }
@@ -559,7 +559,7 @@ void Container::ResizeSW(Widget w, XtPointer client_data, XtPointer)
 	           500, ResizeTimeOut, client_data);
 }
 
-void Container::ResizeRC(Widget w, XEvent *, String *, int *)
+void Container::ResizeRC(Widget w, XEvent *, String *, Cardinal *)
 {
    Container *obj;
    XtVaGetValues(w, XmNuserData, &obj, NULL);

@@ -1153,7 +1153,7 @@ static void CreatePrintDialog(
    XtSetValues (printShell, args, n);
 
    /* Add the popup position callback to our print  dialog */
-   XtAddCallback (printShell, XmNpopupCallback, (XtCallbackProc) _DtHelpMapCB,
+   XtAddCallback (printShell, XmNpopupCallback, _DtHelpMapCB,
                   (XtPointer) XtParent(widget));
 
    /* Add the proper help callback to the print dialog shell "F1" support */

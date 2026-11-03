@@ -77,7 +77,7 @@ externaldef(restraintclassrec) RestraintClassRec restraintClassRec =
       NULL,				/* class_initialize      */    
       NULL, 			        /* class_part_initialize */
       False,                            /* class_inited          */	
-      (XtInitProc) Initialize,          /* initialize	         */	
+      Initialize,                       /* initialize	         */
       NULL,                             /* initialize_hook       */
       Realize,				/* realize	         */	
       NULL,				/* actions               */	
@@ -106,8 +106,8 @@ externaldef(restraintclassrec) RestraintClassRec restraintClassRec =
    },
 
    {		/* composite_class fields */
-      (XtGeometryHandler) GeometryManager,	/* geometry_manager   */
-      (XtWidgetProc) ChangeManaged,		/* change_managed     */
+      GeometryManager,				/* geometry_manager   */
+      ChangeManaged,				/* change_managed     */
       XtInheritInsertChild,			/* insert_child       */
       XtInheritDeleteChild,			/* delete_child       */
       NULL,                                     /* extension          */

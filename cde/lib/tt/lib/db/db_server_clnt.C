@@ -534,7 +534,7 @@ _tt_gettype_1(_Tt_spec_props *argp, CLIENT *clnt)
 	}
 }
 
-clnt_stat _tt_get_rpc_result()
+clnt_stat _tt_get_rpc_result(void)
 {
 	return rpc_result;
 }

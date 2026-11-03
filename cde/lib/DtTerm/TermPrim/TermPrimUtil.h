@@ -38,7 +38,7 @@ extern "C" {
 #endif	/* __cplusplus */
 
 extern void _DtTermPrimPointerOn(Widget w);
-extern void _DtTermPrimPointerOff(Widget w, XtIntervalId *id) ;
+extern void _DtTermPrimPointerOff(XtPointer client_data, XtIntervalId *id) ;
 extern void _DtTermPrimPointerFreeze(Widget w, Boolean frozen) ;
 extern void _DtTermPrimRecolorPointer(Widget w) ;
 extern void _DtTermWriteLog(DtTermPrimitiveWidget tw, char *buffer, int len) ;

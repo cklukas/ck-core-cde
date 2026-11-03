@@ -90,13 +90,17 @@ static void ClassPartInitialize(
                         WidgetClass wc) ;
 static void Initialize( 
                         Widget request_w,
-                        Widget new_w) ;
+                        Widget new_w,
+                        ArgList args,
+                        Cardinal *num_args) ;
 static void Destroy( 
                         Widget w) ;
 static Boolean SetValues( 
                         Widget current_w,
                         Widget request_w,
-                        Widget new_w) ;
+                        Widget new_w,
+                        ArgList args,
+                        Cardinal *num_args) ;
 static void ChangeManaged( 
                         Widget manager) ;
 static void InsertChild( 
@@ -105,7 +109,9 @@ static void DeleteChild(
                         Widget child) ;
 static void ConstraintInitialize( 
                         Widget request,
-                        Widget new) ;
+                        Widget new,
+                        ArgList args,
+                        Cardinal *num_args) ;
 static void GetSize( 
                         Widget manager,
                         Dimension wa_w,
@@ -115,9 +121,7 @@ static void GetSize(
                         Dimension *w,
                         Dimension *h) ;
 static void CreateChildren( 
-                        DtDialogBoxWidget new,
-                        Widget top_widget,
-                        Widget bottom_widget) ;
+                        Widget new) ;
 static void ButtonCallback( 
                         Widget g,
                         XtPointer client_data,
@@ -137,7 +141,7 @@ static void ButtonCallback(
 #define WARN_CHILD_TYPE		_DtMsgDialogBox_0000
 #define WARN_BUTTON_CHILD	_DtMsgDialogBox_0001
 
-extern void 	_DtRegisterNewConverters ();
+extern void 	_DtRegisterNewConverters (void);
 
 
 /*-------------------------------------------------------------
@@ -219,7 +223,7 @@ DtDialogBoxClassRec dtDialogBoxClassRec =
 		ClassInitialize,		/* class_initialize	*/
 		ClassPartInitialize,		/* class_part_initialize*/
 		False,				/* class_inited		*/
-		(XtInitProc) Initialize,	/* initialize		*/
+		Initialize,		/* initialize		*/
 		NULL,				/* initialize_hook	*/
 		XtInheritRealize,		/* realize		*/
 		NULL,				/* actions		*/
@@ -234,7 +238,7 @@ DtDialogBoxClassRec dtDialogBoxClassRec =
 		Destroy,		 	/* destroy		*/	
 		XtInheritResize,		/* resize		*/
 		XtInheritExpose,		/* expose		*/	
-		(XtSetValuesFunc) SetValues,	/* set_values		*/	
+		SetValues,			/* set_values		*/
 		NULL,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
 		NULL,				/* get_values_hook	*/
@@ -263,7 +267,7 @@ DtDialogBoxClassRec dtDialogBoxClassRec =
 		constraints,			/* constraint_resources	*/
 		XtNumber (constraints),		/* num_constraint_resources */
 		sizeof (DtDialogBoxConstraintRec),/* constraint_record	*/
-		(XtInitProc) ConstraintInitialize,/* constraint_initialize */
+		ConstraintInitialize,		/* constraint_initialize */
 		NULL,				/* constraint_destroy	*/
 		NULL,				/* constraint_set_values */
 		NULL,				/* extension		*/
@@ -299,7 +303,7 @@ DtDialogBoxClassRec dtDialogBoxClassRec =
 /*	DtDialogBox Part
 */
 	{
-(XtWidgetProc)	CreateChildren,			/* create_children	*/
+		CreateChildren,			/* create_children	*/
 		NULL,				/* configure_children	*/
 		GetSize,			/* get_size		*/
 		NULL,				/* button_callback	*/
@@ -380,10 +384,16 @@ ClassPartInitialize(
 static void 
 Initialize(
         Widget request_w,
-        Widget new_w )
+        Widget new_w,
+        ArgList args,
+        Cardinal *num_args )
 {
 	DtDialogBoxWidget	new	= (DtDialogBoxWidget) new_w;
 	XtWidgetProc	create_children;
+
+	(void)request_w;
+	(void)args;
+	(void)num_args;
 
 	if (M_ButtonCount (new) > 0)
 		M_Button (new) = (Widget *)
@@ -430,9 +440,17 @@ static Boolean
 SetValues(
         Widget current_w,
         Widget request_w,
-        Widget new_w )
+        Widget new_w,
+        ArgList args,
+        Cardinal *num_args )
 {
 	Boolean redraw_flag = False;
+
+	(void)current_w;
+	(void)request_w;
+	(void)new_w;
+	(void)args;
+	(void)num_args;
 
 /*	Superclass does all the work so far; checks for redisplay, etc.
 */
@@ -575,10 +593,16 @@ DeleteChild(
 static void 
 ConstraintInitialize(
         Widget request,
-        Widget new )
+        Widget new,
+        ArgList args,
+        Cardinal *num_args )
 {
 	DtDialogBoxWidget	mgr	 = (DtDialogBoxWidget) XtParent (new);
 	DtDialogBoxConstraint	constraint	= M_DialogBoxConstraint (new);
+
+	(void)request;
+	(void)args;
+	(void)num_args;
 
 /*	Validate child type.
 */
@@ -702,10 +726,9 @@ GetSize(
 */
 static void 
 CreateChildren(
-        DtDialogBoxWidget new,
-        Widget top_widget,
-        Widget bottom_widget )
+        Widget widget )
 {
+	DtDialogBoxWidget new = (DtDialogBoxWidget)widget;
 	Widget		ref_widget,
 			sep, btn;
 	Widget *	button = 	M_Button (new);
@@ -783,7 +806,7 @@ CreateChildren(
 		btn = XmCreatePushButtonGadget ((Widget)new, button_name, al, ac);
 		XtManageChild (btn);
  		XtAddCallback (btn, XmNactivateCallback,
-				(XtCallbackProc)ButtonCallback,
+				ButtonCallback,
 				(XtPointer)((long)(i+1)));
 
 		button[i] = btn;

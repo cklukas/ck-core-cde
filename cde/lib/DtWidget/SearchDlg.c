@@ -358,7 +358,7 @@ CreateSearchDialog(
     XtManageChild(XtParent(M_search_spellList(pPriv)));
 
     XtAddCallback( M_search_spellList(pPriv), XmNhelpCallback,
-		   (XtCallbackProc)_DtEditorHelpSearchSpellCB, 
+		   _DtEditorHelpSearchSpellCB,
 		   (XtPointer)pPriv );
 
     /* 
@@ -401,7 +401,7 @@ CreateSearchDialog(
 					   al, ac);
 
     XtAddCallback( M_findText(pPriv), XmNhelpCallback,
-		   (XtCallbackProc)_DtEditorHelpSearchFindCB, 
+		   _DtEditorHelpSearchFindCB,
 		   (XtPointer)pPriv );
 
     /* 
@@ -447,7 +447,7 @@ CreateSearchDialog(
     XtManageChild(M_replaceText(pPriv));
 
     XtAddCallback( M_replaceText(pPriv), XmNhelpCallback,
-		   (XtCallbackProc)_DtEditorHelpSearchChangeCB, 
+		   _DtEditorHelpSearchChangeCB,
 		   (XtPointer)pPriv );
     /* 
      * Only enable Change To field if the widget is editable
@@ -598,9 +598,9 @@ CreateSearchDialog(
 
     XtRemoveAllCallbacks(M_search_spellList(pPriv), XmNbrowseSelectionCallback);
     XtAddCallback(M_search_spellList(pPriv), XmNbrowseSelectionCallback,
-                      (XtCallbackProc) _DtEditorMisspelledSelectCB, pPriv);
+                      _DtEditorMisspelledSelectCB, pPriv);
     XtAddCallback(M_search_spellList(pPriv), XmNdefaultActionCallback,
-                      (XtCallbackProc) _DtEditorMisspelledDblClickCB, pPriv);
+                      _DtEditorMisspelledDblClickCB, pPriv);
 
     ac = 0;
     XtSetArg(al[ac], XmNvisibleItemCount, 4); ac++;
@@ -620,28 +620,28 @@ CreateSearchDialog(
     XtSetValues(M_search_separator(pPriv), al, ac);
 
     XtAddCallback(M_search_findBtn(pPriv), XmNactivateCallback,
-                      (XtCallbackProc) _DtEditorDialogSearchCB, 
+                      _DtEditorDialogSearchCB,
 		      (XtPointer) pPriv);
     XtAddCallback(M_search_replaceBtn(pPriv), XmNactivateCallback,
-                      (XtCallbackProc) _DtEditorDialogReplaceCB, 
+                      _DtEditorDialogReplaceCB,
 		      (XtPointer) pPriv);
     XtAddCallback(M_search_replaceAllBtn(pPriv), XmNactivateCallback,
-                      (XtCallbackProc) _DtEditorDialogReplaceAllCB, 
+                      _DtEditorDialogReplaceAllCB,
 		      (XtPointer) pPriv);
     XtAddCallback(M_search_closeBtn(pPriv), XmNactivateCallback,
-                      (XtCallbackProc) _DtEditorDialogFindCancelCB,
+                      _DtEditorDialogFindCancelCB,
 		      (XtPointer) pPriv);
     XtAddCallback(M_search_helpBtn(pPriv), XmNactivateCallback,
-                      (XtCallbackProc) _DtEditorHelpSearchCB,
+                      _DtEditorHelpSearchCB,
 		      (XtPointer) pPriv);
     XtAddCallback(M_search_dialog(pPriv), XmNmapCallback,
-                      (XtCallbackProc) _DtEditorSearchMapCB, pPriv);
+                      _DtEditorSearchMapCB, pPriv);
     XtAddCallback(M_findText(pPriv), XmNvalueChangedCallback, 
-		      (XtCallbackProc)_DtEditorFindTextChangedCB, pPriv);
+		      _DtEditorFindTextChangedCB, pPriv);
     XtAddCallback(M_replaceText(pPriv), XmNvalueChangedCallback, 
-		      (XtCallbackProc)_DtEditorReplaceTextChangedCB, pPriv);
+		      _DtEditorReplaceTextChangedCB, pPriv);
     XtAddCallback(M_search_dialog(pPriv), XmNhelpCallback, 
-		  (XtCallbackProc) _DtEditorHelpSearchCB, (XtPointer)pPriv);
+		  _DtEditorHelpSearchCB, (XtPointer)pPriv);
 
     XtSetArg(al[0], XmNdefaultButton, M_search_closeBtn(pPriv));
     XtSetValues(M_search_dialog(pPriv), al, 1);

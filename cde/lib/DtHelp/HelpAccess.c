@@ -225,7 +225,7 @@ static void SetupHelpDialog(
 
           /* Add the popup position callback to our history dialog */
           XtAddCallback (XtParent(*helpDialog), XmNpopupCallback,
-                        (XtCallbackProc)_DtHelpMapCB, 
+                        _DtHelpMapCB,
                         (XtPointer)XtParent(parent));
 
  

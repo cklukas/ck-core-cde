@@ -65,15 +65,6 @@
 #include <Xm/Xm.h>
 #include <ab_private/vwr.h>
 
-/*
- * Some internal functions.
-static ViewerNode	*r_locate_node();
- */
-static void		erase_node();
-static int		child_of_selected_node();
-static void		draw_icon();
-static void		draw_arrow();
-
 /*************************************
 	ADT of the browser structure
  *************************************/
@@ -295,27 +286,6 @@ vwr_traverse_tree
 	PUBLIC FUNCTIONS.
  **************************************************/
 
-#ifdef MATRIX
-/*
- * Draw the tree in a matrix form.
- */
-void
-draw_matrix(b)
-	Viewer	*b;
-{
-	ViewerNode	*node;
-
-	if (!b->current_tree || !b->current_tree->first)
-		return;
-
-	recalc_matrix(b);
-	for (node = b->current_tree->first; node; node = node->next) {
-		render_matrix(b, node, XtWindow(b->canvas), b->select_fn);
-	}
-}
-#endif
-
-
 /**************************************************
 	Drawing routines for the browser objects.
 	PRIVATE FUNCTIONS.
@@ -340,147 +310,6 @@ erase_node
     XClearArea(XtDisplay(draw_area), XtWindow(draw_area), node->x, node->y, 
 			node->width, node->height, FALSE);
 }
-#endif
-
-
-#ifdef MATRIX
-/*
- * Recalculate the coordinates of the nodes in a matrix.
- * b->select_fn is applied to each
- * of the nodes in the tree to determine if the node is to be
- * drawn.
- * After this function is called, some of the coordinates stored
- * in the tree node will be changed.  So to switch back to drawing
- * a tree, all the coordinates have to be recalculated. 
- * A temporary list is derived to temporarily link up all the
- * nodes that will be shown.
- */
-static void
-recalc_matrix(b)
-	Viewer	*b;
-{
-	ViewerNode	*head = NULL;
-	int	max_y, width;
-	ViewerNode	*node;
-
-	for (node = b->current_tree->last; node; node = node->previous)
-		line_up_nodes(b, node, b->select_fn, &head);
-
-	if (!head)
-		return;
-
-	XtVaGetValues(b->canvas, XtNwidth, &width, NULL);
-
-	compute_matrix(b, head, X_ORIGIN, Y_ORIGIN, width, &max_y);
-	reallocate_canvas(b->canvas, width, max_y);
-}
-
-
-/*
- * Line up the nodes in a linear list.  The next_in_line
- * pointer is used here.
- */
-static void
-line_up_nodes(b, tree, fn, next)
-	Viewer	*b;
-	ViewerNode	*tree;
-	int	(*fn)();
-	ViewerNode	**next;
-{
-	ViewerNode	*child;
-
-	for (child = tree->last; child; child = child->previous)
-		line_up_nodes(b, child, fn, next);
-
-	if (!fn || (*fn) (b, tree)) {
-		/*
-		 * This is a node of concern.
-		 */
-		tree->next_in_line = *next;
-		*next = tree;
-	}
-	else {
-		tree->next_in_line = NULL;
-		/*
-		 * This is a node of no concern.  Put
-		 * some irrelevant x, y coordinates in
-	 	 * the node.
-		 */
-		tree->icon_x = -1 - tree->icon_width;
-		tree->icon_y = -1 - tree->icon_height;
-		tree->str_width = -1;
-		tree->str_height = -1;
-	}
-}
-
-
-/*
- * Compute the coordinates of the nodes if drawn in the
- * matrix form.
- * The tree data structure is good for drawing trees, but
- * bad for drawing matrices.  Well, what can I do?
- */
-static void
-compute_matrix(b, head, start_x, start_y, x_limit, end_y)
-	Viewer	*b;
-	ViewerNode	*head;
-	int	start_x;
-	int	start_y;
-	int	x_limit;
-	int	*end_y;
-{	
-	ViewerNode	*node;
-	int	x = start_x;
-	int	y = start_y;
-	int	row_max_height = 0;
-	
-	for (node = head; node; node = node->next_in_line) 
-	{
-		browser_node_compute(node, 0, 0);
-		if (x + node->width > x_limit) 
-		{
-			x = start_x;
-			y = y + row_max_height + NODE_Y_GAP; 
-			row_max_height = 0;
-		}
-		node->x = x;
-		node->y = y; 
-		node->icon_x = x + node->icon_x;
-		node->icon_y = y + node->icon_y;
-		node->str_x = x + node->str_x;
-		node->str_y = y + node->str_y;
-		x = x + node->width + NODE_X_GAP;
-		if (node->height > row_max_height)
-			row_max_height = node->height;
-	}
-	*end_y = y + row_max_height + NODE_Y_GAP;
-}
-
-
-/*
- * Actually draw the matrix of nodes on the screen.
- */
-static void
-render_matrix(b, tree, pixmap, fn)
-	Viewer	*b;
-	ViewerNode	*tree;
-	Pixmap	pixmap;
-	int	(*fn)();
-{
-	ViewerNode	*child;
-
-	if (!fn || (*fn) (b, tree))
-	{
-		if (tree && tree->selected)
-			browser_node_render(tree, pixmap, TRUE);
-		else
-			browser_node_render(tree, pixmap, FALSE);
-	}
-
-	for (child = tree->first; child; child = child->next)
-		render_matrix(b, child, pixmap, fn);
-}
-
 #endif
 
 

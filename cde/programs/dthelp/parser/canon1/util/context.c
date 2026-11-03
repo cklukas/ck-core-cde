@@ -169,11 +169,14 @@ delim.h.
 int main(int argc, char **argv)
 {
 int n ;
+const char *context_data = getenv("CDE_CONTEXT_DATA") ;
+
+if (! context_data || ! *context_data) context_data = "context.dat" ;
 
 m_openchk(&delim, "delim.h", "w") ;
 m_openchk(&context, "context.h", "w") ;
 m_openchk(&fcase, "case.c", "w") ;
-m_openchk(&cdat, "context.dat", "r") ;
+m_openchk(&cdat, context_data, "r") ;
 m_openchk(&ddat, "delim.dat", "r") ;
 m_openchk(&m_errfile, "error", "w") ;
 fputs("    switch(m_token) {\n", fcase) ; /* keep the "}" balanced */

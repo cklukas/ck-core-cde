@@ -53,7 +53,6 @@ extern void UxDoEditPixmap(Widget wid, char *fname);
 /* Initialize global values.                                                  */
 /******************************************************************************/
 Boolean bRegisteredSignal = FALSE;
-int     (*sigchildRoutine)();
 
 /******************************************************************************/
 /* activateCB_open_FindSet - Callback for the "Find Set" button on            */
@@ -69,7 +68,7 @@ int     (*sigchildRoutine)();
 /*                                                                            */
 /******************************************************************************/
 void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
-                              XmFileSelectionBoxCallbackStruct *cbstruct)
+                              XtPointer call_data)
 {
   Widget filter;
   XtArgVal /* Boolean */ use_bm = False;
@@ -82,18 +81,18 @@ void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
 
   char **directories_list = GetIconSearchPathList();
   int numberOfTopButtons = 0;
-  void *top_button_one_cb = NULL;
-  void *top_button_two_cb = NULL;
-  void *top_button_three_cb = NULL;
+  XtCallbackProc top_button_one_cb = NULL;
+  XtCallbackProc top_button_two_cb = NULL;
+  XtCallbackProc top_button_three_cb = NULL;
   char *top_button_one_label = NULL;
   char *top_button_two_label = NULL;
   char *top_button_three_label = NULL;
   int use_icon_name_field = True;
   int numberOfBottomButtons = 3;
-  void *bottom_button_one_cb = (void *)load_icons;
-  void *bottom_button_two_cb = NULL;
-  void *bottom_button_three_cb = NULL;
-  void *bottom_button_four_cb = NULL;
+  XtCallbackProc bottom_button_one_cb = load_icons;
+  XtCallbackProc bottom_button_two_cb = NULL;
+  XtCallbackProc bottom_button_three_cb = NULL;
+  XtCallbackProc bottom_button_four_cb = NULL;
   char *bottom_button_one_label = NULL;   /* use default */
   char *bottom_button_two_label = NULL;   /* use default */
   char *bottom_button_three_label = NULL; /* use default */
@@ -135,22 +134,22 @@ void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
                                                (unsigned char *)container_title,
                                                numberOfTopButtons,
                                                (unsigned char *)top_button_one_label,
-                                               (void (*)())top_button_one_cb,
+                                               top_button_one_cb,
                                                (unsigned char *)top_button_two_label,
-                                               (void (*)())top_button_two_cb,
+                                               top_button_two_cb,
                                                (unsigned char *)top_button_three_label,
-                                               (void (*)())top_button_three_cb,
+                                               top_button_three_cb,
                                                use_icon_name_field,
                                                (unsigned char *)name_field_title,
                                                numberOfBottomButtons,
                                                (unsigned char *)bottom_button_one_label,
-                                               (void (*)())bottom_button_one_cb,
+                                               bottom_button_one_cb,
                                                (unsigned char *)bottom_button_two_label,
-                                               (void (*)())bottom_button_two_cb,
+                                               bottom_button_two_cb,
                                                (unsigned char *)bottom_button_three_label,
-                                               (void (*)())bottom_button_three_cb,
+                                               bottom_button_three_cb,
                                                (unsigned char *)bottom_button_four_label,
-                                               (void (*)())bottom_button_four_cb);
+                                               bottom_button_four_cb);
 #ifndef _ICONSELECTOR_DESTROY_ENABLED
   }
 #endif  /* _ICONSELECTOR_DESTROY_ENABLED */
@@ -196,7 +195,7 @@ void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
 /*                                                                            */
 /******************************************************************************/
 void activateCB_edit_icon (Widget wid, XtPointer client_data,
-                           XmPushButtonCallbackStruct *cbs)
+                           XtPointer call_data)
 {
   char    *pszIconToEdit;
   Boolean IsActionIcons;
@@ -236,7 +235,7 @@ static Widget  mainHelpDialog = NULL;
 /*                                                                            */
 /******************************************************************************/
 void closeCB_mainHelpDialog(Widget wid, XtPointer client_data,
-                           XtPointer *cbs)
+                           XtPointer call_data)
 {
   XtDestroyWidget(wid);
   mainHelpDialog = NULL;
@@ -327,7 +326,7 @@ void DisplayHelpDialog(Widget wid, XtPointer client_data, XtPointer cbs)
   if ( mainHelpDialog == NULL ) {
       mainHelpDialog = DtCreateHelpDialog(parent, "mainHelpDialog", args, i);
       XtAddCallback(mainHelpDialog, DtNcloseCallback,
-                (void (*)())closeCB_mainHelpDialog,
+                closeCB_mainHelpDialog,
                 (XtPointer)NULL);
       XtManageChild(mainHelpDialog);
   } else {

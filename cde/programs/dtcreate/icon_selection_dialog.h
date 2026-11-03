@@ -94,22 +94,22 @@ typedef struct
         unsigned char   *Uxcontainer_title;
         int     UxnumberOfTopButtons;
         unsigned char   *Uxtop_button_one_label;
-        void    (*Uxtop_button_one_cb)();
+        XtCallbackProc Uxtop_button_one_cb;
         unsigned char   *Uxtop_button_two_label;
-        void    (*Uxtop_button_two_cb)();
+        XtCallbackProc Uxtop_button_two_cb;
         unsigned char   *Uxtop_button_three_label;
-        void    (*Uxtop_button_three_cb)();
+        XtCallbackProc Uxtop_button_three_cb;
         int     Uxuse_icon_name_field;
         unsigned char   *Uxname_field_title;
         int     UxnumberOfBottomButtons;
         unsigned char   *Uxbottom_button_one_label;
-        void    (*Uxbottom_button_one_cb)();
+        XtCallbackProc Uxbottom_button_one_cb;
         unsigned char   *Uxbottom_button_two_label;
-        void    (*Uxbottom_button_two_cb)();
+        XtCallbackProc Uxbottom_button_two_cb;
         unsigned char   *Uxbottom_button_three_label;
-        void    (*Uxbottom_button_three_cb)();
+        XtCallbackProc Uxbottom_button_three_cb;
         unsigned char   *Uxbottom_button_four_label;
-        void    (*Uxbottom_button_four_cb)();
+        XtCallbackProc Uxbottom_button_four_cb;
 } _UxCicon_selection_dialog;
 
 #ifdef CONTEXT_MACRO_ACCESS
@@ -177,22 +177,22 @@ Widget  create_icon_selection_dialog(swidget,
                                      unsigned char *,
                                      int,
                                      unsigned char *,
-                                     void (*)(),
+                                     XtCallbackProc,
                                      unsigned char *,
-                                     void (*)(),
+                                     XtCallbackProc,
                                      unsigned char *,
-                                     void (*)(),
+                                     XtCallbackProc,
                                      int,
                                      unsigned char *,
                                      int,
                                      unsigned char *,
-                                     void (*)(),
+                                     XtCallbackProc,
                                      unsigned char *,
-                                     void (*)(),
+                                     XtCallbackProc,
                                      unsigned char *,
-                                     void (*)(),
+                                     XtCallbackProc,
                                      unsigned char *,
-                                     void (*)()
+                                     XtCallbackProc
                                     );
 
 #endif  /* _ICON_SELECTION_DIALOG_INCLUDED */

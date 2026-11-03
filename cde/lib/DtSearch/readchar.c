@@ -73,8 +73,9 @@
  * text block is a string.  Used for example when
  * parsing queries.
  */
-UCHAR	readchar_string (UCHAR *the_string)
+UCHAR	readchar_string (void *string)
 {
+    UCHAR *the_string = string;
     static UCHAR	*strp = (UCHAR *) "";
     if (the_string)
 	strp = the_string;
@@ -130,8 +131,9 @@ void	discard_to_ETX (PARG *parg)
  * without further reads until the ETX flag is reset.
  * Returns '\0' forever at end-of-file.
  */
-UCHAR	readchar_ftext (PARG *parg)
+UCHAR	readchar_ftext (void *argument)
 {
+    PARG *parg = argument;
     static FILE		*ftext =	NULL;
     static UCHAR	*etxdelim =	NULL;
     static UCHAR	*rabuf =	NULL;

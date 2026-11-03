@@ -2,7 +2,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 noinst_LTLIBRARIES = libdb.la
 
-libdb_la_CXXFLAGS = -I../../lib -I../../mini_isam
+libdb_la_CXXFLAGS = -I../../lib -I../../mini_isam \
+	-I$(top_srcdir)/lib/tt/lib -I$(top_srcdir)/lib/tt/mini_isam
 
 libdb_la_SOURCES = db_server_clnt.C           db_server_xdr.C \
         old_db_server_functions.C             tt_client_isam_file.C \

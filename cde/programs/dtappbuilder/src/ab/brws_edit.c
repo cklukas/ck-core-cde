@@ -151,7 +151,7 @@ brwsP_create_textf(
 			NULL);
 		
         XtAddCallback(ui->textf, XmNactivateCallback,
-                (XtCallbackProc)browser_textf_activate,
+                browser_textf_activate,
                 (XtPointer)NULL);
     }
 }

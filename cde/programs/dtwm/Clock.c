@@ -152,13 +152,15 @@ static void DrawClockFace(
                         DtClockGadget g) ;
 static void Initialize( 
                         Widget request_w,
-                        Widget new_w) ;
+                        Widget new_w,
+			ArgList args,
+			Cardinal *num_args) ;
 static void Destroy( 
                         Widget w) ;
 static void Resize( 
                         Widget widget) ;
 static void Draw( 
-                        DtClockGadget g,
+			DtIconGadget icon_g,
                         Drawable drawable,
                         Position x,
                         Position y,
@@ -169,7 +171,7 @@ static void Draw(
                         unsigned char s_type,
                         unsigned char fill_mode) ;
 static void UpdateGCs( 
-                        DtClockGadget g) ;
+			DtIconGadget icon_g) ;
 static void EraseHands ( DtClockGadget	w, struct tm *	tm );
 
 /********    End Static Function Declarations    ********/
@@ -232,7 +234,7 @@ DtClockClassRec dtClockClassRec =
 		NULL,				/* class_initialize	*/
 		NULL,				/* class_part_initialize*/
 		False,				/* class_inited		*/
-		(XtInitProc) Initialize,	/* initialize		*/
+		Initialize,			/* initialize		*/
 		NULL,				/* initialize_hook	*/
 		NULL,				/* realize		*/
 		NULL,				/* actions		*/
@@ -279,9 +281,9 @@ DtClockClassRec dtClockClassRec =
 	{
 		DtInheritGetSize,		/* get_size		*/
 		DtInheritGetPositions,		/* get_positions	*/
-		(DrawProc) Draw,		/* draw			*/
+		Draw,				/* draw			*/
 		DtInheritCallCallback,		/* call_callback	*/
-(UpdateGCsProc)	UpdateGCs,			/* update_gcs		*/
+		UpdateGCs,			/* update_gcs		*/
 		False,				/* optimize_redraw	*/
 		NULL,				/* class_cache_part	*/
 		NULL,				/* extension		*/
@@ -649,7 +651,9 @@ DrawClockFace(
 static void 
 Initialize(
         Widget request_w,
-        Widget new_w )
+        Widget new_w,
+	ArgList args,
+	Cardinal *num_args )
 {
 	DtClockGadget	request =	 (DtClockGadget) request_w,
 			new =		 (DtClockGadget) new_w;
@@ -845,7 +849,7 @@ SetValues(
 */
 static void 
 Draw(
-        DtClockGadget g,
+	DtIconGadget icon_g,
         Drawable drawable,
         Position x,
         Position y,
@@ -856,6 +860,7 @@ Draw(
         unsigned char s_type,
         unsigned char fill_mode )
 {
+   DtClockGadget g = (DtClockGadget)icon_g;
    XmManagerWidget mgr = (XmManagerWidget) XtParent (g);
    Display * d = XtDisplay (g);
    GC gc;
@@ -995,8 +1000,9 @@ Draw(
 */
 static void 
 UpdateGCs(
-        DtClockGadget g )
+	DtIconGadget icon_g )
 {
+DtClockGadget g = (DtClockGadget)icon_g;
 XGCValues	values;
 XtGCMask	value_mask;
 XmManagerWidget	mw = (XmManagerWidget) XtParent(g);

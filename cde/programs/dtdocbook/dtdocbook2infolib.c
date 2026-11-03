@@ -1055,7 +1055,7 @@ checkGlobals(void)
 #ifdef DTSR_DEBUG
 	fprintf(stderr, "(DEBUG) gStruct->dtsrlib=\"%s\"\n", gStruct->dtsrlib);
 #endif
-	gStruct->dbdfile = buildPath("%s/dtsr/%s.dbd", STR(DTDCBK_DATAROOTDIR),
+	gStruct->dbdfile = buildPath("%s/dtsr/%s.dbd", STR(DTDCBK_BUILDROOTDIR),
 				     gStruct->searchEngine);
 	gStruct->keytypes = "Default Head Graphics Example Index Table";
     }

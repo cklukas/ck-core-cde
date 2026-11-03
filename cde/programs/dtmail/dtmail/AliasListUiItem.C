@@ -79,7 +79,7 @@ AliasListUiItem::AliasListUiItem(Widget w,
 
     XtAddCallback(w,
 		  XmNbrowseSelectionCallback, 
-		  (XtCallbackProc)handleAliasSelection,
+		  handleAliasSelection,
 		  (XtPointer)this);
 
 }

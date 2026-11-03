@@ -58,7 +58,7 @@ extern "C" {
 	void _tt_add_sender_ptype(const char* const);
 	void _tt_create_hp_list(const char* const);
 	void _tt_add_handler_ptype(const char* const);
-	int _tt_trace_input();
+	int _tt_trace_input(void);
 	void _tt_trace_unput(int);
 }
 

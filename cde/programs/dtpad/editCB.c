@@ -63,8 +63,8 @@
 void
 EditUndoCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     DtEditorUndoEdit(pPad->editor);
@@ -79,8 +79,8 @@ EditUndoCB(
 void
 EditCutCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     DtEditorCutToClipboard(pPad->editor);
@@ -95,8 +95,8 @@ EditCutCB(
 void
 EditCopyCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     DtEditorCopyToClipboard(pPad->editor);
@@ -111,8 +111,8 @@ EditCopyCB(
 void
 EditPasteCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     DtEditorPasteFromClipboard(pPad->editor);
@@ -134,8 +134,8 @@ EditPasteCB(
 void
 EditClearCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     DtEditorClearSelection(pPad->editor);
@@ -150,8 +150,8 @@ EditClearCB(
 void
 EditDeleteCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     DtEditorDeleteSelection(pPad->editor);
@@ -166,8 +166,8 @@ EditDeleteCB(
 void
 SelectAllCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     DtEditorSelectAll(pPad->editor);
@@ -182,8 +182,8 @@ SelectAllCB(
 void
 FindChangeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     DtEditorInvokeFindChangeDialog(pPad->editor);
@@ -198,8 +198,8 @@ FindChangeCB(
 void
 CheckSpellingCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
     DtEditorInvokeSpellDialog(pPad->editor);
@@ -237,8 +237,8 @@ SetSelectionMenuItems(
 void
 TextSelectedCB(
 	Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Editor *pPad = (Editor *)client_data;
     SetSelectionMenuItems(pPad, True);
@@ -254,8 +254,8 @@ TextSelectedCB(
 void
 TextDeselectedCB(
 	Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Editor *pPad = (Editor *)client_data;
     SetSelectionMenuItems(pPad, False);

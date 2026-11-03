@@ -747,8 +747,8 @@ DtEditorChange(
 void
 _DtEditorSearchMapCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     int         ac;
     Arg         al[4];
@@ -797,8 +797,8 @@ _DtEditorSearchMapCB(
 void
 _DtEditorDialogSearchCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
 
     DtEditorWidget pPriv = (DtEditorWidget) client_data;
@@ -902,8 +902,8 @@ _DtEditorDialogSearchCB(
 void
 _DtEditorDialogReplaceCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     DtEditorWidget pPriv = (DtEditorWidget) client_data;
 
@@ -962,8 +962,8 @@ _DtEditorDialogReplaceCB(
 void
 _DtEditorDialogReplaceAllCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     DtEditorWidget pPriv = (DtEditorWidget) client_data;
 
@@ -1029,8 +1029,8 @@ _DtEditorDialogReplaceAllCB(
 void
 _DtEditorDialogFindCancelCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     DtEditorWidget pPriv = (DtEditorWidget)client_data;
     XtUnmanageChild(M_search_dialog(pPriv));
@@ -1044,8 +1044,8 @@ _DtEditorDialogFindCancelCB(
 void
 _DtEditorMisspelledSelectCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     XmListCallbackStruct *cb = (XmListCallbackStruct *)call_data;
     DtEditorWidget editor = (DtEditorWidget)client_data;
@@ -1086,8 +1086,8 @@ _DtEditorMisspelledSelectCB(
 void
 _DtEditorMisspelledDblClickCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     _DtEditorMisspelledSelectCB(w, client_data, call_data );
     _DtEditorDialogSearchCB(w, client_data, call_data );
@@ -1139,8 +1139,8 @@ _DtEditorSetReplaceAllSensitivity(
 void
 _DtEditorFindTextChangedCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Arg al[10];                 /* arg list */
     Widget defaultButton;
@@ -1201,8 +1201,8 @@ _DtEditorFindTextChangedCB(
 void
 _DtEditorReplaceTextChangedCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     char *pString;
 

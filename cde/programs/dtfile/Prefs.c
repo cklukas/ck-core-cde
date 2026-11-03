@@ -111,30 +111,30 @@ static void Create(
                         Widget *return_widget,
                         XtPointer *dialog) ;
 static void InstallChange(
-                        PreferencesRec *preferences_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void InstallClose(
-                        PreferencesRec *preferences_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void Destroy(
-                        PreferencesRec *preferences_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetValues(
-                        PreferencesRec *preferences_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetDefaultValues( void ) ;
 static XtPointer GetResourceValues(
                         XrmDatabase data_base,
                         char **name_list) ;
 static void SetValues(
-                        PreferencesRec *preferences_rec,
-                        PreferencesData *preferences_data) ;
+                        XtPointer dialog,
+                        XtPointer values) ;
 static void WriteResourceValues(
                         DialogData *values,
                         int fd,
                         char **name_list) ;
 static void FreeValues(
-                        PreferencesData *preferences_data) ;
+                        XtPointer values) ;
 static void ResetCallback(
                         Widget w,
                         XtPointer client_data,
@@ -145,11 +145,11 @@ static void ToggleCallback(
                         XtPointer call_data) ;
 static void OkCallback(
                         Widget w,
-                        PreferencesApply *apply_data,
+                        XtPointer client_data,
                         XtPointer call_data) ;
 static void ApplyCallback(
                         Widget w,
-                        PreferencesApply *apply_data,
+                        XtPointer client_data,
                         XtPointer call_data) ;
 static void GetPreferencesValues(
                         PreferencesRec *preferences_rec,
@@ -231,16 +231,16 @@ static DialogClass preferencesClassRec =
    resources,
    XtNumber(resources),
    Create,
-   (DialogInstallChangeProc) InstallChange,
-   (DialogInstallCloseProc) InstallClose,
-   (DialogDestroyProc) Destroy,
-   (DialogGetValuesProc) GetValues,
+   InstallChange,
+   InstallClose,
+   Destroy,
+   GetValues,
    GetDefaultValues,
    GetResourceValues,
-   (DialogSetValuesProc) SetValues,
+   SetValues,
    WriteResourceValues,
-   (DialogFreeValuesProc) FreeValues,
-   (DialogMapWindowProc) _DtGenericMapWindow,
+   FreeValues,
+   _DtGenericMapWindow,
    NULL,
 };
 
@@ -317,7 +317,7 @@ Create(
    XtSetArg (args[n], XmNshadowType, XmSHADOW_OUT);             n++;
    XtSetArg (args[n], XmNautoUnmanage, False);                  n++;
    form = XmCreateForm (shell, "form", args, n);
-   XtAddCallback(form, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(form, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_DIALOG_STR);
 
 
@@ -336,7 +336,7 @@ Create(
    headers_frame = _DtCreateTitleBox(form, "headers_frame", args, n);
    XtManageChild (headers_frame);
    XtAddCallback(headers_frame, XmNhelpCallback,
-                 (XtCallbackProc)HelpRequestCB,
+                 HelpRequestCB,
                  HELP_PREFERENCES_HEADERS_STR);
    XmStringFree(label_string);
 
@@ -360,7 +360,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_HEADERS_STR);
 
    label_string = XmStringCreateLocalized ((GETMESSAGE(23,24, "Iconic Path")));
@@ -376,7 +376,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_HEADERS_STR);
 
    label_string = XmStringCreateLocalized ((GETMESSAGE(23,36, "Text Path")));
@@ -391,7 +391,7 @@ Create(
    XtManageChild (temp);
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_HEADERS_STR);
 
    label_string = XmStringCreateLocalized ((GETMESSAGE(23,37, "Message Line")));
@@ -406,7 +406,7 @@ Create(
    XtManageChild (temp);
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_HEADERS_STR);
 
 
@@ -426,7 +426,7 @@ Create(
    position_frame = _DtCreateTitleBox(form, "position_frame", args, n);
    XtManageChild (position_frame);
    XtAddCallback(position_frame, XmNhelpCallback, 
-                 (XtCallbackProc)HelpRequestCB, 
+                 HelpRequestCB,
                  HELP_PREFERENCES_PLACEMENT_STR);
    XmStringFree(label_string);
 
@@ -451,7 +451,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, 
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_PLACEMENT_STR);
 
    label_string = XmStringCreateLocalized ((GETMESSAGE(23,35, "Rows and Columns")));
@@ -467,7 +467,7 @@ Create(
    XtManageChild (temp);
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_PLACEMENT_STR);
 
 
@@ -486,7 +486,7 @@ Create(
    show_frame = _DtCreateTitleBox (form, "show_frame", args, n);
    XtManageChild (show_frame);
    XmStringFree (label_string);
-   XtAddCallback(show_frame, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(show_frame, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_SHOW_STR);
 
    titleWidget = _DtTitleBoxGetTitleArea(show_frame);
@@ -509,7 +509,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, 
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_SHOW_STR);
 
 
@@ -527,7 +527,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_SHOW_STR);
 
    label_string = XmStringCreateLocalized (((char *)GETMESSAGE(23, 27, "Folders only")));
@@ -545,7 +545,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_SHOW_STR);
 
    label_string = XmStringCreateLocalized (((char *)GETMESSAGE(23, 28, "Folders, then Files")));
@@ -563,7 +563,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_SHOW_STR);
 
    label_string = XmStringCreateLocalized (((char *)GETMESSAGE(23, 29, "Folders and Files")));
@@ -581,7 +581,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_SHOW_STR);
 
 
@@ -603,7 +603,7 @@ Create(
    view_frame = _DtCreateTitleBox(form, "view_frame", args, n);
    XtManageChild (view_frame);
    XmStringFree (label_string);
-   XtAddCallback(view_frame, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(view_frame, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_VIEW_STR);
 
    titleWidget = _DtTitleBoxGetTitleArea(view_frame);
@@ -626,7 +626,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_VIEW_STR);
 
 
@@ -644,7 +644,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_VIEW_STR);
 
 
@@ -663,7 +663,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_VIEW_STR);
 
 
@@ -681,7 +681,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_VIEW_STR);
 
 
@@ -700,7 +700,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_VIEW_STR);
 
    /* Render Image Icons */
@@ -718,7 +718,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_VIEW_STR);
 
    /* Center Icons above Label */
@@ -736,7 +736,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback,
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_VIEW_STR);
 
 
@@ -757,7 +757,7 @@ Create(
    order_frame = _DtCreateTitleBox (form, "order_frame", args, n);
    XtManageChild (order_frame);
    XmStringFree (label_string);
-   XtAddCallback(order_frame, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(order_frame, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_ORDER_STR);
 
    titleWidget = _DtTitleBoxGetTitleArea(order_frame);
@@ -780,7 +780,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, 
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_ORDER_STR);
 
 
@@ -798,7 +798,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, 
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_ORDER_STR);
 
 
@@ -816,7 +816,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, 
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_ORDER_STR);
 
 
@@ -835,7 +835,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, 
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_ORDER_STR);
 
 
@@ -859,7 +859,7 @@ Create(
    XtManageChild (direction_frame);
    XmStringFree (label_string);
    XtAddCallback(direction_frame, XmNhelpCallback, 
-                 (XtCallbackProc)HelpRequestCB, 
+                 HelpRequestCB,
                  HELP_PREFERENCES_DIRECTION_STR);
 
    titleWidget = _DtTitleBoxGetTitleArea(direction_frame);
@@ -883,7 +883,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, 
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_DIRECTION_STR);
 
 
@@ -902,7 +902,7 @@ Create(
    XmStringFree (label_string);
    XtAddCallback (temp, XmNvalueChangedCallback, ToggleCallback, 
                   (XtPointer) preferences_rec);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_DIRECTION_STR);
 
 
@@ -936,7 +936,7 @@ Create(
    preferences_rec->ok = temp =
       XmCreatePushButtonGadget (form, "ok", args, n);
    XtManageChild (temp);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_DIALOG_STR);
 
    n = 0;
@@ -955,7 +955,7 @@ Create(
    preferences_rec->apply = temp =
       XmCreatePushButtonGadget (form, "apply", args, n);
    XtManageChild (temp);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_DIALOG_STR);
 
 
@@ -978,7 +978,7 @@ Create(
       XmCreatePushButtonGadget (form, "defaults", args, n);
    XmStringFree (label_string);
    XtManageChild (temp);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_DIALOG_STR);
    XtAddCallback (temp, XmNactivateCallback, ResetCallback, 
                   (XtPointer) preferences_rec);
@@ -1000,7 +1000,7 @@ Create(
    preferences_rec->close = temp =
       XmCreatePushButtonGadget (form, "close", args, n);
    XtManageChild (temp);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_DIALOG_STR);
 
 
@@ -1020,9 +1020,9 @@ Create(
    preferences_rec->help = temp =
       XmCreatePushButtonGadget (form, "help", args, n);
    XtManageChild (temp);
-   XtAddCallback(temp, XmNactivateCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNactivateCallback, HelpRequestCB,
                  HELP_PREFERENCES_DIALOG_STR);
-   XtAddCallback(temp, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(temp, XmNhelpCallback, HelpRequestCB,
                  HELP_PREFERENCES_DIALOG_STR);
 
 
@@ -1048,10 +1048,11 @@ Create(
 
 static void
 InstallChange(
-        PreferencesRec *preferences_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   PreferencesRec *preferences_rec = dialog;
    PreferencesApply * apply_data;
 
 
@@ -1069,10 +1070,10 @@ InstallChange(
    /*  Add the callbacks for list item insertion.  */
 
    XtAddCallback (preferences_rec->apply, XmNactivateCallback, 
-                  (XtCallbackProc)ApplyCallback, (XtPointer) apply_data);
+                  ApplyCallback, (XtPointer) apply_data);
 
    XtAddCallback (preferences_rec->ok, XmNactivateCallback, 
-                  (XtCallbackProc)OkCallback, (XtPointer) apply_data);
+                  OkCallback, (XtPointer) apply_data);
 }
 
 
@@ -1086,10 +1087,11 @@ InstallChange(
 
 static void
 InstallClose(
-        PreferencesRec *preferences_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   PreferencesRec *preferences_rec = dialog;
    Atom delete_window_atom;
 
    XtAddCallback (preferences_rec->close,
@@ -1113,8 +1115,9 @@ InstallClose(
 
 static void
 Destroy(
-        PreferencesRec *preferences_rec )
+        XtPointer dialog )
 {
+   PreferencesRec *preferences_rec = dialog;
    XtDestroyWidget (preferences_rec->shell);
    XtFree ((char *) preferences_rec->apply_data);
    XtFree ((char *) preferences_rec);
@@ -1131,8 +1134,9 @@ Destroy(
 
 static XtPointer
 GetValues(
-        PreferencesRec *preferences_rec )
+        XtPointer dialog )
 {
+   PreferencesRec *preferences_rec = dialog;
    PreferencesData * preferences_data;
    Arg args[4];
 
@@ -1230,9 +1234,11 @@ GetResourceValues(
 
 static void
 SetValues(
-        PreferencesRec *preferences_rec,
-        PreferencesData *preferences_data )
+        XtPointer dialog,
+        XtPointer values )
 {
+   PreferencesRec *preferences_rec = dialog;
+   PreferencesData *preferences_data = values;
    Arg true_args[1];
    Arg false_args[1];
    unsigned char *viewP;
@@ -1491,8 +1497,9 @@ WriteResourceValues(
 
 static void
 FreeValues(
-        PreferencesData *preferences_data )
+        XtPointer values )
 {
+   PreferencesData *preferences_data = values;
    XtFree ((char *) preferences_data);
 }
 
@@ -1763,9 +1770,10 @@ ToggleCallback(
 static void
 OkCallback(
         Widget w,
-        PreferencesApply *apply_data,
+        XtPointer client_data,
         XtPointer call_data )
 {
+   PreferencesApply *apply_data = client_data;
    PreferencesRec * preferences_rec;
    DialogData * dialog_data;
 
@@ -1791,9 +1799,10 @@ OkCallback(
 static void
 ApplyCallback(
         Widget w,
-        PreferencesApply *apply_data,
+        XtPointer client_data,
         XtPointer call_data )
 {
+   PreferencesApply *apply_data = client_data;
    (*(apply_data->callback)) (w, apply_data->client_data, NULL);
 }
 

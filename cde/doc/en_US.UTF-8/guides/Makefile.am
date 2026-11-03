@@ -30,14 +30,25 @@ include $(top_srcdir)/doc/common/guides/docbookGuide.am
 
 
 # build the infolib + search DB
-INFOLIBDEPS = $(SGMLDEPS) $(top_srcdir)/doc/common/docbook/docbook.stl
+GUIDE_TOCS = $(filter %/TOC.sgm,$(BUILT_SOURCES))
+SHADOW_BOOKCASE = bookcase.shadow.bc
+
+$(SHADOW_BOOKCASE): $(abs_srcdir)/bookcase.bc
+	$(AM_V_GEN)sed \
+		-e 's|SYSTEM "../../../doc/common/docbook/docbook.stl"|SYSTEM "$(abs_top_srcdir)/doc/common/docbook/docbook.stl"|' \
+		-e 's|SYSTEM "\./\([^"]*\)/TOC.sgm"|SYSTEM "$(abs_builddir)/\1/TOC.sgm"|g' \
+		-e 's|SYSTEM "\./\([^"]*\)/book.sgm"|SYSTEM "$(abs_srcdir)/\1/book.sgm"|g' \
+		$< > $@.tmp && mv $@.tmp $@
+
+INFOLIBDEPS = $(SGMLDEPS) $(GUIDE_TOCS) $(SHADOW_BOOKCASE) \
+	$(top_srcdir)/doc/common/docbook/docbook.stl
 
 $(INFOLIB)/$(BOOKCASE)/dtsearch/dtsearch.ocf: $(INFOLIBDEPS)
 	$(MKDIR_P) $(INFOLIB)
-	$(DGENV) $(DTINFOGEN) build -v -T $(DTINFOGENTMPDIR) $(DTINFOGENOPTIONS) $(DGOPTS) $(SSENTS) -l $(INFOLIB) bookcase.bc
+	$(DGENV) $(DTINFOGEN) build -v -T $(DTINFOGENTMPDIR) $(DTINFOGENOPTIONS) $(DGOPTS) $(SSENTS) -l $(INFOLIB) $(abs_builddir)/$(SHADOW_BOOKCASE)
 
-BUILT_SOURCES += $(INFOLIB)/$(BOOKCASE)/dtsearch/dtsearch.ocf
-CLEANFILES += $(INFOLIB)/$(BOOKCASE)/dtsearch/dtsearch.ocf
+BUILT_SOURCES += $(SHADOW_BOOKCASE) $(INFOLIB)/$(BOOKCASE)/dtsearch/dtsearch.ocf
+CLEANFILES += $(SHADOW_BOOKCASE) $(INFOLIB)/$(BOOKCASE)/dtsearch/dtsearch.ocf
 
 # installation - these files *may* change depending on if the docs
 # ever change, but for now we will list them as they are currently

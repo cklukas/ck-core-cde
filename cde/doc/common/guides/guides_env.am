@@ -8,8 +8,8 @@ INFOLIBNAME = -n cde
 # the -d option) prior to including this file.
 # orig: INFOLIBDESC = -d InfoLibDesc
 
-SSENTS = -m common/catalog
-DGENV = SGML_SEARCH_PATH=".:.."
+SSENTS = -m $(abs_srcdir)/common/catalog
+DGENV = SGML_SEARCH_PATH="$(abs_srcdir):$(abs_srcdir)/.."
 DTINFOGENOPTIONS = -L $(LANG) $(SSENTS) $(INFOLIBNAME) -d $(INFOLIBDESC)
 
 # Note the quad-dollar sign - this escapes $$ (pid) for the tmp
@@ -26,4 +26,4 @@ SGMLDEPS = $(SGMLDIR)/docbook.dtd $(SGMLDIR)/isobox.gml \
 
 DTINFOGEN = \
 	PATH=$(PATH):$(DTSRDIR) \
-	$(top_srcdir)/programs/dtdocbook/doc_utils/dtdocbook2infolib
+	$(top_builddir)/programs/dtdocbook/doc_utils/dtdocbook2infolib

@@ -437,7 +437,7 @@ choice_prop_init(
 
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNactivateCallback,
-                  (XtCallbackProc)prop_item_labeltypeCB, (XtPointer)&(pcs->items));
+                  prop_item_labeltypeCB, (XtPointer)&(pcs->items));
 
 	/* Item Label */
         prop_field_init(&(pcs->item_label), cgen->itemlabel_label,

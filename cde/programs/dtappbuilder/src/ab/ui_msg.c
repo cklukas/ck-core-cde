@@ -102,12 +102,12 @@ static Widget	create_prompt_dlg(
 static void     prompt_ok_modal_dlgCB(
                     Widget      		  widget,
                     XtPointer   		  client_data,
-                    XmSelectionBoxCallbackStruct  *call_data
+                    XtPointer             call_data
                 );
 static void     prompt_cancel_modal_dlgCB(
                     Widget      		  widget,
                     XtPointer   		  client_data,
-                    XmSelectionBoxCallbackStruct  *call_data
+                    XtPointer             call_data
                 );
 static void 	prompt_close_modal_dlg(
 		    Widget      widget,
@@ -205,16 +205,16 @@ ui_popup_modal_message(
     Widget		   modal_dlg_pane = NULL;
     UI_MODAL_ANSWER        answer;
     XtCallbackRec ok_callback[] = {
-            {(XtCallbackProc)modal_dlgCB, (XtPointer) UI_ANSWER_OK},
-            {(XtCallbackProc) NULL, (XtPointer) NULL}
+            {modal_dlgCB, (XtPointer) UI_ANSWER_OK},
+            {NULL, (XtPointer) NULL}
     };
     XtCallbackRec cancel_callback[] = { 
-            {(XtCallbackProc)modal_dlgCB, (XtPointer) UI_ANSWER_CANCEL}, 
-            {(XtCallbackProc) NULL, (XtPointer) NULL} 
+            {modal_dlgCB, (XtPointer) UI_ANSWER_CANCEL},
+            {NULL, (XtPointer) NULL}
     };
     XtCallbackRec help_callback[] = {
-            {(XtCallbackProc)modal_dlgCB, (XtPointer) UI_ANSWER_HELP},
-            {(XtCallbackProc) NULL, (XtPointer) NULL}
+            {modal_dlgCB, (XtPointer) UI_ANSWER_HELP},
+            {NULL, (XtPointer) NULL}
     };
 
 
@@ -531,15 +531,16 @@ static void
 prompt_ok_modal_dlgCB(
     Widget      		  widget,
     XtPointer   		  client_data,
-    XmSelectionBoxCallbackStruct  *call_data
+    XtPointer             call_data
 )
 {
+    XmSelectionBoxCallbackStruct *selection_data = call_data;
     UI_MODAL_ANSWER	*answerp = NULL;
     Prompt_Info_Rec	*prompt_info = NULL;
     Widget		textf = NULL;
 
     XtVaGetValues(widget, XmNuserData, &prompt_info, NULL);
-    *(prompt_info->seln_str) =(STRING)objxm_xmstr_to_str(call_data->value);
+    *(prompt_info->seln_str) =(STRING)objxm_xmstr_to_str(selection_data->value);
     answerp = (UI_MODAL_ANSWER *)client_data;
 
     textf = XmSelectionBoxGetChild(widget, XmDIALOG_TEXT); 
@@ -558,14 +559,15 @@ static void
 prompt_cancel_modal_dlgCB(
     Widget      		  widget,
     XtPointer   		  client_data,
-    XmSelectionBoxCallbackStruct  *call_data
+    XtPointer             call_data
 )
 {
+    XmSelectionBoxCallbackStruct *selection_data = call_data;
     UI_MODAL_ANSWER     *answerp = NULL;
     Prompt_Info_Rec     *prompt_info = NULL;
 
     XtVaGetValues(widget, XmNuserData, &prompt_info, NULL);
-    *(prompt_info->seln_str) =(STRING)objxm_xmstr_to_str(call_data->value);
+    *(prompt_info->seln_str) =(STRING)objxm_xmstr_to_str(selection_data->value);
     answerp = (UI_MODAL_ANSWER *)client_data;
 
     /* We want to popdown the prompt dialog first before setting
@@ -615,12 +617,12 @@ ui_popup_modal_prompt(
     Widget			modal_prompt = NULL;
     
     XtCallbackRec ok_callback[] = {
-            {(XtCallbackProc)prompt_ok_modal_dlgCB, (XtPointer) NULL},
-            {(XtCallbackProc) NULL, (XtPointer) NULL}
+            {prompt_ok_modal_dlgCB, (XtPointer) NULL},
+            {NULL, (XtPointer) NULL}
     };   
     XtCallbackRec cancel_callback[] = {
-            {(XtCallbackProc)prompt_cancel_modal_dlgCB, (XtPointer) NULL},
-            {(XtCallbackProc) NULL, (XtPointer) NULL}
+            {prompt_cancel_modal_dlgCB, (XtPointer) NULL},
+            {NULL, (XtPointer) NULL}
     };
  
     modal_prompt = create_prompt_dlg(parent, title, label, ok_label, 

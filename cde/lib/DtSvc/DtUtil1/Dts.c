@@ -145,9 +145,9 @@ static int      csh_match(const char *, const char *);
 static int      csh_match_star(const char *, const char *);
 
 /* filetype comparison function for sorting */
-extern	int	cde_dc_compare(DtDtsMMRecord **entry1, DtDtsMMRecord **entry2);
+extern	int	cde_dc_compare(const void *entry1, const void *entry2);
 extern	int	cde_da_compare(DtDtsMMRecord **entry1, DtDtsMMRecord **entry2);
-extern	int	cde_dc_field_compare(DtDtsMMField **entry1, DtDtsMMField **entry2);
+extern	int	cde_dc_field_compare(const void *entry1, const void *entry2);
 
 
 void

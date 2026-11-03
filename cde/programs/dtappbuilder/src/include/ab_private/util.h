@@ -137,7 +137,7 @@ BOOL	util_be_silent(void);
 BOOL	util_be_verbose(void);
 int	util_get_debug_level(void);
 int	debug_level(void);	/* these are special-case shortcuts that */
-BOOL	debugging();		/* don't conform to the naming convention */
+BOOL	debugging(void);	/* don't conform to the naming convention */
 
 
 /*

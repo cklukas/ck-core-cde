@@ -259,7 +259,7 @@ CreateColorEditor(
 	XtAddCallback(edit.DialogShell, XmNcallback, dialogBoxCB, NULL);
         XtAddCallback(edit.DialogShell, XmNmapCallback, _DtmapCB, parent);
         XtAddCallback(edit.DialogShell, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_MODIFY_PALETTE_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_MODIFY_PALETTE_DIALOG);
 
         XmStringFree(button_string[0]);
         XmStringFree(button_string[1]);

@@ -99,15 +99,15 @@ static Widget	panedwin_editor_init(
 static int	panedwin_editor_load(
 		    ABObj	project
                 );
-static int	panedwin_editor_clear();
-static int 	panedwin_editor_clear_geom();
+static int	panedwin_editor_clear(void);
+static int 	panedwin_editor_clear_geom(void);
 
 static int	panedwin_editor_activate(
 		    BOOL 	 active
 		);
-static int	panedwin_editor_apply();
-static BOOL     panedwin_editor_pending();
-static void 	panedwinEdP_init();
+static int	panedwin_editor_apply(void);
+static BOOL     panedwin_editor_pending(void);
+static void 	panedwinEdP_init(void);
 static void     pw_objlist_load(
                    Widget      list
                 );
@@ -117,8 +117,8 @@ static BOOL     pw_objlist_test_func(
 static BOOL 	pw_child_test_func(
 		    ABObj test_obj
 		);
-static BOOL	verify_editor();
-static void	turnoff_changebars();
+static BOOL	verify_editor(void);
+static void	turnoff_changebars(void);
 
 /*
  * Callbacks
@@ -186,13 +186,13 @@ panedwin_ed_show_dialog(
 	/* Add Callback to load panedWin object when selected from list */
 	XtAddCallback(dtb_panedwin_ed_dialog.objlist, 
 		XmNbrowseSelectionCallback,
-		(XtCallbackProc)pw_objlist_selectCB, (XtPointer)NULL);
+		pw_objlist_selectCB, (XtPointer)NULL);
 
 	/* Add Callback to load panes when a paned window obj is
 	 * selected from list. */
 	XtAddCallback(dtb_panedwin_ed_dialog.panelist, 
 		XmNbrowseSelectionCallback,
-		(XtCallbackProc)pw_panelist_selectCB, (XtPointer)NULL);
+		pw_panelist_selectCB, (XtPointer)NULL);
 
         /*
          * Setup dialog to participate in dtbuilder window protocol
@@ -278,6 +278,7 @@ panedwin_editor_activate(
 
 static int
 panedwin_editor_clear(
+    void
 )
 {
     PanedWinEditorSettingsRec   *pws = &pw_editor_settings_rec;
@@ -298,6 +299,7 @@ panedwin_editor_clear(
 
 static int
 panedwin_editor_clear_geom(
+    void
 )
 {
     PanedWinEditorSettingsRec   *pws = &pw_editor_settings_rec;
@@ -361,6 +363,7 @@ panedwin_editor_load(
  */
 int
 panedwin_editor_apply(
+    void
 )
 {
     PanedWinEditorSettingsRec   *pws = &pw_editor_settings_rec;
@@ -400,6 +403,7 @@ panedwin_editor_apply(
 
 static BOOL
 panedwin_editor_pending(
+    void
 )
 {
     return(prop_changebars_pending(pw_editor_settings_rec.prop_sheet));
@@ -407,6 +411,7 @@ panedwin_editor_pending(
 
 static BOOL
 verify_editor(
+    void
 )
 {
     PanedWinEditorSettingsRec   *pws = &pw_editor_settings_rec;
@@ -420,6 +425,7 @@ verify_editor(
 
 static void
 turnoff_changebars(
+    void
 )
 {
     PanedWinEditorSettingsRec   *pws = &pw_editor_settings_rec;
@@ -830,7 +836,7 @@ pw_obj_reparentedOCB(
 }
 
 static void
-panedwinEdP_init()
+panedwinEdP_init(void)
 {
     obj_add_reparent_callback(pw_obj_reparentedOCB, "panedwinEdP_init");
     obj_add_rename_callback(pw_obj_renamedOCB, "panedwinEdP_init");

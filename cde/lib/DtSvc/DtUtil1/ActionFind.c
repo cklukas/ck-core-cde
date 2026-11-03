@@ -99,10 +99,10 @@ static int	 _DtActMMCompareCount(
 			 int reqCount,
 			 char *actCount);
 static int _DtActionCompareRecordQuarks(
-                    DtDtsDbRecord ** record1,
-                    DtDtsDbRecord ** record2) ;
+                    const void * record1,
+                    const void * record2) ;
 static void _DtActionGetRecordWeight(
-                    DtDtsDbRecord ** record,
+                    DtDtsDbRecord *const * record,
                     long * primaryWeightPtr,
                     long * secondaryWeightPtr );
 static void ParseMessage( 
@@ -1029,9 +1029,11 @@ _DtCheckForDuplicateRecord( DtDtsDbRecord *rec, DtDtsDbRecord *duprec)
 /* used for building only */
 static int 
 _DtActionCompareRecordQuarks(
-        DtDtsDbRecord ** record1,
-        DtDtsDbRecord ** record2 )
+        const void * item1,
+        const void * item2 )
 {
+   DtDtsDbRecord *const *record1 = item1;
+   DtDtsDbRecord *const *record2 = item2;
    long r1PrimaryWeight, r1SecondaryWeight;
    long r2PrimaryWeight, r2SecondaryWeight;
 
@@ -1087,7 +1089,7 @@ _DtActionCompareRecordQuarks(
 
 static void
 _DtActionGetRecordWeight(
-        DtDtsDbRecord ** record,
+        DtDtsDbRecord *const * record,
         long * primaryWeightPtr,
         long * secondaryWeightPtr )
 {

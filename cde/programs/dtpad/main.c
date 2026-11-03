@@ -346,7 +346,7 @@ main(
      * and message catalogs. */
     (void)_DtEnvControl(DT_ENV_SET);
 
-    (void) XtSetLanguageProc((XtAppContext)NULL, (XtLanguageProc)NULL, 
+    (void) XtSetLanguageProc((XtAppContext)NULL, NULL,
 			     (XtPointer)NULL);
 
     pArgc = argc;
@@ -652,7 +652,7 @@ CreateFirstPad(
     xa_WM_SAVE_YOURSELF = XInternAtom(pPad->display, 
                                              "WM_SAVE_YOURSELF", False);
     XmAddWMProtocolCallback(topLevelWithWmCommand, xa_WM_SAVE_YOURSELF, 
-                           (XtCallbackProc)SaveSessionCB, (XtPointer)pPadList);
+                           SaveSessionCB, (XtPointer)pPadList);
 
      
     /* Create the application shell widget and obtain the application context.
@@ -920,7 +920,7 @@ SendMessageToServer(
 
 #ifdef HAVE_EDITRES
     XtAddEventHandler(topLevelWithWmCommand, 0, True,
-                      (XtEventHandler) _XEditResCheckMessages,
+                      _XEditResCheckMessages,
                       (XtPointer) NULL);
 #endif
 
@@ -1119,7 +1119,7 @@ RealizeNewPad(
 
     /* setup where a close by the window manager will be handled */
     XmAddWMProtocolCallback(pPad->app_shell, xa_WM_DELETE_WINDOW,
-                            (XtCallbackProc) closeCB, (XtPointer)pPad);
+                            closeCB, (XtPointer)pPad);
 
     /* reset the "save with newLines" flag */
     pPad->fileStuff.saveWithNewlines = True;
@@ -1229,30 +1229,21 @@ exitCB(Widget w, XtPointer callData, XtPointer clientData)
 /************************************************************************
  * setPanicConditions - 
  ************************************************************************/
+static void
+panicSignalHandler(int signalNumber)
+{
+    (void)signalNumber;
+    PanicSave();
+}
+
 void
 setPanicConditions(void)
 {
     struct sigaction act;
 
     sigfillset(&act.sa_mask);
-    /*
-    signal(SIGHUP, (void (*)(int))PanicSave);
-    signal(SIGINT, (void (*)(int))PanicSave);
-    signal(SIGQUIT, (void (*)(int))PanicSave);
-    signal(SIGILL, (void (*)(int))PanicSave);
-    signal(SIGABRT, (void (*)(int))PanicSave);
-    signal(SIGIOT, (void (*)(int))PanicSave);
-    signal(SIGEMT, (void (*)(int))PanicSave);
-    signal(SIGFPE, (void (*)(int))PanicSave);
-    signal(SIGBUS, (void (*)(int))PanicSave);
-    signal(SIGSEGV, (void (*)(int))PanicSave);
-    signal(SIGSYS, (void (*)(int))PanicSave);
-    signal(SIGPIPE, (void (*)(int))PanicSave);
-    signal(SIGTERM, (void (*)(int))PanicSave);
-    */
-    sigfillset(&act.sa_mask);
     act.sa_flags = 0;
-    act.sa_handler = (void (*)(int))PanicSave;
+    act.sa_handler = panicSignalHandler;
     sigaction(SIGHUP, &act, (struct sigaction *)NULL);
     sigaction(SIGINT, &act, (struct sigaction *)NULL);
     sigaction(SIGQUIT, &act, (struct sigaction *)NULL);
@@ -1271,11 +1262,6 @@ setPanicConditions(void)
     sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
     sigaction(SIGTERM, &act, (struct sigaction *)NULL);
 
-    /* TTT - comment out for debugging TookTalk code */
-#if 0
-    XSetErrorHandler((int (*)()) PanicSave);
-    XSetIOErrorHandler((int (*)())PanicSave);
-#endif
     XSetErrorHandler(dtpadXErrorHandler);
     XSetIOErrorHandler(dtpadXIOErrorHandler);
 }

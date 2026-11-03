@@ -114,48 +114,48 @@ express or implied warranty.
 static XmOffsetPtr ipot; /* Instance part offset table */
 static XmOffsetPtr cpot; /* Constraint part offset table */
 
-static void	ClassInitialize ();
-static void	Initialize (DtSpinBoxWidget request, 
-			       DtSpinBoxWidget new, ArgList given_args, 
+static void	ClassInitialize (void);
+static void	Initialize (Widget request,
+			       Widget new, ArgList given_args,
 			       Cardinal *num_args);
-static XmNavigability WidgetNavigable (DtSpinBoxWidget spin);
-static void	_SpinBoxFocusIn (DtSpinBoxWidget spin, XEvent *event, 
+static XmNavigability WidgetNavigable (Widget spin);
+static void	_SpinBoxFocusIn (Widget spin, XEvent *event,
 				       char **params, Cardinal *num_params);
-static void	_SpinBoxFocusOut (DtSpinBoxWidget spin, XEvent *event,
+static void	_SpinBoxFocusOut (Widget spin, XEvent *event,
 					char **params, Cardinal *num_params);
 static void	DrawHighlight (DtSpinBoxWidget spin, Boolean clear);
-static void	_SpinBoxUp (DtSpinBoxWidget spin, 
+static void	_SpinBoxUp (Widget spin,
 				  XEvent *event, char **params, 
 				  Cardinal *num_params);
-static void	_SpinBoxDown (DtSpinBoxWidget spin, 
+static void	_SpinBoxDown (Widget spin,
 				    XEvent *event, char **params, 
 				    Cardinal *num_params);
-static void	_SpinBoxLeft (DtSpinBoxWidget spin, 
+static void	_SpinBoxLeft (Widget spin,
 				    XEvent *event, char **params, 
 				    Cardinal *num_params);
-static void	_SpinBoxRight (DtSpinBoxWidget spin, 
+static void	_SpinBoxRight (Widget spin,
 				     XEvent *event, char **params, 
 				     Cardinal *num_params);
-static void	_SpinBoxBeginLine (DtSpinBoxWidget spin, 
+static void	_SpinBoxBeginLine (Widget spin,
 					 XEvent *event, char **params, 
 					 Cardinal *num_params);
-static void	_SpinBoxEndLine (DtSpinBoxWidget spin, 
+static void	_SpinBoxEndLine (Widget spin,
 				       XEvent *event, char **params, 
 				       Cardinal *num_params);
-static void     _SpinBoxGetFocus (DtSpinBoxWidget spin,
+static void     _SpinBoxGetFocus (Widget spin,
                                        XEvent *event, char **params,
                                        Cardinal *num_params);
-static void     _SpinBoxPrevTabGroup (DtSpinBoxWidget spin,
+static void     _SpinBoxPrevTabGroup (Widget spin,
                                        XEvent *event, char **params,
                                        Cardinal *num_params);
-static void     _SpinBoxNextTabGroup (DtSpinBoxWidget spin,
+static void     _SpinBoxNextTabGroup (Widget spin,
                                        XEvent *event, char **params,
                                        Cardinal *num_params);
 
 static void	CheckResources (DtSpinBoxWidget spin);
-static void	Destroy (DtSpinBoxWidget spin);
-static void	Resize (DtSpinBoxWidget spin);
-static void	Redisplay (DtSpinBoxWidget w, XEvent *event, 
+static void	Destroy (Widget spin);
+static void	Resize (Widget spin);
+static void	Redisplay (Widget w, XEvent *event,
 			      Region region);
 static XtGeometryResult GeometryManager (Widget w, 
 					    XtWidgetGeometry *request, 
@@ -167,9 +167,8 @@ static void	CalculateSizes (DtSpinBoxWidget spin,
 				Dimension *pheight,
 				Dimension *parrow_width);
 static void	LayoutChildren (DtSpinBoxWidget spin);
-static Boolean	SetValues (DtSpinBoxWidget current, 
-			      DtSpinBoxWidget request, 
-			      DtSpinBoxWidget new);
+static Boolean	SetValues (Widget current, Widget request, Widget new,
+			      ArgList args, Cardinal *num_args);
 static void	ClearShadow (DtSpinBoxWidget w, Boolean all);
 static void	DrawShadow (DtSpinBoxWidget w);
 static void	StoreResourceInfo (DtSpinBoxPart *spin_p,
@@ -333,17 +332,17 @@ static char const SpinBoxArrowTranslationTable[] = "\
 
 
 static XtActionsRec SpinBoxActionTable[] = {
-       {"SpinBoxFocusIn",	(XtActionProc)_SpinBoxFocusIn},
-       {"SpinBoxFocusOut",	(XtActionProc)_SpinBoxFocusOut},
-       {"SpinBoxUp",		(XtActionProc)_SpinBoxUp},
-       {"SpinBoxDown",	(XtActionProc)_SpinBoxDown},
-       {"SpinBoxRight",	(XtActionProc)_SpinBoxRight},
-       {"SpinBoxLeft",	(XtActionProc)_SpinBoxLeft},
-       {"SpinBoxBeginLine",	(XtActionProc)_SpinBoxBeginLine},
-       {"SpinBoxEndLine",	(XtActionProc)_SpinBoxEndLine},
-       {"SpinBoxGetFocus",	(XtActionProc)_SpinBoxGetFocus},
-       {"SpinBoxPrevTabGroup",   (XtActionProc)_SpinBoxPrevTabGroup},
-       {"SpinBoxNextTabGroup",   (XtActionProc)_SpinBoxNextTabGroup},
+       {"SpinBoxFocusIn",	_SpinBoxFocusIn},
+       {"SpinBoxFocusOut",	_SpinBoxFocusOut},
+       {"SpinBoxUp",		_SpinBoxUp},
+       {"SpinBoxDown",		_SpinBoxDown},
+       {"SpinBoxRight",		_SpinBoxRight},
+       {"SpinBoxLeft",		_SpinBoxLeft},
+       {"SpinBoxBeginLine",	_SpinBoxBeginLine},
+       {"SpinBoxEndLine",	_SpinBoxEndLine},
+       {"SpinBoxGetFocus",	_SpinBoxGetFocus},
+       {"SpinBoxPrevTabGroup",   _SpinBoxPrevTabGroup},
+       {"SpinBoxNextTabGroup",   _SpinBoxNextTabGroup},
 };
 
 /* DtSpinBoxWidget resources */
@@ -453,7 +452,7 @@ static XmBaseClassExtRec baseClassExtRec = {
     NULL,                               /* compiled_ext_resources*/
     0,                                  /* num_ext_resources    */
     FALSE,                              /* use_sub_resources    */
-    (XmWidgetNavigableProc)WidgetNavigable,
+    WidgetNavigable,
 					/* widgetNavigable      */
     (XmFocusChangeProc)NULL,            /* focusChange          */
     (XmWrapperData)NULL			/* wrapperData 		*/
@@ -468,10 +467,10 @@ externaldef(dtspinboxclassrec) DtSpinBoxClassRec dtSpinBoxClassRec =
     (WidgetClass)&(xmManagerClassRec),		/* superclass         */    
     (String)"DtSpinBox",			/* class_name         */    
     (Cardinal)sizeof(DtSpinBoxPart),		/* widget_size        */    
-    (XtProc)ClassInitialize,			/* class_initialize   */    
+    ClassInitialize,				/* class_initialize   */
     (XtWidgetClassProc)NULL,			/* class_part_init    */    
     (XtEnum)FALSE,				/* class_inited       */    
-    (XtInitProc)Initialize,			/* initialize         */    
+    Initialize,					/* initialize         */
     (XtArgsProc)NULL,				/* initialize_hook    */    
     (XtRealizeProc)XtInheritRealize,		/* realize            */    
     (XtActionList)SpinBoxActionTable,		/* actions	      */    
@@ -483,10 +482,10 @@ externaldef(dtspinboxclassrec) DtSpinBoxClassRec dtSpinBoxClassRec =
     (XtEnum)XtExposeCompressMaximal,		/* compress_exposure  */    
     (Boolean)TRUE,				/* compress_enterleave*/    
     (Boolean)FALSE,				/* visible_interest   */    
-    (XtWidgetProc)Destroy,			/* destroy            */    
-    (XtWidgetProc)Resize,			/* resize             */    
-    (XtExposeProc)Redisplay,			/* expose             */    
-    (XtSetValuesFunc)SetValues,			/* set_values         */    
+    Destroy,					/* destroy            */
+    Resize,					/* resize             */
+    Redisplay,					/* expose             */
+    SetValues,					/* set_values         */
     (XtArgsFunc)NULL,				/* set values hook    */    
     (XtAlmostProc)XtInheritSetValuesAlmost,	/* set values almost  */    
     (XtArgsProc)NULL,				/* get values hook    */    
@@ -499,7 +498,7 @@ externaldef(dtspinboxclassrec) DtSpinBoxClassRec dtSpinBoxClassRec =
     (XtPointer)&baseClassExtRec			/* extension	      */
     },
     {		/* composite_class fields */
-    (XtGeometryHandler)GeometryManager,		/* geometry_manager   */     
+    GeometryManager,				/* geometry_manager   */
     (XtWidgetProc)XtInheritChangeManaged,	/* change_managed     */     
     (XtWidgetProc)XtInheritInsertChild,		/* insert_child	      */     
     (XtWidgetProc)XtInheritDeleteChild,		/* delete_child	      */     
@@ -574,11 +573,13 @@ ClassInitialize(void)
  * widgets if the user never changes the editable resource.
  */
 static void
-Initialize(	DtSpinBoxWidget request,
-		DtSpinBoxWidget new,
+Initialize(	Widget request_widget,
+		Widget new_widget,
 		ArgList given_args,
 		Cardinal *num_args)
 {   /* MotifBc */
+    DtSpinBoxWidget request = (DtSpinBoxWidget)request_widget;
+    DtSpinBoxWidget new = (DtSpinBoxWidget)new_widget;
     DtSpinBoxPart *spin_p = (DtSpinBoxPart*)
         &(XmField(new,ipot,DtSpinBox,label,Widget));
     char *widget_name;
@@ -772,8 +773,9 @@ Initialize(	DtSpinBoxWidget request,
  * text-field), then let the toolkit give focus to the text-field.
  */
 static XmNavigability
-WidgetNavigable(DtSpinBoxWidget spin)
-{   
+WidgetNavigable(Widget widget)
+{
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     XmNavigationType nav_type = ((XmManagerWidget)spin)->manager.navigation_type;
 
     if (spin->core.sensitive &&  spin->core.ancestor_sensitive &&
@@ -796,11 +798,12 @@ WidgetNavigable(DtSpinBoxWidget spin)
  * The spin_box gets focus.
  */
 static void 
-_SpinBoxFocusIn(	DtSpinBoxWidget spin,
+_SpinBoxFocusIn(	Widget widget,
 			XEvent *event,
 			char **params,
 			Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     DrawHighlight(spin, FALSE);
 }
 
@@ -808,11 +811,12 @@ _SpinBoxFocusIn(	DtSpinBoxWidget spin,
  * The spin_box loses focus.
  */
 static void 
-_SpinBoxFocusOut(	DtSpinBoxWidget spin,
+_SpinBoxFocusOut(	Widget widget,
 			XEvent *event,
 			char **params,
 			Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     DrawHighlight(spin, TRUE);
 }
 
@@ -862,11 +866,12 @@ DrawHighlight(	DtSpinBoxWidget spin,
  * osfUp virtual key hit.  Simulate hitting the up arrow.
  */
 static void 
-_SpinBoxUp(	DtSpinBoxWidget spin,
+_SpinBoxUp(	Widget widget,
 		XEvent *event,
 		char **params,
 		Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     if (*num_params != 0) /* params means label or arrows */
 	spin = (DtSpinBoxWidget)XtParent(spin);
 
@@ -880,11 +885,12 @@ _SpinBoxUp(	DtSpinBoxWidget spin,
  * osfDown virtual key hit.  Simulate hitting the down arrow.
  */
 static void 
-_SpinBoxDown(DtSpinBoxWidget spin,
+_SpinBoxDown(Widget widget,
 		XEvent *event,
 		char **params,
 		Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     if (*num_params != 0) /* params means label or arrows */
 	spin = (DtSpinBoxWidget)XtParent(spin);
 
@@ -898,11 +904,12 @@ _SpinBoxDown(DtSpinBoxWidget spin,
  * osfRight virtual key hit.  Simulate hitting the up arrow.
  */
 static void 
-_SpinBoxRight(DtSpinBoxWidget spin,
+_SpinBoxRight(Widget widget,
 		XEvent *event,
 		char **params,
 		Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     if (*num_params != 0) /* params means label or arrows */
 	spin = (DtSpinBoxWidget)XtParent(spin);
 
@@ -916,11 +923,12 @@ _SpinBoxRight(DtSpinBoxWidget spin,
  * osfLeft virtual key hit.  Simulate hitting the down arrow.
  */
 static void 
-_SpinBoxLeft(DtSpinBoxWidget spin,
+_SpinBoxLeft(Widget widget,
 		XEvent *event,
 		char **params,
 		Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     if (*num_params != 0) /* params means label or arrows */
 	spin = (DtSpinBoxWidget)XtParent(spin);
 
@@ -934,11 +942,12 @@ _SpinBoxLeft(DtSpinBoxWidget spin,
  * osfBeginLine virtual key hit.  Go to first item.
  */
 static void 
-_SpinBoxBeginLine(	DtSpinBoxWidget spin,
+_SpinBoxBeginLine(	Widget widget,
 			XEvent *event,
 			char **params,
 			Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     int new_position;
     float new_current = 0.0;
     
@@ -972,11 +981,12 @@ _SpinBoxBeginLine(	DtSpinBoxWidget spin,
  * osfEndLine virtual key hit.  Go to last item.
  */
 static void 
-_SpinBoxEndLine(	DtSpinBoxWidget spin,
+_SpinBoxEndLine(	Widget widget,
 			XEvent *event,
 			char **params,
 			Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     int new_position;
     float new_current = 0.0;
     
@@ -1009,11 +1019,12 @@ _SpinBoxEndLine(	DtSpinBoxWidget spin,
  * Legacy: Get Focus for SpinBox when hit its label part
  */
 static void
-_SpinBoxGetFocus(     DtSpinBoxWidget spin,
+_SpinBoxGetFocus(     Widget widget,
                         XEvent *event,
                         char **params,
                         Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     XmProcessTraversal((Widget)XtParent(spin),
                         (XmTraversalDirection) XmTRAVERSE_CURRENT);
 }
@@ -1022,21 +1033,23 @@ _SpinBoxGetFocus(     DtSpinBoxWidget spin,
  * Legacy: Process Focus Traversal for SpinBox when cursor is in its arrow part
  */
 static void
-_SpinBoxPrevTabGroup(DtSpinBoxWidget spin,
+_SpinBoxPrevTabGroup(Widget widget,
                         XEvent *event,
                         char **params,
                         Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     XmProcessTraversal((Widget)XtParent(spin),
                         (XmTraversalDirection) XmTRAVERSE_PREV_TAB_GROUP);
 }
 
 static void
-_SpinBoxNextTabGroup(DtSpinBoxWidget spin,
+_SpinBoxNextTabGroup(Widget widget,
                         XEvent *event,
                         char **params,
                         Cardinal *num_params)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     XmProcessTraversal((Widget)XtParent(spin),
                         (XmTraversalDirection) XmTRAVERSE_NEXT_TAB_GROUP);
 }
@@ -1109,8 +1122,9 @@ CheckResources(DtSpinBoxWidget spin)
  * Destroy procedure called by the toolkit.
  */
 static void 
-Destroy(DtSpinBoxWidget spin)
+Destroy(Widget widget)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     int i;
 
     if ((int)Timer(spin))
@@ -1140,8 +1154,9 @@ Destroy(DtSpinBoxWidget spin)
  * old_width and old_height.
  */
 static void
-Resize(DtSpinBoxWidget spin)
+Resize(Widget widget)
 {
+    DtSpinBoxWidget spin = (DtSpinBoxWidget)widget;
     ClearShadow(spin, TRUE);
     LayoutChildren(spin);
     DrawShadow(spin);
@@ -1155,10 +1170,11 @@ Resize(DtSpinBoxWidget spin)
  * so just redisplay the shadow.
  */
 static void
-Redisplay(	DtSpinBoxWidget w,
+Redisplay(	Widget widget,
 		XEvent *event,
 		Region region)
 {
+    DtSpinBoxWidget w = (DtSpinBoxWidget)widget;
     DrawShadow(w);
 }
 
@@ -1526,10 +1542,18 @@ LayoutChildren(DtSpinBoxWidget spin)
  * the label to be resize even if it isn't managed.
  */
 static Boolean
-SetValues(	DtSpinBoxWidget current,
-		DtSpinBoxWidget request,
-		DtSpinBoxWidget new)
+SetValues(	Widget current_widget,
+		Widget request_widget,
+		Widget new_widget,
+		ArgList given_args,
+		Cardinal *num_args)
 {
+    DtSpinBoxWidget current = (DtSpinBoxWidget)current_widget;
+    DtSpinBoxWidget request = (DtSpinBoxWidget)request_widget;
+    DtSpinBoxWidget new = (DtSpinBoxWidget)new_widget;
+
+    (void)given_args;
+    (void)num_args;
     DtSpinBoxPart *new_p = (DtSpinBoxPart*)
 	&(XmField(new,ipot,DtSpinBox,label,Widget));
     DtSpinBoxPart *cur_p = (DtSpinBoxPart*)

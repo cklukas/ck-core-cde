@@ -56,7 +56,7 @@ timeoutCallback(XtPointer client_data, XtIntervalId *id)
 	tpd->cursorTimeoutId =
 		XtAppAddTimeOut(XtWidgetToApplicationContext((Widget) tw),
 		tw->term.blinkRate,
-		(XtTimerCallbackProc) timeoutCallback, (XtPointer) tw);
+		timeoutCallback, (XtPointer) tw);
     } else {
 	tpd->cursorTimeoutId = (XtIntervalId) 0;
     }
@@ -341,7 +341,7 @@ _DtTermPrimCursorOn(Widget w)
 	if (tw->term.blinkRate > 0) {
 	    tpd->cursorTimeoutId =
 		    XtAppAddTimeOut(XtWidgetToApplicationContext(w),
-		    tw->term.blinkRate, (XtTimerCallbackProc) timeoutCallback,
+		    tw->term.blinkRate, timeoutCallback,
 		    (XtPointer) w);
 	}
     }

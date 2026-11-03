@@ -623,20 +623,20 @@ extern DtEditorErrorCode 	_DtEditorValidateFileAccess(
 			int     		accessType );
 extern void	_DtEditorHelpSearchCB (
 			Widget	w,
-			caddr_t client_data ,
-			caddr_t call_data );
+			XtPointer client_data ,
+			XtPointer call_data );
 extern void	_DtEditorHelpSearchSpellCB (
 			Widget	w,
-			caddr_t client_data ,
-			caddr_t call_data );
+			XtPointer client_data ,
+			XtPointer call_data );
 extern void	_DtEditorHelpSearchFindCB (
 			Widget	w,
-			caddr_t client_data ,
-			caddr_t call_data );
+			XtPointer client_data ,
+			XtPointer call_data );
 extern void	_DtEditorHelpSearchChangeCB (
 			Widget	w,
-			caddr_t client_data ,
-			caddr_t call_data );
+			XtPointer client_data ,
+			XtPointer call_data );
 
 /*** library-private functions in EditAreaData.c ***/
 
@@ -648,50 +648,50 @@ extern char *_DtEditorGetPointer(
 
 extern void _DtEditorModifyVerifyCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 
 /*** library-private functions in SearchCalls.c ***/
 
 extern void _DtEditorSearchMapCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern int _DtEditor_CountCharacters(
         char *str,
         int num_count_bytes);
 extern void _DtEditorDialogSearchCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void _DtEditorDialogReplaceCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void _DtEditorDialogReplaceAllCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void _DtEditorDialogFindCancelCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void _DtEditorMisspelledSelectCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void _DtEditorMisspelledDblClickCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void _DtEditorFindTextChangedCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void _DtEditorReplaceTextChangedCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data );
+        XtPointer client_data,
+        XtPointer call_data );
 extern void _DtEditorSetFindSensitivity(
         DtEditorWidget pPriv,
 	Boolean sensitivity);

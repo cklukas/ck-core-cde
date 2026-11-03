@@ -219,16 +219,10 @@ void			vwr_destroy(
 			    Vwr v
 			);
 
-VNode			vwr_create_node();
+VNode			vwr_create_node(void);
 
 void			vwr_destroy_node(
 			    VNode bnode
-			);
-
-ViewerNodeElm		vwr_create_elm();
-
-ViewerNodeElm		vwr_destroy_elm(
-			    VNodeElm belm
 			);
 
 /*
@@ -247,7 +241,10 @@ void			vwr_reset(
 			    Viewer *v
 			);
 
-VNode			vwr_traverse_tree();
+VNode			vwr_traverse_tree(
+			    ViewerNode *tree,
+			    int (*fn)(ViewerNode *)
+			);
 
 void			vwr_init_elements(
 			    VNode	vnode

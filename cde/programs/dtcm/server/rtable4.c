@@ -103,6 +103,17 @@ RPCGEN_ADAPTER(_DtCm_rtable_create_4_svc, Table_Op_Args_4)
 RPCGEN_ADAPTER(_DtCm_rtable_remove_4_svc, Table_Op_Args_4)
 RPCGEN_ADAPTER(_DtCm_rtable_rename_4_svc, Table_Op_Args_4)
 
+#include "connection.h"
+DTCM_DEFINE_XDR_PROC(_DtCm_xdr_Access_Args_4)
+DTCM_DEFINE_XDR_PROC(_DtCm_xdr_Access_Status_4)
+DTCM_DEFINE_XDR_PROC(_DtCm_xdr_Registration_4)
+DTCM_DEFINE_XDR_PROC(_DtCm_xdr_Registration_Status_4)
+DTCM_DEFINE_XDR_PROC(_DtCm_xdr_Table_Args_4)
+DTCM_DEFINE_XDR_PROC(_DtCm_xdr_Table_Op_Args_4)
+DTCM_DEFINE_XDR_PROC(_DtCm_xdr_Table_Res_4)
+DTCM_DEFINE_XDR_PROC(_DtCm_xdr_Table_Status_4)
+DTCM_DEFINE_XDR_PROC(xdr_int)
+DTCM_DEFINE_XDR_PROC(xdr_long)
 #include "rtable4_tbl.i"
 #include "lookup.h"
 #include "cmsdata.h"

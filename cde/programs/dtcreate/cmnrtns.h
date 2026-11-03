@@ -98,15 +98,14 @@
 ushort WriteDefinitionFile(char *, ActionData *);
 ushort WriteActionFile(ActionData *);
 void   Change_IconGadget_IconType(Widget, char *);
-void   load_icons (Widget wid, XtPointer client_data,
-		   XmFileSelectionBoxCallbackStruct *cbs);
+void   load_icons (Widget wid, XtPointer client_data, XtPointer call_data);
 void   GetWidgetTextString(Widget, char **);
 void   PutWidgetTextString (Widget wid, char *pszText);
 char * GetCoreName(char *pszFullName);
 char **GetIconSearchPathList(void);
 void   FreeIconSearchPathList(char **);
-void   TurnOnHourGlassAllWindows();
-void   TurnOffHourGlassAllWindows();
+void   TurnOnHourGlassAllWindows(void);
+void   TurnOffHourGlassAllWindows(void);
 char * ReplaceSpaces(char *pszName);
 void   SetIconData(Widget, char *, enum icon_size_range);
 char * GetCorrectIconType(char *);

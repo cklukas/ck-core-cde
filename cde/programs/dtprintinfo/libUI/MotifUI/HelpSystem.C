@@ -81,8 +81,8 @@ void HelpSystem::CreateHelpDialog(MotifUI *parent, char *name, char *volume,
 
    DtWsmRemoveWorkspaceFunctions(display, XtWindow(XtParent(_w)));
    XtAddCallback(_w, DtNhyperLinkCallback, 
-      (XtCallbackProc)HyperlinkCB, (XtPointer) this);
-   XtAddCallback(_w, DtNcloseCallback, (XtCallbackProc)CloseCB,
+      HyperlinkCB, (XtPointer) this);
+   XtAddCallback(_w, DtNcloseCallback, CloseCB,
       (XtPointer) this);
    XmAddWMProtocolCallback(XtParent(_w), 
       XmInternAtom(display, "WM_DELETE_WINDOW", False), 

@@ -4,11 +4,11 @@ CLEANFILES = TermLineData.c
 
 noinst_LTLIBRARIES = libTerm.la
 
-libTerm_la_CFLAGS = -I../TermPrim @DT_INCDIR@
+libTerm_la_CFLAGS = -I$(srcdir)/../TermPrim @DT_INCDIR@
 
-TermLineData.c: TermLineData.data
+TermLineData.c: $(srcdir)/TermLineData.data
 	$(RM) $@
-	../util/lineToData -p _DtTerm -f TermLineData.data > $@
+	../util/lineToData -p _DtTerm -f $(srcdir)/TermLineData.data > $@
 
 includes:: TermLineData.c
 

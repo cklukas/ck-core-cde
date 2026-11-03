@@ -26,7 +26,8 @@ AM_CXXFLAGS = \
 	      -DDTSEARCH \
 	      -DDtinfoClient \
 	      -DEXPAND_TEMPLATES \
-	      -I$(top_builddir)/lib/DtMmdb
+	      -I$(top_builddir)/lib/DtMmdb \
+	      -I$(top_srcdir)/lib/DtMmdb
 
 AM_LDFLAGS = $(XTOOLLIB) $(LIBMMDB) $(DTCLIENTLIBS) $(LMDBLIB)
 

@@ -151,8 +151,8 @@ int check_file(istream&, const char* msg = "");
 Boolean exist_dir(const char* path);
 Boolean check_and_create_dir(const char* path);
 
-int open_file_prot();
-int open_dir_prot();
+int open_file_prot(void);
+int open_dir_prot(void);
 
 
 Boolean cc_is_digit(istream&); // "cc" stands for current char

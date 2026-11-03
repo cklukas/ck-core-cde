@@ -3754,7 +3754,7 @@ static void CreateVolSelDialog(
     wm_delete_window = XmInternAtom(XtDisplay(dlgChld.shell),
                                             "WM_DELETE_WINDOW", FALSE);
     XmAddWMProtocolCallback(dlgChld.shell,wm_delete_window,
-             (XtCallbackProc)CloseVolSelDialogCB, (XtPointer)hw);
+             CloseVolSelDialogCB, (XtPointer)hw);
 
     XtAddCallback(dlgChld.list, XmNsingleSelectionCallback, 
                            StartSelectedVolumeSearchCB, (XtPointer) hw);
@@ -4322,7 +4322,7 @@ static void CreateGlobSrchDialog(
 
    /* set the callback that positions the dialog when popped up */
    XtAddCallback (srchShell, XmNpopupCallback, 
-               (XtCallbackProc)_DtHelpMapCB, (XtPointer) XtParent(hw));
+               _DtHelpMapCB, (XtPointer) XtParent(hw));
 
    /***  Create the form used for the dialog.  ***/
    /* setting RESIZE_NONE is important to prevent the resultList from

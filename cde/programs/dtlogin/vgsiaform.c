@@ -92,7 +92,7 @@ static char noEchoBindings[] = {
 };
 
 static XtActionsRec textActions[] = {
-	{"sia-bksp", (XtActionProc)SiaBackspace},
+	{"sia-bksp", SiaBackspace},
     };
 
 

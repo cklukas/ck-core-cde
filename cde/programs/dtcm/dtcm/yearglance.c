@@ -400,7 +400,7 @@ static int anchors[] = {
 	XtManageChild(y->form);
 	XtUnmapWidget(y->form);
 
-	XtAddCallback(y->form, XmNhelpCallback, (XtCallbackProc)help_cb, 
+	XtAddCallback(y->form, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_YEAR_WINDOW);
 
 /*

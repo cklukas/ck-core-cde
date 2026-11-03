@@ -73,7 +73,7 @@
 
 int (*progressCallback)(char *fname) = NULL;
 int (*errorCallback)(char *fname, int errnum) = NULL;
-int (*periodicCallback)() = NULL;
+int (*periodicCallback)(void) = NULL;
 
 /*--------------------------------------------------------------------
  * Local subroutines

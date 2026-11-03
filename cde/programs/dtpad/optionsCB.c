@@ -71,8 +71,8 @@
 void
 OverstrikeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Arg al[1];
     Editor *pPad = (Editor *)client_data;
@@ -98,8 +98,8 @@ OverstrikeCB(
 void
 WordWrapCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Arg al[1];
     Editor *pPad = (Editor *)client_data;
@@ -147,8 +147,8 @@ WordWrapCB(
 void
 StatusLineCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Arg al[1];
     Editor *pPad = (Editor *)client_data;
@@ -214,8 +214,8 @@ SaveDroppedFilesModeResource(Editor *pPad)
 void
 DroppedFilesModeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Arg al[1];
     Editor *pPad = (Editor *)client_data;

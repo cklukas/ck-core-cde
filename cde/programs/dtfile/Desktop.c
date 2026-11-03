@@ -339,7 +339,7 @@ InitializeDesktopWindows(
 
       /* Event handler for detecting drag threshold surpassed */
       XtAddEventHandler(drawA, Button1MotionMask|Button2MotionMask,
-                        False, (XtEventHandler)FileIconMotion, NULL);
+                        False, FileIconMotion, NULL);
 
       n = 0;
       XtSetArg (args[n], XmNfillMode, XmFILL_TRANSPARENT);            n++;
@@ -371,7 +371,7 @@ InitializeDesktopWindows(
       desktop->iconGadget = _DtCreateIcon (drawA, "desktop_icon", args, n);
       XtManageChild (desktop->iconGadget);
       XtAddCallback (desktop->iconGadget, XmNhelpCallback,
-                     (XtCallbackProc)DTHelpRequestCB, NULL);
+                     DTHelpRequestCB, NULL);
 
       desktop->view = UNSET_VALUE;
       desktop->order = UNSET_VALUE;
@@ -411,7 +411,7 @@ RegisterIconDropsDT(
    XtRemoveAllCallbacks(desktopWindow->iconGadget, XmNcallback);
    XtAddCallback (desktopWindow->iconGadget,
                   XmNcallback,
-                  (XtCallbackProc)IconCallback,
+                  IconCallback,
                   desktopWindow->file_view_data);
 }
 
@@ -3266,7 +3266,7 @@ CreatePopupMenu (
    XtAddCallback (desktop_data->popupMenu->popup, XmNmapCallback,
                                         popupMenu, (XtPointer) NULL);
    XtAddCallback (desktop_data->popupMenu->popup, XmNhelpCallback,
-                  (XtCallbackProc)DTHelpRequestCB,
+                  DTHelpRequestCB,
                   HELP_DESKTOP_POPUP_MENU_STR);
 
    label_string = XmStringCreateLocalized((GETMESSAGE(28,4, "Workspace Object")));
@@ -3288,7 +3288,7 @@ CreatePopupMenu (
                                                              "rmDT", args, 2);
    XmStringFree (label_string);
    XtAddCallback (desktop_data->popupMenu->removeDT, XmNhelpCallback,
-                  (XtCallbackProc)DTHelpRequestCB,
+                  DTHelpRequestCB,
                   HELP_DESKTOP_POPUP_MENU_STR);
 
 
@@ -3301,7 +3301,7 @@ CreatePopupMenu (
                                                              "info", args, 2);
    XmStringFree (label_string);
    XtAddCallback (desktop_data->popupMenu->openFolder, XmNhelpCallback,
-                  (XtCallbackProc)DTHelpRequestCB,
+                  DTHelpRequestCB,
                   HELP_DESKTOP_POPUP_MENU_STR);
 
    label_string = XmStringCreateLocalized ((GETMESSAGE(20,128, "Rename")));
@@ -3313,7 +3313,7 @@ CreatePopupMenu (
                                                             "rename", args, 2);
    XmStringFree (label_string);
    XtAddCallback (desktop_data->popupMenu->rename, XmNhelpCallback,
-                  (XtCallbackProc)DTHelpRequestCB,
+                  DTHelpRequestCB,
                   HELP_DESKTOP_POPUP_MENU_STR);
 
    popupBtns[6] = XmCreateSeparatorGadget(desktop_data->popupMenu->popup,

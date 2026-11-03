@@ -91,27 +91,31 @@ static void GetSize(
                         Dimension *w,
                         Dimension *h) ;
 static void GetTitleString( 
-                        DtTitleBoxWidget manager,
+                        Widget manager,
                         XrmQuark resource,
                         XtArgVal *value) ;
 static void ClassInitialize( void ) ;
 static void ClassPartInitialize( 
                         WidgetClass wc) ;
 static void Initialize( 
-                        DtTitleBoxWidget request,
-                        DtTitleBoxWidget new) ;
+                        Widget request,
+                        Widget new,
+                        ArgList args,
+                        Cardinal *num_args) ;
 static void Destroy( 
-                        DtTitleBoxWidget manager) ;
+                        Widget manager) ;
 static void Resize( 
-                        DtTitleBoxWidget manager) ;
+                        Widget manager) ;
 static void Redisplay( 
-                        DtTitleBoxWidget manager,
+                        Widget manager,
                         XEvent *event,
                         Region region) ;
 static Boolean SetValues( 
-                        DtTitleBoxWidget current,
-                        DtTitleBoxWidget request,
-                        DtTitleBoxWidget new) ;
+                        Widget current,
+                        Widget request,
+                        Widget new,
+                        ArgList args,
+                        Cardinal *num_args) ;
 static XtGeometryResult QueryGeometry( 
                         DtTitleBoxWidget manager,
                         XtWidgetGeometry *request,
@@ -121,12 +125,14 @@ static XtGeometryResult GeometryManager(
                         XtWidgetGeometry *request,
                         XtWidgetGeometry *reply) ;
 static void ChangeManaged( 
-                        DtTitleBoxWidget manager) ;
+                        Widget manager) ;
 static void InsertChild( 
                         Widget child) ;
 static void ConstraintInitialize( 
                         Widget request,
-                        Widget new) ;
+                        Widget new,
+                        ArgList args,
+                        Cardinal *num_args) ;
 
 /********    End Static Function Declarations    ********/
 
@@ -231,20 +237,20 @@ static XmSyntheticResource syn_resources[] =
 	{
 		XmNtitleString, sizeof (XmString),
 		TB_Offset (title_string),
-		(XmExportProc) GetTitleString,
+		GetTitleString,
 		(XmImportProc) NULL
 	},
 	{
 		XmNmarginWidth, sizeof (Dimension),
 		TB_Offset (margin_width),
-		(XmExportProc) XmeFromHorizontalPixels,
-		(XmImportProc) XmeToHorizontalPixels
+		XmeFromHorizontalPixels,
+		XmeToHorizontalPixels
 	},
 	{
 		XmNmarginHeight, sizeof (Dimension),
 		TB_Offset (margin_height),
-		(XmExportProc) XmeFromVerticalPixels,
-		(XmImportProc) XmeToVerticalPixels, 
+		XmeFromVerticalPixels,
+		XmeToVerticalPixels,
 	}
 };
 
@@ -274,7 +280,7 @@ DtTitleBoxClassRec dtTitleBoxClassRec =
 		ClassInitialize,		/* class_initialize	*/
 		ClassPartInitialize,		/* class_part_initialize*/
 		False,				/* class_inited		*/
-		(XtInitProc) Initialize,	/* initialize		*/
+		Initialize,		/* initialize		*/
 		NULL,				/* initialize_hook	*/
 		XtInheritRealize,		/* realize		*/
 		NULL,				/* actions		*/
@@ -286,10 +292,10 @@ DtTitleBoxClassRec dtTitleBoxClassRec =
 		True,				/* compress_exposure	*/
 		True,				/* compress_enterleave	*/
 		False,				/* visible_interest	*/	
-		(XtWidgetProc) Destroy,		/* destroy		*/	
-		(XtWidgetProc) Resize,		/* resize		*/
-		(XtExposeProc) Redisplay,	/* expose		*/	
-		(XtSetValuesFunc) SetValues,	/* set_values		*/	
+		Destroy,			/* destroy		*/
+		Resize,			/* resize		*/
+		Redisplay,		/* expose		*/
+		SetValues,			/* set_values		*/
 		NULL,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
 		NULL,				/* get_values_hook	*/
@@ -305,9 +311,9 @@ DtTitleBoxClassRec dtTitleBoxClassRec =
 /*	Composite Part
 */
 	{
-		(XtGeometryHandler) GeometryManager,/* geometry_manager	*/
-		(XtWidgetProc) ChangeManaged,	/* change_managed	*/
-		(XtWidgetProc) InsertChild,	/* insert_child		*/
+		GeometryManager,		/* geometry_manager	*/
+		ChangeManaged,			/* change_managed	*/
+		InsertChild,			/* insert_child		*/
 		XtInheritDeleteChild,		/* delete_child		*/
 		NULL,				/* extension		*/
 	},
@@ -318,7 +324,7 @@ DtTitleBoxClassRec dtTitleBoxClassRec =
 		constraints,			/* constraint_resources	*/
 		XtNumber (constraints),		/* num_constraint_resources */
 		sizeof (DtTitleBoxConstraintRec), /* constraint_record	*/
-		(XtInitProc) ConstraintInitialize, /* constraint_initialize */
+		ConstraintInitialize,		/* constraint_initialize */
 		NULL,				/* constraint_destroy	*/
 		NULL,				/* constraint_set_values */
 		NULL,				/* extension		*/
@@ -494,10 +500,11 @@ GetSize(
 */
 static void 
 GetTitleString(
-        DtTitleBoxWidget manager,
+        Widget widget,
         XrmQuark resource,
         XtArgVal *value )
 {
+	DtTitleBoxWidget manager = (DtTitleBoxWidget)widget;
 	Arg		al[10];		/*  arg list		*/
 	int	ac;		/*  arg count		*/
 	Widget		title_area = M_TitleArea (manager);
@@ -555,9 +562,16 @@ ClassPartInitialize(
 */
 static void 
 Initialize(
-        DtTitleBoxWidget request,
-        DtTitleBoxWidget new )
+        Widget request_widget,
+        Widget new_widget,
+        ArgList args,
+        Cardinal *num_args )
 {
+	DtTitleBoxWidget request = (DtTitleBoxWidget)request_widget;
+	DtTitleBoxWidget new = (DtTitleBoxWidget)new_widget;
+
+	(void)args;
+	(void)num_args;
 	Arg		al[10];		/*  arg list		*/
 	int	ac;		/*  arg count		*/
 	Widget		title = NULL;
@@ -684,8 +698,10 @@ Initialize(
 */
 static void 
 Destroy(
-        DtTitleBoxWidget manager )
+        Widget widget )
 {
+	DtTitleBoxWidget manager = (DtTitleBoxWidget)widget;
+	(void)manager;
 	/*	Superclass does all the work so far.
 	*/
 }
@@ -698,8 +714,9 @@ Destroy(
 */
 static void 
 Resize(
-        DtTitleBoxWidget manager )
+        Widget widget )
 {
+	DtTitleBoxWidget manager = (DtTitleBoxWidget)widget;
 	Widget		title_area = M_TitleArea (manager);
 	Dimension	s_t = M_OldShadowThickness (manager),
 			w = M_OldWidth (manager),
@@ -731,7 +748,7 @@ Resize(
 /*	Draw shadow and title.
 */
 	if (XtIsRealized ((Widget)manager))
-		Redisplay (manager, NULL, NULL);
+		Redisplay ((Widget)manager, NULL, NULL);
 }
 
 
@@ -742,10 +759,11 @@ Resize(
 */
 static void 
 Redisplay(
-        DtTitleBoxWidget manager,
+        Widget widget,
         XEvent *event,
         Region region )
 {
+	DtTitleBoxWidget manager = (DtTitleBoxWidget)widget;
 	Widget		title_area = M_TitleArea (manager),
 			work_area = M_WorkArea (manager);
 	Position	title_x = M_X (title_area),
@@ -892,10 +910,18 @@ Redisplay(
 
 static Boolean 
 SetValues(
-        DtTitleBoxWidget current,
-        DtTitleBoxWidget request,
-        DtTitleBoxWidget new )
+        Widget current_widget,
+        Widget request_widget,
+        Widget new_widget,
+        ArgList args,
+        Cardinal *num_args )
 {
+	DtTitleBoxWidget current = (DtTitleBoxWidget)current_widget;
+	DtTitleBoxWidget request = (DtTitleBoxWidget)request_widget;
+	DtTitleBoxWidget new = (DtTitleBoxWidget)new_widget;
+
+	(void)args;
+	(void)num_args;
 	Widget		title = M_TitleArea (new);
 	Boolean		redisplay_flag = False,
 			new_title = False,
@@ -1158,8 +1184,9 @@ GeometryManager(
 */
 static void 
 ChangeManaged(
-        DtTitleBoxWidget manager )
+        Widget widget )
 {
+	DtTitleBoxWidget manager = (DtTitleBoxWidget)widget;
 	Dimension	w = M_Width (manager),
 			h = M_Height (manager);
 
@@ -1242,10 +1269,16 @@ InsertChild(
 static void 
 ConstraintInitialize(
         Widget request,
-        Widget new )
+        Widget new,
+        ArgList args,
+        Cardinal *num_args )
 {
 	DtTitleBoxWidget	manager = (DtTitleBoxWidget) XtParent (new);
 	DtTitleBoxConstraint	constraint = M_TitleBoxConstraint (new);
+
+	(void)request;
+	(void)args;
+	(void)num_args;
 
 /*	Validate child type.
 */

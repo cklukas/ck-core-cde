@@ -65,9 +65,6 @@ extern XtPointer _XmStringUngenerate (XmString string,
                         XmTextType output_type);
 
 
-typedef Uil_continue_type(*UIL_CB)();
-
-
 /*
  * Private function declarations
  */
@@ -131,21 +128,21 @@ static sym_entry_type	*parse_uil(
 			    char		*uil_file_name
 			);
 static Uil_continue_type	message_cb(
-			    int			*message_user_data,
+			    char		*message_user_data,
 			    int			msg_number,
 			    int			msg_severity,
-			    char		*msg_text,
-			    char		*src_text,
-			    char		*ptr_text,
-			    char		*loc_text,
-			    int			message_count[]
+			    const char		*msg_text,
+			    const char		*src_text,
+			    const char		*ptr_text,
+			    const char		*loc_text,
+			    int			*message_count
 			);
 static Uil_continue_type	status_cb(
 			    char		*status_user_data,
 			    int			percent_complete,
 			    int			lines_processed,
-			    char		*current_file,
-			    int			message_count[]
+			    const char		*current_file,
+			    int			*message_count
 			);
 static void		init_sym_stacks(
 			    void
@@ -1140,8 +1137,8 @@ parse_uil(
     /* Call uil compiler with appropriate paramters */
 
     compile_stat = Uil(&command_desc, &compile_desc,
-		       (UIL_CB)message_cb, (char *)&user_mess_data,
-		       (UIL_CB)status_cb, (char *)&user_stat_data);
+		       message_cb, (char *)&user_mess_data,
+		       status_cb, (char *)&user_stat_data);
 
     fprintf(stderr, "\nUIL Compiler Version %d, ",
 		compile_desc.compiler_version);
@@ -1192,27 +1189,29 @@ parse_uil(
  */
 static Uil_continue_type
 message_cb(
-    int			*message_user_data,	/* user message number */
+    char		*message_user_data,	/* user message number */
     int			msg_number,		/* to identify the error */
     int			msg_severity,		/* severity level */
-    char		*msg_text,		/* text of message */
-    char		*src_text,		/* text of source of error */
-    char		*ptr_text,		/* source column information */
-    char		*loc_text,		/* location line */
-    int			message_count[]
+    const char		*msg_text,		/* text of message */
+    const char		*src_text,		/* text of source of error */
+    const char		*ptr_text,		/* source column information */
+    const char		*loc_text,		/* location line */
+    int			*message_count
 )
 {
+    int *message_number = (int *)message_user_data;
+
     if (msg_number != 38)	/* if not an error summary */
     {
 	fprintf(stderr, "\t Diagnostic %d: Code: %d, Severity: %d\n",
-		*message_user_data, msg_number, msg_severity);
+		*message_number, msg_number, msg_severity);
 	fprintf(stderr, "%s: %s\n", loc_text, msg_text);
 	fprintf(stderr, "\t\t Source: %s\n", src_text);
     }
     else
 	fprintf(stderr, "Compilation results: %s\n", msg_text);
 
-    *message_user_data = *message_user_data + 1;
+    *message_number = *message_number + 1;
     return(Uil_k_continue);
 }
 
@@ -1227,15 +1226,17 @@ status_cb(
     char 	*status_user_data,
     int  	percent_complete,
     int  	lines_processed,
-    char 	*current_file,
-    int		message_count[]
+    const char 	*current_file,
+	int		*message_count
 )
 {
+    int *status_number = (int *)status_user_data;
+
  /*
     fprintf(stderr, "Status #%d -- Lines: %d, File: %s, Percentage: %d%%\n",
 	*status_user_data, lines_processed, current_file, percent_complete);
   */
-    *status_user_data = *status_user_data + 1;
+    *status_number = *status_number + 1;
     return(Uil_k_continue);
 }
 

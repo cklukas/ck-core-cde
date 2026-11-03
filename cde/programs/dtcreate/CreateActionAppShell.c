@@ -317,7 +317,7 @@ What do you want to do?";
           display_question_message(CreateActionAppShell, bufPtr,
                               "Replace", questionCB_ReplaceFile,
                               "Cancel Save", questionCB_CancelSave,
-                              (char *)NULL, (XtCallbackProc)NULL);
+                              (char *)NULL, NULL);
 	  XtFree(bufPtr);
           bHaveError = True;
        }
@@ -587,7 +587,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         NULL );
         }
         XtAddCallback( CreateActionMainWindow, XmNhelpCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_ONITEM );
 
         /*********************************************************************/
@@ -633,7 +633,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNmnemonic, mnemonic[0],
                         NULL );
         XtAddCallback( CA_MB_FileNew, XmNactivateCallback,
-                (XtCallbackProc) activateCB_FileNew,
+                activateCB_FileNew,
                 (XtPointer) NULL );
 
         /* Creation of CA_MB_FileOpen */
@@ -648,7 +648,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNmnemonic, mnemonic[0],
                         NULL );
         XtAddCallback( CA_MB_FileOpen, XmNactivateCallback,
-                (XtCallbackProc) activateCB_FileOpen,
+                activateCB_FileOpen,
                 (XtPointer) NULL );
 
         /* Creation of CA_MB_FileSave */
@@ -663,7 +663,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNmnemonic, mnemonic[0],
                         NULL );
         XtAddCallback( CA_MB_FileSave, XmNactivateCallback,
-                (XtCallbackProc) activateCB_CA_MB_FileSave,
+                activateCB_CA_MB_FileSave,
                 (XtPointer) NULL );
 
         /* Creation of CA_MB_Sep */
@@ -684,7 +684,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNmnemonic, mnemonic[0],
                         NULL );
         XtAddCallback( CA_MB_FileExit, XmNactivateCallback,
-                (XtCallbackProc) activateCB_FileQuit,
+                activateCB_FileQuit,
                 (XtPointer) NULL );
 
         /* Creation of CA_MB_FileTop */
@@ -727,7 +727,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNuserData, CreateActionAppShell,
                         NULL );
         XtAddCallback( CA_MB_HelpOverview, XmNactivateCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_OVERVIEW );
 
         /*
@@ -742,7 +742,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNuserData, CreateActionAppShell,
                         NULL );
         XtAddCallback( CA_MB_HelpTasks, XmNactivateCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_TASKS );
 
 #if 0
@@ -771,7 +771,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNuserData, CreateActionAppShell,
                         NULL );
         XtAddCallback( CA_MB_HelpReference, XmNactivateCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_REFERENCE );
 
         /*
@@ -794,7 +794,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNuserData, CreateActionAppShell,
                         NULL );
         XtAddCallback( CA_MB_HelpUsing, XmNactivateCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_USING );
 
         /*
@@ -817,7 +817,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNuserData, CreateActionAppShell,
                         NULL );
         XtAddCallback( CA_MB_HelpAbout, XmNactivateCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_ABOUT );
 
         /*
@@ -859,7 +859,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNhighlightThickness, 0,
                         NULL );
         XtAddCallback( ColorMonoOption, XmNvalueChangedCallback,
-                (XtCallbackProc) valueChangedCB_ColorMonoOption,
+                valueChangedCB_ColorMonoOption,
                 (XtPointer) NULL );
         createCB_ColorMonoOption(ColorMonoOption);
 
@@ -919,7 +919,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         NULL );
 #if 0
         XtAddCallback( CA_ActionNameTextField, XmNvalueChangedCallback,
-                (XtCallbackProc) valueChangedCB_CA_ActionNameTextField,
+                valueChangedCB_CA_ActionNameTextField,
                 (XtPointer) NULL );
 #endif
 
@@ -1015,7 +1015,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
         pIconData->wid = CA_MED_IconGadget;
         pIconData->size = Medium_Icon;
         XtAddCallback( CA_MED_IconGadget, XmNcallback,
-                (XtCallbackProc) activateCB_action_icon,
+                activateCB_action_icon,
                 (XtPointer) NULL );
         createCB_IconGadget( CA_MED_IconGadget, TRUE, Medium_Icon );
         last_action_pushed = CA_MED_IconGadget;
@@ -1056,7 +1056,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
         pIconData->wid = CA_TINY_IconGadget;
         pIconData->size = Tiny_Icon;
         XtAddCallback( CA_TINY_IconGadget, XmNcallback,
-                (XtCallbackProc) activateCB_action_icon,
+                activateCB_action_icon,
                 (XtPointer) NULL );
         createCB_IconGadget( CA_TINY_IconGadget, TRUE, Tiny_Icon );
 
@@ -1096,7 +1096,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
         pIconData->wid = CA_LRG_IconGadget;
         pIconData->size = Large_Icon;
         XtAddCallback( CA_LRG_IconGadget, XmNcallback,
-                (XtCallbackProc) activateCB_action_icon,
+                activateCB_action_icon,
                 (XtPointer) NULL );
         createCB_IconGadget( CA_LRG_IconGadget, TRUE, Large_Icon );
 
@@ -1116,7 +1116,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopAttachment, XmATTACH_POSITION,
                         NULL );
         XtAddCallback( CA_EditIcon_button, XmNactivateCallback,
-                (XtCallbackProc) activateCB_edit_icon,
+                activateCB_edit_icon,
                 (XtPointer) CA_ACTION_ICONS );
 
         /* Creation of CA_FindSet_button */
@@ -1134,7 +1134,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNbottomAttachment, XmATTACH_POSITION,
                         NULL );
         XtAddCallback( CA_FindSet_button, XmNactivateCallback,
-                (XtCallbackProc) activateCB_open_FindSet,
+                activateCB_open_FindSet,
                 (XtPointer) CA_ACTION_ICONS );
 
         /******************************************************************/
@@ -1366,7 +1366,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNmarginRight, 5,
                         NULL );
         XtAddCallback( CA_FiletypesAdd, XmNactivateCallback,
-                (XtCallbackProc) activateCB_add_filetype,
+                activateCB_add_filetype,
                 (XtPointer) NULL );
 
         /* Creation of CA_FiletypesDelete */
@@ -1379,7 +1379,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNmarginRight, 5,
                         NULL );
         XtAddCallback( CA_FiletypesDelete, XmNactivateCallback,
-                (XtCallbackProc) activateCB_CA_FiletypesDelete,
+                activateCB_CA_FiletypesDelete,
                 (XtPointer) NULL );
 
         /* Creation of CA_FiletypesEdit */
@@ -1392,7 +1392,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNmarginRight, 5,
                         NULL );
         XtAddCallback( CA_FiletypesEdit, XmNactivateCallback,
-                (XtCallbackProc) activateCB_edit_filetype,
+                activateCB_edit_filetype,
                 (XtPointer) NULL );
 
         /*********************************************************************/
@@ -1510,7 +1510,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(4, 18, "Only Above List")),
                         NULL );
         XtAddCallback( CA_FiletypesInListToggle, XmNvalueChangedCallback,
-                (XtCallbackProc) valueChangedCB_DroppableFiletypes,
+                valueChangedCB_DroppableFiletypes,
                 (XtPointer) CA_DF_ONLYFTFILES );
 
 
@@ -1534,7 +1534,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNbottomAttachment, XmATTACH_WIDGET,
                         NULL );
         XtAddCallback( CA_Expand, XmNactivateCallback,
-                (XtCallbackProc) activateCB_ExpertOption,
+                activateCB_ExpertOption,
                 (XtPointer) NULL );
 
         /*********************************************************************/
@@ -1564,7 +1564,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(3, 34, "Graphical (X-Window)")),
                         NULL );
         XtAddCallback( CA_WinTypeX, XmNactivateCallback,
-                (XtCallbackProc) activateCB_WindowTypeOptionMenu,
+                activateCB_WindowTypeOptionMenu,
                 (XtPointer) CA_WT_XWINDOWS );
 
         CA_WinTypeAutoClose = XtVaCreateManagedWidget( "CA_WinTypeAutoClose",
@@ -1573,7 +1573,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(3, 36, "Terminal (Auto-Close)")),
                         NULL );
         XtAddCallback( CA_WinTypeAutoClose, XmNactivateCallback,
-                (XtCallbackProc) activateCB_WindowTypeOptionMenu,
+                activateCB_WindowTypeOptionMenu,
                 (XtPointer) CA_WT_TERM );
 
         CA_WinTypeManualClose = XtVaCreateManagedWidget( "CA_WinTypeManualClose",
@@ -1582,7 +1582,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(3, 38, "Terminal (Manual Close)")),
                         NULL );
         XtAddCallback( CA_WinTypeManualClose, XmNactivateCallback,
-                (XtCallbackProc) activateCB_WindowTypeOptionMenu,
+                activateCB_WindowTypeOptionMenu,
                 (XtPointer) CA_WT_PERMTERM );
 
         CA_WinTypeNoOutput = XtVaCreateManagedWidget( "CA_WinTypeNoOutput",
@@ -1591,7 +1591,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(3, 40, "No Output")),
                         NULL );
         XtAddCallback( CA_WinTypeNoOutput, XmNactivateCallback,
-                (XtCallbackProc) activateCB_WindowTypeOptionMenu,
+                activateCB_WindowTypeOptionMenu,
                 (XtPointer) CA_WT_XWINDOWS );
 
         CA_WindowType_OptionMenu = XtVaCreateManagedWidget( "CA_WindowType_OptionMenu",
@@ -1658,7 +1658,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         NULL );
 
         XtAddCallback( CreateActionAppShell, XmNdestroyCallback,
-                (XtCallbackProc) UxDestroyContextCB,
+                UxDestroyContextCB,
                 (XtPointer) NULL );
 
         XmMainWindowSetAreas( CreateActionMainWindow, CA_MenuBar, (Widget) NULL,

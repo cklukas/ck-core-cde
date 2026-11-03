@@ -3,7 +3,7 @@ MAINTAINERCLEANFILES = Makefile.in
 noinst_PROGRAMS = eltdef
 
 HELPTAG       = ..
-HELPTAGSRC    = $(HELPTAG)/helptag
+HELPTAGSRC    = $(top_srcdir)/programs/dthelp/parser/pass1/helptag
 HELPPARSERSRC = $(HELPTAG)/parser
 HELPELTDEFSRC = $(HELPTAG)/eltdef
 HELPDTDFILE   = $(HELPTAGSRC)/hptag.dtd
@@ -15,8 +15,8 @@ HELPTSSFILE   = $(HELPTAGSRC)/htag.tss
 
 eltdef_LDADD = $(HELPUTILLIB)
 
-eltdef_CFLAGS = -DPASS1 -I../build -I../util -I../../include/util -I../../include/build \
-		-I../../include/eltdef
+eltdef_CFLAGS = -DPASS1 -I../build -I$(top_srcdir)/programs/dthelp/parser/pass1/build -I../util -I$(top_srcdir)/programs/dthelp/parser/pass1/util -I../../include/util -I$(top_srcdir)/programs/dthelp/parser/include/util -I../../include/build -I$(top_srcdir)/programs/dthelp/parser/include/build \
+		-I../../include/eltdef -I$(top_srcdir)/programs/dthelp/parser/include/eltdef
 
 eltdef_SOURCES = eltdef.c eltutil.c entity.c scan.c
 
@@ -49,6 +49,6 @@ EDONE: eltdef  $(HELPIFFILE) $(HELPTSSFILE)
 CDONE:  $(HELPUTILSRC)/context $(HELPTAGSRC)/delim.elt context.dat
 	$(RM) $(CPRODS) $(CTRASH)
 	$(CP) $(HELPTAGSRC)/delim.elt delim.dat  # appl.-specific delim.dat
-	$(HELPUTILSRC)/context
+	CDE_CONTEXT_DATA=$(srcdir)/context.dat $(HELPUTILSRC)/context
 	touch CDONE
 

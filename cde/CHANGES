@@ -1,7 +1,335 @@
 2026-11-03
-- dtksh: build the desktop shell from a checksum-pinned upstream ksh93
+- Validation: pass clean GCC and Clang C23 builds, both complete check suites,
+  the Xvfb dtksh widget callback test, installed private-ksh resolution, and an
+  installed uConsole desktop smoke session using the pinned CK Core Motif.
+- dtwm: copy read-only action-cache icon names before passing them through the
+  historical mutable-string image API, preserving const correctness in C23.
+- dtksh: give Xt callbacks, work procedures, timers, and input handlers their
+  exact toolkit prototypes, removing the function casts at registration.
+- dtksh: give the shared event handler Xt's exact widget and client-data
+  contract so event registration no longer needs a function-pointer cast.
+- dtksh: register legacy resource converters through exact `XtTypeConverter`
+  adapters, preserving their behavior without incompatible function casts.
+- dtksh: register its two-argument legacy command implementations through one
+  exact three-argument ksh93 builtin adapter and typed descriptors, replacing
+  hundreds of incompatible callback casts.
+- dtsession: give the contention-management resource converter Xt's actual
+  `XtConverter` prototype and register it directly without a function cast.
+- Calendar RPC: adapt legacy callback handlers to `registerrpc`'s actual
+  one-argument procedure contract and provide an exact `xdrproc_t` no-payload
+  serializer instead of casting `xdr_void` or service functions in client and
+  server code.
+- Calendar RPC: bridge rpcgen's typed serializers to libtirpc's variadic
+  `xdrproc_t` through exact adapters, removing casts from the server procedure
+  tables, callback calls, and result cleanup.
+- DtTerm: retain the specified XIC-based input-method callback contracts,
+  including preedit-start's integer result, and isolate Xlib's historical
+  generic callback transport without incompatible function-pointer casts.
+- CI: make both ARM64 GCC and Clang whole-CDE C23 lanes reject ambiguous
+  function declarations, old-style definitions and incompatible
+  function-pointer casts. The installed filesystem-consumer qualification uses
+  the same strict C boundary. The rpi4 runner uses separate isolated,
+  out-of-tree lanes with pinned Motif and filesystem revisions and records each
+  verified build's timing, compiler, source revisions and dtwm fingerprint.
+  Clang's stricter function-cast subgroup is warning-only for Xt/Motif's
+  required `_XtInherit` sentinels; synchronized build logs are audited so every
+  warning outside an inherit entry, method-propagation comparison, or rpcgen's
+  exact typed-XDR to variadic-libtirpc boundary fails.
+- dtksh: replace the embedded ksh93 tree with a checksum-pinned upstream
   maintenance revision. Keep CDE built-ins and patches separate, support
-  offline archive builds, and install the upstream license and notices.
+  verified offline archive builds, install the upstream license and notices,
+  and retain the engine's own supported compiler dialect while the CDE glue
+  follows the configured C standard.
+- DtWidget: pass TitleBox's private instance through the declared Xt `Widget`
+  boundary when its resize method invokes the expose method.
+- DtTerm: load the Solaris interactive-session hook through its documented
+  four-argument function contract instead of an unprototyped `void (*)()`
+  cast. App Builder drops a disabled, structurally obsolete matrix renderer
+  that could no longer compile against the maintained viewer model.
+- ToolTalk and DtMmdb: complete the remaining cross-language no-argument and
+  mini-ISAM conversion declarations. Modernize the standalone `prolatex`
+  utility's entry point and replacement helper to explicit C23 prototypes.
+- DtPrint: represent procedure-resource defaults as addresses of typed
+  `DtPrintSetupProc` values. A valid typed sentinel now distinguishes an
+  unspecified procedure from an explicit null without integer/function or
+  function/object pointer conversions.
+- DtSvc: preserve action-database reload functions in a typed ToolTalk
+  registration context rather than converting function pointers to and from
+  object pointers through pattern user-data slots.
+- DtFile, DtStyle and DtSession: store the native collation function and
+  workspace callback directly, and give action-database reload notifications
+  their complete `DtDbReloadCallbackProc` client-data contract.
+- DtWidget and DtInfo: store project-owned widget methods, synthetic-resource
+  converters and selection callbacks directly through their already-exact
+  Xt/Motif contracts instead of retaining redundant function-pointer casts.
+  Icon input dispatch now preserves the enclosing `XEvent` pointer through
+  button handling and passes widget methods the declared `Widget` boundary.
+- ToolTalk: implement the desktop timeout hook through its exact
+  `XtTimerCallbackProc` contract and register it directly.
+- ToolTalk: type every dynamically loaded Xlib and Xt entry with its native
+  prototype. The desktop I/O-error handler now stores and restores the native
+  `XIOErrorHandler` instead of converting it through data and variadic function
+  pointers.
+- DtSvc: initialize an optional preserved drop callback with a typed null value
+  instead of a function-pointer cast.
+- DtHelp and DtTerm: register selection and key-translation callbacks directly
+  through their exact Xt contracts; use typed null selection-completion and
+  language callbacks throughout maintained desktop programs and generated App
+  Builder source.
+- App Builder: store object-notification callbacks in a typed union and dispatch
+  each event through its matching public callback contract instead of a
+  cast-to-`void *` function table.
+- DtWm: give all resource converters the native `XtConverter` argument-count
+  pointer contract. Button and clock gadget class records now store exact
+  initialization, redisplay, set-values, dispatch, drawing and graphics-context
+  methods without project-function casts.
+- DtInfo: store Restraint geometry and management methods directly, and match
+  Simple's sensitivity method to the class record's `Bool` result contract.
+- DtCm: register the shared calendar help callback directly throughout menus,
+  editors, browsers and dialogs through its exact `XtCallbackProc` contract.
+  Appointment, group, to-do and standalone-editor drag-motion hooks now
+  implement the complete `XtEventHandler` signature. Appointment and to-do
+  list-view buttons expose the native Xt callback boundary. Calendar canvas
+  translations and input callbacks use separate exact adapters around shared
+  event processing, and canvas help is registered directly throughout day
+  views.
+- DtLogin: register login-field insert and backspace actions through their
+  complete `XtActionProc` contracts instead of function-pointer casts.
+- DtHelp: register the help-view window-manager close callback directly through
+  its native `XtCallbackProc` contract.
+- DtCalc: register popup mapping, help-selection timeout and X editres hooks
+  directly through their native Xt callback contracts.
+- DtPad: register its X editres event hook directly through the complete
+  `XtEventHandler` contract.
+- DtIcon: use a typed `XtTimerCallbackProc` adapter for polygon click-state
+  expiry while retaining the reusable no-argument reset helper.
+- DtInfo: give WWL member-callback and timeout bridges their exact Xt opaque
+  pointer and interval-ID contracts and register them without casts. Query
+  resizing, search help, selection transfer, input readiness, deferred scope,
+  session save, client-event, editres and command-exit hooks now expose their
+  complete native callback contracts as well; remove a disabled registration
+  for a nonexistent service-manager event handler.
+- DtMail: expose list selection, structure notification, message drag actions,
+  icon drag/callback, text activation and editres hooks through their exact Xt
+  contracts. Replace the transport core's untyped sendmail-handler pointer with
+  a frontend-neutral completion operation invoked by a typed Xt input adapter.
+- DtPdm: compare optional menu callbacks with a typed null value directly.
+- DtFile: give the file-manager close, directory-entry, restricted-text,
+  drag-motion, map/resize and status-timeout hooks their exact Xt callback
+  contracts and register them without function-pointer casts. Help callbacks
+  are registered directly throughout the file-manager dialogs. Its Change
+  Directory dialog class now stores exact generic method contracts and recovers
+  concrete records inside each method. The Find dialog follows the same method
+  boundary and uses complete Xt event-handler contracts for its stop-button
+  transitions. The main File Manager dialog also stores its set/free/focus
+  methods through their native generic contracts and uses typed null entries;
+  its branch and selection resource converters now implement the native modern
+  and legacy Xt converter signatures. The Help dialog class likewise stores
+  each generic dialog method directly and recovers its concrete records inside
+  the method boundary. The Modify Attributes class now follows the same exact
+  method contracts, including its apply callback and filesystem-specific
+  launcher callback. The Filter dialog class also stores exact generic methods
+  and recovers its concrete dialog/value records internally. The Preferences
+  dialog completes this conversion and exposes apply/OK handlers through the
+  native Xt callback contract. DtFile's text actions and nine legacy resource
+  converters now implement their complete Xt contracts directly.
+  Command, dialog-cache and Change Directory timeouts now implement
+  `XtTimerCallbackProc` directly instead of treating client data as a widget
+  parameter in the function type. Dialog-cache structure notifications use the
+  complete `XtEventHandler` signature. Find and content-search pipe readers
+  register their exact `XtInputCallbackProc` contracts directly.
+  Rename verification and tree-button activation recover concrete Motif
+  callback records inside exact `XtCallbackProc` boundaries.
+  Map, help, icon activation and iconic-path event handlers are registered
+  directly through their already-exact Xt contracts, as are drop callbacks and
+  Xmu editres dispatch.
+- DtImsStart: register window-manager callbacks and the host-return action with
+  their exact Xt contracts, using a typed adapter for the no-argument shutdown
+  routine.
+- DtWidget: expose every editor translation action through its exact
+  `XtActionProc` contract instead of casting the action table entries.
+- DtAction: register text actions and invocation status callbacks through their
+  exact toolkit contracts instead of function-pointer casts.
+- DtPad: expose editor, help, formatting, option, session and print callbacks
+  through `XtCallbackProc` directly, and route panic signals through a typed
+  signal adapter.
+- DtCalc: give help callbacks their exact Xt signatures and use typed callback
+  adapters for parameterless ASCII-conversion and exit operations.
+- DtIcon: register help, hyperlink and close callbacks through their exact Xt
+  callback signatures instead of casting legacy `caddr_t` functions.
+- App Builder: emit popup actions and drag-motion handlers with their complete
+  Xt contracts, keeping generated applications free of callback casts.
+- DtInfo: register the launcher action-completion and timeout routines through
+  their native callback types instead of casting a by-value timeout identifier.
+- DtSearch: route dtsrcreate's emergency database close through a typed exit
+  adapter rather than casting the no-argument database routine.
+- App Builder: give project, browser and object translation actions their exact
+  `XtActionProc` argument contracts. Resize event handlers and double-click
+  timers now implement their Xt callback types directly, without registration
+  casts.
+- DtSvc: give action translations, timers, prompt handlers, message logging,
+  command termination handlers and database converters their exact callback
+  and function-table contracts. Registrations no longer cast functions with
+  incompatible types.
+- DtSearch: route database-close and shared-memory cleanup through typed exit
+  adapters instead of storing incompatible functions in exit-hook slots. Text
+  parser reader callbacks now implement their shared opaque-argument contract
+  directly.
+- DtWidget: give ComboBox, Control and DialogBox their complete Xt/Motif method
+  signatures, including argument lists and base-class widget parameters.
+- DtWidget: align Editor, Icon, SpinBox and TitleBox class methods, action
+  tables, synthetic-resource hooks and gadget dispatch with their framework
+  callback types.
+- DtInfo: preprocess the aggregate message input from the shadow build
+  directory where it is generated, and materialize the preprocessor stream
+  before running the catalog converter. A missing generated input now fails
+  the build instead of being masked by a successful downstream pipeline, and
+  the final catalog is replaced atomically only after both stages succeed.
+- build: keep Autoconf's Flex link probe valid under strict C23 by selecting
+  the POSIX declaration level required by generated scanners. Configure now
+  checks the usable `LEX` result rather than merely the discovered executable,
+  so a missing or unusable lexer is reported before a clean DtMmdb build can
+  silently run a no-op generator and fail on an absent generated source.
+- build: make fresh out-of-tree builds search generated public headers first
+  and the maintained source header tree second, removing their hidden
+  dependency on headers copied into a reused build directory. ToolTalk's
+  recursive libraries and clients likewise resolve their private interfaces
+  from the maintained source tree after generated build interfaces, as does
+  DtSvc's private code-library interface and DtMmdb's namespaced recursive
+  library interfaces. File Manager likewise resolves its copy engine's shared
+  interface from the source subtree when no generated copy exists. Convenience
+  include groups for Dt, DtI, ToolTalk, Xm, CSA and SPC now apply the same
+  build-first/source-second order. Run both C23 CI compiler lanes and the
+  installed filesystem integration from empty shadow build directories.
+- build: make C23 the default for maintained C sources after complete GCC and
+  Clang ARM64 builds, both full `make check` runs and the uConsole desktop
+  smoke suite passed against CK Core Motif ABI 9. Explicit caller-selected
+  language modes remain honored, while embedded compatibility components keep
+  their scoped GNU17 rules.
+- DtSvc: give the checkpoint-delivery shutdown API its implemented no-argument
+  prototype instead of an unspecified-argument declaration.
+- DtSearch: remove an unused, undefined `chmat()` shadow declaration rather
+  than preserving an unspecified-argument interface with no implementation or
+  caller.
+- dtfile: make the copy engine's periodic callback definition match its typed
+  no-argument declaration and the `EventCheck` implementation assigned to it.
+- dtcalc: remove the unimplemented, unused legacy choice-widget interface and
+  its ambiguous callback slot instead of inventing a prototype for an API with
+  no implementation or caller.
+- dtksh: make the maintained desktop integration initializer definition match
+  its existing no-argument prototype; the embedded ksh93 compatibility engine
+  remains on its separately scoped GNU17 build.
+- DtInfo: aggregate application and UAS message fragments through explicit
+  source-tree prerequisites so clean shadow builds neither depend on staged
+  message files nor miss rebuilds when a fragment changes.
+- Documentation: build the DocBook search database generator from its tracked
+  DtSearch source and resolve Raima headers from generated build interfaces
+  first and the maintained source tree second.
+- Documentation: let the DocBook information-library tools and shared helpers
+  find checked-in DtMmdb interfaces after generated shadow-build interfaces.
+- CI: run the ARM64 native build, full check suite, Motif ABI verification and
+  installed filesystem integration in explicit GCC and Clang C23 lanes.
+- localization: regenerate app defaults, configuration, desktop types/actions,
+  palettes, backdrops and App Manager entries in clean out-of-tree builds by
+  resolving maintained translation templates from the source tree, generated
+  resources from the build tree and tracked resources from their source tree.
+- localization: give the maintained merge utility its C-standard `int main`
+  entry point so both GCC and Clang accept it in C23 mode.
+- DtInfo: resolve resource and message templates from the source tree so clean
+  shadow builds do not silently emit an empty application-default file.
+- DtHelp: let the maintained help generator and print helper find checked-in
+  private DtHelp interfaces in clean out-of-tree C23 builds.
+- DtHelp: map pass1, pass2 and canon1 parser builds to their checked-in shared
+  headers after generated build interfaces, and correct a concatenated include
+  option in the canon1 parser.
+- DtHelp: resolve parser DTD, delimiter and context generator inputs from their
+  source directories while keeping generated tables in shadow build trees.
+- DtHelp: make the parser's file-opening contract const-correct and map
+  maintained sibling generator fragments after build-tree outputs.
+- DtHelp: keep generated interface parameter macros warning-free when they
+  intentionally replace parser token names, preserve glossary trie payloads
+  through `intptr_t`, and give the pass2 parser a conforming `int main`.
+- DtHelp: give the maintained help viewer a conforming `int main` entry point
+  accepted by both GCC and Clang in C23 mode.
+- Documentation: make the Motif manual-link input repeatable and usable from
+  clean shadow builds by linking its source-qualified file, and invoke the
+  generated DocBook-to-man wrapper and compiled converter from the build tree.
+  Manual rules now pass their source-qualified declaration file to that
+  wrapper, whose launcher path no longer depends on the invoking shell's
+  `PWD` value. Shadow builds link the SGML entity inputs expected relative to
+  the manual build directory and create output directories before conversion;
+  guide generation likewise invokes its compiled information-library tool from
+  the build tree, reads source-qualified catalog and book inputs, and creates
+  each shadow-tree TOC directory before writing it. The final information
+  library build waits for every generated TOC and consumes a derived bookcase
+  descriptor which maps immutable books and styles to the source tree and
+  generated TOCs to the shadow build tree. The information-library helper
+  likewise reads static DocBook data from the source tree and the generated
+  dtsearch database definition from the build tree, and resolves its sibling
+  generator executables from its absolute build directory rather than the
+  configure shell's `PWD` value.
+- Documentation: generate localized help SDL through the build-tree DocBook
+  wrapper and pass absolute source-book, search and build-output paths, so help
+  generation no longer depends on an in-source configured script or staged
+  source files. Derived per-book descriptors map the configured shared help
+  entities to the build tree while retaining checked-in product entities in
+  the source tree.
+- DtInfo: let clean out-of-tree WWL and application-module builds search their
+  generated build headers before the maintained DtInfo, UAS, DtMmdb and C++
+  wrapper source interfaces.
+- ttsnoop: resolve App Builder project, module, stub-template and wrapper
+  inputs from the maintained source directory, so clean out-of-tree builds
+  regenerate every UI module and the main program without staged source files;
+  emit complete enum dispatch and pass integer-valued Xt client data through
+  `uintptr_t`; and replace `tempnam` with owned `mkstemp` paths for FIFOs and
+  ToolTalk viewer data.
+- dtprintinfo: search both build and maintained source directories for its
+  private UI, object and utility headers, and resolve message-generator scripts
+  and inputs from the source tree during clean out-of-tree builds; give the
+  icon and work-area widgets' Xt class methods, actions and timeout their exact
+  callback contracts; register the C++ action, callback and event adapters
+  directly; return the icon's negotiated geometry result; and make the fatal
+  Xt handler explicitly non-returning.
+- dtsearchpath: let `dtsearchpath` and `dtappgather` resolve the private
+  libCliSrv interfaces from both their build and maintained source directories,
+  so clean out-of-tree qualification does not depend on copied headers.
+- C23: type the remaining core DtHelp, DtTerm, DtWidget, dtcreate, dtlogin,
+  dtsession and dtstyle no-argument interfaces; give dtlogin network,
+  authentication and Xt hooks exact contracts; type dtappbuilder utilities,
+  dtudcexch conversion routines and callbacks, and PAM module dispatch; use
+  the platform dynamic-loader declarations in the bundled font layer; let a
+  clean out-of-tree build find DtHelp image/JPEG headers, DtTerm private
+  headers and line-data input, App Builder private headers and message-catalog
+  inputs, App Builder's BIL project and generated parser inputs, and dtterm's
+  private source headers, fallback-resource generator and inputs; correct
+  dtcreate's ToolTalk and help callback
+  registrations, type its icon-selector callback table and directory filter,
+  type dtlogin's saved X I/O and signal handlers and language enumerator table,
+  and use its shared
+  environment/address interfaces consistently, remove redundant local
+  shadow declarations for its shared host/address helpers, and drop an unused
+  untyped dtcreate signal-function slot; use the standard stdio
+  declarations and exact non-returning Xt error-handler contract there;
+  make dtcreate's generated registrations and callback boundaries use
+  `XtCallbackProc` directly instead of casting toolkit-specific record types;
+  give App Builder's memory-fault hook the signal-handler ABI and its UIL
+  diagnostics the toolkit's distinct typed callback contracts, preserve its
+  maintained generated-header and stub additions in clean builds, type its
+  chooser and modal callback arrays without registration casts, recover Motif
+  selection records inside those callbacks, keep the generated message-dialog
+  runtime and emitted callback fields on their native `XtCallbackProc`/null
+  representation, register its editor and palette callbacks directly, recover
+  list and toggle records behind their Xt boundary, keep its generated project
+  open/import chooser arrays cast-free, replace its remaining non-prototype
+  declarations with explicit no-argument contracts, remove unused untyped
+  function aliases, and assign `SIG_IGN` without an incompatible function cast;
+  correct dtstyle signal,
+  fatal Xt, event-handler and callback contracts without registration casts,
+  and preserve legacy Motif/catalog string input types without discarding
+  qualifiers.
+- dtfile: initialize the File Manager dialog's view data before the shelf
+  placeholder selects its startup icon geometry. This removes an uninitialized
+  pointer dereference when the first window opens with the filesystem shelf.
 - C23: remove the calendar RPC headers' obsolete K&R declaration fallbacks;
   give dtcm parsing, UI, ToolTalk and helper callbacks exact contracts; make
   clean out-of-tree calendar builds resolve generated and checked-in headers
@@ -11,14 +339,40 @@
   exact, typed dispatch adapters; type its lookup and signal callbacks, and
   make libcsa RPC generation work from an out-of-tree build directory.
 - C23: type dtpad file-menu and ToolTalk callbacks, dtcalc button and X error
-  dispatch, DtTerm parser and cleanup hooks, dtpdm constructors, dtmail utility
+  dispatch, DtTerm parser, cleanup, cursor, pointer-blanking and session-save
+  hooks, dtpdm constructors, dtmail utility
   accessors, libcsa hash destruction, and dtcm calendar match/list/container
   callbacks; avoid the C23 `bool` keyword in the calendar tree checker.
+- DtMrm: let clean out-of-tree builds resolve private DtHelp and DtTerm headers
+  from their maintained source directories.
+- dtmail: make the library, Motif support layer and applications resolve their
+  maintained public, utility, RFC and Help headers in clean out-of-tree builds;
+  use Autoconf's complete X compiler flags instead of emitting a bare `-I` when
+  X needs no nonstandard include directory.
+- dtksh: stage the embedded ksh93 source into the private out-of-tree build,
+  correct the libshell dependency, and compile that vendored compatibility
+  component with explicit GNU17 while the maintained dtksh glue remains on the
+  enclosing compiler mode.
+- dtksh: generate the installed `DtFuncs.dtsh` script from its source-tree
+  input so the check and install targets work in clean out-of-tree builds.
+- dtksh: give the maintained Xt, Xlib, ToolTalk, print-setup and ksh discipline
+  dispatch paths their exact callback contracts; split incompatible one- and
+  two-name ToolTalk operations instead of routing them through an untyped
+  function pointer.
+- dtksh: type Motif widget constructors, list operations, text operations,
+  subwidget accessors and X error handlers by their real signatures; use typed
+  adapters where related text operations accept different native value types.
 - public interfaces: replace unspecified-argument ToolTalk, DtSvc service,
   action, multimedia database, symbolic-table and event-loop declarations
   with their exact C/C++ contracts; type Instant's remaining initialization,
   browsing and output-buffer entry points and link their consumers with GCC
-  and Clang C23.
+  and Clang C23; let a clean out-of-tree `ttdbck` build resolve its private
+  ToolTalk headers from their source directories, and make `tt_type_comp` use
+  the source grammar header and private source includes; give `ttauth` public
+  entry points, command handlers and authority-entry iterators exact function
+  contracts; let clean `rpc.ttdbserver` builds resolve private ToolTalk and
+  mini-ISAM headers from their maintained source directories, and give
+  `ttsession` the corresponding ToolTalk source-header paths.
 - dtfile: type resource serializers, file-operation dispatch, menu-data
   callbacks and selected signal and X/Xt callbacks without unspecified
   argument lists or compatibility casts; link the complete File Manager with
@@ -35,10 +389,17 @@
   framework call ABI.
 - DtHelp: type formatter, SDL model, display-area, interpreter-filter and
   region-cleanup callbacks; split buffered input and output callbacks so read
-  and write paths no longer share an incompatible function-pointer slot.
+  and write paths no longer share an incompatible function-pointer slot;
+  correct dialog map return types and give menu, message and display-area
+  event handlers the complete Xt contract without registration casts.
 - C23: replace ambiguous system, signal, Xt, ICE and Xlib declarations in
-  dtexec, dtaction, dtsession, dsdm and dticon with their exact interfaces;
-  remove callback casts that concealed mismatched timer and handler contracts.
+  dtexec, dtaction, dtsession, dsdm, dthello and dticon with their exact
+  interfaces; register dthello's alarm handler without an incompatible cast;
+  share the exact dsdm interest-property and drag-and-drop proxy contract
+  across its translation units;
+  remove callback casts that concealed mismatched timer and handler contracts,
+  including dtsession's client-message and X I/O handlers; make its fatal Xt
+  hook unconditionally non-returning as required by the toolkit.
 - dticon: give ToolTalk, UI-constructor, dialog-management and selection-timer
   callbacks complete prototypes; remove unused legacy externs and timer casts.
 - dtwm: make workspace-presence, front-panel, icon-box, popup, embedded-client
@@ -47,7 +408,9 @@
   expose read-only shell-scan tokens and type the shared desktop callbacks
   used by the window manager.
 - DtWidget: publish the complete `_DtCreateView` factory prototype and remove
-  its redundant unspecified-argument declaration.
+  its redundant unspecified-argument declaration; give editor/search callbacks,
+  icon timers and icon/format event handlers their exact Xt contracts and
+  remove their registration casts.
 
 2026-11-02
 - dtinfo: match typed DtHelp hyperlink/resize callback interfaces in the C++

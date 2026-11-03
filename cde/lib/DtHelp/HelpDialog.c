@@ -204,7 +204,7 @@ static void  DisplayPrintCB(
 static void  ProcessBMenuBackCB(
                         Widget w,
                         XtPointer clientData,
-                        XButtonEvent * event,
+                        XEvent *event,
                         Boolean *continueToDispatch);
 static void  ProcessJumpReuse(
                         Widget nw,
@@ -888,8 +888,7 @@ static void Initialize(
 
 
    /* Just for fun, lets make sure our sizes are correct */
-   XtAddCallback (XtParent(hw), XmNpopupCallback, (XtCallbackProc)
-                 InitialPopupCB, (XtPointer) hw);
+   XtAddCallback (XtParent(hw), XmNpopupCallback,                  InitialPopupCB, (XtPointer) hw);
 
 
   return;
@@ -926,8 +925,7 @@ static void InitialPopupCB(
                              hw->help_dialog.display.textRows,
                              hw->help_dialog.display.textColumns);
 
-  XtRemoveCallback (XtParent(hw), XmNpopupCallback, (XtCallbackProc)
-                  InitialPopupCB, (XtPointer) hw);
+  XtRemoveCallback (XtParent(hw), XmNpopupCallback,                   InitialPopupCB, (XtPointer) hw);
 
 
 }
@@ -1477,13 +1475,13 @@ static void  CopyTextCB(
 static void  ProcessBMenuBackCB(
     Widget w,
     XtPointer clientData,
-    XButtonEvent * event,
+    XEvent *event,
     Boolean *continueToDispatch)
 {
 
    DtHelpDialogWidget	hw = (DtHelpDialogWidget) clientData;
 
-   XmMenuPosition(hw->help_dialog.menu.popupMenu, event);
+   XmMenuPosition(hw->help_dialog.menu.popupMenu, &event->xbutton);
    XtManageChild(hw->help_dialog.menu.popupMenu);
 
 }
@@ -3133,7 +3131,7 @@ static void CatchClose (
 
   /* Current Help Dialog Window */
   XmAddWMProtocolCallback(XtParent(widget),wm_delete_window,
-                          (XtCallbackProc)CloseHelpCB, (XtPointer) widget);
+                          CloseHelpCB, (XtPointer) widget);
   XtSetValues(XtParent(widget), args, 1);
   
 } 
@@ -3694,7 +3692,7 @@ static Widget CreatePopupMenu(
    XtAddEventHandler(
 		_DtHelpDisplayAreaWidget(hw->help_dialog.help.pDisplayArea), 
                     ButtonPressMask, FALSE, 
-                    (XtEventHandler)ProcessBMenuBackCB, hw);
+                    ProcessBMenuBackCB, hw);
 
   /* Add Help callback for Popup Menu */
   pHelpInfo = _DtHelpListAdd(DtHELP_PopupMenu_STR,

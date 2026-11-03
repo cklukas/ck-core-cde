@@ -36,20 +36,13 @@
 #include "_fallibint.h"
 #ifdef USE_DYNAMIC_LOADER
 
+#include <dlfcn.h>
+
 #ifndef XLOCALEDIR
 #define XLOCALEDIR "/usr/lib/X11/locale"
 #endif
 
 #define LCLIBNAME    "xi18n.so"
-
-extern void *dlopen();
-extern void *dlsym();
-extern int dlclose();
-extern char *dlerror();
-
-#define LAZY       1
-#define NOW        2
-#define GLOBAL     0x100
 
 XLCd
 _fallcDynamicLoader(char *name)
@@ -61,7 +54,7 @@ _fallcDynamicLoader(char *name)
 
     sprintf(libpath,"%s/%s/%s",
 		XLOCALEDIR,name,LCLIBNAME);
-    nlshandler = dlopen(libpath,LAZY);
+    nlshandler = dlopen(libpath, RTLD_LAZY | RTLD_GLOBAL);
     _fallcGenericMethods = (XLCdMethods)dlsym(nlshandler,
 				"genericMethods");
     lcd = _fallcCreateLC(name,_fallcGenericMethods);

@@ -40,6 +40,10 @@
 #include "cmcb.h"
 #include "callback.h"
 #include "appt4.h"
+#include "connection.h"
+
+DTCM_DEFINE_XDR_PROC(_DtCm_xdr_Table_Res_4)
+DTCM_DEFINE_XDR_PROC(xdr_cmcb_update_callback_args)
 #include "utility.h"
 #include "lutil.h"
 
@@ -196,8 +200,8 @@ _DtCmsCheckRegistrationList(_DtCmsRegistrationInfo *rlist)
 		}
 				
 		/* no client or client not responding */
-		if (cl == NULL || clnt_call(cl, 0, (xdrproc_t)xdr_void, (char *)NULL,
-			(xdrproc_t)xdr_void, (char *)NULL, timeout_tv) != RPC_SUCCESS)
+		if (cl == NULL || clnt_call(cl, 0, _DtCm_xdr_void, (char *)NULL,
+			_DtCm_xdr_void, (char *)NULL, timeout_tv) != RPC_SUCCESS)
 		{
 			if (debug) {
 				clnt_pcreateerror(sourcehost);
@@ -646,12 +650,12 @@ _DtCmsDoCallback(
 #endif
 			if (version == AGENTVERS) {
 				(void)clnt_call(cl, ptr->procnum,
-					(xdrproc_t)_DtCm_xdr_Table_Res_4, (char *)args,
-					(xdrproc_t)xdr_void, (char *)0, timeout_tv);
+					DTCM_XDR_PROC(_DtCm_xdr_Table_Res_4), (char *)args,
+					_DtCm_xdr_void, (char *)0, timeout_tv);
 			} else if (version == AGENTVERS_2) {
 				(void)clnt_call(cl, ptr->procnum,
-					(xdrproc_t)xdr_cmcb_update_callback_args,
-					(char *)args, (xdrproc_t)xdr_void, (char *)0,
+					DTCM_XDR_PROC(xdr_cmcb_update_callback_args),
+					(char *)args, _DtCm_xdr_void, (char *)0,
 					timeout_tv);
 			}
 			ncallbacks++;

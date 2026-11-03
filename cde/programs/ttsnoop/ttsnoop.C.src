@@ -145,21 +145,23 @@ const char Usage[] =
 static void
 cleanUp()
 {
-	if (unlinkSnoopFile) {
+	if (unlinkSnoopFile && (snoopFile != 0)) {
 		if (unlink( snoopFile ) == -1) {
 			clog << "ttsnoop: unlink( \"" << snoopFile;
 			clog << "\"): " << strerror( errno ) << endl;
-		} else {
-			unlinkSnoopFile = False;
 		}
+		free(snoopFile);
+		snoopFile = 0;
+		unlinkSnoopFile = False;
 	}
-	if (unlinkTraceFile) {
+	if (unlinkTraceFile && (traceFile != 0)) {
 		if (unlink( traceFile ) == -1) {
 			clog << "ttsnoop: unlink( \"" << traceFile;
 			clog << "\"): " << strerror( errno ) << endl;
-		} else {
-			unlinkTraceFile = False;
 		}
+		free(traceFile);
+		traceFile = 0;
+		unlinkTraceFile = False;
 	}
 }
 
@@ -508,10 +510,19 @@ main(int argc, char **argv)
 	    //
 	    // Set up fifo for trace output
 	    //
-	    traceFile = tempnam( 0, "ttsnt" );
+	    int fd = _DtCreateTemporaryFile("ttsnt", &traceFile);
+	    if (fd == -1) {
+		    clog << "ttsnoop: cannot create trace path: ";
+		    clog << strerror( errno ) << endl;
+		    exit(1);
+	    }
+	    close(fd);
+	    unlink(traceFile);
 	    if (mkfifo( traceFile, S_IWUSR | S_IRUSR ) == -1) {
 		    clog << "ttsnoop: mkfifo( \"" << traceFile << "\" ) = ";
 		    clog << strerror( errno ) << endl;
+		    cleanUp();
+		    exit(1);
 	    }
     }
     apiTracerArgv[ 0 ] = "tail";
@@ -523,10 +534,20 @@ main(int argc, char **argv)
 	    //
 	    // Set up fifo for snoop output
 	    //
-	    snoopFile = tempnam( 0, "ttsnp" );
+	    int fd = _DtCreateTemporaryFile("ttsnp", &snoopFile);
+	    if (fd == -1) {
+		    clog << "ttsnoop: cannot create snoop path: ";
+		    clog << strerror( errno ) << endl;
+		    cleanUp();
+		    exit(1);
+	    }
+	    close(fd);
+	    unlink(snoopFile);
 	    if (mkfifo( snoopFile, S_IWUSR | S_IRUSR ) == -1) {
 		    clog << "ttsnoop: mkfifo( \"" << snoopFile << "\" ) = ";
 		    clog << strerror( errno ) << endl;
+		    cleanUp();
+		    exit(1);
 	    }
     }
     snooperArgv[ 0 ] = "tail";

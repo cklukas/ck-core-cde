@@ -61,8 +61,8 @@
 void
 FormatCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Editor *pPad = (Editor *) client_data;
     DtEditorInvokeFormatDialog(pPad->editor);
@@ -76,8 +76,8 @@ FormatCB(
 void
 FormatParaCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Editor		*pPad = (Editor *) client_data;
     DtEditorErrorCode	 error = DtEDITOR_NO_ERRORS;
@@ -111,8 +111,8 @@ FormatParaCB(
 void
 FormatAllCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data)
+        XtPointer client_data,
+        XtPointer call_data)
 {
     Editor		*pPad = (Editor *)client_data;
     DtEditorErrorCode	 error = DtEDITOR_NO_ERRORS;

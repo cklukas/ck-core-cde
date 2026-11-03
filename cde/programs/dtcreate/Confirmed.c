@@ -73,7 +73,7 @@ void display_confirmed_message (Widget parent, char *message)
   XtUnmanageChild (XmMessageBoxGetChild (Confirmed, XmDIALOG_HELP_BUTTON));
 
   XtAddCallback( Confirmed, XmNokCallback,
-          (XtCallbackProc) activateCB_Confirmed_OkButton,
+          activateCB_Confirmed_OkButton,
           (XtPointer) NULL );
 
   XtVaSetValues (Confirmed,
@@ -157,7 +157,7 @@ void display_question_message (Widget parent, char *message,
                    RES_CONVERT( XmNlabelString, button1),
                    NULL);
      XtAddCallback( QuestionDialog, XmNokCallback,
-             (XtCallbackProc) cb_button1,
+             cb_button1,
              (XtPointer) NULL );
   } else {
      XtUnmanageChild (tmpw);
@@ -169,7 +169,7 @@ void display_question_message (Widget parent, char *message,
                    RES_CONVERT( XmNlabelString, button2),
                    NULL);
      XtAddCallback( QuestionDialog, XmNcancelCallback,
-             (XtCallbackProc) cb_button2,
+             cb_button2,
              (XtPointer) NULL );
   } else {
      XtUnmanageChild (tmpw);
@@ -181,7 +181,7 @@ void display_question_message (Widget parent, char *message,
                    RES_CONVERT( XmNlabelString, button3),
                    NULL);
      XtAddCallback( QuestionDialog, XmNhelpCallback,
-             (XtCallbackProc) cb_button3,
+             cb_button3,
              (XtPointer) NULL );
   } else {
      XtUnmanageChild (tmpw);

@@ -325,7 +325,7 @@ extern	int	FalGetUDCGIArea(
 	int*		/* num_gr */
 ) ;
 
-extern	FalFontID	FalOpenFont() ;
+extern FalFontID FalOpenFont(char *file, int protect_key_data, int codeset);
 
 /*
  * Code set

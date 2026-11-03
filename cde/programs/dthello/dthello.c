@@ -649,7 +649,7 @@ main (int argc, char **argv)
     /* 
      * set up the timeout
      */
-    signal (SIGALRM, (void (*)()) CatchAlarm);
+    signal (SIGALRM, CatchAlarm);
     alarm (atoi(timeArg));
 
     /*

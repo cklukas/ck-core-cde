@@ -449,7 +449,7 @@ CreateBackdropDialog(
     XtAddCallback(style.backdropDialog, XmNcallback, ButtonCB, NULL);
     XtAddCallback(style.backdropDialog, XmNmapCallback, _DtMapCB, parent);
     XtAddCallback(style.backdropDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_BACKDROP_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_BACKDROP_DIALOG);
 
     /* free compound strings now */
     XmStringFree (strings[0]);

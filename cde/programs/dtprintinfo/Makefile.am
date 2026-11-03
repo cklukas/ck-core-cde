@@ -2,8 +2,14 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtprintinfo
 
-AM_CPPFLAGS = -I./UI -I./libUI -I./util -I./libUI/MotifUI -I./objects	\
-	-I./objects/PrintObj -DKORNSHELL=\"$(KSH)\"
+AM_CPPFLAGS = \
+	-I$(builddir)/UI -I$(srcdir)/UI \
+	-I$(builddir)/libUI -I$(srcdir)/libUI \
+	-I$(builddir)/util -I$(srcdir)/util \
+	-I$(builddir)/libUI/MotifUI -I$(srcdir)/libUI/MotifUI \
+	-I$(builddir)/objects -I$(srcdir)/objects \
+	-I$(builddir)/objects/PrintObj -I$(srcdir)/objects/PrintObj \
+	-DKORNSHELL=\"$(KSH)\"
 
 dtprintinfo_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB)
 
@@ -52,7 +58,7 @@ dtprintinfo_SOURCES = $(UTIL_SRC) $(LIBUI_SRC) $(OBJ_SRC) $(UI_SRC)	\
 	DtPrintinfo.C dtprintinfomsg.h
 
 # special processing for message files
-SYM2NUM_CMD = CPP=$(GENCPP) $(KSH) sym2num
+SYM2NUM_CMD = CPP=$(GENCPP) $(KSH) $(srcdir)/sym2num
 
 BUILT_SOURCES = dtprintinfo_cat.h dtprintinfo_msg.h dtprintinfo.msg
 CLEANFILES = $(BUILT_SOURCES)
@@ -66,11 +72,11 @@ CLEANFILES = $(BUILT_SOURCES)
 # with dtprintinfo.msg.
 dtprintinfo_msg.h:
 
-dtprintinfo.msg: dtprintinfo.msg.src
+dtprintinfo.msg: $(srcdir)/dtprintinfo.msg.src
 	$(RM) dtprintinfo_msg.h dtprintinfo.msg
-	$(SYM2NUM_CMD) dtprintinfo dtprintinfo.msg.src > dtprintinfo.msg
+	$(SYM2NUM_CMD) dtprintinfo $(srcdir)/dtprintinfo.msg.src > dtprintinfo.msg
 
-dtprintinfo_cat.h: dtprintinfo.msg.src
+dtprintinfo_cat.h: $(srcdir)/dtprintinfo.msg.src
 	$(RM) dtprintinfo_cat.h
-	$(AWK) -f msg.awk dtprintinfo.msg.src > dtprintinfo_cat.h
+	$(AWK) -f $(srcdir)/msg.awk $(srcdir)/dtprintinfo.msg.src > dtprintinfo_cat.h
 

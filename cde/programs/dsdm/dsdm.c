@@ -88,8 +88,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 
-extern void ProxyInit(Display *dpy, Window dsdm_win);
-extern void ProxyMain(Display *dpy, XEvent *event);
+#include "dsdm.h"
 /*
  * Use DPRINTF to write debugging messages.  Place all arguments in an
  * extra pair of parentheses, like so:

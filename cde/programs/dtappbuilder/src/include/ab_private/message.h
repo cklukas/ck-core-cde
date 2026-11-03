@@ -48,6 +48,7 @@
 #define _ab_message_h
 
 extern void 	msgEd_show_dialog(
+		    void
 		);
 
 #endif /* _ab_message_h */

@@ -192,7 +192,7 @@ s_init()
 		if (! _desktop->init(_displayname, _TT_DESKTOP_X11)) {
 			return(TT_ERR_NOMP);
 		}
-		_desktop->set_error_handler((_Tt_dt_errfn)_tt_xio_handler);
+		_desktop->set_error_handler(_tt_xio_handler);
 
 		// set this field in the _Tt_s_mp object which will
 		// then be used to add the fd for the desktop

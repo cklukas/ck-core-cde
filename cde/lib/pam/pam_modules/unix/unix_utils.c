@@ -30,9 +30,9 @@
 
 #include "unix_headers.h"
 
-static char 	*spskip();
-static int	special_case();
-static int	illegal_input();
+static char *spskip(char *p);
+static int special_case(char *str, char *default_str);
+static int illegal_input(pam_handle_t *pamh, char *input_str, int nowarn);
 static int	copy_passwd_structs(struct passwd **, struct passwd *,
 			struct spwd **, struct spwd *);
 
@@ -466,8 +466,7 @@ setup_attr(dest_attr, k, attr, value)
 
 #ifdef PAM_NISPLUS
 static char *
-spskip(p)
-	char *p;
+spskip(char *p)
 {
 	while (*p && *p != ':' && *p != '\n')
 		++p;
@@ -805,10 +804,7 @@ repository_to_string(int repository)
  * Returns '1' if a colon or newline is found or the input line is too long.
  */
 static int
-illegal_input(pamh, input_str, nowarn)
-	pam_handle_t *pamh;
-	char *input_str;
-	int nowarn;
+illegal_input(pam_handle_t *pamh, char *input_str, int nowarn)
 {
 	char *ptr;
 	int error_flag = 0;
@@ -867,8 +863,7 @@ illegal_input(pamh, input_str, nowarn)
  *  in these two cases.
  */
 static int
-special_case(str, default_str)
-	char *str, *default_str;
+special_case(char *str, char *default_str)
 {
 	static char word[] = "none\n";
 	char *ptr, *wordptr;

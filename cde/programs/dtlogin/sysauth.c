@@ -75,6 +75,9 @@
 #include	<stdio.h>
 #include	<fcntl.h>
 #include	<stdlib.h>
+#if defined(__linux__)
+#include	<crypt.h>
+#endif
 #include	<pwd.h>
 
 #if defined(PAM) || defined(HAS_PAM_LIBRARY)
@@ -635,7 +638,6 @@ Authenticate( struct display *d, char *name, char *passwd, char **msg )
 
     static int		login_attempts = 0; /* # failed authentications	   */
     struct passwd	*p;		/* password structure */
-    char 		*crypt();
     char               *origpw;
     int loginType;
     char tty[128];
@@ -990,7 +992,6 @@ Authenticate( struct display *d, char *name, char *passwd, char **msg )
     static int		login_attempts = 0; /* # failed authentications	   */
     
     struct passwd	*p;		/* password structure */
-    char 		*crypt();
 
     int			n;
 

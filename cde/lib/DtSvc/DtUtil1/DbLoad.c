@@ -85,11 +85,11 @@
 #include "myassertP.h"
 #include "DtSvcLock.h"
 
-extern	void	_DtDtsDCConverter(DtDtsDbField * fields,
+extern	Boolean	_DtDtsDCConverter(DtDtsDbField * fields,
 	       DtDbPathId pathId,
 	       char *hostPrefix,
 	       Boolean rejectionStatus);
-extern	void	_DtDtsDAConverter(DtDtsDbField * fields,
+extern	Boolean	_DtDtsDAConverter(DtDtsDbField * fields,
 	       DtDbPathId pathId,
 	       char *hostPrefix,
 	       Boolean rejectionStatus);
@@ -104,7 +104,7 @@ char **_DtsDbListDb(void);
 
 int      use_in_memory_db = False;
 
-static void
+static Boolean
 _DtOAConverter(DtDtsDbField * fields,
 	       DtDbPathId pathId,
 	       char *hostPrefix,
@@ -125,7 +125,7 @@ _DtOAConverter(DtDtsDbField * fields,
 				fields[0].fieldValue))
 	{
 		_DtSvcProcessUnlock();
-		return;
+		return False;
 	}
 
 	/*
@@ -187,6 +187,7 @@ _DtOAConverter(DtDtsDbField * fields,
 	fld->fieldName = XrmStringToQuark(DtDTS_DA_COPY_TO_ACTION);
 	fld->fieldValue = strdup(fields[0].fieldValue);
 	_DtSvcProcessUnlock();
+	return False;
 }
 
 
@@ -266,21 +267,21 @@ _DtDtsMMCreateDb(DtDirPaths *dirs, const char *CacheFile, int override)
 	}
 
 	/* Build up the record descriptions */
-	criteriaConverters[0] = (DtDbConverter) _DtDtsDCConverter;
+	criteriaConverters[0] = _DtDtsDCConverter;
 	criteriaConverters[1] = NULL;
 	recordDescriptions[0].recordKeyword = DtDTS_DC_NAME;
 	recordDescriptions[0].maxFields = _DtMAX_NUM_FIELDS;
 	recordDescriptions[0].converters = criteriaConverters;
 
 	/* Build up the ot record descriptions */
-	attributesConverters[0] = (DtDbConverter) _DtDtsDAConverter;
+	attributesConverters[0] = _DtDtsDAConverter;
 	attributesConverters[1] = NULL;
 	recordDescriptions[1].recordKeyword = DtDTS_DA_NAME;
 	recordDescriptions[1].maxFields = _DtMAX_NUM_FIELDS;
 	recordDescriptions[1].converters = attributesConverters;
 
-	actionConverters[0] = (DtDbConverter) _DtActionConverter;
-	actionConverters[1] = (DtDbConverter) _DtOAConverter;
+	actionConverters[0] = _DtActionConverter;
+	actionConverters[1] = _DtOAConverter;
 	actionConverters[2] = NULL;
 	recordDescriptions[2].recordKeyword = _DtACTION_NAME;
 	recordDescriptions[2].maxFields = _ActDb_MAX_NUM_FIELDS;

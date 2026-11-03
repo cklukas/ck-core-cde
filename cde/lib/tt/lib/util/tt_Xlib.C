@@ -55,7 +55,7 @@ _Tt_xt _tt_xt;
 // from it. 
 // 
 int
-_tt_load_xlib()
+_tt_load_xlib(void)
 {
 	static int	loaded = 0;
 
@@ -109,7 +109,7 @@ _tt_load_xlib()
 }
 
 int
-_tt_load_xt()
+_tt_load_xt(void)
 {
 	static int	loaded = 0;
 
@@ -172,19 +172,12 @@ _tt_load_xt()
 static int
 load_xlib_fns_from_handle(void *xlib_handle)
 {
-#if defined(__STDC__)
 #define	DLINK_FN(fn)\
-	_tt_xlib . fn = (_Tt_xfn_ptr)dlsym(xlib_handle, #fn);		\
-	if ( _tt_xlib . fn  == (_Tt_xfn_ptr)0) {			\
+	_tt_xlib.fn = reinterpret_cast<decltype(_tt_xlib.fn)>(		\
+		dlsym(xlib_handle, #fn));				\
+	if (_tt_xlib.fn == nullptr) {					\
 		return(0);						\
 	}								
-#else /* __STDC__ */
-#define	DLINK_FN(fn)\
-	_tt_xlib . fn = (_Tt_xfn_ptr)dlsym(xlib_handle, "fn");		\
-	if ( _tt_xlib . fn  == (_Tt_xfn_ptr)0) {			\
-		return(0);						\
-	}								
-#endif /* __STDC__ */
 
 	DLINK_FN(XOpenDisplay)
 	DLINK_FN(XCloseDisplay)
@@ -223,24 +216,17 @@ load_xlib_fns_from_handle(void *xlib_handle)
 static int
 load_xt_fns_from_handle(void *xt_handle)
 {
-#if defined(__STDC__)
 #define	DLINK_FN(fn)\
-	_tt_xt . fn = (_Tt_xfn_ptr)dlsym(xt_handle, #fn);		\
-	if ( _tt_xt . fn  == (_Tt_xfn_ptr)0) {				\
+	_tt_xt.fn = reinterpret_cast<decltype(_tt_xt.fn)>(		\
+		dlsym(xt_handle, #fn));					\
+	if (_tt_xt.fn == nullptr) {					\
 		return(0);						\
 	}								
 #define	DLINK_FNV(fn)\
-	_tt_xt . fn = (void*)(_Tt_xfn_ptr)dlsym(xt_handle, #fn);	\
-	if ( _tt_xt . fn  == (_Tt_xfn_ptr)0) {				\
+	_tt_xt.fn = dlsym(xt_handle, #fn);				\
+	if (_tt_xt.fn == nullptr) {					\
 		return(0);						\
 	}
-#else /* __STDC__ */
-#define	DLINK_FN(fn)\
-	_tt_xt . fn = (_Tt_xfn_ptr)dlsym(xt_handle, "fn");		\
-	if ( _tt_xt . fn  == (_Tt_xfn_ptr)0) {				\
-		return(0);						\
-	}								
-#endif /* __STDC__ */
 
 	DLINK_FN(XtVaGetValues)
 	DLINK_FN(XtVaSetValues)
@@ -267,13 +253,13 @@ load_xt_fns_from_handle(void *xt_handle)
  */
 
 int
-_tt_load_xlib()
+_tt_load_xlib(void)
 {
 	return 1;
 }
 
 int
-_tt_load_xt()
+_tt_load_xt(void)
 {
 	return 1;
 }

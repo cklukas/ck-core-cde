@@ -66,13 +66,13 @@
 static void		find_callback(
 			    Widget      widget,
 			    XtPointer   client_data,
-			    XmSelectionBoxCallbackStruct *call_data
+			    XtPointer   call_data
 			);
 
 static void		cancel_callback(
 			    Widget      widget,
 			    XtPointer   client_data,
-			    XmSelectionBoxCallbackStruct *call_data
+			    XtPointer   call_data
 			);
 
 
@@ -107,12 +107,12 @@ brwsP_create_find_box(
 			ok_label;
 
         XtCallbackRec	find_callback_list[] = {
-                {(XtCallbackProc)find_callback, (XtPointer) NULL},
-                {(XtCallbackProc) NULL, (XtPointer) NULL}
+                {find_callback, (XtPointer) NULL},
+                {NULL, (XtPointer) NULL}
             };
         XtCallbackRec	cancel_callback_list[] = {
-                {(XtCallbackProc)cancel_callback, (XtPointer) NULL},
-                {(XtCallbackProc) NULL, (XtPointer) NULL}
+                {cancel_callback, (XtPointer) NULL},
+                {NULL, (XtPointer) NULL}
             };
 	Arg		args[3];
 	int		num_args = 0;
@@ -221,9 +221,10 @@ static void
 find_callback(
     Widget      widget,
     XtPointer   client_data,
-    XmSelectionBoxCallbackStruct *call_data
+    XtPointer   call_data
 )
 {
+    XmSelectionBoxCallbackStruct *selection_data = call_data;
     ABBrowser		b = NULL;
     Vwr			v;
     VNode		root_node;
@@ -255,7 +256,7 @@ find_callback(
     /*
      * Get instance name entered by user
      */
-    obj_name_str = objxm_xmstr_to_str(call_data->value);
+    obj_name_str = objxm_xmstr_to_str(selection_data->value);
 
     if (!obj_name_str)
 	return;
@@ -295,7 +296,7 @@ static void
 cancel_callback(
     Widget      widget,
     XtPointer   client_data,
-    XmSelectionBoxCallbackStruct *call_data
+    XtPointer   call_data
 )
 {
     XtUnmanageChild(widget);

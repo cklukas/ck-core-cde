@@ -2015,11 +2015,11 @@ NodeWindowAgent::create_ui()
   f_search_text = (WXmTextField*)(Widget)
       WXmTextField (search_area, "text", AM, args, n);
   XtAddEventHandler (*f_search_text, EnterWindowMask, False,
-		     (XtEventHandler) search_help, (XtPointer) this);
+		     search_help, (XtPointer) this);
   XtAddEventHandler (*f_search_text, LeaveWindowMask, False,
-		     (XtEventHandler) search_help, (XtPointer) this);
+		     search_help, (XtPointer) this);
   XtAddEventHandler (*f_search_text, FocusChangeMask, False,
-		     (XtEventHandler) search_help, (XtPointer) this);
+		     search_help, (XtPointer) this);
   ON_ACTIVATE (*f_search_text,		text_callback);
   help_agent().add_help_cb (*f_search_text);
 

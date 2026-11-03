@@ -73,7 +73,7 @@
 **       Private Function Declarations                                  **
 **                                                                      **
 **************************************************************************/
-static Vwr	create_proj_struct();
+static Vwr	create_proj_struct(void);
 
 static void	create_proj_ui_handles(
 		    Vwr		v
@@ -86,21 +86,21 @@ static void    	select_module(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 
 static void    	toggle_select_module(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 
 static void    	show_module(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 
 static void	enable_proj_actions(
@@ -132,7 +132,7 @@ static void 	pointer_motion_proc(
 		    Widget widget,
 		    XEvent *event,
 		    String *params,
-		    int num_params
+		    Cardinal *num_params
 		);
 		    
 static void	popdown_proj_window(
@@ -167,7 +167,7 @@ static void	project_bpress(
 		    Widget widget, 
 		    XEvent *event, 
 		    String *params, 
-		    int num_params
+		    Cardinal *num_params
 		);
 
 static int	project_select_rband(
@@ -198,11 +198,11 @@ static void	project_rband(
  * Project window Actions
  */
 static XtActionsRec projwin_actions[] = {
-    {"ModButtonPress",   (XtActionProc)project_bpress },
-    {"ModSelect",        (XtActionProc)select_module },
-    {"ModToggleSelect",  (XtActionProc)toggle_select_module },
-    {"ModShowModule",    (XtActionProc)show_module },
-    {"ModPointerMotion", (XtActionProc)pointer_motion_proc}
+    {"ModButtonPress",   project_bpress },
+    {"ModSelect",        select_module },
+    {"ModToggleSelect",  toggle_select_module },
+    {"ModShowModule",    show_module },
+    {"ModPointerMotion", pointer_motion_proc}
 };
 
 /* 
@@ -539,7 +539,7 @@ select_module(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     Vwr		v = NULL;
@@ -594,7 +594,7 @@ toggle_select_module(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     Vwr		v = NULL;
@@ -650,7 +650,7 @@ show_module(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     Vwr         v = NULL;
@@ -1014,7 +1014,7 @@ pointer_motion_proc(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     Vwr			v = NULL;
@@ -1101,14 +1101,15 @@ void
 proj_open_proj_okCB(
     Widget      widget,
     XtPointer   client_data,
-    XmSelectionBoxCallbackStruct *call_data
+    XtPointer   call_data
 )
 {
+    XmSelectionBoxCallbackStruct *selection_data = call_data;
     STRING      	proj_filename = (STRING) NULL;
     XmString		xm_buf = (XmString) NULL;
     DtbObjectHelpData	help_data = NULL;
 
-    proj_filename = (STRING)objxm_xmstr_to_str(call_data->value);
+    proj_filename = (STRING)objxm_xmstr_to_str(selection_data->value);
 
     /* If the file chooser selection text field is empty, return */
     if ( util_strempty(proj_filename) )
@@ -1154,7 +1155,7 @@ void
 proj_cancelCB(
     Widget              widget,
     XtPointer           client_data,
-    XmSelectionBoxCallbackStruct *call_data
+    XtPointer           call_data
 )
 {
     /* Pop down the file chooser.  This must be done
@@ -1169,20 +1170,21 @@ void
 proj_import_okCB(
     Widget              		widget,
     XtPointer				client_data,
-    XmSelectionBoxCallbackStruct	*call_data
+    XtPointer                           call_data
 )
 {
+    XmSelectionBoxCallbackStruct *selection_data = call_data;
     STRING 	file_name = (STRING) NULL;
     XmString	xm_buf = (XmString) NULL;
     BOOL	read_OK, write_OK;
     DtbObjectHelpData	help_data = NULL;
 
-    if (call_data->reason != XmCR_OK)
+    if (selection_data->reason != XmCR_OK)
     {
         return;
     }
 
-    file_name = (STRING)objxm_xmstr_to_str(call_data->value);
+    file_name = (STRING)objxm_xmstr_to_str(selection_data->value);
 
     /* If the file chooser selection text field is empty,
      * return, leaving the chooser up to give the user 
@@ -1356,7 +1358,7 @@ project_bpress(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     XButtonEvent        *bevent;

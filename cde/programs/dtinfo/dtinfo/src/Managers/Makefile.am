@@ -17,5 +17,5 @@ libManagers_a_AR = $(LD) -r -o
 BUILT_SOURCES = Managers.msg
 CLEANFILES = $(BUILT_SOURCES)
 
-Managers.msg:
-	cat $(Managers_MSGS) > $@
+Managers.msg: $(addprefix $(srcdir)/,$(Managers_MSGS))
+	cat $^ > $@

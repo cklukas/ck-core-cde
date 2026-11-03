@@ -379,7 +379,7 @@ menu_prop_init(
 
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNactivateCallback,
-                  (XtCallbackProc)prop_item_labeltypeCB, (XtPointer)&(pms->items));
+                  prop_item_labeltypeCB, (XtPointer)&(pms->items));
 
 	/* Item Mnemonic */
         prop_field_init(&(pms->item_mnemonic), cgen->mnemonic_field_label,

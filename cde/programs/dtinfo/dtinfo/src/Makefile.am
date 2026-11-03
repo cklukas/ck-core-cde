@@ -35,7 +35,7 @@ Prelude.h:
 	$(top_builddir)/programs/dtinfo/tools/misc/pmaker $(CLASSLIBS)
 
 Dtinfo: Dtinfo.res $(RESFILES)
-	$(CPP_PROGRAM) -traditional -nostdinc -C Dtinfo.res | $(TREERES) > $@
+	$(CPP_PROGRAM) -traditional -nostdinc -C $(srcdir)/Dtinfo.res | $(TREERES) > $@
 
 # dtinfo class dfile and hfile building for the modules
 include $(top_srcdir)/programs/dtinfo/dtinfo/src/dtinfo_dfiles_hfiles.mk
@@ -46,12 +46,17 @@ include $(top_srcdir)/programs/dtinfo/dtinfo/src/dtinfo_dfiles_hfiles.mk
 noinst_DATA = dtinfo.msg.updated
 
 dtinfo.msg.updated:
-	(msgs=; for i in $(MSGS) ; do msgs="$$msgs $$i/$$i.msg"; done; \
-	 cat $$msgs >dtinfo.cpp && \
-	 $(CPP_PROGRAM) -traditional -nostdinc -P -C dtinfo_msg.tmpl | $(MSGSETS) > dtinfo.msg.updated; \
-	 $(RM) dtinfo.cpp )
+	@set -e; \
+	 msgs=; for i in $(MSGS) ; do msgs="$$msgs $$i/$$i.msg"; done; \
+	 trap '$(RM) dtinfo.cpp dtinfo.msg.preprocessed $@.tmp' 0 1 2 3 15; \
+	 cat $$msgs > dtinfo.cpp; \
+	 $(CPP_PROGRAM) -traditional -nostdinc -P -C -I$(abs_builddir) \
+	   $(srcdir)/dtinfo_msg.tmpl > dtinfo.msg.preprocessed; \
+	 $(MSGSETS) < dtinfo.msg.preprocessed > $@.tmp; \
+	 mv $@.tmp $@
 
-CLEANFILES += dtinfo.msg.updated dtinfo.cpp
+CLEANFILES += dtinfo.msg.updated dtinfo.cpp dtinfo.msg.preprocessed \
+	      dtinfo.msg.updated.tmp
 
 ## dtinfo proper
 OLIASNORMALLIBS= Agents/libAgents.a Other/libOther.a			\

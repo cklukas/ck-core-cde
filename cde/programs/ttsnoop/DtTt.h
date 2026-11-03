@@ -356,10 +356,14 @@ void			_DtTtMessageUpdate(
 				Tt_message		msg,
 				Tt_message_callback	cb
 			);
+int			_DtCreateTemporaryFile(
+				const char *		prefix,
+				char **			path
+			);
 void			_DtOpen(
 				Widget			label,
 				const char *		cmd,
-				const char *		tempnamTemplate
+				const char *		temporaryPrefix
 			);
 void			_DtOpen(
 				Widget			label,
@@ -369,7 +373,7 @@ void			_DtOpen(
 				Widget			label,
 				void *			buf,
 				size_t			len,
-				const char *		tempnamTemplate
+				const char *		temporaryPrefix
 			);
 extern "C" {
 Boolean			_DtCanHelp(

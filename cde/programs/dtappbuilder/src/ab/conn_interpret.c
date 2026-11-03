@@ -232,18 +232,18 @@ get_when_callback(AB_WHEN	when)
 {
     switch (when)
     {
-      case AB_WHEN_UNDEF:		return (XtCallbackProc)NULL;
+      case AB_WHEN_UNDEF:		return NULL;
       case AB_WHEN_ACTIVATED:		return activate_when_cb;
-      case AB_WHEN_DESTROYED:		return (XtCallbackProc)NULL;
-      case AB_WHEN_DROPPED_ON:		return (XtCallbackProc)NULL;
-      case AB_WHEN_DOUBLE_CLICKED_ON:	return (XtCallbackProc)NULL;
-      case AB_WHEN_ITEM_SELECTED:	return (XtCallbackProc)NULL;
-      case AB_WHEN_POPPED_DOWN:		return (XtCallbackProc)NULL;
-      case AB_WHEN_POPPED_UP:		return (XtCallbackProc)NULL;
-      case AB_WHEN_REPAINT_NEEDED:	return (XtCallbackProc)NULL;
-      case AB_WHEN_NUM_VALUES:		return (XtCallbackProc)NULL;
+      case AB_WHEN_DESTROYED:		return NULL;
+      case AB_WHEN_DROPPED_ON:		return NULL;
+      case AB_WHEN_DOUBLE_CLICKED_ON:	return NULL;
+      case AB_WHEN_ITEM_SELECTED:	return NULL;
+      case AB_WHEN_POPPED_DOWN:		return NULL;
+      case AB_WHEN_POPPED_UP:		return NULL;
+      case AB_WHEN_REPAINT_NEEDED:	return NULL;
+      case AB_WHEN_NUM_VALUES:		return NULL;
     }
-    return (XtCallbackProc)NULL;
+    return NULL;
 }
 
 static INTERPRET_HANDLER

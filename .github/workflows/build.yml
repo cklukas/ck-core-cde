@@ -20,8 +20,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  linux-arm64:
+  linux-arm64-c23:
+    name: Linux ARM64 C23 (${{ matrix.compiler }})
     runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: GCC
+            cc: gcc
+            cxx: g++
+            clang_cast_policy: ''
+          - compiler: Clang
+            cc: clang
+            cxx: clang++
+            clang_cast_policy: '-Wno-error=cast-function-type-strict'
     steps:
       - uses: actions/checkout@v5
         with:
@@ -60,12 +73,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            autoconf automake bison build-essential cmake fakeroot flex ksh libatspi2.0-dev \
+            autoconf automake bison build-essential clang cmake fakeroot flex ksh libatspi2.0-dev \
             libdbus-1-dev libharfbuzz-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
             librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
             libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
             m4 ncompress opensp pkg-config python3 rpcsvc-proto tcl-dev x11-xserver-utils \
-            xbitmaps xfonts-utils curl patch xvfb xauth gcc-14 clang-19
+            xbitmaps xfonts-utils curl patch xvfb xauth
       - name: Build CK Core Motif ABI 9
         run: |
           set -eu
@@ -77,8 +90,9 @@ jobs:
           (cd motif-source && autoreconf -fi)
           cd "$RUNNER_TEMP/motif-build"
           "$GITHUB_WORKSPACE/motif-source/configure" --prefix="$prefix" \
+            CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
             --disable-demos --disable-static --enable-xft --enable-unicode-text \
-            --enable-atspi --enable-svg CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0'
+            --enable-atspi --enable-svg CFLAGS='-O1 -g0 -std=c23' CXXFLAGS='-O1 -g0'
           for component in bindings bitmaps config localized lib include tools/wml clients/uil; do
             make -j4 -C "$component"
             make -j1 -C "$component" install
@@ -95,29 +109,43 @@ jobs:
             'char XineramaQueryScreens(void);' \
             'int main(void) { return XineramaQueryScreens(); }' \
             > "$xinerama_probe.c"
-          cc "$xinerama_probe.c" -lXinerama -o "$xinerama_probe"
+          '${{ matrix.cc }}' "$xinerama_probe.c" -lXinerama -o "$xinerama_probe"
           prefix="$RUNNER_TEMP/motif"
           export PATH="$prefix/bin:$PATH"
           export CPPFLAGS="-I$prefix/include $(pkg-config --cflags xft)"
           export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
           export LD_LIBRARY_PATH="$prefix/lib"
-          cd cde-source/cde
-          ./autogen.sh
-          if ! ./configure CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0'; then
+          (cd cde-source/cde && ./autogen.sh)
+          cde_build="$RUNNER_TEMP/cde-build-${{ matrix.cc }}"
+          cde_build_log="$RUNNER_TEMP/cde-build-${{ matrix.cc }}.log"
+          strict_cflags='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type -Werror=incompatible-pointer-types -Werror=implicit-function-declaration ${{ matrix.clang_cast_policy }}'
+          mkdir "$cde_build"
+          cd "$cde_build"
+          if ! "$GITHUB_WORKSPACE/cde-source/cde/configure" \
+            CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
+            CFLAGS="$strict_cflags" \
+            CXXFLAGS='-O1 -g0'; then
             tail -n 200 config.log
             exit 1
           fi
           make -j1 -C programs/dtksh prepare-ksh
-          make -j4
-          for cc in gcc-14 clang-19; do
-            make -j1 -C programs/dtksh -f Makefile -f "$GITHUB_WORKSPACE/cde-source/scripts/check-dtksh-c23.mk" CC="$cc" check-dtksh-c23
-          done
+          if ! make --output-sync=target -j4 > "$cde_build_log" 2>&1; then
+            cat "$cde_build_log"
+            exit 1
+          fi
+          cat "$cde_build_log"
+          python3 "$GITHUB_WORKSPACE/cde-source/scripts/check-clang-cast-warnings.py" \
+            "$cde_build_log"
+          make -j1 -C programs/dtksh -f Makefile \
+            -f "$GITHUB_WORKSPACE/cde-source/scripts/check-dtksh-c23.mk" \
+            CC='${{ matrix.cc }}' check-dtksh-c23
           make -j4 check
           xvfb-run -a make -j1 -C programs/dtksh check-widget
           readelf -dW programs/dtwm/.libs/dtwm | grep -F 'libXm.so.9'
       - name: Build installed filesystem C API and test dtfile workflows
         run: |
           set -eu
+          strict_cflags='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type -Werror=incompatible-pointer-types -Werror=implicit-function-declaration ${{ matrix.clang_cast_policy }}'
           export TMPDIR="$RUNNER_TEMP/cde-tests"
           fs_prefix="$RUNNER_TEMP/filesystem"
           private_fixture="$(mktemp -d "$HOME/.cde-sync-test.XXXXXXXX")"
@@ -126,6 +154,7 @@ jobs:
           cmake -S fs-source -B "$RUNNER_TEMP/filesystem-build" \
             -DCMAKE_INSTALL_PREFIX="$fs_prefix" -DCMAKE_INSTALL_LIBDIR=lib \
             -DCK_CORE_FS_BUILD_BROWSER=OFF -DBUILD_TESTING=OFF \
+            -DCMAKE_CXX_COMPILER='${{ matrix.cxx }}' \
             -DCMAKE_CXX_FLAGS='-O1 -g0'
           cmake --build "$RUNNER_TEMP/filesystem-build" --parallel 4
           cmake --install "$RUNNER_TEMP/filesystem-build"
@@ -135,8 +164,20 @@ jobs:
           export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
           export LD_LIBRARY_PATH="$prefix/lib:$fs_prefix/lib"
           export PKG_CONFIG_PATH="$fs_prefix/lib/pkgconfig"
-          cd cde-source/cde
-          ./configure --with-ck-core-fs CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0'
-          make -j4 -C programs/dtfile
+          cde_fs_build="$RUNNER_TEMP/cde-filesystem-${{ matrix.cc }}"
+          cde_fs_log="$RUNNER_TEMP/cde-filesystem-${{ matrix.cc }}.log"
+          mkdir "$cde_fs_build"
+          cd "$cde_fs_build"
+          "$GITHUB_WORKSPACE/cde-source/cde/configure" --with-ck-core-fs \
+            CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
+            CFLAGS="$strict_cflags" \
+            CXXFLAGS='-O1 -g0'
+          if ! make --output-sync=target -j4 -C programs/dtfile > "$cde_fs_log" 2>&1; then
+            cat "$cde_fs_log"
+            exit 1
+          fi
+          cat "$cde_fs_log"
+          python3 "$GITHUB_WORKSPACE/cde-source/scripts/check-clang-cast-warnings.py" \
+            "$cde_fs_log"
           make -j1 -C programs/localized/C/msg dtfile_sync.cat
           make -j1 -C programs/dtfile check

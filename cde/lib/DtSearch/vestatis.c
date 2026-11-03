@@ -167,7 +167,6 @@ static char     vestat_msgbuf[256];
 static int      mes_search_box;
 static int      slot_d00;
 
-extern char    *chmat ();
 extern void     find_keyword (char *cur_word, int vista_num);
 extern void     read_wordstr (struct or_hwordrec * glob_word, int vista_num);
 extern void     write_wordstr (struct or_hwordrec * glob_word, int vista_num);

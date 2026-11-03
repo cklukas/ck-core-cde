@@ -108,11 +108,11 @@ pam_sm_acct_mgmt(
 	return (error?PAM_SUCCESS:PAM_AUTH_ERR);
 }
 
-static
+static int
 parse_allow_name(char *who, char *cp)
 {
 	char name[256];
-	static char *getname();
+	static char *getname(char *cp, char *name);
 
 	/* catch "allow=" */
 	if (*cp == '\0')

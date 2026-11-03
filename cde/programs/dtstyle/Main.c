@@ -116,11 +116,12 @@ static int IOErrorHandler(
                         Display *disp ) ;
 
 static void ToolkitErrorHandler(
-                        char *message) ;
+                        char *message) _X_NORETURN ;
 static void errParentMap( 
                         Widget w,
                         XtPointer client_data,
-                        XEvent *event) ;
+                        XEvent *event,
+                        Boolean *continue_to_dispatch) ;
 static void UnmanageCB( 
                         Widget w,
                         XtPointer client_data,
@@ -142,7 +143,8 @@ static Boolean NewAllocColor( XtPointer shell) ;
 static Boolean NewBottomColor( XtPointer shell) ;
 static Boolean NewCreateButtons( XtPointer shell) ;
 
-extern void WaitChildDeath(void);
+static void ExitSignalHandler(int signal_number);
+static void WaitChildDeath(int signal_number);
 
 /*++++++++++++++++++++++++++++++++++++++*/
 /* Internal Variables                   */
@@ -296,7 +298,7 @@ ErrDialog(
     else
     {
         XtAddEventHandler(XtParent(style.errParent), StructureNotifyMask, 0,
-                          (XtEventHandler)errParentMap, NULL);
+                          errParentMap, NULL);
     }
 
 }
@@ -307,7 +309,8 @@ static void
 errParentMap(
         Widget w,
         XtPointer client_data,
-        XEvent *event )
+        XEvent *event,
+        Boolean *continue_to_dispatch )
 {
     if (event->type == MapNotify)
     {
@@ -315,7 +318,7 @@ errParentMap(
         /* ring the bell (PM behavior) */
         XBell(style.display, 0);
         XtRemoveEventHandler(XtParent(style.errParent), StructureNotifyMask,
-                             0, (XtEventHandler)errParentMap, NULL);
+                             0, errParentMap, NULL);
     }
 }
 
@@ -531,7 +534,7 @@ malloc_trace(0);
     XtAppSetErrorHandler(XtWidgetToApplicationContext(style.shell),
                          ToolkitErrorHandler);
     XtAddEventHandler(style.shell, StructureNotifyMask, 0,
-                         (XtEventHandler)MwmReparentNotify, NULL);
+                         MwmReparentNotify, NULL);
 
     /* set up resolution dependent layout variables */
     switch (_DtGetDisplayResolution(style.display, style.screenNum))
@@ -603,11 +606,11 @@ malloc_trace(0);
       GetDefaultPal(style.shell);
     }
     
-    signal(SIGINT,(void (*)())activateCB_exitBtn); 
-    signal(SIGTERM,(void (*)())activateCB_exitBtn); 
+    signal(SIGINT, ExitSignalHandler);
+    signal(SIGTERM, ExitSignalHandler);
 
     /* to avoid defunct screen saver processes */    
-    signal(SIGCHLD, (void (*)())WaitChildDeath);
+    signal(SIGCHLD, WaitChildDeath);
 
     /* backdrop dialog  needs to know when the workspace changes to recolor 
        the bitmap displayed in the dialog */
@@ -1074,13 +1077,21 @@ NewCreateButtons(
  *  --------
  * 
  *************************************<->***********************************/
-void
-WaitChildDeath( void )
+static void
+ExitSignalHandler(int signal_number)
+{
+  (void) signal_number;
+  activateCB_exitBtn(NULL, NULL, NULL);
+}
+
+static void
+WaitChildDeath(int signal_number)
 {
   int   stat_loc;
   pid_t pid;
-  
+
+  (void) signal_number;
   pid = wait(&stat_loc);
-  signal(SIGCHLD,(void (*)())WaitChildDeath);
+  signal(SIGCHLD, WaitChildDeath);
 
 }

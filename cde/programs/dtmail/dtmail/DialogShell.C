@@ -98,7 +98,7 @@ DialogShell::initialize()
 #ifdef USE_EDITRES
     XtAddEventHandler(
 		_w, (EventMask) 0, True,
-		(XtEventHandler) _XEditResCheckMessages, NULL);
+		_XEditResCheckMessages, NULL);
 #endif
 
     installDestroyHandler();

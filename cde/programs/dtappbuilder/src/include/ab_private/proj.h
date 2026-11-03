@@ -129,6 +129,7 @@ extern int 	proj_destroy_project(
 		);
 
 extern ABObj	proj_get_project(
+		    void
 		);
 
 extern int	proj_set_cur_module(
@@ -136,6 +137,7 @@ extern int	proj_set_cur_module(
 		);
 
 extern ABObj	proj_get_cur_module(
+		    void
 		);
 
 extern int	proj_rename_module(
@@ -214,13 +216,13 @@ extern int 	proj_show_proj_dir(void);
 extern void	proj_open_proj_okCB(
 		    Widget      		widget,
                     XtPointer   		client_data,
-                    XmSelectionBoxCallbackStruct *call_data
+                    XtPointer                   call_data
 		);
 
 extern void	proj_cancelCB(
 		    Widget 			widget,
                     XtPointer           	client_data,
-                    XmSelectionBoxCallbackStruct *call_data
+                    XtPointer                   call_data
 		);
 
 
@@ -240,7 +242,7 @@ extern void 	proj_show_dialog(void);
 extern void 	proj_import_okCB(
 		    Widget              	widget,
 		    XtPointer                	client_data,
-		    XmSelectionBoxCallbackStruct *call_data
+		    XtPointer                   call_data
 		);
 
 extern STRING 	proj_cvt_mod_file_to_rel_path(

@@ -548,7 +548,7 @@ CreateFontDlg(
     XtAddCallback(style.fontDialog, XmNmapCallback, _DtmapCB_fontBB, 
                             (XtPointer)parent);
     XtAddCallback(style.fontDialog, XmNhelpCallback,
-            (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_FONT_DIALOG);
+            HelpRequestCB, (XtPointer)HELP_FONT_DIALOG);
 
     XmStringFree(button_string[0]);
     XmStringFree(button_string[1]);

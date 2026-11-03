@@ -218,6 +218,8 @@ static void menu_handler(Widget, XtPointer, XEvent *, Boolean *);
 static void popupHandler(Widget, XtPointer, XEvent *, Boolean *);
 static void new_cf_value(Widget, XtPointer, XtPointer);
 static void do_memory(Widget, XtPointer, XtPointer);
+static void do_ascii_callback(Widget, XtPointer, XtPointer);
+static void do_frame_callback(Widget, XtPointer, XtPointer);
 static void switch_mode(enum mode_type);
 static void update_cf_value(void);
 static int xerror_interpose(Display *, XErrorEvent *);
@@ -228,6 +230,24 @@ static void SaveSession(char *, char *);
 static void setCalcHints(void);
 
 static char * _DtcalcStripSpaces(char *);
+
+static void
+do_ascii_callback(Widget widget, XtPointer client_data, XtPointer call_data)
+{
+   (void)widget;
+   (void)client_data;
+   (void)call_data;
+   do_ascii();
+}
+
+static void
+do_frame_callback(Widget widget, XtPointer client_data, XtPointer call_data)
+{
+   (void)widget;
+   (void)client_data;
+   (void)call_data;
+   do_frame();
+}
 
 static void ProcessMotifSelection(Widget);
 static void create_menu_bar(Widget parent);
@@ -426,7 +446,7 @@ button_create(Widget owner, int row, int column, int maxrows, int maxcols)
   if (mtype != M_NONE) create_menu(mtype, button, n) ;
   val = (v->curwin << 16) + n ;
   XtAddCallback(button, XmNactivateCallback, do_button,  (XtPointer) val) ;
-  XtAddCallback(button, XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB, (XtPointer) val) ;
+  XtAddCallback(button, XmNhelpCallback, HelpRequestCB, (XtPointer) val) ;
   XtAddEventHandler(button, KeyPressMask | KeyReleaseMask,
                     FALSE, event_proc, NULL) ;
 
@@ -749,7 +769,7 @@ dtcalc_kpanel_create(Widget owner)
 
 #ifdef HAVE_EDITRES
     XtAddEventHandler(owner, 0, True,
-                      (XtEventHandler) _XEditResCheckMessages,
+                      _XEditResCheckMessages,
                       (XtPointer) NULL);
 #endif
 
@@ -786,7 +806,7 @@ dtcalc_kpanel_create(Widget owner)
                                       XmNleftAttachment,     XmATTACH_FORM,
                                       XmNnavigationType,     XmTAB_GROUP,
                                       NULL) ;
-  XtAddCallback(X->textFrame, XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+  XtAddCallback(X->textFrame, XmNhelpCallback, HelpRequestCB,
                                                  (XtPointer)HELP_DISPLAY) ;
 
   X->textForm = XtVaCreateManagedWidget("textForm",
@@ -796,7 +816,7 @@ dtcalc_kpanel_create(Widget owner)
                                       XmNbackground,         tmp_pixelbg,
                                       XmNforeground,         tmp_pixelfg,
                                       NULL) ;
-  XtAddCallback(X->textForm, XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+  XtAddCallback(X->textForm, XmNhelpCallback, HelpRequestCB,
                                                  (XtPointer)HELP_DISPLAY) ;
 
   X->modevals[(int) DISPLAYITEM] = XtVaCreateManagedWidget("display",
@@ -813,7 +833,7 @@ dtcalc_kpanel_create(Widget owner)
                                        XmNbackground,         tmp_pixelbg,
                                        XmNforeground,         tmp_pixelfg,
                                        NULL) ;
-  XtAddCallback(X->modevals[(int) DISPLAYITEM], XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+  XtAddCallback(X->modevals[(int) DISPLAYITEM], XmNhelpCallback, HelpRequestCB,
                                                     (XtPointer) HELP_DISPLAY) ;
   XtAddEventHandler(X->modevals[(int) DISPLAYITEM],
                 KeyPressMask | KeyReleaseMask, FALSE, event_proc, NULL) ;
@@ -831,7 +851,7 @@ dtcalc_kpanel_create(Widget owner)
                                       XmNleftAttachment,     XmATTACH_FORM,
                                       XmNnavigationType,     XmTAB_GROUP,
                                       NULL) ;
-  XtAddCallback(X->modeFrame, XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+  XtAddCallback(X->modeFrame, XmNhelpCallback, HelpRequestCB,
                                                    (XtPointer) HELP_MODELINE) ;
 
   X->modeline = XtVaCreateManagedWidget("modeline",
@@ -839,7 +859,7 @@ dtcalc_kpanel_create(Widget owner)
                     X->modeFrame,
                     XmNshadowThickness, 0,
                     NULL) ;
-  XtAddCallback(X->modeline, XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+  XtAddCallback(X->modeline, XmNhelpCallback, HelpRequestCB,
                                                     (XtPointer) HELP_MODELINE) ;
 
   label_string = XmStringCreateLocalized ("                        ");
@@ -853,7 +873,7 @@ dtcalc_kpanel_create(Widget owner)
                        XmNalignment, XmALIGNMENT_CENTER,
                        XmNlabelString, label_string,
                        NULL) ;
-  XtAddCallback(X->modevals[i], XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+  XtAddCallback(X->modevals[i], XmNhelpCallback, HelpRequestCB,
                                                     (XtPointer) HELP_MODELINE) ;
 
   i = (int) HYPITEM;
@@ -867,7 +887,7 @@ dtcalc_kpanel_create(Widget owner)
                        XmNalignment, XmALIGNMENT_CENTER,
                        XmNlabelString, label_string,
                        NULL) ;
-  XtAddCallback(X->modevals[i], XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+  XtAddCallback(X->modevals[i], XmNhelpCallback, HelpRequestCB,
                                                     (XtPointer) HELP_MODELINE) ;
 
   i = (int) INVITEM;
@@ -881,7 +901,7 @@ dtcalc_kpanel_create(Widget owner)
                        XmNalignment, XmALIGNMENT_CENTER,
                        XmNlabelString, label_string,
                        NULL) ;
-  XtAddCallback(X->modevals[i], XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+  XtAddCallback(X->modevals[i], XmNhelpCallback, HelpRequestCB,
                                                     (XtPointer) HELP_MODELINE) ;
   XmStringFree(label_string);
 
@@ -932,7 +952,7 @@ dtcalc_kpanel_create(Widget owner)
     XtSetArg(args[n], XmNmenuHistory, modeArry[(int)v->modetype]);    n++;
     X->modevals[i] = XmCreateOptionMenu(X->modeline, "mode", args, n);
     XtManageChild (X->modevals[i]);
-    XtAddCallback(X->modevals[i], XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+    XtAddCallback(X->modevals[i], XmNhelpCallback, HelpRequestCB,
                                                        (XtPointer) HELP_MODE) ;
 
     XtOverrideTranslations(X->modevals[i], trans_table);
@@ -996,7 +1016,7 @@ dtcalc_kpanel_create(Widget owner)
     XtSetArg(args[n], XmNmenuHistory, X->baseWidgArry[(int)v->base]); n++;
     X->modevals[i] = XmCreateOptionMenu(X->modeline, "base", args, n);
     XtManageChild (X->modevals[i]);
-    XtAddCallback(X->modevals[i], XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+    XtAddCallback(X->modevals[i], XmNhelpCallback, HelpRequestCB,
                                                       (XtPointer) HELP_BASE) ;
 
     XtOverrideTranslations(X->modevals[i], trans_table);
@@ -1050,7 +1070,7 @@ dtcalc_kpanel_create(Widget owner)
     XtSetArg(args[n], XmNmenuHistory, X->numWidgArry[(int)v->dtype]);  n++;
     X->modevals[i] = XmCreateOptionMenu(X->modeline, "num", args, n);
     XtManageChild (X->modevals[i]);
-    XtAddCallback(X->modevals[i], XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer))  HelpRequestCB,
+    XtAddCallback(X->modevals[i], XmNhelpCallback, HelpRequestCB,
                                                    (XtPointer) HELP_NOTATION) ;
 
     XtOverrideTranslations(X->modevals[i], trans_table);
@@ -1108,7 +1128,7 @@ dtcalc_kpanel_create(Widget owner)
     XtSetArg(args[n], XmNmenuHistory, X->ttypeWidgArry[(int)v->ttype]); n++;
     X->modevals[i] = XmCreateOptionMenu(X->modeline, "trig", args, n);
     XtManageChild (X->modevals[i]);
-    XtAddCallback(X->modevals[i], XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+    XtAddCallback(X->modevals[i], XmNhelpCallback, HelpRequestCB,
                                                       (XtPointer) HELP_TRIG) ;
 
     XtOverrideTranslations(X->modevals[i], trans_table);
@@ -2330,7 +2350,7 @@ new_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
       XmStringFree(cstr) ;
 
       XtRemoveAllCallbacks(X->CFpi_butHelp, XmNactivateCallback);
-      XtAddCallback(X->CFpi_butHelp, XmNactivateCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+      XtAddCallback(X->CFpi_butHelp, XmNactivateCallback, HelpRequestCB,
                                                     (XtPointer) HELP_CONSTANT);
     }
   else
@@ -2343,7 +2363,7 @@ new_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
       XmStringFree(cstr) ;
 
       XtRemoveAllCallbacks(X->CFpi_butHelp, XmNactivateCallback);
-      XtAddCallback(X->CFpi_butHelp, XmNactivateCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+      XtAddCallback(X->CFpi_butHelp, XmNactivateCallback, HelpRequestCB,
                                                     (XtPointer) HELP_FUNCTION);
     }
 
@@ -2613,7 +2633,7 @@ show_ascii_frame(void)      /* Display ASCII popup. */
       XtAddCallback(X->Api_butOK,  XmNactivateCallback, show_ascii, NULL) ;
       XtAddCallback(X->Api_butClose, XmNactivateCallback, close_ascii,
                                                           (XtPointer) NULL) ;
-      XtAddCallback(X->Api_butHelp, XmNactivateCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+      XtAddCallback(X->Api_butHelp, XmNactivateCallback, HelpRequestCB,
                                                     (XtPointer) HELP_ASCII) ;
 
       j = 0;
@@ -3290,7 +3310,7 @@ create_menu_bar(Widget parent)
    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM);  n++;
    X->menubar = XmCreateMenuBar(parent, "mainMenu", args, n);
    XtManageChild(X->menubar);
-   XtAddCallback(X->menubar, XmNhelpCallback, (void (*)(Widget, XtPointer, XtPointer)) HelpRequestCB,
+   XtAddCallback(X->menubar, XmNhelpCallback, HelpRequestCB,
                  (XtPointer)HELP_MENUBAR);
 
    mnemonic = GETMESSAGE(2, 13, "O");
@@ -3320,7 +3340,7 @@ create_menu_bar(Widget parent)
    mem_reg = XmCreatePushButtonGadget (lastMenuPane, "memR", args, 2);
    XtManageChild(mem_reg);
    XmStringFree(labelString);
-   XtAddCallback(mem_reg, XmNactivateCallback, (XtCallbackProc)do_memory,
+   XtAddCallback(mem_reg, XmNactivateCallback, do_memory,
                                                                (XtPointer)MEM);
 
    mnemonic = GETMESSAGE(2, 45, "g");
@@ -3332,7 +3352,7 @@ create_menu_bar(Widget parent)
    mem_reg = XmCreatePushButtonGadget (lastMenuPane, "finR", args, 2);
    XtManageChild(mem_reg);
    XmStringFree(labelString);
-   XtAddCallback(mem_reg, XmNactivateCallback, (XtCallbackProc)do_memory,
+   XtAddCallback(mem_reg, XmNactivateCallback, do_memory,
                                                                (XtPointer)FIN);
 
    mnemonic = GETMESSAGE(2, 41, "A");
@@ -3343,7 +3363,7 @@ create_menu_bar(Widget parent)
    child = XmCreatePushButtonGadget (lastMenuPane, "asc", args, 2);
    XtManageChild(child);
    XmStringFree(labelString);
-   XtAddCallback(child, XmNactivateCallback, (XtCallbackProc)do_ascii,
+   XtAddCallback(child, XmNactivateCallback, do_ascii_callback,
                                                          (XtPointer)NULL);
 
   if(_DtNl_is_multibyte)
@@ -3360,7 +3380,7 @@ create_menu_bar(Widget parent)
    child = XmCreatePushButtonGadget (lastMenuPane, "enterFunc", args, 2);
    XtManageChild(child);
    XmStringFree(labelString);
-   XtAddCallback(child, XmNactivateCallback, (XtCallbackProc)new_cf_value,
+   XtAddCallback(child, XmNactivateCallback, new_cf_value,
                                                       (XtPointer)(int)M_FUN);
 
    mnemonic = GETMESSAGE(2, 43, "C");
@@ -3371,7 +3391,7 @@ create_menu_bar(Widget parent)
    child = XmCreatePushButtonGadget (lastMenuPane, "enterCons", args, 2);
    XtManageChild(child);
    XmStringFree(labelString);
-   XtAddCallback(child, XmNactivateCallback, (XtCallbackProc)new_cf_value,
+   XtAddCallback(child, XmNactivateCallback, new_cf_value,
                                                       (XtPointer)(int)M_CON);
 
    child = (Widget)XmCreateSeparatorGadget(lastMenuPane, "separator",args,0);
@@ -3385,7 +3405,7 @@ create_menu_bar(Widget parent)
    child = XmCreatePushButtonGadget (lastMenuPane, "exit", args, 2);
    XtManageChild(child);
    XmStringFree(labelString);
-   XtAddCallback(child, XmNactivateCallback, (XtCallbackProc)do_frame,
+   XtAddCallback(child, XmNactivateCallback, do_frame_callback,
                                                           (XtPointer) NULL);
 
    n = 0;
@@ -3421,7 +3441,7 @@ create_menu_bar(Widget parent)
    WidgList[count++]=
        XmCreatePushButton(helpPulldown, "introduction", args, n );
    XtAddCallback(WidgList[count-1], XmNactivateCallback,
-       (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_INTRODUCTION);
+       HelpRequestCB, (XtPointer)HELP_INTRODUCTION);
    XmStringFree(labelString);
    XtFree(mnemonic);
 
@@ -3437,7 +3457,7 @@ create_menu_bar(Widget parent)
    XtSetArg(args[n], XmNlabelString, labelString);  n++;
    WidgList[count++]= XmCreatePushButton(helpPulldown, "toc", args, n );
    XtAddCallback(WidgList[count-1], XmNactivateCallback,
-       (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_TABLEOFCONTENTS);
+       HelpRequestCB, (XtPointer)HELP_TABLEOFCONTENTS);
    XmStringFree(labelString);
    XtFree(mnemonic);
 
@@ -3449,7 +3469,7 @@ create_menu_bar(Widget parent)
    XtSetArg(args[n], XmNlabelString, labelString);  n++;
    WidgList[count++]= XmCreatePushButton(helpPulldown, "tasks", args, n );
    XtAddCallback(WidgList[count-1], XmNactivateCallback,
-       (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_TASKS);
+       HelpRequestCB, (XtPointer)HELP_TASKS);
    XmStringFree(labelString);
    XtFree(mnemonic);
 
@@ -3461,7 +3481,7 @@ create_menu_bar(Widget parent)
    XtSetArg(args[n], XmNlabelString, labelString);  n++;
    WidgList[count++]= XmCreatePushButton(helpPulldown, "reference", args, n );
    XtAddCallback(WidgList[count-1], XmNactivateCallback,
-       (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_REFERENCE);
+       HelpRequestCB, (XtPointer)HELP_REFERENCE);
    XmStringFree(labelString);
    XtFree(mnemonic);
 
@@ -3473,7 +3493,7 @@ create_menu_bar(Widget parent)
    XtSetArg(args[n], XmNlabelString, labelString);  n++;
    WidgList[count++]= XmCreatePushButton(helpPulldown, "onItem", args, n );
    XtAddCallback(WidgList[count-1], XmNactivateCallback,
-       (XtCallbackProc)HelpModeCB, (XtPointer)NULL);
+       HelpModeCB, (XtPointer)NULL);
    XmStringFree(labelString);
    XtFree(mnemonic);
 
@@ -3489,7 +3509,7 @@ create_menu_bar(Widget parent)
    WidgList[count++]=
        XmCreatePushButton(helpPulldown, "usingHelp", args, n );
    XtAddCallback(WidgList[count-1], XmNactivateCallback,
-       (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_USING);
+       HelpRequestCB, (XtPointer)HELP_USING);
    XmStringFree(labelString);
    XtFree(mnemonic);
 
@@ -3505,7 +3525,7 @@ create_menu_bar(Widget parent)
    XtSetArg(args[n], XmNlabelString, labelString); n++;
    WidgList[count++]= XmCreatePushButton(helpPulldown, "about", args, n );
    XtAddCallback(WidgList[count-1], XmNactivateCallback,
-       (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_VERSION);
+       HelpRequestCB, (XtPointer)HELP_VERSION);
    XmStringFree(labelString);
    XtFree(mnemonic);
 
@@ -3758,7 +3778,7 @@ create_popup(Widget parent)
 				    XmNmnemonic, XStringToKeysym(
 						      GETMESSAGE(2, 40, "R") ),
 				    NULL);
-  XtAddCallback(memRegs, XmNactivateCallback, (XtCallbackProc)do_memory,
+  XtAddCallback(memRegs, XmNactivateCallback, do_memory,
                                                                (XtPointer)MEM);
 
 /* 2.  Finacial Registers ...  */
@@ -3770,7 +3790,7 @@ create_popup(Widget parent)
 				    XmNmnemonic, XStringToKeysym(
 						GETMESSAGE( 2, 45, "g" ) ),
 				    NULL);
-  XtAddCallback(memRegs, XmNactivateCallback, (XtCallbackProc)do_memory,
+  XtAddCallback(memRegs, XmNactivateCallback, do_memory,
                                                                (XtPointer)FIN);
 
 /* 3.  Ascii Converter ...  */
@@ -3782,7 +3802,7 @@ create_popup(Widget parent)
 					 XmNmnemonic, XStringToKeysym(
 						      GETMESSAGE(2, 41, "A") ),
 					 NULL);
-  XtAddCallback(X->asciiConv, XmNactivateCallback, (XtCallbackProc)do_ascii,
+  XtAddCallback(X->asciiConv, XmNactivateCallback, do_ascii_callback,
                                                          (XtPointer)NULL);
 
   if(_DtNl_is_multibyte)
@@ -3800,7 +3820,7 @@ create_popup(Widget parent)
 					XmNmnemonic, XStringToKeysym(
 						      GETMESSAGE(2, 42, "F") ),
                                 NULL);
-  XtAddCallback(X->enterFun, XmNactivateCallback, (XtCallbackProc)new_cf_value,
+  XtAddCallback(X->enterFun, XmNactivateCallback, new_cf_value,
                                                       (XtPointer)(int)M_FUN);
 
 /* 5.  Enter Constants ...  */
@@ -3812,7 +3832,7 @@ create_popup(Widget parent)
 					  XmNmnemonic, XStringToKeysym(
 						      GETMESSAGE(2, 43, "C") ),
 					  NULL);
-  XtAddCallback(X->enterConst, XmNactivateCallback,(XtCallbackProc)new_cf_value,
+  XtAddCallback(X->enterConst, XmNactivateCallback,new_cf_value,
                                                       (XtPointer)(int)M_CON);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
@@ -3843,7 +3863,7 @@ create_popup(Widget parent)
 
 
   XtAddCallback(helpI, XmNactivateCallback,
-                 (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_INTRODUCTION);
+                 HelpRequestCB, (XtPointer)HELP_INTRODUCTION);
   XmStringFree (label);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
@@ -3857,7 +3877,7 @@ create_popup(Widget parent)
                 NULL);
 
   XtAddCallback(helpToc, XmNactivateCallback,
-                (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_TABLEOFCONTENTS);
+                HelpRequestCB, (XtPointer)HELP_TABLEOFCONTENTS);
 
   XmStringFree(label);
 
@@ -3870,7 +3890,7 @@ create_popup(Widget parent)
                 NULL);
 
   XtAddCallback(helpT, XmNactivateCallback,
-                 (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_TASKS);
+                 HelpRequestCB, (XtPointer)HELP_TASKS);
 
   XmStringFree(label);
 
@@ -3884,7 +3904,7 @@ create_popup(Widget parent)
 
 
   XtAddCallback(helpR, XmNactivateCallback,
-                 (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_REFERENCE);
+                 HelpRequestCB, (XtPointer)HELP_REFERENCE);
 
   XmStringFree(label);
 
@@ -3897,7 +3917,7 @@ create_popup(Widget parent)
                 NULL);
 
   XtAddCallback(helpO, XmNactivateCallback,
-                 (XtCallbackProc)HelpModeCB, (XtPointer)NULL);
+                 HelpModeCB, (XtPointer)NULL);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
                         dummyHelp2, NULL, 0);
@@ -3912,7 +3932,7 @@ create_popup(Widget parent)
 
 
   XtAddCallback(helpU, XmNactivateCallback,
-                 (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_USING);
+                 HelpRequestCB, (XtPointer)HELP_USING);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
                         dummyHelp2, NULL, 0);
@@ -3927,7 +3947,7 @@ create_popup(Widget parent)
                 NULL);
 
   XtAddCallback(helpV, XmNactivateCallback,
-                 (XtCallbackProc)HelpRequestCB, (XtPointer)HELP_VERSION);
+                 HelpRequestCB, (XtPointer)HELP_VERSION);
 
   XmStringFree(label);
 
@@ -3955,12 +3975,12 @@ create_popup(Widget parent)
 				      XStringToKeysym(GETMESSAGE(2, 44, "X" )),
                                 NULL);
   XmStringFree(label);
-  XtAddCallback(X->Close, XmNactivateCallback,(XtCallbackProc)do_frame,
+  XtAddCallback(X->Close, XmNactivateCallback,do_frame_callback,
                                                       (XtPointer)(int)M_FUN);
 
   XtAddEventHandler(parent, ButtonPressMask, FALSE,
                                      popupHandler, (XtPointer) NULL) ;
-  XtAddCallback(X->popupMenu, XmNmapCallback,(XtCallbackProc)map_popup,
+  XtAddCallback(X->popupMenu, XmNmapCallback,map_popup,
                                                       (XtPointer)NULL);
 }
 

@@ -48,7 +48,7 @@ void
 ClientEventMgr::register_handler(ClientEventHandler *client, Widget widget)
 {
   XtAddEventHandler(widget, None, True,
-		    (XtEventHandler)dispatch, client);
+		    dispatch, client);
 }
 
 void

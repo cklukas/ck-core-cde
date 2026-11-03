@@ -31,18 +31,18 @@
  * (c) Copyright 1987, 1988, 1989, 1990 HEWLETT-PACKARD COMPANY */
 
 extern void AddWmResourceConverters (void);
-extern void WmCvtStringToAMBehavior (XrmValue *args, Cardinal numArgs, 
+extern void WmCvtStringToAMBehavior (XrmValue *args, Cardinal *numArgs,
 				 XrmValue *fromVal, XrmValue *toVal);
-extern void WmCvtStringToCFocus (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
-extern void WmCvtStringToCDecor (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
-extern void WmCvtStringToCFunc (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
-extern void WmCvtStringToFrameStyle (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
-extern void WmCvtStringToIDecor (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
-extern void WmCvtStringToIPlace (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
-extern void WmCvtStringToKFocus (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
-extern void WmCvtStringToSize (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
-extern void WmCvtStringToShowFeedback (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
-extern void WmCvtStringToUsePPosition (XrmValue *args, Cardinal numArgs, XrmValue *fromVal, XrmValue *toVal);
+extern void WmCvtStringToCFocus (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal);
+extern void WmCvtStringToCDecor (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal);
+extern void WmCvtStringToCFunc (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal);
+extern void WmCvtStringToFrameStyle (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal);
+extern void WmCvtStringToIDecor (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal);
+extern void WmCvtStringToIPlace (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal);
+extern void WmCvtStringToKFocus (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal);
+extern void WmCvtStringToSize (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal);
+extern void WmCvtStringToShowFeedback (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal);
+extern void WmCvtStringToUsePPosition (XrmValue *args, Cardinal *numArgs, XrmValue *fromVal, XrmValue *toVal);
 extern unsigned char *NextToken (unsigned char *pchIn, int *pLen, unsigned char **ppchNext);
 extern long DecStrToL (unsigned char *str, unsigned char **ptr);
 extern Boolean StringsAreEqual (unsigned char *pch1, unsigned char *pch2, int len);

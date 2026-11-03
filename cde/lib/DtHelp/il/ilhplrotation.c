@@ -733,7 +733,7 @@ DATA_OUT_PTR out
 }
 
 
-void _il_Rotate_Image_End()
+void _il_Rotate_Image_End(void)
 {
     Free_All_Buffers();
 }

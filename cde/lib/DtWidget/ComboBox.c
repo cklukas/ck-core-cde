@@ -130,13 +130,13 @@ static XmOffsetPtr cpot; /* Constraint part offset table */
 #define ScrollBarVisible( wid)      (wid && XtIsManaged( wid))
 
 static void	ClassInitialize (void);
-static void	Initialize (DtComboBoxWidget request, 
-			       DtComboBoxWidget new, ArgList given_args, 
+static void	Initialize (Widget request,
+			       Widget new, ArgList given_args,
 			       Cardinal *num_args);
-static XmNavigability WidgetNavigable (DtComboBoxWidget combo);
-static void	_ComboBoxFocusIn (DtComboBoxWidget combo, XEvent *event, 
+static XmNavigability WidgetNavigable (Widget combo);
+static void	_ComboBoxFocusIn (Widget combo, XEvent *event,
 				     char **params, Cardinal *num_params);
-static void	_ComboBoxFocusOut (DtComboBoxWidget combo, XEvent *event,
+static void	_ComboBoxFocusOut (Widget combo, XEvent *event,
 				      char **params, Cardinal *num_params);
 static void	DrawHighlight (DtComboBoxWidget combo, Boolean clear);
 static void	_ComboBoxActivate (Widget w, XEvent *event, char **params,
@@ -148,9 +148,9 @@ static void	_ComboBoxPrevTabGroup (Widget w, XEvent *event,
 static void	_ComboBoxNextTabGroup (Widget w, XEvent *event, 
 				char **params, Cardinal *num_params);
 static void	CheckResources (DtComboBoxWidget combo);
-static void	Destroy (DtComboBoxWidget combo);
-static void	Resize (DtComboBoxWidget combo);
-static void	Redisplay (DtComboBoxWidget w, XEvent *event, 
+static void	Destroy (Widget combo);
+static void	Resize (Widget combo);
+static void	Redisplay (Widget w, XEvent *event,
 			      Region region);
 static XtGeometryResult GeometryManager (Widget w, 
 					    XtWidgetGeometry *request, 
@@ -158,8 +158,8 @@ static XtGeometryResult GeometryManager (Widget w,
 static void	SetComboBoxSize (DtComboBoxWidget combo);
 static void	ForceChildSizes (DtComboBoxWidget combo);
 static void	LayoutChildren (DtComboBoxWidget combo);
-static Boolean	SetValues (DtComboBoxWidget current, 
-			      DtComboBoxWidget request, DtComboBoxWidget new);
+static Boolean	SetValues (Widget current, Widget request, Widget new,
+			      ArgList given_args, Cardinal *num_args);
 static void	ClearShadow (DtComboBoxWidget w, Boolean all);
 static void	DrawShadow (DtComboBoxWidget w);
 static char*	GetTextString (XmString xm_string);
@@ -343,12 +343,12 @@ static char ComboBoxListTranslationTable[] = "\
 ";
 
 static XtActionsRec ComboBoxActionTable[] = {
-       {"ComboBoxFocusIn",   (XtActionProc)_ComboBoxFocusIn},
-       {"ComboBoxFocusOut",  (XtActionProc)_ComboBoxFocusOut},
-       {"ComboBoxActivate",  (XtActionProc)_ComboBoxActivate},
-       {"ComboBoxKbdCancel", (XtActionProc)_ComboBoxKbdCancel},
-       {"ComboBoxPrevTabGroup", (XtActionProc)_ComboBoxPrevTabGroup},
-       {"ComboBoxNextTabGroup", (XtActionProc)_ComboBoxNextTabGroup},
+       {"ComboBoxFocusIn",   _ComboBoxFocusIn},
+       {"ComboBoxFocusOut",  _ComboBoxFocusOut},
+       {"ComboBoxActivate",  _ComboBoxActivate},
+       {"ComboBoxKbdCancel", _ComboBoxKbdCancel},
+       {"ComboBoxPrevTabGroup", _ComboBoxPrevTabGroup},
+       {"ComboBoxNextTabGroup", _ComboBoxNextTabGroup},
 };
 
 
@@ -506,7 +506,7 @@ static XmBaseClassExtRec baseClassExtRec = {
     NULL,                               /* compiled_ext_resources*/
     0,                                  /* num_ext_resources    */
     FALSE,                              /* use_sub_resources    */
-    (XmWidgetNavigableProc)WidgetNavigable,
+    WidgetNavigable,
 					/* widgetNavigable      */
     (XmFocusChangeProc)NULL,            /* focusChange          */
     (XmWrapperData)NULL			/* wrapperData 		*/
@@ -521,10 +521,10 @@ externaldef(dtcomboBoxclassrec) DtComboBoxClassRec dtComboBoxClassRec =
     (WidgetClass)&(xmManagerClassRec),		/* superclass         */    
     (String)"DtComboBox",			/* class_name         */    
     (Cardinal)sizeof(DtComboBoxPart),		/* widget_size        */    
-    (XtProc)ClassInitialize,			/* class_initialize   */    
+    ClassInitialize,				/* class_initialize   */
     (XtWidgetClassProc)NULL,			/* class_part_init    */    
     (XtEnum)FALSE,				/* class_inited       */    
-    (XtInitProc)Initialize,			/* initialize         */    
+    Initialize,					/* initialize         */
     (XtArgsProc)NULL,				/* initialize_hook    */    
     (XtRealizeProc)XtInheritRealize,		/* realize            */    
     (XtActionList)ComboBoxActionTable,		/* actions	       */    
@@ -536,10 +536,10 @@ externaldef(dtcomboBoxclassrec) DtComboBoxClassRec dtComboBoxClassRec =
     (XtEnum)XtExposeCompressMaximal,		/* compress_exposure  */    
     (Boolean)TRUE,				/* compress_enterleave*/    
     (Boolean)FALSE,				/* visible_interest   */    
-    (XtWidgetProc)Destroy,			/* destroy            */    
-    (XtWidgetProc)Resize,			/* resize             */    
-    (XtExposeProc)Redisplay,			/* expose             */    
-    (XtSetValuesFunc)SetValues,			/* set_values         */    
+    Destroy,					/* destroy            */
+    Resize,					/* resize             */
+    Redisplay,					/* expose             */
+    SetValues,					/* set_values         */
     (XtArgsFunc)NULL,				/* set values hook    */    
     (XtAlmostProc)XtInheritSetValuesAlmost,	/* set values almost  */    
     (XtArgsProc)NULL,				/* get values hook    */    
@@ -552,7 +552,7 @@ externaldef(dtcomboBoxclassrec) DtComboBoxClassRec dtComboBoxClassRec =
     (XtPointer)&baseClassExtRec			/* extension	      */
     },
     {		/* composite_class fields */
-    (XtGeometryHandler)GeometryManager,		/* geometry_manager   */     
+    GeometryManager,				/* geometry_manager   */
     (XtWidgetProc)XtInheritChangeManaged,	/* change_managed     */     
     (XtWidgetProc)XtInheritInsertChild,		/* insert_child	      */     
     (XtWidgetProc)XtInheritDeleteChild,		/* delete_child	      */     
@@ -627,11 +627,13 @@ ClassInitialize(void)
  * both widgets if the user never changes the type resource.
  */
 static void
-Initialize(	DtComboBoxWidget request,
-		DtComboBoxWidget new,
+Initialize(	Widget request_widget,
+		Widget new_widget,
 		ArgList given_args,
 		Cardinal *num_args)
 {
+    DtComboBoxWidget request = (DtComboBoxWidget)request_widget;
+    DtComboBoxWidget new = (DtComboBoxWidget)new_widget;
    /* use the address of the first element of DtComboBoxPart structure 
     * as of DtComboBoxPart 
     */    
@@ -868,10 +870,10 @@ Initialize(	DtComboBoxWidget request,
      * Set up event handlers needed for handling grab states.
      */
     XtInsertEventHandler(List(new), LIST_EVENTS, TRUE,
-			 (XtEventHandler)list_event_handler, 
+			 list_event_handler,
 			 (XtPointer)new, XtListHead);
     XtInsertEventHandler(Shell(new), SHELL_EVENTS, TRUE,
-			 (XtEventHandler)shell_event_handler, 
+			 shell_event_handler,
 			 (XtPointer)new, XtListHead);
 
     /*
@@ -894,8 +896,9 @@ Initialize(	DtComboBoxWidget request,
  * text-field), then let the toolkit give focus to the text-field.
  */
 static XmNavigability
-WidgetNavigable(DtComboBoxWidget combo)
-{   
+WidgetNavigable(Widget widget)
+{
+    DtComboBoxWidget combo = (DtComboBoxWidget)widget;
     XmNavigationType nav_type = NavigationType(((XmManagerWidget)combo));
 
     if (Sensitive(combo) &&  AncestorSensitive(combo) &&
@@ -918,11 +921,12 @@ WidgetNavigable(DtComboBoxWidget combo)
  * The combo_box gets focus.
  */
 static void 
-_ComboBoxFocusIn(	DtComboBoxWidget combo,
+_ComboBoxFocusIn(	Widget widget,
 			XEvent *event,
 			char **params,
 			Cardinal *num_params)
 {
+    DtComboBoxWidget combo = (DtComboBoxWidget)widget;
     DrawHighlight(combo, FALSE);
 }
 
@@ -930,11 +934,12 @@ _ComboBoxFocusIn(	DtComboBoxWidget combo,
  * The combo_box loses focus. Only happens if not editable.
  */
 static void 
-_ComboBoxFocusOut(	DtComboBoxWidget combo,
+_ComboBoxFocusOut(	Widget widget,
 			XEvent *event,
 			char **params,
 			Cardinal *num_params)
 {
+    DtComboBoxWidget combo = (DtComboBoxWidget)widget;
     DrawHighlight(combo, TRUE);
 }
 
@@ -1097,8 +1102,9 @@ CheckResources(	DtComboBoxWidget combo)
  * Destroy procedure called by the toolkit.  Free local resources
  */
 static void 
-Destroy(DtComboBoxWidget combo)
+Destroy(Widget widget)
 {
+    DtComboBoxWidget combo = (DtComboBoxWidget)widget;
     if (LabelString(combo))
 	XmStringFree(LabelString(combo));
     if (SelectedItem(combo))
@@ -1111,8 +1117,9 @@ Destroy(DtComboBoxWidget combo)
  * old_width and old_height.
  */
 static void
-Resize(DtComboBoxWidget combo)
+Resize(Widget widget)
 {
+    DtComboBoxWidget combo = (DtComboBoxWidget)widget;
     ClearShadow(combo, TRUE);
     LayoutChildren(combo);
     DrawShadow(combo);
@@ -1126,10 +1133,11 @@ Resize(DtComboBoxWidget combo)
  * so just redisplay the shadow.
  */
 static void
-Redisplay(	DtComboBoxWidget w,
+Redisplay(	Widget widget,
 		XEvent *event,
 		Region region)
 {
+    DtComboBoxWidget w = (DtComboBoxWidget)widget;
     DrawShadow(w);
 }
 
@@ -1458,10 +1466,18 @@ LayoutChildren(DtComboBoxWidget combo)
  * SetValues() routine for ComboBox widget. 
  */
 static Boolean
-SetValues(	DtComboBoxWidget current,
-		DtComboBoxWidget request,
-		DtComboBoxWidget new)
+SetValues(	Widget current_widget,
+		Widget request_widget,
+		Widget new_widget,
+		ArgList given_args,
+		Cardinal *num_args)
 {
+    DtComboBoxWidget current = (DtComboBoxWidget)current_widget;
+    DtComboBoxWidget request = (DtComboBoxWidget)request_widget;
+    DtComboBoxWidget new = (DtComboBoxWidget)new_widget;
+
+	(void)given_args;
+	(void)num_args;
     DtComboBoxPart *new_p = (DtComboBoxPart*)
 	&(XmField(new,ipot,DtComboBox,arrow,Widget));
     Boolean label_size_changed = FALSE;

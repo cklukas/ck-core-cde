@@ -8,11 +8,13 @@ CLEANFILES = mp_types_gram.h
 
 mp_types_gram.h:
 	$(RM) mp_types_gram.h
-	$(LN_S) frozen.mp_types_gram.h mp_types_gram.h
+	$(LN_S) $(abs_srcdir)/frozen.mp_types_gram.h mp_types_gram.h
 
 bin_PROGRAMS = tt_type_comp
 
 tt_type_comp_CXXFLAGS = -I../../lib -I../../slib \
+			-I$(top_srcdir)/lib/tt/lib \
+			-I$(top_srcdir)/lib/tt/slib \
 			$(TT_VERSION_DEFINE) -DCPP_PROGRAM="\"$(CPP_PROGRAM)\""
 
 tt_type_comp_SOURCES = mp_type_comp.C        mp_types_table.C \

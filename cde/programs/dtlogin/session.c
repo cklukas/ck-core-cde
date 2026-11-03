@@ -358,7 +358,7 @@ ManageSession( struct display *d )
    /* Display 		*dpy; */
 #ifdef BYPASSLOGIN
     char	*BypassUsername;
-    char	*BypassLogin();
+    char *BypassLogin(char *displayName);
 #endif /* BYPASSLOGIN */
         
 

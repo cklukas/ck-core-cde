@@ -85,12 +85,10 @@ extern char **errmsg_org;
 
 FalFontData fullFontData;
 
-void	PopupSelectXLFD() ;
-static Widget	CreateSelectXLFD() ;
+void PopupSelectXLFD(Widget top);
+static Widget CreateSelectXLFD(Widget top);
 
 /*extern	void	xlfdPopupDialog() ; dtex del*/
-extern	int	GetListsOfItems() ;
-
 /* extern	void	ReadCB(); dtex del */
 
 Widget	xlfdDialog;
@@ -390,7 +388,6 @@ static void OpenWindowCB() /* dtex change */
     char	*msg2;
     char	*msg3;
     char	err[128];
-    extern void selcharcd();
     char *locale;
     int mask = FAL_FONT_MASK_DEFINED | FAL_FONT_MASK_UNDEFINED
 	| FAL_FONT_MASK_XLFDNAME;

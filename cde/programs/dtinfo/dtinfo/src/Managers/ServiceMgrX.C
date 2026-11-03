@@ -85,11 +85,6 @@ extern char g_top_locator[];
 
 ServiceMgr::ServiceMgr()
 {
-#if 0
-  // We need to wait for the window to be mapped before doing anything
-  XtAddEventHandler (window_system().toplevel(), StructureNotifyMask, False,
-		     (XtEventHandler) handle_toplevel_mapped, this);
-#endif
 }
 
 
@@ -217,7 +212,7 @@ ServiceMgr::get_olias_event (XEvent *event)
 
   XtGetSelectionValue (window_system().toplevel(), selection,
 		       _XA_OLIAS_EVENT,
-		       (XtSelectionCallbackProc) receive_olias_event,
+		       receive_olias_event,
 		       this, time);		       
 }
 

@@ -1021,6 +1021,13 @@ SendMsgDialog::isMsgValid(void)
         return TRUE;
 }
 
+void
+SendMsgDialog::sendmailInputProc(XtPointer client_data, int *, XtInputId *)
+{
+    DtMail::Transport *transport = (DtMail::Transport *)client_data;
+    transport->processSendmailReturn();
+}
+
 
 // Sendmail is exed'd and this parent process returns immediately.  When
 // the sendmail child exits, this function is called with the pid of the 
@@ -1250,9 +1257,8 @@ SendMsgDialog::send_message(const char * trans_impl, int trans_type)
 	    // Call ourproc when input is available on _transfds[0]
 	    XtAppAddInput(XtWidgetToApplicationContext(this->_main_form),
 		_transfds[0], (XtPointer)XtInputReadMask,
-	        (XtInputCallbackProc)
-		    (theRoamApp.default_transport()->getSendmailReturnProc()),
-		NULL);
+	        SendMsgDialog::sendmailInputProc,
+		theRoamApp.default_transport());
 	    first_time = 0;
 	}
 
@@ -1286,8 +1292,8 @@ SendMsgDialog::send_message(const char * trans_impl, int trans_type)
 	    // Call ourproc when input is available on _transfds[0]
 	    XtAppAddInput(XtWidgetToApplicationContext(this->_main_form),
 		_transfds[0], (XtPointer)XtInputReadMask,
-		(XtInputCallbackProc)(mail_transport->getSendmailReturnProc()),
-		NULL);
+		SendMsgDialog::sendmailInputProc,
+		mail_transport);
 	    first_time = 0;
 	}
 

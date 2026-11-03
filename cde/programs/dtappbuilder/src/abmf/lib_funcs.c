@@ -66,6 +66,7 @@
 
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <Tt/tttk.h>
@@ -235,7 +236,7 @@ void dtb_save_toplevel_widget(
     Widget 	toplevel
 );
 
-Widget dtb_get_toplevel_widget();
+Widget dtb_get_toplevel_widget(void);
 
 void dtb_remove_sash_focus(
     Widget	panedwindow
@@ -245,7 +246,7 @@ void dtb_save_command(
     char *command
 );
 
-char *  dtb_get_command();
+char *  dtb_get_command(void);
 
 void dtb_help_dispatch(
     Widget 	widget,
@@ -262,7 +263,7 @@ void dtb_more_help_dispatch(
     XtPointer	clientData,
     XtPointer	callData
 );
-void dtb_do_onitem_help();
+void dtb_do_onitem_help(void);
 void dtb_show_help_volume_info(
     char	*volume_name,
     char	*location_id
@@ -320,7 +321,7 @@ void dtb_session_save(
     XtPointer	clientData,
     XtPointer	callData
 );
-DtbClientSessionSaveCB dtb_get_client_session_saveCB();
+DtbClientSessionSaveCB dtb_get_client_session_saveCB(void);
 
 void dtb_set_client_session_saveCB(
     DtbClientSessionSaveCB session_saveCB
@@ -333,7 +334,7 @@ void dtb_set_client_session_restoreCB(
     DtbClientSessionRestoreCB session_restoreCB
 );
 
-DtbClientSessionRestoreCB dtb_get_client_session_restoreCB();
+DtbClientSessionRestoreCB dtb_get_client_session_restoreCB(void);
 
 void dtb_set_tt_msg_quitCB(
     DtbTTMsgHandlerCB msg_quitCB
@@ -353,7 +354,7 @@ Tt_message dtb_tt_contractCB(
     Tt_message 		contract
 );
 
-void dtb_tt_close();
+void dtb_tt_close(void);
 
 
 #define dtb_cvt_string_to_pixel(parent, str) \
@@ -1025,7 +1026,7 @@ dtb_save_toplevel_widget(
 }
 
 Widget
-dtb_get_toplevel_widget()
+dtb_get_toplevel_widget(void)
 {
 	return(dtb_project_toplevel_widget);
 }
@@ -1083,7 +1084,7 @@ dtb_save_command(
 
 
 char * 
-dtb_get_command() 
+dtb_get_command(void)
 {
     return(dtb_save_command_str); 
 }
@@ -1297,7 +1298,7 @@ dtb_more_help_dispatch(
 ** main menubar's "Help" menu.
 */
 void
-dtb_do_onitem_help()
+dtb_do_onitem_help(void)
 {
     Widget	target;
 
@@ -1526,7 +1527,7 @@ dtb_session_save(
  * dtb_get_client_session_saveCB()
  */
 DtbClientSessionSaveCB
-dtb_get_client_session_saveCB()
+dtb_get_client_session_saveCB(void)
 {
     return(dtb_client_session_saveCB);
 
@@ -1610,7 +1611,7 @@ dtb_set_client_session_restoreCB(
  * dtb_get_client_session_restoreCB()
  */
 DtbClientSessionRestoreCB
-dtb_get_client_session_restoreCB()
+dtb_get_client_session_restoreCB(void)
 {
     return(dtb_client_session_restoreCB);
 
@@ -1850,18 +1851,18 @@ dtb_show_message(
 	return;
 
     /* Add Callbacks if necessary */
-    if (mbr->action1_callback != (XtCallbackProc) NULL)
+    if (mbr->action1_callback != NULL)
         XtAddCallback(msg_dlg, XmNokCallback, mbr->action1_callback, NULL);
-    if (mbr->cancel_callback != (XtCallbackProc) NULL)
+    if (mbr->cancel_callback != NULL)
         XtAddCallback(msg_dlg, XmNcancelCallback, mbr->cancel_callback, NULL);
-    if (mbr->action2_callback != (XtCallbackProc) NULL)
+    if (mbr->action2_callback != NULL)
     {
 	action_btn = dtb_MessageBoxGetActionButton(msg_dlg, DTB_ACTION2_BUTTON);
 	if (action_btn != NULL)
             XtAddCallback(action_btn, XmNactivateCallback,
 			  mbr->action2_callback, NULL);
     }
-    if (mbr->action3_callback != (XtCallbackProc) NULL)
+    if (mbr->action3_callback != NULL)
     {
         action_btn = dtb_MessageBoxGetActionButton(msg_dlg, DTB_ACTION3_BUTTON);        if (action_btn != NULL)
             XtAddCallback(action_btn, XmNactivateCallback,
@@ -1909,12 +1910,12 @@ dtb_show_modal_message(
     DtbObjectHelpData		help_data_copy = (DtbObjectHelpData)NULL;
     DTB_MODAL_ANSWER		answer = DTB_ANSWER_NONE;
     XtCallbackRec ok_callback[] = {
-            {(XtCallbackProc)modal_dlgCB, (XtPointer) DTB_ANSWER_ACTION1},
-            {(XtCallbackProc) NULL, (XtPointer) NULL}
+            {modal_dlgCB, (XtPointer) DTB_ANSWER_ACTION1},
+            {NULL, (XtPointer) NULL}
     };
     XtCallbackRec cancel_callback[] = {
-            {(XtCallbackProc)modal_dlgCB, (XtPointer) DTB_ANSWER_CANCEL},
-            {(XtCallbackProc) NULL, (XtPointer) NULL}
+            {modal_dlgCB, (XtPointer) DTB_ANSWER_CANCEL},
+            {NULL, (XtPointer) NULL}
     };
 
     if (override_help != (DtbObjectHelpData) NULL)
@@ -2107,7 +2108,7 @@ dtb_center(
 
    XtAddEventHandler(form_child,
             StructureNotifyMask, False,
-            centering_handler, (XtPointer)type);
+            centering_handler, (XtPointer)(uintptr_t)type);
 }
 
 /*
@@ -2128,7 +2129,7 @@ dtb_uncenter(
 
    XtRemoveEventHandler(form_child,
             StructureNotifyMask, False,
-            centering_handler, (XtPointer)type);
+            centering_handler, (XtPointer)(uintptr_t)type);
 }
 
 /*
@@ -2166,6 +2167,9 @@ center_widget(
                 NULL);
 
     switch (type) {
+	case DTB_CENTER_NONE:
+	break;
+
 	case DTB_CENTER_POSITION_VERT:
 
             if (left_attach != XmATTACH_POSITION)
@@ -2240,6 +2244,9 @@ uncenter_widget(
                 NULL);
 
     switch (type) {
+	case DTB_CENTER_NONE:
+	break;
+
 	case DTB_CENTER_POSITION_VERT:
 
             if (left_attach != XmATTACH_POSITION)
@@ -2289,7 +2296,7 @@ centering_handler(
 {
     XConfigureEvent	*xcon = &event->xconfigure;
     Widget		resized_child;
-    DTB_CENTERING_TYPES	type = (DTB_CENTERING_TYPES)client_data;
+    DTB_CENTERING_TYPES	type = (DTB_CENTERING_TYPES)(uintptr_t)client_data;
 
 
     if ((event->type != ConfigureNotify) && (event->type != MapNotify))
@@ -2735,6 +2742,10 @@ dtb_children_align(
 	case DTB_GROUP_ROWS:
 	    num_rows = 1;
 	    num_cols = 0;
+	break;
+
+	case DTB_GROUP_NONE:
+	case DTB_GROUP_ROWSCOLUMNS:
 	break;
 
     }
@@ -4302,7 +4313,7 @@ dtb_tt_contractCB(
  * Close ToolTalk Connection
  */
 void
-dtb_tt_close()
+dtb_tt_close(void)
 {
     ttdt_close(NULL, NULL, True);
 }
@@ -4328,7 +4339,8 @@ dtb_call_help_callback(
 static void     dtb_drag_button1_motion_handler(
                         Widget          dragInitiator,
                         XtPointer       clientData,
-                        XEvent         *event
+                        XEvent         *event,
+                        Boolean        *continueDispatch
 		);
 static int	dtb_drag_start(
 			DtbDragSite dragSite, 
@@ -4362,7 +4374,7 @@ dtb_popup_menu_register(Widget popupMenu, Widget parent)
     static XtTranslations	popupMenuTrans = NULL;
     static XtActionsRec		menuActions[] =
     {
-	{"DtbPopupMenu", (XtActionProc)dtb_popup_menu }
+        {"DtbPopupMenu", dtb_popup_menu }
     };
     int		i = 0;
     Boolean	foundEntry = False;
@@ -4525,7 +4537,7 @@ dtb_drag_site_register(
         dragSite->dragFinishCBRec[0].callback = dtb_drag_finishCB;
     
         XtAddEventHandler(widget, Button1MotionMask, False,
-            (XtEventHandler)dtb_drag_button1_motion_handler, 
+            dtb_drag_button1_motion_handler,
 	    (XtPointer)dragSite);
     }
     
@@ -4629,7 +4641,8 @@ static void
 dtb_drag_button1_motion_handler(
         Widget          dragInitiator,
         XtPointer       clientData,
-        XEvent         *event
+        XEvent         *event,
+        Boolean        *continueDispatch
 )
 {
     int             	diffX, diffY;

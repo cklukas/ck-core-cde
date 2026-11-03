@@ -84,7 +84,7 @@ static void resetdevperm(char *);
 #ifdef SUNAUTH
 static int login_conv(int conv_id, int num_msg, struct ia_message **msg,
     		      struct ia_response **response, void *appdata_ptr);
-static void end_conv();
+static void end_conv(void);
 
 static struct ia_conv ia_conv = {login_conv, login_conv, end_conv, NULL};
 static char *saved_user_passwd;
@@ -643,7 +643,7 @@ login_conv(int conv_id, int num_msg, struct ia_message **msg,
  *****************************************************************************/
 
 static void
-end_conv()
+end_conv(void)
 {}
 #endif SUNAUTH 
 

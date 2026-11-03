@@ -680,7 +680,7 @@ RoamMenuWindow::initialize()
     // This EH will handle exposure, configure notifies ...
     XtAddEventHandler(
 		this->baseWidget(), StructureNotifyMask, False,
-		(XtEventHandler) &RoamMenuWindow::structurenotify,
+		&RoamMenuWindow::structurenotify,
 		(XtPointer) this);
 
     _convertContainerCmd = new ConvertContainerCmd(
@@ -1220,7 +1220,7 @@ RoamMenuWindow::getDragIcon(
 //
 // Translation start a drag from the msg list
 //
-XtActionProc
+void
 RoamMenuWindow::msgListDragStart(
 	Widget		widget,
 	XEvent		*event,
@@ -1243,7 +1243,7 @@ RoamMenuWindow::msgListDragStart(
     XtVaGetValues(widget, XmNuserData, &rmw, NULL);
 
     if (rmw == NULL)
-	return NULL;
+	return;
 
     drag_icon = rmw->getDragIcon(widget);
     //drag_icon = NULL;
@@ -1272,7 +1272,6 @@ RoamMenuWindow::msgListDragStart(
 	DebugPrintf(3, "DragStart returned NULL.\n");
     }
 
-    return NULL;
 }
 
 /* ARGSUSED */
@@ -1392,9 +1391,9 @@ RoamMenuWindow::msgListDragSetup()
     XtTranslations	new_translations;
     static XtActionsRec	actionTable[] = {
 	{"MsgListDragStart", 
-	(XtActionProc) &RoamMenuWindow::msgListDragStart},
+	&RoamMenuWindow::msgListDragStart},
 	{"dt-process-press", 
-	(XtActionProc) &RoamMenuWindow::msgListProcessPress}
+	&RoamMenuWindow::msgListProcessPress}
     };
 
     DebugPrintf(3, "In RoamMenuWindow::msgListDragSetup\n");

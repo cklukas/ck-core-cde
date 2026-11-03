@@ -44,7 +44,7 @@
 void _DtTermPrimRemoveSuidRoot(void);
 static void ForceCloseLog(DtTermPrimitiveWidget);
 static void PointerMoved(Widget w, XtPointer closure, XEvent *event, Boolean *cont) ;
-void _DtTermPrimPointerOff(Widget w, XtIntervalId *id) ;
+void _DtTermPrimPointerOff(XtPointer client_data, XtIntervalId *id) ;
 
 /*
 ** the following white pixmap is used to create the noPointer (blank) pointer.
@@ -112,7 +112,7 @@ PointerMoved(Widget w, XtPointer closure, XEvent *event, Boolean *cont)
                 tpd->pointerTimeoutID = 
                       XtAppAddTimeOut(XtWidgetToApplicationContext((Widget)tw),
                       (unsigned long) 1000 * tw->term.pointerBlankDelay,
-                      (XtTimerCallbackProc) _DtTermPrimPointerOff,
+                      _DtTermPrimPointerOff,
                       (XtPointer)tw);
             }
         } else {
@@ -123,8 +123,9 @@ PointerMoved(Widget w, XtPointer closure, XEvent *event, Boolean *cont)
 }
 
 void
-_DtTermPrimPointerOff(Widget w, XtIntervalId *id)
+_DtTermPrimPointerOff(XtPointer client_data, XtIntervalId *id)
 {
+    Widget w = client_data;
     DtTermPrimitiveWidget tw = (DtTermPrimitiveWidget) w;
     DtTermPrimData tpd = tw->term.tpd;
 
@@ -180,7 +181,7 @@ _DtTermPrimPointerOn(Widget w)
             tpd->pointerTimeoutID = 
                     XtAppAddTimeOut(XtWidgetToApplicationContext((Widget)tw),
                     (unsigned long) (1000 * tw->term.pointerBlankDelay),
-                    (XtTimerCallbackProc)_DtTermPrimPointerOff, (XtPointer)tw);
+                    _DtTermPrimPointerOff, (XtPointer)tw);
         }
         /*
         ** and set the pointer on flag...
@@ -228,7 +229,7 @@ _DtTermPrimPointerFreeze(Widget w, Boolean freeze)
                 tpd->pointerTimeoutID = 
                        XtAppAddTimeOut(XtWidgetToApplicationContext((Widget)tw),
                        (unsigned long) 1000 * tw->term.pointerBlankDelay,
-                       (XtTimerCallbackProc) _DtTermPrimPointerOff,
+                       _DtTermPrimPointerOff,
                        (XtPointer)tw);
             }
         }
@@ -259,7 +260,7 @@ _DtTermPrimPointerFreeze(Widget w, Boolean freeze)
                 tpd->pointerTimeoutID = 
                       XtAppAddTimeOut(XtWidgetToApplicationContext((Widget)tw),
                       (unsigned long) (1000 * tw->term.pointerBlankDelay),
-                      (XtTimerCallbackProc)_DtTermPrimPointerOff,(XtPointer)tw);
+                      _DtTermPrimPointerOff,(XtPointer)tw);
             }
         /*
         ** and set the flag...

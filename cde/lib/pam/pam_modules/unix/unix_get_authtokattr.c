@@ -36,10 +36,10 @@
 
 #ifdef PAM_NISPLUS
 static void _np_nss_initf_shadow(nss_db_params_t *);
-static void _np_setspent();
-static void _np_endspent();
+static void _np_setspent(void);
+static void _np_endspent(void);
 static struct spwd * _np_getspent_r(struct spwd *, char *, int);
-static struct spwd * _np_getspent();
+static struct spwd *_np_getspent(void);
 #endif
 
 /*
@@ -315,8 +315,7 @@ static DEFINE_NSS_DB_ROOT(db_root);
 static DEFINE_NSS_GETENT(context);
 
 static void
-_np_nss_initf_shadow(p)
-	nss_db_params_t	*p;
+_np_nss_initf_shadow(nss_db_params_t *p)
 {
 	p->name	= NSS_DBNAM_SHADOW;
 	p->config_name    = NSS_DBNAM_PASSWD;	/* Use config for "passwd" */
@@ -325,23 +324,20 @@ _np_nss_initf_shadow(p)
 }
 
 static void
-_np_setspent()
+_np_setspent(void)
 {
 	nss_setent(&db_root, _np_nss_initf_shadow, &context);
 }
 
 static void
-_np_endspent()
+_np_endspent(void)
 {
 	nss_endent(&db_root, _np_nss_initf_shadow, &context);
 	nss_delete(&db_root);
 }
 
 static struct spwd *
-_np_getspent_r(result, buffer, buflen)
-	struct spwd	*result;
-	char		*buffer;
-	int		buflen;
+_np_getspent_r(struct spwd *result, char *buffer, int buflen)
 {
 	nss_XbyY_args_t arg;
 	char		*nam;
@@ -362,7 +358,7 @@ _np_getspent_r(result, buffer, buflen)
 static nss_XbyY_buf_t *buffer;
 
 static struct spwd *
-_np_getspent()
+_np_getspent(void)
 {
 	nss_XbyY_buf_t	*b;
 

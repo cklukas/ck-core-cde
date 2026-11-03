@@ -411,7 +411,8 @@ static void
 EditApptDragMotionHandler(
         Widget          dragInitiator,
         XtPointer       clientData,
-        XEvent         *event)
+        XEvent         *event,
+        Boolean        *continueToDispatch)
 {
         int             diffX, diffY;
         DTCM_editor     *de = (DTCM_editor *) clientData;
@@ -1244,7 +1245,7 @@ main(int argc, char **argv) {
 	XmStringFree(xmstr);
 
         XtAddEventHandler(XtParent(de->drag_source), Button1MotionMask, False,
-                (XtEventHandler)EditApptDragMotionHandler, (XtPointer) de);
+                EditApptDragMotionHandler, (XtPointer) de);
 
         XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(de->form)),
                 "enableBtn1Transfer",   &btn1_transfer,
@@ -1254,7 +1255,7 @@ main(int argc, char **argv) {
 	if ((Boolean)btn1_transfer != True)
                 XtAddEventHandler(XtParent(de->drag_source),
                                 Button2MotionMask, False,
-                                (XtEventHandler)EditApptDragMotionHandler,
+                                EditApptDragMotionHandler,
                                 (XtPointer) de);
 
 

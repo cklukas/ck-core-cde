@@ -23,20 +23,28 @@
 /* $XConsortium: prolatex.c /main/3 1996/06/11 17:38:30 cde-hal $ */
 
 #include <stdio.h> 
+#include <stdlib.h>
 #include <string.h> 
 
-#define BUFSIZ 1000
+#define PROLATEX_BUFSIZE 1000
 
-int replace();
+static int replace(char *buf, const char *pattern, const char *prefix);
 
-main(argc, argv)
-int argc;
-char* argv[];
+int
+main(int argc, char *argv[])
 {
-   char buf[BUFSIZ];
+   char buf[PROLATEX_BUFSIZE];
 
-   while ( fgets(buf, BUFSIZ, stdin) != NULL ) {
-       buf[strlen(buf)-1] = '\0';
+   if (argc != 2) {
+      fprintf(stderr, "usage: %s prefix\n", argv[0]);
+      return EXIT_FAILURE;
+   }
+
+   while (fgets(buf, sizeof(buf), stdin) != NULL) {
+       size_t length = strlen(buf);
+
+       if (length > 0 && buf[length - 1] == '\n')
+          buf[length - 1] = '\0';
        if ( replace(buf, "\\epsffile{", argv[1]) == 0 )
           continue;
        if ( replace(buf, "\\input{", argv[1]) == 0 )
@@ -46,20 +54,23 @@ char* argv[];
          fputs("\n", stdout);
       }
    }
+
+   return ferror(stdin) || ferror(stdout) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int replace(buf, pattern, s)
-char* buf;
-char* pattern;
-char* s;
+static int
+replace(char *buf, const char *pattern, const char *prefix)
 {
-   int loc = strlen(pattern);
+   size_t loc = strlen(pattern);
+   if (strlen(buf) < loc)
+      return -1;
+
    char c = buf[loc];
    buf[loc] = '\0';
    if ( strcmp(buf, pattern) == 0 ) {
      fputs(buf, stdout);
      /*fputs(getenv("PWD"), stdout);*/
-     fputs(s, stdout);
+     fputs(prefix, stdout);
      fputs("/", stdout);
      buf[loc] = c;
      fputs(buf + loc, stdout);

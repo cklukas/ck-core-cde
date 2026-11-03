@@ -73,7 +73,7 @@ AlternatesListUiItem::AlternatesListUiItem(Widget w,
 
     XtAddCallback(w,
 		XmNbrowseSelectionCallback, 
-		(XtCallbackProc)handleAlternateSelection,
+		handleAlternateSelection,
 		  (XtPointer)this);
 }
 

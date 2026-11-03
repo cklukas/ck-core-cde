@@ -47,6 +47,8 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 
+#include "dsdm.h"
+
 #ifdef    DEBUG
 #define DPRINTF(args) (void) printf args
 #define a2s(atom)	(atom ? XGetAtomName(dpy, atom) : "0")
@@ -182,8 +184,6 @@ extern drop_site_t *MasterSiteList;
 extern Window proxy_win;
 extern Atom ATOM_DRAGDROP_INTEREST;
 extern Atom ATOM_WM_STATE;
-
-unsigned char *GetInterestProperty();
 
 static int ForwardConversion(XSelectionEvent *event, drop_info_t *drop_info);
 

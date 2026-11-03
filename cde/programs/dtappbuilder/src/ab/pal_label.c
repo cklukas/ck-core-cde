@@ -296,7 +296,7 @@ label_prop_init(
 
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNvalueChangedCallback,
-                        (XtCallbackProc)prop_size_policyCB, (XtPointer)&(pls->geometry));
+                        prop_size_policyCB, (XtPointer)&(pls->geometry));
 
 
         /* Geometry */

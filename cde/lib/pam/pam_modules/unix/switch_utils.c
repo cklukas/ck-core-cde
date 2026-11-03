@@ -40,7 +40,7 @@
  * and NSS_SWITCH is not used.
  */
 
-static void	pr_config();
+static void pr_config(pam_handle_t *pamh);
 
 /*
  * The following is similar to getpwnam() except that it specifies
@@ -493,8 +493,7 @@ getspnam_from(name, rep)
 #endif /* (PAM_NIS || PAM_NISPLUS) */
 
 static void
-pr_config(pamh)
-	pam_handle_t *pamh;
+pr_config(pam_handle_t *pamh)
 {
 	char 		messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 

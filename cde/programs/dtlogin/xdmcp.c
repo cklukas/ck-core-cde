@@ -103,7 +103,7 @@ from the X Consortium.
 
 #ifdef X_NOT_STDC_ENV
 #define Time_t long
-extern Time_t time ();
+extern Time_t time (Time_t *timer);
 #else
 #include <time.h>
 #define Time_t time_t
@@ -115,8 +115,7 @@ extern Time_t time ();
  * interface to policy routines
  */
 
-extern ARRAY8Ptr	ChooseAuthentication ();
-extern int		SelectConnectionTypeIndex ();
+/* policy interfaces are declared in dm.h */
 
 void query_respond (struct sockaddr *from, int fromlen, int length);
 void broadcast_respond (struct sockaddr *from, int fromlen, int length);
@@ -145,7 +144,6 @@ int	WellKnownSocketsMax;
 int RememberIndirectClient(ARRAY8Ptr clientAddress, CARD16 connectionType);
 void ForgetIndirectClient(ARRAY8Ptr clientAddress, CARD16 connectionType);
 int IsIndirectClient(ARRAY8Ptr clientAddress, CARD16 connectionType);
-ARRAY8Ptr IndirectChoice(ARRAY8Ptr clientAddress, CARD16 connectionType);
 int ProcessChooserSocket(int fd);
 void RunChooser(struct display *d);
 
@@ -213,16 +211,13 @@ sendForward (CARD16 connectionType, ARRAY8Ptr address, char *closure)
     return;
 }
 
-extern char *NetaddrAddress();
-extern char *NetaddrPort();
-
 static void
 ClientAddress (struct sockaddr *from, ARRAY8Ptr addr, ARRAY8Ptr port, CARD16 *type)
 {
     int length, family;
     char *data;
 
-    data = NetaddrPort(from, &length);
+    data = NetaddrPort((XdmcpNetaddr)from, &length);
     XdmcpAllocARRAY8 (port, length);
     memmove( port->data, data, length);
     port->length = length;
@@ -477,7 +472,7 @@ NetworkAddressToName(CARD16 connectionType, ARRAY8Ptr connectionAddress, CARD16 
 	    CARD8		*data;
 	    struct hostent	*hostent;
 	    char		*name;
-	    char		*localhost, *localHostname();
+	    char		*localhost;
 
 	    data = connectionAddress->data;
 	    hostent = gethostbyaddr ((char *)data,
@@ -967,8 +962,6 @@ manage (struct sockaddr *from, int fromlen, int length)
 	    d = FindDisplayByName (name);
 	    if (d)
 	    {
-		extern void StopDisplay ();
-
 		Debug ("Terminating active session for %s\n", d->name);
 		StopDisplay (d);
 	    }

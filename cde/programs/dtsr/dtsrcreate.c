@@ -148,6 +148,13 @@ static char	*exttab[] = {
 static char	default_unable_to_open_msg[] =
 	"%1$s Unable to open '%2$s':\n  %3$s.\a\n";
 
+static void
+close_database_on_exit(int status)
+{
+    (void)status;
+    (void)d_close();
+}
+
 
 /************************************************/
 /*						*/
@@ -723,7 +730,7 @@ DBD_OKAY:
 	puts (vista_msg (PROGNAME "231"));
 	DtSearchExit (3);
     }
-    austext_exit_dbms = (void (*) (int)) d_close;	/* emerg exit func */
+    austext_exit_dbms = close_database_on_exit;	/* emerg exit func */
 
     /* initialize the 'dtsearch' database */
     if (debug_mode)

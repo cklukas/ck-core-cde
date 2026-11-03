@@ -65,7 +65,7 @@ typedef struct HASH
     ENTRY   value[BUCKETSIZE];
 }HASH;
 
-extern HASH *hash_create();
+extern HASH *hash_create(void);
 
 extern int hash_destroy(HASH *table);
 

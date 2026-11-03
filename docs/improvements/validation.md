@@ -36,7 +36,12 @@ invalidating unrelated consumers.
 ## Build contract
 
 CI builds the recorded batch Motif dependency in an isolated prefix, checks
-its ABI, compiles CDE and verifies that `dtwm` links to `libXm.so.9`.
+its ABI, compiles CDE and verifies that `dtwm` links to `libXm.so.9`. Separate
+ARM64 GCC and Clang jobs compile maintained C sources as C23 and run the full
+test suite; embedded compatibility sources retain their scoped older mode. CDE
+and its optional filesystem integration are configured in fresh shadow build
+directories, with generated headers preferred over maintained source headers,
+so reused build-tree state cannot make a CI lane pass.
 
 ## Automated suite
 
@@ -129,5 +134,9 @@ An isolated X server launches `/usr/dt/bin/Xsession`, waits for the Front Panel,
 opens Style Manager, Terminal and File Manager, and verifies a command typed
 through the visible Terminal. The capture records each executable and its
 mapped Motif library alongside the screenshots.
+
+The File Manager launch is part of the gate: the smoke run must observe its
+real managed window, so an early shelf or view-initialization crash fails the
+session rather than being hidden by successful compilation.
 
 See [The desktop and its tools](../desktop.md) for the current captured session.

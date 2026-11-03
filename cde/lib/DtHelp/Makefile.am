@@ -13,7 +13,8 @@ EXTRA_DIST = tests/check-help-strings.py tests/help-strings.c
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-help-strings.py
 
-libDtHelp_la_CFLAGS = -I./il -I./jpeg -I../DtSvc/DtUtil2 -DDTLIB \
+libDtHelp_la_CFLAGS = -I./il -I$(srcdir)/il -I./jpeg -I$(srcdir)/jpeg \
+	-I../DtSvc/DtUtil2 -DDTLIB \
 		      -DCDE_INSTALLATION_TOP='"$(CDE_INSTALLATION_TOP)"' \
 		      -DCDE_CONFIGURATION_TOP='"$(CDE_CONFIGURATION_TOP)"' \
 		      @DT_INCDIR@ @DTI_INCDIR@

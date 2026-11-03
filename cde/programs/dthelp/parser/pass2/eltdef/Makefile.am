@@ -5,7 +5,7 @@ MAINTAINERCLEANFILES = Makefile.in
 noinst_PROGRAMS = eltdef
 
 HTAG2       = ..
-HTAG2SRC    = $(HTAG2)/htag2
+HTAG2SRC     = $(top_srcdir)/programs/dthelp/parser/pass2/htag2
 SDLPARSERSRC = $(HTAG2)/parser
 SDLELTDEFSRC = $(HTAG2)/eltdef
 SDLDTDFILE   = $(HTAG2SRC)/sdl.dtd
@@ -16,8 +16,8 @@ SDLIFFILE    = $(HTAG2SRC)/sdl.if
 
 eltdef_LDADD = $(SDLUTILLIB)
 
-eltdef_CFLAGS = -DPASS2 -I../util -I../build -I../../include/util \
-		-I../../include/build -I../../include/eltdef
+eltdef_CFLAGS = -DPASS2 -I../util -I$(top_srcdir)/programs/dthelp/parser/pass2/util -I../build -I$(top_srcdir)/programs/dthelp/parser/pass2/build -I../../include/util -I$(top_srcdir)/programs/dthelp/parser/include/util \
+		-I../../include/build -I$(top_srcdir)/programs/dthelp/parser/include/build -I../../include/eltdef -I$(top_srcdir)/programs/dthelp/parser/include/eltdef
 
 eltdef_SOURCES = eltdef.c eltutil.c entity.c scan.c
 
@@ -50,6 +50,6 @@ EDONE: eltdef  $(SDLIFFILE)
 CDONE:  $(SDLUTILSRC)/context $(HTAG2SRC)/delim.elt context.dat
 	$(RM) $(CPRODS) $(CTRASH)
 	$(CP) $(HTAG2SRC)/delim.elt delim.dat  # appl.-specific delim.dat
-	$(SDLUTILSRC)/context
+	CDE_CONTEXT_DATA=$(srcdir)/context.dat $(SDLUTILSRC)/context
 	touch CDONE
 

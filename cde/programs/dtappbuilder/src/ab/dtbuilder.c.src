@@ -236,8 +236,8 @@ static void		reloadDB(XtPointer client_data);
 **                                                                      **
 **************************************************************************/
 
-extern void     	proj_show_dialog();
-extern void     	layout_show_dialog();
+extern void     	proj_show_dialog(void);
+extern void     	layout_show_dialog(void);
 
 #ifdef DEBUG	/* performance testing */
 static ABProfiledIntervalRec	startupTime;
@@ -1959,20 +1959,20 @@ proj_show_open_chooserCB(
     char		*title;
 
     XtCallbackRec ok_callback[] = {
-        {(XtCallbackProc)proj_open_proj_okCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_open_proj_okCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
     XtCallbackRec cancel_callback[] = {
-        {(XtCallbackProc)proj_cancelCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_cancelCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
     XtCallbackRec popdown_callback[] = {
-        {(XtCallbackProc)proj_unmap_chooserCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_unmap_chooserCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
     XtCallbackRec help_callback[] = {
-        {(XtCallbackProc)dtb_help_dispatch, (XtPointer) &chooser_help_data},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {dtb_help_dispatch, (XtPointer) &chooser_help_data},
+        {NULL, (XtPointer) NULL}
     };
 
     /* Before loading in the new project, check if
@@ -2189,16 +2189,16 @@ proj_show_import_chooserCB(
     char			*title;
 
     XtCallbackRec ok_callback[] = {
-        {(XtCallbackProc)proj_import_okCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_import_okCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
     XtCallbackRec cancel_callback[] = {
-        {(XtCallbackProc)proj_cancelCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_cancelCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
     XtCallbackRec popdown_callback[] = {
-        {(XtCallbackProc)proj_unmap_chooserCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_unmap_chooserCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
@@ -2296,7 +2296,7 @@ exit_dtbuilder(int n)
     struct sigaction	exit_action;
     struct sigaction	ign_action;
 
-    ign_action.sa_handler = (void (*)())SIG_IGN;
+    ign_action.sa_handler = SIG_IGN;
     ign_action.sa_flags = 0;
     sigemptyset(&(ign_action.sa_mask));
 

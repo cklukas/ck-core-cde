@@ -176,8 +176,6 @@ IsIndirectClient (
     return 0;
 }
 
-extern char *NetaddrPort();
-
 static int
 FormatChooserArgument (
     char    *buf,
@@ -201,7 +199,7 @@ FormatChooserArgument (
 	{
 	    char *port;
 	    int portlen;
-	    ARRAY8Ptr localAddress, getLocalAddress ();
+	    ARRAY8Ptr localAddress;
 
 	    port = NetaddrPort((XdmcpNetaddr)addr_buf, &portlen);
 	    result_buf[0] = netfamily >> 8;
@@ -417,7 +415,7 @@ void
 RunChooser (
     struct display  *d)
 {
-    char    **args = NULL, **systemEnv();
+    char    **args = NULL;
     char    buf[1024];
     char    **env;
 

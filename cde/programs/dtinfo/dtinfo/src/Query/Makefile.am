@@ -17,5 +17,5 @@ libQuery_a_AR = $(LD) -r -o
 BUILT_SOURCES = Query.msg
 CLEANFILES = $(BUILT_SOURCES)
 
-Query.msg:
-	cat $(Query_MSGS) > $@
+Query.msg: $(addprefix $(srcdir)/,$(Query_MSGS))
+	cat $^ > $@

@@ -18,5 +18,5 @@ libBase_a_AR = $(LD) -r -o
 BUILT_SOURCES = Base.msg
 CLEANFILES = $(BUILT_SOURCES)
 
-Base.msg:
-	cat $(Base_MSGS) > $@
+Base.msg: $(addprefix $(srcdir)/,$(Base_MSGS))
+	cat $^ > $@

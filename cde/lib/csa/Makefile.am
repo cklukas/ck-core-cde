@@ -67,6 +67,7 @@ rtable2_xdr.c rtable3_xdr.c rtable4_xdr.c agent_xdr.c:
 rtable4_clnt.c rtable4_xdr.c: rtable4.h namechange1.sed namechange2.sed
 rtable3_clnt.c rtable3_xdr.c: rtable3.h namechange1.sed namechange2.sed
 rtable2_clnt.c rtable2_xdr.c: rtable2.h namechange1.sed namechange2.sed
+cm_clnt.c: cm.x namechange1.sed namechange2.sed
 agent_xdr.c agent.c: agent.h
 
 agent.h:

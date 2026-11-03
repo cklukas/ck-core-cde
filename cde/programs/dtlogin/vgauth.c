@@ -74,6 +74,9 @@
 #include	<stdio.h>
 #include	<fcntl.h>
 #include	<stdlib.h>
+#if defined(__linux__)
+#include	<crypt.h>
+#endif
 #include	<pwd.h>
 
 /* necessary for bzero */
@@ -246,7 +249,6 @@ Verify( char *name, char *passwd )
     
     struct passwd	*p;		/* password structure */
     struct spwd         *sp;            /* shadow info */
-    char 		*crypt();
 
     int			n;
 
@@ -517,7 +519,6 @@ Verify( char *name, char *passwd )
     static int		login_attempts = 0; /* # failed authentications	   */
     
     struct passwd	*p;		/* password structure */
-    char 		*crypt();
 
     int			n;
 
@@ -736,7 +737,6 @@ Verify( char *name, char *passwd )
     static int		login_attempts = 0; /* # failed authentications	   */
     
     struct passwd	*p;		/* password structure */
-    char 		*crypt();
 
     int			n;
 

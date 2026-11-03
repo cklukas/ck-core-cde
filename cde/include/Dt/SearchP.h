@@ -851,8 +851,8 @@ extern int	open_dblk (DBLK **dblist, int numpages, int debugging);
 extern LLIST	*pop_llist (LLIST **llistp);
 extern void	print_dbrec (char *dbname, struct or_dbrec *dbrec);
 extern int	quit_escape(void);
-extern UCHAR	readchar_ftext (PARG *parg);
-extern UCHAR	readchar_string (UCHAR *string);
+extern UCHAR	readchar_ftext (void *parg);
+extern UCHAR	readchar_string (void *string);
 extern char	*remove_spaces (char *string);
 extern void	replace_ext (char *buffer, int buflen,
 		    char *fname, char *fext);

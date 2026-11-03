@@ -601,7 +601,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
         }
 	XtFree(dialog_title);
         XtAddCallback( FileCharacteristics, XmNhelpCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_FILECHAR );
 
         /* Creation of FC_MainLabel1 */
@@ -733,7 +733,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNbottomAttachment, XmATTACH_NONE,
                         NULL );
         XtAddCallback( FC_NameOrPathToggle, XmNvalueChangedCallback,
-                (XtCallbackProc) valueChangedCB_FC_NameOrPathToggle,
+                valueChangedCB_FC_NameOrPathToggle,
                 (XtPointer) NULL );
 
         /******************************************************************/
@@ -1001,7 +1001,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNbottomAttachment, XmATTACH_NONE,
                         NULL );
         XtAddCallback( FC_PermissionToggle, XmNvalueChangedCallback,
-                (XtCallbackProc) valueChangedCB_FC_PermissionToggle,
+                valueChangedCB_FC_PermissionToggle,
                 (XtPointer) NULL );
 
         /* Creation of FC_ContentsLabel */
@@ -1050,7 +1050,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNbottomAttachment, XmATTACH_NONE,
                         NULL );
         XtAddCallback( FC_ContentsToggle, XmNvalueChangedCallback,
-                (XtCallbackProc) valueChangedCB_FC_ContentsToggle,
+                valueChangedCB_FC_ContentsToggle,
                 (XtPointer) NULL );
 
         /* Creation of FC_ContentsPatternLabel */
@@ -1239,7 +1239,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         NULL );
         nbutton++;
         XtAddCallback( FC_OkButton, XmNactivateCallback,
-                (XtCallbackProc) activateCB_FC_OkButton,
+                activateCB_FC_OkButton,
                 (XtPointer) NULL );
 
         /* Creation of FC_CancelButton */
@@ -1256,7 +1256,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         NULL );
         nbutton++;
         XtAddCallback( FC_CancelButton, XmNactivateCallback,
-                (XtCallbackProc) activateCB_FC_CancelButton,
+                activateCB_FC_CancelButton,
                 (XtPointer) NULL );
 
         /* Creation of FC_ClearButton */
@@ -1273,7 +1273,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         NULL );
         nbutton++;
         XtAddCallback( FC_ClearButton, XmNactivateCallback,
-                (XtCallbackProc) activateCB_FC_ClearButton,
+                activateCB_FC_ClearButton,
                 (XtPointer) NULL );
 
         /* Creation of FC_HelpButton */
@@ -1291,7 +1291,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         NULL );
         nbutton++;
         XtAddCallback( FC_HelpButton, XmNactivateCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_FILECHAR );
 
         XtVaSetValues(FileCharacteristics,
@@ -1301,7 +1301,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         NULL );
 
         XtAddCallback( FileCharacteristics, XmNdestroyCallback,
-                (XtCallbackProc) UxDestroyContextCB,
+                UxDestroyContextCB,
                 (XtPointer) NULL );
 
         if (bLowRes) {

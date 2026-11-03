@@ -138,7 +138,7 @@ static void	setup_label_field(
 static void     typeCB(
                     Widget   	widget,
                     XtPointer 	clientdata,
-                    XmToggleButtonCallbackStruct *state
+                    XtPointer   calldata
                 );
 static void	labeltypeCB(
 		    Widget   	widget,
@@ -304,7 +304,7 @@ button_prop_init(
                                 cgen->buttontype_cb);
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNvalueChangedCallback,
-                        (XtCallbackProc)typeCB, (XtPointer)type);
+                        typeCB, (XtPointer)type);
 
         /* Label Type */
         n = 0;
@@ -320,7 +320,7 @@ button_prop_init(
                         cgen->labeltype_cb);
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNactivateCallback,
-                        (XtCallbackProc)labeltypeCB, (XtPointer)type);
+                        labeltypeCB, (XtPointer)type);
 
         /* special setup required for Button Type/Label Type */
         pbs->string_item = cgen->labeltype_rbox_items.String_item;
@@ -389,7 +389,7 @@ button_prop_init(
 
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNvalueChangedCallback,
-                        (XtCallbackProc)prop_size_policyCB, (XtPointer)&(pbs->geometry));
+                        prop_size_policyCB, (XtPointer)&(pbs->geometry));
 
         /* Geometry */
         prop_geomfield_init(&(pbs->geometry), cgen->geom_label,
@@ -818,9 +818,10 @@ static void
 typeCB(
     Widget   item,
     XtPointer clientdata,
-    XmToggleButtonCallbackStruct *state
+    XtPointer calldata
 )
 {
+    XmToggleButtonCallbackStruct *state = calldata;
     AB_PROP_TYPE	type = (AB_PROP_TYPE)clientdata;
     int    		value;
 

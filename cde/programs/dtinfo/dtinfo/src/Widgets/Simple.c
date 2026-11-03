@@ -95,7 +95,7 @@ static void ClassInitialize(void);
 static void Realize(Widget, XtValueMask *, XSetWindowAttributes *);
 static void ConvertCursor(Widget);
 static Boolean SetValues(Widget, Widget, Widget, ArgList, Cardinal *);
-static Boolean ChangeSensitive(Widget);
+static Bool ChangeSensitive(Widget);
 
 SimpleClassRec simpleClassRec = {
   { /* core fields */
@@ -133,7 +133,7 @@ SimpleClassRec simpleClassRec = {
     /* extension		*/	NULL
   },
   { /* simple fields */
-    /* change_sensitive		*/	(Bool (*)(Widget))ChangeSensitive
+    /* change_sensitive		*/	ChangeSensitive
   }
 };
 
@@ -170,7 +170,7 @@ static void ClassPartInitialize(WidgetClass class)
 		"%s Widget: The Simple Widget class method 'change_sensitive' is undefined.\nA function must be defined or inherited.",
 		c->core_class.class_name);
 	XtWarning(buf);
-	c->simple_class.change_sensitive = (Bool (*)(Widget))ChangeSensitive;
+	c->simple_class.change_sensitive = ChangeSensitive;
     }
 
     if (c->simple_class.change_sensitive == XtInheritChangeSensitive)
@@ -280,7 +280,7 @@ static Boolean SetValues(Widget current, Widget request, Widget new,
 }
 
 
-static Boolean ChangeSensitive(Widget w)
+static Bool ChangeSensitive(Widget w)
 {
     if (XtIsRealized(w)) {
 	if (XtIsSensitive(w))

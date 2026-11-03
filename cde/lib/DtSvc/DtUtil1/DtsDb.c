@@ -67,8 +67,6 @@ extern int _MMWriteDb(DtDirPaths *dirs, int num_db, DtDtsDbDatabase **db_list,
 
 #define PADMEM 10
 
-typedef	int	(*genfunc)(const void *, const void *);
-
 static	DtDtsDbDatabase	**db_list;
 static	int	num_db = 0;
 
@@ -148,15 +146,21 @@ _DtDtsDbPrint(FILE *org_fd)
 }
 
 int
-_DtDtsDbCompareRecordNames(DtDtsDbRecord **a, DtDtsDbRecord **b)
+_DtDtsDbCompareRecordNames(const void *a, const void *b)
 {
-	return ((*a)->recordName - (*b)->recordName);
+	DtDtsDbRecord *const *record1 = a;
+	DtDtsDbRecord *const *record2 = b;
+
+	return ((*record1)->recordName - (*record2)->recordName);
 }
 
 int
-_DtDtsDbCompareFieldNames(DtDtsDbField **a, DtDtsDbField **b)
+_DtDtsDbCompareFieldNames(const void *a, const void *b)
 {
-	return ((*a)->fieldName - (*b)->fieldName);
+	DtDtsDbField *const *field1 = a;
+	DtDtsDbField *const *field2 = b;
+
+	return ((*field1)->fieldName - (*field2)->fieldName);
 }
 
 #include <Dt/Dts.h>
@@ -320,7 +324,7 @@ _DtDtsDbFieldSort(DtDtsDbRecord *rec, _DtDtsDbFieldCompare compare)
 	qsort(rec->fieldList,
 		rec->fieldCount,
 		sizeof(DtDtsDbField *),
-		(genfunc)compare);
+		compare);
 	rec->compare = compare;
 }
 
@@ -334,7 +338,7 @@ _DtDtsDbRecordSort(DtDtsDbDatabase *db, _DtDtsDbRecordCompare compare)
 	qsort(db->recordList,
 		db->recordCount,
 		sizeof(DtDtsDbRecord *),
-		(genfunc)compare);
+		compare);
 	db->compare = compare;
 }
 
@@ -415,7 +419,7 @@ _DtDtsDbGetRecordByName(DtDtsDbDatabase *db, char *name)
 			db->recordList,
 			db->recordCount,
 			sizeof(DtDtsDbRecord *),
-			(genfunc)_DtDtsDbCompareRecordNames);
+			_DtDtsDbCompareRecordNames);
 	}
 
 	if(result)

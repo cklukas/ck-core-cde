@@ -62,15 +62,18 @@ extern XmWidgetExtData _XmGetWidgetExtData(
 #endif /* NeedWidePrototypes */
 
 #include "dtcreate.h"
+#include "AddFiletype.h"
 #include "ca_aux.h"
 #include "cmnrtns.h"
 #include "ErrorDialog.h"
+#include "FileCharacteristics.h"
+#include "OpenFile.h"
 #include "fileio.h"
 
 #ifdef __TOOLTALK
 #include <Tt/tttk.h>
 void DieFromToolTalkError(Widget, char*, Tt_status);
-Tt_message ProcessToolTalkMessage( );
+Tt_message ProcessToolTalkMessage(Tt_message, void *, Tt_message);
 #endif
 
 #if !defined(NL_CAT_LOCALE)
@@ -1347,15 +1350,9 @@ main(int argc, char *argv[])
         Tt_status ttRc;
         char * errfmt;
         char * sessionString;
-        char * ttsession;
 #endif
 
         Widget          mainIface;
-        extern swidget  create_AddFiletype();
-        extern swidget  create_FileCharacteristics();
-        extern swidget  create_OpenFile();
-        extern swidget  create_Confirmed();
-        extern Widget   create_ErrorDialog();
         int             rc;
         Atom            xa_WM_SAVE_YOURSELF;
         char            *ptr;
@@ -1437,37 +1434,6 @@ main(int argc, char *argv[])
         /*-------------------------------------------------------
          * Insert initialization code for your application here
          *------------------------------------------------------*/
-#ifdef __TOOLTALK
-#ifdef DEBUG
-        printf("display string = '%s'\n", DisplayString(UxDisplay));
-#endif
-        ttsession = getenv("TT_SESSION");
-        if (!ttsession || strlen(ttsession)==0) {
-	   char *ttxsession = tt_X_session(XDisplayString(UxDisplay));
-           ttRc = tt_default_session_set(ttxsession);
-        }
-
-        ttMark = tt_mark( );
-
-        procId = tt_open( );
-	ttRc = tt_ptr_error(procId);
-        errfmt =
-          GETMESSAGE(13, 2, "Could not connect to ToolTalk:\n%s\nExiting ...");
-        DieFromToolTalkError( UxTopLevel, errfmt, ttRc );
-
-        ttFd = tt_fd( );
-        DieFromToolTalkError( UxTopLevel, "tt_fd", tt_int_error( ttFd ) );
-
-        ttRc = tt_ptype_declare( "dtcreate" );
-        DieFromToolTalkError( UxTopLevel, "tt_ptype_declare", ttRc );
-
-        ttRc = tt_session_join( tt_default_session( ));
-        DieFromToolTalkError( UxTopLevel, "tt_session_join", ttRc );
-
-        XtAppAddInput( UxAppContext, ttFd, (XtPointer)XtInputReadMask,
-                            (XtInputCallbackProc)ProcessToolTalkMessage, 0 );
-#endif
-
         if (!pszFileToEdit) {
            initAD(&AD);
         }
@@ -1509,8 +1475,17 @@ main(int argc, char *argv[])
         pMyCopyAD = copyAD(&AD);
 
 #ifdef __TOOLTALK
+        const char *ttsession;
+
         DtDbLoad();
         ttMark = tt_mark( );
+	ttsession = getenv("TT_SESSION");
+	if (ttsession == NULL || ttsession[0] == '\0') {
+	   char *ttxsession = tt_X_session(XDisplayString(UxDisplay));
+	   ttRc = tt_default_session_set(ttxsession);
+	   tt_free(ttxsession);
+	   DieFromToolTalkError(UxTopLevel, "tt_default_session_set", ttRc);
+	}
 
         procId = ttdt_open( &ttFd, "dtcreate", "CDE", "1.0", 1 );
 	ttRc = tt_ptr_error(procId);

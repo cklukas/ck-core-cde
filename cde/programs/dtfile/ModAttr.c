@@ -177,33 +177,33 @@ static void Create(
                         Widget *return_widget,
                         XtPointer *dialog) ;
 static void InstallChange(
-                        ModAttrRec *modAttr_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void InstallClose(
-                        ModAttrRec *modAttr_rec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer client_data) ;
 static void Destroy(
-                        ModAttrRec *modAttr_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetValues(
-                        ModAttrRec *modAttr_rec) ;
+                        XtPointer dialog) ;
 static XtPointer GetDefaultValues( void ) ;
 static XtPointer GetResourceValues(
                         XrmDatabase data_base,
                         char **name_list) ;
 static void SetValues(
-                        ModAttrRec *modAttr_rec,
-                        ModAttrData *modAttr_data) ;
+                        XtPointer dialog,
+                        XtPointer values) ;
 static void WriteResourceValues(
                         DialogData *values,
                         int fd,
                         char **name_list) ;
 static void FreeValues(
-                        ModAttrData *modAttr_data) ;
+                        XtPointer values) ;
 static void OkCallback(
                         Widget w,
-                        ModAttrApply *apply_data,
+                        XtPointer client_data,
                         XtPointer call_data) ;
 static short GetModAttrValues(
                         ModAttrRec *modAttr_rec,
@@ -220,8 +220,8 @@ static Boolean _LoadFileAttributes(
                         unsigned long mask) ;
 static void displayFSDialog(
                             Widget                        w,
-                            dtFSData                    * fileSystem,
-                            XmPushButtonCallbackStruct  * cbs);
+                            XtPointer                     client_data,
+                            XtPointer                     call_data);
 static void DontChangeCB(
                         Widget w,
                         XtPointer client_data,
@@ -242,16 +242,16 @@ static DialogClass modAttrClassRec =
    resources,
    XtNumber(resources),
    Create,
-   (DialogInstallChangeProc) InstallChange,
-   (DialogInstallCloseProc) InstallClose,
-   (DialogDestroyProc) Destroy,
-   (DialogGetValuesProc) GetValues,
+   InstallChange,
+   InstallClose,
+   Destroy,
+   GetValues,
    GetDefaultValues,
    GetResourceValues,
-   (DialogSetValuesProc) SetValues,
+   SetValues,
    WriteResourceValues,
-   (DialogFreeValuesProc) FreeValues,
-   (DialogMapWindowProc) _DtGenericMapWindow,
+   FreeValues,
+   _DtGenericMapWindow,
    NULL,
 };
 
@@ -317,7 +317,7 @@ Create(
    XtSetArg (args[n], XmNshadowType, XmSHADOW_OUT);             n++;
    XtSetArg (args[n], XmNautoUnmanage, False);                  n++;
    form = XmCreateForm (shell, "form", args, n);
-   XtAddCallback(form, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(form, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
 
@@ -334,7 +334,7 @@ Create(
    nameLabel = XmCreateLabelGadget (form, "file_name_label", args, n);
    XtManageChild (nameLabel);
    XmStringFree (label_string);
-   XtAddCallback(nameLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(nameLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -346,7 +346,7 @@ Create(
    XtSetArg (args[n], XmNtraversalOn, False);                   n++;
    name = XmCreateLabelGadget (form, "file_name", args, n);
    XtManageChild (name);
-   XtAddCallback(name, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(name, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    /* Create the optional field displaying the symbolic link name */
@@ -363,7 +363,7 @@ Create(
    link_label= XmCreateLabelGadget (form, "link_name_label", args, n);
    XtManageChild (link_label);
    XmStringFree (label_string);
-   XtAddCallback(link_label, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(link_label, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -376,7 +376,7 @@ Create(
    XtSetArg (args[n], XmNtraversalOn, False);                   n++;
    link_name = XmCreateLabelGadget (form, "link_name", args, n);
    XtManageChild (link_name);
-   XtAddCallback(link_name, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(link_name, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
 
@@ -395,7 +395,7 @@ Create(
    ownerLabel = XmCreateLabelGadget (form, "owner_name", args, n);
    XtManageChild (ownerLabel);
    XmStringFree (label_string);
-   XtAddCallback(ownerLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(ownerLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    label_string = XmStringCreateLocalized (((char *)
@@ -411,7 +411,7 @@ Create(
    groupLabel = XmCreateLabelGadget (form, "group_name", args, n);
    XtManageChild (groupLabel);
    XmStringFree (label_string);
-   XtAddCallback(groupLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(groupLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    XtSetArg (args[0], XmNwidth, &len[0]);
@@ -433,7 +433,7 @@ Create(
    XtSetArg (args[n], XmNtopOffset, 8);                         n++;
    owner = XmCreateTextField (form, "owner_text", args, n);
    XtManageChild (owner);
-   XtAddCallback(owner, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(owner, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -450,7 +450,7 @@ Create(
    XtSetArg (args[n], XmNtopOffset, 0);                         n++;
    XtSetArg (args[n], XmNtraversalOn, False);                   n++;
    ownerL = XmCreateLabelGadget (form, "owner_textL", args, n);
-   XtAddCallback(ownerL, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(ownerL, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -467,7 +467,7 @@ Create(
    XtSetArg (args[n], XmNtopOffset, 15);                        n++;
    group = XmCreateTextField (form, "group_text", args, n);
    XtManageChild (group);
-   XtAddCallback(group, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(group, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -484,7 +484,7 @@ Create(
    XtSetArg (args[n], XmNtopOffset, 0);                         n++;
    XtSetArg (args[n], XmNtraversalOn, False);                   n++;
    groupL = XmCreateLabelGadget (form, "group_textL", args, n);
-   XtAddCallback(groupL, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(groupL, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    /* Create the field displaying the file type info */
@@ -506,7 +506,7 @@ Create(
    XtSetArg (args[n], XmNbehavior, XmICON_LABEL);               n++;
    fileType = _DtCreateIcon (form, "file_type", args, n);
    XtManageChild (fileType);
-   XtAddCallback(fileType, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(fileType, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    /* Create the label for the permissions */
@@ -525,7 +525,7 @@ Create(
    XtManageChild (permissionLabel);
    XmStringFree (label_string);
    XtAddCallback(permissionLabel, XmNhelpCallback, 
-                 (XtCallbackProc)HelpRequestCB, 
+                 HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    /* Create the box containing the permission settings */
@@ -543,7 +543,7 @@ Create(
    permissionForm = XmCreateForm (form, "permission_form", args, n);
    XtManageChild (permissionForm);
    XtAddCallback(permissionForm, XmNhelpCallback, 
-                 (XtCallbackProc)HelpRequestCB, 
+                 HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    /* Create the labels and toggles for the permissions */
@@ -562,7 +562,7 @@ Create(
    readLabel = XmCreateLabelGadget (permissionForm, "read_label", args, n);
    XtManageChild (readLabel);
    XmStringFree (label_string);
-   XtAddCallback(readLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(readLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    label_string = XmStringCreateLocalized (((char *)
@@ -579,7 +579,7 @@ Create(
    writeLabel = XmCreateLabelGadget (permissionForm, "write_label", args, n);
    XtManageChild (writeLabel);
    XmStringFree (label_string);
-   XtAddCallback(writeLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(writeLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    label_string = XmStringCreateLocalized (((char *)
@@ -594,7 +594,7 @@ Create(
    XtSetArg (args[n], XmNtopOffset, 10);                        n++;
    XtSetArg (args[n], XmNtraversalOn, False);                   n++;
    executeLabel = XmCreateLabelGadget(permissionForm, "execute_label", args, n);
-   XtAddCallback(executeLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(executeLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
    XtManageChild (executeLabel);
    XmStringFree (label_string);
@@ -612,7 +612,7 @@ Create(
    ownerPLabel = XmCreateLabelGadget (permissionForm, "owner_label", args, n);
    XtManageChild (ownerPLabel);
    XmStringFree (label_string);
-   XtAddCallback(ownerPLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(ownerPLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    empty_label_string = XmStringCreateLocalized ("");
@@ -629,7 +629,7 @@ Create(
    ownerRead =
          XmCreateToggleButtonGadget (permissionForm, "owner_read", args, n);
    XtManageChild (ownerRead);
-   XtAddCallback(ownerRead, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(ownerRead, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -645,7 +645,7 @@ Create(
    ownerWrite =
          XmCreateToggleButtonGadget (permissionForm, "owner_write", args, n);
    XtManageChild (ownerWrite);
-   XtAddCallback(ownerWrite, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(ownerWrite, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -661,7 +661,7 @@ Create(
    ownerExecute =
       XmCreateToggleButtonGadget (permissionForm, "owner_execute", args, n);
    XtManageChild (ownerExecute);
-   XtAddCallback(ownerExecute, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(ownerExecute, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    label_string = XmStringCreateLocalized (((char *)
@@ -677,7 +677,7 @@ Create(
    groupPLabel = XmCreateLabelGadget (permissionForm, "group_label", args, n);
    XtManageChild (groupPLabel);
    XmStringFree (label_string);
-   XtAddCallback(groupPLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(groupPLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -693,7 +693,7 @@ Create(
    groupRead =
           XmCreateToggleButtonGadget (permissionForm, "group_read", args, n);
    XtManageChild (groupRead);
-   XtAddCallback(groupRead, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(groupRead, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -709,7 +709,7 @@ Create(
    groupWrite =
         XmCreateToggleButtonGadget (permissionForm, "group_write", args, n);
    XtManageChild (groupWrite);
-   XtAddCallback(groupWrite, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(groupWrite, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -725,7 +725,7 @@ Create(
    groupExecute =
          XmCreateToggleButtonGadget (permissionForm, "group_execute", args, n);
    XtManageChild (groupExecute);
-   XtAddCallback(groupExecute, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(groupExecute, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    label_string = XmStringCreateLocalized (((char *)
@@ -743,7 +743,7 @@ Create(
    otherPLabel = XmCreateLabelGadget (permissionForm, "other_label", args, n);
    XtManageChild (otherPLabel);
    XmStringFree (label_string);
-   XtAddCallback(otherPLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(otherPLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -759,7 +759,7 @@ Create(
    otherRead =
          XmCreateToggleButtonGadget (permissionForm, "other_read", args, n);
    XtManageChild (otherRead);
-   XtAddCallback(otherRead, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(otherRead, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -775,7 +775,7 @@ Create(
    otherWrite =
         XmCreateToggleButtonGadget (permissionForm, "other_write", args, n);
    XtManageChild (otherWrite);
-   XtAddCallback(otherWrite, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(otherWrite, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -792,7 +792,7 @@ Create(
       XmCreateToggleButtonGadget (permissionForm, "other_execute", args, n);
    XtManageChild (otherExecute);
    XmStringFree (empty_label_string);
-   XtAddCallback(otherExecute, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(otherExecute, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
 
@@ -829,7 +829,7 @@ Create(
    sizeLabel = XmCreateLabelGadget (form, "size_label", args, n);
    XtManageChild (sizeLabel);
    XmStringFree (label_string);
-   XtAddCallback(sizeLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(sizeLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -842,7 +842,7 @@ Create(
    XtSetArg (args[n], XmNtraversalOn, False);                   n++;
    size = XmCreateLabelGadget (form, "size", args, n);
    XtManageChild (size);
-   XtAddCallback(size, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(size, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
 
@@ -862,7 +862,7 @@ Create(
    modLabel = XmCreateLabelGadget (form, "modify_date_label", args, n);
    XtManageChild (modLabel);
    XmStringFree (label_string);
-   XtAddCallback(modLabel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(modLabel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
    n = 0;
@@ -875,7 +875,7 @@ Create(
    XtSetArg (args[n], XmNtraversalOn, False);                   n++;
    mod = XmCreateLabelGadget (form, "modify_date", args, n);
    XtManageChild (mod);
-   XtAddCallback(mod, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(mod, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
 
@@ -908,7 +908,7 @@ Create(
    XtSetArg (args[n], XmNuserData, flag);                        n++;
    ok = XmCreatePushButtonGadget (form, "ok", args, n);
    XtManageChild (ok);
-   XtAddCallback(ok, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(ok, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
 
@@ -932,7 +932,7 @@ Create(
    XtSetArg (args[n], XmNuserData, flag);                        n++;
    cancel = XmCreatePushButtonGadget (form, "cancel", args, n);
    XtManageChild (cancel);
-   XtAddCallback(cancel, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(cancel, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
 
@@ -950,9 +950,9 @@ Create(
    XtSetArg (args[n], XmNmarginHeight, 4);                      n++;
    help = XmCreatePushButtonGadget (form, "help", args, n);
    XtManageChild (help);
-   XtAddCallback(help, XmNactivateCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(help, XmNactivateCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
-   XtAddCallback(help, XmNhelpCallback, (XtCallbackProc)HelpRequestCB, 
+   XtAddCallback(help, XmNhelpCallback, HelpRequestCB,
                  HELP_PROPERTIES_DIALOG_STR);
 
 
@@ -1008,10 +1008,11 @@ Create(
 
 static void
 InstallChange(
-        ModAttrRec *modAttr_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   ModAttrRec *modAttr_rec = dialog;
    ModAttrApply * apply_data;
 
 
@@ -1027,7 +1028,7 @@ InstallChange(
 
 
    XtAddCallback (modAttr_rec->ok, XmNactivateCallback, 
-                  (XtCallbackProc)OkCallback, (XtPointer) apply_data);
+                  OkCallback, (XtPointer) apply_data);
 }
 
 
@@ -1041,10 +1042,11 @@ InstallChange(
 
 static void
 InstallClose(
-        ModAttrRec *modAttr_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   ModAttrRec *modAttr_rec = dialog;
    Atom delete_window_atom;
 
    XtAddCallback (modAttr_rec->cancel,
@@ -1078,8 +1080,9 @@ InstallClose(
 
 static void
 Destroy(
-        ModAttrRec *modAttr_rec )
+        XtPointer dialog )
 {
+   ModAttrRec *modAttr_rec = dialog;
    XtDestroyWidget (modAttr_rec->shell);
    XtFree ((char *) modAttr_rec->apply_data);
    XtFree ((char *) modAttr_rec);
@@ -1096,8 +1099,9 @@ Destroy(
 
 static XtPointer
 GetValues(
-        ModAttrRec *modAttr_rec )
+        XtPointer dialog )
 {
+   ModAttrRec *modAttr_rec = dialog;
    ModAttrData * modAttr_data;
 
 
@@ -1207,9 +1211,11 @@ GetResourceValues(
 
 static void
 SetValues(
-        ModAttrRec *modAttr_rec,
-        ModAttrData *modAttr_data )
+        XtPointer dialog,
+        XtPointer values )
 {
+   ModAttrRec *modAttr_rec = dialog;
+   ModAttrData *modAttr_data = values;
    Arg args[10];
    XmString string;
    char buf[20];
@@ -1651,7 +1657,7 @@ SetValues(
      }
      XtAddCallback(modAttr_rec->fsPushButton,
                    XmNactivateCallback,
-                   (XtCallbackProc)displayFSDialog,
+                   displayFSDialog,
                    &modAttr_rec->fileSystem);
      XtManageChild (modAttr_rec->fsPushButton);
    }
@@ -1821,8 +1827,9 @@ WriteResourceValues(
 
 static void
 FreeValues(
-        ModAttrData *modAttr_data )
+        XtPointer values )
 {
+   ModAttrData *modAttr_data = values;
    XtFree ((char *) modAttr_data->host);
    XtFree ((char *) modAttr_data->directory);
    XtFree ((char *) modAttr_data->name);
@@ -1857,9 +1864,10 @@ FreeValues(
 static void
 OkCallback(
         Widget w,
-        ModAttrApply *apply_data,
+        XtPointer client_data,
         XtPointer call_data )
 {
+  ModAttrApply *apply_data = client_data;
   ModAttrRec  * modAttr_rec = (ModAttrRec *) apply_data->modAttr_rec;
   ModAttrData * new_attr_data;
   FileMgrRec *file_mgr_rec;
@@ -2329,11 +2337,12 @@ LoadFileAttributes(
  
 
 static void 
-displayFSDialog (Widget                      w,
-                 dtFSData                    *fileSystem,       
-                 XmPushButtonCallbackStruct  *cbs)
+displayFSDialog (Widget      w,
+                 XtPointer   client_data,
+                 XtPointer   call_data)
 
 { 
+   dtFSData *fileSystem = client_data;
    static char *pname = "displayFSDialog";
    pid_t     pid;
    int       n;  

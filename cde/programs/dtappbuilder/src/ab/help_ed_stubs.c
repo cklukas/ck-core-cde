@@ -152,7 +152,7 @@ static void	help_attr_chgCB(
 static void	select_instanceCB(
 		    Widget      widget,
 		    XtPointer   client_data,
-		    XmListCallbackStruct *listdata
+		    XtPointer   call_data
 		);
 
 static int	object_was_created(
@@ -172,6 +172,7 @@ static int	object_was_updated(
 		);
 
 static void	clear_editor_fields(
+		    void
 		);
 
 static void	fetch_help_attrs(
@@ -197,6 +198,7 @@ static BOOL	help_obj_is_target_type(
 		);
 
 static void	help_test_onitem_help(
+		    void
 		);
 
 static void	verify_closeCB(
@@ -223,6 +225,7 @@ static void	update_object_menu_from_obj(
 		);
 
 static ABObj	find_toplevel_obj(
+		    void
 		);
 
 static BOOL
@@ -298,7 +301,7 @@ ab_popup_help(
 
 	/* Register Help Editor callbacks */
 	XtAddCallback(HelpObjList,XmNsingleSelectionCallback,
-		(XtCallbackProc)select_instanceCB, (XtPointer)NULL);
+		select_instanceCB, (XtPointer)NULL);
 
 	/* Initialize settings data structure */
 	hes->prop_sheet = help_ed->text_panel;
@@ -431,8 +434,9 @@ static void
 select_instanceCB(
     Widget widget,
     XtPointer client_data,
-    XmListCallbackStruct *listdata)
+    XtPointer call_data)
 {
+    XmListCallbackStruct *listdata = call_data;
     ABObj        module;
     ABObj        selected_obj;
     STRING       name;

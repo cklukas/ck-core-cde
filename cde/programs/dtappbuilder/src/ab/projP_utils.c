@@ -73,7 +73,7 @@
 static void 	save_as_bil_okCB(
 		    Widget              widget,
 		    XtPointer           client_data,
-		    XmSelectionBoxCallbackStruct *call_data
+		    XtPointer           call_data
 		);
 
 static void     no_module_selected(
@@ -121,16 +121,16 @@ projP_show_save_as_bil_chooser(
     char		*title;
  
     XtCallbackRec ok_callback[] = {
-        {(XtCallbackProc)save_as_bil_okCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {save_as_bil_okCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
     XtCallbackRec cancel_callback[] = {
-        {(XtCallbackProc)proj_cancelCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_cancelCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
     XtCallbackRec popdown_callback[] = {
-        {(XtCallbackProc)proj_unmap_chooserCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_unmap_chooserCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
  
     /* Create the file chooser if it hasn't already
@@ -206,9 +206,10 @@ static void
 save_as_bil_okCB(
     Widget              widget,
     XtPointer           client_data,
-    XmSelectionBoxCallbackStruct *call_data
+    XtPointer           call_data
 )
 {
+    XmSelectionBoxCallbackStruct *selection_data = call_data;
     STRING              fullpath = NULL, msg = NULL;
     char		mod_name[MAXPATHLEN];
     char		mod_dir[MAXPATHLEN];
@@ -220,7 +221,7 @@ save_as_bil_okCB(
 
     *mod_name = 0;
     *mod_dir = 0;
-    fullpath = (STRING) objxm_xmstr_to_str(call_data->value);
+    fullpath = (STRING) objxm_xmstr_to_str(selection_data->value);
 
     /*
      * If the file chooser selection text field is empty,

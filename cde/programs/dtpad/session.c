@@ -206,8 +206,8 @@ SaveMain(
 void 
 SaveSessionCB(
         Widget w,			/* widget id */
-        caddr_t client_data,		/* data from application  */
-        caddr_t call_data )		/* data from widget class */
+        XtPointer client_data,		/* data from application  */
+        XtPointer call_data )		/* data from widget class */
 {
     char *longpath, *fileName;
     int fd, numPadsToSave;
@@ -283,8 +283,8 @@ SaveSessionCB(
 void
 closeCB(
         Widget w,
-        caddr_t client_data,
-        caddr_t call_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
     Editor *pPad = (Editor *)client_data;
 

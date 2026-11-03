@@ -44,7 +44,7 @@ class InputMgrX: public UAS_Receiver<WantInputReady>,
 	void		receive (WantInputReadyCancel &msg, void *client_data);
 
     private:
-	static void	inputHandler (InputMgrData *, int *, XtInputId *);
+	static void	inputHandler (XtPointer, int *, XtInputId *);
 
     private:
 	xList<InputMgrData *>		fWantList;

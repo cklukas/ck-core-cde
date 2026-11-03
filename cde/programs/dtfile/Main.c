@@ -353,7 +353,7 @@ static void RemoveTextFields (
                         DialogData * new_dialog_data) ;
 static void DtfileCvtStringToObjPlace (
                         XrmValue *args,
-                        Cardinal numArgs,
+                        Cardinal *numArgs,
                         XrmValue *fromVal,
                         XrmValue *toVal) ;
 static unsigned char *_DtNextToken (
@@ -362,42 +362,42 @@ static unsigned char *_DtNextToken (
                         unsigned char **ppchNext) ;
 static void DtfileCvtStringToOpenDir (
                         XrmValue *args,
-                        Cardinal numArgs,
+                        Cardinal *numArgs,
                         XrmValue *fromVal,
                         XrmValue *toVal) ;
 static void DtfileCvtStringToDTIcon (
                         XrmValue *args,
-                        Cardinal numArgs,
+                        Cardinal *numArgs,
                         XrmValue *fromVal,
                         XrmValue *toVal) ;
 static void DtfileCvtStringToTree (
                         XrmValue *args,
-                        Cardinal numArgs,
+                        Cardinal *numArgs,
                         XrmValue *fromVal,
                         XrmValue *toVal) ;
 static void DtfileCvtStringToTreeFiles (
                         XrmValue *args,
-                        Cardinal numArgs,
+                        Cardinal *numArgs,
                         XrmValue *fromVal,
                         XrmValue *toVal) ;
 static void DtfileCvtStringToView (
                         XrmValue *args,
-                        Cardinal numArgs,
+                        Cardinal *numArgs,
                         XrmValue *fromVal,
                         XrmValue *toVal) ;
 static void DtfileCvtStringToOrder (
                         XrmValue *args,
-                        Cardinal numArgs,
+                        Cardinal *numArgs,
                         XrmValue *fromVal,
                         XrmValue *toVal) ;
 static void DtfileCvtStringToDirection (
                         XrmValue *args,
-                        Cardinal numArgs,
+                        Cardinal *numArgs,
                         XrmValue *fromVal,
                         XrmValue *toVal) ;
 static void DtfileCvtStringToGrid (
                         XrmValue *args,
-                        Cardinal numArgs,
+                        Cardinal *numArgs,
                         XrmValue *fromVal,
                         XrmValue *toVal) ;
 static void DtfileStringToTree(
@@ -987,8 +987,8 @@ static XtResource resources[] =
 };
 
 XtActionsRec actionTable[] = {
-   {"Space", (XtActionProc)VFTextChangeSpace},
-   {"EscapeFM", (XtActionProc)CancelOut},
+   {"Space", VFTextChangeSpace},
+   {"EscapeFM", CancelOut},
 };
 
 /************************************************************************
@@ -1131,7 +1131,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    display = XtDisplay (toplevel);
 #ifdef HAVE_EDITRES
     XtAddEventHandler(toplevel, 0, True,
-                      (XtEventHandler) _XEditResCheckMessages,
+                      _XEditResCheckMessages,
                       (XtPointer) NULL);
 #endif
 
@@ -1221,31 +1221,31 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    /* First lets add the resource converters needed */
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "ObjectPlacement",
-                       (XtConverter)DtfileCvtStringToObjPlace, NULL, 0);
+                       DtfileCvtStringToObjPlace, NULL, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "OpenFolder",
-                       (XtConverter)DtfileCvtStringToOpenDir, NULL, 0);
+                       DtfileCvtStringToOpenDir, NULL, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "DesktopIcon",
-                       (XtConverter)DtfileCvtStringToDTIcon, NULL, 0);
+                       DtfileCvtStringToDTIcon, NULL, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "Tree",
-                       (XtConverter)DtfileCvtStringToTree, NULL, 0);
+                       DtfileCvtStringToTree, NULL, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "TreeFiles",
-                       (XtConverter)DtfileCvtStringToTreeFiles, NULL, 0);
+                       DtfileCvtStringToTreeFiles, NULL, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "View",
-                       (XtConverter)DtfileCvtStringToView, NULL, 0);
+                       DtfileCvtStringToView, NULL, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "Order",
-                       (XtConverter)DtfileCvtStringToOrder, NULL, 0);
+                       DtfileCvtStringToOrder, NULL, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "Direction",
-                       (XtConverter)DtfileCvtStringToDirection, NULL, 0);
+                       DtfileCvtStringToDirection, NULL, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "Grid",
-                       (XtConverter)DtfileCvtStringToGrid, NULL, 0);
+                       DtfileCvtStringToGrid, NULL, 0);
 
    /*  Get the application defined resources of session and  */
    /*  directory, and get the processes host.                */
@@ -5285,7 +5285,7 @@ CleanUp (
 static void
 DtfileCvtStringToObjPlace (
           XrmValue *args,
-          Cardinal numArgs,
+          Cardinal *numArgs,
           XrmValue *fromVal,
           XrmValue *toVal)
 {
@@ -5526,7 +5526,7 @@ static unsigned char
 static void
 DtfileCvtStringToOpenDir (
           XrmValue *args,
-          Cardinal numArgs,
+          Cardinal *numArgs,
           XrmValue *fromVal,
           XrmValue *toVal)
 {
@@ -5580,7 +5580,7 @@ DtfileCvtStringToOpenDir (
 static void
 DtfileCvtStringToDTIcon (
           XrmValue *args,
-          Cardinal numArgs,
+          Cardinal *numArgs,
           XrmValue *fromVal,
           XrmValue *toVal)
 {
@@ -5611,7 +5611,7 @@ DtfileCvtStringToDTIcon (
 static void
 DtfileCvtStringToTree (
           XrmValue *args,
-          Cardinal numArgs,
+          Cardinal *numArgs,
           XrmValue *fromVal,
           XrmValue *toVal)
 {
@@ -5627,7 +5627,7 @@ DtfileCvtStringToTree (
 static void
 DtfileCvtStringToTreeFiles (
           XrmValue *args,
-          Cardinal numArgs,
+          Cardinal *numArgs,
           XrmValue *fromVal,
           XrmValue *toVal)
 {
@@ -5643,7 +5643,7 @@ DtfileCvtStringToTreeFiles (
 static void
 DtfileCvtStringToView (
           XrmValue *args,
-          Cardinal numArgs,
+          Cardinal *numArgs,
           XrmValue *fromVal,
           XrmValue *toVal)
 {
@@ -5659,7 +5659,7 @@ DtfileCvtStringToView (
 static void
 DtfileCvtStringToOrder (
           XrmValue *args,
-          Cardinal numArgs,
+          Cardinal *numArgs,
           XrmValue *fromVal,
           XrmValue *toVal)
 {
@@ -5675,7 +5675,7 @@ DtfileCvtStringToOrder (
 static void
 DtfileCvtStringToDirection (
           XrmValue *args,
-          Cardinal numArgs,
+          Cardinal *numArgs,
           XrmValue *fromVal,
           XrmValue *toVal)
 {
@@ -5691,7 +5691,7 @@ DtfileCvtStringToDirection (
 static void
 DtfileCvtStringToGrid (
           XrmValue *args,
-          Cardinal numArgs,
+          Cardinal *numArgs,
           XrmValue *fromVal,
           XrmValue *toVal)
 {
