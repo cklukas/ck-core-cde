@@ -123,6 +123,26 @@ static void setThickness(Widget widget, int offset, XrmValue *value);
 /*
  * on the spot callbacks
  */
+typedef int (*DtTermPreeditStartProc)(
+    XIC xic,
+    XPointer client_data,
+    XPointer call_data);
+
+typedef void (*DtTermPreeditDoneProc)(
+    XIC xic,
+    XPointer client_data,
+    XPointer call_data);
+
+typedef void (*DtTermPreeditDrawProc)(
+    XIC xic,
+    XPointer client_data,
+    XIMPreeditDrawCallbackStruct *call_data);
+
+typedef void (*DtTermPreeditCaretProc)(
+    XIC xic,
+    XPointer client_data,
+    XIMPreeditCaretCallbackStruct *call_data);
+
 static int PreeditStart(
     XIC xic,
     XPointer client_data,
@@ -142,6 +162,36 @@ static void PreeditCaret(
     XIC xic,
     XPointer client_data,
     XIMPreeditCaretCallbackStruct *call_data);
+
+static XIMCallback MakePreeditStartCallback(
+    XPointer client_data,
+    DtTermPreeditStartProc callback);
+static XIMCallback MakePreeditDoneCallback(
+    XPointer client_data,
+    DtTermPreeditDoneProc callback);
+static XIMCallback MakePreeditDrawCallback(
+    XPointer client_data,
+    DtTermPreeditDrawProc callback);
+static XIMCallback MakePreeditCaretCallback(
+    XPointer client_data,
+    DtTermPreeditCaretProc callback);
+
+/*
+ * Xlib exposes every XIM callback through XIMCallback.callback, whose
+ * historical XIMProc type does not describe the callback contracts in the
+ * Xlib specification.  In particular, the preedit-start callback takes an
+ * XIC and returns the maximum preedit length.  Keep the application-facing
+ * callbacks precisely typed and copy their representations into Xlib's
+ * generic transport slot at this boundary.
+ */
+_Static_assert(sizeof(XIMProc) == sizeof(DtTermPreeditStartProc),
+    "XIM callback pointer representations must have the same size");
+_Static_assert(sizeof(XIMProc) == sizeof(DtTermPreeditDoneProc),
+    "XIM callback pointer representations must have the same size");
+_Static_assert(sizeof(XIMProc) == sizeof(DtTermPreeditDrawProc),
+    "XIM callback pointer representations must have the same size");
+_Static_assert(sizeof(XIMProc) == sizeof(DtTermPreeditCaretProc),
+    "XIM callback pointer representations must have the same size");
 
 
 /* action list for class: Term... */
@@ -2556,14 +2606,10 @@ Realize(Widget w, XtValueMask *p_valueMask, XSetWindowAttributes *attributes)
     /*
      * Register on the spot callbacks.
      */
-    xim_cb[0].client_data = (XPointer)w;
-    xim_cb[0].callback = (XIMProc)PreeditStart;
-    xim_cb[1].client_data = (XPointer)w;
-    xim_cb[1].callback = (XIMProc)PreeditDone;
-    xim_cb[2].client_data = (XPointer)tw;
-    xim_cb[2].callback = (XIMProc)PreeditDraw;
-    xim_cb[3].client_data = (XPointer)w;
-    xim_cb[3].callback = (XIMProc)PreeditCaret;
+    xim_cb[0] = MakePreeditStartCallback((XPointer)w, PreeditStart);
+    xim_cb[1] = MakePreeditDoneCallback((XPointer)w, PreeditDone);
+    xim_cb[2] = MakePreeditDrawCallback((XPointer)tw, PreeditDraw);
+    xim_cb[3] = MakePreeditCaretCallback((XPointer)w, PreeditCaret);
     XtSetArg(args[n], XmNpreeditStartCallback, &xim_cb[0]); n++;
     XtSetArg(args[n], XmNpreeditDoneCallback, &xim_cb[1]); n++;
     XtSetArg(args[n], XmNpreeditDrawCallback, &xim_cb[2]); n++;
@@ -3982,6 +4028,54 @@ PreeditStart(
 
     PreUnder(tw) = True;
     return(-1);
+}
+
+
+static XIMCallback
+MakePreeditStartCallback(
+    XPointer client_data,
+    DtTermPreeditStartProc callback)
+{
+    XIMCallback xim_callback = { .client_data = client_data };
+
+    memcpy(&xim_callback.callback, &callback, sizeof(callback));
+    return xim_callback;
+}
+
+
+static XIMCallback
+MakePreeditDoneCallback(
+    XPointer client_data,
+    DtTermPreeditDoneProc callback)
+{
+    XIMCallback xim_callback = { .client_data = client_data };
+
+    memcpy(&xim_callback.callback, &callback, sizeof(callback));
+    return xim_callback;
+}
+
+
+static XIMCallback
+MakePreeditDrawCallback(
+    XPointer client_data,
+    DtTermPreeditDrawProc callback)
+{
+    XIMCallback xim_callback = { .client_data = client_data };
+
+    memcpy(&xim_callback.callback, &callback, sizeof(callback));
+    return xim_callback;
+}
+
+
+static XIMCallback
+MakePreeditCaretCallback(
+    XPointer client_data,
+    DtTermPreeditCaretProc callback)
+{
+    XIMCallback xim_callback = { .client_data = client_data };
+
+    memcpy(&xim_callback.callback, &callback, sizeof(callback));
+    return xim_callback;
 }
 
 

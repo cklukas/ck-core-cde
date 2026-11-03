@@ -1,4 +1,7 @@
 2026-11-03
+- DtTerm: retain the specified XIC-based input-method callback contracts,
+  including preedit-start's integer result, and isolate Xlib's historical
+  generic callback transport without incompatible function-pointer casts.
 - CI: make both ARM64 GCC and Clang whole-CDE C23 lanes reject ambiguous
   function declarations, old-style definitions and incompatible
   function-pointer casts. The installed filesystem-consumer qualification uses
