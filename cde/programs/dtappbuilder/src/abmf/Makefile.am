@@ -9,10 +9,10 @@ UTILLIB = -lutil
 endif
 
 SOURCES.msg = \
-        dtcodegen.msg   \
-        ../libAButil/libAButil.msg \
-        ../libABobjXm/libABobjXm.msg \
-        ../libABil/libABil.msg
+        $(srcdir)/dtcodegen.msg   \
+        $(srcdir)/../libAButil/libAButil.msg \
+        $(srcdir)/../libABobjXm/libABobjXm.msg \
+        $(srcdir)/../libABil/libABil.msg
 
 bin_PROGRAMS = dtcodegen
 

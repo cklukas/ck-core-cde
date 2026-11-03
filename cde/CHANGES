@@ -5,9 +5,10 @@
   dtudcexch conversion routines and callbacks, and PAM module dispatch; use
   the platform dynamic-loader declarations in the bundled font layer; let a
   clean out-of-tree build find DtHelp image/JPEG headers, DtTerm private
-  headers and line-data input, App Builder private headers and dtterm resource
-  inputs; correct dtcreate's ToolTalk and help callback registrations, type
-  its icon-selector callback table and directory filter, type dtlogin's saved
+  headers and line-data input, App Builder private headers and message-catalog
+  inputs, and dtterm resource inputs; correct dtcreate's ToolTalk and help
+  callback registrations, type its icon-selector callback table and directory
+  filter, type dtlogin's saved
   X I/O and signal handlers and language enumerator table, and use its shared
   environment/address interfaces consistently; use the standard stdio
   declarations and exact non-returning Xt error-handler contract there;
