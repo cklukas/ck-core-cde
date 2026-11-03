@@ -28,6 +28,24 @@ write is reported as an I/O error. The first transfer error is retained while
 both descriptors are closed, and delayed close failures are reported before
 the copy is accepted. The transfer regression injects these conditions into
 the production copy routines and checks copied bytes and source preservation.
+The regular-file fallback used directly by File Manager follows the same
+completion rule: a failed destination close blocks source removal during a
+cross-filesystem move, including when no error-dialog callback is installed.
+Dropped or pasted buffers are written completely before success is sent to the
+parent window. Invalid lengths, missing nonempty data, zero-progress writes and
+delayed close failures report an error; an empty buffer creates an empty file.
+New targets are created exclusively. An unexpected existing file or symbolic
+link is rejected rather than overwritten; approved buffer replacement removes
+the old target through the existing conflict workflow before creation.
+For multi-file operations, a later successful item does not erase an earlier
+transfer or preflight failure in the result returned to the parent window.
+Dismissing a subsequent conflict dialog likewise retains an earlier failure.
+A desktop drop whose source cannot be resolved reports that error and skips
+that item instead of passing a missing source into the transfer routine.
+Failed transfers attempt to remove their newly created incomplete destination;
+cleanup failure can leave it in place. These legacy operations do not provide
+crash recovery or transactional replacement.
+
 An ignored copy error is tracked separately from successful completion.
 Cross-filesystem moves retain their source if any file or recursive child was
 not copied completely, even when the user chooses to ignore the error.

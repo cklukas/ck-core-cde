@@ -570,6 +570,7 @@ FileMoveCopyProcess(
    char * target_dir, * from = NULL, * to;
    int i, j, rc, result;
    Boolean return_val = False;
+   Boolean operationFailed = False;
    Boolean isContainer;
    long current;
    char *tmpStr, *target_file;
@@ -591,7 +592,7 @@ FileMoveCopyProcess(
 
    /*  Get the fully qualified destination path.  */
    target_dir = (char *)ResolveLocalPathName(host, directory, NULL, home_host_name, &tt_status);
-   if( TT_OK != tt_status )
+   if (TT_OK != tt_status || target_dir == NULL)
    {
      char msg1[2*MAX_PATH];
 #ifdef sun
@@ -602,7 +603,7 @@ FileMoveCopyProcess(
               directory, host, host);
 #endif
      PipeWriteErrmsg(pipe_s2m, -1, msg1, NULL);
-     pipe_msg = PIPEMSG_FILEOP_ERROR;
+     pipe_msg = PIPEMSG_DONE;
      rc = -1;
      write(pipe_s2m, &pipe_msg, sizeof(short));
      write(pipe_s2m, &rc, sizeof(int));
@@ -636,6 +637,7 @@ FileMoveCopyProcess(
                    updates[i].directory, updates[i].host, updates[i].host);
 #endif
           PipeWriteErrmsg(pipe_s2m, -1, msg1, NULL);
+          errorCount++;
           continue;
         }
 
@@ -957,6 +959,8 @@ FileMoveCopyProcess(
         XtFree( (char *) from );
       }
 
+      if (!return_val)
+         operationFailed = True;
       XtFree ((char *) target_file);
 
    } /* end for loop */
@@ -1084,7 +1088,15 @@ FileMoveCopyProcess(
 
       /* wait for reply from main process */
       rc = -1;
-      PipeRead(pipe_m2s, &rc, sizeof(int));
+      if (PipeRead(pipe_m2s, &rc, sizeof(int)) != sizeof(int) ||
+          (rc != PIPEMSG_CANCEL && rc != PIPEMSG_MULTI_PROCEED &&
+           (mode == MAKE_BUFFER
+            ? (rc != PIPEMSG_REPLACE_BUFFER && rc != PIPEMSG_RENAME_BUFFER)
+            : (rc != PIPEMSG_PROCEED && rc != PIPEMSG_MERGE))))
+      {
+         operationFailed = True;
+         rc = PIPEMSG_CANCEL;
+      }
       DPRINTF(("FileMoveCopyProcess: woke up after confirm, rc %d\n", rc));
       if (rc != PIPEMSG_CANCEL)
       {
@@ -1100,10 +1112,17 @@ FileMoveCopyProcess(
             }
             if (rc == PIPEMSG_MULTI_PROCEED)
             {
-	       int opvalue;
-               PipeRead(pipe_m2s, &opvalue, sizeof(int));
-	       if(opvalue != 0)
-		   continue;
+               int opvalue;
+               if (PipeRead(pipe_m2s, &opvalue, sizeof(int)) != sizeof(int))
+               {
+                  operationFailed = True;
+                  break;
+               }
+               if (opvalue != 0)
+               {
+                  operationFailed = True;
+                  continue;
+               }
 	    }
 
             if (mode != MAKE_BUFFER)
@@ -1113,7 +1132,7 @@ FileMoveCopyProcess(
                                            updates[j].file,
                                            home_host_name,
                                            &tt_status);
-              if( TT_OK != tt_status )
+              if (TT_OK != tt_status || from == NULL)
               {
                  char msg1[2*MAX_PATH];
 
@@ -1127,7 +1146,8 @@ FileMoveCopyProcess(
                           updates[j].host);
 #endif
                   PipeWriteErrmsg(pipe_s2m, -1, msg1, NULL);
-                   continue;
+                  operationFailed = True;
+                  continue;
               }
             } /* endif */
 
@@ -1147,7 +1167,11 @@ FileMoveCopyProcess(
 
             /* check the return code for type of message and */
             /* perform the appropriate action                */
-            switch (rc)
+            int operationReply = rc;
+            if (mode == MAKE_BUFFER && rc == PIPEMSG_MULTI_PROCEED)
+               operationReply = PIPEMSG_REPLACE_BUFFER;
+            return_val = False;
+            switch (operationReply)
             {
                 case PIPEMSG_MERGE:
 
@@ -1177,6 +1201,8 @@ FileMoveCopyProcess(
                 case PIPEMSG_RENAME_BUFFER:
 
                     renamed_file = PipeReadString(pipe_m2s);
+                    if (renamed_file == NULL)
+                       break;
 
                     SendModifyMsg(pipe_s2m, mode, first_op, to, updates, j, renamed_file);
                     target_file = (char *)XtMalloc(strlen(to) + strlen(renamed_file)
@@ -1189,7 +1215,9 @@ FileMoveCopyProcess(
                                                       updates[j].bufferInfo.buf_ptr,
                                                       updates[j].bufferInfo.size);
                     XtFree((char *) target_file);
-                     target_file = NULL;
+                    target_file = NULL;
+                    XtFree(renamed_file);
+                    renamed_file = NULL;
 
                     break;
                 default:
@@ -1222,7 +1250,6 @@ FileMoveCopyProcess(
                             return_val = FileManip((Widget) (intptr_t) pipe_s2m, mode, from,
                                                    toFile, False, FileOpError,
                                                    True, NOT_DESKTOP);
-                            XtFree(path);
                             XtFree(toFile);
                         }
                         else
@@ -1232,6 +1259,13 @@ FileMoveCopyProcess(
                     }
             } /* endswitch */
 
+           if (!return_val)
+              operationFailed = True;
+           if (mode != MAKE_BUFFER)
+           {
+              XtFree(from);
+              from = NULL;
+           }
            if (to_file != NULL)
            {
                XtFree ((char *) to);
@@ -1250,10 +1284,11 @@ FileMoveCopyProcess(
 
 
    pipe_msg = PIPEMSG_DONE;
-   if (rc != PIPEMSG_CANCEL)
-      rc = return_val? 0: -1;
-   else
-      rc = 0;
+   /* A later success or a cancelled conflict dialog cannot erase an
+    * earlier transfer or preflight failure. A clean cancellation retains
+    * its existing non-error result.
+    */
+   rc = (operationFailed || errorCount != 0) ? -1 : 0;
    write(pipe_s2m, &pipe_msg, sizeof(short));
    write(pipe_s2m, &rc, sizeof(int));
 
@@ -1285,12 +1320,13 @@ FileMoveCopyProcessDesktop(
    int i, rc;
    Boolean first_op = True;
    Boolean return_val = False;
+   Boolean operationFailed = False;
    short pipe_msg;
    Tt_status tt_status;
 
    /*  Get the fully qualified destination path.  */
    to = ResolveLocalPathName(host, directory, NULL, home_host_name, &tt_status);
-   if( TT_OK != tt_status )
+   if (TT_OK != tt_status || to == NULL)
    {
      char msg1[2*MAX_PATH];
 #ifdef sun
@@ -1301,7 +1337,7 @@ FileMoveCopyProcessDesktop(
               directory, host, host);
 #endif
      PipeWriteErrmsg(pipe_s2m, -1, msg1, NULL);
-     pipe_msg = PIPEMSG_FILEOP_ERROR;
+     pipe_msg = PIPEMSG_DONE;
      rc = -1;
      write(pipe_s2m, &pipe_msg, sizeof(short));
      write(pipe_s2m, &rc, sizeof(int));
@@ -1332,6 +1368,8 @@ FileMoveCopyProcessDesktop(
                        updates[i].directory, updates[i].host, updates[i].host);
 #endif
             PipeWriteErrmsg(pipe_s2m, -1, msg, NULL);
+            operationFailed = True;
+            continue;
          }
          else if (strcmp(to, from) == 0)
          {
@@ -1341,6 +1379,8 @@ FileMoveCopyProcessDesktop(
             PipeWriteErrmsg(pipe_s2m, -1, msg, NULL);
             XtFree ((char *) from);
              from = NULL;
+            operationFailed = True;
+            continue;
          }
       } /* end if dealing with regular files */
 
@@ -1371,6 +1411,7 @@ FileMoveCopyProcessDesktop(
                                           target_file,
                                           updates[i].bufferInfo.buf_ptr,
                                           updates[i].bufferInfo.size);
+        XtFree(target_file);
       }
       else
       {
@@ -1379,10 +1420,12 @@ FileMoveCopyProcessDesktop(
         XtFree (from);
         from = NULL;
       }
+      if (!return_val)
+         operationFailed = True;
    }
 
    pipe_msg = PIPEMSG_DONE;
-   rc = return_val? 0: -1;
+   rc = operationFailed ? -1 : 0;
    write(pipe_s2m, &pipe_msg, sizeof(short));
    write(pipe_s2m, &rc, sizeof(int));
 
@@ -3355,64 +3398,61 @@ CreateFileFromBuffer(int    pipe_s2m,
 	             int    size)
 {
   int fnew = -1;
-  int rc=0;
+  int rc = 0;
   unsigned int mode;
-  Boolean BufferIsExecutable=FALSE;
   char *err_msg, *err_arg, *tmpStr;
-  char *format_str, *strerror_str;
-  int format_param_len=20;
   int savedError = 0;
+  Boolean targetCreated = False;
+  size_t offset = 0;
 
-
-
-
-  /* Set the permissions depending if buffer is a */
-  /* file or an execuatable                       */
-  if (_DtIsBufferExecutable(buffer,size))
+  /* Validate the signed external length before inspecting or writing data. */
+  if (size < 0 || (size > 0 && buffer == NULL))
   {
-   mode = S_IRUSR | S_IWUSR | S_IXUSR |
-	  S_IRGRP | S_IWGRP | S_IXGRP |
-	  S_IROTH | S_IWOTH | S_IXOTH;
-  }
-  else
-  {
-   mode = S_IRUSR | S_IWUSR |
-	  S_IRGRP | S_IWGRP |
-	  S_IROTH | S_IWOTH;
-  }
-
-  /* Create the target file */
-  if ((fnew = open(fully_qualified_name, O_CREAT| O_WRONLY, mode)) < 0)
-  {
-    DPRINTF(("CreateBufferFromFile: Could not create %s\n",
-	      fully_qualified_name));
-    savedError = errno;
+    savedError = EINVAL;
     rc = -1;
   }
   else
   {
-    /* Write the buffer to the target file */
-    if ((rc = write(fnew, buffer, size)) < 0 )
+    mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    if (size > 0 && _DtIsBufferExecutable(buffer, size))
+      mode |= S_IXUSR | S_IXGRP | S_IXOTH;
+
+    if ((fnew = open(fully_qualified_name, O_CREAT | O_EXCL | O_WRONLY, mode)) < 0)
     {
-      DPRINTF (("CreateBufferFromFile: Could not write buffer to %s\n",
-	         fully_qualified_name));
-      savedError=errno;
+      savedError = errno;
+      rc = -1;
     }
     else
     {
-      close(fnew);
-      fnew = -1;
-      DPRINTF (("CreateBuffeFromFile: Target file %s created\n",
-	         fully_qualified_name));
+      targetCreated = True;
+      while (offset < (size_t)size)
+      {
+        ssize_t written = write(fnew, (const char *)buffer + offset,
+                                (size_t)size - offset);
+        if (written < 0 && errno == EINTR)
+          continue;
+        if (written <= 0)
+        {
+          savedError = written == 0 ? EIO : errno;
+          rc = -1;
+          break;
+        }
+        offset += (size_t)written;
+      }
+      /* Do not retry close: the descriptor may already have been released. */
+      if (close(fnew) < 0 && rc == 0)
+      {
+        savedError = errno;
+        rc = -1;
+      }
     }
   }
-
-  if (fnew >= 0)
-      close(fnew);
 
 /* Handle errors */
   if (rc < 0)
   {
+    if (targetCreated)
+      (void) unlink(fully_qualified_name);
     switch (savedError)
     {
        case EACCES:
@@ -3423,7 +3463,7 @@ CreateFileFromBuffer(int    pipe_s2m,
 	  DPRINTF (("CreateBufferFromFile: EACCESS errno is %d\n",errno));
 	  break;
        default :
-	  err_msg = strerror(savedError);
+	  err_msg = XtNewString(strerror(savedError));
 	  err_arg = NULL;
 
 	  DPRINTF (("CreateBufferFromFile: %s\n", err_msg));

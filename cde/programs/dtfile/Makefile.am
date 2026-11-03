@@ -10,7 +10,8 @@ bin_PROGRAMS = dtfile
 
 EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/trash-metadata.c tests/check-copy-transfer.py tests/copy-transfer.c \
-             tests/copy-paths.c tests/check-operation-outcome.py \
+             tests/copy-paths.c tests/check-transfer-completion.py \
+             tests/transfer-completion.c tests/check-operation-outcome.py \
              tests/check-sync-controller.py tests/sync-controller.c \
              tests/check-sync-retry-ui.py SyncFeature.h.in
 
@@ -18,6 +19,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-writer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-metadata.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-copy-transfer.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-transfer-completion.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-operation-outcome.py
 if HAVE_CK_CORE_FS
 	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-sync-controller.py

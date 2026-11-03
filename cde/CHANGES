@@ -1,4 +1,11 @@
 2026-11-03
+- dtfile: finish short and interrupted regular-file and dropped-buffer writes,
+  report zero-progress and delayed close failures before claiming success, and
+  preserve a cross-filesystem move's source on transfer failure. Validate buffer
+  lengths before use, reject unexpected occupied targets, and own error strings
+  passed through the parent dialog pipe. Preserve earlier item failures in batch
+  results, avoid an invalid free during same-folder copies, and skip desktop
+  items whose source could not be resolved.
 - dtfile_sync: keep operation messages and journal locations on a separate
   diagnostics page while inspecting rows; preserve text selection during idle
   polling, escape native journal names, and reject oversized journal paths
