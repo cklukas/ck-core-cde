@@ -748,7 +748,7 @@ Resize(
 /*	Draw shadow and title.
 */
 	if (XtIsRealized ((Widget)manager))
-		Redisplay (manager, NULL, NULL);
+		Redisplay ((Widget)manager, NULL, NULL);
 }
 
 

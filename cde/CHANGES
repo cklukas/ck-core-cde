@@ -10,6 +10,8 @@
   verified offline archive builds, install the upstream license and notices,
   and retain the engine's own supported compiler dialect while the CDE glue
   follows the configured C standard.
+- DtWidget: pass TitleBox's private instance through the declared Xt `Widget`
+  boundary when its resize method invokes the expose method.
 - DtTerm: load the Solaris interactive-session hook through its documented
   four-argument function contract instead of an unprototyped `void (*)()`
   cast. App Builder drops a disabled, structurally obsolete matrix renderer
