@@ -3528,7 +3528,7 @@ KeyTranslator
     (void) XtTranslateKey(display, keyCode, modifiers, modifiersReturn,
 	    keysymReturn);
     /* and reinstall the Motif translator for the next widget/event... */
-    (void) XtSetKeyTranslator(display, (XtKeyProc) XmTranslateKey);
+    (void) XtSetKeyTranslator(display, XmTranslateKey);
 }
     
 /*ARGSUSED*/
@@ -3545,7 +3545,7 @@ handleKeyEvents(Widget w, XtPointer closure, XEvent *event, Boolean *cont)
 
 #ifdef	KEY_TRANSLATE_HACK
     /* install our key translator... */
-    (void) XtSetKeyTranslator(XtDisplay(w), (XtKeyProc) KeyTranslator);
+    (void) XtSetKeyTranslator(XtDisplay(w), KeyTranslator);
 #endif	/* KEY_TRANSLATE_HACK */
     /* and return... */
 }

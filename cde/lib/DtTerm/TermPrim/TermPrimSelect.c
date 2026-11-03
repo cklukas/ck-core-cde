@@ -685,7 +685,7 @@ setSelection
             if (!XtOwnSelection((Widget)tw, XA_PRIMARY, selectTime,
                                 _DtTermPrimSelectConvert,
                                 _DtTermPrimSelectLoseSelection,
-                                (XtSelectionDoneProc) NULL))
+				NULL))
             {
                 /* 
                 ** XtOwnSelection failed, make a dummy call to setSelection

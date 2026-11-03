@@ -346,7 +346,7 @@ main(
      * and message catalogs. */
     (void)_DtEnvControl(DT_ENV_SET);
 
-    (void) XtSetLanguageProc((XtAppContext)NULL, (XtLanguageProc)NULL, 
+    (void) XtSetLanguageProc((XtAppContext)NULL, NULL,
 			     (XtPointer)NULL);
 
     pArgc = argc;

@@ -542,7 +542,7 @@ xevent_error_aborter(Display *display, XErrorEvent* error_event)
 void
 WindowSystem::init()
 {
-  XtSetLanguageProc(NULL, (XtLanguageProc)NULL, NULL);
+  XtSetLanguageProc(NULL, NULL, NULL);
 
   _DtEnvControl(DT_ENV_SET);
 

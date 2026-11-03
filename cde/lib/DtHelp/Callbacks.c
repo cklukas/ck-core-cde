@@ -1715,9 +1715,9 @@ _DtHelpGetClearSelection (
       {
         if (XtOwnSelection (widget, XA_PRIMARY,
 			XtLastTimestampProcessed(XtDisplay(widget)),
-			(XtConvertSelectionProc) ConvertSelectionCB,
-			(XtLoseSelectionProc) _DtHelpLoseSelectionCB,
-			(XtSelectionDoneProc) NULL))
+			ConvertSelectionCB,
+			_DtHelpLoseSelectionCB,
+			NULL))
 	  {
 	    pDAS->primary = True;
 	    pDAS->anchor_time = XtLastTimestampProcessed(XtDisplay(widget));

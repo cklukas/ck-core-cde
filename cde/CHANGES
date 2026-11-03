@@ -7,6 +7,10 @@
   pointers.
 - DtSvc: initialize an optional preserved drop callback with a typed null value
   instead of a function-pointer cast.
+- DtHelp and DtTerm: register selection and key-translation callbacks directly
+  through their exact Xt contracts; use typed null selection-completion and
+  language callbacks throughout maintained desktop programs and generated App
+  Builder source.
 - DtCm: register the shared calendar help callback directly throughout menus,
   editors, browsers and dialogs through its exact `XtCallbackProc` contract.
   Appointment, group, to-do and standalone-editor drag-motion hooks now

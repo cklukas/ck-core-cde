@@ -153,7 +153,7 @@ PdmShellCreate(PdmShell* me,
      * create the application context and open the video display
      */
     XtToolkitInitialize();
-    XtSetLanguageProc((XtAppContext)NULL, (XtLanguageProc)NULL,
+    XtSetLanguageProc((XtAppContext)NULL, NULL,
 		      (XtPointer)NULL);
     me->app_context = XtCreateApplicationContext();
 

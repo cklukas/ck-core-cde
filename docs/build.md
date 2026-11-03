@@ -262,7 +262,9 @@ The complete shared DtHelp library compiles and links with both C23 toolchains.
 Dialog map callbacks return `void` as `XtCallbackProc` requires. Menu, message
 and display-area event handlers accept Xt's dispatch-control pointer and are
 registered directly, without function-pointer casts concealing a three- versus
-four-argument ABI mismatch.
+four-argument ABI mismatch. Help and terminal selection ownership uses the
+native Xt conversion, loss and completion slots directly, and terminal key
+translation no longer casts already-compatible translators at registration.
 
 The maintained desktop launch and session paths also use their framework and
 system interfaces directly. `dtexec` relies on the standard and POSIX headers
