@@ -7,6 +7,8 @@
   entry point so both GCC and Clang accept it in C23 mode.
 - DtInfo: resolve resource and message templates from the source tree so clean
   shadow builds do not silently emit an empty application-default file.
+- DtHelp: let the maintained help generator and print helper find checked-in
+  private DtHelp interfaces in clean out-of-tree C23 builds.
 - DtInfo: let clean out-of-tree WWL and application-module builds search their
   generated build headers before the maintained DtInfo, UAS, DtMmdb and C++
   wrapper source interfaces.

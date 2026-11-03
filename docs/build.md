@@ -108,6 +108,10 @@ clean shadow build cannot silently turn a missing relative input into an empty
 application-default file. The maintained merge utility is compiled as C23 with
 a standard `int main` entry point under both GCC and Clang.
 
+The DtHelp generator and print helper search generated build interfaces before
+the checked-in private DtHelp headers. This preserves generated overrides while
+allowing clean out-of-tree GCC and Clang C23 builds.
+
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
 use complete prototypes; the conversion regression test also compiles const
