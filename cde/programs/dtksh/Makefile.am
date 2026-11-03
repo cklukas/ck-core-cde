@@ -91,5 +91,5 @@ check-local:
 clean-local:
 	$(RM) -r $(KSH93SRC)
 
-DtFuncs.dtsh:
-	$(CP) DtFuncs.sh DtFuncs.dtsh
+DtFuncs.dtsh: $(srcdir)/DtFuncs.sh
+	$(CP) $(srcdir)/DtFuncs.sh $@

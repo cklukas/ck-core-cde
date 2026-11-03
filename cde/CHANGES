@@ -56,6 +56,8 @@
   correct the libshell dependency, and compile that vendored compatibility
   component with explicit GNU17 while the maintained dtksh glue remains on the
   enclosing compiler mode.
+- dtksh: generate the installed `DtFuncs.dtsh` script from its source-tree
+  input so the check and install targets work in clean out-of-tree builds.
 - dtksh: give the maintained Xt, Xlib, ToolTalk, print-setup and ksh discipline
   dispatch paths their exact callback contracts; split incompatible one- and
   two-name ToolTalk operations instead of routing them through an untyped

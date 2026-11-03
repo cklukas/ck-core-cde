@@ -56,6 +56,8 @@ and passes `-std=gnu17` only to that package build; the maintained dtksh glue
 continues to inherit the enclosing C23 qualification flags. This also keeps
 generated ksh93 objects out of the source checkout. The compatibility build
 uses the lane's configured compiler, so both GCC and Clang exercise GNU17.
+Generated dtksh scripts likewise name their source-tree prerequisites
+explicitly, allowing the check and install targets to run out of tree.
 The maintained dtksh command layer is compiled in the enclosing C23 mode. Its
 Xt, Xlib, ToolTalk, print-setup and ksh discipline callbacks use their native
 prototypes; operations with different signatures have separate typed paths or
