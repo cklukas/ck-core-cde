@@ -1,0 +1,105 @@
+{
+  "topic": "Keep dtfile comparison command feedback actionable through polling and cleanup",
+  "base_revision": "a25eac5b64d6dd7fde295c2c7fa5dd084e0e7bd4",
+  "native_sdk_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "native_sdk_version": "0.3.0",
+  "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "native_regression": {
+    "build_start_utc": "2026-11-03T18:12:24.710441+00:00",
+    "build_end_utc": "2026-11-03T18:12:25.787584+00:00",
+    "build_seconds": 1.0771744311787188,
+    "run_start_utc": "2026-11-03T18:12:25.788355+00:00",
+    "run_end_utc": "2026-11-03T18:12:33.230820+00:00",
+    "run_seconds": 7.442482543177903,
+    "exit_code": 0,
+    "passed": true,
+    "fixture_unchanged": true,
+    "timeout_failures": [],
+    "source_hashes": {
+      "SyncDates.h": "dd6d805135b1b1f2d6119ba8048ad4b905c63b06b86e25ad03f5c74dc2e00060",
+      "dtfile_sync.msg": "06fa1d8b0967daf56947d4aaa92e353ea9b14473e71a9c36b8f932f21a7e3dfd",
+      "SyncProfiles.c": "308664f90ce90373623779a0d6f859c407e53c3c075277bb49712d5b93806432",
+      "SyncProfiles.h": "2fe33ff5a6715867613561e73f4ee604ce4cfbe9e27b1090a2579339577ab340",
+      "main.c": "9637c34777f4db7f1e2ec1ed9e775d75fab8e44463dc0b1af8f6814ac5ad3fed",
+      "SyncPrivateStorage.h": "2b51afc697073ad374843d8b4579f3d66c6891b52b3662493cd3a1fb5626bfea",
+      "SyncJob.h": "955ea1f34200ed74ec190416c31c5ec56edd1f421da3df52722f0c596c6a0451",
+      "SyncJob.c": "3a14f5567f147dd9338c29b8bc6b8c5e774622ee841da2098570cb600713c5f0"
+    }
+  },
+  "baseline_control": {
+    "revision": "a25eac5b64d6dd7fde295c2c7fa5dd084e0e7bd4",
+    "exit_code": 1,
+    "fixture_unchanged": true,
+    "expected_failures": [
+      "Delete profile available without preferences worker",
+      "No-job validation feedback remains stale after correction",
+      "Close lacks distinct cleanup feedback"
+    ]
+  },
+  "coverage": [
+    "Retain local input and rule feedback across real scheduled Xt ticks",
+    "Clear obsolete messages on input and exact selected-row-set changes",
+    "Validate scope and selection before action availability or rename-side changes",
+    "Update existing rules at 64-rule capacity; refuse a new rule without changing decisions",
+    "Require one valid rule selection for removal",
+    "Expose Delete only after actual preferences worker readiness",
+    "Prioritize real cancellation and Close; block late operation callbacks",
+    "Preserve transactional profile loading, reviewed rename intent and comparison retry regressions"
+  ],
+  "scope": "UI and preview authority only; no file-operation execution, SDK upgrade or Apply enablement.",
+  "checks": [
+    "Native regression PASS with no timeouts; previous UI expected FAIL",
+    "Strict documentation check: 16 pages PASS",
+    "Python parse and unique catalog IDs PASS",
+    "Final read-only review: no actionable findings"
+  ],
+  "script_sha256": "c6f27415b8957c3ec45fbb1874d0b5b7521d9a538594ffc4252995ab60d0d676",
+  "normal_ui": {
+    "actual_process_runtime_maps_verified": true,
+    "executable_sha256": "bb68023013a08bf75d680f37965e62e763f7d291feaff2564fd068da5fe45f36",
+    "catalog_sha256": "4964957efa7ba4fea183b828698678b10a50e4a13ae7a30feb43d7a5e149cb77",
+    "main_inspected": [
+      "nojob-error-retained.png",
+      "nojob-edit-cleared.png",
+      "review-error-retained.png",
+      "review-edit-cleared.png",
+      "cancel-immediate.png",
+      "close-immediate.png"
+    ],
+    "screenshots": {
+      "nojob-edit-cleared.png": "507acd46706ac38cf6804d9fe77cdaff30f867fbaac21f0e7d0cf3dbd728a291",
+      "review-error-retained.png": "368fde936b6937657a0640ead2fb3f3efdccbcfb18355639076b0649988fa604",
+      "nojob-error-retained.png": "74a48aa5e7fa6451a1d681519b4f1d49f8622f62ac177ec2143370c74cf8b120",
+      "review-edit-cleared.png": "137871fdc17edeff3a71d9a0fda24b7798fd83f4f3995dc07dec86a67fcc8d1c",
+      "cancel-immediate.png": "493f44a301f81a486dfe9e4c4a62f40c55b26391e0c6d0dc229a35006356ca04",
+      "close-immediate.png": "d9b50fc4be9128aaee7bdb0eed43fe77055b4342aed540564a132d4c563e86de"
+    },
+    "fixture_bytes_unchanged": 71,
+    "graceful_exit": 0,
+    "own_helper_wm_xvfb_gone": true,
+    "other_xvfb_preserved": true,
+    "final_receipt_sha256": "c86186cc947aaf4a404a6ab0b6503b517b7c394d4165124691846b123b4e4168"
+  },
+  "incremental_build": {
+    "start": "2026-11-03T18:15:53.576972+00:00",
+    "end": "2026-11-03T18:15:54.679299+00:00",
+    "elapsed_seconds": 1.1023153641726822,
+    "jobs": 1,
+    "inputs": {
+      "SyncProfiles.c": "308664f90ce90373623779a0d6f859c407e53c3c075277bb49712d5b93806432",
+      "SyncJob.h": "955ea1f34200ed74ec190416c31c5ec56edd1f421da3df52722f0c596c6a0451",
+      "SyncPrivateStorage.h": "2b51afc697073ad374843d8b4579f3d66c6891b52b3662493cd3a1fb5626bfea",
+      "SyncDates.h": "dd6d805135b1b1f2d6119ba8048ad4b905c63b06b86e25ad03f5c74dc2e00060",
+      "main.c": "9637c34777f4db7f1e2ec1ed9e775d75fab8e44463dc0b1af8f6814ac5ad3fed",
+      "SyncProfiles.h": "2fe33ff5a6715867613561e73f4ee604ce4cfbe9e27b1090a2579339577ab340",
+      "dtfile_sync.msg": "06fa1d8b0967daf56947d4aaa92e353ea9b14473e71a9c36b8f932f21a7e3dfd",
+      "SyncJob.c": "3a14f5567f147dd9338c29b8bc6b8c5e774622ee841da2098570cb600713c5f0"
+    },
+    "outputs": {
+      "/home/klukas/tmp/cde-hardening-20261102-01/command-feedback-native-20261103-01/normal-gui-build/dtfile_sync": "bb68023013a08bf75d680f37965e62e763f7d291feaff2564fd068da5fe45f36",
+      "/home/klukas/tmp/cde-hardening-20261102-01/command-feedback-native-20261103-01/normal-gui-build/dtfile_sync.cat": "4964957efa7ba4fea183b828698678b10a50e4a13ae7a30feb43d7a5e149cb77"
+    },
+    "closure": "Changed main.c only, relink and changed catalog; verified unchanged worker objects reused.",
+    "timing_assessment": "1.102s versus prior main-only 0.803s and current native harness compile 1.077s; exact commands and input/output hashes independently establish freshness."
+  }
+}

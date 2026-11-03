@@ -138,6 +138,17 @@ then select **Review rules** to obtain backend counts and consequences. Editing
 or removing a rule requires review again; only actions offered for that class
 and scope can be selected.
 
+Footer input errors and rule-command feedback remain visible while the current plan is
+waiting for review. Correcting an input, selecting the required rows or issuing
+a new command clears the old message; periodic polling alone does not. A fresh
+comparison starts a new feedback generation. Cancellation, worker cleanup,
+recovery requirements and errors from an incoherent backend view take priority.
+
+The window holds at most 64 matching rules. Existing rules can still be updated
+when all slots are occupied. Adding a new rule then asks you to remove one;
+a rejected add does not change the rename side or existing decisions. Removing
+a rule requires exactly one rule selected in the list.
+
 A reviewed rename belongs to its selected object, basename and incoming/target
 side. Changing any part requires review again, including choosing a different
 row while a basename is entered. Repainting an unchanged selection does not
@@ -232,7 +243,9 @@ does not apply file operations to either tree. Its real preferences worker
 writes only inside a disposable private fixture; the work directory needs
 trusted, non-group-writable ancestors. UI allocation faults verify atomic
 profile loading and aborting an unreadable rename input; real review receipts
-verify side and selected-row invalidation. `result.json` and logs record the run.
+verify side and selected-row invalidation. It also checks retained input feedback,
+selection-based clearing, updates at the 64-rule limit, profile availability,
+and cancellation/Close feedback priority. `result.json` and logs record the run.
 
 Set `TMPDIR` explicitly. Private test homes must be on an ownership-enforcing
 filesystem with trusted ancestors; if that differs from the build's temporary

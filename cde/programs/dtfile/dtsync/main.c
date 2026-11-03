@@ -59,13 +59,16 @@ typedef struct {
     uint64_t rename_row;
     unsigned rename_selection_count;
     Widget rule_page;
-    char last_error[512];
+    char last_error[512], command_notice[512];
+    uint64_t command_notice_generation;
+    uint64_t feedback_selection[SYNC_PAGE_SIZE];
+    unsigned feedback_selection_count;
     uint64_t displayed_ids[SYNC_PAGE_SIZE];
     unsigned displayed_count;
     unsigned rendered_names_valid;
     SyncProfiles *preferences;
     SyncProfilesSnapshot preferences_view;
-    Widget profile_list, profile_name, profile_status, profile_load, profile_save;
+    Widget profile_list, profile_name, profile_status, profile_load, profile_save, profile_delete;
     Widget operation_option, metadata_option, operation_explanation, setup_notice, setup_viewport;
     Widget class_option, name_side_option;
     Widget compared_roots;
@@ -128,16 +131,58 @@ static void label(Widget widget, const char *text)
     XtVaSetValues(widget,XmNlabelString,value,NULL); XmStringFree(value);
 }
 static void notify(SyncWindow *w, const char *text) { label(w->status,text); }
+/* Local feedback may replace ordinary idle status, not an in-flight command,
+ * cancellation, close, failed/recovery view or unfinished native cleanup. */
+static int command_notice_ready(const SyncWindow *w)
+{
+    if (w->closing) return 0;
+    if (!w->job) return 1;
+    const SyncView *v=w->view;
+    if (w->review_pending || w->execute_pending || v->settling || v->snapshot.recovery_required) return 0;
+    if (v->finished || v->stopped) {
+        return (v->snapshot.state==CKFET_COMPLETE || v->snapshot.state==CKFET_CANCELLED) &&
+            (v->drained || v->stopped) && !v->error[0];
+    }
+    return !w->cancel_requested && v->ready && v->snapshot.state==CKFET_AWAITING_REVIEW &&
+        v->snapshot.command_state!=CKFET_COMMAND_PENDING && SyncJobViewCoherent(v) &&
+        v->summary_valid && v->summary_generation==v->snapshot.plan_generation &&
+        v->summary_receipt==v->snapshot.receipt_id;
+}
+static void clear_command_notice(SyncWindow *w)
+{
+    int visible=w->command_notice[0]!=0;
+    w->command_notice[0]=0; w->command_notice_generation=0;
+    if (visible && !w->job && !w->closing && w->status)
+        notify(w,M(78,"Choose folders and an operation, then compare. Review matching rules before applying changes."));
+}
+static void command_notice(SyncWindow *w,const char *text)
+{
+    snprintf(w->command_notice,sizeof(w->command_notice),"%s",text);
+    w->command_notice_generation=w->view->snapshot.plan_generation;
+    int first;
+    w->feedback_selection_count=w->list?selected_rows(w,w->feedback_selection,&first):0;
+    if (command_notice_ready(w)) notify(w,w->command_notice);
+}
+static void progress_notice(SyncWindow *w,const char *message)
+{
+    char text[1024];
+    const char *recovery=w->job && w->view->snapshot.recovery_required?M(242,"Recovery required"):"";
+    snprintf(text,sizeof(text),"%s%s%s",message,*recovery?"\n":"",recovery); notify(w,text);
+}
+static void rule_input_changed(Widget widget,XtPointer data,XtPointer call)
+{
+    (void)widget; (void)call; clear_command_notice((SyncWindow *)data);
+}
 static void setup_changed(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data; w->setup_dirty=1;
+    (void)widget;(void)call; SyncWindow *w=data; clear_command_notice(w); w->setup_dirty=1;
     if (w->execute) XtSetSensitive(w->execute,False);
     if (w->review) XtSetSensitive(w->review,False);
     if (w->rule_page) XtSetSensitive(w->rule_page,False);
     if (w->job && w->view->snapshot.plan_generation) {
         const char *message=M(296,"These results use earlier folder options.\nCompare again before reviewing rules.");
         if (w->setup_notice) label(w->setup_notice,message);
-        notify(w,M(261,"Folder options changed. Compare again before reviewing or applying changes."));
+        if (command_notice_ready(w)) notify(w,M(261,"Folder options changed. Compare again before reviewing or applying changes."));
     }
 }
 static void operation_explanation(SyncWindow *w)
@@ -163,7 +208,7 @@ static void swap_folders(Widget widget,XtPointer data,XtPointer call)
     (void)widget;(void)call; SyncWindow *w=data;
     char *source=XmTextFieldGetString(w->source),*destination=XmTextFieldGetString(w->destination);
     if (!source || !destination) {
-        XtFree(source); XtFree(destination); notify(w,M(223,"Not enough memory.")); return;
+        XtFree(source); XtFree(destination); command_notice(w,M(223,"Not enough memory.")); return;
     }
     /* Both display copies exist before either field changes. An edited field
      * has no retained native pointer: move that fact with its exact text too.
@@ -188,10 +233,10 @@ static void clear_prepared_path(PreparedPath *path)
 static int prepare_native_path(SyncWindow *w,const char *path,PreparedPath *prepared)
 {
     size_t n=strnlen(path,SYNC_PROFILE_PATH_MAX+1);
-    if (n>SYNC_PROFILE_PATH_MAX) { notify(w,M(222,"Folder path is too long.")); return 0; }
+    if (n>SYNC_PROFILE_PATH_MAX) { command_notice(w,M(222,"Folder path is too long.")); return 0; }
     prepared->native=strdup(path); prepared->display=malloc(n*4+1);
     if (!prepared->native || !prepared->display) {
-        clear_prepared_path(prepared); notify(w,M(223,"Not enough memory.")); return 0;
+        clear_prepared_path(prepared); command_notice(w,M(223,"Not enough memory.")); return 0;
     }
     size_t j=0; static const char hex[]="0123456789abcdef";
     for (size_t i=0;i<n;++i) {
@@ -226,7 +271,7 @@ static void path_edited(Widget field,XtPointer data,XtPointer call)
 }
 static void mark_dirty(SyncWindow *w)
 {
-    w->dirty=1;
+    clear_command_notice(w); w->dirty=1;
     ++w->local_rules_revision;
     if (w->execute) XtSetSensitive(w->execute,False);
 }
@@ -259,7 +304,7 @@ static void folder_chosen(Widget dialog,XtPointer data,XtPointer call)
         int accepted=set_native_path(choice->window,choice->target,path); XtFree(path);
         if (!accepted) return;
     } else {
-        notify(choice->window,M(282,"Cannot read the selected folder name.")); return;
+        command_notice(choice->window,M(282,"Cannot read the selected folder name.")); return;
     }
     XtDestroyWidget(XtParent(dialog));
 }
@@ -269,7 +314,7 @@ static void choose_folder(Widget button,XtPointer data,XtPointer call)
 {
     (void)call; SyncWindow *w=data; Widget target=NULL;
     XtVaGetValues(button,XmNuserData,&target,NULL);
-    FolderChoice *choice=malloc(sizeof(*choice)); if (!choice) { notify(w,M(223,"Not enough memory.")); return; }
+    FolderChoice *choice=malloc(sizeof(*choice)); if (!choice) { command_notice(w,M(223,"Not enough memory.")); return; }
     choice->window=w; choice->target=target;
     Widget dialog=XmCreateFileSelectionDialog(w->shell,"chooseFolder",NULL,0);
     XmString title=XmStringCreateLocalized((char *)M(96,"Choose a folder"));
@@ -370,6 +415,14 @@ static void selection_changed(Widget widget,XtPointer data,XtPointer call)
     uint64_t rename_row=n==1?ids[0]:0;
     int rename_selection_changed=n!=w->rename_selection_count || rename_row!=w->rename_row;
     w->rename_selection_count=n; w->rename_row=rename_row;
+    int feedback_changed=n!=w->feedback_selection_count;
+    for (unsigned i=0;i<n && !feedback_changed;++i) {
+        unsigned j=0;
+        while (j<w->feedback_selection_count && ids[i]!=w->feedback_selection[j]) ++j;
+        if (j==w->feedback_selection_count) feedback_changed=1;
+    }
+    memcpy(w->feedback_selection,ids,n*sizeof(*ids)); w->feedback_selection_count=n;
+    if (feedback_changed) clear_command_notice(w);
     if (rename_selection_changed && w->new_name && XmTextFieldGetLastPosition(w->new_name)>0) {
         mark_dirty(w); if (w->rules_list) render_rules(w);
     }
@@ -421,7 +474,7 @@ static void selection_changed(Widget widget,XtPointer data,XtPointer call)
     XmTextSetString(w->details,text);
 }
 static void choice_context_changed(Widget widget,XtPointer data,XtPointer call)
-{ (void)call; selection_changed(widget,data,NULL); }
+{ (void)call; clear_command_notice((SyncWindow *)data); selection_changed(widget,data,NULL); }
 static void observe_choice_option(Widget menu,SyncWindow *w)
 {
     Widget pane=NULL; WidgetList children=NULL; Cardinal count=0;
@@ -493,7 +546,7 @@ static int date_bound(Widget field,ckfsp_timestamp *out,int *present)
 }
 static int setup_error(SyncWindow *w,Widget field,const char *message)
 {
-    notify(w,message); XtVaSetValues(w->notebook,XmNcurrentPageNumber,1,NULL);
+    command_notice(w,message); XtVaSetValues(w->notebook,XmNcurrentPageNumber,1,NULL);
     XmScrollVisible(w->setup_viewport,field,8,8);
     XmProcessTraversal(field,XmTRAVERSE_CURRENT);
     XmTextFieldSetInsertionPosition(field,0);
@@ -543,6 +596,7 @@ static int setup_fields(SyncWindow *w,SyncSetup *setup,char **source,char **dest
 }
 static void reset_result_view(SyncWindow *w)
 {
+    clear_command_notice(w);
     /* Retain only reusable job preferences. Row-scoped rules belong to the old
      * generation and cannot be rebound by list position to a new inventory. */
     unsigned reusable=0;
@@ -551,7 +605,7 @@ static void reset_result_view(SyncWindow *w)
         else free(w->rules[i].subtree);
     }
     w->rule_count=reusable; w->have_rendered=0; w->displayed_count=0; w->pause_requested=0; w->cancel_requested=0; w->last_error[0]=0;
-    w->rename_selection_count=0; w->rename_row=0;
+    w->rename_selection_count=0; w->rename_row=0; w->feedback_selection_count=0;
     w->dirty=1; w->setup_dirty=0; w->review_pending=0; w->execute_pending=0;
     memset(w->view,0,sizeof(*w->view));
     XmListDeleteAllItems(w->rules_list); XmListDeleteAllItems(w->list);
@@ -572,9 +626,9 @@ static void compare(Widget widget,XtPointer data,XtPointer call)
         if (!SyncJobDestroy(w->job)) {
             if (w->view->finished || (w->view->snapshot.state==CKFET_AWAITING_REVIEW && !w->review_pending && !w->execute_pending)) {
                 w->recompare=1; SyncJobStop(w->job); XtSetSensitive(w->setup,False); XtSetSensitive(w->compare,False);
-                notify(w,M(260,"Preparing a fresh comparison..."));
+                progress_notice(w,M(260,"Preparing a fresh comparison..."));
             }
-            else notify(w,M(24,"Cancel or finish the current operation before comparing again."));
+            else command_notice(w,M(24,"Cancel or finish the current operation before comparing again."));
             return;
         }
         w->job=NULL;
@@ -586,7 +640,7 @@ static void compare(Widget widget,XtPointer data,XtPointer call)
     }
     char error[512]={0}; w->job=SyncJobStart(&setup,error,sizeof(error));
     XtFree(source); XtFree(destination);
-    if (!w->job) { notify(w,error[0]?error:M(26,"Cannot start operation")); return; }
+    if (!w->job) { command_notice(w,error[0]?error:M(26,"Cannot start operation")); return; }
     char *shown_source=XmTextFieldGetString(w->source),*shown_target=XmTextFieldGetString(w->destination);
     char roots[2048]; snprintf(roots,sizeof(roots),"%s: %.900s\n%s: %.900s",M(6,"Source"),shown_source,M(7,"Destination"),shown_target);
     label(w->compared_roots,roots); XtFree(shown_source); XtFree(shown_target);
@@ -594,48 +648,71 @@ static void compare(Widget widget,XtPointer data,XtPointer call)
     XtSetSensitive(w->setup,False);
     XtVaSetValues(w->notebook,XmNcurrentPageNumber,2,NULL);
 }
+static void rule_name_side(SyncWindow *w,uint32_t choice)
+{
+    if (choice==CKFET_KEEP_BOTH_TARGET) w->name_side=1;
+    else if (choice==CKFET_KEEP_BOTH_INCOMING || choice==CKFET_RENAME) w->name_side=0;
+    option_selected(w->name_side_option,w->name_side);
+}
 static void add_rule(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data;
-    if (!w->job || w->view->snapshot.state!=CKFET_AWAITING_REVIEW || w->rule_count==SYNC_MAX_RULES) return;
-    if (w->choice>=23 || !XtIsSensitive(w->choice_menu[w->choice])) {
-        notify(w,M(279,"Choose an action available for this matching class and scope.")); return;
-    }
-    SyncRule r; memset(&r,0,sizeof(r)); r.choice=w->choice; r.kind=w->kind;
-    r.tie=w->fallback==0?CKFET_ASK:w->fallback==1?CKFET_KEEP_TARGET:CKFET_KEEP_BOTH_INCOMING;
+    (void)widget;(void)call;
+    SyncWindow *w=data;
+    if (w->closing || w->cancel_requested) return;
+    if (w->view->snapshot.recovery_required || w->view->finished || w->view->stopped) return;
+    if (!w->job || w->view->snapshot.state!=CKFET_AWAITING_REVIEW) return;
+    clear_command_notice(w);
     const uint32_t scopes[]={CKFET_SCOPE_JOB,CKFET_SCOPE_SELECTED,CKFET_SCOPE_ITEM,CKFET_SCOPE_SUBTREE};
-    r.scope=scopes[w->scope];
-    r.protect_nonempty=XmToggleButtonGetState(w->zero); r.retain_replaced=XmToggleButtonGetState(w->retain);
-    if (r.choice==CKFET_KEEP_BOTH_TARGET) w->name_side=1;
-    else if (r.choice==CKFET_KEEP_BOTH_INCOMING || r.choice==CKFET_RENAME) w->name_side=0;
-    option_selected(w->name_side_option,w->name_side);
+    if (w->scope>=XtNumber(scopes)) {
+        command_notice(w,M(312,"Choose a matching-rule scope.")); return;
+    }
+    SyncRule r; memset(&r,0,sizeof(r)); r.scope=scopes[w->scope];
     uint64_t ids[SYNC_PAGE_SIZE]; int first;
     unsigned n=selected_rows(w,ids,&first);
     if (r.scope!=CKFET_SCOPE_JOB) {
-        if (!n) { notify(w,M(27,"Select matching rows first.")); return; }
+        if (!n) { command_notice(w,M(27,"Select matching rows first.")); return; }
         if ((r.scope==CKFET_SCOPE_ITEM || r.scope==CKFET_SCOPE_SUBTREE) && n!=1) {
-            notify(w,M(85,"Select exactly one item or subtree root.")); return;
+            command_notice(w,M(85,"Select exactly one item or subtree root.")); return;
         }
         memcpy(r.selected,ids,n*sizeof(*ids)); r.selected_count=n;
     }
-    /* Replacing an identical scope/class is an explicit edit, not conflicting rules. */
+    if (w->choice>=23 || !XtIsSensitive(w->choice_menu[w->choice])) {
+        command_notice(w,M(279,"Choose an action available for this matching class and scope.")); return;
+    }
+    r.choice=w->choice; r.kind=w->kind;
+    r.tie=w->fallback==0?CKFET_ASK:w->fallback==1?CKFET_KEEP_TARGET:CKFET_KEEP_BOTH_INCOMING;
+    r.protect_nonempty=XmToggleButtonGetState(w->zero); r.retain_replaced=XmToggleButtonGetState(w->retain);
+    /* Existing rules can be replaced even when every slot is occupied. Only a
+     * successful edit may adjust the rename side or invalidate its receipt. */
     for (unsigned i=0;i<w->rule_count;++i) {
         if (w->rules[i].kind==r.kind && w->rules[i].scope==r.scope && w->rules[i].selected_count==r.selected_count &&
             !memcmp(w->rules[i].selected,r.selected,r.selected_count*sizeof(uint64_t))) {
-            free(w->rules[i].subtree); w->rules[i]=r; mark_dirty(w); render_rules(w);
-            notify(w,M(28,"Rule updated. Review rules before applying the changed plan.")); return;
+            free(w->rules[i].subtree); w->rules[i]=r; rule_name_side(w,r.choice);
+            mark_dirty(w); render_rules(w);
+            command_notice(w,M(28,"Rule updated. Review rules before applying the changed plan.")); return;
         }
     }
-    w->rules[w->rule_count++]=r; mark_dirty(w); render_rules(w);
-    notify(w,M(29,"Rule added. Review rules to see matched counts and consequences."));
+    if (w->rule_count==SYNC_MAX_RULES) {
+        command_notice(w,M(310,"Matching rule limit reached. Remove a rule before adding another.")); return;
+    }
+    w->rules[w->rule_count++]=r; rule_name_side(w,r.choice); mark_dirty(w); render_rules(w);
+    command_notice(w,M(29,"Rule added. Review rules to see matched counts and consequences."));
 }
 static void remove_rule(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data; int *positions=NULL,n=0;
-    if (!XmListGetSelectedPos(w->rules_list,&positions,&n) || n!=1) { XtFree((char *)positions); return; }
+    (void)widget;(void)call;
+    SyncWindow *w=data;
+    if (w->closing || w->cancel_requested) return;
+    if (w->view->snapshot.recovery_required || w->view->finished || w->view->stopped) return;
+    int *positions=NULL,n=0;
+    clear_command_notice(w);
+    if (!XmListGetSelectedPos(w->rules_list,&positions,&n) || n!=1) {
+        XtFree((char *)positions); command_notice(w,M(311,"Select one rule to remove.")); return;
+    }
     unsigned i=(unsigned)(positions[0]-1); XtFree((char *)positions);
-    if (i<w->rule_count) { free(w->rules[i].subtree); memmove(w->rules+i,w->rules+i+1,(w->rule_count-i-1)*sizeof(SyncRule)); --w->rule_count; }
-    mark_dirty(w); render_rules(w); notify(w,M(30,"Rule removed. Review the changed rule list before execution."));
+    if (i>=w->rule_count) { command_notice(w,M(311,"Select one rule to remove.")); return; }
+    free(w->rules[i].subtree); memmove(w->rules+i,w->rules+i+1,(w->rule_count-i-1)*sizeof(SyncRule)); --w->rule_count;
+    mark_dirty(w); render_rules(w); command_notice(w,M(30,"Rule removed. Review the changed rule list before execution."));
 }
 static void profile_selected(Widget widget,XtPointer data,XtPointer call)
 {
@@ -645,8 +722,12 @@ static void profile_selected(Widget widget,XtPointer data,XtPointer call)
 }
 static void save_profile(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data; if (!w->preferences) return;
-    SyncProfile *profile=calloc(1,sizeof(*profile)); if (!profile) { notify(w,M(223,"Not enough memory.")); return; }
+    (void)widget;(void)call;
+    SyncWindow *w=data;
+    if (w->closing) return;
+    clear_command_notice(w);
+    if (!w->preferences) return;
+    SyncProfile *profile=calloc(1,sizeof(*profile)); if (!profile) { command_notice(w,M(223,"Not enough memory.")); return; }
     char *name=XmTextFieldGetString(w->profile_name),*source=NULL,*destination=NULL; SyncSetup setup;
     if (!name || !*name || strlen(name)>SYNC_PROFILE_NAME_MAX) {
         label(w->profile_status,M(224,"Enter a profile name (1-64 bytes).")); goto done;
@@ -671,13 +752,16 @@ done:
 }
 static void load_profile(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data;
+    (void)widget;(void)call;
+    SyncWindow *w=data;
+    if (w->closing) return;
+    clear_command_notice(w);
     if (!w->preferences || (w->job && !w->view->finished &&
         (w->view->snapshot.state!=CKFET_AWAITING_REVIEW || w->review_pending || w->execute_pending))) return;
     char *name=XmTextFieldGetString(w->profile_name);
-    if (!name) { notify(w,M(223,"Not enough memory.")); return; }
+    if (!name) { command_notice(w,M(223,"Not enough memory.")); return; }
     SyncProfile *profile=calloc(1,sizeof(*profile));
-    if (!profile) { XtFree(name); notify(w,M(223,"Not enough memory.")); return; }
+    if (!profile) { XtFree(name); command_notice(w,M(223,"Not enough memory.")); return; }
     SyncProfilesResult result=SyncProfilesGetProfile(w->preferences,name,profile); XtFree(name);
     if (result!=SYNC_PROFILES_OK) { free(profile); label(w->profile_status,M(228,"Choose an available saved profile.")); return; }
     char after[40]="",before[40]=""; unsigned mode=0;
@@ -730,13 +814,17 @@ static void profile_deletion_ok(Widget dialog,XtPointer data,XtPointer call)
 }
 static void delete_profile(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data;
+    (void)widget;(void)call;
+    SyncWindow *w=data;
+    if (w->closing) return;
+    clear_command_notice(w);
+    if (!w->preferences) { command_notice(w,M(236,"Saved preferences are unavailable.")); return; }
     char *name=XmTextFieldGetString(w->profile_name);
     if (!name || !*name || strlen(name)>SYNC_PROFILE_NAME_MAX) { XtFree(name); label(w->profile_status,M(228,"Choose an available saved profile.")); return; }
     ProfileDeletion *choice=calloc(1,sizeof(*choice));
     if (choice) choice->name=strdup(name);
     XtFree(name);
-    if (!choice || !choice->name) { if (choice) free(choice); notify(w,M(223,"Not enough memory.")); return; }
+    if (!choice || !choice->name) { if (choice) free(choice); command_notice(w,M(223,"Not enough memory.")); return; }
     choice->window=w;
     char question[256]; snprintf(question,sizeof(question),M(252,"Delete saved profile '%s'?\nThis removes preferences only."),choice->name);
     Widget dialog=XmCreateQuestionDialog(w->shell,"deleteProfile",NULL,0);
@@ -752,13 +840,18 @@ static void delete_profile(Widget widget,XtPointer data,XtPointer call)
 }
 static void review(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data; if (!w->job || w->review_pending || w->execute_pending) return;
-    if (w->setup_dirty) { notify(w,M(261,"Folder options changed. Compare again before reviewing or applying changes.")); return; }
+    (void)widget;(void)call;
+    SyncWindow *w=data;
+    if (w->closing || w->cancel_requested) return;
+    if (w->view->snapshot.recovery_required || w->view->finished || w->view->stopped) return;
+    clear_command_notice(w);
+    if (!w->job || w->review_pending || w->execute_pending) return;
+    if (w->setup_dirty) { command_notice(w,M(261,"Folder options changed. Compare again before reviewing or applying changes.")); return; }
     uint64_t ids[SYNC_PAGE_SIZE]; int first; unsigned n=selected_rows(w,ids,&first);
     char *name=XmTextFieldGetString(w->new_name);
-    if (!name) { notify(w,M(223,"Not enough memory.")); return; }
+    if (!name) { command_notice(w,M(223,"Not enough memory.")); return; }
     if (*name && (n!=1 || strchr(name,'/') || !strcmp(name,".") || !strcmp(name,".."))) {
-        notify(w,M(31,"For a reviewed rename, select one row and enter one basename.")); XtFree(name); return;
+        command_notice(w,M(31,"For a reviewed rename, select one row and enter one basename.")); XtFree(name); return;
     }
     w->rename_selection_count=n; w->rename_row=n==1?ids[0]:0;
     uint64_t serial=SyncJobReview(w->job,w->view->snapshot.plan_generation,w->rules,w->rule_count,NULL,0,
@@ -768,22 +861,28 @@ static void review(Widget widget,XtPointer data,XtPointer call)
     w->reviewed_rules_revision=w->local_rules_revision;
     XtSetSensitive(w->execute,False);
     if (serial) { XtSetSensitive(w->review,False); XtSetSensitive(w->rule_page,False); XtSetSensitive(w->setup,False); XtSetSensitive(w->compare,False); }
-    notify(w,serial?M(32,"Evaluating rules; no files have been changed."):M(33,"Worker is busy; try the command again."));
+    if (serial) notify(w,M(32,"Evaluating rules; no files have been changed."));
+    else command_notice(w,M(33,"Worker is busy; try the command again."));
 }
 static void execute(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data; if (!w->job || w->review_pending || w->execute_pending) return;
+    (void)widget;(void)call;
+    SyncWindow *w=data;
+    if (w->closing || w->cancel_requested) return;
+    if (w->view->snapshot.recovery_required || w->view->finished || w->view->stopped) return;
+    clear_command_notice(w);
+    if (!w->job || w->review_pending || w->execute_pending) return;
     if (!DTFILE_SYNC_MUTATION_QUALIFIED) {
-        notify(w,M(258,"Applying changes is unavailable until native execution is qualified.")); return;
+        command_notice(w,M(258,"Applying changes is unavailable until native execution is qualified.")); return;
     }
     if (w->dirty || w->setup_dirty || !SyncJobViewCoherent(w->view) || w->view->api!=CKFE_API_OK ||
         w->view->snapshot.state!=CKFET_AWAITING_REVIEW || w->view->snapshot.unresolved_rows ||
         !w->view->snapshot.receipt_id || w->view->snapshot.rule_count!=w->rule_count ||
         profiles[w->profile_index]==CKFSP_COMPARE || profiles[w->profile_index]==CKFSP_MIRROR) {
-        notify(w,M(273,"Compare and review the complete current plan before applying changes.")); return;
+        command_notice(w,M(273,"Compare and review the complete current plan before applying changes.")); return;
     }
     w->execute_serial=SyncJobExecute(w->job,w->view->snapshot.plan_generation,w->view->snapshot.receipt_id);
-    if (!w->execute_serial) notify(w,M(33,"Worker is busy; try the command again."));
+    if (!w->execute_serial) command_notice(w,M(33,"Worker is busy; try the command again."));
     else {
         w->execute_pending=1; XtSetSensitive(w->execute,False); XtSetSensitive(w->review,False); XtSetSensitive(w->rule_page,False);
         XtSetSensitive(w->setup,False); XtSetSensitive(w->compare,False);
@@ -792,13 +891,17 @@ static void execute(Widget widget,XtPointer data,XtPointer call)
 }
 static void pause_job(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data; if (!w->job) return;
+    (void)widget;(void)call; SyncWindow *w=data; if (!w->job || w->closing || w->cancel_requested) return;
+    if (w->view->settling || w->view->finished || w->view->stopped || w->view->snapshot.recovery_required) return;
     w->pause_requested=!w->pause_requested; SyncJobPause(w->job,w->pause_requested);
 }
 static void cancel_job(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data; if (!w->job) return;
-    w->cancel_requested=1; SyncJobCancel(w->job); notify(w,M(35,"Cancelling - finishing safe cleanup..."));
+    (void)widget;(void)call; SyncWindow *w=data; if (!w->job || w->closing || w->cancel_requested) return;
+    clear_command_notice(w); w->cancel_requested=1; SyncJobCancel(w->job);
+    Widget controls[]={w->setup,w->compare,w->review,w->execute,w->rule_page,w->pause,w->cancel,w->previous,w->next};
+    for (unsigned i=0;i<XtNumber(controls);++i) XtSetSensitive(controls[i],False);
+    progress_notice(w,M(35,"Cancelling - finishing safe cleanup..."));
 }
 static void help(Widget widget,XtPointer data,XtPointer call)
 {
@@ -816,19 +919,22 @@ static void help(Widget widget,XtPointer data,XtPointer call)
 static void close_window(Widget widget,XtPointer data,XtPointer call)
 {
     (void)widget;(void)call; SyncWindow *w=data;
-    w->closing=1; w->recompare=0;
+    w->closing=1; clear_command_notice(w); w->recompare=0;
     if (w->job) SyncJobStop(w->job);
     if (w->preferences) SyncProfilesStop(w->preferences);
-    notify(w,M(35,"Cancelling - finishing safe cleanup..."));
+    Widget controls[]={w->setup,w->compare,w->review,w->execute,w->rule_page,w->pause,w->cancel,
+        w->previous,w->next,w->profile_save};
+    for (unsigned i=0;i<XtNumber(controls);++i) XtSetSensitive(controls[i],False);
+    progress_notice(w,M(313,"Closing - finishing safe cleanup..."));
 }
 static void previous(Widget widget,XtPointer data,XtPointer call)
 {
     (void)widget;(void)call; SyncWindow *w=data;
-    if (w->job) SyncJobPage(w->job,w->view->offset>=SYNC_PAGE_SIZE?w->view->offset-SYNC_PAGE_SIZE:0);
+    if (w->job && !w->closing && !w->cancel_requested) SyncJobPage(w->job,w->view->offset>=SYNC_PAGE_SIZE?w->view->offset-SYNC_PAGE_SIZE:0);
 }
 static void next(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)widget;(void)call; SyncWindow *w=data; if (w->job && w->view->has_next) SyncJobPage(w->job,w->view->next_offset);
+    (void)widget;(void)call; SyncWindow *w=data; if (w->job && !w->closing && !w->cancel_requested && w->view->has_next) SyncJobPage(w->job,w->view->next_offset);
 }
 static void tick(XtPointer data,XtIntervalId *id)
 {
@@ -843,16 +949,21 @@ static void tick(XtPointer data,XtIntervalId *id)
             int ready=snapshot.state==SYNC_PROFILES_READY || snapshot.state==SYNC_PROFILES_ERROR;
             XtSetSensitive(w->profile_save,ready && !w->closing);
             XtSetSensitive(w->profile_load,ready && !w->closing);
+            XtSetSensitive(w->profile_delete,ready && !w->closing);
             if (snapshot.error[0]) label(w->profile_status,snapshot.error);
             else if (snapshot.state==SYNC_PROFILES_SAVING) label(w->profile_status,M(226,"Saving profile preferences..."));
             else if (snapshot.state==SYNC_PROFILES_READY) label(w->profile_status,M(231,"Profile preferences ready."));
         }
     }
     if (w->job && SyncJobRead(w->job,w->view)) {
-        const SyncView *v=w->view; int awaiting=v->ready && !v->settling && v->snapshot.state==CKFET_AWAITING_REVIEW && !v->stopped &&
+        const SyncView *v=w->view;
+        if (w->command_notice[0] && w->command_notice_generation!=v->snapshot.plan_generation)
+            clear_command_notice(w);
+        int awaiting=v->ready && !v->settling && !v->snapshot.recovery_required &&
+            v->snapshot.state==CKFET_AWAITING_REVIEW && !v->stopped &&
             v->snapshot.command_state!=CKFET_COMMAND_PENDING;
         int active=!v->finished && !v->stopped;
-        int configure=(!active || awaiting) && !w->review_pending && !w->execute_pending && !w->recompare && !w->closing;
+        int configure=(!active || (awaiting && !w->cancel_requested)) && !w->review_pending && !w->execute_pending && !w->recompare && !w->closing;
         XtSetSensitive(w->setup,configure); XtSetSensitive(w->compare,configure);
         int coherent=SyncJobViewCoherent(v) && v->summary_valid && v->summary_generation==v->snapshot.plan_generation &&
             v->summary_receipt==v->snapshot.receipt_id;
@@ -865,15 +976,16 @@ static void tick(XtPointer data,XtIntervalId *id)
         if (w->execute_pending && v->completed_submission==w->execute_serial && !v->command_accepted) {
             w->dirty=1; w->execute_pending=0;
         }
-        XtSetSensitive(w->review,awaiting && !w->setup_dirty && !w->review_pending && !w->execute_pending);
-        XtSetSensitive(w->pause,active && (v->snapshot.state!=CKFET_AWAITING_REVIEW ||
+        XtSetSensitive(w->review,awaiting && !w->cancel_requested && !w->closing && !w->setup_dirty && !w->review_pending && !w->execute_pending);
+        XtSetSensitive(w->pause,!w->closing && !w->cancel_requested && !v->settling && !v->snapshot.recovery_required && active && (v->snapshot.state!=CKFET_AWAITING_REVIEW ||
             v->snapshot.pause_requested || v->snapshot.paused));
-        XtSetSensitive(w->rule_page,awaiting && coherent && !w->setup_dirty && !w->review_pending && !w->execute_pending);
+        XtSetSensitive(w->rule_page,awaiting && coherent && !w->cancel_requested && !w->closing && !w->setup_dirty && !w->review_pending && !w->execute_pending);
         XtSetSensitive(w->list,v->cache_valid);
-        XtSetSensitive(w->cancel,active); XtSetSensitive(w->previous,v->offset>0);
-        XtSetSensitive(w->next,v->has_next);
+        XtSetSensitive(w->cancel,!w->closing && !w->cancel_requested && active);
+        XtSetSensitive(w->previous,!w->closing && !w->cancel_requested && v->offset>0);
+        XtSetSensitive(w->next,!w->closing && !w->cancel_requested && v->has_next);
         /* A local rule edit must not reuse a receipt from the prior rule list. */
-        int reviewed=!w->dirty && !w->setup_dirty && !w->review_pending && !w->execute_pending && v->snapshot.rule_count==w->rule_count;
+        int reviewed=!w->closing && !w->cancel_requested && !w->dirty && !w->setup_dirty && !w->review_pending && !w->execute_pending && v->snapshot.rule_count==w->rule_count;
         XtSetSensitive(w->execute,DTFILE_SYNC_MUTATION_QUALIFIED && awaiting && coherent && reviewed && v->api==CKFE_API_OK && v->snapshot.receipt_id && !v->snapshot.unresolved_rows &&
             profiles[w->profile_index]!=CKFSP_COMPARE && profiles[w->profile_index]!=CKFSP_MIRROR);
         label(w->pause,v->snapshot.pause_requested?M(36,"Resume"):M(37,"Pause"));
@@ -882,13 +994,10 @@ static void tick(XtPointer data,XtIntervalId *id)
             render_rows(w); render_rules(w); w->rendered_sequence=v->snapshot.sequence; w->rendered_offset=v->offset;
             w->rendered_names_valid=v->names_valid; w->have_rendered=1;
         }
-        char text[1024];
-        if ((w->cancel_requested || v->settling) && active) snprintf(text,sizeof(text),"%s",M(35,"Cancelling - finishing safe cleanup..."));
-        else if (v->snapshot.state>=CKFET_COMPLETE && !v->drained && !v->stopped)
-            snprintf(text,sizeof(text),"%s",M(257,"Finalizing the operation and releasing native resources..."));
-        else if (w->setup_dirty && awaiting) snprintf(text,sizeof(text),"%s",M(261,"Folder options changed. Compare again before reviewing or applying changes."));
-        else if (v->error[0]) {
-            snprintf(text,sizeof(text),"%s\n%s",M(98,"Operation needs attention. See details and recovery information."),v->error);
+        char text[1024],backend_error[1024]={0};
+        if (v->error[0]) {
+            snprintf(backend_error,sizeof(backend_error),"%s\n%s",
+                M(98,"Operation needs attention. See details and recovery information."),v->error);
             if (strcmp(w->last_error,v->error)) {
                 char details[4096];
                 if (v->journal[0]) snprintf(details,sizeof(details),"%s\n\n%s: %s",v->error,M(14,"Journal directory"),v->journal);
@@ -896,6 +1005,21 @@ static void tick(XtPointer data,XtIntervalId *id)
                 XmTextSetString(w->details,details); snprintf(w->last_error,sizeof(w->last_error),"%s",v->error);
             }
         }
+        const char *recovery=v->snapshot.recovery_required?M(242,"Recovery required"):"";
+        if (w->closing)
+            snprintf(text,sizeof(text),"%s%s%s",M(313,"Closing - finishing safe cleanup..."),*recovery?"\n":"",recovery);
+        else if ((w->cancel_requested || v->settling) && active)
+            snprintf(text,sizeof(text),"%s%s%s",M(35,"Cancelling - finishing safe cleanup..."),*recovery?"\n":"",recovery);
+        else if (v->snapshot.state>=CKFET_COMPLETE && !v->drained && !v->stopped)
+            snprintf(text,sizeof(text),"%s%s%s",M(257,"Finalizing the operation and releasing native resources..."),*recovery?"\n":"",recovery);
+        else if (*recovery) snprintf(text,sizeof(text),"%s%s%s",recovery,v->error[0]?"\n":"",v->error);
+        else if (v->error[0] && (!awaiting || !coherent)) snprintf(text,sizeof(text),"%s",backend_error);
+        /* Local command feedback belongs to this coherent review generation.
+         * It may replace an older command rejection, never recovery or drain. */
+        else if (w->command_notice[0] && command_notice_ready(w))
+            snprintf(text,sizeof(text),"%s",w->command_notice);
+        else if (w->setup_dirty && awaiting) snprintf(text,sizeof(text),"%s",M(261,"Folder options changed. Compare again before reviewing or applying changes."));
+        else if (v->error[0]) snprintf(text,sizeof(text),"%s",backend_error);
         else if (w->dirty && awaiting) snprintf(text,sizeof(text),"%s",M(221,"Not reviewed"));
         else snprintf(text,sizeof(text),"%s%s\n%" PRIu64 " %s, %" PRIu64 " %s, %" PRIu64 " %s; %" PRIu64 "/%" PRIu64 " %s%s",
             v->snapshot.paused?M(38,"Paused"):state_label(v->snapshot.state),
@@ -941,6 +1065,7 @@ int main(int argc,char **argv)
     Widget profile_entry=XtVaCreateManagedWidget("profileEntry",xmRowColumnWidgetClass,profile_bar,XmNorientation,XmHORIZONTAL,NULL);
     w.profile_name=field(profile_entry,"profileName",M(232,"Profile name:"),"",28);
     XtVaSetValues(w.profile_name,XmNmaxLength,SYNC_PROFILE_NAME_MAX,NULL);
+    XtAddCallback(w.profile_name,XmNvalueChangedCallback,rule_input_changed,&w);
     w.profile_save=button(profile_entry,"saveProfile",M(233,"Save preferences"),save_profile,&w);
     w.profile_status=XtVaCreateManagedWidget("profileStatus",xmLabelWidgetClass,profile_bar,
         XmNalignment,XmALIGNMENT_BEGINNING,XmNrecomputeSize,False,XmNheight,24,XmNwidth,1000,NULL);
@@ -973,7 +1098,8 @@ int main(int argc,char **argv)
     XtAddCallback(w.profile_list,XmNdefaultActionCallback,load_profile,&w);
     Widget profile_buttons=XtVaCreateManagedWidget("profileButtons",xmRowColumnWidgetClass,w.setup,XmNorientation,XmHORIZONTAL,NULL);
     w.profile_load=button(profile_buttons,"loadProfile",M(235,"Load selected preferences"),load_profile,&w); XtSetSensitive(w.profile_load,False);
-    button(profile_buttons,"deleteProfile",M(253,"Delete profile"),delete_profile,&w);
+    w.profile_delete=button(profile_buttons,"deleteProfile",M(253,"Delete profile"),delete_profile,&w);
+    XtSetSensitive(w.profile_delete,False);
     w.source=folder_field(&w,"source",M(43,"Source folder:"),"");
     w.destination=folder_field(&w,"destination",M(44,"Destination folder:"),"");
     XtAddCallback(w.source,XmNvalueChangedCallback,path_edited,&w); XtAddCallback(w.destination,XmNvalueChangedCallback,path_edited,&w);
@@ -1028,15 +1154,19 @@ int main(int argc,char **argv)
     const char *classes[15],*choices[23]; for (unsigned i=0;i<15;++i) classes[i]=kind_label(i); for (unsigned i=0;i<23;++i) choices[i]=choice_label(i);
     w.class_option=option(editor,"conflictClass",M(64,"Matching class:"),classes,15,&w.kind,w.class_menu);
     observe_choice_option(w.class_option,&w);
-    option(editor,"choice",M(65,"Action:"),choices,23,&w.choice,w.choice_menu);
+    Widget choice_option=option(editor,"choice",M(65,"Action:"),choices,23,&w.choice,w.choice_menu);
+    observe_choice_option(choice_option,&w);
     const char *scopes[]={M(66,"All matching in job"),M(67,"Selected matching rows"),M(89,"This item"),M(90,"Matching in selected subtree")};
     Widget scope_option=option(editor,"scope",M(68,"Scope:"),scopes,4,&w.scope,NULL); observe_choice_option(scope_option,&w);
     Widget policies=XtVaCreateManagedWidget("policies",xmRowColumnWidgetClass,rule_page,NULL);
     const char *fallbacks[]={M(69,"Ask"),M(70,"Keep target"),M(71,"Keep both incoming")};
-    option(policies,"fallback",M(72,"Tie / unknown fallback:"),fallbacks,3,&w.fallback,NULL);
+    Widget fallback_option=option(policies,"fallback",M(72,"Tie / unknown fallback:"),fallbacks,3,&w.fallback,NULL);
+    observe_choice_option(fallback_option,&w);
     w.zero=XtVaCreateManagedWidget("protectNonempty",xmToggleButtonWidgetClass,policies,XmNset,True,NULL);
     label(w.zero,M(73,"Do not replace nonempty with empty"));
+    XtAddCallback(w.zero,XmNvalueChangedCallback,rule_input_changed,&w);
     w.retain=XtVaCreateManagedWidget("retainReplaced",xmToggleButtonWidgetClass,policies,XmNset,True,NULL); label(w.retain,M(74,"Preserve replaced versions"));
+    XtAddCallback(w.retain,XmNvalueChangedCallback,rule_input_changed,&w);
     w.new_name=field(rule_page,"newName",M(75,"Exact reviewed basename (one row):"),"",40);
     XtAddCallback(w.new_name,XmNvalueChangedCallback,name_changed,&w);
     const char *name_sides[]={M(254,"Incoming object"),M(255,"Existing target")};
@@ -1049,6 +1179,7 @@ int main(int argc,char **argv)
     button(rule_buttons,"addRule",M(76,"Add / update matching rule"),add_rule,&w);
     w.remove_rule=button(rule_buttons,"removeRule",M(77,"Remove selected rule"),remove_rule,&w);
     n=0; XtSetArg(args[n],XmNvisibleItemCount,5);++n; w.rules_list=XmCreateScrolledList(rule_page,"activeRules",args,n); XtManageChild(w.rules_list);
+    XtAddCallback(w.rules_list,XmNbrowseSelectionCallback,rule_input_changed,&w);
     n=0; XtSetArg(args[n],XmNrows,5);++n; XtSetArg(args[n],XmNeditable,False);++n;
     XtSetArg(args[n],XmNeditMode,XmMULTI_LINE_EDIT);++n;
     XtSetArg(args[n],XmNwordWrap,True);++n; XtSetArg(args[n],XmNscrollHorizontal,False);++n;
