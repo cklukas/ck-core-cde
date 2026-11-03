@@ -385,6 +385,7 @@ static BOOL	menu_in_list(
 		);
 
 static void strings_init(
+		    void
 		);
 
 

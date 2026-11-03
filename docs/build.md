@@ -243,7 +243,12 @@ The maintained generated application source also initializes project-open and
 import chooser arrays with the direct callbacks. Their shared implementations
 recover the selection-box record internally. The final application also
 includes the parser header from the sibling build directory rather than
-depending on an in-source generated copy. Dtterm resolves its
+depending on an in-source generated copy. App Builder's remaining internal and
+public no-argument declarations use `(void)`, and unused generic function
+pointer aliases have been removed. A complete GNU17 diagnostic audit with
+`-Wstrict-prototypes -Wold-style-definition` reports no remaining ambiguous
+declaration or old-style definition before the same target is rebuilt in C23
+mode. Dtterm resolves its
 terminfo and fallback-resource generation scripts and inputs through
 `$(srcdir)`, while its compile includes cover both generated build headers and
 the checked-in private terminal headers.

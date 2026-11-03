@@ -96,6 +96,7 @@ typedef struct  ATTACHMENT_EDITOR_SETTINGS
 } AttchEditorSettingsRec, *AttchEditorSettings;
 
 void		attch_ed_init(
+		    void
 		);
 
 void		attch_ed_show_dialog(

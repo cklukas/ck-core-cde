@@ -159,6 +159,7 @@ static int	formlist_append(
 		);
 
 static int	formlist_force_resize(
+		    void
 		);
 
 /*

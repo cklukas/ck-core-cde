@@ -741,6 +741,7 @@ extern int	objxm_dump_widget_geometry(
 		 * required Xt/Xm resources/enums/createfuncs
 		 */
 extern void     objxm_strs_init(
+		    void
                 );
 
 		/* return "strname" corresponding to xmname 

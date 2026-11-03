@@ -129,6 +129,7 @@ extern int 	proj_destroy_project(
 		);
 
 extern ABObj	proj_get_project(
+		    void
 		);
 
 extern int	proj_set_cur_module(
@@ -136,6 +137,7 @@ extern int	proj_set_cur_module(
 		);
 
 extern ABObj	proj_get_cur_module(
+		    void
 		);
 
 extern int	proj_rename_module(

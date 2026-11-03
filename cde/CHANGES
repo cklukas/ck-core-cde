@@ -24,8 +24,10 @@
   runtime and emitted callback fields on their native `XtCallbackProc`/null
   representation, register its editor and palette callbacks directly, recover
   list and toggle records behind their Xt boundary, keep its generated project
-  open/import chooser arrays cast-free, and assign `SIG_IGN` without an
-  incompatible function cast; correct dtstyle signal,
+  open/import chooser arrays cast-free, replace its remaining non-prototype
+  declarations with explicit no-argument contracts, remove unused untyped
+  function aliases, and assign `SIG_IGN` without an incompatible function cast;
+  correct dtstyle signal,
   fatal Xt, event-handler and callback contracts without registration casts,
   and preserve legacy Motif/catalog string input types without discarding
   qualifiers.

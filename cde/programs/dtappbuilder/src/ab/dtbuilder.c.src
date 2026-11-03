@@ -236,8 +236,8 @@ static void		reloadDB(XtPointer client_data);
 **                                                                      **
 **************************************************************************/
 
-extern void     	proj_show_dialog();
-extern void     	layout_show_dialog();
+extern void     	proj_show_dialog(void);
+extern void     	layout_show_dialog(void);
 
 #ifdef DEBUG	/* performance testing */
 static ABProfiledIntervalRec	startupTime;

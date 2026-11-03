@@ -184,6 +184,7 @@ extern void		brws_register_actions(
                         );
 
 extern ABBrowser	brws_create (
+			    void
                         );
 
 extern void		brws_destroy (
@@ -390,5 +391,6 @@ extern void		brws_center_on_obj(
 			);
 
 extern void		brws_init(
+			    void
 			);
 #endif /* _brws_h */

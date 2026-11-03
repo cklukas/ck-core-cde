@@ -147,6 +147,7 @@ static int      msg_editor_load(
                     ABObj   project
                 );
 static int 	msg_editor_clear(
+		    void
 		);
 
 /*

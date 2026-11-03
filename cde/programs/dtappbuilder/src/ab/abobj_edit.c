@@ -77,6 +77,7 @@
 **                                                                      **
 **************************************************************************/
 static void	init_clipboard(
+		    void
 		);
 
 static void	verify_clipboard_space(
@@ -142,6 +143,7 @@ static void	init_undo_rec(
 		);
 
 static void	init_undo(
+		    void
 		);
 
 static void	verify_undo_rec_space(

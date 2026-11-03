@@ -45,13 +45,6 @@
 #include <ab_private/obj.h>
 #include "abmfP.h"
 
-/*
- * Pointer to functions.
- */
-typedef int         (*PFI) ();
-typedef char       *(*PFS) ();
-typedef void        (*PFV) ();
-
 extern STRING nlstr;	/* "\n" - keep this identifier short! */
 extern STRING nlstr2;	/* "\n\n" - keep this identifier short! */
 
