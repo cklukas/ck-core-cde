@@ -6,8 +6,9 @@
   the platform dynamic-loader declarations in the bundled font layer; let a
   clean out-of-tree build find DtHelp image/JPEG headers, DtTerm private
   headers and line-data input, App Builder private headers and dtterm resource
-  inputs; correct dtcreate's ToolTalk and help callback registrations and
-  dtstyle signal handlers.
+  inputs; correct dtcreate's ToolTalk and help callback registrations, type
+  its icon-selector callback table and directory filter, and correct dtstyle
+  signal handlers.
 - C23: remove the calendar RPC headers' obsolete K&R declaration fallbacks;
   give dtcm parsing, UI, ToolTalk and helper callbacks exact contracts; make
   clean out-of-tree calendar builds resolve generated and checked-in headers

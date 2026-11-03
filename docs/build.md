@@ -209,7 +209,10 @@ resolves its resource-generation scripts and inputs through `$(srcdir)`.
 Dtcreate uses the ToolTalk toolkit's input handler for Xt dispatch and reserves
 its exact three-argument contract callback for `ttdt_session_join`, avoiding an
 incompatible callback cast and a duplicate ToolTalk connection. Its help-dialog
-close hook is also registered directly through its exact Xt callback type.
+close hook is also registered directly through its exact Xt callback type. The
+icon selector stores and accepts `XtCallbackProc` values rather than unspecified
+function pointers, and its directory scanner gives the selection hook its real
+two-argument contract.
 Dtstyle registers dedicated `int`-argument signal handlers rather than casting
 Xt callbacks or no-argument helpers to the signal ABI.
 

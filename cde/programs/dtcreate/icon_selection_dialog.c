@@ -82,7 +82,9 @@ char    *file_filter_global;
 DtIconGadget **icons_in_container = NULL;
 
 
-int myscandir(char *, struct dirent ***, int (), int ());
+typedef int (*DirentSelectProc)(struct dirent *, char *);
+
+int myscandir(char *, struct dirent ***, DirentSelectProc);
 int get_top_b1_position (int buttoncount);
 int get_top_b2_position (int buttoncount);
 void load_directories_list (char **dirlist);
@@ -125,7 +127,8 @@ Auxiliary code from the Declarations Editor:
 /*  myscandir                                                              */
 /*                                                                         */
 /***************************************************************************/
-int myscandir(char *pszDirName, struct dirent ***NameList, int Select(), int Compare())
+int myscandir(char *pszDirName, struct dirent ***NameList,
+              DirentSelectProc select_entry)
 
 {
   DIR            *dirptr;
@@ -159,7 +162,7 @@ int myscandir(char *pszDirName, struct dirent ***NameList, int Select(), int Com
   for (dp = readdir(dirptr); dp != NULL; dp = readdir(dirptr)) {
 
 #if 0
-     if ((*Select)(dp, pszDirName)) {
+     if (select_entry(dp, pszDirName)) {
         (*NameList)[count] = dp;
      if ((*Select)(dp)) {
 #endif
@@ -233,7 +236,7 @@ struct dirent **build_dirent_list (char *filter, int *filecount)
 
   if (dirptr) {
 
-     *filecount = myscandir (dirname, &namelist, new_name_select, NULL);
+     *filecount = myscandir (dirname, &namelist, new_name_select);
 
 #ifdef DEBUG
      printf("# of icons = %d\n", *filecount);
@@ -1538,7 +1541,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         NULL );
         nbutton++;
         XtAddCallback( bottom_button2, XmNactivateCallback,
-                (XtCallbackProc) bottom_button_two_cb ?
+                bottom_button_two_cb ?
                       bottom_button_two_cb : activateCB_bottom_button2,
                 (XtPointer) UxIcon_selection_dialogContext );
 
@@ -1563,7 +1566,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         NULL );
         nbutton++;
         XtAddCallback( bottom_button3, XmNactivateCallback,
-                (XtCallbackProc) bottom_button_three_cb ?
+                bottom_button_three_cb ?
                       bottom_button_three_cb : activateCB_bottom_button3,
                 (XtPointer) UxIcon_selection_dialogContext );
 
@@ -1587,7 +1590,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         NULL );
         nbutton++;
         XtAddCallback( bottom_button4, XmNactivateCallback,
-                (XtCallbackProc) bottom_button_four_cb ?
+                bottom_button_four_cb ?
                       bottom_button_four_cb : activateCB_bottom_button,
                 (XtPointer) UxIcon_selection_dialogContext );
 
@@ -1757,7 +1760,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         RES_CONVERT( XmNlabelString, UxTmp0 ),
                         NULL );
         XtAddCallback( top_button1, XmNactivateCallback,
-                (XtCallbackProc) top_button_one_cb,
+                top_button_one_cb,
                 (XtPointer) UxIcon_selection_dialogContext );
 
         UxPutContext( top_button1, (char *) UxIcon_selection_dialogContext );
@@ -1778,7 +1781,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         RES_CONVERT( XmNlabelString, UxTmp0 ),
                         NULL );
         XtAddCallback( top_button2, XmNactivateCallback,
-                (XtCallbackProc) top_button_two_cb,
+                top_button_two_cb,
                 (XtPointer) UxIcon_selection_dialogContext );
 
         UxPutContext( top_button2, (char *) UxIcon_selection_dialogContext );
@@ -1799,7 +1802,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNbottomAttachment, XmATTACH_FORM,
                         NULL );
         XtAddCallback( top_button3, XmNactivateCallback,
-                (XtCallbackProc) top_button_three_cb,
+                top_button_three_cb,
                 (XtPointer) UxIcon_selection_dialogContext );
 
         UxPutContext( top_button3, (char *) UxIcon_selection_dialogContext );
@@ -1925,22 +1928,22 @@ Widget  create_icon_selection_dialog(swidget    _UxUxParent,
         unsigned char   *_Uxcontainer_title,
         int     _UxnumberOfTopButtons,
         unsigned char   *_Uxtop_button_one_label,
-        void    (*_Uxtop_button_one_cb)(),
+        XtCallbackProc _Uxtop_button_one_cb,
         unsigned char   *_Uxtop_button_two_label,
-        void    (*_Uxtop_button_two_cb)(),
+        XtCallbackProc _Uxtop_button_two_cb,
         unsigned char   *_Uxtop_button_three_label,
-        void    (*_Uxtop_button_three_cb)(),
+        XtCallbackProc _Uxtop_button_three_cb,
         int     _Uxuse_icon_name_field,
         unsigned char   *_Uxname_field_title,
         int     _UxnumberOfBottomButtons,
         unsigned char   *_Uxbottom_button_one_label,
-        void    (*_Uxbottom_button_one_cb)(),
+        XtCallbackProc _Uxbottom_button_one_cb,
         unsigned char   *_Uxbottom_button_two_label,
-        void    (*_Uxbottom_button_two_cb)(),
+        XtCallbackProc _Uxbottom_button_two_cb,
         unsigned char   *_Uxbottom_button_three_label,
-        void    (*_Uxbottom_button_three_cb)(),
+        XtCallbackProc _Uxbottom_button_three_cb,
         unsigned char   *_Uxbottom_button_four_label,
-        void    (*_Uxbottom_button_four_cb)() )
+        XtCallbackProc _Uxbottom_button_four_cb )
 
 
 {

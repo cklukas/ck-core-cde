@@ -82,18 +82,18 @@ void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
 
   char **directories_list = GetIconSearchPathList();
   int numberOfTopButtons = 0;
-  void *top_button_one_cb = NULL;
-  void *top_button_two_cb = NULL;
-  void *top_button_three_cb = NULL;
+  XtCallbackProc top_button_one_cb = NULL;
+  XtCallbackProc top_button_two_cb = NULL;
+  XtCallbackProc top_button_three_cb = NULL;
   char *top_button_one_label = NULL;
   char *top_button_two_label = NULL;
   char *top_button_three_label = NULL;
   int use_icon_name_field = True;
   int numberOfBottomButtons = 3;
-  void *bottom_button_one_cb = (void *)load_icons;
-  void *bottom_button_two_cb = NULL;
-  void *bottom_button_three_cb = NULL;
-  void *bottom_button_four_cb = NULL;
+  XtCallbackProc bottom_button_one_cb = load_icons;
+  XtCallbackProc bottom_button_two_cb = NULL;
+  XtCallbackProc bottom_button_three_cb = NULL;
+  XtCallbackProc bottom_button_four_cb = NULL;
   char *bottom_button_one_label = NULL;   /* use default */
   char *bottom_button_two_label = NULL;   /* use default */
   char *bottom_button_three_label = NULL; /* use default */
@@ -135,22 +135,22 @@ void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
                                                (unsigned char *)container_title,
                                                numberOfTopButtons,
                                                (unsigned char *)top_button_one_label,
-                                               (void (*)())top_button_one_cb,
+                                               top_button_one_cb,
                                                (unsigned char *)top_button_two_label,
-                                               (void (*)())top_button_two_cb,
+                                               top_button_two_cb,
                                                (unsigned char *)top_button_three_label,
-                                               (void (*)())top_button_three_cb,
+                                               top_button_three_cb,
                                                use_icon_name_field,
                                                (unsigned char *)name_field_title,
                                                numberOfBottomButtons,
                                                (unsigned char *)bottom_button_one_label,
-                                               (void (*)())bottom_button_one_cb,
+                                               bottom_button_one_cb,
                                                (unsigned char *)bottom_button_two_label,
-                                               (void (*)())bottom_button_two_cb,
+                                               bottom_button_two_cb,
                                                (unsigned char *)bottom_button_three_label,
-                                               (void (*)())bottom_button_three_cb,
+                                               bottom_button_three_cb,
                                                (unsigned char *)bottom_button_four_label,
-                                               (void (*)())bottom_button_four_cb);
+                                               bottom_button_four_cb);
 #ifndef _ICONSELECTOR_DESTROY_ENABLED
   }
 #endif  /* _ICONSELECTOR_DESTROY_ENABLED */

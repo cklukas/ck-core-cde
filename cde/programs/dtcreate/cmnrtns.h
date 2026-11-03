@@ -98,8 +98,7 @@
 ushort WriteDefinitionFile(char *, ActionData *);
 ushort WriteActionFile(ActionData *);
 void   Change_IconGadget_IconType(Widget, char *);
-void   load_icons (Widget wid, XtPointer client_data,
-		   XmFileSelectionBoxCallbackStruct *cbs);
+void   load_icons (Widget wid, XtPointer client_data, XtPointer call_data);
 void   GetWidgetTextString(Widget, char **);
 void   PutWidgetTextString (Widget wid, char *pszText);
 char * GetCoreName(char *pszFullName);
