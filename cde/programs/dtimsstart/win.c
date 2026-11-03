@@ -136,6 +136,8 @@ static int	disown_main_atom(Window win);
 static void	free_ims_list(ImsList *list);
 static void	clear_selection_var(void);
 static void	finish_selection_window(int end_window);
+static void	end_window_env_cb(Widget w, XtPointer client_data,
+				  XtPointer call_data);
 static void	done_cb(Widget w, XtPointer client_data, XtPointer call_data);
 static void	select_cb(Widget w, XtPointer client_data, XtPointer call_data);
 static void	host_btn_cb(Widget w, XtPointer client_data, XtPointer call_data);
@@ -259,7 +261,7 @@ int	init_window_env(void)
     /* handle system Menu's "close" */
     XmAddWMProtocolCallback(topW,
 			XmInternAtom(dpy, "WM_DELETE_WINDOW", True),
-			(XtCallbackProc)end_window_env, (XtPointer)0);
+			end_window_env_cb, (XtPointer)0);
 #endif
 
     Dpy = dpy; TopW = topW; appC = app;	/* @@@ */
@@ -311,6 +313,12 @@ void	end_window_env(void)
     ximsMain();
 
     /* return; */
+}
+
+static void
+end_window_env_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+    end_window_env();
 }
 
 /* clear WM_COMMAND property */
@@ -526,7 +534,7 @@ int	start_selection_window(void)
     /* handle system Menu's "close" */
     XmAddWMProtocolCallback(XtParent(SelW),
 			XmInternAtom(Dpy, "WM_DELETE_WINDOW", True),
-			(XtCallbackProc)done_cb, (XtPointer)CANCEL_BTN);
+			done_cb, (XtPointer)CANCEL_BTN);
 
     if (isXsession()) {
 	clear_cmd_property(XtWindow(TopW));
@@ -986,7 +994,7 @@ static void	start_host_window(char *cur_host)
 	/* handle system Menu's "close" */
 	XmAddWMProtocolCallback(XtParent(HostW),
 			XmInternAtom(Dpy, "WM_DELETE_WINDOW", True),
-			(XtCallbackProc)host_done_cb, (XtPointer)CANCEL_BTN);
+			host_done_cb, (XtPointer)CANCEL_BTN);
     }
 
     XtVaSetValues(HostText, XmNvalue, CurHost, NULL);
@@ -1119,7 +1127,7 @@ static void	create_host_window(char *cur_host)
     XtTranslations	trans;
     static char		host_trans[] = "<Key>Return: host-done()";
     static XtActionsRec	host_actions[] = {
-	{ "host-done", (XtActionProc) host_done_action }
+	{ "host-done", host_done_action }
     };
 
 	i = 0;
@@ -1218,7 +1226,7 @@ int	start_mode_window(int cur_mode)
     /* handle system Menu's "close" */
     XmAddWMProtocolCallback(XtParent(ModeW),
 			XmInternAtom(Dpy, "WM_DELETE_WINDOW", True),
-			(XtCallbackProc)mode_done_cb, (XtPointer)CANCEL_BTN);
+			mode_done_cb, (XtPointer)CANCEL_BTN);
 
     locate_window(ModeW);
     XtManageChild(ModeW);

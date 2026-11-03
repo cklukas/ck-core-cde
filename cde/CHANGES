@@ -1,4 +1,7 @@
 2026-11-03
+- DtImsStart: register window-manager callbacks and the host-return action with
+  their exact Xt contracts, using a typed adapter for the no-argument shutdown
+  routine.
 - DtWidget: expose every editor translation action through its exact
   `XtActionProc` contract instead of casting the action table entries.
 - DtAction: register text actions and invocation status callbacks through their

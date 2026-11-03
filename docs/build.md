@@ -447,6 +447,9 @@ casts.
 DtWidget's editor translation table stores its complete four-argument Xt action
 implementations directly, allowing the compiler to check every public and
 internal editor action.
+DtImsStart registers its window-manager callbacks and host-return action
+directly, with a typed Xt adapter around its reusable no-argument window
+shutdown routine.
 DtPad exposes its editor, help, formatting, option, session and print callbacks
 through `XtCallbackProc` directly, and routes panic signals through a typed
 signal adapter. DtAction likewise registers its custom text actions and
