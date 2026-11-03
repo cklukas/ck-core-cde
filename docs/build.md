@@ -147,6 +147,12 @@ source-owned, while the generated dtsearch database definition is build-owned.
 Its sibling generator lookup is anchored to Automake's absolute build
 directory, not the directory from which configure happened to be invoked.
 
+Localized help SDL generation likewise invokes the generated DocBook wrapper
+from the build tree, searches immutable SGML data in the source tree and writes
+each output through its absolute shadow-build path. A derived descriptor for
+each help book maps the configured shared help entities to the build tree and
+the checked-in per-product entities to the source tree.
+
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
 use complete prototypes; the conversion regression test also compiles const

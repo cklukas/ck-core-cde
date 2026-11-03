@@ -1,27 +1,35 @@
 # build and install SDL files for the help system
 
-BUILT_SOURCES = Appmanager.sdl $(APPBUILDER) Calculator.sdl		\
+SDL_HELP = Appmanager.sdl $(APPBUILDER) Calculator.sdl		\
     Calendar.sdl CreatAct.sdl Filemgr.sdl FPanel.sdl Help4Help.sdl	\
     Iconed.sdl Infomgr.sdl Intromgr.sdl LibDtPrint.sdl Loginmgr.sdl	\
     Mailer.sdl Printmgr.sdl PrnSetup.sdl Stylemgr.sdl Terminal.sdl	\
     Textedit.sdl
 
+SHADOW_BOOKS = $(SDL_HELP:.sdl=.shadow.sgm)
+BUILT_SOURCES = $(SDL_HELP) $(SHADOW_BOOKS)
 CLEANFILES = $(BUILT_SOURCES)
 
 # install the help SDL files
 sdlhelpdir = $(CDE_INSTALLATION_TOP)/appconfig/help/$(LANG)
-dist_sdlhelp_DATA = $(BUILT_SOURCES)
+dist_sdlhelp_DATA = $(SDL_HELP)
 
-DTDOCBOOK = $(top_srcdir)/programs/dtdocbook/doc_utils/dtdocbook2sdl
+DTDOCBOOK = $(top_builddir)/programs/dtdocbook/doc_utils/dtdocbook2sdl
 DTHELP_HTAG2 = $(top_builddir)/programs/dthelp/parser/pass2/parser/dthelp_htag2
 
 # let's try a rule here.  I don't like the backticks for running basename
 # but the $(basename...) seems to add a space for some reason
 
-%.sdl:
-	SGML_SEARCH_PATH=".:.." \
+%.shadow.sgm: $(abs_srcdir)/%/book.sgm $(top_builddir)/doc/common/help/HELPEnt.sgm
+	$(AM_V_GEN)sed \
+		-e 's|SYSTEM "../../common/help/HELPEnt.sgm"|SYSTEM "$(abs_top_builddir)/doc/common/help/HELPEnt.sgm"|' \
+		-e 's|SYSTEM "\./|SYSTEM "$(abs_srcdir)/|g' \
+		$< > $@.tmp && mv $@.tmp $@
+
+%.sdl: %.shadow.sgm
+	SGML_SEARCH_PATH="$(abs_srcdir):$(abs_srcdir)/.." \
 		$(KSH) $(DTDOCBOOK) -H $(DTHELP_HTAG2) -L $(LANG) \
-			-o $@ `basename $@ .sdl`/book.sgm
+			-o $(abs_builddir)/$@ $(abs_builddir)/`basename $@ .sdl`.shadow.sgm
 
 APPMANAGER_SRCS = Appmanager/GEntity.sgm Appmanager/TOC.sgm		\
     Appmanager/Home.sgm Appmanager/Tasks.sgm Appmanager/MetaInfo.sgm	\

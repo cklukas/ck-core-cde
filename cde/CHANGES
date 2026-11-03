@@ -36,6 +36,12 @@
   dtsearch database definition from the build tree, and resolves its sibling
   generator executables from its absolute build directory rather than the
   configure shell's `PWD` value.
+- Documentation: generate localized help SDL through the build-tree DocBook
+  wrapper and pass absolute source-book, search and build-output paths, so help
+  generation no longer depends on an in-source configured script or staged
+  source files. Derived per-book descriptors map the configured shared help
+  entities to the build tree while retaining checked-in product entities in
+  the source tree.
 - DtInfo: let clean out-of-tree WWL and application-module builds search their
   generated build headers before the maintained DtInfo, UAS, DtMmdb and C++
   wrapper source interfaces.
