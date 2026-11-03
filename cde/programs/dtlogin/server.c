@@ -69,7 +69,7 @@ static const char * _SysErrorMsg( int n) ;
 static SIGVAL CatchUsr1( int arg ) ;
 static void   GetRemoteAddress( struct display *d, int fd) ;
 static SIGVAL PingBlocked( int arg ) ;
-static SIGVAL PingLost( int arg ) ;
+static int    PingLost( Display *display ) ;
 static SIGVAL abortOpen( int arg ) ;
 static int    serverPause( unsigned t, int serverPid) ;
 static SIGVAL serverPauseAbort( int arg ) ;
@@ -445,8 +445,8 @@ ResetServer( struct display *d )
 static sigjmp_buf	pingTime;
 static int	serverDead = FALSE;
 
-static SIGVAL
-PingLost( int arg )
+static int
+PingLost( Display *display )
 {
     serverDead = TRUE;
     siglongjmp (pingTime, 1);
@@ -464,13 +464,13 @@ PingBlocked( int arg )
 int 
 PingServer( struct display *d, Display *alternateDpy )
 {
-    int	    (*oldError)();
-    SIGVAL  (*oldSig)();
+    XIOErrorHandler oldError;
+    SIGVAL  (*oldSig)(int);
     int	    oldAlarm;
 
     if (!alternateDpy)
 	alternateDpy = dpy;
-    oldError = XSetIOErrorHandler ((XIOErrorHandler)PingLost);
+    oldError = XSetIOErrorHandler (PingLost);
     oldAlarm = alarm (0);
     oldSig = signal (SIGALRM, PingBlocked);
     alarm (d->pingTimeout * 60);

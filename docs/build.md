@@ -213,6 +213,9 @@ close hook is also registered directly through its exact Xt callback type. The
 icon selector stores and accepts `XtCallbackProc` values rather than unspecified
 function pointers, and its directory scanner gives the selection hook its real
 two-argument contract.
+Dtlogin retains X I/O and alarm handlers through their native function-pointer
+types and restores X's default error handler with `NULL`, without handler casts.
+Its language enumerator table carries the exact next/end method contracts.
 Dtstyle registers dedicated `int`-argument signal handlers rather than casting
 Xt callbacks or no-argument helpers to the signal ABI.
 
