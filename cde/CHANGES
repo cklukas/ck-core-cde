@@ -55,7 +55,8 @@
   the source grammar header and private source includes; give `ttauth` public
   entry points, command handlers and authority-entry iterators exact function
   contracts; let clean `rpc.ttdbserver` builds resolve private ToolTalk and
-  mini-ISAM headers from their maintained source directories.
+  mini-ISAM headers from their maintained source directories, and give
+  `ttsession` the corresponding ToolTalk source-header paths.
 - dtfile: type resource serializers, file-operation dispatch, menu-data
   callbacks and selected signal and X/Xt callbacks without unspecified
   argument lists or compatibility casts; link the complete File Manager with

@@ -73,7 +73,9 @@ uses separate typed dispatch contracts for command handlers and authority-entry
 iterators, so C23 does not reinterpret either table as accepting no arguments.
 The ToolTalk database server also searches the maintained ToolTalk and
 mini-ISAM source directories, allowing its C++ sources to build cleanly from an
-out-of-tree C23 qualification directory.
+out-of-tree C23 qualification directory. The ToolTalk session server uses the
+same source-aware include contract for its private session, message and utility
+headers.
 
 The `dtimsstart` desktop input-method launcher is also qualified at the
 translation-unit level with GCC and Clang in C23 mode. Its module interface and
