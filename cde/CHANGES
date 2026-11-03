@@ -1,4 +1,8 @@
 2026-11-03
+- dtfile_sync: retain actionable command feedback across idle polling and clear
+  it on correction or a new comparison without hiding cancellation or recovery.
+  Validate rule scope/selection before changing rename controls, permit updates
+  at the rule limit, and explain rejected additions and missing rule selections.
 - dtfile_sync: bind rename review to the selected object, basename and side;
   require fresh review after intent changes, preserve setup on failed profile
   preparation, and report allocation failure without dropping rename input.

@@ -266,3 +266,7 @@ $set 1
 307 Modified before: enter a valid local YYYY-MM-DD date or ISO UTC timestamp,\nor leave empty. This bound is exclusive for regular files.
 308 Modified before must be later than modified on/after.\nThe lower bound is inclusive and the upper bound exclusive.
 309 Byte and date bounds filter regular files only; comparison reads contents.\nUnknown required size, time or precision stays unknown; it is not excluded.
+310 Matching rule limit reached. Remove a rule before adding another.
+311 Select one rule to remove.
+312 Choose a matching-rule scope.
+313 Closing - finishing safe cleanup...

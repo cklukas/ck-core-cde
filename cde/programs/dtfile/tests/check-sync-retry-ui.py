@@ -113,13 +113,15 @@ static void assertion(int ok,const char *message)
 {
     if (!ok) { fprintf(stderr,"FAIL: %s\n",message); test_failed=1; }
 }
-enum WaitFor { REPORT, ADMISSION_FAILURE, EXIT, PREFERENCES_READY, REVIEWED };
+enum WaitFor { REPORT, ADMISSION_FAILURE, EXIT, PREFERENCES_READY, REVIEWED, CANCELLED_DRAINED };
 static int wait_for(SyncWindow *w,enum WaitFor event)
 {
     long long end=milliseconds()+15000;
     do {
         while (XtAppPending(w->context)) XtAppProcessEvent(w->context,XtIMAll);
         if (event==EXIT && XtAppGetExitFlag(w->context)) return 1;
+        if (event==CANCELLED_DRAINED && w->job && w->view->snapshot.state==CKFET_CANCELLED &&
+            w->view->finished && w->view->drained) return 1;
         if (event==REPORT && w->job && !w->recompare && w->view->ready &&
             w->view->snapshot.state==CKFET_AWAITING_REVIEW &&
             item_count(w->list)>0 && XtIsSensitive(w->compare)) return 1;
@@ -324,6 +326,139 @@ static void pump_ticks(SyncWindow *w)
         struct timespec delay={0,5000000}; nanosleep(&delay,NULL);
     } while (milliseconds()<end);
 }
+/* Visible feedback is observed across real scheduled ticks, without reading
+ * command-notice storage or manufacturing a backend error/state. */
+static void retained_feedback(SyncWindow *w,const char *message)
+{
+    char *before=label_text(w->status);
+    assertion(strstr(before,message)!=NULL,"actual callback presents its command feedback");
+    XtFree(before);
+    pump_ticks(w);
+    char *after=label_text(w->status);
+    if (!strstr(after,message)) fprintf(stderr,"FEEDBACK LOST: expected [%s], observed [%s]\n",message,after);
+    assertion(strstr(after,message)!=NULL,"command feedback survives300ms of real Xt polling");
+    XtFree(after);
+}
+static void feedback_cleared(SyncWindow *w,const char *message)
+{
+    pump_ticks(w);
+    char *text=label_text(w->status);
+    if (strstr(text,message)) fprintf(stderr,"FEEDBACK STALE: expected cleared [%s], observed [%s]\n",message,text);
+    assertion(strstr(text,message)==NULL,"relevant real input edit clears obsolete command feedback");
+    XtFree(text);
+}
+static void no_job_feedback_case(SyncWindow *w)
+{
+    assertion(!w->job,"no-job feedback is checked before worker startup");
+    invalid_setup(w,w->size_min,"bad","Minimum bytes must be empty or digits");
+    retained_feedback(w,"Minimum bytes must be empty or digits");
+    XmTextFieldSetString(w->size_min,"");
+    feedback_cleared(w,"Minimum bytes must be empty or digits");
+    assertion(!w->job && !w->recompare,"correcting local validation does not start a worker");
+}
+static int same_rule(const SyncRule *a,const SyncRule *b)
+{
+    return a->kind==b->kind && a->scope==b->scope && a->choice==b->choice && a->tie==b->tie &&
+        a->protect_nonempty==b->protect_nonempty && a->retain_replaced==b->retain_replaced &&
+        a->selected_count==b->selected_count && a->selected_count<=SYNC_PAGE_SIZE &&
+        !memcmp(a->selected,b->selected,a->selected_count*sizeof(a->selected[0])) &&
+        a->subtree==b->subtree && a->subtree_size==b->subtree_size;
+}
+static void select_pair(SyncWindow *w,unsigned first,unsigned second)
+{
+    XmStringTable items=NULL; int count=0;
+    XtVaGetValues(w->list,XmNitems,&items,XmNitemCount,&count,NULL);
+    assertion(first && second && first<=(unsigned)count && second<=(unsigned)count,
+              "pair selection refers to real displayed rows");
+    if (!first || !second || first>(unsigned)count || second>(unsigned)count) return;
+    XmString selected[]={items[first-1],items[second-1]};
+    /* This public settable resource copies the strings and selects both real
+     * items without an intermediate single-selection notification. */
+    XtVaSetValues(w->list,XmNselectedItems,selected,XmNselectedItemCount,2,NULL);
+    XmListCallbackStruct event={0}; event.reason=XmCR_EXTENDED_SELECT;
+    event.item_position=(int)first;
+    XtCallCallbacks(w->list,XmNextendedSelectionCallback,&event);
+}
+static void rule_feedback_cases(SyncWindow *w,Widget scope,Widget choice)
+{
+    assertion(!w->rule_count && w->view->row_count==64 && item_count(w->list)==64,
+              "capacity regression starts with64 real Copy-preview rows and no rules");
+    if (w->rule_count || w->view->row_count!=64) return;
+    choose_option(scope,2); /* Actual This item menu callback. */
+    XmListDeselectAllItems(w->list); XmListSelectPos(w->list,1,True);
+    assertion(XtIsSensitive(w->choice_menu[CKFET_KEEP_BOTH_INCOMING]),
+              "first real row offers Keep Both before the no-selection Add case");
+    choose_option(choice,CKFET_KEEP_BOTH_INCOMING);
+    XmListDeselectAllItems(w->list);
+    choose_option(w->name_side_option,1);
+    unsigned side=w->name_side; uint64_t revision=w->local_rules_revision;
+    activate(w,"*addRule");
+    retained_feedback(w,"Select matching rows first.");
+    assertion(!w->rule_count && w->name_side==side && w->local_rules_revision==revision,
+              "failed no-row Add neither adds a rule nor changes rename side/authority");
+    XmListSelectPos(w->list,1,True);
+    feedback_cleared(w,"Select matching rows first.");
+    select_pair(w,1,2);
+    uint64_t selected[SYNC_PAGE_SIZE]; int first;
+    assertion(selected_rows(w,selected,&first)==2,"actual item Add case selects two real rows");
+    activate(w,"*addRule");
+    retained_feedback(w,"Select exactly one item or subtree root.");
+    assertion(!w->rule_count,"two-row This item Add leaves the rule model unchanged");
+    /* No callbacks during the intermediate selection changes: only the final
+     * actual list callback observes the replacement set with the same count. */
+    select_pair(w,3,4);
+    assertion(selected_rows(w,selected,&first)==2 &&
+              selected[0]==w->view->rows[2].observed.row_id && selected[1]==w->view->rows[3].observed.row_id,
+              "two-row selection is replaced by different real row IDs without an intermediate notification");
+    feedback_cleared(w,"Select exactly one item or subtree root.");
+    choose_option(choice,CKFET_ASK);
+    Boolean protect=XmToggleButtonGetState(w->zero);
+    for (unsigned i=0;i<64;++i) {
+        XmListDeselectAllItems(w->list); XmListSelectPos(w->list,(int)i+1,True);
+        assertion(XtIsSensitive(w->choice_menu[CKFET_ASK]),"real selected row permits an Ask item rule");
+        activate(w,"*addRule");
+        assertion(w->rule_count==i+1,"actual Add callback creates one distinct row-bound item rule");
+        if (w->rule_count!=i+1) break;
+        assertion(w->rules[i].scope==CKFET_SCOPE_ITEM && w->rules[i].kind==w->view->rows[i].observed.conflict_class &&
+                  w->rules[i].choice==CKFET_ASK && w->rules[i].selected_count==1 &&
+                  w->rules[i].selected[0]==w->view->rows[i].observed.row_id,
+                  "item rule uses the real row ID and automatically selected matching class");
+    }
+    if (w->rule_count==64) {
+        XmListDeselectAllItems(w->list); XmListSelectPos(w->list,1,True);
+        XmToggleButtonSetState(w->zero,!protect,True);
+        activate(w,"*addRule");
+        assertion(w->rule_count==64 && w->rules[0].protect_nonempty==!protect,
+                  "existing first item rule remains editable at the64-rule capacity");
+        retained_feedback(w,"Rule updated.");
+        SyncRule original[64]; memcpy(original,w->rules,sizeof(original));
+        choose_option(scope,0); choose_option(choice,CKFET_KEEP_BOTH_INCOMING);
+        assertion(XtIsSensitive(w->choice_menu[CKFET_KEEP_BOTH_INCOMING]),
+                  "capacity rejection uses a valid JOB action rather than unavailable-choice validation");
+        choose_option(w->name_side_option,1);
+        side=w->name_side; revision=w->local_rules_revision;
+        activate(w,"*addRule");
+        retained_feedback(w,"Matching rule limit reached. Remove a rule before adding another.");
+        assertion(w->rule_count==64 && w->name_side==side && w->local_rules_revision==revision,
+                  "new JOB rule at capacity preserves count, rename side and authority");
+        for (unsigned i=0;i<64;++i)
+            assertion(same_rule(&original[i],&w->rules[i]),"capacity refusal preserves every existing rule semantically");
+    }
+    while (w->rule_count) {
+        unsigned count=w->rule_count;
+        XmListDeselectAllItems(w->rules_list); XmListSelectPos(w->rules_list,1,False);
+        activate(w,"*removeRule");
+        assertion(w->rule_count+1==count,"actual Remove callback removes one item rule");
+        if (w->rule_count>=count) break;
+    }
+    XmListDeselectAllItems(w->rules_list);
+    activate(w,"*removeRule");
+    retained_feedback(w,"Select one rule to remove.");
+    assertion(!w->rule_count,"invalid Remove cannot change the empty rule model");
+    XmToggleButtonSetState(w->zero,protect,True);
+    choose_option(scope,0); choose_option(choice,CKFET_ASK); choose_option(w->name_side_option,0);
+    XmListDeselectAllItems(w->list); XmListSelectPos(w->list,1,True);
+}
 static int review_receipt(SyncWindow *w)
 {
     XtCallCallbacks(w->review,XmNactivateCallback,NULL);
@@ -351,11 +486,19 @@ static void review_intent_cases(SyncWindow *w)
     Widget choice=rule_option(w,"choice"),scope=rule_option(w,"scope");
     assertion(choice && scope,"actual rule choices exist for rename preview");
     if (!choice || !scope) return;
+    rule_feedback_cases(w,scope,choice);
     choose_option(scope,0); choose_option(choice,CKFET_KEEP_BOTH_INCOMING);
     activate(w,"*addRule");
     assertion(w->rule_count==1 && w->rules[0].choice==CKFET_KEEP_BOTH_INCOMING,
               "actual UI rule permits incoming Keep Both naming");
+    XmTextFieldSetString(w->new_name,"not/a-basename");
+    uint64_t invalid_serial=w->review_serial;
+    XtCallCallbacks(w->review,XmNactivateCallback,NULL);
+    retained_feedback(w,"For a reviewed rename, select one row and enter one basename.");
+    assertion(w->review_serial==invalid_serial && !w->review_pending,
+              "invalid basename is rejected locally without a backend review submission");
     XmTextFieldSetString(w->new_name,"review-intent-name");
+    feedback_cleared(w,"For a reviewed rename, select one row and enter one basename.");
     choose_option(w->name_side_option,0);
     uint64_t serial=w->review_serial,completed=w->view->completed_submission;
     unsigned original_dirty=w->dirty;
@@ -363,7 +506,7 @@ static void review_intent_cases(SyncWindow *w)
     XtCallCallbacks(w->review,XmNactivateCallback,NULL);
     assertion(null_basename_hits==1 && !null_basename_once && w->review_serial==serial && !w->review_pending,
               "NULL basename getter aborts before queueing a review submission");
-    pump_ticks(w);
+    retained_feedback(w,"Not enough memory.");
     assertion(w->view->completed_submission==completed && w->dirty==original_dirty,
               "NULL basename getter never reaches the backend or changes dirty authority");
     if (!review_receipt(w)) return;
@@ -410,6 +553,9 @@ static void profile_load_fault(SyncWindow *w)
     w->preferences=SyncProfilesStart(home,error,sizeof(error));
     assertion(w->preferences!=NULL,"actual private profile worker starts");
     if (!w->preferences || !wait_for(w,PREFERENCES_READY)) goto done;
+    Widget delete_profile_button=XtNameToWidget(w->shell,"*deleteProfile");
+    assertion(delete_profile_button && XtIsSensitive(delete_profile_button),
+              "Delete profile becomes available after the real preferences worker is ready");
     XmTextFieldSetString(w->profile_name,"initial-settings");
     activate(w,"*saveProfile");
     if (!wait_for(w,PREFERENCES_READY)) goto done;
@@ -505,6 +651,11 @@ static void test_loop(XtAppContext context)
     SyncWindow *w=callbacks[0].closure;
     assertion(getenv("HOME")==NULL,"HOME is genuinely absent");
     assertion(!XtIsSensitive(w->execute),"Apply starts disabled");
+    Widget delete_profile_button=XtNameToWidget(w->shell,"*deleteProfile");
+    assertion(delete_profile_button && !XtIsSensitive(delete_profile_button),
+              "Delete profile starts disabled without a preferences worker; no confirmation is opened");
+    no_job_feedback_case(w);
+    if (test_failed) goto close;
     profile_load_fault(w);
     if (test_failed) goto close;
     setup_cases(w);
@@ -578,14 +729,62 @@ static void test_loop(XtAppContext context)
               w->view->snapshot.rule_count==0 && !w->review_pending,
               "retained preference remains unreviewed against the fresh inventory");
     assertion(!XtIsSensitive(w->execute),"retry never enables Apply");
+    /* Last scenario: real cancellation supersedes a retained local notice.
+     * The real Compare-only worker supplies its terminal state and drain; no
+     * recovery flag, snapshot, error or worker function is substituted. */
+    assertion(XtIsSensitive(w->setup),"setup is editable before the real Cancel request");
+    XmTextFieldSetString(w->size_min,"bad");
+    XmTextFieldSetString(w->profile_name,"cancel-feedback");
+    activate(w,"*saveProfile");
+    retained_feedback(w,"Minimum bytes must be empty or digits");
+    assertion(XtIsSensitive(w->cancel),"real awaiting-review worker can be cancelled");
+    XtCallCallbacks(w->cancel,XmNactivateCallback,NULL);
+    char *cancelling=label_text(w->status);
+    assertion(strstr(cancelling,"Cancelling - finishing safe cleanup...")!=NULL &&
+              !strstr(cancelling,"Minimum bytes must be empty or digits"),
+              "actual Cancel immediately supersedes retained local command feedback");
+    XtFree(cancelling);
+    Widget cancelled_controls[]={w->setup,w->compare,w->review,w->execute,w->rule_page,
+        w->pause,w->cancel,w->previous,w->next};
+    for (unsigned i=0;i<XtNumber(cancelled_controls);++i)
+        assertion(!XtIsSensitive(cancelled_controls[i]),"Cancel immediately disables operation and setup controls");
+    uint64_t cancelled_serial=w->review_serial;
+    XtCallCallbacks(w->review,XmNactivateCallback,NULL);
+    assertion(w->review_serial==cancelled_serial && !w->review_pending,
+              "direct Review callback after Cancel cannot submit a new command");
+    SyncProfilesSnapshot before_save={0},after_save={0};
+    assertion(SyncProfilesGetSnapshot(w->preferences,&before_save)==SYNC_PROFILES_OK,
+              "real preference worker snapshot is available before invalid Save during cancellation");
+    int cleanup_pending=!w->view->finished && !w->view->drained;
+    activate(w,"*saveProfile");
+    assertion(SyncProfilesGetSnapshot(w->preferences,&after_save)==SYNC_PROFILES_OK &&
+              after_save.submitted==before_save.submitted,
+              "Save with invalid minimum bytes queues no real preferences operation");
+    if (cleanup_pending && !w->view->finished && !w->view->drained) {
+        char *critical=label_text(w->status);
+        assertion(strstr(critical,"Cancelling - finishing safe cleanup...")!=NULL &&
+                  !strstr(critical,"Minimum bytes must be empty or digits"),
+                  "actual invalid Save cannot replace immediate cancellation feedback while cleanup is pending");
+        XtFree(critical);
+    }
+    pump_ticks(w);
+    char *after_cancel=label_text(w->status);
+    assertion(!strstr(after_cancel,"Select one rule to remove."),
+              "real cancellation or terminal feedback keeps priority across scheduled ticks");
+    XtFree(after_cancel);
+    assertion(wait_for(w,CANCELLED_DRAINED),"real cancelled Compare-only worker reaches terminal state and drains");
 close:
     XtCallCallbacks(XtNameToWidget(test_shell,"*close"),XmNactivateCallback,NULL);
+    char *closing=label_text(w->status);
+    assertion(strstr(closing,"Closing - finishing safe cleanup...")!=NULL,
+              "Close immediately presents its own cleanup feedback");
+    XtFree(closing);
     assertion(wait_for(w,EXIT),"native job drains and UI closes normally");
 }
 int main(int argc,char **argv)
 {
     int result=application_main(argc,argv);
-    if (!result && !test_failed) puts("PASS: transactional profile loading, reviewed rename intent, setup validation and comparison retry");
+    if (!result && !test_failed) puts("PASS: retained command feedback, rule capacity, transactional profile loading, reviewed rename intent, setup validation and comparison retry");
     return result ? result : test_failed;
 }
 '''
