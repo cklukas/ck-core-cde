@@ -195,8 +195,9 @@ match the dispatch table's `void` contract, and chooser callbacks carry their
 complete Xt types. Dtappbuilder's browser, editor and generated-application
 utilities now state their real contracts instead of relying on implicit
 arguments or an untyped undo slot. Its object verifier also installs a real
-`int`-argument signal handler for guarded memory probes. Dtudcexch similarly
-publishes complete BDF
+`int`-argument signal handler for guarded memory probes, while its callable
+UIL compiler uses separate, exact message and status callback contracts
+without registration casts. Dtudcexch similarly publishes complete BDF
 conversion and utility interfaces; its primary UI and file-selection callbacks
 accept `XtPointer` client data directly, without callback casts. The bundled
 PAM dispatcher uses one exact module-function type, while the font loader uses
