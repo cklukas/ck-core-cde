@@ -1,0 +1,244 @@
+{
+  "topic": "Complete legacy dtfile transfers before reporting success or removing a move source",
+  "base_revision": "b641e3ac0651d7c06e6381fb56fe1ede2c94a4c0",
+  "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "jobs": 1,
+  "source_hashes": {
+    "FileManip.c": "d239a0fb5761061118667e2d10da4e7c39e66bcfb3fe095308b1de5637b92888",
+    "FileOp.c": "d6c271791d7a31b23ad591b72b657dcc1975a858e53094ae84d8507df225055c",
+    "Main.h": "1d41cf6207ddc3b125a16d02257debe0293128c1c9b3d08670ccd271a65f83b4",
+    "FileMgr.h": "007cc720196e62785e2e89c97d1920d035b0fbb35dc630fca647ee7c10b61b04",
+    "Common.h": "59ffce7d0ed458effa1bb34bb2af8140e78a5fcf064ed664cb6a4a81a13dd414",
+    "SharedMsgs.h": "71597a6a527d697f8663f938a519797c87e82ed19da5247dde32c1b9cd41df29"
+  },
+  "harness_sha256": "0256ad6ef9e40472639ef27096c889219739db2f5807ca9b9ca00a32023d901b",
+  "driver_sha256": "e1ecade2614989ec0c585e447b72b78ab7445e4e4a56b553198504c181e54acf",
+  "source_unchanged": true,
+  "sanitizers": {
+    "instrumented": "Whole production functions, helpers and test adapters; no GUI toolkit involved",
+    "options": "address,undefined",
+    "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "build_seconds": 1.1304678658489138,
+    "start": "2026-11-03T19:59:45.837401+00:00",
+    "end": "2026-11-03T19:59:48.975918+00:00",
+    "passed_cases": [
+      "copy-success",
+      "move-success",
+      "copy-short",
+      "move-short",
+      "copy-read-eintr",
+      "copy-write-eintr",
+      "move-write-eintr",
+      "copy-write-zero",
+      "move-write-zero",
+      "move-read-error",
+      "copy-write-error",
+      "move-write-error",
+      "copy-null-handler-write-error",
+      "copy-close-target",
+      "move-close-target",
+      "copy-close-source",
+      "move-close-source",
+      "copy-first-error",
+      "move-first-error",
+      "copy-collision",
+      "buffer-success",
+      "buffer-short",
+      "buffer-write-eintr",
+      "buffer-write-zero",
+      "buffer-write-error",
+      "buffer-close-error",
+      "buffer-first-error",
+      "buffer-cleanup-error",
+      "buffer-empty",
+      "buffer-negative",
+      "buffer-null-positive",
+      "buffer-occupied",
+      "buffer-symlink",
+      "worker-normal-success",
+      "worker-desktop-success",
+      "worker-normal-same-copy",
+      "worker-normal-first-fails",
+      "worker-desktop-first-fails",
+      "worker-normal-last-fails",
+      "worker-desktop-last-fails",
+      "worker-normal-resolve",
+      "worker-desktop-resolve",
+      "worker-normal-target-resolve",
+      "worker-desktop-target-resolve",
+      "worker-normal-collision-first-fails",
+      "worker-normal-collision-op-fails",
+      "worker-normal-collision-resolve",
+      "worker-normal-failure-then-cancel",
+      "worker-normal-collision-clean-cancel",
+      "worker-normal-collision-short-reply",
+      "worker-normal-collision-bad-reply",
+      "worker-normal-collision-wrong-mode",
+      "worker-normal-regular-collision-wrong-mode",
+      "worker-normal-collision-short-op",
+      "worker-normal-collision-rename-null"
+    ],
+    "failed_cases": [],
+    "timeouts": [],
+    "result_sha256": "901d02bf6a994da40a33e5bc89f1183bb18215c65bded8af7a270555334d35bd"
+  },
+  "baseline_control": {
+    "revision": "b641e3ac0651d7c06e6381fb56fe1ede2c94a4c0",
+    "same_fixture": true,
+    "case_count": 55,
+    "failed_cases": [
+      "copy-short",
+      "move-short",
+      "copy-read-eintr",
+      "copy-write-eintr",
+      "move-write-eintr",
+      "copy-write-error",
+      "move-write-error",
+      "copy-null-handler-write-error",
+      "copy-close-target",
+      "move-close-target",
+      "copy-close-source",
+      "move-close-source",
+      "copy-first-error",
+      "move-first-error",
+      "copy-collision",
+      "buffer-short",
+      "buffer-write-eintr",
+      "buffer-write-zero",
+      "buffer-write-error",
+      "buffer-close-error",
+      "buffer-first-error",
+      "buffer-cleanup-error",
+      "buffer-empty",
+      "buffer-negative",
+      "buffer-null-positive",
+      "buffer-occupied",
+      "buffer-symlink",
+      "worker-desktop-success",
+      "worker-normal-same-copy",
+      "worker-normal-first-fails",
+      "worker-desktop-first-fails",
+      "worker-desktop-last-fails",
+      "worker-normal-resolve",
+      "worker-desktop-resolve",
+      "worker-normal-target-resolve",
+      "worker-desktop-target-resolve",
+      "worker-normal-collision-first-fails",
+      "worker-normal-collision-op-fails",
+      "worker-normal-collision-resolve",
+      "worker-normal-failure-then-cancel",
+      "worker-normal-collision-short-reply",
+      "worker-normal-collision-bad-reply",
+      "worker-normal-collision-wrong-mode",
+      "worker-normal-regular-collision-wrong-mode",
+      "worker-normal-collision-short-op",
+      "worker-normal-collision-rename-null"
+    ],
+    "compiler_waivers": "Only baseline allows free-nonheap-object and sometimes-uninitialized diagnostics as warnings to execute unchanged buggy code. Candidate uses -Werror with neither waiver.",
+    "result_sha256": "d170e127047ae09b6353fc8ca002b407bdd3f2a135ee07f56e17da0c9bcde14f"
+  },
+  "incremental_builds": [
+    {
+      "source_base": "b641e3ac0651d7c06e6381fb56fe1ede2c94a4c0",
+      "jobs": 1,
+      "target": "dtfile, Clang19 C23",
+      "source_hashes": {
+        "FileManip.c": "d239a0fb5761061118667e2d10da4e7c39e66bcfb3fe095308b1de5637b92888",
+        "FileOp.c": "319cca54e486a16c0e784d10cc2b351f1ea3a7dcf0c73f0009e11b3889055c83"
+      },
+      "start_utc": "2026-11-03T19:53:16.736763+00:00",
+      "baseline_duration": "No recent comparable two-object link duration recorded; inspect exact compiler/link input plan and outputs.",
+      "end_utc": "2026-11-03T19:53:19.862038+00:00",
+      "seconds": 3.1252816759515554,
+      "exit_code": 0,
+      "outputs": {
+        "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/dtfile-FileManip.o": {
+          "sha256": "451a1263d86ab30d2c1d1411b49dfab1571e938964a70638ab0ef51b81f6687b",
+          "mtime_ns": 1793735597349127546
+        },
+        "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/dtfile-FileOp.o": {
+          "sha256": "a5532cc9646ad1cd792f1ff7dc53a901bff75db6425163329371fac83703f873",
+          "mtime_ns": 1793735598705133786
+        },
+        "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile": {
+          "sha256": "987d1e66891669e5e7e80f32dfebcb1a09e4abb4c744d58c7c433dcd861f0753",
+          "mtime_ns": 1793735599845139031
+        }
+      },
+      "compiled_objects": 2
+    },
+    {
+      "source_base": "b641e3ac0651d7c06e6381fb56fe1ede2c94a4c0",
+      "jobs": 1,
+      "target": "dtfile, Clang19 C23",
+      "source_hashes": {
+        "FileManip.c": "d239a0fb5761061118667e2d10da4e7c39e66bcfb3fe095308b1de5637b92888",
+        "FileOp.c": "d6c271791d7a31b23ad591b72b657dcc1975a858e53094ae84d8507df225055c"
+      },
+      "start_utc": "2026-11-03T19:58:50.263794+00:00",
+      "baseline_duration": "No recent comparable two-object link duration recorded; inspect exact compiler/link input plan and outputs.",
+      "end_utc": "2026-11-03T19:58:52.735390+00:00",
+      "seconds": 2.4715843880549073,
+      "exit_code": 0,
+      "outputs": {
+        "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/dtfile-FileManip.o": {
+          "sha256": "451a1263d86ab30d2c1d1411b49dfab1571e938964a70638ab0ef51b81f6687b",
+          "mtime_ns": 1793735597349127546
+        },
+        "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/dtfile-FileOp.o": {
+          "sha256": "7960a4ab5d468c28ad2d32aaa5ad6904eb165c1994786716eb00d8900f3440de",
+          "mtime_ns": 1793735931410656114
+        },
+        "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile": {
+          "sha256": "13980118edecda1af7819741a2432c5cefd2192520dd201039ed6f778449e56f",
+          "mtime_ns": 1793735932722831406
+        }
+      },
+      "compiled_objects": 1
+    }
+  ],
+  "immutable_retained_inputs_verified": true,
+  "component_checkpoint": [
+    {
+      "test": "check-trash-writer.py",
+      "start": "2026-11-03T19:53:58.251270+00:00",
+      "seconds": 0.7380408719182014,
+      "exit_code": 0
+    },
+    {
+      "test": "check-trash-metadata.py",
+      "start": "2026-11-03T19:53:58.989455+00:00",
+      "seconds": 0.7766203451901674,
+      "exit_code": 0
+    },
+    {
+      "test": "check-copy-transfer.py",
+      "start": "2026-11-03T19:53:59.766273+00:00",
+      "seconds": 1.56644467683509,
+      "exit_code": 0
+    },
+    {
+      "test": "check-operation-outcome.py",
+      "start": "2026-11-03T19:54:01.333152+00:00",
+      "seconds": 0.6124775540083647,
+      "exit_code": 0
+    },
+    {
+      "test": "check-sync-controller.py",
+      "start": "2026-11-03T19:54:01.945733+00:00",
+      "seconds": 8.959118106868118,
+      "exit_code": 0
+    }
+  ],
+  "coverage_limits": "Regular-file transfers and actual buffer/worker functions. No GUI, directory transfers, remote resolver or native-device-fault claim. UI/notification adapters and reported syscall faults are test-only.",
+  "not_claimed": [
+    "GUI rendering or toolkit qualification",
+    "Native disk hardware failure simulation",
+    "Directory transfer or transactional replacement",
+    "Crash recovery or durability guarantees beyond checked read/write/close results"
+  ],
+  "documentation": "ckdocs 0.10.1+g7e3ee5eb57a2 strict check passed16pages; rendered site to be built once from integrated primary.",
+  "default_check_invocation": "Pass: --case copy-success without --work-dir uses an explicitly rooted temporary workspace and removes it on completion."
+}

@@ -753,7 +753,8 @@ FileManip(
 {
    int fold;
    int fnew;
-   int n;
+   ssize_t n;
+   int transferError = 0;
    Boolean copy_dir_return;
    Boolean move_dir_return;
    void (*oldInt)(int);
@@ -1146,10 +1147,24 @@ FileManip(
    /*  unable create <to>  */
 
 
-   /* We use the stat buffer info not lstat info */
-   (void) stat (from, &s4);
+   /* Use the opened source's mode, not another lookup of its pathname. */
+   if (fstat(fold, &s4) < 0)
+   {
+      if (errorHandler)
+      {
+         tmpStr = GetSharedMessage(CANT_READ_ERROR);
+         msg = XtNewString(tmpStr);
+         (*errorHandler)(w, msg, from);
+         XtFree(msg);
+      }
+      (void) close(fold);
+      return (False);
+   }
 
-   if ((fnew = creat (to, (int) s4.st_mode)) < 0)
+   /* An approved old destination was removed above. Never truncate a new
+    * occupant (including a link) which appeared after the conflict check.
+    */
+   if ((fnew = open(to, O_WRONLY | O_CREAT | O_EXCL, s4.st_mode)) < 0)
    {
       if (errorHandler)
       {
@@ -1167,40 +1182,56 @@ FileManip(
    /*  do the copy  */
 
 
-   while (n = read (fold, buf, BLOCK_SIZE))
+   for (;;)
    {
-     int result;
+      size_t offset = 0;
+      do {
+         n = read(fold, buf, sizeof(buf));
+      } while (n < 0 && errno == EINTR);
+      if (n == 0)
+         break;
+      if (n < 0)
+      {
+         transferError = errno;
+         break;
+      }
+      while (offset < (size_t)n)
+      {
+         ssize_t written = write(fnew, buf + offset, (size_t)n - offset);
+         if (written < 0 && errno == EINTR)
+            continue;
+         if (written <= 0)
+         {
+            transferError = written == 0 ? EIO : errno;
+            break;
+         }
+         offset += (size_t)written;
+      }
+      if (transferError)
+         break;
+   }
 
-     if (n < 0)
-     {
-       if (errorHandler)
-       {
-         tmpStr = (GETMESSAGE(11,31, "Error while reading %s"));
-         msg = XtNewString(tmpStr);
-         (*errorHandler) (w, msg, to);
-         XtFree(msg);
-       }
-       (void) close (fold);
-       (void) close (fnew);
-       return (False);
-     }
+   /* A descriptor is closed once, including when close reports EINTR.
+    * Preserve the first transfer error across cleanup and error reporting.
+    * Never remove the source until both descriptors closed successfully.
+    */
+   if (close(fold) < 0 && !transferError)
+      transferError = errno;
+   if (close(fnew) < 0 && !transferError)
+      transferError = errno;
 
-     errno = 0;
-     result = write(fnew, buf, n);
-     if (result != n)
-     {
-       (void) close (fold);
-       (void) close (fnew);
-       if(errno)
-       {
+   if (transferError)
+   {
+      if (errorHandler)
+      {
          char * strerrormsg = NULL;
          char * catmsg = NULL;
          char * samsg = NULL;
-         char errnoMsg[25];
+         const char *errnoMsg;
          Boolean unknown = False;
          int bufLen;
 
-         switch (errno)
+         switch (transferError)
          {
 #ifdef EDQUOT
              case EDQUOT:
@@ -1223,37 +1254,37 @@ FileManip(
                  break;
                  }
              case EAGAIN:
-                 sprintf(errnoMsg, "EAGAIN:  ");
-                 strerrormsg = strerror(errno);
+                 errnoMsg = "EAGAIN:  ";
+                 strerrormsg = strerror(transferError);
                  break;
              case EBADF:
-                 sprintf(errnoMsg, "EBADF:  ");
-                 strerrormsg = strerror(errno);
+                 errnoMsg = "EBADF:  ";
+                 strerrormsg = strerror(transferError);
                  break;
              case EDEADLK:
-                 sprintf(errnoMsg, "EDEADLK:  ");
-                 strerrormsg = strerror(errno);
+                 errnoMsg = "EDEADLK:  ";
+                 strerrormsg = strerror(transferError);
                  break;
              case EINTR:
-                 sprintf(errnoMsg, "EINTR:  ");
-                 strerrormsg = strerror(errno);
+                 errnoMsg = "EINTR:  ";
+                 strerrormsg = strerror(transferError);
                  break;
              case EIO:
-                 sprintf(errnoMsg, "EIO:   ");
-                 strerrormsg = strerror(errno);
+                 errnoMsg = "EIO:   ";
+                 strerrormsg = strerror(transferError);
                  break;
              case ENOLCK:
-                 sprintf(errnoMsg, "ENOLCK:  ");
-                 strerrormsg = strerror(errno);
+                 errnoMsg = "ENOLCK:  ";
+                 strerrormsg = strerror(transferError);
                  break;
              case EPIPE:
-                 sprintf(errnoMsg, "EPIPE:  ");
-                 strerrormsg = strerror(errno);
+                 errnoMsg = "EPIPE:  ";
+                 strerrormsg = strerror(transferError);
                  break;
              default:
                  unknown = True;
-                 sprintf(errnoMsg, "%s", GETMESSAGE(11,56, "(Unknown):"));
-                 strerrormsg = strerror(errno);
+                 errnoMsg = GETMESSAGE(11,56, "(Unknown):");
+                 strerrormsg = strerror(transferError);
                  break;
          }
 
@@ -1292,15 +1323,11 @@ FileManip(
          (*errorHandler) (w, msg, to);
          XtFree(msg);
          XtFree(catmsg);
-       }
-       unlink(to);
-       return (False);
-     }
+         XtFree(samsg);
+      }
+      (void) unlink(to);
+      return (False);
    }
-
-   (void) close (fold);
-   (void) close (fnew);
-
 
    /*  unlink <from> if not copy  */
 
