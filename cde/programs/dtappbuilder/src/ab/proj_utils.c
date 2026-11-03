@@ -97,13 +97,13 @@ static int      select_fn(
 static void 	save_proj_as_okCB(
 		    Widget              widget,
 		    XtPointer           client_data,
-		    XmSelectionBoxCallbackStruct *call_data
+		    XtPointer           call_data
 		);
 
 static void 	export_bil_okCB(
 		    Widget                      widget,
 		    XtPointer                   client_data,
-		    XmSelectionBoxCallbackStruct *call_data
+		    XtPointer                   call_data
 		);
 
 static void 	name_module( 
@@ -367,19 +367,19 @@ proj_show_save_proj_as_chooser(
     char		*title;
  
     XtCallbackRec ok_callback[] = {
-        {(XtCallbackProc)save_proj_as_okCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {save_proj_as_okCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
     XtCallbackRec cancel_callback[] = {
-        {(XtCallbackProc)proj_cancelCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_cancelCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
 
     XtCallbackRec popdown_callback[] = {
-        {(XtCallbackProc)proj_unmap_chooserCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_unmap_chooserCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
 
 
@@ -506,9 +506,10 @@ static void
 save_proj_as_okCB(
     Widget              widget,
     XtPointer           client_data,
-    XmSelectionBoxCallbackStruct *call_data
+    XtPointer           call_data
 )
 {
+    XmSelectionBoxCallbackStruct *selection_data = call_data;
     STRING              proj_filename = NULL;
     char		proj_name[MAXPATHLEN];
     char		proj_dir[MAXPATHLEN];
@@ -522,7 +523,7 @@ save_proj_as_okCB(
     *proj_name = 0;
     *proj_dir = 0;
     *help_buf = 0;
-    proj_filename = (STRING)objxm_xmstr_to_str(call_data->value);
+    proj_filename = (STRING)objxm_xmstr_to_str(selection_data->value);
 
     /* 
     ** If the file chooser selection text field is empty, return,
@@ -898,16 +899,16 @@ proj_show_export_bil_chooser(
     char		*title;
 
     XtCallbackRec ok_callback[] = {
-        {(XtCallbackProc)export_bil_okCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL},
+        {export_bil_okCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL},
     };
     XtCallbackRec cancel_callback[] = {
-        {(XtCallbackProc)proj_cancelCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_cancelCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
     XtCallbackRec popdown_callback[] = {
-        {(XtCallbackProc)proj_unmap_chooserCB, (XtPointer) NULL},
-        {(XtCallbackProc) NULL, (XtPointer) NULL}
+        {proj_unmap_chooserCB, (XtPointer) NULL},
+        {NULL, (XtPointer) NULL}
     };
 
     /* Create the file chooser if it hasn't already
@@ -985,9 +986,10 @@ static void
 export_bil_okCB(
     Widget                      widget,
     XtPointer                   client_data,
-    XmSelectionBoxCallbackStruct *call_data
+    XtPointer                   call_data
 )
 {
+    XmSelectionBoxCallbackStruct *selection_data = call_data;
     STRING	fullpath = NULL;
     ABObj	module_obj = (ABObj) client_data;
     XmString	xm_buf = (XmString) NULL;
@@ -999,7 +1001,7 @@ export_bil_okCB(
 
     *mod_name = 0;
     *mod_dir = 0;
-    fullpath = (STRING) objxm_xmstr_to_str(call_data->value);
+    fullpath = (STRING) objxm_xmstr_to_str(selection_data->value);
     /* 
     ** If the file chooser selection text field is empty, return,
     ** but leave the choser up so the user gets another try.

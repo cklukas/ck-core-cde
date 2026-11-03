@@ -1154,7 +1154,7 @@ void
 proj_cancelCB(
     Widget              widget,
     XtPointer           client_data,
-    XmSelectionBoxCallbackStruct *call_data
+    XtPointer           call_data
 )
 {
     /* Pop down the file chooser.  This must be done

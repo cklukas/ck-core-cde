@@ -220,7 +220,7 @@ extern void	proj_open_proj_okCB(
 extern void	proj_cancelCB(
 		    Widget 			widget,
                     XtPointer           	client_data,
-                    XmSelectionBoxCallbackStruct *call_data
+                    XtPointer                   call_data
 		);
 
 

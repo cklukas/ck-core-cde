@@ -228,9 +228,13 @@ message catalog from source-qualified inputs, and stages read-only links to its
 BIL project inputs when generating code outside the source tree. It seeds the
 build with the maintained generated header and stub files so application
 resources and user-code sections survive code generation, and its exit path
-assigns `SIG_IGN` through the native signal-handler type. The final application
-also includes the parser header from the sibling build directory rather than
-depending on an in-source generated copy. Dtterm resolves its
+assigns `SIG_IGN` through the native signal-handler type. Project, module,
+browser and modal-prompt chooser arrays store exact `XtCallbackProc`
+implementations rather than cast functions specialized to a Motif callback
+record. Those implementations accept `XtPointer` at the toolkit boundary and
+recover `XmSelectionBoxCallbackStruct` only inside the callback. The final
+application also includes the parser header from the sibling build directory
+rather than depending on an in-source generated copy. Dtterm resolves its
 terminfo and fallback-resource generation scripts and inputs through
 `$(srcdir)`, while its compile includes cover both generated build headers and
 the checked-in private terminal headers.
