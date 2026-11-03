@@ -448,7 +448,9 @@ DtCm's menus, editors, browsers and dialogs likewise register the shared
 calendar help callback directly through its exact Xt contract.
 Its appointment, group, to-do and standalone-editor drag-motion hooks carry
 Xt's complete event-handler contract. Appointment and to-do list-view buttons
-also register through exact Xt callbacks.
+also register through exact Xt callbacks. Calendar canvas translations
+implement `XtActionProc` directly, and canvas help uses its native Xt callback
+contract.
 DtWidget's editor translation table stores its complete four-argument Xt action
 implementations directly, allowing the compiler to check every public and
 internal editor action.

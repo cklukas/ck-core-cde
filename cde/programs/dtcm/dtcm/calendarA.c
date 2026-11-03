@@ -2305,10 +2305,9 @@ logon_retry(XtPointer data, XtIntervalId *dummy)
 }
 
 static void
-view_event(Widget w, XtPointer client_data, XtPointer cbs)
+view_event(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
         Calendar *c = calendar;
-	XEvent	*event = (XEvent *) client_data;
 
         if (event == NULL)
                 return;
@@ -2485,7 +2484,7 @@ init_calendar(int argc, char **argv)
         	"<Btn1Down>: view_event()               \n\
          	<Btn1Motion>: view_event()";
         static XtActionsRec action_table[] = {
-                {(String) "view_event", (XtActionProc) view_event},
+                {(String) "view_event", view_event},
 		{(String) "TranslationDragStart", 
 		   TranslationDragStart},
 		{"dtcm-process-press",
@@ -2668,8 +2667,8 @@ init_calendar(int argc, char **argv)
 	XtSetArg(al[ac], XmNleftOffset, 1); ac++;
       	calendar->canvas = XmCreateDrawingArea(calendar->form, "canvas",
 				al, ac);
-        XtAddCallback(calendar->canvas, XmNhelpCallback, 
-					(XtCallbackProc)help_view_cb, NULL);
+        XtAddCallback(calendar->canvas, XmNhelpCallback,
+					help_view_cb, NULL);
 	ac=0;
 	XtSetArg(al[ac], XmNalignment, XmALIGNMENT_BEGINNING); ac++;
 	XtSetArg(al[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
