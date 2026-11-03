@@ -751,7 +751,7 @@ void  update_container_contents (char *filter)
                             dtIconGadgetClass, (Widget)icon_scrolled_container,
                             args, n);
           XtAddCallback((Widget) icons_in_container[lcv], XmNcallback,
-                       (XtCallbackProc) selectionCB_icon_scrolled_container,
+                       selectionCB_icon_scrolled_container,
                        (XtPointer) NULL);
 
 #ifdef DEBUG
@@ -1031,10 +1031,10 @@ void display_nofindicon_message (Widget parent)
   XtUnmanageChild (XmMessageBoxGetChild (dialog, XmDIALOG_HELP_BUTTON));
 
   XtAddCallback( dialog, XmNokCallback,
-          (XtCallbackProc) activateCB_NoFindIconDialog_ChangeNameButton,
+          activateCB_NoFindIconDialog_ChangeNameButton,
           (XtPointer) NULL );
   XtAddCallback( dialog, XmNcancelCallback,
-          (XtCallbackProc) activateCB_NoFindIconDialog_NameOKButton,
+          activateCB_NoFindIconDialog_NameOKButton,
           (XtPointer) NULL );
 
   /*********  WARNING - this needs to be translated !!! ***********/
@@ -1473,7 +1473,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
         /* Set up help callback                                            */
         /*******************************************************************/
         XtAddCallback( icon_selection_dialog, XmNhelpCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_ICONSELECTOR );
 
         XtAddCallback(icon_selection_dialog, XmNmapCallback,
@@ -1518,7 +1518,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         NULL );
         nbutton++;
         XtAddCallback( bottom_button1, XmNactivateCallback,
-                (XtCallbackProc) activateCB_bottom_button1,
+                activateCB_bottom_button1,
                 (XtPointer) NULL );
 
         UxPutContext( bottom_button1, (char *) UxIcon_selection_dialogContext );
@@ -1683,7 +1683,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         NULL );
         XtAddCallback( filter_text_field, XmNactivateCallback,
-                (XtCallbackProc) activateCB_filter_text_field,
+                activateCB_filter_text_field,
                 (XtPointer) UxIcon_selection_dialogContext );
 
         UxPutContext( filter_text_field, (char *) UxIcon_selection_dialogContext );
@@ -1847,7 +1847,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                                (XtPointer) UxIcon_selection_dialogContext,
                                (XtPointer) NULL);
         XtAddCallback( dir_scrolled_list, XmNdefaultActionCallback,
-                (XtCallbackProc) defaultActionCB_dir_scrolled_list,
+                defaultActionCB_dir_scrolled_list,
                 (XtPointer) UxIcon_selection_dialogContext );
 
         UxTmp0 = (char *)((numberOfTopButtons > 0) ? top_button_form : icon_name_textfield_label);
@@ -1900,12 +1900,12 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         NULL );
 
         XtAddCallback( icon_selection_dialog, XmNdestroyCallback,
-                      (XtCallbackProc) UxDestroyContextCB,
+                      UxDestroyContextCB,
                       (XtPointer) UxIcon_selection_dialogContext);
 
         XtVaGetValues (icon_scrolled_win, XmNclipWindow, &widclipWindow, NULL);
         XtAddCallback( widclipWindow, XmNresizeCallback,
-                (XtCallbackProc) resizeCB_clipWindow,
+                resizeCB_clipWindow,
                 (XtPointer) icon_scrolled_container );
 
         return ( icon_selection_dialog );

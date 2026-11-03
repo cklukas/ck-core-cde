@@ -14,6 +14,8 @@
   and use its shared
   environment/address interfaces consistently; use the standard stdio
   declarations and exact non-returning Xt error-handler contract there;
+  make dtcreate's generated registrations and callback boundaries use
+  `XtCallbackProc` directly instead of casting toolkit-specific record types;
   give App Builder's memory-fault hook the signal-handler ABI and its UIL
   diagnostics the toolkit's distinct typed callback contracts, preserve its
   maintained generated-header and stub additions in clean builds, and assign

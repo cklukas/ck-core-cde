@@ -76,7 +76,7 @@
 void load_filetype_icons (Widget, XtPointer, XmFileSelectionBoxCallbackStruct *);
 void clear_filetype_icon (void);
 Widget get_selected_filetype_icon (void);
-void activateCB_filetype_icon (Widget, XtPointer, DtIconCallbackStruct *);
+void activateCB_filetype_icon (Widget, XtPointer, XtPointer);
 
 void readAFFromGUI (FiletypeData *);
 void getAF_FiletypeName (FiletypeData *);

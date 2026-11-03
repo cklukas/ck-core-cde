@@ -180,20 +180,20 @@ static Widget   _Uxbuild_OpenFile(void)
                         RES_CONVERT( XmNpattern, "" ),
                         NULL );
         XtAddCallback( OpenFile, XmNcancelCallback,
-                (XtCallbackProc) cancelCB_OpenFile,
+                cancelCB_OpenFile,
                 (XtPointer) UxOpenFileContext );
         XtAddCallback( OpenFile, XmNokCallback,
-                (XtCallbackProc) okCallback_OpenFile,
+                okCallback_OpenFile,
                 (XtPointer) UxOpenFileContext );
         XtAddCallback( OpenFile, XmNhelpCallback,
-                (XtCallbackProc) helpCallback_OpenFile,
+                helpCallback_OpenFile,
                 (XtPointer) UxOpenFileContext );
         XtVaSetValues(OpenFile, XmNuserData, OpenFile, NULL);
 
         UxPutContext( OpenFile, (char *) UxOpenFileContext );
 
         XtAddCallback( OpenFile, XmNdestroyCallback,
-                (XtCallbackProc) UxDestroyContextCB,
+                UxDestroyContextCB,
                 (XtPointer) UxOpenFileContext);
 
         return ( OpenFile );

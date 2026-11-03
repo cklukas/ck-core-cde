@@ -619,7 +619,7 @@ void activateCB_FileQuit (Widget wid, XtPointer cdata,
      cancelPtr = XtNewString(GETMESSAGE(5, 154, "Cancel Close"));
 
      display_question_message(CreateActionAppShell, msgPtr,
-			     savePtr, (XtCallbackProc)saveCB_QuestionDialog,
+			     savePtr, saveCB_QuestionDialog,
                              noSavePtr, nosaveCB_QuestionDialog,
                              cancelPtr, cancelCB_QuestionDialog);
 
@@ -657,7 +657,7 @@ void activateCB_FileQuit (Widget wid, XtPointer cdata,
 /* wintypeheight                                                              */
 /******************************************************************************/
 void activateCB_ExpertOption (Widget wid, XtPointer client_data,
-                              XtPointer *cbs)
+                              XtPointer call_data)
 {
   XtArgVal /* Dimension */  ca_width;
 
@@ -714,8 +714,9 @@ void activateCB_ExpertOption (Widget wid, XtPointer client_data,
 /*                                                                            */
 /******************************************************************************/
 void valueChangedCB_ColorMonoOption (Widget wid, XtPointer client_data,
-                              XmToggleButtonCallbackStruct *tcb)
+                              XtPointer call_data)
 {
+  XmToggleButtonCallbackStruct *tcb = call_data;
   int        toggle_set= tcb->set;
   IconData   *pIconData;
   Widget     widIcon;
@@ -797,8 +798,9 @@ void createCB_ColorMonoOption (Widget wid)
 /*                                                                            */
 /******************************************************************************/
 void activateCB_action_icon (Widget wid, XtPointer client_data,
-                             DtIconCallbackStruct *cbs)
+                             XtPointer call_data)
 {
+  DtIconCallbackStruct *cbs = call_data;
   Time    lts, mct = 0;
   static  Time prev_lts = 0;
 
@@ -835,8 +837,7 @@ void activateCB_action_icon (Widget wid, XtPointer client_data,
     printf("DblClick icon callback.\n");
 #endif
 
-    activateCB_edit_icon(wid, (XtPointer)CA_ACTION_ICONS,
-		(XmPushButtonCallbackStruct *)cbs /* unused anyway */);
+    activateCB_edit_icon(wid, (XtPointer)CA_ACTION_ICONS, cbs);
 
   }
   return;
@@ -851,7 +852,7 @@ void activateCB_action_icon (Widget wid, XtPointer client_data,
 /* OUTPUT: none                                                               */
 /******************************************************************************/
 void activateCB_add_filetype (Widget wid, XtPointer client_data,
-                              XmPushButtonCallbackStruct *cbs)
+                              XtPointer call_data)
 {
   FiletypeData *pFtD;
   char         *ptr;
@@ -927,7 +928,7 @@ void activateCB_add_filetype (Widget wid, XtPointer client_data,
 /* OUTPUT: none                                                               */
 /******************************************************************************/
 void activateCB_edit_filetype (Widget wid, XtPointer client_data,
-                              XmPushButtonCallbackStruct *cbs)
+                              XtPointer call_data)
 {
   FiletypeData *pFtD;
   int          *poslist, poscnt;

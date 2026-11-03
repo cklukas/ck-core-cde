@@ -134,7 +134,7 @@ extern Widget   AF_TINY_IconGadget;
 void    activateCB_edit_id_characteristics (
 			   Widget filesel, 
 			   XtPointer cdata,
-			   XmFileSelectionBoxCallbackStruct *cbstruct);
+			   XtPointer call_data);
 Widget  create_AddFiletype(swidget _UxUxParent);
 
 

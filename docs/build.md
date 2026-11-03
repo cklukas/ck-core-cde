@@ -228,6 +228,10 @@ close hook is also registered directly through its exact Xt callback type. The
 icon selector stores and accepts `XtCallbackProc` values rather than unspecified
 function pointers, and its directory scanner gives the selection hook its real
 two-argument contract.
+Generated widget registrations now pass their callbacks without function-pointer
+casts. Those callbacks expose Xt's three-argument boundary and recover Motif- or
+CDE-specific callback records from `call_data` only where the implementation
+actually reads one.
 Dtlogin retains X I/O and alarm handlers through their native function-pointer
 types and restores X's default error handler with `NULL`, without handler casts.
 Its language enumerator table carries the exact next/end method contracts, and

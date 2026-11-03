@@ -103,7 +103,7 @@ void LayoutCB_AddFiletype(Widget wid, XtPointer cdata, XtPointer cbs)
 /* OUTPUT: none                                                               */
 /******************************************************************************/
 void activateCB_edit_id_characteristics (Widget filesel, XtPointer cdata,
-                   XmFileSelectionBoxCallbackStruct *cbstruct)
+                   XtPointer call_data)
 {
   FiletypeData  *pFtD;
 
@@ -331,7 +331,7 @@ static Widget   _Uxbuild_AddFiletype(void)
 	XtFree(title);
 
         XtAddCallback( AddFiletype, XmNhelpCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_ADDFILETYPE );
 
         /* Creation of AF_FiletypeFamilyNameLabel */
@@ -390,7 +390,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         NULL );
         nbutton++;
         XtAddCallback( AF_OkButton, XmNactivateCallback,
-                (XtCallbackProc) activateCB_AF_OkButton,
+                activateCB_AF_OkButton,
                 (XtPointer) NULL );
 
         /* Creation of AF_ApplyButton */
@@ -407,7 +407,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         NULL );
         nbutton++;
         XtAddCallback( AF_ApplyButton, XmNactivateCallback,
-                (XtCallbackProc) activateCB_AF_ApplyButton,
+                activateCB_AF_ApplyButton,
                 (XtPointer) NULL );
 
         /* Creation of AF_CancelButton */
@@ -424,7 +424,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         NULL );
         nbutton++;
         XtAddCallback( AF_CancelButton, XmNactivateCallback,
-                (XtCallbackProc) activateCB_AF_CancelButton,
+                activateCB_AF_CancelButton,
                 (XtPointer) NULL );
 
         /* Creation of AF_HelpButton */
@@ -442,7 +442,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         NULL );
         nbutton++;
         XtAddCallback( AF_HelpButton, XmNactivateCallback,
-                (XtCallbackProc) helpCB_general,
+                helpCB_general,
                 (XtPointer) HELP_ADDFILETYPE );
 
         /* Creation of AF_IdCharacteristicsLabel */
@@ -493,7 +493,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET,
                         NULL );
         XtAddCallback( AF_IdCharacteristicsEdit, XmNactivateCallback,
-                (XtCallbackProc) activateCB_edit_id_characteristics,
+                activateCB_edit_id_characteristics,
                 (XtPointer) NULL );
         XtRealizeWidget(AF_IdCharacteristicsEdit);
         XtVaGetValues(AF_IdCharacteristicsEdit, XmNwidth, &dim1, NULL);
@@ -653,7 +653,7 @@ static Widget   _Uxbuild_AddFiletype(void)
         pIconData->wid = AF_MED_IconGadget;
         pIconData->size = Medium_Icon;
         XtAddCallback( AF_MED_IconGadget, XmNcallback,
-                (XtCallbackProc) activateCB_filetype_icon,
+                activateCB_filetype_icon,
                 (XtPointer) NULL );
         createCB_IconGadget(AF_MED_IconGadget, FALSE, Medium_Icon);
         last_filetype_pushed = AF_MED_IconGadget;
@@ -693,7 +693,7 @@ static Widget   _Uxbuild_AddFiletype(void)
         pIconData->wid = AF_TINY_IconGadget;
         pIconData->size = Tiny_Icon;
         XtAddCallback( AF_TINY_IconGadget, XmNcallback,
-                (XtCallbackProc) activateCB_filetype_icon,
+                activateCB_filetype_icon,
                 (XtPointer) NULL );
         createCB_IconGadget(AF_TINY_IconGadget, FALSE, Tiny_Icon);
 
@@ -712,7 +712,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftAttachment, XmATTACH_POSITION,
                         NULL );
         XtAddCallback( AF_FiletypeIconsEditButton, XmNactivateCallback,
-                (XtCallbackProc) activateCB_edit_icon,
+                activateCB_edit_icon,
                 (XtPointer) CA_FILETYPE_ICONS );
 
         /* Creation of AF_FiletypeIconFindSetButton */
@@ -730,7 +730,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftAttachment, XmATTACH_POSITION,
                         NULL );
         XtAddCallback( AF_FiletypeIconFindSetButton, XmNactivateCallback,
-                (XtCallbackProc) activateCB_open_FindSet,
+                activateCB_open_FindSet,
                 (XtPointer) CA_FILETYPE_ICONS );
 
         /******************************************************************/
@@ -874,7 +874,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         NULL );
 
         XtAddCallback( AddFiletype, XmNdestroyCallback,
-                (XtCallbackProc) UxDestroyContextCB,
+                UxDestroyContextCB,
                 (XtPointer) UxAddFiletypeContext);
 
         if (bLowRes) {

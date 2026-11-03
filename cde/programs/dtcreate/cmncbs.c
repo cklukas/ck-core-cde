@@ -69,7 +69,7 @@ int     (*sigchildRoutine)();
 /*                                                                            */
 /******************************************************************************/
 void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
-                              XmFileSelectionBoxCallbackStruct *cbstruct)
+                              XtPointer call_data)
 {
   Widget filter;
   XtArgVal /* Boolean */ use_bm = False;
@@ -196,7 +196,7 @@ void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
 /*                                                                            */
 /******************************************************************************/
 void activateCB_edit_icon (Widget wid, XtPointer client_data,
-                           XmPushButtonCallbackStruct *cbs)
+                           XtPointer call_data)
 {
   char    *pszIconToEdit;
   Boolean IsActionIcons;
