@@ -48,6 +48,7 @@ HARNESS = r'''
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/file.h>
+#include <sys/stat.h>
 /* Define seams only after every production C/Xm header. They affect this UI
  * translation unit, never the separately compiled SDK/profile worker. */
 static char *test_text_get(Widget);
@@ -115,13 +116,19 @@ static void assertion(int ok,const char *message)
 {
     if (!ok) { fprintf(stderr,"FAIL: %s\n",message); test_failed=1; }
 }
-enum WaitFor { REPORT, ADMISSION_FAILURE, EXIT, PREFERENCES_READY, REVIEWED, CANCELLED_DRAINED };
+enum WaitFor { REPORT, ADMISSION_FAILURE, EXIT, PREFERENCES_READY, REVIEWED, CANCELLED_DRAINED, REVIEW_REJECTED, WORKER_FAILED };
 static int wait_for(SyncWindow *w,enum WaitFor event)
 {
     long long end=milliseconds()+15000;
     do {
         while (XtAppPending(w->context)) XtAppProcessEvent(w->context,XtIMAll);
         if (event==EXIT && XtAppGetExitFlag(w->context)) return 1;
+        if (event==REVIEW_REJECTED && w->review_serial && !w->review_pending &&
+            w->view->completed_submission==w->review_serial && !w->view->command_accepted &&
+            w->view->command_api==CKFE_API_OPERATION_UNAVAILABLE && w->view->error[0] &&
+            SyncJobViewCoherent(w->view) && w->view->summary_valid && XtIsSensitive(w->list)) return 1;
+        if (event==WORKER_FAILED && w->job && !w->recompare && w->view->finished &&
+            w->view->snapshot.state==CKFET_FAILED) return 1;
         if (event==CANCELLED_DRAINED && w->job && w->view->snapshot.state==CKFET_CANCELLED &&
             w->view->finished && w->view->drained) return 1;
         if (event==REPORT && w->job && !w->recompare && w->view->ready &&
@@ -355,8 +362,19 @@ static void no_job_feedback_case(SyncWindow *w)
     assertion(!w->job,"no-job feedback is checked before worker startup");
     invalid_setup(w,w->size_min,"bad","Minimum bytes must be empty or digits");
     retained_feedback(w,"Minimum bytes must be empty or digits");
+    Widget diagnostic=XtNameToWidget(w->shell,"*operationDiagnostics");
+    if (diagnostic) {
+        char *text=XmTextGetString(diagnostic);
+        assertion(strstr(text,"No operation is running.") && strstr(text,"Minimum bytes must be empty or digits"),
+                  "no-job diagnostics identify the absent operation and current input error"); XtFree(text);
+    }
     XmTextFieldSetString(w->size_min,"");
     feedback_cleared(w,"Minimum bytes must be empty or digits");
+    if (diagnostic) {
+        char *text=XmTextGetString(diagnostic);
+        assertion(strstr(text,"No operation is running.") && !strstr(text,"Minimum bytes must be empty or digits"),
+                  "correcting no-job input clears its diagnostic notice"); XtFree(text);
+    }
     assertion(!w->job && !w->recompare,"correcting local validation does not start a worker");
 }
 static int same_rule(const SyncRule *a,const SyncRule *b)
@@ -471,6 +489,73 @@ static int review_receipt(SyncWindow *w)
     assertion(0,"rename-intent checks require a real accepted SDK review; no synthetic clean state");
     return 0;
 }
+static Widget diagnostics_widget(SyncWindow *w)
+{
+    Widget text=XtNameToWidget(w->shell,"*operationDiagnostics");
+    assertion(text && XtIsSubclass(text,xmTextWidgetClass),"independent Operation diagnostics text exists");
+    return text && XtIsSubclass(text,xmTextWidgetClass)?text:NULL;
+}
+static void diagnostics_contains(SyncWindow *w,const char *error,const char *journal)
+{
+    Widget widget=diagnostics_widget(w);
+    if (!widget) return; /* Baseline lacks page4: record failure, keep real flow. */
+    char *text=XmTextGetString(widget);
+    assertion(error && *error && strstr(text,error),"Operation diagnostics contains the actual worker error");
+    if (journal) assertion(*journal && strstr(text,journal),"Operation diagnostics contains the real Copy journal path");
+    XtFree(text);
+}
+static void diagnostics_cleared(SyncWindow *w,const char *old_error)
+{
+    if (!old_error) return;
+    Widget widget=diagnostics_widget(w);
+    if (!widget) return;
+    char *text=XmTextGetString(widget);
+    assertion(!w->view->error[0] && !strstr(text,old_error),"new successful review/comparison removes the old operation error");
+    XtFree(text);
+}
+static char *rejected_review_diagnostics(SyncWindow *w)
+{
+    /* This known incompatible name side is submitted to the real SDK. An
+     * unexpected acceptance is a failed prerequisite, never a fake rejection. */
+    XmListDeselectAllItems(w->list); XmListSelectPos(w->list,1,True);
+    choose_option(w->name_side_option,1);
+    XtCallCallbacks(w->review,XmNactivateCallback,NULL);
+    if (!wait_for(w,REVIEW_REJECTED)) {
+        fprintf(stderr,"UNCERTAIN: incompatible Copy target-side review did not produce the required real rejection: %s\n",w->view->error);
+        return NULL;
+    }
+    assertion(w->view->snapshot.state==CKFET_AWAITING_REVIEW && w->view->journal[0],
+              "real rejected Copy review retains its awaiting-review worker and private journal");
+    char *error=XtNewString(w->view->error),*journal=XtNewString(w->view->journal);
+    diagnostics_contains(w,error,journal);
+    char *row=XmTextGetString(w->details);
+    assertion(strstr(row,w->view->rows[0].path) && !strstr(row,error),
+              "operation error does not overwrite selected row details"); XtFree(row);
+    XmListDeselectAllItems(w->list); XmListSelectPos(w->list,2,True);
+    row=XmTextGetString(w->details);
+    assertion(strstr(row,w->view->rows[1].path) && !strstr(row,error),
+              "selecting another real row shows its own details, not operation diagnostics");
+    pump_ticks(w);
+    char *after=XmTextGetString(w->details);
+    assertion(!strcmp(after,row),"unchanged real polling leaves selected row details intact"); XtFree(row); XtFree(after);
+    diagnostics_contains(w,error,journal);
+    Widget widget=diagnostics_widget(w);
+    if (widget) {
+        XtVaSetValues(w->notebook,XmNcurrentPageNumber,4,NULL);
+        int page=0; XtVaGetValues(w->notebook,XmNcurrentPageNumber,&page,NULL);
+        assertion(page==4,"Operation diagnostics is reachable on notebook page4 after row selection");
+        XmTextSetSelection(widget,2,9,CurrentTime);
+        pump_ticks(w);
+        XmTextPosition start=0,end=0;
+        assertion(XmTextGetSelectionPosition(widget,&start,&end) && start==2 && end==9,
+                  "unchanged polling preserves actual diagnostic text selection");
+        diagnostics_contains(w,error,journal);
+        XmTextClearSelection(widget,CurrentTime);
+        XtVaSetValues(w->notebook,XmNcurrentPageNumber,2,NULL);
+    }
+    XmListDeselectAllItems(w->list); XmListSelectPos(w->list,1,True);
+    XtFree(journal); return error;
+}
 static void review_intent_cases(SyncWindow *w)
 {
     /* Compare-only does not accept manual-name decisions. Establish a real
@@ -520,8 +605,10 @@ static void review_intent_cases(SyncWindow *w)
     choose_option(w->name_side_option,1);
     assertion(w->name_side==1 && w->dirty && w->local_rules_revision>revision && !XtIsSensitive(w->execute),
               "actual name-side callback invalidates the reviewed rename tuple");
+    char *rejected_error=rejected_review_diagnostics(w);
     choose_option(w->name_side_option,0);
-    if (!review_receipt(w)) return;
+    if (!review_receipt(w)) { XtFree(rejected_error); return; }
+    diagnostics_cleared(w,rejected_error); XtFree(rejected_error);
     revision=w->local_rules_revision;
     uint64_t selected[SYNC_PAGE_SIZE]; int first;
     assertion(selected_rows(w,selected,&first)==1,"reviewed rename has one selected row");
@@ -530,6 +617,7 @@ static void review_intent_cases(SyncWindow *w)
     assertion(selected_rows(w,selected,&first)==1 && selected[0]!=row && w->dirty &&
               w->local_rules_revision>revision && !XtIsSensitive(w->execute),
               "actual row selection invalidates a reviewed nonempty basename binding");
+    rejected_error=rejected_review_diagnostics(w);
     XmTextFieldSetString(w->new_name,"");
     XmListDeselectAllItems(w->list);
     XmListSelectPos(w->rules_list,1,False); activate(w,"*removeRule");
@@ -537,7 +625,59 @@ static void review_intent_cases(SyncWindow *w)
     choose_option(choice,CKFET_ASK); choose_option(scope,0);
     choose_option(w->operation_option,0); choose_option(w->metadata_option,0);
     XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
-    assertion(wait_for(w,REPORT),"fresh Compare-only report restored after rename checks");
+    if (wait_for(w,REPORT)) diagnostics_cleared(w,rejected_error);
+    else assertion(0,"fresh Compare-only report restored after rename checks");
+    XtFree(rejected_error);
+}
+static void journal_path_cases(SyncWindow *w)
+{
+    const char *deep=getenv("DTFILE_UI_TEST_DEEP_HOME"),*escaped=getenv("DTFILE_UI_TEST_ESCAPED_HOME");
+    const char *deep_kind=getenv("DTFILE_UI_TEST_DEEP_HOME_KIND");
+    assertion(deep && escaped && deep_kind && !getenv("HOME"),"journal path inputs and fixture kind are explicit, with process HOME absent");
+    if (!deep || !escaped || !deep_kind) return;
+    int actual=!strcmp(deep_kind,"actual");
+    assertion(actual || !strcmp(deep_kind,"input-only"),"deep HOME is identified as an actual fixture or an input-only path");
+    assertion(strlen(deep)>2048,"long HOME input exceeds the fixed journal capacity");
+    assertion(setenv("HOME",deep,1)==0,"supply explicit long HOME input for Copy admission");
+    choose_option(w->operation_option,1); choose_option(w->metadata_option,1);
+    XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
+    int failed=wait_for(w,WORKER_FAILED);
+    assertion(unsetenv("HOME")==0,"restore absent HOME after long-path worker result");
+    if (!failed) return;
+    assertion(strstr(w->view->error,"Operation journal directory path is too long.") && !w->view->journal[0],
+              "overlong journal fails explicitly without publishing a truncated journal path");
+    char container[4096]; struct stat container_stat;
+    int length=snprintf(container,sizeof(container),"%s/.dtfile-operations",deep);
+    assertion(length>0 && (size_t)length<sizeof(container),"deep HOME container check fits the bounded test buffer");
+    if (length>0 && (size_t)length<sizeof(container)) {
+        errno=0; int result=lstat(container,&container_stat);
+        assertion(result<0 && (actual?errno==ENOENT:(errno==ENAMETOOLONG || errno==ENOENT)),
+                  "too-long journal failure leaves no container; input-only paths may exceed the host pathname limit");
+    }
+    char *error=XtNewString(w->view->error);
+    diagnostics_contains(w,error,NULL);
+    choose_option(w->operation_option,0); choose_option(w->metadata_option,0);
+    XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
+    if (!wait_for(w,REPORT)) { XtFree(error); return; }
+    diagnostics_cleared(w,error); XtFree(error);
+    assertion(setenv("HOME",escaped,1)==0,"supply real private HOME containing newline, backslash and non-ASCII bytes");
+    choose_option(w->operation_option,1); choose_option(w->metadata_option,1);
+    XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
+    int ready=wait_for(w,REPORT);
+    assertion(unsetenv("HOME")==0,"restore absent HOME after escaped-path Copy admission");
+    if (!ready) return;
+    char expected[4096]; snprintf(expected,sizeof(expected),"%s/.dtfile-operations",escaped);
+    assertion(!strcmp(w->view->journal,expected),"real Copy view retains exact raw native journal bytes");
+    Widget widget=diagnostics_widget(w);
+    if (widget) {
+        char *text=XmTextGetString(widget);
+        assertion(strstr(text,"\\x0a") && strstr(text,"\\x5c") && strstr(text,"\\xc3\\xa9") && !strstr(text,escaped),
+                  "Operation diagnostics escapes newline, backslash and UTF-8 journal bytes without changing the native view");
+        XtFree(text);
+    }
+    choose_option(w->operation_option,0); choose_option(w->metadata_option,0);
+    XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
+    assertion(wait_for(w,REPORT),"Compare-only works again after both real journal-path cases");
 }
 static int save_preferences(SyncWindow *w,SyncProfile *profile)
 {
@@ -800,6 +940,10 @@ static void test_loop(XtAppContext context)
     assertion(w->view->total_rows==70 && item_count(w->list)==64,"real Compare has70 objects,64 first-page rows");
     assertion(XtIsSensitive(w->list),"fresh report rows are selectable");
     review_intent_cases(w);
+    /* Missing diagnostics on the baseline records a failure but must not
+     * prevent the independent real journal-path checks after a restored report. */
+    if (w->job && !w->recompare && profiles[w->profile_index]==CKFSP_COMPARE && !w->rule_count &&
+        w->view->snapshot.state==CKFET_AWAITING_REVIEW && SyncJobViewCoherent(w->view)) journal_path_cases(w);
     if (test_failed) goto close;
     XmListSelectPos(w->list,1,True);
     char *old_details=XmTextGetString(w->details);
@@ -837,6 +981,8 @@ static void test_loop(XtAppContext context)
     if (!wait_for(w,ADMISSION_FAILURE)) { assertion(0,"queued Copy reaches real no-HOME admission failure"); goto close; }
     char *summary=label_text(w->plan_summary),*page=label_text(w->page_info);
     char *details=XmTextGetString(w->details),*roots=label_text(w->compared_roots);
+    char *admission_error=label_text(w->status);
+    diagnostics_contains(w,admission_error,NULL); XtFree(admission_error);
     fprintf(stderr,"AFTER FAILED ADMISSION: rows=%d source_sensitive=%d compare_sensitive=%d next_sensitive=%d\nplan=%s\npage=%s\ndetails=%s\n",
             item_count(w->list),XtIsSensitive(w->source),XtIsSensitive(w->compare),XtIsSensitive(w->next),summary,page,details);
     assertion(item_count(w->list)==0,"failed admission leaves no old rows");
@@ -942,8 +1088,30 @@ def main():
     work.mkdir(parents=True, mode=0o700)
     for name in ("tmp", "source", "target", "cache", "config", "data", "runtime", "preferences-home"):
         (work / name).mkdir(mode=0o700)
+    # Source/target remain the original71-file inventory. A host whose native
+    # pathname limit is smaller than the worker's journal buffer cannot have an
+    # existing over-capacity HOME: test its pre-I/O rejection as input-only.
+    native_path_max = os.pathconf(work, "PC_PATH_MAX")
+    deep_home = work / "deep-journal-home"
+    deep_parts = [deep_home]
+    while len(os.fsencode(deep_home)) <= 2100:
+        deep_home /= "private-" + "x" * 72
+        deep_parts.append(deep_home)
+    fits_native = native_path_max > 0 and len(os.fsencode(deep_home)) + len(b"/.dtfile-operations") < native_path_max
+    if os.uname().sysname == "Linux" and not fits_native:
+        parser.error("Linux requires an actual deep HOME fixture within its native pathname limit")
+    if fits_native:
+        for directory in deep_parts:
+            directory.mkdir(mode=0o700)
+    deep_kind = "actual" if fits_native else "input-only"
+    deep_home_fixture = {"kind": deep_kind, "path": str(deep_home), "native_path_max": native_path_max,
+                         "home_bytes": len(os.fsencode(deep_home)), "materialized": fits_native}
+    escaped_home = work / "journal-home-\\\n-é"
+    escaped_home.mkdir(mode=0o700)
     env = dict(os.environ, TMPDIR=str(work / "tmp"), LANG="C", LC_ALL="C",
-               DTFILE_UI_TEST_PREFERENCES_HOME=str(work / "preferences-home"))
+               DTFILE_UI_TEST_PREFERENCES_HOME=str(work / "preferences-home"),
+               DTFILE_UI_TEST_DEEP_HOME=str(deep_home), DTFILE_UI_TEST_DEEP_HOME_KIND=deep_kind,
+               DTFILE_UI_TEST_ESCAPED_HOME=str(escaped_home))
     env.pop("HOME", None)
     env.pop("LD_PRELOAD", None)
     for key, name in (("XDG_CACHE_HOME", "cache"), ("XDG_CONFIG_HOME", "config"),
@@ -970,7 +1138,8 @@ def main():
                "-lck-core-fs-lib", "-lXm", "-lXt", "-lX11", "-pthread", "-o", str(work / "sync-retry-ui")]
     utc = lambda: datetime.now(timezone.utc).isoformat()
     start = time.monotonic()
-    record = {"build_start_utc": utc(), "jobs": 1, "compile_command": command, "source_hashes": {p.name: sha(p) for p in source.iterdir()
+    record = {"build_start_utc": utc(), "jobs": 1, "deep_home_fixture": deep_home_fixture,
+              "compile_command": command, "source_hashes": {p.name: sha(p) for p in source.iterdir()
               if p.suffix in (".c", ".h", ".msg")}, "fixture_before": before}
     try:
         with (work / "build.log").open("w") as log:

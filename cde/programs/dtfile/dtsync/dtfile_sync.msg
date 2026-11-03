@@ -239,7 +239,7 @@ $set 1
 277 Action
 278 Result
 279 Choose an action available for this matching class and scope.
-280 Choose two folders and an operation, then Compare. Inspect the plan totals\nand select rows to see both versions and the proposed names.\n\nUse matching rules for one item, selected rows, a subtree or the whole job.\nReview rules after every edit. Saved profiles store preferences only;\nloading one always requires a fresh comparison and review.\n\nDisplayed \\xNN escapes retain original folder bytes until the field is edited.\nDate-only bounds use local midnight; UTC timestamps preserve exact bounds.\nPause and Cancel are requests. Closing waits for safe worker shutdown.
+280 Choose two folders and an operation, then Compare. Inspect the plan totals\nand select rows to see both versions and the proposed names.\n\nUse matching rules for one item, selected rows, a subtree or the whole job.\nReview rules after every edit. Saved profiles store preferences only;\nloading one always requires a fresh comparison and review.\n\nDisplayed \\xNN escapes retain original folder bytes until the field is edited.\nDate-only bounds use local midnight; UTC timestamps preserve exact bounds.\nOperation diagnostics keeps operation messages and the journal location separate\nfrom row details. Pause and Cancel are requests. Closing waits for safe shutdown.
 281 Help
 282 Cannot read the selected folder name.
 286 Comparison results are not yet available.
@@ -272,3 +272,9 @@ $set 1
 313 Closing - finishing safe cleanup...
 314 Save as profile:
 315 Delete selected profile
+316 Operation diagnostics
+317 No operation is running. Compare folders to obtain operation diagnostics.
+318 Input message
+319 Operation needs attention. Open Operation diagnostics.
+320 Operation state
+321 Operation message
