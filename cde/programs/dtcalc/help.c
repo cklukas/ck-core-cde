@@ -366,7 +366,7 @@ HelpRequestCB(Widget widget, XtPointer client_data, XtPointer call_data)
   Help(helpVolume, locationId);
   ignore_event = True;
   timerId = XtAppAddTimeOut (XtWidgetToApplicationContext (X->kframe), 300,
-                         (XtTimerCallbackProc) TimerEvent, (XtPointer) NULL);
+                         TimerEvent, (XtPointer) NULL);
 }
 
 void

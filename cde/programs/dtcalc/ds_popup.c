@@ -87,7 +87,7 @@ _DtMappedCB(
 {
   _DtmapCB(w, client_data, call_data);
 
-  XtRemoveCallback(w, XmNmapCallback, (XtCallbackProc)_DtMappedCB, 
+  XtRemoveCallback(w, XmNmapCallback, _DtMappedCB,
                                         client_data);
 }
 
@@ -102,7 +102,7 @@ _DtGenericMapWindow (
      Widget parent )
 {
    XtAddCallback (parent, XmNmapCallback,
-                  (XtCallbackProc)_DtMappedCB, (XtPointer) shell);
+                  _DtMappedCB, (XtPointer) shell);
 }
 
 

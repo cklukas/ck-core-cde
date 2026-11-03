@@ -769,7 +769,7 @@ dtcalc_kpanel_create(Widget owner)
 
 #ifdef HAVE_EDITRES
     XtAddEventHandler(owner, 0, True,
-                      (XtEventHandler) _XEditResCheckMessages,
+                      _XEditResCheckMessages,
                       (XtPointer) NULL);
 #endif
 
