@@ -463,6 +463,8 @@ The main File Manager class similarly implements its set/free/focus methods at
 the generic boundary and initializes unsupported methods with typed nulls. Its
 branch-list and selection-list resource converters implement the actual modern
 and legacy Xt converter contracts directly.
+The Help dialog class also stores exact generic methods and typed null entries,
+recovering its concrete help records only inside the method implementation.
 DtPad exposes its editor, help, formatting, option, session and print callbacks
 through `XtCallbackProc` directly, and routes panic signals through a typed
 signal adapter. DtAction likewise registers its custom text actions and

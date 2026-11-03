@@ -8,7 +8,9 @@
   transitions. The main File Manager dialog also stores its set/free/focus
   methods through their native generic contracts and uses typed null entries;
   its branch and selection resource converters now implement the native modern
-  and legacy Xt converter signatures.
+  and legacy Xt converter signatures. The Help dialog class likewise stores
+  each generic dialog method directly and recovers its concrete records inside
+  the method boundary.
 - DtImsStart: register window-manager callbacks and the host-return action with
   their exact Xt contracts, using a typed adapter for the no-argument shutdown
   routine.

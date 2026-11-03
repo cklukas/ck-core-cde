@@ -121,24 +121,24 @@ static void Create(
                         Widget *return_widget,
                         XtPointer *dialog) ;
 static void InstallClose(
-                        HelpRec *helpRec,
+                        XtPointer dialog,
                         XtCallbackProc callback,
                         XtPointer clientData) ;
 static XtPointer GetValues(
-                        HelpRec *helpRec) ;
+                        XtPointer dialog) ;
 static XtPointer GetDefaultValues( void ) ;
 static XtPointer GetResourceValues(
                         XrmDatabase data_base,
                         char **name_list) ;
 static void SetValues(
-                        HelpRec *helpRec,
-                        HelpData *helpData) ;
+                        XtPointer dialog,
+                        XtPointer values) ;
 static void WriteResourceValues(
                         DialogData *values,
                         int fd,
                         char **name_list) ;
 static void FreeValues(
-                        HelpData *helpData) ;
+                        XtPointer values) ;
 
 /********    End Static Function Declarations    ********/
 
@@ -150,18 +150,18 @@ static DialogClass helpClassRec =
 {
    resources,
    XtNumber(resources),
-   (DialogCreateProc)Create,
-   (DialogInstallChangeProc)NULL,
-   (DialogInstallCloseProc)InstallClose,
-   (DialogDestroyProc)_DtGenericDestroy,
-   (DialogGetValuesProc)GetValues,
-   (DialogGetDefaultValuesProc)GetDefaultValues,
-   (DialogGetResourceValuesProc)GetResourceValues,
-   (DialogSetValuesProc)SetValues,
-   (DialogWriteResourceValuesProc)WriteResourceValues,
-   (DialogFreeValuesProc)FreeValues,
-   (DialogMapWindowProc)_DtGenericMapWindow,
-   (DialogSetFocusProc)NULL,
+   Create,
+   NULL,
+   InstallClose,
+   _DtGenericDestroy,
+   GetValues,
+   GetDefaultValues,
+   GetResourceValues,
+   SetValues,
+   WriteResourceValues,
+   FreeValues,
+   _DtGenericMapWindow,
+   NULL,
 };
 
 DialogClass * helpClass = (DialogClass *) &helpClassRec;
@@ -215,11 +215,12 @@ Create(
 
 static void
 InstallClose(
-        HelpRec *helpRec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer clientData )
 
 {
+   HelpRec *helpRec = dialog;
    XtAddCallback(helpRec->helpDialog, DtNcloseCallback, callback,
                  clientData);
 }
@@ -233,9 +234,10 @@ InstallClose(
 
 static XtPointer
 GetValues(
-        HelpRec *helpRec )
+        XtPointer dialog )
 
 {
+   HelpRec *helpRec = dialog;
    DialogData * dialog_data;
    HelpData * helpData;
    HelpData * oldData;
@@ -347,10 +349,12 @@ GetResourceValues(
 
 static void
 SetValues(
-        HelpRec *helpRec,
-        HelpData *helpData )
+        XtPointer dialog,
+        XtPointer values )
 
 {
+   HelpRec *helpRec = dialog;
+   HelpData *helpData = values;
    Arg args[10];
    int n;
    String helpString = NULL;
@@ -445,9 +449,10 @@ WriteResourceValues(
 
 static void
 FreeValues(
-        HelpData *helpData )
+        XtPointer values )
 
 {
+   HelpData *helpData = values;
    XtFree((char *) helpData->topicTitle);
    XtFree((char *) helpData->idString);
    XtFree((char *) helpData->volString);
