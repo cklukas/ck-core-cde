@@ -56,6 +56,10 @@ and passes `-std=gnu17` only to that package build; the maintained dtksh glue
 continues to inherit the enclosing C23 qualification flags. This also keeps
 generated ksh93 objects out of the source checkout. The compatibility build
 uses the lane's configured compiler, so both GCC and Clang exercise GNU17.
+The maintained dtksh command layer is compiled in the enclosing C23 mode. Its
+Xt, Xlib, ToolTalk, print-setup and ksh discipline callbacks use their native
+prototypes; operations with different signatures have separate typed paths or
+small value adapters rather than common untyped dispatch.
 
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks

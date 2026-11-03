@@ -56,6 +56,10 @@
   correct the libshell dependency, and compile that vendored compatibility
   component with explicit GNU17 while the maintained dtksh glue remains on the
   enclosing compiler mode.
+- dtksh: give the maintained Xt, Xlib, ToolTalk, print-setup and ksh discipline
+  dispatch paths their exact callback contracts; split incompatible one- and
+  two-name ToolTalk operations instead of routing them through an untyped
+  function pointer.
 - public interfaces: replace unspecified-argument ToolTalk, DtSvc service,
   action, multimedia database, symbolic-table and event-loop declarations
   with their exact C/C++ contracts; type Instant's remaining initialization,
