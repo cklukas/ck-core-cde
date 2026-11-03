@@ -52,7 +52,7 @@ static char *label_text(Widget widget)
     XmString text=NULL;
     char *plain=NULL;
     XtVaGetValues(widget,XmNlabelString,&text,NULL);
-    if (text) XmStringGetLtoR(text,XmFONTLIST_DEFAULT_TAG,&plain);
+    if (text) plain=XmStringUnparse(text,NULL,XmCHARSET_TEXT,XmCHARSET_TEXT,NULL,0,XmOUTPUT_ALL);
     return plain ? plain : XtNewString("");
 }
 static void assertion(int ok,const char *message)
@@ -66,7 +66,7 @@ static int wait_for(SyncWindow *w,enum WaitFor event)
     do {
         while (XtAppPending(w->context)) XtAppProcessEvent(w->context,XtIMAll);
         if (event==EXIT && XtAppGetExitFlag(w->context)) return 1;
-        if (event==REPORT && w->job && w->view->ready &&
+        if (event==REPORT && w->job && !w->recompare && w->view->ready &&
             w->view->snapshot.state==CKFET_AWAITING_REVIEW &&
             item_count(w->list)>0 && XtIsSensitive(w->compare)) return 1;
         char *status=label_text(w->status);
@@ -114,6 +114,138 @@ static int same_job_preference(const SyncRule *a,const SyncRule *b)
         !a->selected_count && !b->selected_count && !a->subtree && !b->subtree &&
         !a->subtree_size && !b->subtree_size;
 }
+typedef struct { char *source,*destination,*native_source,*native_destination; } Paths;
+static Paths save_paths(SyncWindow *w)
+{
+    Paths p={XmTextFieldGetString(w->source),XmTextFieldGetString(w->destination),
+             w->native_source?XtNewString(w->native_source):NULL,
+             w->native_destination?XtNewString(w->native_destination):NULL};
+    return p;
+}
+static int same_nullable(const char *a,const char *b)
+{ return (!a && !b) || (a && b && !strcmp(a,b)); }
+static void check_paths(SyncWindow *w,const Paths *p,int swapped)
+{
+    Paths actual=save_paths(w);
+    assertion(!strcmp(actual.source,swapped?p->destination:p->source) &&
+              !strcmp(actual.destination,swapped?p->source:p->destination) &&
+              same_nullable(actual.native_source,swapped?p->native_destination:p->native_source) &&
+              same_nullable(actual.native_destination,swapped?p->native_source:p->native_destination),
+              "native bytes, edited ownership and displayed paths stay paired without decoding");
+    XtFree(actual.source); XtFree(actual.destination);
+    XtFree(actual.native_source); XtFree(actual.native_destination);
+}
+static void free_paths(Paths *p)
+{
+    XtFree(p->source); XtFree(p->destination);
+    XtFree(p->native_source); XtFree(p->native_destination);
+}
+static void activate(SyncWindow *w,const char *name)
+{
+    Widget button=XtNameToWidget(w->shell,(char *)name);
+    assertion(button && XtIsSensitive(button),"setup action exists and is usable");
+    if (button) XtCallCallbacks(button,XmNactivateCallback,NULL);
+}
+static void check_clear_filters(SyncWindow *w)
+{
+    Paths paths=save_paths(w);
+    unsigned operation=w->profile_index,metadata=w->metadata,count=w->rule_count;
+    SyncRule preference={0};
+    if (count==1) preference=w->rules[0];
+    XmTextFieldSetString(w->size_min,"1"); XmTextFieldSetString(w->size_max,"99");
+    XmTextFieldSetString(w->date_after,"2000-01-01"); XmTextFieldSetString(w->date_before,"2099-01-01");
+    activate(w,"*clearFilters");
+    Widget fields[]={w->size_min,w->size_max,w->date_after,w->date_before};
+    for (unsigned i=0;i<XtNumber(fields);++i) {
+        char *text=XmTextFieldGetString(fields[i]);
+        assertion(!*text,"Clear filters empties each of the four filter fields"); XtFree(text);
+    }
+    check_paths(w,&paths,0); free_paths(&paths);
+    assertion(w->profile_index==operation && w->metadata==metadata && w->rule_count==count &&
+              (count!=1 || same_job_preference(&w->rules[0],&preference)),
+              "Clear filters retains paths, operation, metadata and JOB preference");
+}
+static void invalid_setup(SyncWindow *w,Widget field,const char *value,const char *message)
+{
+    XmTextFieldSetString(field,(char *)value);
+    XtVaSetValues(w->notebook,XmNcurrentPageNumber,2,NULL);
+    XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
+    XSync(XtDisplay(w->shell),False);
+    while (XtAppPending(w->context)) XtAppProcessEvent(w->context,XtIMAll);
+    int page=0; XtVaGetValues(w->notebook,XmNcurrentPageNumber,&page,NULL);
+    char *status=label_text(w->status);
+    fprintf(stderr,"VALIDATION: field=%s page=%d focus=%s status=%s\n",XtName(field),page,
+            XmGetFocusWidget(w->shell)?XtName(XmGetFocusWidget(w->shell)):"none",status);
+    assertion(!w->job && !w->recompare,"invalid setup never admits a worker");
+    assertion(page==1 && XmGetFocusWidget(w->shell)==field,"Compare returns to setup and focuses the invalid field");
+    assertion(strstr(status,message)!=NULL,"Compare presents the field-specific validation message");
+    assertion(XtIsSensitive(w->compare) && !XtIsSensitive(w->execute),"invalid setup permits correction and never Apply");
+    XtFree(status);
+}
+static void setup_cases(SyncWindow *w)
+{
+    Paths original=save_paths(w);
+    Widget explanation=XtNameToWidget(w->shell,"*operationExplanation");
+    assertion(explanation && XtNameToWidget(w->shell,"*swapFolders") &&
+              XtNameToWidget(w->shell,"*clearFilters"),"new setup controls exist");
+    if (!explanation) { free_paths(&original); return; }
+    const char *titles[]={"Compare only:","Copy preview:","Update preview:",
+                          "Copy missing only preview:","Synchronize one way preview:","Mirror preview:"};
+    const char *meaning[]={"No file changes are proposed or applied", "Newer targets are not implicitly protected",
+                          "Equal-time differences need review", "Existing destination objects are kept",
+                          "destination-only objects remain", "plan can contain deletions"};
+    for (unsigned i=0;i<6;++i) {
+        choose_option(w->operation_option,i);
+        char *text=label_text(explanation);
+        assertion(w->profile_index==i && strstr(text,titles[i]) && strstr(text,meaning[i]),
+                  "actual operation menu callback updates its complete explanation");
+        if (i) assertion(strstr(text,"Preview only")!=NULL,"mutating operation remains explicitly preview-only");
+        assertion(!XtIsSensitive(w->execute),"operation explanations never enable Apply"); XtFree(text);
+    }
+    set_native_path(w,w->source,"/native/left\\\001");
+    set_native_path(w,w->destination,"/native/right\\\002");
+    Paths native=save_paths(w);
+    assertion(strstr(native.source,"\\x5c") && strstr(native.source,"\\x01"),"swap fixture includes escaped backslash and nonprintable bytes");
+    activate(w,"*swapFolders"); check_paths(w,&native,1);
+    activate(w,"*swapFolders"); check_paths(w,&native,0); free_paths(&native);
+    XmTextFieldSetString(w->destination,"/edited/literal\\x41");
+    Paths mixed=save_paths(w);
+    assertion(mixed.native_source && !mixed.native_destination,"editing removes only the edited field's retained native path");
+    activate(w,"*swapFolders"); check_paths(w,&mixed,1);
+    activate(w,"*swapFolders"); check_paths(w,&mixed,0); free_paths(&mixed);
+    set_native_path(w,w->source,original.native_source);
+    set_native_path(w,w->destination,original.native_destination);
+    choose_option(w->metadata_option,1); check_clear_filters(w);
+    choose_option(w->operation_option,0); choose_option(w->metadata_option,0);
+    const char *bad_bytes[]={"word","-1","+1","18446744073709551616","1x"," 1"};
+    for (unsigned i=0;i<XtNumber(bad_bytes);++i) {
+        invalid_setup(w,w->size_min,bad_bytes[i],"Minimum bytes must be empty or digits"); activate(w,"*clearFilters");
+        invalid_setup(w,w->size_max,bad_bytes[i],"Maximum bytes must be empty or digits"); activate(w,"*clearFilters");
+    }
+    XmTextFieldSetString(w->size_min,"10");
+    invalid_setup(w,w->size_max,"9","Maximum bytes must be at least minimum bytes"); activate(w,"*clearFilters");
+    invalid_setup(w,w->date_after,"2025-02-29","Modified on/after: enter a valid local"); activate(w,"*clearFilters");
+    invalid_setup(w,w->date_before,"2024-02-30","Modified before: enter a valid local"); activate(w,"*clearFilters");
+    XmTextFieldSetString(w->date_after,"2026-01-02");
+    invalid_setup(w,w->date_before,"2026-01-01","Modified before must be later than modified on/after"); activate(w,"*clearFilters");
+    XmTextFieldSetString(w->date_after,"2026-01-01T00:00:00.123Z");
+    invalid_setup(w,w->date_before,"2026-01-01T00:00:00.123Z","Modified before must be later than modified on/after"); activate(w,"*clearFilters");
+    invalid_setup(w,w->source,"","Choose a source folder"); set_native_path(w,w->source,original.native_source);
+    invalid_setup(w,w->destination,"","Choose a destination folder"); set_native_path(w,w->destination,original.native_destination);
+    invalid_setup(w,w->source,"relative","Enter an absolute source folder path"); set_native_path(w,w->source,original.native_source);
+    invalid_setup(w,w->destination,"relative","Enter an absolute destination folder path"); set_native_path(w,w->destination,original.native_destination);
+    char *long_path=malloc(SYNC_PROFILE_PATH_MAX+2);
+    if (long_path) {
+        memset(long_path,'x',SYNC_PROFILE_PATH_MAX+1); long_path[0]='/'; long_path[SYNC_PROFILE_PATH_MAX+1]=0;
+        invalid_setup(w,w->source,long_path,"The source folder path is too long"); set_native_path(w,w->source,original.native_source);
+        invalid_setup(w,w->destination,long_path,"The destination folder path is too long"); set_native_path(w,w->destination,original.native_destination);
+        free(long_path);
+    } else assertion(0,"allocate oversized path fixture");
+    check_paths(w,&original,0); free_paths(&original);
+    /* A positive equal-bound case uses the real Compare worker, then clearing
+     * filters restores the original unfiltered70-object retry regression. */
+    XmTextFieldSetString(w->size_min,"10"); XmTextFieldSetString(w->size_max,"10");
+}
 static void test_loop(XtAppContext context)
 {
     (void)context;
@@ -125,6 +257,12 @@ static void test_loop(XtAppContext context)
     SyncWindow *w=callbacks[0].closure;
     assertion(getenv("HOME")==NULL,"HOME is genuinely absent");
     assertion(!XtIsSensitive(w->execute),"Apply starts disabled");
+    setup_cases(w);
+    if (test_failed) goto close;
+    XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
+    assertion(w->job!=NULL,"equal inclusive byte bounds admit a real Compare worker");
+    if (!wait_for(w,REPORT)) { assertion(0,"equal-bound Compare reaches a real report"); goto close; }
+    activate(w,"*clearFilters");
     XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
     if (!wait_for(w,REPORT)) { assertion(0,"initial real Compare completes"); goto close; }
     assertion(w->view->total_rows==70 && item_count(w->list)==64,"real Compare has70 objects,64 first-page rows");
@@ -141,6 +279,19 @@ static void test_loop(XtAppContext context)
     assertion(w->rule_count==1 && w->rules[0].scope==CKFET_SCOPE_JOB,"job-wide preference added by UI callback");
     if (w->rule_count!=1) goto close;
     SyncRule job_preference=w->rules[0];
+    Paths assessed=save_paths(w);
+    activate(w,"*swapFolders"); check_paths(w,&assessed,1);
+    assertion(w->setup_dirty && !XtIsSensitive(w->review) && !XtIsSensitive(w->rule_page) &&
+              !XtIsSensitive(w->execute),"Swap immediately invalidates old assessment and review authority");
+    char *notice=label_text(XtNameToWidget(w->shell,"*setupNotice"));
+    assertion(strstr(notice,"earlier folder options")!=NULL,"comparison page preserves the stale-options explanation"); XtFree(notice);
+    activate(w,"*swapFolders"); check_paths(w,&assessed,0); free_paths(&assessed);
+    check_clear_filters(w);
+    XtCallCallbacks(w->compare,XmNactivateCallback,NULL);
+    if (!wait_for(w,REPORT)) { assertion(0,"fresh Compare after setup edits completes"); goto close; }
+    assertion(w->view->total_rows==70 && w->rule_count==1 && same_job_preference(&w->rules[0],&job_preference),
+              "setup edits retain only the JOB preference for a fresh70-object assessment");
+    XmListSelectPos(w->list,1,True);
     choose_option(scope,2);
     XtCallCallbacks(add,XmNactivateCallback,NULL);
     assertion(w->rule_count==2 && w->rules[1].scope==CKFET_SCOPE_ITEM && w->rules[1].selected_count==1,
@@ -182,7 +333,7 @@ close:
 int main(int argc,char **argv)
 {
     int result=application_main(argc,argv);
-    if (!result && !test_failed) puts("PASS: failed admission clears old result authority and permits fresh Compare retry");
+    if (!result && !test_failed) puts("PASS: setup explanations, byte-preserving swap, filter clearing, focused validation and comparison retry");
     return result ? result : test_failed;
 }
 '''

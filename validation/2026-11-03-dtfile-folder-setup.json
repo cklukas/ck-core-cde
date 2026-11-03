@@ -1,0 +1,59 @@
+{
+  "topic": "Make folder comparison setup explicit and correctable",
+  "base_revision": "989a5bfef05bc628838055e04f977f235481a53e",
+  "sdk_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "sdk_version": "0.3.0",
+  "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "scope": "Folder setup and read-only comparison. Apply remains disabled; no Root0.4 or execution qualification.",
+  "native_regression": {
+    "passed": true,
+    "build_seconds": 34.19860192621127,
+    "run_seconds": 7.038401839090511,
+    "timeout_failures": [],
+    "fixture_unchanged": true,
+    "source_hashes": {
+      "SyncDates.h": "dd6d805135b1b1f2d6119ba8048ad4b905c63b06b86e25ad03f5c74dc2e00060",
+      "dtfile_sync.msg": "1266a35e65a6b613415502847a4b5c81d25fedc9b7e3d2ec8157e4cb635d24d3",
+      "SyncProfiles.c": "308664f90ce90373623779a0d6f859c407e53c3c075277bb49712d5b93806432",
+      "SyncProfiles.h": "2fe33ff5a6715867613561e73f4ee604ce4cfbe9e27b1090a2579339577ab340",
+      "main.c": "44ccdacab5dc53f2493da87bd620773d4b3ca276bc04860c3db87794383bd8de",
+      "SyncPrivateStorage.h": "2b51afc697073ad374843d8b4579f3d66c6891b52b3662493cd3a1fb5626bfea",
+      "SyncJob.h": "955ea1f34200ed74ec190416c31c5ec56edd1f421da3df52722f0c596c6a0451",
+      "SyncJob.c": "3a14f5567f147dd9338c29b8bc6b8c5e774622ee841da2098570cb600713c5f0"
+    },
+    "script_sha256": "52405bd327dd83b236cbe1bc49b56a113f942e15578d8402daa33add5098638b"
+  },
+  "normal_ui": {
+    "passed": true,
+    "executable_sha256": "06fc528422fc97859038a2f7d2c26922b2947cf64b592e705e3bf2a84dfabfbb",
+    "catalog_sha256": "87a3e5f09bcab70aa7d378e4bda640a1e641261761025022d3c047a62e4b7447",
+    "actual_process_runtime_maps_verified": true,
+    "default_and_980x660_windows_inspected": true,
+    "invalid_field_scrolled_visible_focused_and_selected": true,
+    "footer_actions_visible": true,
+    "fixture_files_unchanged": 71,
+    "graceful_exit": 0,
+    "own_helper_wm_xvfb_closed": true,
+    "other_xvfb_preserved": true,
+    "evidence_receipt_sha256": "0fdb37bd40bd6f5f3c2e11f5d3f2f5e9fa09dbc9aec5852cc0c02148fe924b12"
+  },
+  "build": {
+    "configuration": "C11, O0, debug, warnings as errors; frozen installed filesystem SDK and Motif",
+    "closure": "Recompile main.c, relink, regenerate catalog; verified unchanged SyncJob.o and SyncProfiles.o reused.",
+    "elapsed_seconds": 0.4866756310220808,
+    "compiler_cpu_user_seconds": 0.443641,
+    "compiler_cpu_system_seconds": 0.041639,
+    "expected_duration_evidence": "Prior full three-object module build: 0.743 seconds. Incremental closure and all source/output hashes verified; duration is not freshness proof.",
+    "regression_build_outlier": "Standalone regression build took 34.199 seconds. Commands, source and output hashes verified; subsequent normal incremental build matched the established baseline. No host-pressure causality inferred."
+  },
+  "checks": [
+    "Native production callback regression: PASS, no timeouts, fixture bytes unchanged",
+    "Normal uninjected GUI: PASS, runtime executable/catalog/SDK/Motif hashes verified",
+    "Documentation strict check: 16 pages PASS",
+    "Python syntax, unique catalog IDs and whitespace checks: PASS"
+  ],
+  "limitations": [
+    "Preview only; execution and two-way sync remain unavailable.",
+    "Published primary C23 CI GCC failure is in the Motif dependency build, before CDE. It is under separate investigation; no full-stack CI success claimed."
+  ]
+}

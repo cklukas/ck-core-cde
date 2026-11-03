@@ -64,7 +64,7 @@ typedef struct {
     SyncProfiles *preferences;
     SyncProfilesSnapshot preferences_view;
     Widget profile_list, profile_name, profile_status, profile_load, profile_save;
-    Widget operation_option, metadata_option;
+    Widget operation_option, metadata_option, operation_explanation, setup_notice, setup_viewport;
     Widget class_option, name_side_option;
     Widget compared_roots;
     Widget page_info;
@@ -128,6 +128,53 @@ static void setup_changed(Widget widget,XtPointer data,XtPointer call)
 {
     (void)widget;(void)call; SyncWindow *w=data; w->setup_dirty=1;
     if (w->execute) XtSetSensitive(w->execute,False);
+    if (w->review) XtSetSensitive(w->review,False);
+    if (w->rule_page) XtSetSensitive(w->rule_page,False);
+    if (w->job && w->view->snapshot.plan_generation) {
+        const char *message=M(296,"These results use earlier folder options.\nCompare again before reviewing rules.");
+        if (w->setup_notice) label(w->setup_notice,message);
+        notify(w,M(261,"Folder options changed. Compare again before reviewing or applying changes."));
+    }
+}
+static void operation_explanation(SyncWindow *w)
+{
+    const char *text;
+    switch (w->profile_index) {
+    case 0: text=M(288,"Compare only: inspect differences in file contents and metadata.\nNo file changes are proposed or applied. This is not two-way synchronization."); break;
+    case 1: text=M(289,"Copy preview: propose adding missing source objects to the destination.\nExisting destination objects need conflict-policy review.\nNewer targets are not implicitly protected. Preview only; Apply is unavailable.\nThis is not two-way synchronization."); break;
+    case 2: text=M(290,"Update preview: add missing objects and consider source-newer files.\nRounded timestamps determine order; destination-newer files are skipped.\nEqual-time differences need review. Preview only; Apply is unavailable.\nThis is not two-way synchronization."); break;
+    case 3: text=M(291,"Copy missing only preview: propose adding objects absent from the destination.\nExisting destination objects are kept; inspect conflicts and unavailable assessments.\nPreview only: Apply is unavailable. This is not two-way synchronization."); break;
+    case 4: text=M(292,"Synchronize one way preview: make included destination files match the source.\nMay propose replacing destination-newer files; destination-only objects remain.\nPreview only: Apply is unavailable. This is not two-way synchronization."); break;
+    case 5: text=M(293,"Mirror preview: also propose removing destination-only objects in scope.\nWarning: the plan can contain deletions, which require separate review.\nPreview only: mirror execution and two-way synchronization are unavailable."); break;
+    default: text=M(1,"Unknown"); break;
+    }
+    if (w->operation_explanation) label(w->operation_explanation,text);
+}
+static void operation_changed(Widget widget,XtPointer data,XtPointer call)
+{
+    SyncWindow *w=data; operation_explanation(w); setup_changed(widget,data,call);
+}
+static void swap_folders(Widget widget,XtPointer data,XtPointer call)
+{
+    (void)widget;(void)call; SyncWindow *w=data;
+    char *source=XmTextFieldGetString(w->source),*destination=XmTextFieldGetString(w->destination);
+    if (!source || !destination) {
+        XtFree(source); XtFree(destination); notify(w,M(223,"Not enough memory.")); return;
+    }
+    /* Both display copies exist before either field changes. An edited field
+     * has no retained native pointer: move that fact with its exact text too.
+     * Never parse display escapes into a native filename. */
+    w->setting_paths=1;
+    char *native=w->native_source; w->native_source=w->native_destination; w->native_destination=native;
+    XmTextFieldSetString(w->source,destination); XmTextFieldSetString(w->destination,source);
+    w->setting_paths=0; XtFree(source); XtFree(destination); setup_changed(NULL,w,NULL);
+}
+static void clear_filters(Widget widget,XtPointer data,XtPointer call)
+{
+    (void)widget;(void)call; SyncWindow *w=data;
+    XmTextFieldSetString(w->size_min,""); XmTextFieldSetString(w->size_max,"");
+    XmTextFieldSetString(w->date_after,""); XmTextFieldSetString(w->date_before,"");
+    setup_changed(NULL,w,NULL);
 }
 static int set_native_path(SyncWindow *w,Widget field,const char *path)
 {
@@ -242,7 +289,8 @@ static void observe_setup_option(Widget menu,SyncWindow *w)
 {
     Widget pane=NULL; WidgetList children=NULL; Cardinal count=0;
     XtVaGetValues(menu,XmNsubMenuId,&pane,NULL); XtVaGetValues(pane,XmNchildren,&children,XmNnumChildren,&count,NULL);
-    for (Cardinal i=0;i<count;++i) XtAddCallback(children[i],XmNactivateCallback,setup_changed,w);
+    for (Cardinal i=0;i<count;++i)
+        XtAddCallback(children[i],XmNactivateCallback,menu==w->operation_option?operation_changed:setup_changed,w);
 }
 static unsigned selected_rows(SyncWindow *w,uint64_t ids[SYNC_PAGE_SIZE],int *first)
 {
@@ -392,37 +440,71 @@ static void render_rules(SyncWindow *w)
 }
 static int numeric(Widget field,uint64_t *out,int *present)
 {
-    char *text=XmTextFieldGetString(field),*end=NULL; *present=text && *text;
-    if (!*present) { XtFree(text); return 1; }
-    errno=0; unsigned long long n=strtoull(text,&end,10);
-    int valid=text[0]>='0' && text[0]<='9' && !errno && end && !*end;
-    if (valid) *out=(uint64_t)n;
-    XtFree(text); return valid;
+    char *text=XmTextFieldGetString(field); *present=0; *out=0;
+    if (!text) return -1;
+    *present=*text!=0; uint64_t value=0;
+    for (const unsigned char *p=(const unsigned char *)text;*p;++p) {
+        if (*p<'0' || *p>'9' || value>(UINT64_MAX-(uint64_t)(*p-'0'))/10) { XtFree(text); return 0; }
+        value=value*10+(uint64_t)(*p-'0');
+    }
+    *out=value; XtFree(text); return 1;
 }
 static int date_bound(Widget field,ckfsp_timestamp *out,int *present)
 {
     char *text=XmTextFieldGetString(field);
+    if (!text) return -1;
     int valid=SyncParseDate(text,out,present);
     XtFree(text); return valid;
 }
+static int setup_error(SyncWindow *w,Widget field,const char *message)
+{
+    notify(w,message); XtVaSetValues(w->notebook,XmNcurrentPageNumber,1,NULL);
+    XmScrollVisible(w->setup_viewport,field,8,8);
+    XmProcessTraversal(field,XmTRAVERSE_CURRENT);
+    XmTextFieldSetInsertionPosition(field,0);
+    XmTextFieldSetSelection(field,0,XmTextFieldGetLastPosition(field),CurrentTime);
+    return 0;
+}
 static int setup_fields(SyncWindow *w,SyncSetup *setup,char **source,char **destination)
 {
+    *source=NULL; *destination=NULL; memset(setup,0,sizeof(*setup));
     *source=w->native_source?XtNewString(w->native_source):XmTextFieldGetString(w->source);
+    if (!*source) return setup_error(w,w->source,M(223,"Not enough memory."));
+    if (!**source) return setup_error(w,w->source,M(297,"Choose a source folder."));
+    if (strnlen(*source,SYNC_PROFILE_PATH_MAX+1)>SYNC_PROFILE_PATH_MAX)
+        return setup_error(w,w->source,M(301,"The source folder path is too long."));
+    if (**source!='/') return setup_error(w,w->source,M(299,"Enter an absolute source folder path, starting with /."));
     *destination=w->native_destination?XtNewString(w->native_destination):XmTextFieldGetString(w->destination);
-    memset(setup,0,sizeof(*setup)); setup->source=*source; setup->destination=*destination;
+    if (!*destination) return setup_error(w,w->destination,M(223,"Not enough memory."));
+    if (!**destination) return setup_error(w,w->destination,M(298,"Choose a destination folder."));
+    if (strnlen(*destination,SYNC_PROFILE_PATH_MAX+1)>SYNC_PROFILE_PATH_MAX)
+        return setup_error(w,w->destination,M(302,"The destination folder path is too long."));
+    if (**destination!='/') return setup_error(w,w->destination,M(300,"Enter an absolute destination folder path, starting with /."));
+    setup->source=*source; setup->destination=*destination;
     setup->profile=profiles[w->profile_index]; setup->metadata_scope=w->metadata;
     setup->filters.allowed_kind_mask=CKFSP_ALL_KINDS; setup->filters.maximum_depth=1024;
     int min=0,max=0,after=0,before=0;
-    int valid=numeric(w->size_min,&setup->filters.minimum_size,&min) && numeric(w->size_max,&setup->filters.maximum_size,&max) &&
-        date_bound(w->date_after,&setup->filters.modified_not_before,&after) && date_bound(w->date_before,&setup->filters.modified_before,&before);
-    if (valid && min && max && setup->filters.minimum_size>setup->filters.maximum_size) valid=0;
-    if (valid && after && before && (setup->filters.modified_not_before.seconds>setup->filters.modified_before.seconds ||
+    int result=numeric(w->size_min,&setup->filters.minimum_size,&min);
+    if (result!=1) return setup_error(w,w->size_min,result<0?M(223,"Not enough memory."):
+        M(303,"Minimum bytes must be empty or digits from 0 through 18446744073709551615.\nSigns and spaces are not allowed."));
+    result=numeric(w->size_max,&setup->filters.maximum_size,&max);
+    if (result!=1) return setup_error(w,w->size_max,result<0?M(223,"Not enough memory."):
+        M(304,"Maximum bytes must be empty or digits from 0 through 18446744073709551615.\nSigns and spaces are not allowed."));
+    if (min && max && setup->filters.minimum_size>setup->filters.maximum_size)
+        return setup_error(w,w->size_max,M(305,"Maximum bytes must be at least minimum bytes.\nBoth bounds are inclusive for regular files."));
+    result=date_bound(w->date_after,&setup->filters.modified_not_before,&after);
+    if (result!=1) return setup_error(w,w->date_after,result<0?M(223,"Not enough memory."):
+        M(306,"Modified on/after: enter a valid local YYYY-MM-DD date or ISO UTC timestamp,\nor leave empty. This bound is inclusive for regular files."));
+    result=date_bound(w->date_before,&setup->filters.modified_before,&before);
+    if (result!=1) return setup_error(w,w->date_before,result<0?M(223,"Not enough memory."):
+        M(307,"Modified before: enter a valid local YYYY-MM-DD date or ISO UTC timestamp,\nor leave empty. This bound is exclusive for regular files."));
+    if (after && before && (setup->filters.modified_not_before.seconds>setup->filters.modified_before.seconds ||
         (setup->filters.modified_not_before.seconds==setup->filters.modified_before.seconds &&
-         setup->filters.modified_not_before.nanoseconds>=setup->filters.modified_before.nanoseconds))) valid=0;
+         setup->filters.modified_not_before.nanoseconds>=setup->filters.modified_before.nanoseconds)))
+        return setup_error(w,w->date_before,M(308,"Modified before must be later than modified on/after.\nThe lower bound is inclusive and the upper bound exclusive."));
     setup->filters.has_minimum_size=min; setup->filters.has_maximum_size=max;
     setup->filters.has_modified_not_before=after; setup->filters.has_modified_before=before;
-    if (!valid) notify(w,M(25,"Check byte bounds and dates. Use YYYY-MM-DD or an ISO UTC timestamp; order the bounds."));
-    return valid;
+    return 1;
 }
 static void reset_result_view(SyncWindow *w)
 {
@@ -443,6 +525,7 @@ static void reset_result_view(SyncWindow *w)
     Widget actions[]={w->list,w->previous,w->next,w->review,w->execute,w->pause,w->cancel,w->rule_page};
     for (unsigned i=0;i<XtNumber(actions);++i) XtSetSensitive(actions[i],False);
     label(w->compared_roots,M(287,"No comparison has started."));
+    label(w->setup_notice,"");
     XtSetSensitive(w->setup,True); XtSetSensitive(w->compare,True);
 }
 static void compare(Widget widget,XtPointer data,XtPointer call)
@@ -571,6 +654,7 @@ static void load_profile(Widget widget,XtPointer data,XtPointer call)
     if (!set_native_path(w,w->source,profile->source) || !set_native_path(w,w->destination,profile->destination)) { free(profile); return; }
     w->profile_index=mode; w->metadata=profile->metadata_scope;
     option_selected(w->operation_option,mode); option_selected(w->metadata_option,w->metadata);
+    operation_explanation(w);
     char value[32];
     if (profile->filters.has_minimum_size) snprintf(value,sizeof(value),"%" PRIu64,profile->filters.minimum_size); else value[0]=0;
     XmTextFieldSetString(w->size_min,value);
@@ -738,7 +822,7 @@ static void tick(XtPointer data,XtIntervalId *id)
         XtSetSensitive(w->review,awaiting && !w->setup_dirty && !w->review_pending && !w->execute_pending);
         XtSetSensitive(w->pause,active && (v->snapshot.state!=CKFET_AWAITING_REVIEW ||
             v->snapshot.pause_requested || v->snapshot.paused));
-        XtSetSensitive(w->rule_page,awaiting && coherent && !w->review_pending && !w->execute_pending);
+        XtSetSensitive(w->rule_page,awaiting && coherent && !w->setup_dirty && !w->review_pending && !w->execute_pending);
         XtSetSensitive(w->list,v->cache_valid);
         XtSetSensitive(w->cancel,active); XtSetSensitive(w->previous,v->offset>0);
         XtSetSensitive(w->next,v->has_next);
@@ -829,6 +913,7 @@ int main(int argc,char **argv)
         Widget viewport=XtVaCreateManagedWidget("pageViewport",xmScrolledWindowWidgetClass,w.notebook,
             XmNnotebookChildType,XmPAGE,XmNpageNumber,page,XmNscrollingPolicy,XmAUTOMATIC,
             XmNvisualPolicy,XmCONSTANT,XmNscrollBarDisplayPolicy,XmAS_NEEDED,NULL);
+        if (page==1) w.setup_viewport=viewport;
         pages_widgets[page-1]=XtVaCreateManagedWidget("page",xmRowColumnWidgetClass,viewport,
             XmNmarginWidth,8,XmNmarginHeight,8,NULL);
         Widget tab=XtVaCreateManagedWidget("tab",xmPushButtonWidgetClass,w.notebook,XmNnotebookChildType,XmMAJOR_TAB,XmNpageNumber,page,NULL);
@@ -845,9 +930,13 @@ int main(int argc,char **argv)
     w.source=folder_field(&w,"source",M(43,"Source folder:"),"");
     w.destination=folder_field(&w,"destination",M(44,"Destination folder:"),"");
     XtAddCallback(w.source,XmNvalueChangedCallback,path_edited,&w); XtAddCallback(w.destination,XmNvalueChangedCallback,path_edited,&w);
+    button(w.setup,"swapFolders",M(294,"Swap folders"),swap_folders,&w);
     Widget modes=XtVaCreateManagedWidget("modes",xmRowColumnWidgetClass,w.setup,NULL);
     const char *mode_names[]={M(45,"Compare only"),M(46,"Copy"),M(47,"Update: protect destination-newer"),M(48,"Copy missing only"),M(49,"Synchronize one way"),M(50,"Mirror - deletion review required")};
     w.operation_option=option(modes,"operation",M(51,"Operation:"),mode_names,6,&w.profile_index,NULL);
+    w.operation_explanation=XtVaCreateManagedWidget("operationExplanation",xmLabelWidgetClass,modes,
+        XmNalignment,XmALIGNMENT_BEGINNING,NULL);
+    operation_explanation(&w);
     observe_setup_option(w.operation_option,&w);
     const char *metadata[]={M(52,"Complete preservation"),M(53,"Ordinary mode/times; new caller ownership")};
     w.metadata_option=option(modes,"metadata",M(54,"Metadata:"),metadata,2,&w.metadata,NULL);
@@ -855,13 +944,16 @@ int main(int argc,char **argv)
     Widget warning=XtVaCreateManagedWidget("capabilities",xmLabelWidgetClass,w.setup,NULL);
     label(warning,M(55,"Compare and rule review are available. Applying changes awaits native backend qualification.\nTwo-way sync, move and mirror execution require further qualification."));
     Widget comparison_note=XtVaCreateManagedWidget("comparisonPolicy",xmLabelWidgetClass,w.setup,NULL);
-    label(comparison_note,M(99,"Comparison reads file contents. Byte and date bounds limit selected files.\nUnknown inputs block unsafe actions."));
+    label(comparison_note,M(309,"Byte and date bounds filter regular files only; comparison reads contents.\nUnknown required size, time or precision stays unknown; it is not excluded."));
     Widget filters=XtVaCreateManagedWidget("filters",xmRowColumnWidgetClass,w.setup,NULL);
     w.size_min=field(filters,"minimumBytes",M(56,"Minimum bytes:"),"",9); w.size_max=field(filters,"maximumBytes",M(57,"Maximum bytes:"),"",9);
     w.date_after=field(filters,"modifiedAfter",M(58,"Modified on/after (local YYYY-MM-DD or UTC time):"),"",30);
     w.date_before=field(filters,"modifiedBefore",M(59,"Modified before (local YYYY-MM-DD or UTC time):"),"",30);
     XtAddCallback(w.size_min,XmNvalueChangedCallback,setup_changed,&w); XtAddCallback(w.size_max,XmNvalueChangedCallback,setup_changed,&w);
     XtAddCallback(w.date_after,XmNvalueChangedCallback,setup_changed,&w); XtAddCallback(w.date_before,XmNvalueChangedCallback,setup_changed,&w);
+    button(filters,"clearFilters",M(295,"Clear filters"),clear_filters,&w);
+    w.setup_notice=XtVaCreateManagedWidget("setupNotice",xmLabelWidgetClass,comparison,
+        XmNalignment,XmALIGNMENT_BEGINNING,NULL); label(w.setup_notice,"");
     w.compared_roots=XtVaCreateManagedWidget("comparedFolders",xmLabelWidgetClass,comparison,
         XmNalignment,XmALIGNMENT_BEGINNING,XmNrecomputeSize,False,XmNheight,44,XmNwidth,970,NULL);
     label(w.compared_roots,"");
