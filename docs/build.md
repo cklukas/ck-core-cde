@@ -111,6 +111,10 @@ separate callback slots: input callbacks receive the buffer, while output
 callbacks receive the byte and buffer. This removes the former dependence on a
 single unspecified-argument function pointer serving two incompatible ABIs.
 The complete shared DtHelp library compiles and links with both C23 toolchains.
+Dialog map callbacks return `void` as `XtCallbackProc` requires. Menu, message
+and display-area event handlers accept Xt's dispatch-control pointer and are
+registered directly, without function-pointer casts concealing a three- versus
+four-argument ABI mismatch.
 
 The maintained desktop launch and session paths also use their framework and
 system interfaces directly. `dtexec` relies on the standard and POSIX headers

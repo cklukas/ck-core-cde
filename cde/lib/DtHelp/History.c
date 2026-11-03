@@ -606,7 +606,7 @@ static void CreateHistoryDialog(
 
    XtAddCallback (hw->help_dialog.history.volumeList, 
                  XmNsingleSelectionCallback, 
-                 (XtCallbackProc)ProcessVolumeSelectionCB, (XtPointer) hw);
+                 ProcessVolumeSelectionCB, (XtPointer) hw);
    
    /* Set the constraints on our scrolled list */
    n = 0;
@@ -650,12 +650,12 @@ static void CreateHistoryDialog(
 
    XtAddCallback (hw->help_dialog.history.topicList, 
                   XmNsingleSelectionCallback, 
-                  (XtCallbackProc)ProcessTopicSelectionCB,
+                  ProcessTopicSelectionCB,
                   (XtPointer) hw);
   
    XtAddCallback (hw->help_dialog.history.topicList, 
                   XmNdefaultActionCallback, 
-                  (XtCallbackProc)ProcessTopicSelectionCB,
+                  ProcessTopicSelectionCB,
                   (XtPointer) hw);
 
    /* Set the constraints on our scrolled list */
@@ -703,7 +703,7 @@ static void CreateHistoryDialog(
    cancelBtn = XmCreatePushButtonGadget (historyForm, "cancelBtn", args, n);
    
    XtAddCallback(cancelBtn, XmNactivateCallback, 
-                (XtCallbackProc)CloseHistoryCB, (XtPointer) hw);
+                CloseHistoryCB, (XtPointer) hw);
   	     
    XtManageChild (cancelBtn);
    XmStringFree (labelString);
@@ -809,7 +809,7 @@ static void CreateHistoryDialog(
    
   
    /* Add the popup position callback to our history dialog */
-   XtAddCallback (historyShell, XmNpopupCallback, (XtCallbackProc)_DtHelpMapCB,
+   XtAddCallback (historyShell, XmNpopupCallback, _DtHelpMapCB,
                   (XtPointer) XtParent(hw));
  
    /* Add our help callback to the shell of the dialog  */

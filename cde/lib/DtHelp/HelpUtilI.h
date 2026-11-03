@@ -299,7 +299,7 @@ extern void _DtHelpTopicListDeleteHead(
  *                  relation to its parent.
  *
  *****************************************************************************/
-extern XtCallbackProc _DtHelpMapCB(
+extern void _DtHelpMapCB(
     Widget w,
     XtPointer client_data,
     XtPointer call_data );
@@ -318,7 +318,7 @@ extern XtCallbackProc _DtHelpMapCB(
  *                  where new child dialog should be mapped such that its centered.
  *
  *****************************************************************************/
-extern XtCallbackProc _DtHelpMapCenteredCB(
+extern void _DtHelpMapCenteredCB(
     Widget w,
     XtPointer client_data,
     XtPointer call_data);

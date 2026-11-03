@@ -1145,7 +1145,8 @@ void
 _DtHelpMouseMoveCB(
         Widget	   widget,
         XtPointer  client_data,
-        XEvent	  *event )
+        XEvent	  *event,
+        Boolean    *continue_to_dispatch )
 {
     _DtCvUnit   newX;
     _DtCvUnit   newY;
@@ -1311,7 +1312,8 @@ void
 _DtHelpLinkCursorCB(
         Widget     widget,
         XtPointer  client_data,
-        XEvent    *event )
+        XEvent    *event,
+        Boolean   *continue_to_dispatch )
 {
     DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
     if (!pDAS || event == NULL)
@@ -1437,7 +1439,8 @@ void
 _DtHelpFocusCB(
         Widget	   widget,
         XtPointer  client_data,
-        XEvent	  *event )
+        XEvent	  *event,
+        Boolean    *continue_to_dispatch )
 {
     Boolean                oldFlag;
     Boolean                newFlag = False;
@@ -1489,7 +1492,8 @@ void
 _DtHelpEnterLeaveCB(
         Widget     widget,
         XtPointer  client_data,
-        XEvent    *event )
+        XEvent    *event,
+        Boolean   *continue_to_dispatch )
 {
     Boolean                oldFlag;
     Boolean                newFlag = False;
@@ -1542,7 +1546,8 @@ void
 _DtHelpVisibilityCB(
         Widget	   widget,
         XtPointer  client_data,
-        XEvent	  *event )
+        XEvent	  *event,
+        Boolean    *continue_to_dispatch )
 {
     DtHelpDispAreaStruct  *pDAS = (DtHelpDispAreaStruct *) client_data;
 
@@ -1675,7 +1680,8 @@ void
 _DtHelpMoveBtnFocusCB(
         Widget	   widget,
         XtPointer  client_data,
-        XEvent	  *event )
+        XEvent	  *event,
+        Boolean    *continue_to_dispatch )
 {
     DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
 

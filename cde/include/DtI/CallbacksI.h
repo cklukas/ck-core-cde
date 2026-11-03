@@ -75,7 +75,8 @@ extern	void	_DtHelpEndSelectionCB (
 extern  void    _DtHelpEnterLeaveCB (
 			Widget          widget,
 			XtPointer       client_data,
-			XEvent          *event );
+			XEvent          *event,
+			Boolean         *continue_to_dispatch );
 extern	void	_DtHelpExposeCB (
 			Widget		widget,
 			XtPointer	client_data,
@@ -83,7 +84,8 @@ extern	void	_DtHelpExposeCB (
 extern	void	_DtHelpFocusCB (
 			Widget		widget,
 			XtPointer	client_data,
-			XEvent		*event );
+			XEvent		*event,
+			Boolean		*continue_to_dispatch );
 extern	void	_DtHelpGetClearSelection (
 			Widget		widget,
 			XtPointer	client_data);
@@ -99,15 +101,18 @@ extern	void    _DtHelpLoseSelectionCB (
 extern	void	_DtHelpMoveBtnFocusCB (
 			Widget		widget,
 			XtPointer	client_data,
-			XEvent		*event );
+			XEvent		*event,
+			Boolean		*continue_to_dispatch );
 extern	void	_DtHelpMouseMoveCB (
 			Widget		widget,
 			XtPointer	client_data,
-			XEvent		*event );
+			XEvent		*event,
+			Boolean		*continue_to_dispatch );
 extern	void	_DtHelpLinkCursorCB (
 			Widget		widget,
 			XtPointer	client_data,
-			XEvent		*event );
+			XEvent		*event,
+			Boolean		*continue_to_dispatch );
 extern	void	_DtHelpResizeCB (
 			Widget		widget,
 			XtPointer	client_data,
@@ -119,7 +124,8 @@ extern	void	_DtHelpVertScrollCB (
 extern	void	_DtHelpVisibilityCB (
 			Widget		widget,
 			XtPointer	client_data,
-			XEvent		*event );
+			XEvent		*event,
+			Boolean		*continue_to_dispatch );
 
 #ifdef __cplusplus
 }

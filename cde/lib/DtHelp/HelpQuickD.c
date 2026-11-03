@@ -872,8 +872,7 @@ static void Initialize(
   SetupDisplayType((Widget)qw ,DtJUMP_UPDATE);
 
   /* Just for fun, lets make sure our sizes are correct */
-  XtAddCallback (XtParent(qw), XmNpopupCallback, (XtCallbackProc)
-                 InitialPopupCB, (XtPointer) qw);
+  XtAddCallback (XtParent(qw), XmNpopupCallback,                  InitialPopupCB, (XtPointer) qw);
 
 
  
@@ -914,8 +913,7 @@ static void InitialPopupCB(
                              qw->qhelp_dialog.display.textRows,
                              qw->qhelp_dialog.display.textColumns);
 
-  XtRemoveCallback (XtParent(qw), XmNpopupCallback, (XtCallbackProc)
-                  InitialPopupCB, (XtPointer) qw);
+  XtRemoveCallback (XtParent(qw), XmNpopupCallback,                   InitialPopupCB, (XtPointer) qw);
 
 }
 

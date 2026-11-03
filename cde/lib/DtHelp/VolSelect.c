@@ -374,7 +374,7 @@ static Widget CreateFileSelDialog(
    XmStringFree (labelString);
    
    XtAddCallback(FSWIDGETS.closeBtn, XmNactivateCallback, 
-                (XtCallbackProc)CloseDialogCB, (XtPointer) selDlgData);
+                CloseDialogCB, (XtPointer) selDlgData);
   	     
    /* Build the Help button */
    labelString = XmStringCreateLocalized(((char *)_DTGETMESSAGE
@@ -457,7 +457,7 @@ static Widget CreateFileSelDialog(
 
    /* Add the popup position callback to our select dialog */
    XtAddCallback (FSWIDGETS.shell, XmNpopupCallback, 
-                  (XtCallbackProc)_DtHelpMapCB, (XtPointer) XtParent(parent));
+                  _DtHelpMapCB, (XtPointer) XtParent(parent));
  
    /* Add our help callback to the form of the dialog  */
    pHelpInfo = _DtHelpListAdd(DtHELP_volSelectShell_STR,

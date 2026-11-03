@@ -664,7 +664,7 @@ HelpCreateDA(
 					_DtHelpVertScrollCB, (XtPointer) pDAS);
 
 	XtAddEventHandler (pDAS->vertScrollWid, ButtonPressMask, True,
-			(XtEventHandler)_DtHelpMoveBtnFocusCB,(XtPointer) pDAS);
+			_DtHelpMoveBtnFocusCB,(XtPointer) pDAS);
 
       }
 
@@ -776,9 +776,9 @@ HelpCreateDA(
 						(XtPointer) pDAS);
 
     XtAddEventHandler (pDAS->dispWid, Button1MotionMask, True,
-			(XtEventHandler)_DtHelpMouseMoveCB, (XtPointer) pDAS);
+			_DtHelpMouseMoveCB, (XtPointer) pDAS);
     XtAddEventHandler (pDAS->dispWid, PointerMotionMask, True,
-			(XtEventHandler)_DtHelpLinkCursorCB, (XtPointer) pDAS);
+			_DtHelpLinkCursorCB, (XtPointer) pDAS);
 
     /*
      * add my actions
@@ -799,16 +799,16 @@ HelpCreateDA(
     if (_XmGetFocusPolicy(parent) == XmPOINTER)
       {
 	XtAddEventHandler (pDAS->dispWid, EnterWindowMask, True,
-			(XtEventHandler)_DtHelpEnterLeaveCB, (XtPointer) pDAS);
+			_DtHelpEnterLeaveCB, (XtPointer) pDAS);
 	XtAddEventHandler (pDAS->dispWid, LeaveWindowMask, True,
-			(XtEventHandler)_DtHelpEnterLeaveCB, (XtPointer) pDAS);
+			_DtHelpEnterLeaveCB, (XtPointer) pDAS);
       }
     else
 	XtAddEventHandler (pDAS->dispWid, FocusChangeMask, True,
-			(XtEventHandler)_DtHelpFocusCB, (XtPointer) pDAS);
+			_DtHelpFocusCB, (XtPointer) pDAS);
 
     XtAddEventHandler (pDAS->dispWid, VisibilityChangeMask, True,
-			(XtEventHandler)_DtHelpVisibilityCB, (XtPointer) pDAS);
+			_DtHelpVisibilityCB, (XtPointer) pDAS);
   
 
     /* Add a destroy callback so that the display area can clean up prior to

@@ -103,7 +103,8 @@ char _DtHelpDefaultLocationId[] = "_HOMETOPIC";
 static void _DtMessageClose(
     Widget w,
     XtPointer client_data,
-    XEvent *event);
+    XEvent *event,
+    Boolean *continue_to_dispatch);
 static void  CloseDefBoxCB(
     Widget w,
     XtPointer client_data,
@@ -284,13 +285,14 @@ static Boolean trusted (char *hv_path)  /* Full path to the help volume */
 static void _DtMessageClose(
     Widget w,
     XtPointer client_data,
-    XEvent *event )
+    XEvent *event,
+    Boolean *continue_to_dispatch )
 {                        
    /* NOTE: ExecuteContextCB() is dependent on this code */
    if (event->type == UnmapNotify)
    {
       XtRemoveEventHandler (XtParent (client_data), StructureNotifyMask, 
-                            True, (XtEventHandler) _DtMessageClose, client_data);
+                            True, _DtMessageClose, client_data);
 
       XtUnmanageChild (client_data);
       XtDestroyWidget (client_data);
@@ -379,7 +381,7 @@ CreateErrorDialog(
       Gravity, Map, Reparent, & Unmap events */
    XtAddEventHandler(XtParent(messageDialog),
  	             StructureNotifyMask,True,
-                     (XtEventHandler) _DtMessageClose, (XtPointer) messageDialog);
+                     _DtMessageClose, (XtPointer) messageDialog);
  
    return messageDialog;           /* RETURN */
 
@@ -1914,7 +1916,7 @@ void _DtHelpTopicListDeleteHead(
  *                     amount of overlap, and places there.
  *
  *****************************************************************************/
-XtCallbackProc _DtHelpMapCB(
+void _DtHelpMapCB(
     Widget w,
     XtPointer client_data,
     XtPointer call_data )
@@ -1978,8 +1980,6 @@ XtCallbackProc _DtHelpMapCB(
     XtSetArg(args[1], XmNy,  bestY);
     XtSetValues(w, args, 2);
 
-    return((XtCallbackProc) NULL);
-
 }
 
 
@@ -2000,7 +2000,7 @@ XtCallbackProc _DtHelpMapCB(
  *                  where new child dialog should be mapped such that its centered.
  *
  *****************************************************************************/
-XtCallbackProc _DtHelpMapCenteredCB(
+void _DtHelpMapCenteredCB(
     Widget w,
     XtPointer client_data,
     XtPointer call_data )
@@ -2026,8 +2026,6 @@ XtCallbackProc _DtHelpMapCenteredCB(
     XtSetArg(args[0], XmNx, newX);
     XtSetArg(args[1], XmNy, newY);
     XtSetValues(w, args, 2);
-
-    return((XtCallbackProc) NULL);
 
 }
 
@@ -2117,7 +2115,7 @@ void _DtHelpDisplayDefinitionBox(
     
       /* Add the popup position callback to our history dialog */
       XtAddCallback (XtParent(*definitionBox), XmNpopupCallback,
-                    (XtCallbackProc)_DtHelpMapCenteredCB, (XtPointer)XtParent(parent));
+                    _DtHelpMapCenteredCB, (XtPointer)XtParent(parent));
 
 
 
