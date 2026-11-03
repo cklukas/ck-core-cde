@@ -178,7 +178,7 @@ static void
 e_view_cancel_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
 	Editor		*e = (Editor *)client_data;
 
@@ -232,7 +232,7 @@ e_build_view_popup(Editor *e) {
       			NULL);
 	XmStringFree(xmstr);
 
-	XtAddCallback(e->view_cancel_button, XmNactivateCallback, (XtCallbackProc) e_view_cancel_cb, e);
+	XtAddCallback(e->view_cancel_button, XmNactivateCallback, e_view_cancel_cb, e);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 77, "Help"));
 	e->view_help_button = XtVaCreateWidget("help",

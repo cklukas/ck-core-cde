@@ -410,7 +410,7 @@ static void
 t_view_cancel_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
 	ToDo		*t = (ToDo *)client_data;
 
@@ -424,7 +424,7 @@ static void
 t_view_apply_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
 	ToDo		*t = (ToDo *)client_data;
 
@@ -437,7 +437,7 @@ static void
 t_view_ok_cb(
         Widget  widget,
         XtPointer client_data,
-        XmPushButtonCallbackStruct *cbs)
+        XtPointer call_data)
 {
 	ToDo		*t = (ToDo *)client_data;
 
@@ -577,7 +577,7 @@ t_build_view_popup(ToDo *t) {
 	XmStringFree(xmstr);
 
 
-	XtAddCallback(t->view_ok_button, XmNactivateCallback, (XtCallbackProc) t_view_ok_cb, t);
+	XtAddCallback(t->view_ok_button, XmNactivateCallback, t_view_ok_cb, t);
 
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 460, "Apply"));
@@ -594,7 +594,7 @@ t_build_view_popup(ToDo *t) {
       				NULL);
 	XmStringFree(xmstr);
 
-	XtAddCallback(t->view_apply_button, XmNactivateCallback, (XtCallbackProc) t_view_apply_cb, t);
+	XtAddCallback(t->view_apply_button, XmNactivateCallback, t_view_apply_cb, t);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 923, "Cancel"));
 
@@ -611,7 +611,7 @@ t_build_view_popup(ToDo *t) {
 
 	XmStringFree(xmstr);
 
-	XtAddCallback(t->view_cancel_button, XmNactivateCallback, (XtCallbackProc) t_view_cancel_cb, t);
+	XtAddCallback(t->view_cancel_button, XmNactivateCallback, t_view_cancel_cb, t);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 77, "Help"));
 
