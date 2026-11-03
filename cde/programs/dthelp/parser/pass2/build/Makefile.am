@@ -5,7 +5,7 @@ MAINTAINERCLEANFILES = Makefile.in
 noinst_PROGRAMS = build
 
 HTAG2       = ..
-HTAG2SRC    = $(HTAG2)/htag2
+HTAG2SRC     = $(top_srcdir)/programs/dthelp/parser/pass2/htag2
 SDLPARSERSRC = $(HTAG2)/parser
 SDLELTDEFSRC = $(HTAG2)/eltdef
 SDLDTDFILE   = $(HTAG2SRC)/sdl.dtd
@@ -14,7 +14,10 @@ SDLBUILDSRC  = $(HTAG2)/build
 SDLUTILLIB   = $(HTAG2)/util/libutil.a
 SDLIFFILE    = $(HTAG2SRC)/help.if
 
-build_CFLAGS = -DPASS2 -I../../include/util -I../../include/build -I$(SDLUTILSRC)
+build_CFLAGS = -DPASS2 -I../../include/util \
+	-I$(top_srcdir)/programs/dthelp/parser/include/util \
+	-I../../include/build -I$(top_srcdir)/programs/dthelp/parser/include/build \
+	-I$(SDLUTILSRC) -I$(top_srcdir)/programs/dthelp/parser/pass2/util
 
 build_LDADD = ../util/libutil.a
 
@@ -53,6 +56,6 @@ BDONE: ./build $(SDLDTDFILE)
 CDONE: $(SDLUTILSRC)/context $(HTAG2SRC)/delim.bld context.dat
 	$(RM) $(CPRODS) $(CTRASH)
 	$(CP) $(HTAG2SRC)/delim.bld delim.dat # appl.-specific delim.dat
-	$(SDLUTILSRC)/context sparse
+	CDE_CONTEXT_DATA=$(srcdir)/context.dat $(SDLUTILSRC)/context sparse
 	touch CDONE
 

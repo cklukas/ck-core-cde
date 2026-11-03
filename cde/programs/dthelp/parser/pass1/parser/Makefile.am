@@ -8,7 +8,7 @@ bin_PROGRAMS = dthelp_htag1
 .NOTPARALLEL:
 
 HELPTAG       = ..
-HELPTAGSRC    = $(HELPTAG)/helptag
+HELPTAGSRC    = $(top_srcdir)/programs/dthelp/parser/pass1/helptag
 HELPPARSERSRC = $(HELPTAG)/parser
 HELPELTDEFSRC = $(HELPTAG)/eltdef
 HELPDTDFILE   = $(HELPTAGSRC)/hptag.dtd
@@ -16,9 +16,9 @@ HELPUTILSRC   = $(HELPTAG)/util
 HELPBUILDSRC  = $(HELPTAG)/build
 HELPUTILLIB   = $(HELPTAG)/util/libutil.a
 
-AM_CPPFLAGS = -DPASS1 -I../eltdef -I../helptag -I../util -I../build \
-	      -I../../include/helptag -I../../include/util -I../../include/build \
-	      -I../../include/eltdef -I../../include/parser
+AM_CPPFLAGS = -DPASS1 -I../eltdef -I$(top_srcdir)/programs/dthelp/parser/pass1/eltdef -I../helptag -I$(top_srcdir)/programs/dthelp/parser/pass1/helptag -I../util -I$(top_srcdir)/programs/dthelp/parser/pass1/util -I../build -I$(top_srcdir)/programs/dthelp/parser/pass1/build \
+	      -I../../include/helptag -I$(top_srcdir)/programs/dthelp/parser/include/helptag -I../../include/util -I$(top_srcdir)/programs/dthelp/parser/include/util -I../../include/build -I$(top_srcdir)/programs/dthelp/parser/include/build \
+	      -I../../include/eltdef -I$(top_srcdir)/programs/dthelp/parser/include/eltdef -I../../include/parser -I$(top_srcdir)/programs/dthelp/parser/include/parser
 
 dthelp_htag1_SOURCES = parser.c actutil.c \
         closent.c code.c cyclent.c dcurelt.c \
@@ -45,6 +45,6 @@ $(CPRODS): CDONE
 CDONE:  $(HELPUTILSRC)/context $(HELPTAGSRC)/delim.par context.dat
 	$(RM) $(CPRODS) $(CTRASH)
 	$(CP) $(HELPTAGSRC)/delim.par delim.dat  # appl.-specific delim.dat
-	$(HELPUTILSRC)/context
+	CDE_CONTEXT_DATA=$(srcdir)/context.dat $(HELPUTILSRC)/context
 	touch CDONE
 

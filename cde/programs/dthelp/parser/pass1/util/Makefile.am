@@ -2,7 +2,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 noinst_LIBRARIES = libutil.a
 
-AM_CPPFLAGS = -DPASS1 -I../../include/util
+AM_CPPFLAGS = -DPASS1 -I../../include/util -I$(top_srcdir)/programs/dthelp/parser/include/util
 
 noinst_PROGRAMS = context fclndir
 

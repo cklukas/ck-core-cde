@@ -189,7 +189,7 @@ LOGICAL m_omitend(void);
 
 LOGICAL m_omitstart(void);
 
-void m_openchk(FILE **ptr, char *name, char *mode);
+void m_openchk(FILE **ptr, const char *name, const char *mode);
 
 void *m_openent(M_WCHAR *entcontent);
 

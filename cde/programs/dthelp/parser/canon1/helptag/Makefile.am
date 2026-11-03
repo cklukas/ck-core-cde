@@ -6,7 +6,7 @@ MAINTAINERCLEANFILES = Makefile.in
 .NOTPARALLEL:
 
 HELPTAG       = ..
-HELPTAGSRC    = $(HELPTAG)/helptag
+HELPTAGSRC    = $(top_srcdir)/programs/dthelp/parser/canon1/helptag
 HELPPARSERSRC = $(HELPTAG)/parser
 HELPELTDEFSRC = $(HELPTAG)/eltdef
 HELPDTDFILE   = $(HELPTAGSRC)/hptag.dtd
@@ -23,8 +23,8 @@ XDONE:
 BUILT_SOURCES = XDONE
 CLEANFILES = $(BUILT_SOURCES)
 
-AM_CPPFLAGS = -DCANON1 -I../parser -I../eltdef -I../../include/parser -I../../include/util \
-	      -I../../include/eltdef -I../../include/helptag \
+AM_CPPFLAGS = -DCANON1 -I../parser -I$(top_srcdir)/programs/dthelp/parser/canon1/parser -I../eltdef -I$(top_srcdir)/programs/dthelp/parser/canon1/eltdef -I../../include/parser -I$(top_srcdir)/programs/dthelp/parser/include/parser -I../../include/util -I$(top_srcdir)/programs/dthelp/parser/include/util \
+	      -I../../include/eltdef -I$(top_srcdir)/programs/dthelp/parser/include/eltdef -I../../include/helptag -I$(top_srcdir)/programs/dthelp/parser/include/helptag \
 	      $(DT_INCDIR)
 
 # needed by parser/

@@ -8,7 +8,7 @@ bin_PROGRAMS = dthelp_htag2
 .NOTPARALLEL:
 
 HTAG2       = ..
-HTAG2SRC    = $(HTAG2)/htag2
+HTAG2SRC     = $(top_srcdir)/programs/dthelp/parser/pass2/htag2
 SDLPARSERSRC = $(HTAG2)/parser
 SDLELTDEFSRC = $(HTAG2)/eltdef
 SDLDTDFILE   = $(HTAG2SRC)/sdl.dtd
@@ -17,8 +17,8 @@ SDLBUILDSRC  = $(HTAG2)/build
 SDLUTILLIB   = $(HTAG2)/util/libutil.a
 SDLIFFILE    = $(HTAG2SRC)/help.if
 
-AM_CPPFLAGS = -DPASS2 -I../util -I../build -I../eltdef -I../../include/util -I$(HTAG2SRC) -I../../include/build \
-	      -I../../include/eltdef -I../../include/parser
+AM_CPPFLAGS = -DPASS2 -I../util -I$(top_srcdir)/programs/dthelp/parser/pass2/util -I../build -I$(top_srcdir)/programs/dthelp/parser/pass2/build -I../eltdef -I$(top_srcdir)/programs/dthelp/parser/pass2/eltdef -I../../include/util -I$(top_srcdir)/programs/dthelp/parser/include/util -I$(HTAG2SRC) -I../../include/build -I$(top_srcdir)/programs/dthelp/parser/include/build \
+	      -I../../include/eltdef -I$(top_srcdir)/programs/dthelp/parser/include/eltdef -I../../include/parser -I$(top_srcdir)/programs/dthelp/parser/include/parser
 
 dthelp_htag2_SOURCES = parser.c actutil.c \
         closent.c code.c cyclent.c dcurelt.c \
@@ -45,6 +45,6 @@ $(CPRODS): CDONE
 CDONE:  $(SDLUTILSRC)/context $(HTAG2SRC)/delim.par context.dat
 	$(RM) $(CPRODS) $(CTRASH)
 	$(CP) $(HTAG2SRC)/delim.par delim.dat  # appl.-specific delim.dat
-	$(SDLUTILSRC)/context
+	CDE_CONTEXT_DATA=$(srcdir)/context.dat $(SDLUTILSRC)/context
 	touch CDONE
 

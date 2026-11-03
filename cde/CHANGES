@@ -9,6 +9,16 @@
   shadow builds do not silently emit an empty application-default file.
 - DtHelp: let the maintained help generator and print helper find checked-in
   private DtHelp interfaces in clean out-of-tree C23 builds.
+- DtHelp: map pass1, pass2 and canon1 parser builds to their checked-in shared
+  headers after generated build interfaces, and correct a concatenated include
+  option in the canon1 parser.
+- DtHelp: resolve parser DTD, delimiter and context generator inputs from their
+  source directories while keeping generated tables in shadow build trees.
+- DtHelp: make the parser's file-opening contract const-correct and map
+  maintained sibling generator fragments after build-tree outputs.
+- DtHelp: keep generated interface parameter macros warning-free when they
+  intentionally replace parser token names, preserve glossary trie payloads
+  through `intptr_t`, and give the pass2 parser a conforming `int main`.
 - DtInfo: let clean out-of-tree WWL and application-module builds search their
   generated build headers before the maintained DtInfo, UAS, DtMmdb and C++
   wrapper source interfaces.

@@ -32,10 +32,10 @@ extern FILE *m_errfile ;
 
 void m_exit(int status);
 
-void m_openchk(FILE **ptr, char *name, char *mode);
+void m_openchk(FILE **ptr, const char *name, const char *mode);
 
 /* Open a file and check that the open succeeded */
-void m_openchk(FILE **ptr, char *name, char *mode)
+void m_openchk(FILE **ptr, const char *name, const char *mode)
   {
     *ptr = fopen(name, mode) ;
     if (*ptr) return ;

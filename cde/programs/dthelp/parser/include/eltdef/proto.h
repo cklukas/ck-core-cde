@@ -98,7 +98,7 @@ LOGICAL litproc(int delim);
 
 void *m_malloc(int size, char *msg);
 
-void m_openchk(FILE **ptr, char *name, char *mode);
+void m_openchk(FILE **ptr, const char *name, const char *mode);
 
 void outpval(M_TRIE *p);
 
