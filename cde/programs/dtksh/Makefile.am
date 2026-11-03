@@ -4,7 +4,7 @@ CLEANFILES = DtFuncs.dtsh ksh-work/.built
 
 include $(srcdir)/ksh93.mk
 
-EXTRA_DIST = prepare-ksh.py run-shell-tests.sh $(KSH93_PATCHES) $(KSH93_TEST_PATCHES) DtFuncs.sh widget-callback.dtsh dtksh.exp
+EXTRA_DIST = $(KSH93_TARBALL) prepare-ksh.py run-shell-tests.sh $(KSH93_PATCHES) $(KSH93_TEST_PATCHES) DtFuncs.sh widget-callback.dtsh dtksh.exp
 noinst_HEADERS = XtCvtrs.h dtkcmds.h dtkcvt.h dtksh.h extra.h msgs.h widget.h \
                  xmcmds.h xmcvt.h xmksh.h xmwidgets.h
 
@@ -111,9 +111,6 @@ uninstall-hook:
 		base="$(DESTDIR)$(kshlibdir)/lib$$name"; \
 		$(RM) "$$base.so" "$$base.so."[0-9]* "$$base.dylib" "$$base."[0-9]*.dylib; \
 	done
-
-dist-hook: prepare-ksh
-	cp ksh-work/$(KSH93_TARBALL) "$(distdir)/"
 
 clean-local:
 	rm -rf "$(KSH93SRC)" ksh-work/lib ksh-work/.prepared lib/dtksh/ksh93

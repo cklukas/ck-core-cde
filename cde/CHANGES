@@ -1,4 +1,7 @@
 2026-11-03
+- dtksh: ship the checksum-pinned upstream ksh93 archive in Git checkouts as
+  well as source distributions, allowing network-isolated builds and CI lanes
+  to prepare the dependency without a download.
 - CI: select GCC 14 explicitly for the GitHub C23 lane and reconfigure each
   already-qualified GitHub and rpi4 CDE tree for the optional filesystem
   consumer. This keeps generated tools and library prerequisites available to

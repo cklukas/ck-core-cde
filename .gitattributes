@@ -2,3 +2,4 @@
 
 # Unified diff context prefixes are part of the patch format.
 /cde/programs/dtksh/patches/*.patch -whitespace
+/cde/programs/dtksh/ksh-*.tar.gz -diff

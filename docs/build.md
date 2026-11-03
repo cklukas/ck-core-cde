@@ -69,9 +69,10 @@ can also prepare it explicitly:
 make -C programs/dtksh prepare-ksh
 ```
 
-Preparation requires Python 3, tar and patch. A Git checkout downloads the
-pinned archive from GitHub on first use. For a verified offline build, supply
-the absolute path to a local copy of the same archive:
+Preparation requires Python 3, tar and patch. Git checkouts and source
+distributions contain the checksum-pinned upstream archive, so the dependency
+can be prepared without network access. To use a separately staged copy of the
+same archive, supply its absolute path:
 
 ```sh
 make -j4 KSH93_ARCHIVE=/absolute/path/to/ksh-REVISION.tar.gz
@@ -79,8 +80,9 @@ make -j4 KSH93_ARCHIVE=/absolute/path/to/ksh-REVISION.tar.gz
 
 Preparation verifies the archive checksum before extraction or patching. The
 verified archive and patched source live in the private build directory under
-`programs/dtksh/ksh-work/`. Source distributions include the original upstream
-archive, integration manifest and patches so release builds can run offline.
+`programs/dtksh/ksh-work/`. The tracked archive remains the unmodified bytes
+from the pinned upstream revision; CDE's integration manifest and ordered
+patches remain separate.
 Installation includes the upstream EPL-2.0 license and copyright notices under
 `share/licenses/dtksh/`.
 
