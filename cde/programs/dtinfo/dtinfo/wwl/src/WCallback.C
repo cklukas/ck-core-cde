@@ -51,9 +51,9 @@
 // ---------------- the callback
 
 static void
-cbWwl (Widget, caddr_t closure, caddr_t call_data)
+cbWwl (Widget, XtPointer closure, XtPointer call_data)
 {
-	((WCallback*) closure) -> Call (call_data);
+	((WCallback*) closure) -> Call ((caddr_t) call_data);
 }
 
 /*?class WWL
@@ -152,7 +152,7 @@ WCallback :: WCallback (Widget w, const char* n, WWL* o, WWL_FUN f, void* client
   object = 0;
   fun = f;
   client_data = (caddr_t) clientdata;
-  XtAddCallback (widget, name, (XtCallbackProc)cbWwl, (caddr_t) this);
+  XtAddCallback (widget, name, cbWwl, (XtPointer) this);
   if (o)
     o->AddCb (this);
 }
@@ -166,7 +166,7 @@ WCallback :: WCallback (Widget w, Atom a, WWL* o, WWL_FUN f, void* clientdata)
   object = o;
   fun = f;
   client_data = (caddr_t) clientdata;
-  XmAddWMProtocolCallback (widget, a, (XtCallbackProc)cbWwl, (caddr_t) this);
+  XmAddWMProtocolCallback (widget, a, cbWwl, (XtPointer) this);
 }
 
 /*?
@@ -184,7 +184,7 @@ WCallback :: WCallback (WObject &w, const char* n, WWL* o, WWL_FUN f, void* clie
   object = 0;
   fun = f;
   client_data = (caddr_t) clientdata;
-  XtAddCallback (widget, name, (XtCallbackProc)cbWwl, (caddr_t) this);
+  XtAddCallback (widget, name, cbWwl, (XtPointer) this);
   if (o)
     o->AddCb (this);
 }
@@ -198,7 +198,7 @@ WCallback :: WCallback (WObject &w, Atom a, WWL* o, WWL_FUN f, void* clientdata)
   object = o;
   fun = f;
   client_data = (caddr_t) clientdata;
-  XmAddWMProtocolCallback (widget, a, (XtCallbackProc)cbWwl, (caddr_t) this);
+  XmAddWMProtocolCallback (widget, a, cbWwl, (XtPointer) this);
 }
 
 
@@ -209,8 +209,7 @@ WCallback :: WCallback (WObject &w, Atom a, WWL* o, WWL_FUN f, void* clientdata)
 WCallback :: ~WCallback ()
 {
   if (name)
-    XtRemoveCallback (widget, name, (XtCallbackProc)cbWwl,
-		      (caddr_t) this);
+    XtRemoveCallback (widget, name, cbWwl, (XtPointer) this);
   if (object)
     object->RemoveCb (this);
 }
@@ -279,7 +278,7 @@ WCallback :: Call (caddr_t calldata)
 // callback for timeout procedure
 
 static void
-timeoutWwl (XtPointer client_data, XtIntervalId)
+timeoutWwl (XtPointer client_data, XtIntervalId *)
 {
   // IntervalId already stored in WTimeOut object, so no need for it here. 
   ((WTimeOut *) client_data)->Call();
@@ -292,7 +291,7 @@ WTimeOut::WTimeOut (XtAppContext app_context, unsigned long interval,
 : object (o), func (f), client_data (client)
 {
   interval_id =
-    XtAppAddTimeOut (app_context, interval, (XtTimerCallbackProc) timeoutWwl,
+    XtAppAddTimeOut (app_context, interval, timeoutWwl,
 		     this);
 }
 
