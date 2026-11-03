@@ -225,14 +225,14 @@ static XtPointer GetResourceValues(
                         XrmDatabase data_base,
                         char **name_list) ;
 static void SetValues(
-                        FileMgrRec *file_mgr_rec,
-                        FileMgrData *file_mgr_data) ;
+                        XtPointer dialog,
+                        XtPointer values) ;
 static void WriteResourceValues(
                         DialogData *values,
                         int fd,
                         char **name_list) ;
 static void FreeValues(
-                        FileMgrData *file_mgr_data) ;
+                        XtPointer values) ;
 static void Destroy(
                         XtPointer recordPtr) ;
 static void GetSessionDir(
@@ -308,8 +308,8 @@ static void SetIconAttributes(
                         FileMgrData *file_mgr_data,
                         char *directory_name) ;
 static void SetFocus (
-                        FileMgrRec  * file_mgr_rec,
-                        FileMgrData * file_mgr_data) ;
+                        XtPointer dialog,
+                        XtPointer values) ;
 static void MoveOkCB(
                         Widget w,
                         XtPointer client_data,
@@ -1415,17 +1415,17 @@ static DialogClass fileMgrClassRec =
    resources,
    XtNumber(resources),
    Create,
-   (DialogInstallChangeProc) NULL,
-   (DialogInstallCloseProc) NULL,
+   NULL,
+   NULL,
    Destroy,
-   (DialogGetValuesProc) NULL,
+   NULL,
    GetDefaultValues,
    GetResourceValues,
-   (DialogSetValuesProc) SetValues,
+   SetValues,
    WriteResourceValues,
-   (DialogFreeValuesProc) FreeValues,
+   FreeValues,
    NULL,
-   (DialogSetFocusProc) SetFocus,
+   SetFocus,
 };
 
 DialogClass * fileMgrClass = (DialogClass *) &fileMgrClassRec;
@@ -2670,9 +2670,11 @@ GetResourceValues(
 
 static void
 SetValues(
-        FileMgrRec *file_mgr_rec,
-        FileMgrData *file_mgr_data )
+        XtPointer dialog,
+        XtPointer values )
 {
+   FileMgrRec *file_mgr_rec = dialog;
+   FileMgrData *file_mgr_data = values;
    Widget cd = file_mgr_rec->current_directory;
    Widget cdi = file_mgr_rec->current_directory_icon;
    Widget cdd = file_mgr_rec->current_directory_drop;
@@ -3223,8 +3225,9 @@ WriteResourceValues(
 
 static void
 FreeValues(
-        FileMgrData *file_mgr_data )
+        XtPointer values )
 {
+   FileMgrData *file_mgr_data = values;
    int i;
 
    FileMgrRec *file_mgr_rec;
@@ -8886,9 +8889,11 @@ ShowChangeDirField (
 
 static void
 SetFocus (
-   FileMgrRec  * file_mgr_rec,
-   FileMgrData * file_mgr_data)
+   XtPointer dialog,
+   XtPointer values)
 {
+   FileMgrRec *file_mgr_rec = dialog;
+   FileMgrData *file_mgr_data = values;
    /* Force the focus to the text field */
    if (file_mgr_data->fast_cd_enabled)
    {

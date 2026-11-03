@@ -5,7 +5,8 @@
   Directory dialog class now stores exact generic method contracts and recovers
   concrete records inside each method. The Find dialog follows the same method
   boundary and uses complete Xt event-handler contracts for its stop-button
-  transitions.
+  transitions. The main File Manager dialog also stores its set/free/focus
+  methods through their native generic contracts and uses typed null entries.
 - DtImsStart: register window-manager callbacks and the host-return action with
   their exact Xt contracts, using a typed adapter for the no-argument shutdown
   routine.
