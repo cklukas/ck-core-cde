@@ -206,7 +206,9 @@ static void QualifyIconLocalCache(
 			DtIconCacheObjPart *cache);
 static void Initialize( 
                         Widget request_w,
-                        Widget new_w) ;
+                        Widget new_w,
+                        ArgList args,
+                        Cardinal *num_args) ;
 static void Destroy( 
                         Widget w) ;
 static void Resize( 
@@ -218,17 +220,21 @@ static void Redisplay(
 static Boolean SetValues( 
                         Widget current_w,
                         Widget request_w,
-                        Widget new_w) ;
+                        Widget new_w,
+                        ArgList args,
+                        Cardinal *num_args) ;
 static void BorderHighlight(
-                        DtIconGadget g) ;
+                        Widget w) ;
 static void BorderUnhighlight(
-                        DtIconGadget g) ;
+                        Widget w) ;
 static void ArmAndActivate( 
                         Widget w,
-                        XEvent *event) ;
+                        XEvent *event,
+                        String *params,
+                        Cardinal *num_params) ;
 static void InputDispatch( 
                         Widget w,
-                        XButtonEvent *event,
+                        XEvent *event,
                         Mask event_mask) ;
 static Boolean VisualChange( 
                         Widget w,
@@ -554,8 +560,8 @@ static XmBaseClassExtRec       iconBaseClassExtRec = {
     InitializePosthook,                       /* initialize posthook  */
     SetValuesPosthook,                        /* set_values posthook  */
     (WidgetClass)&dtIconCacheObjClassRec,     /* secondary class      */
-    (XtInitProc)SecondaryObjectCreate,        /* creation proc        */
-    (XmGetSecResDataFunc) GetIconClassSecResData,    /* getSecResData */
+    SecondaryObjectCreate,                    /* creation proc        */
+    GetIconClassSecResData,                   /* getSecResData        */
     {0},                                      /* fast subclass        */
     GetValuesPrehook,                         /* get_values prehook   */
     GetValuesPosthook,                        /* get_values posthook  */
@@ -632,7 +638,7 @@ DtIconClassRec dtIconClassRec =
 		ClassInitialize,		/* class_initialize	*/
 		ClassPartInitialize,		/* class_part_initialize*/
 		False,				/* class_inited		*/
-		(XtInitProc) Initialize,	/* initialize		*/
+		Initialize,		/* initialize		*/
 		NULL,				/* initialize_hook	*/
 		NULL,				/* realize		*/
 		NULL,				/* actions		*/
@@ -647,7 +653,7 @@ DtIconClassRec dtIconClassRec =
 		(XtWidgetProc) Destroy, 	/* destroy		*/	
 		(XtWidgetProc) Resize,		/* resize		*/
 		(XtExposeProc) Redisplay,	/* expose		*/	
-		(XtSetValuesFunc) SetValues,	/* set_values		*/	
+		SetValues,			/* set_values		*/
 		NULL,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
 		NULL,				/* get_values_hook	*/
@@ -663,11 +669,11 @@ DtIconClassRec dtIconClassRec =
 	/*	XmGadget Part
 	*/
 	{
-	(XtWidgetProc)	BorderHighlight,	/* border_highlight	*/
-	(XtWidgetProc)	BorderUnhighlight,	/* border_unhighlight	*/
-	(XtActionProc)	ArmAndActivate,		/* arm_and_activate	*/
-	(XmWidgetDispatchProc)	InputDispatch,	/* input_dispatch	*/
-	(XmVisualChangeProc)	VisualChange,	/* visual_change	*/
+		BorderHighlight,		/* border_highlight	*/
+		BorderUnhighlight,		/* border_unhighlight	*/
+		ArmAndActivate,			/* arm_and_activate	*/
+		InputDispatch,			/* input_dispatch	*/
+		VisualChange,			/* visual_change	*/
 		syn_resources,			/* get_resources	*/
 		XtNumber (syn_resources),	/* num_get_resources	*/
 		&IconClassCachePart,		/* class_cache_part	*/
@@ -1707,7 +1713,9 @@ GetParentBackgroundGC(
 static void 
 Initialize(
         Widget request_w,
-        Widget new_w )
+        Widget new_w,
+        ArgList args,
+        Cardinal *num_args )
 {
 	DtIconGadget	request =	(DtIconGadget) request_w,
 			new =		(DtIconGadget) new_w;
@@ -1719,6 +1727,9 @@ Initialize(
 	EventMask	mask;
 	String		name = NULL;
 	UpdateGCsProc	update_gcs;
+
+	(void)args;
+	(void)num_args;
 
 	G_Sync (new) = False;
 
@@ -2060,7 +2071,9 @@ static Boolean
 SetValues(
         Widget current_w,
         Widget request_w,
-        Widget new_w )
+        Widget new_w,
+        ArgList args,
+        Cardinal *num_args )
 {
 	DtIconGadget	current =	(DtIconGadget) current_w,
 			new =		(DtIconGadget) new_w;
@@ -2078,6 +2091,10 @@ SetValues(
 	Dimension	h_t = G_HighlightThickness (new),
 			s_t = G_ShadowThickness (new),
 			p_x, p_y, s_x, s_y;
+
+	(void)request_w;
+	(void)args;
+	(void)num_args;
 	String		name = NULL;
 	Boolean		optimize_redraw = False;
 
@@ -2698,8 +2715,9 @@ SetValues(
 **
 */
 static void 
-BorderHighlight( DtIconGadget g)
+BorderHighlight(Widget widget)
 {
+   DtIconGadget g = (DtIconGadget)widget;
    int width;
    int height;
    CallCallbackProc call_callback;
@@ -2728,8 +2746,9 @@ BorderHighlight( DtIconGadget g)
 **
 */
 static void 
-BorderUnhighlight( DtIconGadget g)
+BorderUnhighlight(Widget widget)
 {
+   DtIconGadget g = (DtIconGadget)widget;
 
    int window_width;
    int window_height;
@@ -2763,8 +2782,12 @@ BorderUnhighlight( DtIconGadget g)
 static void 
 ArmAndActivate(
         Widget w,
-        XEvent *event )
+        XEvent *event,
+        String *params,
+        Cardinal *num_params )
 {
+	(void)params;
+	(void)num_params;
 	IconArm (w, event);
 	IconActivate (w, event);
 }
@@ -2778,9 +2801,10 @@ ArmAndActivate(
 static void 
 InputDispatch(
         Widget w,
-        XButtonEvent *event,
+        XEvent *xevent,
         Mask event_mask )
 {
+	XButtonEvent *event = &xevent->xbutton;
 	DtIconGadget	g =	(DtIconGadget) w;
 
 	if (event_mask & XmARM_EVENT || event_mask & XmMULTI_ARM_EVENT)

@@ -236,6 +236,8 @@ than treating unrelated no-argument routines as exit hooks. Its string and file
 readers also implement the parser's shared opaque-argument callback directly.
 DtWidget's ComboBox, Control and DialogBox class records use full Xt/Motif
 method signatures and recover their concrete widget types inside each method.
+The same rule applies to Editor, Icon, SpinBox and TitleBox methods, action
+tables, synthetic resources and gadget dispatch hooks.
 
 DtHelp's image library uses exact callback types for pipeline initialization,
 cleanup, destruction and execution, conversion records, and image-object

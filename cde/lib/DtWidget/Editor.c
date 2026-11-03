@@ -170,7 +170,9 @@ static Widget 	CreateStatusLine(
 static Boolean	SetValues(
                         Widget cw,
                         Widget rw,
-                        Widget nw);
+                        Widget nw,
+                        ArgList args,
+                        Cardinal *num_args);
 
 static void	_DtEditorGetCenterToggleLabel(
 	Widget		wid,
@@ -1280,7 +1282,7 @@ dtEditorClassRec =
 		(XtWidgetProc) Destroy,		/* destroy		*/	
 		XtInheritResize,		/* resize		*/
 		XtInheritExpose,		/* expose		*/	
-		(XtSetValuesFunc) SetValues,	/* set_values		*/	
+		SetValues,			/* set_values		*/
 		NULL,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
 		NULL,		 		/* get_values_hook	*/
@@ -2103,7 +2105,9 @@ static Boolean
 SetValues(
         Widget cw,
         Widget rw,
-        Widget nw )
+        Widget nw,
+        ArgList args,
+        Cardinal *num_args )
 {
   Boolean         redisplay_flag = False;
   Arg		al[15];		/*  arg list            */
@@ -2118,6 +2122,9 @@ SetValues(
 		NeedToFixWordWrap = False;	/* XXX Word Wrap workaround*/
 
   DtEditorWidget  current = (DtEditorWidget) cw;
+
+  (void)args;
+  (void)num_args;
   DtEditorWidget  request = (DtEditorWidget) rw;
   DtEditorWidget  new     = (DtEditorWidget) nw;
 

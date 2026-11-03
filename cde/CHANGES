@@ -9,6 +9,9 @@
   directly.
 - DtWidget: give ComboBox, Control and DialogBox their complete Xt/Motif method
   signatures, including argument lists and base-class widget parameters.
+- DtWidget: align Editor, Icon, SpinBox and TitleBox class methods, action
+  tables, synthetic-resource hooks and gadget dispatch with their framework
+  callback types.
 - DtInfo: preprocess the aggregate message input from the shadow build
   directory where it is generated, and materialize the preprocessor stream
   before running the catalog converter. A missing generated input now fails
