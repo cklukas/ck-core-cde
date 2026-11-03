@@ -1,4 +1,8 @@
 2026-11-03
+- DtTerm: load the Solaris interactive-session hook through its documented
+  four-argument function contract instead of an unprototyped `void (*)()`
+  cast. App Builder drops a disabled, structurally obsolete matrix renderer
+  that could no longer compile against the maintained viewer model.
 - ToolTalk and DtMmdb: complete the remaining cross-language no-argument and
   mini-ISAM conversion declarations. Modernize the standalone `prolatex`
   utility's entry point and replacement helper to explicit C23 prototypes.

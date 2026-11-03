@@ -128,6 +128,12 @@ through `intptr_t` rather than a width-truncating cast.
 The maintained help viewer also uses the C-standard `int main` entry-point
 contract under both compilers.
 
+DtTerm's optional Solaris interactive-session integration resolves its Xlib
+entry point dynamically but retains the documented display, process-buffer,
+flag and count types at the call boundary. App Builder no longer carries the
+disabled pre-CDE matrix renderer whose data members and callback shape predated
+the maintained viewer model.
+
 The Motif manual guide resolves its shared link definitions from the source
 tree and replaces an earlier generated link atomically enough for repeated
 out-of-tree builds. A stale or broken shadow-tree link therefore cannot stop a

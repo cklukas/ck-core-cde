@@ -29,6 +29,7 @@
 
 #ifdef sun
 #include <dlfcn.h>
+#include <stdint.h>
 #endif /* sun */
 #include "TermHeader.h"
 #include "TermPrim.h"
@@ -428,13 +429,22 @@ GetSavedUserFontListIndex(long *index_out)
 void
 sunSetupIA(Widget w)
 {
-    int	i, major_op, first_event, first_err;
-    int	*pids;
-    void 	(*IAptr)()=(void (*)())NULL;
+    typedef Bool (*SolarisIASetProcessInfoProc)(Display *, unsigned char *,
+                                                uint32_t, uint32_t);
+    int i, major_op, first_event, first_err;
+    int *pids;
+    void *symbol;
+    SolarisIASetProcessInfoProc set_process_info = NULL;
     DtTermPrimitiveWidget tw;
 
-    if ((IAptr = (void (*)())dlsym(RTLD_NEXT, "XSolarisIASetProcessInfo"))!=NULL) {
+    symbol = dlsym(RTLD_NEXT, "XSolarisIASetProcessInfo");
+    if (symbol != NULL) {
+        _Static_assert(sizeof(set_process_info) == sizeof(symbol),
+                       "dlsym function pointer size mismatch");
+        memcpy(&set_process_info, &symbol, sizeof(set_process_info));
         pids = (int *)malloc(sizeof(int) * (InstanceCount + 1));
+        if (pids == NULL)
+            return;
         pids[0] = getpid();
         for (i = 0; i < InstanceCount; i++) {
 	    tw = (DtTermPrimitiveWidget)instance_list[i]->termview.term;
@@ -442,8 +452,9 @@ sunSetupIA(Widget w)
         }
         if (XQueryExtension(XtDisplay(w), "SolarisIA",
 		        &major_op, &first_event, &first_err))
-            (*IAptr)(XtDisplay(w),pids,
-	         0x1,InstanceCount + 1);
+            (void)set_process_info(XtDisplay(w), (unsigned char *)pids,
+	                           UINT32_C(1),
+                                   (uint32_t)(InstanceCount + 1));
         free(pids);
     }
 }
