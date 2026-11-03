@@ -189,7 +189,8 @@ void
 FileWindowResizeCallback(
         Widget w,
         XtPointer client_data,
-        XEvent *event )
+        XEvent *event,
+        Boolean *continue_to_dispatch )
 {
    FileMgrRec  * file_mgr_rec;
    DialogData  * dialog_data;
@@ -236,7 +237,8 @@ void
 FileWindowMapCallback(
         Widget w,
         XtPointer client_data,
-        XEvent *event )
+        XEvent *event,
+        Boolean *continue_to_dispatch )
 {
    FileMgrRec  * file_mgr_rec;
    DialogData  * dialog_data;

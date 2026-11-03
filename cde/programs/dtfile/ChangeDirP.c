@@ -694,7 +694,8 @@ void
 CurrentDirectoryIconMotion(
                         Widget w,
                         XtPointer client_data,
-                        XEvent *event)
+                        XEvent *event,
+                        Boolean *continue_to_dispatch)
 {
 
    FileMgrRec  * file_mgr_rec = (FileMgrRec *) client_data;

@@ -1070,8 +1070,9 @@ void
 ChangeToNewDir (
        Widget text_field,
        XtPointer client_data,
-       XmAnyCallbackStruct * callback_data )
+       XtPointer call_data )
 {
+   XmAnyCallbackStruct *callback_data = call_data;
    DialogData * dialog_data;
    ChangeDirData * change_dir_data;
    ChangeDirRec * change_dir_rec;
@@ -1271,8 +1272,9 @@ void
 TextChange(
         Widget text,
         XtPointer client_data,
-        XmTextVerifyCallbackStruct * callback_data )
+        XtPointer call_data )
 {
+   XmTextVerifyCallbackStruct *callback_data = call_data;
    char *homeDir, *homeDirBackup;
    char *selection;
 

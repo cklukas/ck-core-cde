@@ -518,7 +518,7 @@ extern Tt_callback_action HandleTtRequest(
 extern void ChangeToNewDir (
                         Widget text_field,
                         XtPointer client_data,
-                        XmAnyCallbackStruct * callback_data );
+                        XtPointer callback_data );
 
 extern void ChangeDirectoryToParent(
                         FileMgrRec * file_mgr_rec,
@@ -530,7 +530,7 @@ extern void DropOnChangeView (
 extern void TextChange(
                         Widget text,
                         XtPointer client_data,
-                        XmTextVerifyCallbackStruct * callback_data );
+                        XtPointer callback_data );
 
 /* prototypes from ChangeDirP.c */
 
@@ -585,7 +585,8 @@ extern void DrawCurrentDirectory(
 extern void CurrentDirectoryIconMotion(
                         Widget w,
                         XtPointer client_data,
-                        XEvent *event) ;
+                        XEvent *event,
+                        Boolean *continue_to_dispatch) ;
 extern void ShowFastChangeDir(
                         FileMgrRec *file_mgr_rec,
                         FileMgrData *file_mgr_data ) ;
@@ -800,7 +801,8 @@ extern void IconCallback(
 extern void FileIconMotion(
                         Widget w,
                         XtPointer clientData,
-                        XEvent *event) ;
+                        XEvent *event,
+                        Boolean *continue_to_dispatch) ;
 extern Boolean FileIsSelected(
                         FileMgrData *file_mgr_data,
                         FileViewData *file_view_data) ;
@@ -1171,11 +1173,13 @@ extern void FileWindowExposeCallback(
 extern void FileWindowResizeCallback(
                         Widget w,
                         XtPointer client_data,
-                        XEvent *event) ;
+                        XEvent *event,
+                        Boolean *continue_to_dispatch) ;
 extern void FileWindowMapCallback(
                         Widget w,
                         XtPointer client_data,
-                        XEvent *event ) ;
+                        XEvent *event,
+                        Boolean *continue_to_dispatch) ;
 extern void FileWindowInputCallback(
                         Widget w,
                         XtPointer client_data,

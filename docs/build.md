@@ -450,6 +450,10 @@ internal editor action.
 DtImsStart registers its window-manager callbacks and host-return action
 directly, with a typed Xt adapter around its reusable no-argument window
 shutdown routine.
+DtFile's core window registers its close and timeout callbacks directly. Its
+directory-entry and restricted-text callbacks accept opaque Xt call data and
+recover the Motif callback record internally, while drag-motion and window
+map/resize handlers carry Xt's complete event-handler contract.
 DtPad exposes its editor, help, formatting, option, session and print callbacks
 through `XtCallbackProc` directly, and routes panic signals through a typed
 signal adapter. DtAction likewise registers its custom text actions and

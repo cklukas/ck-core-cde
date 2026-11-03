@@ -2623,7 +2623,8 @@ void
 FileIconMotion(
                Widget w,
                XtPointer clientData,
-               XEvent *event)
+               XEvent *event,
+               Boolean *continue_to_dispatch)
 {
    int diffX, diffY;
    FileViewData * fileViewData = NULL;

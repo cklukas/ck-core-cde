@@ -301,7 +301,8 @@ static void FreeDirectoryData(
                         FileMgrData *file_mgr_data) ;
 static void SystemClose(
                         Widget w,
-                        XtPointer data) ;
+                        XtPointer data,
+                        XtPointer call_data) ;
 static void SetIconAttributes(
                         FileMgrRec *file_mgr_rec,
                         FileMgrData *file_mgr_data,
@@ -1637,12 +1638,12 @@ Create(
    XtSetValues (shell, args, n);
 
    delete_window = XmInternAtom (XtDisplay (shell), "WM_DELETE_WINDOW", False);
-   XmAddWMProtocolCallback (shell, delete_window, (XtCallbackProc)SystemClose,
+   XmAddWMProtocolCallback (shell, delete_window, SystemClose,
                             (XtPointer)file_mgr_rec);
 
    file_mgr_rec->main = mainWidget = XmCreateMainWindow (shell, "main", args, 1);
    XtManageChild (mainWidget);
-   XtAddCallback(mainWidget, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(mainWidget, XmNhelpCallback, HelpRequestCB,
                  HELP_FILE_MANAGER_VIEW_STR);
 
 
@@ -1766,7 +1767,7 @@ Create(
       /* Event handler for detecting drag threshold surpassed */
       XtAddEventHandler(current_directory_frame,
                         Button1MotionMask|Button2MotionMask,
-                        False, (XtEventHandler)CurrentDirectoryIconMotion,
+                        False, CurrentDirectoryIconMotion,
                         file_mgr_rec);
 
       /* Create the change directory drop zone. */
@@ -1910,7 +1911,7 @@ Create(
       XtSetValues (file_mgr_rec->current_directory_frame, args, 1);
 
       XtAddCallback(file_mgr_rec->current_directory_text, XmNactivateCallback,
-                                 (XtCallbackProc)ChangeToNewDir, file_mgr_rec);
+                                 ChangeToNewDir, file_mgr_rec);
       XtAddCallback(file_mgr_rec->current_directory_text, XmNhelpCallback,
                     (XtCallbackProc)HelpRequestCB,
                     HELP_FILE_MANAGER_VIEW_STR);
@@ -1931,10 +1932,10 @@ Create(
          /* add the callbacks to make sure the user isn't able to
             go anywhere above their restricted directory */
          XtAddCallback (file_mgr_rec->current_directory_text,
-                        XmNmodifyVerifyCallback, (XtCallbackProc)TextChange,
+                        XmNmodifyVerifyCallback, TextChange,
                         (XtPointer)NULL );
          XtAddCallback (file_mgr_rec->current_directory_text,
-                        XmNmotionVerifyCallback, (XtCallbackProc)TextChange,
+                        XmNmotionVerifyCallback, TextChange,
                         (XtPointer)NULL );
       }
 #endif
@@ -2002,10 +2003,10 @@ Create(
    /*  window, in order to force a relayout of the icons.              */
 
    XtAddEventHandler (file_mgr_rec->scroll_window, StructureNotifyMask,
-                      False, (XtEventHandler)FileWindowResizeCallback,
+                      False, FileWindowResizeCallback,
                       file_mgr_rec);
    XtAddEventHandler (shell, StructureNotifyMask,
-                      False, (XtEventHandler)FileWindowMapCallback,
+                      False, FileWindowMapCallback,
                       file_mgr_rec);
 
 
@@ -2061,7 +2062,7 @@ Create(
    /* Event handler for detecting drag threshold surpassed */
    XtAddEventHandler(file_mgr_rec->file_window,
                      Button1MotionMask|Button2MotionMask,
-                     False, (XtEventHandler)FileIconMotion,
+                     False, FileIconMotion,
                      file_mgr_rec);
 
    /* Arrange for initial focus to be inside the file window */
@@ -3847,9 +3848,10 @@ UpdateStatusLine(
  */
 static void
 MsgTimerEvent(
-        FileMgrData *file_mgr_data,
+        XtPointer client_data,
         XtIntervalId *id )
 {
+   FileMgrData *file_mgr_data = client_data;
    FileMgrRec *file_mgr_rec;
 
    if (*id != file_mgr_data->msg_timer_id)
@@ -3895,7 +3897,7 @@ SetSpecialMsg(
       file_mgr_data->special_msg = XtNewString(msg);
       file_mgr_data->msg_timer_id =
         XtAppAddTimeOut (XtWidgetToApplicationContext (file_mgr_rec->shell),
-                         4000, (XtTimerCallbackProc) MsgTimerEvent,
+                         4000, MsgTimerEvent,
                          (XtPointer) file_mgr_data);
    }
    else
@@ -8655,7 +8657,8 @@ Close(
 static void
 SystemClose(
         Widget w,
-        XtPointer data )
+        XtPointer data,
+        XtPointer call_data )
 {
    FileMgrRec * file_mgr_rec;
    DialogData * dialog_data;
