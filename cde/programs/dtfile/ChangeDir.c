@@ -129,23 +129,23 @@ static void Create(     Display *display,
                         Widget parent,
                         Widget *shell,
                         XtPointer *dialog) ;
-static void InstallChange( ChangeDirRec *change_dir_rec,
+static void InstallChange( XtPointer dialog,
                            XtCallbackProc callback,
                            XtPointer client_data) ;
-static void InstallClose( ChangeDirRec *change_dir_rec,
+static void InstallClose( XtPointer dialog,
                           XtCallbackProc callback,
                           XtPointer client_data) ;
-static void Destroy( ChangeDirRec *change_dir_rec) ;
-static XtPointer GetValues( ChangeDirRec *change_dir_rec) ;
+static void Destroy( XtPointer dialog) ;
+static XtPointer GetValues( XtPointer dialog) ;
 static XtPointer GetDefaultValues( void ) ;
 static XtPointer GetResourceValues( XrmDatabase data_base,
                                   char **name_list) ;
-static void SetValues( ChangeDirRec *change_dir_rec,
-                       ChangeDirData *change_dir_data) ;
+static void SetValues( XtPointer dialog,
+                       XtPointer values) ;
 static void WriteResourceValues( DialogData *values,
                                  int fd,
                                  char **name_list) ;
-static void FreeValues( ChangeDirData *change_dir_data) ;
+static void FreeValues( XtPointer values) ;
 typedef void (*ChangeDirViewProc)(FileMgrData *file_mgr_data,
                                   char *directory);
 static Boolean TryToChangeDir( Boolean isFromDialog,
@@ -158,8 +158,8 @@ static Boolean TryToChangeDir( Boolean isFromDialog,
                                XtPointer dialog_client_data,
                                ChangeDirViewProc view_callback) ;
 static void OkCallback( Widget selection_box,
-                        ChangeDirApply *apply_data,
-                        XmSelectionBoxCallbackStruct *callback_data) ;
+                        XtPointer client_data,
+                        XtPointer call_data) ;
 static int CheckRestrictedDir ( FileMgrRec * file_mgr_rec,
                                 FileMgrData * file_mgr_data,
                                 char ** value,
@@ -167,8 +167,8 @@ static int CheckRestrictedDir ( FileMgrRec * file_mgr_rec,
 static void GoToNewDir ( FileMgrData * file_mgr_data,
                          char * dir_name) ;
 static void SetFocus(
-                        ChangeDirRec *change_dir_rec,
-                        ChangeDirData *change_dir_data) ;
+                        XtPointer dialog,
+                        XtPointer values) ;
 
 
 /********    End Static Function Declarations    ********/
@@ -184,17 +184,17 @@ static DialogClass changeDirClassRec =
    resources,
    XtNumber(resources),
    Create,
-   (DialogInstallChangeProc) InstallChange,
-   (DialogInstallCloseProc) InstallClose,
-   (DialogDestroyProc) Destroy,
-   (DialogGetValuesProc) GetValues,
+   InstallChange,
+   InstallClose,
+   Destroy,
+   GetValues,
    GetDefaultValues,
    GetResourceValues,
-   (DialogSetValuesProc) SetValues,
+   SetValues,
    WriteResourceValues,
-   (DialogFreeValuesProc) FreeValues,
-   (DialogMapWindowProc) _DtGenericMapWindow,
-   (DialogSetFocusProc) SetFocus,
+   FreeValues,
+   _DtGenericMapWindow,
+   SetFocus,
 };
 
 DialogClass * changeDirClass = (DialogClass *) &changeDirClassRec;
@@ -245,33 +245,33 @@ Create(
    XmStringFree (prompt);
 
    /* Add the help callback to each of the important sub-components */
-   XtAddCallback(change_dir, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(change_dir, XmNhelpCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
    w = XmSelectionBoxGetChild(change_dir, XmDIALOG_APPLY_BUTTON);
-   XtAddCallback(w, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(w, XmNhelpCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
    w = XmSelectionBoxGetChild(change_dir, XmDIALOG_CANCEL_BUTTON);
-   XtAddCallback(w, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(w, XmNhelpCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
    w = XmSelectionBoxGetChild(change_dir, XmDIALOG_HELP_BUTTON);
-   XtAddCallback(w, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(w, XmNhelpCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
-   XtAddCallback(w, XmNactivateCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(w, XmNactivateCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
    w = XmSelectionBoxGetChild(change_dir, XmDIALOG_OK_BUTTON);
-   XtAddCallback(w, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(w, XmNhelpCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
    w = XmSelectionBoxGetChild(change_dir, XmDIALOG_LIST);
-   XtAddCallback(XtParent(w), XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(XtParent(w), XmNhelpCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
    w = XmSelectionBoxGetChild(change_dir, XmDIALOG_LIST_LABEL);
-   XtAddCallback(w, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(w, XmNhelpCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
    w = XmSelectionBoxGetChild(change_dir, XmDIALOG_SELECTION_LABEL);
-   XtAddCallback(w, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(w, XmNhelpCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
    w = XmSelectionBoxGetChild(change_dir, XmDIALOG_TEXT);
-   XtAddCallback(w, XmNhelpCallback, (XtCallbackProc)HelpRequestCB,
+   XtAddCallback(w, XmNhelpCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
 
 
@@ -323,10 +323,11 @@ Create(
 
 static void
 InstallChange(
-        ChangeDirRec *change_dir_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   ChangeDirRec *change_dir_rec = dialog;
    Widget selection_box = change_dir_rec->change_dir;
    ChangeDirApply * apply_data;
 
@@ -342,7 +343,7 @@ InstallChange(
 
    /*  Add the callbacks for list item insertion and help.  */
 
-   XtAddCallback (selection_box, XmNokCallback, (XtCallbackProc) OkCallback,
+   XtAddCallback (selection_box, XmNokCallback, OkCallback,
                                                       (XtPointer) apply_data);
 }
 
@@ -357,10 +358,11 @@ InstallChange(
 
 static void
 InstallClose(
-        ChangeDirRec *change_dir_rec,
+        XtPointer dialog,
         XtCallbackProc callback,
         XtPointer client_data )
 {
+   ChangeDirRec *change_dir_rec = dialog;
    Widget close_widget;
    Atom delete_window_atom;
 
@@ -388,8 +390,9 @@ InstallClose(
 
 static void
 Destroy(
-        ChangeDirRec *change_dir_rec )
+        XtPointer dialog )
 {
+   ChangeDirRec *change_dir_rec = dialog;
    XtDestroyWidget (change_dir_rec->change_dir);
    XtFree ((char *) change_dir_rec->apply_data);
    XtFree ((char *) change_dir_rec);
@@ -406,8 +409,9 @@ Destroy(
 
 static XtPointer
 GetValues(
-        ChangeDirRec *change_dir_rec )
+        XtPointer dialog )
 {
+   ChangeDirRec *change_dir_rec = dialog;
    ChangeDirData * change_dir_data;
    Arg args[8];
    int n;
@@ -561,9 +565,11 @@ GetResourceValues(
 
 static void
 SetValues(
-        ChangeDirRec *change_dir_rec,
-        ChangeDirData *change_dir_data )
+        XtPointer dialog,
+        XtPointer values )
 {
+   ChangeDirRec *change_dir_rec = dialog;
+   ChangeDirData *change_dir_data = values;
    Arg args[4];
    char *tmp_str, *host_name;
    XmString host_string;
@@ -660,8 +666,9 @@ WriteResourceValues(
 
 static void
 FreeValues(
-        ChangeDirData *change_dir_data )
+        XtPointer values )
 {
+   ChangeDirData *change_dir_data = values;
    int i;
 
    for (i = 0; i < change_dir_data->list_count; i++)
@@ -916,9 +923,11 @@ TryToChangeDir(
 static void
 OkCallback(
         Widget selection_box,
-        ChangeDirApply *apply_data,
-        XmSelectionBoxCallbackStruct *callback_data )
+        XtPointer client_data,
+        XtPointer call_data )
 {
+   ChangeDirApply *apply_data = client_data;
+   XmSelectionBoxCallbackStruct *callback_data = call_data;
    DialogData * dialog_data;
    ChangeDirData * change_dir_data;
    FileMgrRec * file_mgr_rec;
@@ -1248,9 +1257,10 @@ GoToNewDir(
 
 static void
 SetFocus(
-        ChangeDirRec *change_dir_rec,
-        ChangeDirData *change_dir_data )
+        XtPointer dialog,
+        XtPointer values )
 {
+   ChangeDirRec *change_dir_rec = dialog;
    Widget text;
 
    /* Force the focus to the text field */

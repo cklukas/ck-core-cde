@@ -1,7 +1,9 @@
 2026-11-03
 - DtFile: give the file-manager close, directory-entry, restricted-text,
   drag-motion, map/resize and status-timeout hooks their exact Xt callback
-  contracts and register them without function-pointer casts.
+  contracts and register them without function-pointer casts. Its Change
+  Directory dialog class now stores exact generic method contracts and recovers
+  concrete records inside each method.
 - DtImsStart: register window-manager callbacks and the host-return action with
   their exact Xt contracts, using a typed adapter for the no-argument shutdown
   routine.
