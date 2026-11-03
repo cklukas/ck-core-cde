@@ -188,7 +188,7 @@ class MsgScrollingList : public ScrollingList {
 
   protected:
     virtual void defaultAction( Widget, XtPointer, XmListCallbackStruct * );
-    static void extendedSelectionCallback( Widget, XtPointer, XmListCallbackStruct * );
+    static void extendedSelectionCallback( Widget, XtPointer, XtPointer );
     MsgHndArray *_msgs;
     DtMailHeaderRequest	_header_info;
    

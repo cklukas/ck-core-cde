@@ -292,6 +292,7 @@ class SendMsgDialog : public MenuWindow, public AbstractEditorParent {
     void forceFormResize(Widget);
 
     // Called when the sendmail child process completes
+    static void sendmailInputProc(XtPointer, int *, XtInputId *);
     static void sendmailErrorProc (int pid, int status, void *data);
     void popupMemoryError(DtMailEnv &error);
 

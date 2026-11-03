@@ -86,7 +86,6 @@ MsgScrollingList::MsgScrollingList(
 
     XtAddCallback( _w,
 		   XmNextendedSelectionCallback,
-		   (XtCallbackProc)
 		   &MsgScrollingList::extendedSelectionCallback,
 		   this );
 
@@ -1722,9 +1721,10 @@ void
 MsgScrollingList::extendedSelectionCallback(
     Widget ,			// w
     XtPointer clientData,
-    XmListCallbackStruct *cbs
+    XtPointer callData
 )
 {
+    XmListCallbackStruct *cbs = (XmListCallbackStruct *)callData;
     int last_clicked_on_pos;
     int above_selected_pos;
     int tmp_selected_pos;

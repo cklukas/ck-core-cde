@@ -78,7 +78,7 @@ CustomListUiItem::CustomListUiItem(Widget w,
 
     XtAddCallback(w,
 		  XmNbrowseSelectionCallback, 
-		  (XtCallbackProc)handleCustSelection,
+		  handleCustSelection,
 		  (XtPointer)this);
 
 

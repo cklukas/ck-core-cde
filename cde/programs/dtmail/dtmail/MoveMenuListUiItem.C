@@ -75,7 +75,7 @@ MoveMenuListUiItem::MoveMenuListUiItem(Widget w,
 
     XtAddCallback(w,
 		XmNbrowseSelectionCallback, 
-		(XtCallbackProc)handleMMSelection,
+		handleMMSelection,
 		  (XtPointer)this);
 
 

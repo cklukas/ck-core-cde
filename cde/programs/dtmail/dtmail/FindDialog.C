@@ -329,7 +329,7 @@ FindDialog::createWorkArea(Widget dialog)
 		// XtAddCallback(_text_fields [_fd_i], XmNhelpCallback, HelpCB, helpId);
 
 		XtAddCallback(_text_fields [_fd_i], XmNactivateCallback,
-			(XtCallbackProc)textFieldCallback, (XtPointer)this);
+			textFieldCallback, (XtPointer)this);
 	}
 
 

@@ -464,6 +464,10 @@ and interval-ID contracts at the toolkit boundary. Its query-resize, search
 help, selection-transfer, input-readiness, deferred-scope, session-save,
 client-event, editres and command-exit hooks likewise register through exact
 typed boundaries.
+DtMail registers its list, message-drag, icon, text and editres hooks through
+their complete Xt contracts. Sendmail completion crosses the frontend boundary
+through a typed Xt input adapter, while the mail transport exposes a neutral
+completion operation instead of returning an untyped function address.
 DtWidget's editor translation table stores its complete four-argument Xt action
 implementations directly, allowing the compiler to check every public and
 internal editor action.

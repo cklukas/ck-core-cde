@@ -57,7 +57,7 @@
 #include <stdlib.h>
 class ScrollingList : public UIComponent {
 private:
-  static void defaultActionCallback( Widget, XtPointer, XmListCallbackStruct * );
+  static void defaultActionCallback( Widget, XtPointer, XtPointer );
 
 public:
 

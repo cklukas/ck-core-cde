@@ -65,7 +65,7 @@ class Icon : public UIComponent {
 	void  arm(void);
 	void  disarm(void);
         int 	_indx;	/* user data */
-	static void	dragMotionHandler(Widget, XtPointer, XEvent*);
+	static void	dragMotionHandler(Widget, XtPointer, XEvent*, Boolean*);
 	static void	iconCallback(Widget, XtPointer, XtPointer);
     protected:
 	Attachment     *_parent;	// associated attachemnt

@@ -76,7 +76,7 @@ IgnoreListUiItem::IgnoreListUiItem(Widget w,
 
     XtAddCallback(w,
 		XmNbrowseSelectionCallback, 
-		(XtCallbackProc)handleIgnoreSelection,
+		handleIgnoreSelection,
 		  (XtPointer)this);
 
 
