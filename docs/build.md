@@ -444,6 +444,11 @@ Xt callbacks or no-argument helpers to the signal ABI.
 DtIcon's help, hyperlink and close callbacks accept Xt's opaque client and call
 data directly, so all help registrations use typed callback entries without
 casts.
+DtPad exposes its editor, help, formatting, option, session and print callbacks
+through `XtCallbackProc` directly, and routes panic signals through a typed
+signal adapter. DtAction likewise registers its custom text actions and
+action-status callback through the exact Xt and DtAction contracts instead
+of hiding mismatches behind function-pointer casts.
 
 To repeat that focused qualification from a configured C23 build tree:
 

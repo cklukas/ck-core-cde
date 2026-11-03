@@ -1,4 +1,6 @@
 2026-11-03
+- DtAction: register text actions and invocation status callbacks through their
+  exact toolkit contracts instead of function-pointer casts.
 - DtPad: expose editor, help, formatting, option, session and print callbacks
   through `XtCallbackProc` directly, and route panic signals through a typed
   signal adapter.
