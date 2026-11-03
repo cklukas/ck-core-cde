@@ -894,7 +894,7 @@ ProcessScreenSaverMessage(
 
 /*************************************<->*************************************
  *
- *  ProcessReloadActionsDatabase(void)
+ *  ProcessReloadActionsDatabase(XtPointer)
  *
  *
  *  Description:
@@ -918,9 +918,11 @@ ProcessScreenSaverMessage(
  *************************************<->***********************************/
 
 void
-ProcessReloadActionsDatabase(void)
+ProcessReloadActionsDatabase(XtPointer client_data)
 {
   static int needtoregister = 1;
+
+  (void)client_data;
 
   if (needtoregister)
   {
@@ -928,8 +930,7 @@ ProcessReloadActionsDatabase(void)
     * Have not yet registered with the actions database to call this
     * callback when the database changes. Do so.
     */
-    DtDbReloadNotify((DtDbReloadCallbackProc) ProcessReloadActionsDatabase,
-			(XtPointer) NULL);
+    DtDbReloadNotify(ProcessReloadActionsDatabase, NULL);
     needtoregister = 0;
   }
 

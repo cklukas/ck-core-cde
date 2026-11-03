@@ -504,7 +504,7 @@ GetStrcollProc(void)
   if (Clang)
     return StrCaseCmp;
 
-  return ((StrcollProc)strcoll);
+  return strcoll;
 }
 
 static Boolean

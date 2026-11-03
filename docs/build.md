@@ -281,6 +281,9 @@ complete four-argument `XtEventHandler` contract at add/remove registration.
 Its X I/O hook accepts the display directly, while its fatal Xt hook is marked
 non-returning and has an unconditional `_exit` fallback if orderly session
 shutdown is not yet permitted.
+Action-database reload notification likewise uses its public client-data
+callback contract directly, including the session manager's initial explicit
+reload path.
 The `dsdm` X error and recursive-window callbacks, interest-property reader and
 drag-and-drop proxy boundary use exact shared Xlib contracts; the `dticon` X
 error hooks likewise avoid function-pointer casts.

@@ -239,7 +239,7 @@ ListenForWorkspaceChange( void )
 {
 
   DtWsmAddCurrentWorkspaceCallback (style.shell, 
-				    (DtWsmWsChangeProc) HandleWorkspaceChange, NULL);
+				    HandleWorkspaceChange, NULL);
   
 }
 

@@ -1,4 +1,7 @@
 2026-11-03
+- DtFile, DtStyle and DtSession: store the native collation function and
+  workspace callback directly, and give action-database reload notifications
+  their complete `DtDbReloadCallbackProc` client-data contract.
 - DtWidget and DtInfo: store project-owned widget methods, synthetic-resource
   converters and selection callbacks directly through their already-exact
   Xt/Motif contracts instead of retaining redundant function-pointer casts.
