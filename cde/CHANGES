@@ -1,4 +1,6 @@
 2026-11-03
+- DtInfo: let clean out-of-tree WWL builds resolve their maintained C++
+  wrapper headers from the source include directory.
 - ttsnoop: resolve App Builder project, module, stub-template and wrapper
   inputs from the maintained source directory, so clean out-of-tree builds
   regenerate every UI module and the main program without staged source files;

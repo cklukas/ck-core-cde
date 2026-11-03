@@ -93,6 +93,11 @@ client data through `uintptr_t`. The maintained ToolTalk viewer uses one
 `mkstemp` path helper for its temporary files and FIFO names, with explicit file
 descriptor, allocation and cleanup ownership.
 
+DtInfo's WWL wrapper archive searches its generated build include directory
+before the maintained source include directory. Clean out-of-tree builds can
+therefore compile the checked-in C++ wrapper headers without copying them into
+the build tree, while preserving the normal override order for generated files.
+
 ToolTalk's mini-ISAM library is qualified with both GCC and Clang in C23 mode.
 Its public conversion routines, internal operations and record-method callbacks
 use complete prototypes; the conversion regression test also compiles const
