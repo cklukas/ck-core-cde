@@ -42,11 +42,16 @@ CLEANFILES = $(AB_MAKEFILES) *.res *_ui.c *_ui.h .dtcodegen.log *.delta \
 	dtbuilder.c dtbuilder.msg .bil-inputs.stamp
 
 BIL_INPUTS = $(notdir $(wildcard $(srcdir)/*.bil)) dtbuilder.bip
+STUB_INPUTS = $(notdir $(wildcard $(srcdir)/*_stubs.c))
 
-.bil-inputs.stamp: $(addprefix $(srcdir)/,$(BIL_INPUTS)) $(srcdir)/dtbuilder.h
+.bil-inputs.stamp: $(addprefix $(srcdir)/,$(BIL_INPUTS)) \
+		$(addprefix $(srcdir)/,$(STUB_INPUTS)) $(srcdir)/dtbuilder.h
 	@if test "$(srcdir)" != "."; then \
 	  for input in $(BIL_INPUTS); do \
 	    test -e "$$input" || $(LN_S) "$(abs_srcdir)/$$input" "$$input"; \
+	  done; \
+	  for input in $(STUB_INPUTS); do \
+	    $(CP) "$(srcdir)/$$input" "$$input"; \
 	  done; \
 	  $(CP) "$(srcdir)/dtbuilder.h" dtbuilder.h; \
 	fi
@@ -57,6 +62,7 @@ clean-local:
 	  for input in $(BIL_INPUTS); do \
 	    test ! -L "$$input" || $(RM) "$$input"; \
 	  done; \
+	  $(RM) $(STUB_INPUTS) dtbuilder.h; \
 	fi
 
 SOURCES.msg = \

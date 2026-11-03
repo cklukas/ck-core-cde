@@ -15,7 +15,7 @@
   declarations and exact non-returning Xt error-handler contract there;
   give App Builder's memory-fault hook the signal-handler ABI and its UIL
   diagnostics the toolkit's distinct typed callback contracts, preserve its
-  maintained generated-header additions in clean builds, and assign
+  maintained generated-header and stub additions in clean builds, and assign
   `SIG_IGN` without an incompatible function cast; correct dtstyle signal
   handlers.
 - C23: remove the calendar RPC headers' obsolete K&R declaration fallbacks;
