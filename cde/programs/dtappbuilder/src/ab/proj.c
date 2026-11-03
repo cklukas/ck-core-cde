@@ -86,21 +86,21 @@ static void    	select_module(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 
 static void    	toggle_select_module(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 
 static void    	show_module(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 
 static void	enable_proj_actions(
@@ -132,7 +132,7 @@ static void 	pointer_motion_proc(
 		    Widget widget,
 		    XEvent *event,
 		    String *params,
-		    int num_params
+		    Cardinal *num_params
 		);
 		    
 static void	popdown_proj_window(
@@ -167,7 +167,7 @@ static void	project_bpress(
 		    Widget widget, 
 		    XEvent *event, 
 		    String *params, 
-		    int num_params
+		    Cardinal *num_params
 		);
 
 static int	project_select_rband(
@@ -198,11 +198,11 @@ static void	project_rband(
  * Project window Actions
  */
 static XtActionsRec projwin_actions[] = {
-    {"ModButtonPress",   (XtActionProc)project_bpress },
-    {"ModSelect",        (XtActionProc)select_module },
-    {"ModToggleSelect",  (XtActionProc)toggle_select_module },
-    {"ModShowModule",    (XtActionProc)show_module },
-    {"ModPointerMotion", (XtActionProc)pointer_motion_proc}
+    {"ModButtonPress",   project_bpress },
+    {"ModSelect",        select_module },
+    {"ModToggleSelect",  toggle_select_module },
+    {"ModShowModule",    show_module },
+    {"ModPointerMotion", pointer_motion_proc}
 };
 
 /* 
@@ -539,7 +539,7 @@ select_module(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     Vwr		v = NULL;
@@ -594,7 +594,7 @@ toggle_select_module(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     Vwr		v = NULL;
@@ -650,7 +650,7 @@ show_module(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     Vwr         v = NULL;
@@ -1014,7 +1014,7 @@ pointer_motion_proc(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     Vwr			v = NULL;
@@ -1358,7 +1358,7 @@ project_bpress(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     XButtonEvent        *bevent;

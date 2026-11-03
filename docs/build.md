@@ -389,6 +389,10 @@ function-pointer casts. Palette and editor registrations likewise store their
 callbacks directly. List and toggle callbacks accept Xt's opaque call-data
 argument and recover the concrete Motif callback record inside the function;
 the callback-map helper returns a typed null without a function-pointer cast.
+Project, browser and object translation actions likewise implement
+`XtActionProc` directly. External-resize event handlers and the menu-button
+double-click timer use the complete Xt event and timeout callback contracts, so
+their registration sites require no function-pointer casts.
 The maintained generated application source also initializes project-open and
 import chooser arrays with the direct callbacks. Their shared implementations
 recover the selection-box record internally. The final application also

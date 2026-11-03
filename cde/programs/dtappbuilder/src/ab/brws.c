@@ -153,31 +153,31 @@ static void    	browser_bpress(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void    	browser_select(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void    	browser_toggle_select(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void    	browser_invoke_props(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void    	browser_popup_menu(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 
 static void	browser_rband(
@@ -194,25 +194,25 @@ static void    	browser_proj_select(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void    	browser_proj_toggle_select(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void    	browser_proj_invoke_props(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void    	browser_proj_popup_menu(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 
 /*
@@ -299,15 +299,15 @@ static void		brwsP_drawarea_button_drag(
  * Browser Actions
  */
 static XtActionsRec browser_actions[] = {
-    {"BrowserButtonPress",        (XtActionProc)browser_bpress },
-    {"BrowserSelect",        (XtActionProc)browser_select },
-    {"BrowserToggleSelect",  (XtActionProc)browser_toggle_select },
-    {"BrowserInvokeProps",   (XtActionProc)browser_invoke_props },
-    {"BrowserPopupMenu",     (XtActionProc)browser_popup_menu },
-    {"BrowserProjSelect",        (XtActionProc)browser_proj_select },
-    {"BrowserProjToggleSelect",  (XtActionProc)browser_proj_toggle_select },
-    {"BrowserProjInvokeProps",   (XtActionProc)browser_proj_invoke_props },
-    {"BrowserProjPopupMenu",     (XtActionProc)browser_proj_popup_menu }
+    {"BrowserButtonPress",        browser_bpress },
+    {"BrowserSelect",        browser_select },
+    {"BrowserToggleSelect",  browser_toggle_select },
+    {"BrowserInvokeProps",   browser_invoke_props },
+    {"BrowserPopupMenu",     browser_popup_menu },
+    {"BrowserProjSelect",        browser_proj_select },
+    {"BrowserProjToggleSelect",  browser_proj_toggle_select },
+    {"BrowserProjInvokeProps",   browser_proj_invoke_props },
+    {"BrowserProjPopupMenu",     browser_proj_popup_menu }
 };
 
 /* 
@@ -375,7 +375,7 @@ browser_proj_select(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     ABBrowser	ab = NULL;
@@ -445,7 +445,7 @@ browser_proj_toggle_select(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     ABBrowser	ab = NULL;
@@ -532,7 +532,7 @@ browser_proj_invoke_props(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     AB_OBJ	*obj;
@@ -572,7 +572,7 @@ browser_proj_popup_menu(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     AB_OBJ	*obj;
@@ -861,7 +861,7 @@ browser_bpress(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     XButtonEvent	*bevent;
@@ -904,7 +904,7 @@ browser_select(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     ABBrowser	ab = NULL;
@@ -998,7 +998,7 @@ browser_toggle_select(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     AB_OBJ	*obj;
@@ -1062,7 +1062,7 @@ browser_invoke_props(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     AB_OBJ	*obj;
@@ -1103,7 +1103,7 @@ browser_popup_menu(
     Widget widget, 
     XEvent *event, 
     String *params, 
-    int num_params
+    Cardinal *num_params
 )
 {
     AB_OBJ	*obj;

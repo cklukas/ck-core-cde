@@ -57,7 +57,7 @@ extern void		conn_drag_chord(
 			    Widget	widget,
 			    XEvent	*event,
 			    String	*params,
-			    Cardinal	num_params
+			    Cardinal	*num_params
 			);
 extern void		conn_popup_dialog(
 			    Widget	widget,

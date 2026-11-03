@@ -153,7 +153,7 @@ conn_drag_chord(
     Widget	widget,
     XEvent	*event,
     String	*params,
-    Cardinal	num_params
+    Cardinal	*num_params
 )
 {
     ABObj		project = proj_get_project();

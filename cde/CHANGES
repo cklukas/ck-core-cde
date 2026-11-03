@@ -1,4 +1,8 @@
 2026-11-03
+- App Builder: give project, browser and object translation actions their exact
+  `XtActionProc` argument contracts. Resize event handlers and double-click
+  timers now implement their Xt callback types directly, without registration
+  casts.
 - DtSvc: give action translations, timers, prompt handlers, message logging,
   command termination handlers and database converters their exact callback
   and function-table contracts. Registrations no longer cast functions with

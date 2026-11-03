@@ -103,55 +103,55 @@ static void     object_button_press(
                     Widget w,
                     XEvent *ev,
                     String *params,
-                    int nparams
+                    Cardinal *nparams
                 );
 static void     object_mouse_enter(
                     Widget w,
                     XEvent *ev,
                     String *params,
-                    int nparams
+                    Cardinal *nparams
                 );
 static void     object_mouse_leave( 
                     Widget w, 
                     XEvent *ev, 
                     String *params, 
-                    int nparams 
+                    Cardinal *nparams
                 ); 
 static void     object_mouse_motion( 
                     Widget w,  
                     XEvent *ev,  
                     String *params,  
-                    int nparams  
+                    Cardinal *nparams
                 );  
 static void    	object_select(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void    	object_toggle_select(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void    	object_invoke_props(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void    	object_popup_menu(
 		    Widget w, 
 		    XEvent *ev, 
 		    String *params, 
-		    int nparams
+		    Cardinal *nparams
         	);
 static void	objects_pixel_move(
                     Widget w,
                     XEvent *ev,
                     String *params,
-                    int nparams
+                    Cardinal *nparams
                 );
 
 /*
@@ -206,7 +206,7 @@ static void	prevent_closeCB(
 		);
 static void	wait_for_double(
     		    XtPointer    client_data,
-    		    XtIntervalId timer_id
+		    XtIntervalId *timer_id
 		);
 
 /*
@@ -238,16 +238,16 @@ static int      initiate_mselect(
  * Build-Mode Actions
  */
 XtActionsRec build_actions[] = {
-    {"ObjectMouseEnter",    (XtActionProc)object_mouse_enter },
-    {"ObjectMouseLeave",    (XtActionProc)object_mouse_leave },
-    {"ObjectMouseMotion",   (XtActionProc)object_mouse_motion },
-    {"ObjectSelect",        (XtActionProc)object_select },
-    {"ObjectButtonPress",   (XtActionProc)object_button_press },
-    {"ObjectToggleSelect",  (XtActionProc)object_toggle_select },
-    {"ObjectInvokeProps",   (XtActionProc)object_invoke_props },
-    {"ObjectPopupMenu",     (XtActionProc)object_popup_menu },
-    {"ObjectDragChord",     (XtActionProc)conn_drag_chord },
-    {"ObjectsPixelMove",    (XtActionProc)objects_pixel_move }
+    {"ObjectMouseEnter",    object_mouse_enter },
+    {"ObjectMouseLeave",    object_mouse_leave },
+    {"ObjectMouseMotion",   object_mouse_motion },
+    {"ObjectSelect",        object_select },
+    {"ObjectButtonPress",   object_button_press },
+    {"ObjectToggleSelect",  object_toggle_select },
+    {"ObjectInvokeProps",   object_invoke_props },
+    {"ObjectPopupMenu",     object_popup_menu },
+    {"ObjectDragChord",     conn_drag_chord },
+    {"ObjectsPixelMove",    objects_pixel_move }
 };
 
 /* 
@@ -465,7 +465,7 @@ abobjP_enable_build_actions(
 	 * NOTE: this does not set a permanent position attribute for a window!
 	 */
         XtAddEventHandler(widget, StructureNotifyMask, False,
-                (XtEventHandler)object_track_move, (XtPointer)rootObj);
+                object_track_move, (XtPointer)rootObj);
         return;
     }
 
@@ -529,7 +529,7 @@ abobjP_enable_build_actions(
     /* Track size changes caused internally & externally */
     if (objxm_comp_get_subobj(rootObj, AB_CFG_SIZE_OBJ) == obj)
 	XtAddEventHandler(widget, StructureNotifyMask, False,
-		(XtEventHandler)abobjP_track_external_resizes, (XtPointer)rootObj);
+		abobjP_track_external_resizes, (XtPointer)rootObj);
 
     /* Ensure all this stuff gets registered on *internal* widgets as well */
     if ((XtIsSubclass(widget, xmScrolledWindowWidgetClass) &&
@@ -565,7 +565,7 @@ abobjP_disable_build_actions(
             ui_remove_window_iconify_handler(widget, object_track_iconify, (XtPointer)obj); 
 
         XtRemoveEventHandler(widget, StructureNotifyMask, False, 
-                (XtEventHandler)object_track_move, (XtPointer)rootObj);
+                object_track_move, (XtPointer)rootObj);
     }
 
     /* Don't bother for Shells or menu-related widgets */
@@ -595,7 +595,7 @@ abobjP_disable_build_actions(
 
     if (objxm_comp_get_subobj(rootObj, AB_CFG_SIZE_OBJ) == obj)
         XtRemoveEventHandler(widget, StructureNotifyMask, False,
-                (XtEventHandler)abobjP_track_external_resizes, (XtPointer)rootObj);
+                abobjP_track_external_resizes, (XtPointer)rootObj);
 
     orig_trans = objxm_get_actions_from_widget(widget);
 
@@ -628,7 +628,7 @@ object_mouse_enter(
     Widget 	widget,
     XEvent 	*event,
     String 	*params,
-    int 	num_params
+    Cardinal 	*num_params
 )
 {
     ABObj obj = NULL;
@@ -662,7 +662,7 @@ object_mouse_leave(
     Widget 	widget, 
     XEvent 	*event, 
     String 	*params,
-    int 	num_params 
+    Cardinal 	*num_params
 )
 { 
 
@@ -682,7 +682,7 @@ object_mouse_motion(
     Widget 	widget, 
     XEvent 	*event,  
     String 	*params, 
-    int 	num_params  
+    Cardinal 	*num_params
 ) 
 {  
     ABObj	 obj = NULL, rootObj;
@@ -721,7 +721,7 @@ object_select(
     Widget 	widget, 
     XEvent 	*event, 
     String 	*params, 
-    int 	num_params
+    Cardinal 	*num_params
 )
 {
     ABObj obj = NULL;
@@ -749,7 +749,7 @@ object_toggle_select(
     Widget 	widget, 
     XEvent 	*event, 
     String 	*params, 
-    int 	num_params
+    Cardinal 	*num_params
 )
 {
     ABObj 	  obj, rootObj;
@@ -800,7 +800,7 @@ object_invoke_props(
     Widget 	widget, 
     XEvent 	*event, 
     String 	*params, 
-    int 	num_params
+    Cardinal 	*num_params
 )
 {
     ABObj         obj = NULL;
@@ -819,7 +819,7 @@ object_popup_menu(
     Widget 	widget, 
     XEvent 	*event, 
     String 	*params, 
-    int 	num_params
+    Cardinal 	*num_params
 )
 {
     ABObj	  obj = NULL;
@@ -844,7 +844,7 @@ objects_pixel_move(
     Widget 	widget,
     XEvent 	*event,
     String 	*params,
-    int 	num_params
+    Cardinal 	*num_params
 )
 {
     XKeyEvent	  *kevent;
@@ -981,7 +981,7 @@ object_button_press(
     Widget 	widget,
     XEvent 	*event,
     String 	*params,
-    int 	num_params
+    Cardinal 	*num_params
 )
 {
     XButtonEvent 	*bevent;
@@ -1068,7 +1068,7 @@ object_button_press(
 static void 
 wait_for_double(
     XtPointer	 client_data,
-    XtIntervalId timer_id
+    XtIntervalId *timer_id
 )
 {
     DoubleClickInfo *d_click = (DoubleClickInfo*)client_data;
@@ -1150,7 +1150,7 @@ interpose_button_event(
 		    	timer_id = XtAppAddTimeOut(
 				XtWidgetToApplicationContext(widget), 
 				d_click->interval,
-				(XtTimerCallbackProc)wait_for_double, 
+				wait_for_double,
 				(XtPointer)d_click);
 		    }
 
