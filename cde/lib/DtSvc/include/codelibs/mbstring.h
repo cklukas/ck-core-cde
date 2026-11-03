@@ -39,8 +39,6 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-#if defined __cplusplus || defined __STDC__
-
 #ifdef __cplusplus2_1
     extern char *_mb_schr(char *str, wchar_t ch);
     extern char *_mb_srchr(char *str, wchar_t ch);
@@ -48,13 +46,6 @@ extern "C"
     extern char *_mb_schr(const char *str, wchar_t ch);
     extern char *_mb_srchr(const char *str, wchar_t ch);
 #endif /* __cplusplus2_1 */
-
-#else /* defined __cplusplus || defined __STDC__ */
-
-    extern char *_mb_schr();
-    extern char *_mb_srchr();
-
-#endif /* defined __cplusplus || defined __STDC__ */
 
 #ifdef __cplusplus
 }

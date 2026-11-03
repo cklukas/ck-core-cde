@@ -61,23 +61,13 @@
 /* BSD has bzero(), bcmp(), and bcopy() defined. */
 #if !defined(__bsd) && !defined(CSRG_BASED)
 
-#if defined(__STDC__)
 #if !defined(__linux__) && !defined(_XFUNCS_H_) && !defined(sun)
-extern void bcopy(char *b1, char *b2, int length);
-extern int  bcmp(char *b1, char *b2, int length);
-extern void bzero(char *b, int length);
+extern void bcopy(const void *source, void *destination, size_t length);
+extern int bcmp(const void *b1, const void *b2, size_t length);
+extern void bzero(void *b, size_t length);
 #endif
 
 extern char *mktemp(char *tmplate);
-#elif ! defined(__cplusplus)
-#if !defined(__linux__) && !defined(_XFUNCS_H_)
-extern void bcopy();
-extern int  bcmp();
-extern void bzero();
-#endif
-
-extern char *mktemp();
-#endif
 
 #endif
 
@@ -89,151 +79,91 @@ extern char *mktemp();
 /*  --- These always get redefined so we can catch null ptr deref's     */
 /************************************************************************/
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern XeString Xestrcat(XeString s1, ConstXeString s2);
-#else
-extern XeString Xestrcat();
-#endif
 #ifdef strcat
 # undef strcat
 #endif
 #define strcat Xestrcat
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern XeString Xestrncat(XeString s1, ConstXeString s2, size_t n);
-#else
-extern XeString Xestrncat();
-#endif
 #ifdef strncat
 # undef strncat
 #endif
 #define strncat Xestrncat
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern int Xestrcmp(ConstXeString s1, ConstXeString s2);
-#else
-extern int Xestrcmp();
-#endif
 #ifdef strcmp
 # undef strcmp
 #endif
 #define strcmp Xestrcmp
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern int Xestrncmp(ConstXeString s1, ConstXeString s2, size_t n);
-#else
-extern int Xestrncmp();
-#endif
 #ifdef strncmp
 # undef strncmp
 #endif
 #define strncmp Xestrncmp
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern XeString Xestrcpy(XeString s1, ConstXeString s2);
-#else
-extern XeString Xestrcpy();
-#endif
 #ifdef strcpy
 # undef strcpy
 #endif
 #define strcpy Xestrcpy
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern XeString Xestrncpy(XeString s1, ConstXeString s2, size_t n);
-#else
-extern XeString Xestrncpy();
-#endif
 #ifdef strncpy
 # undef strncpy
 #endif
 #define strncpy Xestrncpy
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern int Xestrcoll(ConstXeString s1, ConstXeString s2);
-#else
-extern int Xestrcoll();
-#endif
 #ifdef strcoll
 # undef strcoll
 #endif
 #define strcoll Xestrcoll
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern size_t Xestrxfrm(XeString s1, ConstXeString s2, size_t n);
-#else
-extern size_t Xestrxfrm();
-#endif
 #ifdef strxfrm
 # undef strxfrm
 #endif
 #define strxfrm Xestrxfrm
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern XeString Xestrchr(ConstXeString s, int c);
-#else
-extern XeString Xestrchr();
-#endif
 #ifdef strchr
 # undef strchr
 #endif
 #define strchr Xestrchr
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern XeString Xestrpbrk(ConstXeString s1, ConstXeString s2);
-#else
-extern XeString Xestrpbrk();
-#endif
 #ifdef strpbrk
 # undef strpbrk
 #endif
 #define strpbrk Xestrpbrk
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern XeString Xestrrchr(ConstXeString s, int c);
-#else
-extern XeString Xestrrchr();
-#endif
 #ifdef strrchr
 # undef strrchr
 #endif
 #define strrchr Xestrrchr
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern XeString Xestrstr(ConstXeString s1, ConstXeString s2);
-#else
-extern XeString Xestrstr();
-#endif
 #ifdef strstr
 # undef strstr
 #endif
 #define strstr Xestrstr
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern XeString Xestrtok(XeString s1, ConstXeString s2);
-#else
-extern XeString Xestrtok();
-#endif
 #ifdef strtok
 # undef strtok
 #endif
 #define strtok Xestrtok
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern size_t Xestrlen(ConstXeString s);
-#else
-extern size_t Xestrlen();
-#endif
 #ifdef strlen
 # undef strlen
 #endif
 #define strlen Xestrlen
 
-#if defined(__STDC__) || defined(__cplusplus)
 extern XeString Xestrdup(ConstXeString s);
-#else
-extern XeString Xestrdup();
-#endif
 #ifdef strdup
 # undef strdup
 #endif

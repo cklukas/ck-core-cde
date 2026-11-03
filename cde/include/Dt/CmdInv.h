@@ -60,7 +60,7 @@ typedef void (*DtCmdInvExecuteProc) (
  *	Display *display,
  *	char *toolClass,
  *	char *applicationClass,
- *	DtSvcReceiveProc reloadDBHandler,
+ *	DtSvcMessageProc reloadDBHandler,
  *	XtAppContext appContext)
  *
  * Parameters:		
@@ -101,7 +101,7 @@ _DtInitializeCommandInvoker(
 	Display *display,
 	char *toolClass,
 	char *applicationClass,
-	DtSvcReceiveProc reloadDBHandler,
+	DtSvcMessageProc reloadDBHandler,
 	XtAppContext appContext);
 
 /******************************************************************************

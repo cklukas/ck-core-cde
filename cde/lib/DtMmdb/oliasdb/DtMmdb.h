@@ -117,8 +117,8 @@ typedef struct _DtMmdbGraphicInfo
 /*****************************************************/
 /* mmdb */
 /*****************************************************/
-void DtMmdbInit();
-void DtMmdbQuit();
+void DtMmdbInit(void);
+void DtMmdbQuit(void);
 
 /*****************************************************/
 /* Handle space release*/

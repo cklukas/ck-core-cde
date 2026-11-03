@@ -56,14 +56,12 @@ typedef DtMsgContext		DtSvcMsgContext;
 /************* CALLBACK PROTOTYPES ******************************
  */
 
-typedef void (*DtSvcReceiveProc) ();
-/*
-    DtSvcHandle	service,
-    DtSvcMsgContext	reply_context,
-    Pointer		client_data,
-    String *		message_fields,
-    int			num_fields);
-*/
+typedef void (*DtSvcReceiveProc)(
+    DtSvcHandle service,
+    DtSvcMsgContext reply_context,
+    Pointer client_data,
+    String *message_fields,
+    int num_fields);
 /*
  *  service		A handle for the service.
  *
@@ -81,13 +79,11 @@ typedef void (*DtSvcReceiveProc) ();
  *			array.
  */
 
-typedef void (*DtSvcMessageProc) ();
-/*
-    DtSvcHandle	service,
-    Pointer		client_data,
-    String *		message_fields,
-    int			num_fields);
-*/
+typedef void (*DtSvcMessageProc)(
+    DtSvcHandle service,
+    Pointer client_data,
+    String *message_fields,
+    int num_fields);
 /*
  *  service		A handle for the service.
  *
@@ -101,12 +97,10 @@ typedef void (*DtSvcMessageProc) ();
  *			array.
  */
 
-typedef void (*DtSvcStatusProc) ();
-/*
-    DtSvcHandle	service,
-    int			status,
-    Pointer		client_data);
-*/
+typedef void (*DtSvcStatusProc)(
+    DtSvcHandle service,
+    int status,
+    Pointer client_data);
 /*
  *  service		Handle to the service whose status is being
  *			reported.

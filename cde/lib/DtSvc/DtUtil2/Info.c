@@ -66,7 +66,7 @@ static const char       * STRING_ARG_TYPE = "string";
 /*
  * Forward declarations for static functions
  */
-static DtInfoShowStatus ConnectToMessageServer ();
+static DtInfoShowStatus ConnectToMessageServer(void);
 
 
 /*

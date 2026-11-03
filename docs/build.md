@@ -148,6 +148,16 @@ notifications, and dynamically loaded Help entry points are typed at their
 definitions and call sites. Both linked File Manager executables resolve
 `libXm.so.9` from the pinned CK Core Motif qualification prefix.
 
+The shared public-interface layer is qualified in both C and C++ consumers as
+well. ToolTalk message callbacks, DtSvc receive/message/status callbacks,
+command-invoker initialization, action allocation, multimedia database
+lifecycle functions, the symbolic-table API, and the Sb event-loop hooks now
+publish their complete parameter lists. Instant's initialization, browsing,
+ID-reference and output-buffer declarations match their definitions. Header
+probes compile these interfaces with GCC and Clang in C23 mode and with G++ and
+Clang++ in C++17 mode; the corresponding ToolTalk, DtSvc, DtMmdb, dtspcd,
+dtfile and dtdocbook consumers build and link in both C23 configurations.
+
 To repeat that focused qualification from a configured C23 build tree:
 
 ```sh
@@ -155,11 +165,18 @@ make -j4 -C lib/tt/mini_isam check
 make -j4 -C lib/tt/lib/api/dnd
 make -j4 -C lib/DtHelp/il
 make -j4 -C lib/DtSvc
+make -j4 -C lib/DtMmdb LEX=flex
+make -j4 -C programs/dtspcd
 make -j4 -C programs/dtfile
+make -j4 -C programs/dtdocbook LEX=flex
 ```
 
 This focused result does not imply that the rest of CDE is C23-clean. The
-project will select C23 by default only after the complete build, `make check`,
+listed legacy component directories currently provide little or no executable
+`make check` coverage, so successful dual-compiler builds and header probes are
+qualification evidence for this batch, not a replacement for the project-wide
+test gate. The project will select C23 by default only after the complete
+build, `make check`,
 and the uConsole desktop smoke suite pass with the same qualified source.
 
 The DtInfo C++ viewer also consumes the typed DtHelp hyperlink and resize

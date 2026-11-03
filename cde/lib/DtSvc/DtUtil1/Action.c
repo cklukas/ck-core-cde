@@ -568,7 +568,7 @@ DtActionInvoke(
       _DtInitializeCommandInvoker( XtDisplay(w),
 	NULL,	/* bms tool class -- ignored */
 	NULL,   /* application class -- ignored */
-	(DtSvcMsgContext)NULL, /* reloadDBHandler -- none here */
+	NULL, /* reloadDBHandler -- none here */
         (_DtInitAppContextp ? 
 	    *_DtInitAppContextp : XtWidgetToApplicationContext(w)));
     }

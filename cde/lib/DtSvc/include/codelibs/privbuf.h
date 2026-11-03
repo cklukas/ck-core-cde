@@ -51,16 +51,16 @@ struct privbuf_buffer
     privbuf_strvec vec;
 };
 extern void privbuf_freeprivbuf(void *buf);
-extern privbuf_buffer *privbuf_allocprivbuf();
+extern privbuf_buffer *privbuf_allocprivbuf(void);
 #undef __PRIVATE_
 #endif /* __PRIVATE_ */
 
 #ifdef __cplusplus
 extern "C" {
-    void privbuf_release(void **var);
+#endif
+extern void privbuf_release(void **var);
+#ifdef __cplusplus
 }
-#else
-extern void privbuf_release();
 #endif
 
 #endif /* __PRIVBUF_H_ */

@@ -37,61 +37,27 @@
 
 typedef unsigned long SbInputId;
 
-typedef void (*SbInputCallbackProc)
-#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
-   (void* data, int *fd, SbInputId *id);
-#else
-   ();
-#endif
+typedef void (*SbInputCallbackProc)(void *data, int *fd, SbInputId *id);
     
-extern SbInputId (*SbAddInput_hookfn)
-#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
-    (int fd, SbInputCallbackProc proc, void* data);
-#else
-    ();
-#endif
+extern SbInputId (*SbAddInput_hookfn)(
+    int fd,
+    SbInputCallbackProc proc,
+    void *data);
     
-extern SbInputId (*SbAddException_hookfn)
-#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
-    (int fd, SbInputCallbackProc proc, void* data);
-#else
-   ();
-#endif
+extern SbInputId (*SbAddException_hookfn)(
+    int fd,
+    SbInputCallbackProc proc,
+    void *data);
 
-extern void  (*SbRemoveInput_hookfn)    
-#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
-   (SbInputId id);
-#else
-   ();
-#endif
+extern void (*SbRemoveInput_hookfn)(SbInputId id);
 
-extern void  (*SbRemoveException_hookfn)
-#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
-   (SbInputId id);
-#else
-   ();
-#endif
+extern void (*SbRemoveException_hookfn)(SbInputId id);
 
-extern void  (*SbMainLoopUntil_hookfn)  
-#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
-   (Boolean *flag);
-#else
-   ();
-#endif
+extern void (*SbMainLoopUntil_hookfn)(Boolean *flag);
 
-extern void XeCall_SbMainLoopUntil
-#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
-   (Boolean *flag);
-#else
-   ();
-#endif
+extern void XeCall_SbMainLoopUntil(Boolean *flag);
 
-extern void  (*SbBreakMainLoop_hookfn)  
-#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
-   (void);
-#else
-   ();
-#endif
+extern void (*SbBreakMainLoop_hookfn)(void);
 
 
 #endif /* _SbEvent_h */

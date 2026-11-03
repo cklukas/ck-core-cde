@@ -330,5 +330,5 @@ void		PrintContext(Element_t *e);
 void		PrintElemSummary(Element_t *);
 void		PrintElemTree(Element_t *);
 void		PrintStats(Element_t *);
-void		PrintIDList();
+void		PrintIDList(void);
 

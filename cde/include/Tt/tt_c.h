@@ -293,16 +293,11 @@ typedef struct _Tt_pattern_handle *Tt_pattern;
 typedef struct _tt_AuthFileEntry  *Tt_AuthFileEntry;
 
 
-#if defined(__cplusplus) || defined(__STDC__)
 typedef Tt_filter_action (*Tt_filter_function)(_TT_CONST char *nodeid,
 					       void *context,
 					       void *accumulator);
 typedef Tt_callback_action (*Tt_message_callback) (Tt_message m,
 						   Tt_pattern p);
-#else
-typedef Tt_filter_action (*Tt_filter_function)();
-typedef Tt_callback_action (*Tt_message_callback)();
-#endif
 
 #endif /* _XENUMS_ */
 #endif /* _XSCHEME_  _NAMES_  _EXTERN_ */

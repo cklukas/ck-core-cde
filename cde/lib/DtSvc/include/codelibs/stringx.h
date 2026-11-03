@@ -33,6 +33,7 @@
 #define __STRINGX_H_
 
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #include <codelibs/boolean.h>
 
@@ -46,7 +47,6 @@ extern void *_strcmbn_privbuf;
 extern "C"
 {
 #endif
-#if defined(__cplusplus) || defined(__STDC__)
 #if !defined(sun)
     char *strnew(size_t len);
     void strfree(const char *s);
@@ -66,26 +66,10 @@ extern "C"
 
 #ifdef __cplusplus
     char *strtokx(char *&ptr, const char *sep);
-#else /* __STDC__ */
+#else
     char *strtokx(char **ptr, const char *sep);
     const char *strcmbn(const char **vec, const char *sep);
-#endif /* __STDC__ */
-
-#else /* C */
-
-extern void   strfree();
-extern char  *strstrx(), strrstrx();
-extern int    strwcmp(), strwcmpi();
-extern char  *strwpat();
-extern char  *strend();
-extern char  *strtokx();
-
-extern unsigned   strhash();
-extern unsigned   strhashi();
-
-extern char      *strupper(), *strlower();
-
-#endif /* C */
+#endif
 #if defined(__cplusplus)
 }
 
@@ -114,7 +98,7 @@ inline char *strdup(const char *s)
 
 /* private buffer funcs - we use inlines to handle default args properly */
 
-#else /* C || __STDC__ */
+#else /* C */
 
 #define strnew(len) ((char*)malloc((len) + 1))
 
@@ -122,6 +106,6 @@ inline char *strdup(const char *s)
 
 /* macros for funcs that work on top of privbuf versions */
 
-#endif /* C || __STDC__ */
+#endif /* C */
 
 #endif /* __STRINGX_H_ */

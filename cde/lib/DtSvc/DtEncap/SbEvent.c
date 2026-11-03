@@ -46,8 +46,8 @@ typedef char Boolean;
     * <bms/SbEvent.h>.  The required typedefs were removed from
     * this header and placed within this file.
     */
-typedef void (*SbInputCallbackProc) ();
 typedef unsigned long SbInputId;
+typedef void (*SbInputCallbackProc)(void *data, int *fd, SbInputId *id);
 #else
 #include <bms/SbEvent.h> 
 #endif

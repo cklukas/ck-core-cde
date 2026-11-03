@@ -70,7 +70,7 @@ static char	*def_idrefs[] = { "LINKEND", "LINKENDS", "IDREF", 0 };
 /* forward references */
 void	ChaseIDRefs(Element_t *, char *, int, FILE *);
 void	Find(Element_t *, int, char **, FILE *);
-void	GetIDREFnames();
+void	GetIDREFnames(void);
 
 static	void	OutputCDATA(Content_t *cp, void *client_data);
 typedef struct _cdata_info {

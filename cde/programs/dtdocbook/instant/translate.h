@@ -148,8 +148,8 @@ ContParse_t	ExpandSpecialVar(char *, Element_t *, FILE *, int);
 void	CALStable(Element_t *, FILE *, char **, int);
 
 /* prototypes for things defines in util.c */
-void	ClearOutputBuffer();
-char	*GetOutputBuffer();
-int 	OutputBufferActive();
+void	ClearOutputBuffer(void);
+char	*GetOutputBuffer(void);
+int 	OutputBufferActive(void);
 /* ______________________________________________________________________ */
 
