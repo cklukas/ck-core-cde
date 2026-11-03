@@ -451,6 +451,8 @@ Xt's complete event-handler contract. Appointment and to-do list-view buttons
 also register through exact Xt callbacks. Calendar canvas translations
 and input callbacks use separate exact adapters around shared event processing,
 and canvas help uses its native Xt callback contract throughout day views.
+DtLogin's login-field insert and backspace translation actions likewise use
+their complete four-argument Xt action contracts directly.
 DtWidget's editor translation table stores its complete four-argument Xt action
 implementations directly, allowing the compiler to check every public and
 internal editor action.

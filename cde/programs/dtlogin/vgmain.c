@@ -268,8 +268,8 @@ Widget session_menu = NULL;     /* cascading menu on "Session" option     */
  ***************************************************************************/
 
 static XtActionsRec textActions[] = {
-        {"my-insert", (XtActionProc)MyInsert},
-        {"my-bksp", (XtActionProc)MyBackspace},
+        {"my-insert", MyInsert},
+        {"my-bksp", MyBackspace},
     };
 
 static char textEventBindings[] = {
