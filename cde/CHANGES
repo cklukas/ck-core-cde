@@ -78,6 +78,18 @@
   from `/dev/urandom` only, and no session starts if it cannot be read.
 - tt: add sanitizer tests for ttsession's decoding and request handling that
   run the production code (`make -C lib/tt/slib check`).
+- tt: apply ttsession's authentication level to every request. At the unix and
+  des levels a request with no credentials was served; it is now refused, as is
+  a request with credentials too weak for the level. A failed secure-RPC
+  credential lookup refuses the request, ttsession refuses `-a des` in a build
+  without secure RPC, the cookie is compared without stopping at the first
+  difference, and the unix and none levels log a warning when ttsession starts.
+- tt: limit the environment variables a message can set for a started ptype. The
+  variables ttsession sets itself win over those of a message, names that change
+  which code a program runs, whom it believes it is or how it finds its session
+  are not passed on, and `TOOLTALK_START_ENV` lets the owner of the session
+  approve names or restrict the set to a list. A variable that cannot be set
+  stops the start.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

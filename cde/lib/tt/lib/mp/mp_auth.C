@@ -337,6 +337,28 @@ retrieve_auth_cookie()
     return TT_OK;
 }
 
+//
+// Tells whether a cookie sent by a client is the one of the session.  The
+// comparison always looks at every byte, so the time it takes does not tell
+// how much of a guess was right.  A session without a cookie matches nothing.
+//
+int _Tt_auth::
+cookie_matches(const _Tt_string &candidate) const
+{
+    int		length = _auth_cookie.len();
+
+    if (length == 0 || candidate.len() != length) {
+	return 0;
+    }
+    unsigned char	difference = 0;
+
+    for (int i = 0; i < length; i++) {
+	difference |= (unsigned char) _auth_cookie[i] ^
+		      (unsigned char) candidate[i];
+    }
+    return difference == 0;
+}
+
 Tt_status _Tt_auth::
 set_auth_level(_Tt_auth_level auth_level)
 {

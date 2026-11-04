@@ -48,6 +48,9 @@
 #include "mp_s_global.h"
 #include "mp_s_mp.h"
 #include "mp_s_session.h"
+#include "mp_s_message.h"
+#include "mp/mp_msg_context.h"
+#include "mp_start_env.h"
 #include "mp_otype.h"
 #include "mp_rpc_implement.h"
 #include "mp_typedb.h"
@@ -692,6 +695,18 @@ init_server(bool with_cookie = true)
   CHECK(_tt_s_mp->initial_s_session->auth_level() == _TT_AUTH_ICEAUTH);
 }
 
+/* The session of the given authentication level, as ttsession -a sets it up. */
+static void
+init_server_level(_Tt_auth_level level)
+{
+  init_server();
+  _tt_s_mp->initial_s_session->set_auth_level(level);
+  _tt_s_mp->unix_cred_chk_flag = (level == _TT_AUTH_UNIX);
+}
+
+/* The user id of the unix credentials of the next requests; -1 is the owner's. */
+static uid_t request_uid = (uid_t)-1;
+
 /* Runs one request through the production dispatcher. */
 static void
 serve(int proc, int flavor, Body &body, int version = TT_RPC_VERSION)
@@ -719,7 +734,7 @@ serve(int proc, int flavor, Body &body, int version = TT_RPC_VERSION)
   rq.rq_cred.oa_flavor = (enum_t)flavor;
   authunix_parms cred;
   memset(&cred, 0, sizeof cred);
-  cred.aup_uid = geteuid();
+  cred.aup_uid = request_uid == (uid_t)-1 ? geteuid() : request_uid;
   rq.rq_clntcred = (caddr_t)&cred;
   rq.rq_xprt = &xprt;
   _tt_service_rpc(&rq, &xprt);
@@ -797,6 +812,251 @@ test_rpc_no_session_cookie(void)
   null_cookie.str(0);
   serve(NULLPROC, AUTH_NULL, null_cookie);
   CHECK(replies.size() == 1 && replies[0].denied);
+}
+
+/* The cookie is the same to the last byte, and nothing else. */
+static void
+test_cookie_matches(void)
+{
+  init_server();
+  _Tt_session_ptr s = _tt_s_mp->initial_s_session;
+  std::string good = session_cookie;
+  CHECK(good.size() > 1);
+  CHECK(s->auth_cookie_matches(_Tt_string(good.c_str())));
+  for(size_t i = 0; i < good.size(); i++) {
+    std::string bad = good;
+    bad[i] ^= 1;
+    CHECK(!s->auth_cookie_matches(_Tt_string(bad.c_str())));
+  }
+  CHECK(!s->auth_cookie_matches(_Tt_string(good.substr(1).c_str())));
+  CHECK(!s->auth_cookie_matches(_Tt_string(good.substr(0, good.size() - 1).c_str())));
+  CHECK(!s->auth_cookie_matches(_Tt_string((good + "x").c_str())));
+  CHECK(!s->auth_cookie_matches(_Tt_string("")));
+  CHECK(!s->auth_cookie_matches(_Tt_string((char *)0)));
+
+  /* a session without a cookie matches nothing, not even an empty cookie */
+  init_server(false);
+  s = _tt_s_mp->initial_s_session;
+  CHECK(!s->auth_cookie_matches(_Tt_string("")));
+  CHECK(!s->auth_cookie_matches(_Tt_string((char *)0)));
+  CHECK(!s->auth_cookie_matches(_Tt_string(good.c_str())));
+}
+
+/*
+ * A session of the unix level wants unix credentials with the user id of
+ * the session; the null credentials of a client that sends none are not
+ * enough, with a cookie or without.
+ */
+static void
+test_rpc_unix_level(void)
+{
+  init_server_level(_TT_AUTH_UNIX);
+  Body nothing, with_cookie;
+  with_cookie.cookie();
+
+  serve(NULLPROC, AUTH_UNIX, nothing);
+  CHECK(replies.size() == 1 && !replies[0].denied && replies[0].stat == SUCCESS);
+
+  request_uid = geteuid() + 1;
+  serve(NULLPROC, AUTH_UNIX, nothing);
+  CHECK(replies.size() == 1 && replies[0].denied && replies[0].stat == AUTH_BADCRED);
+  request_uid = (uid_t)-1;
+
+  serve(NULLPROC, AUTH_NULL, nothing);
+  CHECK(replies.size() == 1 && replies[0].denied && replies[0].stat == AUTH_TOOWEAK);
+  serve(NULLPROC, AUTH_NULL, with_cookie);
+  CHECK(replies.size() == 1 && replies[0].denied && replies[0].stat == AUTH_TOOWEAK);
+  serve(NULLPROC, 99, nothing);
+  CHECK(replies.size() == 1 && replies[0].denied && replies[0].stat == AUTH_TOOWEAK);
+
+  /* the procedures behind the check are not reached without credentials */
+  Body procid;
+  procid.str("1");
+  serve(TT_RPC_CLOSE_PROCID, AUTH_NULL, procid);
+  CHECK(replies.size() == 1 && replies[0].denied && replies[0].stat == AUTH_TOOWEAK);
+}
+
+/* A session of the des level takes no unix credentials and no null ones. */
+static void
+test_rpc_des_level(void)
+{
+  init_server_level(_TT_AUTH_DES);
+  Body nothing, with_cookie;
+  with_cookie.cookie();
+  serve(NULLPROC, AUTH_NULL, nothing);
+  CHECK(replies.size() == 1 && replies[0].denied && replies[0].stat == AUTH_TOOWEAK);
+  serve(NULLPROC, AUTH_NULL, with_cookie);
+  CHECK(replies.size() == 1 && replies[0].denied && replies[0].stat == AUTH_TOOWEAK);
+  serve(NULLPROC, AUTH_UNIX, nothing);
+  CHECK(replies.size() == 1 && replies[0].denied && replies[0].stat == AUTH_TOOWEAK);
+}
+
+/* A session that asks for no authentication takes every request. */
+static void
+test_rpc_none_level(void)
+{
+  init_server_level(_TT_AUTH_NONE);
+  Body nothing;
+  serve(NULLPROC, AUTH_NULL, nothing);
+  CHECK(replies.size() == 1 && !replies[0].denied && replies[0].stat == SUCCESS);
+  serve(NULLPROC, AUTH_UNIX, nothing);
+  CHECK(replies.size() == 1 && !replies[0].denied && replies[0].stat == SUCCESS);
+}
+
+/* ---- the environment of a started ptype ------------------------------- */
+
+static void
+test_start_env_default(void)
+{
+  _Tt_start_env policy;
+  CHECK(policy.configure(0) == 0);
+  CHECK(!policy.strict());
+  const char *ordinary[] = { "DISPLAY", "LANG", "LC_ALL", "TERM", "TZ",
+			     "MYAPP_PROFILE", "EDITOR", "PATHS", "HOMEDIR",
+			     "LDAP_URI", "TTY", "PYTHO", "STRICT", 0 };
+  for(const char **n = ordinary; *n; n++)
+    CHECK(policy.check(*n) == _TT_START_ENV_OK);
+  const char *unsafe[] = { "PATH", "IFS", "ENV", "BASH_ENV", "SHELL",
+			   "SHELLOPTS", "PS4", "LD_PRELOAD", "LD_LIBRARY_PATH",
+			   "DYLD_INSERT_LIBRARIES", "GCONV_PATH", "NLSPATH",
+			   "GLIBC_TUNABLES", "MALLOC_PERTURB_", "HOME", "USER",
+			   "XAUTHORITY", "ICEAUTHORITY", "XENVIRONMENT",
+			   "XFILESEARCHPATH", "DTDATABASESEARCHPATH",
+			   "BASH_FUNC_f%%", "PYTHONPATH", "PERL5OPT",
+			   "RUBYOPT", "NODE_OPTIONS", "JAVA_TOOL_OPTIONS",
+			   "CLASSPATH", "TT_START_TOKEN", "TT_FILE_HINT", "TT_SESSION",
+			   "TT_TOKEN", "TT_FILE", "_TT_SID",
+			   "_SUN_TT_TOKEN", "TTAUTHORITY", "TTPATH",
+			   "TTSESSION", "TOOLTALK_START_ENV", 0 };
+  for(const char **n = unsafe; *n; n++) {
+    if(policy.check(*n) != _TT_START_ENV_UNSAFE)
+      fprintf(stderr, "%s is not unsafe\n", *n);
+    CHECK(policy.check(*n) == _TT_START_ENV_UNSAFE);
+  }
+}
+
+static void
+test_start_env_approved(void)
+{
+  _Tt_start_env policy;
+  CHECK(policy.configure("LD_LIBRARY_PATH, MYAPP_* ,TT_FILE_HINT") == 0);
+  CHECK(!policy.strict());
+  CHECK(policy.check("LD_LIBRARY_PATH") == _TT_START_ENV_OK);
+  CHECK(policy.check("LD_PRELOAD") == _TT_START_ENV_UNSAFE);
+  CHECK(policy.check("MYAPP_PROFILE") == _TT_START_ENV_OK);
+  CHECK(policy.check("MYAPP_") == _TT_START_ENV_OK);
+  CHECK(policy.check("MYAPP") == _TT_START_ENV_OK);	/* not unsafe anyway */
+  CHECK(policy.check("TT_FILE_HINT") == _TT_START_ENV_OK);
+  CHECK(policy.check("TT_START_TOKEN") == _TT_START_ENV_UNSAFE);
+  CHECK(policy.check("PATH") == _TT_START_ENV_UNSAFE);
+  /* an empty setting and a blank one change nothing */
+  CHECK(policy.configure("") == 0);
+  CHECK(policy.check("LD_LIBRARY_PATH") == _TT_START_ENV_UNSAFE);
+  CHECK(policy.configure(" , ") == 0);
+  CHECK(!policy.strict());
+}
+
+static void
+test_start_env_strict(void)
+{
+  _Tt_start_env policy;
+  CHECK(policy.configure("strict") == 0);
+  CHECK(policy.strict());
+  const char *passed[] = { "DISPLAY", "LANG", "LANGUAGE", "LC_ALL",
+			   "LC_MESSAGES", "TERM", "TZ", 0 };
+  for(const char **n = passed; *n; n++)
+    CHECK(policy.check(*n) == _TT_START_ENV_OK);
+  const char *held[] = { "MYAPP_PROFILE", "EDITOR", "LD_PRELOAD", "PATH",
+			 "LANGX", "LC", "TERMINFO", 0 };
+  for(const char **n = held; *n; n++)
+    CHECK(policy.check(*n) == _TT_START_ENV_NOT_APPROVED);
+
+  /* the other entries extend the list, the order does not matter */
+  CHECK(policy.configure("MYAPP_*,strict,EDITOR") == 0);
+  CHECK(policy.strict());
+  CHECK(policy.check("MYAPP_PROFILE") == _TT_START_ENV_OK);
+  CHECK(policy.check("EDITOR") == _TT_START_ENV_OK);
+  CHECK(policy.check("EDITORX") == _TT_START_ENV_NOT_APPROVED);
+  CHECK(policy.check("DISPLAY") == _TT_START_ENV_OK);
+  CHECK(policy.check("LD_PRELOAD") == _TT_START_ENV_NOT_APPROVED);
+}
+
+/* A setting that is not understood is read as strict and approves nothing. */
+static void
+test_start_env_bad_setting(void)
+{
+  const char *settings[] = { "a-b", "*", "strict,*,a=b", "MYAPP_*,$HOME",
+			     "LD_PRELOAD=/x", 0 };
+  for(const char **setting = settings; *setting; setting++) {
+    _Tt_start_env policy;
+    CHECK(policy.configure(*setting) > 0);
+    CHECK(policy.strict());
+    CHECK(policy.check("ANYTHING") == _TT_START_ENV_NOT_APPROVED);
+    CHECK(policy.check("LD_PRELOAD") == _TT_START_ENV_NOT_APPROVED);
+    CHECK(policy.check("DISPLAY") == _TT_START_ENV_OK);
+  }
+  _Tt_start_env policy;
+  CHECK(policy.configure("MYAPP_*,a-b") == 1);
+  CHECK(policy.check("MYAPP_X") == _TT_START_ENV_OK);
+}
+
+/* What a message sets in the environment of the process ttsession starts. */
+static void
+add_context(_Tt_s_message &msg, const char *slot, const char *value)
+{
+  _Tt_msg_context_ptr c = new _Tt_msg_context;
+  CHECK(c->setName(slot) == TT_OK);
+  CHECK(c->setValue(_Tt_string(value)) == TT_OK);
+  CHECK(msg.add_context(c) == TT_OK);
+}
+
+static void
+test_set_start_env_default(void)
+{
+  init_server();
+  setenv("PATH", "/usr/bin:/bin", 1);
+  setenv("LD_LIBRARY_PATH", "/lib/owner", 1);
+  _Tt_s_message msg;
+  add_context(msg, "$MYAPP_PROFILE", "work");
+  add_context(msg, "$LANG", "C");
+  add_context(msg, "$PATH", "/tmp/attacker");
+  add_context(msg, "$LD_LIBRARY_PATH", "/tmp/attacker");
+  add_context(msg, "$LD_PRELOAD", "/tmp/attacker.so");
+  add_context(msg, "$IFS", "x");
+  add_context(msg, "$TT_START_TOKEN", "forged");
+  add_context(msg, "PLAIN", "not a variable");
+  CHECK(msg.set_start_env() == TT_OK);
+  CHECK(getenv("MYAPP_PROFILE") && !strcmp(getenv("MYAPP_PROFILE"), "work"));
+  CHECK(getenv("LANG") && !strcmp(getenv("LANG"), "C"));
+  CHECK(getenv("PATH") && !strcmp(getenv("PATH"), "/usr/bin:/bin"));
+  CHECK(getenv("LD_LIBRARY_PATH") && !strcmp(getenv("LD_LIBRARY_PATH"), "/lib/owner"));
+  CHECK(getenv("LD_PRELOAD") == 0);
+  CHECK(getenv("IFS") == 0);
+  CHECK(getenv("TT_START_TOKEN") == 0);
+  CHECK(getenv("PLAIN") == 0);
+}
+
+static void
+test_set_start_env_owner_setting(void)
+{
+  init_server();
+  setenv("LD_LIBRARY_PATH", "/lib/owner", 1);
+  CHECK(_tt_s_mp->start_env.configure("LD_LIBRARY_PATH") == 0);
+  _Tt_s_message msg;
+  add_context(msg, "$LD_LIBRARY_PATH", "/opt/app/lib");
+  add_context(msg, "$LD_PRELOAD", "/tmp/attacker.so");
+  CHECK(msg.set_start_env() == TT_OK);
+  CHECK(getenv("LD_LIBRARY_PATH") && !strcmp(getenv("LD_LIBRARY_PATH"), "/opt/app/lib"));
+  CHECK(getenv("LD_PRELOAD") == 0);
+
+  /* strict: only the listed and the built-in names */
+  CHECK(_tt_s_mp->start_env.configure("strict") == 0);
+  _Tt_s_message strict_msg;
+  add_context(strict_msg, "$TZ", "UTC");
+  add_context(strict_msg, "$MYAPP_PROFILE", "work");
+  CHECK(strict_msg.set_start_env() == TT_OK);
+  CHECK(getenv("TZ") && !strcmp(getenv("TZ"), "UTC"));
+  CHECK(getenv("MYAPP_PROFILE") == 0);
 }
 
 struct Proc {
@@ -1016,6 +1276,16 @@ main(int argc, char **argv)
   add("rpc_cookie_checks", test_rpc_cookie_checks);
   add("rpc_cookie_hostile_lengths", test_rpc_cookie_hostile_lengths);
   add("rpc_no_session_cookie", test_rpc_no_session_cookie);
+  add("cookie_matches", test_cookie_matches);
+  add("rpc_unix_level", test_rpc_unix_level);
+  add("rpc_des_level", test_rpc_des_level);
+  add("rpc_none_level", test_rpc_none_level);
+  add("start_env_default", test_start_env_default);
+  add("start_env_approved", test_start_env_approved);
+  add("start_env_strict", test_start_env_strict);
+  add("start_env_bad_setting", test_start_env_bad_setting);
+  add("set_start_env_default", test_set_start_env_default);
+  add("set_start_env_owner_setting", test_set_start_env_owner_setting);
   for(const Proc &p : object_procs)
     add_arg("rpc_null_object", p.name, test_rpc_null_object);
   for(const Proc &p : object_procs)

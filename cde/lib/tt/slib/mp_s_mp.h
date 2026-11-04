@@ -57,6 +57,7 @@
 #include "mp_rpc_implement.h"
 #include "mp_signature_utils.h"
 #include "util/tt_int_rec.h"
+#include "mp_start_env.h"
 
 const int SIGTYPES = SIGUSR2;
 
@@ -93,6 +94,7 @@ class _Tt_s_mp : public _Tt_mp {
 	_Tt_pid_t_rec_list_ptr		failed_proc_starts;
 	int				exit_main_loop;
 	int				unix_cred_chk_flag;
+	_Tt_start_env			start_env;
 	int				xfd;
 #ifdef OPT_UNIX_SOCKET_RPC
 	int				unix_fd;

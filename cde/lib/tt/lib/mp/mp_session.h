@@ -96,6 +96,9 @@ class _Tt_session : public _Tt_object {
 	_Tt_auth_level		auth_level() {
 		return _auth.auth_level();
 	}
+	int			auth_cookie_matches(const _Tt_string &candidate) {
+		return _auth.cookie_matches(candidate);
+	}
 	Tt_status		call(int rpc_proc,
 				     xdrproc_t xdr_arg_fn, char *arg,
 				     xdrproc_t xdr_res_fn, char *res,

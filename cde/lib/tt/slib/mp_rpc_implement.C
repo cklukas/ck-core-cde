@@ -242,6 +242,9 @@ _tt_service_rpc(svc_req *rqstp, SVCXPRT *transp)
 	switch (rqstp->rq_cred.oa_flavor) {
 	    case AUTH_UNIX:
 	    case AUTH_SHORT:
+		// Unix credentials are asserted by the client.  They are what
+		// a session of the unix level asks for, and too weak for the
+		// cookie and des levels.
 		if (session_auth == _TT_AUTH_DES ||
 		    session_auth == _TT_AUTH_ICEAUTH) {
 			svcerr_auth(transp, AUTH_TOOWEAK);
@@ -280,6 +283,7 @@ _tt_service_rpc(svc_req *rqstp, SVCXPRT *transp)
 				       &req_auth_gidlen,
 				       req_auth_gids)) {
 			svcerr_auth(transp, AUTH_BADCRED);
+			return;
 		}
 #else 		
 		Hack_getucred hack_getucred_p;
@@ -291,36 +295,50 @@ _tt_service_rpc(svc_req *rqstp, SVCXPRT *transp)
 					 &req_auth_gidlen,
 					 req_auth_gids)) {
 			svcerr_auth(transp, AUTH_BADCRED);
+			return;
 		}
 #endif			/* OPT_BUG_SUNOS_5 */
 			
 		// Now that we have the credentials, make sure they
 		// are the right ones
 					
-		if (req_auth_uid == geteuid() &&
-		    req_auth_gid == getegid()) {
-						
-			break;	// else fall through to svcerr_weakauth
+		if (req_auth_uid != geteuid() ||
+		    req_auth_gid != getegid()) {
+			svcerr_auth(transp, AUTH_BADCRED);
+			return;
 		}
+		break;
 #endif				/* OPT_SECURE_RPC */
 	    default:
-		if (session_auth == _TT_AUTH_ICEAUTH) {
-		    _Tt_string	clnt_cookie;
-	            if (!_tt_svc_getargs(transp,
+		// No credentials, or credentials of a kind ttsession does
+		// not know.  Only the cookie level and the level that
+		// asks for nothing accept them; at the unix and des levels
+		// the client has to send what the level is about.
+		switch (session_auth) {
+		    case _TT_AUTH_ICEAUTH:
+			{
+			_Tt_string	clnt_cookie;
+			if (!_tt_svc_getargs(transp,
 					     (xdrproc_t) tt_xdr_string,
 					     (char *) &clnt_cookie)) {
-		        svcerr_auth(transp, AUTH_BADCRED);
-		        return;
-		    }
+				svcerr_auth(transp, AUTH_BADCRED);
+				return;
+			}
 
-		    const _Tt_string	&svr_cookie =
-	            	_tt_s_mp->initial_s_session->auth_cookie();
-		    // a session that has no cookie cannot authenticate anyone
-	            if (svr_cookie.len() == 0 || clnt_cookie != svr_cookie) {
-		        svcerr_auth(transp, AUTH_BADCRED);
-		        return;
-		    }
-	        }
+			// a session that has no cookie cannot authenticate anyone
+			if (! _tt_s_mp->initial_s_session->
+				auth_cookie_matches(clnt_cookie)) {
+				svcerr_auth(transp, AUTH_BADCRED);
+				return;
+			}
+			}
+			break;
+		    case _TT_AUTH_NONE:
+			break;
+		    default:
+			svcerr_auth(transp, AUTH_TOOWEAK);
+			return;
+		}
 	}
 	
 	//

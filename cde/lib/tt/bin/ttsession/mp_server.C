@@ -341,11 +341,52 @@ int main(int argc, char **argv)
 	} else if (!strcmp(option_auth_level, "cookie")) {
 		_tt_mp->initial_session->set_auth_level(_TT_AUTH_ICEAUTH);
 	} else if (!strcmp(option_auth_level,"des")) {
+#if defined(OPT_SECURE_RPC)
 		_tt_mp->initial_session->set_auth_level(_TT_AUTH_DES);
+#else
+		// No client could join: this build has no secure RPC.
+		_tt_syslog( errstr, LOG_ERR,
+			    "Authentication level des needs secure RPC, "
+			    "which this ttsession was built without." );
+		exit(1);
+#endif
 	} else if (!strcmp(option_auth_level,"none")) {
 		_tt_mp->initial_session->set_auth_level(_TT_AUTH_NONE);
 	} else {
 		print_usage_and_exit();
+	}
+
+	// The cookie level is the only one that keeps other users of the
+	// host, and of the network, from using the session.  -s silences
+	// _tt_syslog(), but not this.
+	switch (_tt_mp->initial_session->auth_level()) {
+	      case _TT_AUTH_UNIX:
+		syslog( LOG_WARNING,
+			"Authentication level unix: the credentials a client "
+			"sends are not checked against anything, so any user "
+			"who can reach this session can use it" );
+		break;
+	      case _TT_AUTH_NONE:
+		syslog( LOG_WARNING,
+			"Authentication level none: anyone who can reach this "
+			"session can use it" );
+		break;
+	      default:
+		break;
+	}
+
+	// The environment variables a message may set for the ptypes it
+	// starts.
+	{
+		int	bad = _tt_s_mp->start_env.configure(
+						getenv("TOOLTALK_START_ENV"));
+		if (bad) {
+			syslog( LOG_WARNING,
+				"TOOLTALK_START_ENV has %d entries that are "
+				"not names, prefixes ending in *, or strict: "
+				"passing only the variables it lists",
+				bad );
+		}
 	}
 
 	// check for conflicting options being set.

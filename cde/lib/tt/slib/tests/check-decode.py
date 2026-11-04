@@ -83,6 +83,8 @@ sources = [
     slib_src / "mp_rpc_implement.C",
     slib_src / "mp_s_xdr_functions.C",
     slib_src / "mp_otype.C",
+    slib_src / "mp_s_message.C",
+    slib_src / "mp_start_env.C",
 ]
 if override:
     for s in sources:

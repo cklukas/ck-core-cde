@@ -318,6 +318,14 @@ launch(_Tt_s_message_ptr &m, const _Tt_msg_trace &trace)
 		// mp_session.h 
 		//
 
+		// The variables the message asks for come first, so that
+		// the ones set below, which tie the started process to this
+		// session, are not the sender's to choose.
+
+		if (m->set_start_env() != TT_OK) {
+			exit(1);
+		}
+
 
 
 		// The TT_CDE_FILE_HINT or TT_FILE_HINT environment variable
@@ -387,7 +395,6 @@ launch(_Tt_s_message_ptr &m, const _Tt_msg_trace &trace)
 			exit(1);
 		}
 
-		m->set_start_env();
 		maxfds = _tt_global->maxfds();
 		int i;
 		for (i = 3; i < maxfds; i++) {

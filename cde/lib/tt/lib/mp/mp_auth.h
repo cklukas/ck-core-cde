@@ -83,6 +83,7 @@ class _Tt_auth : public _Tt_object {
 	const _Tt_string	&auth_cookie() const {
 	    return _auth_cookie;
 	}
+	int			cookie_matches(const _Tt_string &candidate) const;
 	Tt_status		generate_auth_cookie();
 	Tt_status		retrieve_auth_cookie();
 	Tt_status		set_auth_level(_Tt_auth_level auth_level);

@@ -80,7 +80,7 @@ have not had such a review. Fuzz targets exist for none of the components yet.
 | `programs/dthelp` | help compiler; SGML parser | none recorded | 644 | 64 | 4 | none |
 | `lib/DtSvc` | SPC protocol shared by dtspcd and its clients; data-type database | SPC wire layer and data-type lookup (Dts.c) (2026-11-04); the rest not reviewed | 412 | 24 | 22 | none |
 | `programs/dtwm` | window manager; property and request readers | property and request readers (2026-11-02) | 410 | 22 | 42 | none |
-| `lib/tt` | ttsession and rpc.ttdbserverd (sockets, RPC) | ttsession request decoding (2026-11-04) | 394 | 242 | 1 | none |
+| `lib/tt` | ttsession and rpc.ttdbserverd (sockets, RPC) | ttsession request decoding, authentication levels, start environment (2026-11-04) | 394 | 242 | 1 | none |
 | `programs/dtsr` | local user program | none recorded | 370 | 3 | 0 | none |
 | `programs/ttsnoop` | local user program | none recorded | 359 | 9 | 0 | none |
 | `programs/dtprintinfo` | local user program | none recorded | 345 | 20 | 0 | none |

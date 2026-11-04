@@ -54,6 +54,7 @@
 #include "util/tt_enumname.h"
 #include "mp/mp_trace.h"
 #include "util/tt_global_env.h"
+#include <syslog.h>
 #include <unistd.h>
 #include "util/tt_port.h"
 
@@ -956,8 +957,30 @@ set_start_env() const
 
 	while (cntxtC.next()) {
 		if (cntxtC->isEnvEntry()) {
-			if (_tt_putenv( cntxtC->enVarName(),
-					cntxtC->stringRep() ) == 0)
+			_Tt_string name = cntxtC->enVarName();
+			// The sender of the message is not the one who
+			// installed the ptype, so it does not get to set
+			// every variable (see mp_start_env.h).
+			switch (_tt_s_mp->start_env.check( name )) {
+			    case _TT_START_ENV_OK:
+				break;
+			    case _TT_START_ENV_UNSAFE:
+				// -s silences _tt_syslog(), not this
+				syslog( LOG_WARNING,
+					"not setting $%s for the start of "
+					"a ptype: a message may not set "
+					"this variable",
+					(char *)name );
+				continue;
+			    default:
+				syslog( LOG_WARNING,
+					"not setting $%s for the start of "
+					"a ptype: it is not in "
+					"TOOLTALK_START_ENV",
+					(char *)name );
+				continue;
+			}
+			if (_tt_putenv( name, cntxtC->stringRep() ) == 0)
 			{
 				return TT_ERR_NOMEM;
 			}

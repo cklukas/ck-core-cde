@@ -15,8 +15,8 @@ mp_s_pattern.C          mp_s_pattern_utils.C       mp_s_procid.C        \
 mp_s_procid_utils.C     mp_s_msg_context.C         mp_s_pat_context.C   \
 mp_s_session.C          mp_s_session_prop.C        mp_s_session_utils.C \
 mp_s_xdr_functions.C    mp_self_procid.C                                \
-mp_signature.C          mp_signature_utils.C       mp_typedb.C          \
-mp_typedb_utils.C       tt_isstrerror.C
+mp_signature.C          mp_signature_utils.C       mp_start_env.C       \
+mp_typedb.C             mp_typedb_utils.C          tt_isstrerror.C
 
 # The decoding tests compile the production sources they exercise (string,
 # session, authentication and request code of libtt and libstt.a) with the
