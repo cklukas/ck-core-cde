@@ -1,0 +1,930 @@
+{
+ "record": "hardening-baseline",
+ "project": "cde",
+ "date": "2026-11-04",
+ "code_revision": "e0219c8d491978930bc79a941906c46125cc4242",
+ "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+ "host_architecture": "aarch64",
+ "host": "Debian GNU/Linux 13 (trixie) (Lima ckdev, virtiofs not used for builds)",
+ "build": {
+  "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+  "profile": "--enable-hardening",
+  "hardening_flags": "-Wall -Wextra -Wno-unused-parameter -Wformat=2 -Wnull-dereference -fstack-protector-strong -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3",
+  "optimization": "-O2 -g0",
+  "jobs": 6,
+  "make": "make -j6 -k",
+  "started": "2026-11-04T11:14:27+01:00",
+  "finished": "2026-11-04T11:20:51+01:00",
+  "elapsed_seconds": 384,
+  "input_fingerprint": "1d99eae7033ded4cda4322abc4ed36da671f8b5c",
+  "fingerprint_method": "git write-tree of the staged worktree streamed with git archive"
+ },
+ "warnings": {
+  "unique_warnings": 10354,
+  "defect_class_warnings": 1126,
+  "defect_classes": {
+   "-Wunused-result": 389,
+   "-Wcast-function-type": 221,
+   "-Wnull-dereference": 116,
+   "-Wimplicit-fallthrough": 108,
+   "-Wmisleading-indentation": 106,
+   "-Wformat-truncation": 52,
+   "-Wreturn-type": 36,
+   "-Wmaybe-uninitialized": 21,
+   "-Waddress": 21,
+   "-Wstringop-truncation": 17,
+   "-Wuse-after-free": 13,
+   "-Wstringop-overflow": 9,
+   "-Wformat-overflow": 8,
+   "-Warray-bounds": 6,
+   "-Wrestrict": 2,
+   "-Wfree-nonheap-object": 1
+  },
+  "totals": {
+   "-Wunused-variable": 3211,
+   "-Wformat-nonliteral": 1423,
+   "-Wwrite-strings": 1270,
+   "-Wsign-compare": 956,
+   "-Wparentheses": 507,
+   "-Wunused-result": 389,
+   "-Wunused-but-set-variable": 385,
+   "-Wswitch": 326,
+   "-Wunused-function": 267,
+   "-Wcast-function-type": 221,
+   "-Wignored-qualifiers": 204,
+   "-Wempty-body": 125,
+   "-Wnull-dereference": 116,
+   "-Wimplicit-fallthrough": 108,
+   "-Wmisleading-indentation": 106,
+   "-Wmissing-field-initializers": 83,
+   "-Wenum-conversion": 75,
+   "-Wformat-truncation": 52,
+   "-Wdeprecated-copy": 37,
+   "-Wreturn-type": 36,
+   "-Wcalloc-transposed-args": 34,
+   "-Wtype-limits": 33,
+   "-Wpointer-sign": 31,
+   "-Wmissing-braces": 31,
+   "-Wreorder": 26,
+   "-Wdangling-else": 23,
+   "-Waddress": 21,
+   "-Wmaybe-uninitialized": 21,
+   "-Wunused-value": 19,
+   "-Wstringop-truncation": 17,
+   "-Wdeprecated-declarations": 17,
+   "-Wformat": 16,
+   "-Wunused-label": 15,
+   "-Wclobbered": 14,
+   "-Wuse-after-free": 13,
+   "-Wchar-subscripts": 12,
+   "-Wformat-y2k": 12,
+   "-Wenum-compare": 10,
+   "-Wdelete-non-virtual-dtor": 10,
+   "-Wstringop-overflow": 9,
+   "-Wmismatched-new-delete": 9,
+   "-Wshift-negative-value": 8,
+   "-Wformat-overflow": 8,
+   "-Warray-bounds": 6,
+   "(unclassified)": 5,
+   "-Wunused-but-set-parameter": 5,
+   "-Wunused-const-variable": 5,
+   "-Wabsolute-value": 4,
+   "-Woverloaded-virtual": 4,
+   "-Wextra": 3,
+   "-Wold-style-declaration": 2,
+   "-Wreturn-local-addr": 2,
+   "-Wrestrict": 2,
+   "-Wnonnull": 2,
+   "-Wcast-user-defined": 2,
+   "-Wtautological-compare": 1,
+   "-Wcomment": 1,
+   "-Wclass-memaccess": 1,
+   "-Warray-parameter": 1,
+   "-Warray-compare": 1,
+   "-Wfree-nonheap-object": 1
+  },
+  "components": {
+   "programs/dtappbuilder": {
+    "-Wunused-variable": 847,
+    "-Wswitch": 229,
+    "-Wunused-but-set-variable": 108,
+    "-Wunused-function": 98,
+    "-Wformat-nonliteral": 90,
+    "-Wparentheses": 63,
+    "-Wsign-compare": 58,
+    "-Wnull-dereference": 24,
+    "-Wcalloc-transposed-args": 10,
+    "-Wunused-result": 10,
+    "-Wmisleading-indentation": 9,
+    "-Wunused-label": 8,
+    "-Wmissing-field-initializers": 7,
+    "-Wformat-truncation": 6,
+    "-Wmissing-braces": 6,
+    "-Wstringop-truncation": 4,
+    "-Wunused-value": 3,
+    "-Wformat-overflow": 2,
+    "-Wenum-compare": 2,
+    "-Wold-style-declaration": 1,
+    "-Wimplicit-fallthrough": 1,
+    "-Wtype-limits": 1,
+    "-Wnonnull": 1,
+    "-Warray-compare": 1,
+    "-Wreturn-type": 1,
+    "-Wabsolute-value": 1,
+    "-Wuse-after-free": 1,
+    "-Warray-bounds": 1,
+    "-Wunused-const-variable": 1
+   },
+   "programs/dtmail": {
+    "-Wwrite-strings": 845,
+    "-Wunused-variable": 153,
+    "-Wignored-qualifiers": 97,
+    "-Wsign-compare": 77,
+    "-Wformat-nonliteral": 54,
+    "-Wunused-but-set-variable": 36,
+    "-Wparentheses": 16,
+    "-Waddress": 14,
+    "-Wunused-result": 12,
+    "-Wreorder": 10,
+    "-Wdelete-non-virtual-dtor": 9,
+    "-Wunused-function": 6,
+    "-Wmisleading-indentation": 6,
+    "-Wmismatched-new-delete": 4,
+    "-Wcast-function-type": 4,
+    "-Wdangling-else": 3,
+    "-Wclobbered": 3,
+    "-Wformat-overflow": 2,
+    "-Wimplicit-fallthrough": 2,
+    "-Wswitch": 2,
+    "-Wreturn-local-addr": 2,
+    "-Wnull-dereference": 2,
+    "-Wcalloc-transposed-args": 1,
+    "-Wunused-but-set-parameter": 1,
+    "-Wtype-limits": 1,
+    "-Wempty-body": 1,
+    "-Wformat": 1,
+    "-Wstringop-overflow": 1,
+    "-Wcomment": 1,
+    "-Wmissing-field-initializers": 1,
+    "-Wformat-truncation": 1,
+    "-Wclass-memaccess": 1
+   },
+   "programs/dtcm": {
+    "-Wunused-variable": 508,
+    "-Wsign-compare": 104,
+    "-Wparentheses": 63,
+    "-Wformat-nonliteral": 48,
+    "-Wunused-but-set-variable": 33,
+    "-Wmisleading-indentation": 26,
+    "-Wunused-function": 20,
+    "-Wcalloc-transposed-args": 11,
+    "-Wswitch": 8,
+    "-Wunused-result": 6,
+    "-Wstringop-truncation": 6,
+    "-Wpointer-sign": 6,
+    "-Wmissing-braces": 6,
+    "-Wformat-truncation": 5,
+    "-Wnull-dereference": 5,
+    "-Wunused-const-variable": 4,
+    "-Wstringop-overflow": 4,
+    "-Wformat-overflow": 4,
+    "-Wenum-compare": 2,
+    "-Wuse-after-free": 2,
+    "-Wdeprecated-declarations": 1,
+    "-Wunused-value": 1,
+    "-Wtype-limits": 1,
+    "-Warray-parameter": 1,
+    "-Wformat": 1,
+    "-Wformat-y2k": 1,
+    "-Wreturn-type": 1,
+    "-Wdangling-else": 1
+   },
+   "programs/dtfile": {
+    "-Wunused-variable": 291,
+    "-Wunused-result": 186,
+    "-Wformat-nonliteral": 105,
+    "-Wunused-but-set-variable": 61,
+    "-Wparentheses": 48,
+    "-Wsign-compare": 41,
+    "-Wempty-body": 28,
+    "-Wunused-function": 18,
+    "-Wdangling-else": 7,
+    "-Wnull-dereference": 6,
+    "-Wmisleading-indentation": 3,
+    "-Wformat-truncation": 3,
+    "-Wmissing-field-initializers": 2,
+    "-Wpointer-sign": 2,
+    "-Wmaybe-uninitialized": 2,
+    "-Wunused-value": 2,
+    "-Warray-bounds": 2,
+    "(unclassified)": 2,
+    "-Wunused-but-set-parameter": 1,
+    "-Wformat-y2k": 1,
+    "-Wmissing-braces": 1,
+    "-Wreturn-type": 1
+   },
+   "programs/dthelp": {
+    "-Wformat-nonliteral": 186,
+    "-Wparentheses": 128,
+    "-Wsign-compare": 126,
+    "-Wunused-variable": 89,
+    "-Wmisleading-indentation": 39,
+    "-Wempty-body": 12,
+    "-Wformat": 9,
+    "-Wformat-truncation": 8,
+    "-Wmissing-braces": 8,
+    "-Wuse-after-free": 7,
+    "-Wunused-but-set-variable": 6,
+    "-Wdangling-else": 6,
+    "-Wunused-result": 5,
+    "-Wformat-y2k": 4,
+    "-Warray-bounds": 3,
+    "-Wswitch": 3,
+    "-Wtype-limits": 2,
+    "-Wunused-function": 1,
+    "-Wnull-dereference": 1,
+    "-Wimplicit-fallthrough": 1
+   },
+   "lib/DtSvc": {
+    "-Wunused-variable": 176,
+    "-Wformat-nonliteral": 95,
+    "-Wsign-compare": 46,
+    "-Wunused-result": 15,
+    "-Wparentheses": 14,
+    "-Wunused-function": 13,
+    "-Wunused-but-set-variable": 10,
+    "-Wunused-value": 8,
+    "-Wenum-conversion": 7,
+    "-Wmissing-field-initializers": 7,
+    "-Wimplicit-fallthrough": 4,
+    "-Wwrite-strings": 3,
+    "-Wunused-label": 3,
+    "-Wchar-subscripts": 2,
+    "-Wnull-dereference": 2,
+    "-Wdangling-else": 1,
+    "-Wpointer-sign": 1,
+    "-Wmissing-braces": 1,
+    "-Wreturn-type": 1,
+    "(unclassified)": 1,
+    "-Wmaybe-uninitialized": 1,
+    "-Wstringop-truncation": 1
+   },
+   "programs/dtwm": {
+    "-Wsign-compare": 142,
+    "-Wunused-variable": 117,
+    "-Wformat-nonliteral": 66,
+    "-Wunused-but-set-variable": 21,
+    "-Wdeprecated-declarations": 11,
+    "-Wpointer-sign": 10,
+    "-Wunused-function": 9,
+    "-Wunused-result": 9,
+    "-Wnull-dereference": 6,
+    "-Wparentheses": 4,
+    "-Wmaybe-uninitialized": 3,
+    "-Wswitch": 3,
+    "-Wmissing-field-initializers": 3,
+    "-Wimplicit-fallthrough": 2,
+    "-Wmisleading-indentation": 2,
+    "(unclassified)": 2
+   },
+   "lib/tt": {
+    "-Wcast-function-type": 204,
+    "-Wformat-nonliteral": 39,
+    "-Wswitch": 36,
+    "-Wwrite-strings": 25,
+    "-Wunused-variable": 17,
+    "-Wunused-result": 15,
+    "-Wimplicit-fallthrough": 15,
+    "-Wsign-compare": 13,
+    "-Wparentheses": 8,
+    "-Wdeprecated-copy": 5,
+    "-Wformat-truncation": 4,
+    "-Wunused-but-set-variable": 3,
+    "-Wclobbered": 3,
+    "-Wunused-function": 3,
+    "-Waddress": 2,
+    "-Wstringop-truncation": 1,
+    "-Wmaybe-uninitialized": 1
+   },
+   "programs/dtsr": {
+    "-Wformat-nonliteral": 312,
+    "-Wsign-compare": 25,
+    "-Wunused-variable": 23,
+    "-Wparentheses": 2,
+    "-Wformat-truncation": 2,
+    "-Wunused-label": 1,
+    "-Wunused-but-set-variable": 1,
+    "-Wformat-y2k": 1,
+    "-Wchar-subscripts": 1,
+    "-Wtype-limits": 1,
+    "-Wimplicit-fallthrough": 1
+   },
+   "programs/ttsnoop": {
+    "-Wwrite-strings": 231,
+    "-Wunused-variable": 56,
+    "-Wsign-compare": 45,
+    "-Wswitch": 14,
+    "-Wunused-result": 4,
+    "-Wimplicit-fallthrough": 3,
+    "-Wmisleading-indentation": 2,
+    "-Wunused-but-set-variable": 2,
+    "-Wignored-qualifiers": 2
+   },
+   "programs/dtprintinfo": {
+    "-Wwrite-strings": 138,
+    "-Wignored-qualifiers": 70,
+    "-Wformat-nonliteral": 39,
+    "-Wparentheses": 33,
+    "-Wunused-variable": 15,
+    "-Wunused-result": 13,
+    "-Wsign-compare": 9,
+    "-Wunused-but-set-variable": 7,
+    "-Wswitch": 5,
+    "-Wimplicit-fallthrough": 5,
+    "-Wmismatched-new-delete": 5,
+    "-Wformat": 1,
+    "-Wunused-function": 1,
+    "-Wmaybe-uninitialized": 1,
+    "-Wunused-but-set-parameter": 1,
+    "-Wformat-y2k": 1,
+    "-Wformat-truncation": 1
+   },
+   "lib/DtSearch": {
+    "-Wformat-nonliteral": 153,
+    "-Wempty-body": 71,
+    "-Wsign-compare": 16,
+    "-Wunused-function": 11,
+    "-Wchar-subscripts": 5,
+    "-Wunused-result": 5,
+    "-Wformat": 4,
+    "-Wtype-limits": 4,
+    "-Wimplicit-fallthrough": 3,
+    "-Wformat-y2k": 3,
+    "-Wnull-dereference": 2,
+    "-Wunused-but-set-variable": 2,
+    "-Wunused-variable": 2,
+    "-Wmissing-field-initializers": 1,
+    "-Wunused-label": 1,
+    "-Wreturn-type": 1,
+    "-Wuse-after-free": 1
+   },
+   "lib/DtTerm": {
+    "-Wunused-variable": 162,
+    "-Wmissing-field-initializers": 20,
+    "-Wunused-function": 18,
+    "-Wsign-compare": 11,
+    "-Wunused-result": 9,
+    "-Wswitch": 7,
+    "-Wformat-nonliteral": 7,
+    "-Wimplicit-fallthrough": 5,
+    "-Wmisleading-indentation": 5,
+    "-Wunused-value": 4,
+    "-Wchar-subscripts": 4,
+    "-Wparentheses": 3,
+    "-Wstringop-truncation": 1,
+    "-Wpointer-sign": 1,
+    "-Wunused-but-set-variable": 1
+   },
+   "lib/DtHelp": {
+    "-Wenum-conversion": 56,
+    "-Wsign-compare": 36,
+    "-Wnull-dereference": 31,
+    "-Wimplicit-fallthrough": 24,
+    "-Wtype-limits": 18,
+    "-Wmissing-field-initializers": 14,
+    "-Wunused-but-set-variable": 11,
+    "-Wswitch": 11,
+    "-Wcalloc-transposed-args": 10,
+    "-Wreturn-type": 7,
+    "-Wformat-nonliteral": 6,
+    "-Wunused-result": 5,
+    "-Wunused-function": 5,
+    "-Wmaybe-uninitialized": 4,
+    "-Wunused-variable": 3,
+    "-Wparentheses": 1,
+    "-Wmisleading-indentation": 1,
+    "-Wtautological-compare": 1,
+    "-Waddress": 1,
+    "-Wenum-compare": 1,
+    "-Wmissing-braces": 1,
+    "-Wold-style-declaration": 1
+   },
+   "programs/dtstyle": {
+    "-Wunused-variable": 144,
+    "-Wparentheses": 20,
+    "-Wformat-nonliteral": 17,
+    "-Wmissing-field-initializers": 13,
+    "-Wsign-compare": 4,
+    "-Wunused-but-set-variable": 3,
+    "-Wunused-function": 3,
+    "-Waddress": 3,
+    "-Wnull-dereference": 3,
+    "-Wmisleading-indentation": 2,
+    "-Wdangling-else": 2,
+    "-Wimplicit-fallthrough": 2,
+    "-Wreturn-type": 2
+   },
+   "lib/csa": {
+    "-Wunused-variable": 99,
+    "-Wsign-compare": 39,
+    "-Wparentheses": 24,
+    "-Wunused-function": 6,
+    "-Wunused-but-set-variable": 3,
+    "-Wabsolute-value": 3,
+    "-Wunused-result": 3,
+    "-Wmaybe-uninitialized": 2,
+    "-Wswitch": 2,
+    "-Wpointer-sign": 2,
+    "-Wtype-limits": 1,
+    "-Wformat-truncation": 1,
+    "-Wunused-label": 1,
+    "-Wreturn-type": 1,
+    "-Wimplicit-fallthrough": 1,
+    "-Wempty-body": 1
+   },
+   "programs/dtlogin": {
+    "-Wunused-variable": 59,
+    "-Wsign-compare": 18,
+    "-Wparentheses": 13,
+    "-Wunused-function": 13,
+    "-Wimplicit-fallthrough": 10,
+    "-Wpointer-sign": 9,
+    "-Wformat-nonliteral": 7,
+    "-Wunused-but-set-variable": 7,
+    "-Wmissing-braces": 5,
+    "-Wformat-truncation": 5,
+    "-Wmissing-field-initializers": 3,
+    "-Wclobbered": 3,
+    "-Wmisleading-indentation": 3,
+    "-Wswitch": 3,
+    "-Wdangling-else": 2,
+    "-Wunused-result": 2,
+    "-Wreturn-type": 1
+   },
+   "programs/dtksh": {
+    "-Wunused-variable": 129,
+    "-Wreturn-type": 15,
+    "-Wsign-compare": 9,
+    "-Wunused-but-set-variable": 2,
+    "-Wunused-function": 2
+   },
+   "programs/dtinfo": {
+    "-Wignored-qualifiers": 33,
+    "-Wdeprecated-copy": 30,
+    "-Wformat-nonliteral": 28,
+    "-Wcast-function-type": 13,
+    "-Wnull-dereference": 8,
+    "-Wempty-body": 7,
+    "-Wunused-variable": 6,
+    "-Wmissing-field-initializers": 6,
+    "-Wsign-compare": 5,
+    "-Wimplicit-fallthrough": 3,
+    "-Wshift-negative-value": 3,
+    "-Wmisleading-indentation": 3,
+    "-Wunused-but-set-parameter": 2,
+    "-Wcast-user-defined": 2,
+    "-Wunused-result": 2,
+    "-Wparentheses": 1,
+    "-Wformat-truncation": 1,
+    "-Wtype-limits": 1
+   },
+   "programs/dtsession": {
+    "-Wunused-variable": 57,
+    "-Wsign-compare": 30,
+    "-Wformat-nonliteral": 14,
+    "-Wunused-result": 11,
+    "-Wunused-function": 8,
+    "-Wparentheses": 7,
+    "-Wunused-but-set-variable": 4,
+    "-Wdeprecated-declarations": 2,
+    "-Wtype-limits": 1,
+    "-Wformat-truncation": 1
+   },
+   "programs/dtpad": {
+    "-Wunused-variable": 47,
+    "-Wunused-result": 16,
+    "-Wformat-nonliteral": 15,
+    "-Wparentheses": 13,
+    "-Wunused-but-set-variable": 12,
+    "-Wunused-function": 6,
+    "-Wenum-compare": 5,
+    "-Wsign-compare": 2,
+    "-Wformat-truncation": 1,
+    "-Wreturn-type": 1,
+    "-Wnull-dereference": 1
+   },
+   "programs/dtcreate": {
+    "-Wunused-variable": 41,
+    "-Wformat-nonliteral": 28,
+    "-Wunused-but-set-variable": 14,
+    "-Wparentheses": 7,
+    "-Wunused-result": 3,
+    "-Wsign-compare": 2,
+    "-Wmisleading-indentation": 2,
+    "-Wmissing-braces": 2,
+    "-Wreturn-type": 1,
+    "-Wformat-truncation": 1,
+    "-Wcalloc-transposed-args": 1,
+    "-Wimplicit-fallthrough": 1,
+    "-Wstringop-overflow": 1
+   },
+   "programs/dtdocbook": {
+    "-Wunused-variable": 42,
+    "-Wparentheses": 18,
+    "-Wunused-result": 7,
+    "-Wunused-function": 5,
+    "-Wformat-nonliteral": 5,
+    "-Wsign-compare": 2,
+    "-Wstringop-truncation": 2,
+    "-Wnull-dereference": 2,
+    "-Wmisleading-indentation": 1,
+    "-Wunused-but-set-variable": 1,
+    "-Wtype-limits": 1,
+    "-Wreturn-type": 1
+   },
+   "lib/DtWidget": {
+    "-Wsign-compare": 47,
+    "-Wformat-nonliteral": 11,
+    "-Wunused-variable": 4,
+    "-Wmissing-field-initializers": 4,
+    "-Wunused-but-set-variable": 4,
+    "-Wunused-result": 4,
+    "-Wunused-function": 3,
+    "-Wimplicit-fallthrough": 2,
+    "-Wmisleading-indentation": 1,
+    "-Wempty-body": 1,
+    "-Wdeprecated-declarations": 1
+   },
+   "programs/dtterm": {
+    "-Wunused-result": 31,
+    "-Wunused-variable": 25,
+    "-Wformat-nonliteral": 8,
+    "-Wparentheses": 4,
+    "-Wsign-compare": 3,
+    "-Wunused-function": 1,
+    "-Wunused-but-set-variable": 1
+   },
+   "programs/dtpdmd": {
+    "-Wunused-variable": 21,
+    "-Wformat-nonliteral": 16,
+    "-Wunused-but-set-variable": 10,
+    "-Wclobbered": 5,
+    "-Wunused-result": 2
+   },
+   "lib/DtMmdb": {
+    "-Wnull-dereference": 17,
+    "-Wwrite-strings": 6,
+    "-Wunused-function": 5,
+    "-Wshift-negative-value": 5,
+    "-Woverloaded-virtual": 4,
+    "-Wsign-compare": 3,
+    "-Wignored-qualifiers": 2,
+    "-Wdeprecated-copy": 2,
+    "-Wextra": 1,
+    "-Wimplicit-fallthrough": 1,
+    "-Wtype-limits": 1,
+    "-Wformat-truncation": 1,
+    "-Wempty-body": 1,
+    "-Wfree-nonheap-object": 1
+   },
+   "programs/dticon": {
+    "-Wunused-variable": 25,
+    "-Wunused-result": 6,
+    "-Wformat-nonliteral": 3,
+    "-Wformat-truncation": 3,
+    "-Wunused-but-set-variable": 3,
+    "-Wstringop-truncation": 2,
+    "-Wparentheses": 2,
+    "-Wmissing-braces": 1,
+    "-Wimplicit-fallthrough": 1,
+    "-Wreturn-type": 1,
+    "-Wsign-compare": 1,
+    "-Wswitch": 1,
+    "-Wunused-function": 1
+   },
+   "programs/dtcalc": {
+    "-Wformat-nonliteral": 20,
+    "-Wenum-conversion": 12,
+    "-Wformat-truncation": 5,
+    "-Wimplicit-fallthrough": 4,
+    "-Wsign-compare": 4,
+    "-Wdeprecated-declarations": 2,
+    "-Wunused-value": 1,
+    "-Wempty-body": 1
+   },
+   "programs/dtimsstart": {
+    "-Wformat-nonliteral": 13,
+    "-Wimplicit-fallthrough": 10,
+    "-Wunused-but-set-variable": 9,
+    "-Wunused-variable": 5,
+    "-Wunused-function": 3,
+    "-Waddress": 1,
+    "-Wunused-label": 1,
+    "-Wmisleading-indentation": 1,
+    "-Wempty-body": 1,
+    "-Wunused-result": 1,
+    "-Wnull-dereference": 1,
+    "-Wformat-y2k": 1,
+    "-Wformat-truncation": 1
+   },
+   "programs/dtsearchpath": {
+    "-Wreorder": 16,
+    "-Wwrite-strings": 10,
+    "-Wparentheses": 9,
+    "-Wsign-compare": 8,
+    "-Wextra": 2,
+    "-Wdelete-non-virtual-dtor": 1
+   },
+   "programs/util": {
+    "-Wformat-nonliteral": 14,
+    "-Wunused-variable": 13,
+    "-Wparentheses": 1,
+    "-Wsign-compare": 1
+   },
+   "programs/dtscreen": {
+    "-Wsign-compare": 10,
+    "-Wformat-nonliteral": 9,
+    "-Wmissing-field-initializers": 2,
+    "-Wimplicit-fallthrough": 2
+   },
+   "programs/dsdm": {
+    "-Wsign-compare": 12,
+    "-Wunused-variable": 7,
+    "-Wparentheses": 1,
+    "-Wunused-but-set-variable": 1
+   },
+   "programs/dtpdm": {
+    "-Wunused-variable": 8,
+    "-Wunused-function": 5,
+    "-Wunused-but-set-variable": 3,
+    "-Wparentheses": 2,
+    "-Wdangling-else": 1,
+    "-Wreturn-type": 1,
+    "-Wswitch": 1
+   },
+   "lib/DtPrint": {
+    "-Wunused-variable": 5,
+    "-Wunused-but-set-variable": 4,
+    "-Wunused-function": 3,
+    "-Wsign-compare": 2,
+    "-Wimplicit-fallthrough": 2,
+    "-Wempty-body": 1,
+    "-Wswitch": 1
+   },
+   "include/Dt": {
+    "-Wwrite-strings": 12,
+    "-Wunused-result": 2,
+    "-Wparentheses": 1,
+    "-Wnull-dereference": 1
+   },
+   "/usr": {
+    "-Wmaybe-uninitialized": 6,
+    "-Wstringop-overflow": 2,
+    "-Wrestrict": 2,
+    "-Wuse-after-free": 2,
+    "-Wnull-dereference": 1,
+    "-Wnonnull": 1
+   },
+   "programs/dthello": {
+    "-Wformat-nonliteral": 11,
+    "-Wsign-compare": 1
+   },
+   "programs/localized": {
+    "-Wunused-variable": 3,
+    "-Wimplicit-fallthrough": 3,
+    "-Wformat-truncation": 2,
+    "-Wcalloc-transposed-args": 1,
+    "-Wunused-but-set-variable": 1,
+    "-Wparentheses": 1
+   },
+   "programs/dtaction": {
+    "-Wformat-nonliteral": 4,
+    "-Wunused-result": 2,
+    "-Wunused-variable": 1
+   },
+   "programs/dtspcd": {
+    "-Wunused-variable": 3,
+    "-Wunused-result": 3
+   },
+   "programs/dtexec": {
+    "-Wunused-variable": 3,
+    "-Wunused-but-set-variable": 1,
+    "-Wstringop-overflow": 1
+   },
+   "programs/dtdbcache": {
+    "-Wunused-variable": 5
+   },
+   "programs/fontaliases": {
+    "-Wsign-compare": 3,
+    "-Wmaybe-uninitialized": 1
+   },
+   "/home": {
+    "-Wnull-dereference": 3
+   },
+   "lib/DtXinerama": {
+    "-Wsign-compare": 1
+   }
+  }
+ },
+ "cppcheck": {
+  "command": "cppcheck -j6 --max-configs=1 --enable=warning,portability --language=c --file-filter=*.c",
+  "excluded": {
+   "test-or-demo": 86,
+   "noise:normalCheckLevelMaxBranches": 742,
+   "noise:unknownMacro": 5,
+   "noise:va_list_usedBeforeStarted": 15,
+   "noise:syntaxError": 8
+  },
+  "unique_messages": 1380,
+  "by_severity": {
+   "warning": 969,
+   "error": 239,
+   "portability": 167,
+   "style": 5
+  },
+  "error_ids": {
+   "memleakOnRealloc": 73,
+   "uninitvar": 69,
+   "memleak": 19,
+   "missingReturn": 16,
+   "legacyUninitvar": 15,
+   "nullPointerArithmeticOutOfMemory": 11,
+   "shiftTooManyBitsSigned": 10,
+   "nullPointer": 9,
+   "va_start_subsequentCalls": 3,
+   "preprocessorErrorDirective": 2,
+   "sprintfOverlappingData": 2,
+   "returnDanglingLifetime": 2,
+   "autoVariables": 2,
+   "va_end_missing": 1,
+   "leakReturnValNotUsed": 1,
+   "internalAstError": 1,
+   "deallocuse": 1,
+   "shiftTooManyBits": 1,
+   "arrayIndexOutOfBounds": 1
+  },
+  "top_ids": {
+   "nullPointerOutOfMemory": 653,
+   "nullPointerRedundantCheck": 117,
+   "uninitvar": 114,
+   "varFuncNullUB": 104,
+   "memleakOnRealloc": 73,
+   "returnImplicitInt": 45,
+   "invalidPrintfArgType_sint": 36,
+   "nullPointer": 23,
+   "memleak": 19,
+   "invalidscanf": 19,
+   "missingReturn": 16,
+   "legacyUninitvar": 15,
+   "nullPointerArithmeticRedundantCheck": 11,
+   "nullPointerArithmeticOutOfMemory": 11,
+   "identicalInnerCondition": 11
+  },
+  "components": {
+   "lib/csa": {
+    "total": 218
+   },
+   "programs/dtcm": {
+    "total": 143,
+    "error": 5
+   },
+   "lib/DtSvc": {
+    "total": 138,
+    "error": 22
+   },
+   "programs/dtudcfonted": {
+    "total": 98,
+    "error": 18
+   },
+   "programs/dtwm": {
+    "total": 93,
+    "error": 42
+   },
+   "programs/dtfile": {
+    "total": 79,
+    "error": 10
+   },
+   "programs/dtappbuilder": {
+    "total": 78,
+    "error": 28
+   },
+   "lib/DtHelp": {
+    "total": 72,
+    "error": 34
+   },
+   "programs/dtcreate": {
+    "total": 44,
+    "error": 6
+   },
+   "programs/dthelp": {
+    "total": 44,
+    "error": 4
+   },
+   "programs/dtpad": {
+    "total": 44,
+    "error": 1
+   },
+   "programs/dtinfo": {
+    "total": 36,
+    "error": 7
+   },
+   "programs/dtdocbook": {
+    "total": 32,
+    "error": 10
+   },
+   "programs/dtlogin": {
+    "total": 29,
+    "error": 9
+   },
+   "lib/DtTerm": {
+    "total": 28,
+    "error": 14
+   },
+   "programs/dsdm": {
+    "total": 22
+   },
+   "lib/DtSearch": {
+    "total": 20,
+    "error": 5
+   },
+   "programs/dtksh": {
+    "total": 18
+   },
+   "programs/dtsr": {
+    "total": 18
+   },
+   "programs/dtcalc": {
+    "total": 15,
+    "error": 1
+   },
+   "programs/dtudcexch": {
+    "total": 15,
+    "error": 5
+   },
+   "programs/dtsession": {
+    "total": 13,
+    "error": 2
+   },
+   "programs/dtstyle": {
+    "total": 13,
+    "error": 3
+   },
+   "programs/dtterm": {
+    "total": 9
+   },
+   "programs/localized": {
+    "total": 9
+   },
+   "lib/tt": {
+    "total": 8,
+    "error": 1
+   },
+   "programs/dtscreen": {
+    "total": 8
+   },
+   "util/tt_trace_parse.l": {
+    "total": 7
+   },
+   "programs/dtexec": {
+    "total": 7,
+    "error": 2
+   },
+   "lib/DtWidget": {
+    "total": 5,
+    "error": 1
+   },
+   "lib/DtPrint": {
+    "total": 3,
+    "error": 3
+   },
+   "util/tt_trace_gram.y": {
+    "total": 3,
+    "error": 2
+   },
+   "programs/dtspcd": {
+    "total": 3,
+    "error": 1
+   },
+   "programs/dtpdm": {
+    "total": 2,
+    "error": 2
+   },
+   "programs/util": {
+    "total": 2
+   },
+   "programs/dtaction": {
+    "total": 1
+   },
+   "programs/dticon": {
+    "total": 1
+   },
+   "programs/dtimsstart": {
+    "total": 1,
+    "error": 1
+   },
+   "programs/types": {
+    "total": 1
+   }
+  }
+ }
+}

@@ -1,3 +1,13 @@
+2026-11-04
+- build: add the opt-in `--enable-hardening` and `--enable-sanitizers[=LIST]`
+  configure switches. Hardening reports truncation, string-constant,
+  ignored-result, null-dereference and format defects and adds stack protection
+  and fortified libc calls; sanitizers build and link with
+  `-fsanitize=address,undefined` by default. Ordinary builds are unchanged.
+- docs: record the first hardening warning and cppcheck baseline and a
+  per-component audit ledger, and add `scripts/warning-baseline.py` to compare
+  a build's warning counts with that baseline.
+
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,
   report zero-progress and delayed close failures before claiming success, and

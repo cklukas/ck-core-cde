@@ -445,18 +445,28 @@ AX_PTHREAD
 AC_PATH_X
 AC_PATH_XTRA
 
+dnl --enable-hardening and --enable-sanitizers (m4/ck_hardening.m4).  The
+dnl flags are applied after the last feature test, below.
+CK_HARDENING_INIT
+
 dnl check some compiler flags
+dnl The -Wno- suppressions hide truncation, string-constant and ignored-result
+dnl defects.  A hardening build reports them.
+AS_IF([test "x$enable_hardening" != xyes], [
 C_FLAG_CHECK([-Wno-format-truncation])
 CXX_FLAG_CHECK([-Wno-format-truncation])
+])
 
 C_FLAG_CHECK([-fno-strict-aliasing])
 CXX_FLAG_CHECK([-fno-strict-aliasing])
 
+AS_IF([test "x$enable_hardening" != xyes], [
 C_FLAG_CHECK([-Wno-write-strings])
 CXX_FLAG_CHECK([-Wno-write-strings])
 
 C_FLAG_CHECK([-Wno-unused-result])
 CXX_FLAG_CHECK([-Wno-unused-result])
+])
 
 
 dnl Add X11 goodies here
@@ -707,6 +717,7 @@ CPPFLAGS="${CPPFLAGS} ${SOURCE_CPP_DEFINES} ${CPP_COMPILER_FLAGS}"
 CFLAGS="${CFLAGS} ${C_COMPILER_FLAGS} ${EXTRA_INCS} ${PTHREAD_CFLAGS}"
 CXXFLAGS="${CXXFLAGS} ${CXX_COMPILER_FLAGS} ${EXTRA_INCS} ${PTHREAD_CFLAGS}"
 LIBS="${EXTRA_LIBS} ${LIBS} ${PTHREAD_LIBS}"
+CK_HARDENING_APPLY
 
 dnl All of the makefiles we need to generate go here...
 AC_CONFIG_FILES([

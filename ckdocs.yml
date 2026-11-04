@@ -45,5 +45,6 @@ nav:
   - title: Development
     pages:
       - docs/build.md
+      - docs/hardening.md
       - docs/improvements/file-operations-design.md
       - docs/ci.md
