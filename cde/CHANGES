@@ -92,6 +92,13 @@
   connection was set to null, and neither they nor the properties' names and
   types were freed; registration leaked the previous id, the generated id and
   the host name. Covered by `programs/dtsession/tests/check-xsmp.py`.
+- dtsession: load the language and resolution independent resources without
+  assuming they are there. An unset `LANG` or saved language reached `strcmp`
+  as a null pointer, a long `LANG` overran the `strncat` chain that builds the
+  system font file name, a session without directories was formatted into the
+  name, a missing `*fontList` resource handed the toolkit an uninitialized
+  pointer and a missing `RESOURCE_MANAGER` property a null database. Covered by
+  `programs/dtsession/tests/check-startup-resources.py`.
 - build: add the opt-in `--enable-hardening` and `--enable-sanitizers[=LIST]`
   configure switches. Hardening reports truncation, string-constant,
   ignored-result, null-dereference and format defects and adds stack protection

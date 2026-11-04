@@ -1537,7 +1537,7 @@ RestoreIndependentResources( void )
     unsigned char   *data = NULL;
     XrmDatabase 	smBase;
     XrmValue		fontResourceReturn;
-    char *currentLangPtr, *resValRet, *sessionType;
+    char *currentLangPtr, *sessionLang, *resValRet, *sessionType;
     float fltYRes;
     int	  intYRes[2], status,i;
     char  *sessionRes;
@@ -1554,7 +1554,15 @@ RestoreIndependentResources( void )
 	return;
     }
     
+    /*
+     * No language is the same as an empty one
+     */
     currentLangPtr = getenv("LANG");
+    if(currentLangPtr == NULL)
+    {
+	currentLangPtr = "";
+    }
+    sessionLang = (smGD.sessionLang != NULL) ? smGD.sessionLang : "";
 
     fltYRes = ((float) DisplayHeight(smGD.display, 0) /
 	       (float) DisplayHeightMM(smGD.display, 0)) * 1000;
@@ -1599,7 +1607,7 @@ RestoreIndependentResources( void )
      * load the language/resolution independent fonts if
      * they exist in the users home directory or in the system
      */
-    if((strcmp(currentLangPtr, smGD.sessionLang)) ||
+    if((strcmp(currentLangPtr, sessionLang)) ||
        (intYRes[0] != intYRes[1]))
     {
         char	*fontPath = SM_MALLOC(MAXPATHLEN + 1);
@@ -1614,10 +1622,22 @@ RestoreIndependentResources( void )
 	}
 
         memset(fontPath, 0, MAXPATHLEN + 1);
-	snprintf(fontPath, MAXPATHLEN, "%s/%s/%s/%s.%s",
-                 smGD.savePath, sessionType,
-                 currentLangPtr, SM_FONT_FILE, sessionRes);
-	status = stat(fontPath, &buf);
+
+	/*
+	 * A name that does not fit the buffer (a language name of any length
+	 * can come from the environment) names no file: the search goes on
+	 */
+	if((smGD.savePath == NULL) ||
+	   (snprintf(fontPath, MAXPATHLEN + 1, "%s/%s/%s/%s.%s",
+		     smGD.savePath, sessionType,
+		     currentLangPtr, SM_FONT_FILE, sessionRes) > MAXPATHLEN))
+	{
+	    status = -1;
+	}
+	else
+	{
+	    status = stat(fontPath, &buf);
+	}
 	if(status == -1)
 	{
 	    /*
@@ -1626,26 +1646,26 @@ RestoreIndependentResources( void )
 	     */
             memset(fontPath, 0, MAXPATHLEN + 1);
 
-            if((currentLangPtr != NULL) && (*currentLangPtr != 0))
+            if(((*currentLangPtr != 0) ?
+		snprintf(fontPath, MAXPATHLEN + 1, "/%s/%s",
+			 currentLangPtr, SM_SYSTEM_FONT_FILE) :
+		snprintf(fontPath, MAXPATHLEN + 1, "/%s",
+			 SM_SYSTEM_FONT_FILE)) > MAXPATHLEN)
             {
-                strcat(fontPath, "/");
-                strncat(fontPath, currentLangPtr, MAXPATHLEN);
+                fontPath[0] = '\0';
             }
-
-            strncat(fontPath, "/", MAXPATHLEN);
-            strncat(fontPath, SM_SYSTEM_FONT_FILE, MAXPATHLEN);
 
             FixPath(fontPath);
 
 	    status = stat(fontPath, &buf);
 	    if(status == -1)
 	    {
-                if((currentLangPtr != NULL) && (*currentLangPtr != 0) &&
+                if((*currentLangPtr != 0) &&
                    (strcmp(currentLangPtr, "C")))
                 {
                     memset(fontPath, 0, MAXPATHLEN + 1);
-                    strcpy(fontPath, "/C/");
-                    strncat(fontPath, SM_SYSTEM_FONT_FILE, MAXPATHLEN);
+                    snprintf(fontPath, MAXPATHLEN + 1, "/C/%s",
+			     SM_SYSTEM_FONT_FILE);
 
                     FixPath(fontPath);
 		
@@ -1667,6 +1687,7 @@ RestoreIndependentResources( void )
 	}
 
 	strncpy(smGD.fontPath, fontPath, MAXPATHLEN);
+	smGD.fontPath[MAXPATHLEN] = '\0';
 
 	if(resIndep == True)
 	{
@@ -1684,7 +1705,8 @@ RestoreIndependentResources( void )
 			       XA_RESOURCE_MANAGER,0L,
 			       100000000L,False,XA_STRING,&actualType,
 			       &actualFormat,&nitems,&leftover,
-			       (unsigned char**) &data) == Success)
+			       (unsigned char**) &data) == Success &&
+	       data != NULL)
 	    {
 		smBase = XrmGetStringDatabase((char *)data);
 	    }
@@ -1709,10 +1731,13 @@ RestoreIndependentResources( void )
 		resRet = XrmGetResource(smBase,  "*fontList", "*FontList",
 					&resValRet, &fontResourceReturn);
 
-		i = 0;
-		XtSetArg(uiArgs[i], XmNdefaultFontList,
-			 (XmFontList) fontResourceReturn.addr);i++;
-		XtSetValues(smGD.topLevelWid, uiArgs, i);
+		if(resRet && fontResourceReturn.addr != NULL)
+		{
+		    i = 0;
+		    XtSetArg(uiArgs[i], XmNdefaultFontList,
+			     (XmFontList) fontResourceReturn.addr);i++;
+		    XtSetValues(smGD.topLevelWid, uiArgs, i);
+		}
 		
                 /*
                  * Overwrite the old font preferences, otherwise,
@@ -1726,15 +1751,16 @@ RestoreIndependentResources( void )
                 {
                     resRet = XrmGetResource(smBase, fonttype[i], fontclass[i],
                                             &resValRet, &fontResourceReturn);
-                    if (resRet)
+                    if (resRet && fontResourceReturn.addr != NULL)
                     {
-                        resdata =
-                            (char *)SM_MALLOC(fontResourceReturn.size + 30);
-                        bzero(resdata, fontResourceReturn.size + 30);
-                        strcat(resdata, fonttype[i]);
-                        strcat(resdata, ": ");
-                        strcat(resdata, fontResourceReturn.addr);
-                        strcat(resdata, "\n");
+                        size_t length = strlen(fonttype[i]) + 2 +
+                            strnlen(fontResourceReturn.addr,
+                                    fontResourceReturn.size) + 2;
+
+                        resdata = (char *)SM_MALLOC(length);
+                        snprintf(resdata, length, "%s: %.*s\n", fonttype[i],
+                                 (int) fontResourceReturn.size,
+                                 (char *) fontResourceReturn.addr);
                         _DtAddResString(smGD.display, resdata, _DT_ATR_PREFS);
                         SM_FREE(resdata);
                     }

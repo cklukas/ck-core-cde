@@ -234,6 +234,24 @@ under LeakSanitizer.
 - Registering a client left its previous id, the id it generated and the host
   name from SMlib allocated; the record keeps its own copy of the host name.
 
+## Language and resolution independent resources
+
+`tests/check-startup-resources.py` runs the production function with the input
+described here.
+
+When the language or the display resolution of a saved session differs from the
+current one, `dtsession` looks for a font resource file in the session
+directory and in the system directories and merges it into the resources of the
+display. It compared the language of the environment and of the session with
+`strcmp` whether or not they were set, built the names of the system files
+with unbounded `strncat` calls from the language (a `LANG` of a few thousand
+characters overran the buffer), formatted a missing session directory (after
+the session directories could not be made) into the name, handed the toolkit an
+uninitialized font list when the resources had none and sized the copy of each
+font resource with a guess. An unset language is an empty one now; names that
+do not fit are names of no file; a font list or property that is not there is
+not used.
+
 ## Tests
 
 `programs/dtsession/tests` holds regression tests that cut the production code
