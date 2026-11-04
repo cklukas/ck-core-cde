@@ -85,7 +85,7 @@ have not had such a review. Fuzz targets exist for none of the components yet.
 | `programs/ttsnoop` | local user program | none recorded | 359 | 9 | 0 | none |
 | `programs/dtprintinfo` | local user program | none recorded | 345 | 20 | 0 | none |
 | `lib/DtSearch` | full-text search; vendored raima subtree excluded | none recorded | 285 | 12 | 5 | none |
-| `lib/DtTerm` | terminal emulation; escape-sequence parser | parser bounds (2026-11-02) | 258 | 20 | 14 | none |
+| `lib/DtTerm` | terminal emulation; escape-sequence parser | parser bounds (2026-11-02); setuid handling (2026-11-04) | 258 | 20 | 14 | none |
 | `lib/DtHelp` | help file and markup parsing | string handling (2026-11-02) | 248 | 73 | 34 | none |
 | `programs/dtstyle` | local user program | none recorded | 218 | 12 | 3 | none |
 | `lib/csa` | RPC interface of rpc.cmsd | none recorded | 189 | 8 | 0 | none |

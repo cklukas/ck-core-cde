@@ -37,6 +37,11 @@
   overran its list when every type matched) and lookup state are bounded or
   checked as well. Sanitizer-built regression tests run under `make check` in
   `lib/DtSvc`.
+- dtterm: when installed setuid root, give up root for good before starting the
+  shell and stop if that does not take effect; a user at a process limit could
+  previously get a shell with root privileges. Returning the window process to
+  the user identity is checked the same way. A test with a fake kernel covers
+  refused and ignored changes and a remaining way back.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

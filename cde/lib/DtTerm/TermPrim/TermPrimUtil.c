@@ -39,6 +39,9 @@
 #include "Xm/Xm.h"
 #include <errno.h>
 #include <signal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/file.h>
 
 void _DtTermPrimRemoveSuidRoot(void);
@@ -570,34 +573,80 @@ suidInit(void)
     _DtTermProcessUnlock();
 }
 
+/*
+** A program installed setuid root must give up that identity or stop: if it
+** went on, everything it does from here, and for the child of a terminal the
+** shell it starts for the user, would run as root.  Changing the identity can
+** fail (setreuid() returns EAGAIN when the user is at a process limit), so the
+** result of every step is checked.
+*/
+static void
+suidFatal(const char *message)
+{
+    static const char prefix[] = "dtterm: ";
+    ssize_t n;
+
+    n = write(STDERR_FILENO, prefix, sizeof(prefix) - 1);
+    n = write(STDERR_FILENO, message, strlen(message));
+    n = write(STDERR_FILENO, "\n", 1);
+    (void) n;
+    _exit(EXIT_FAILURE);
+}
+
 void
 _DtTermPrimRemoveSuidRoot(void)
 {
     (void) suidInit();
+    /* the group first: it cannot be changed once the user is not root... */
 #if	defined(HAS_SETRESUID)
-    (void) setresgid(gid_user, gid_user, gid_user);
-    (void) setresuid(uid_user, uid_user, uid_user);
+    if (setresgid(gid_user, gid_user, gid_user) != 0) {
+	suidFatal("cannot give up the group of the installed program");
+    }
+    if (setresuid(uid_user, uid_user, uid_user) != 0) {
+	suidFatal("cannot give up root privileges");
+    }
 #elif	defined(HAS_SETREUID)
-    (void) setregid(gid_user, gid_user);
-    (void) setreuid(uid_user, uid_user);
+    if (setregid(gid_user, gid_user) != 0) {
+	suidFatal("cannot give up the group of the installed program");
+    }
+    if (setreuid(uid_user, uid_user) != 0) {
+	suidFatal("cannot give up root privileges");
+    }
 #else	/* !HAS_SETRESUID && !HAS_SETREUID */
-    (void) setgid(gid_user);
-    (void) setuid(uid_user);
+    if (setgid(gid_user) != 0) {
+	suidFatal("cannot give up the group of the installed program");
+    }
+    if (setuid(uid_user) != 0) {
+	suidFatal("cannot give up root privileges");
+    }
 #endif	/* !HAS_SETRESUID && !HAS_SETREUID */
+    /* ...and the identity has to be the user's, with no way back to root. */
+    if (getgid() != gid_user || getegid() != gid_user ||
+	    getuid() != uid_user || geteuid() != uid_user ||
+	    (uid_user != 0 && setuid(0) == 0)) {
+	suidFatal("root privileges were not given up");
+    }
 }
 
 void
 _DtTermPrimToggleSuidRoot(Boolean root)
 {
+    Boolean changed = True;
+
     (void) suidInit();
 
 #if	defined(HAS_SETRESUID)
-    (void) setresuid(-1, root ? uid_root : uid_user, -1);
-    (void) setresgid(-1, root ? gid_root : gid_user, -1);
+    changed = (setresuid(-1, root ? uid_root : uid_user, -1) == 0);
+    changed = (setresgid(-1, root ? gid_root : gid_user, -1) == 0) && changed;
 #elif	defined(HAS_SETEUID)
-    (void) seteuid(root ? uid_root : uid_user);
-    (void) setegid(root ? gid_root : gid_user);
+    changed = (seteuid(root ? uid_root : uid_user) == 0);
+    changed = (setegid(root ? gid_root : gid_user) == 0) && changed;
 #endif	/* HAS_SETEUID */
+    /* Not getting root back only makes the privileged operation that follows
+     * fail.  Not giving it up would let everything after it run as root. */
+    if (!root && (!changed || geteuid() != uid_user || getegid() != gid_user)) {
+	suidFatal("cannot give up the effective root identity");
+    }
 }
 
 void
