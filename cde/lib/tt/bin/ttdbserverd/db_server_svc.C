@@ -1282,12 +1282,12 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 		return;
 	}
 	/* get the input arguments */
+	xdrproc_t arg_proc = (xdrproc_t)xdr_argument;
 	memset((char *)&argument, 0, sizeof(argument));
-	if (!svc_getargs(transp, (xdrproc_t)xdr_argument, (caddr_t)&argument)) {
+	if (!svc_getargs(transp, arg_proc, (caddr_t)&argument)) {
 		svcerr_decode(transp);
 		// free what was decoded before the request turned out malformed
-		(void)svc_freeargs(transp, (xdrproc_t)xdr_argument,
-				   (caddr_t)&argument);
+		(void)svc_freeargs(transp, arg_proc, (caddr_t)&argument);
 		UNLOCK_RPC();
 		return;
 	}
@@ -1319,9 +1319,7 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 	}
 	
 	/* free memory */
-	if (!svc_freeargs(transp,
-			  (xdrproc_t)xdr_argument,
-			  (caddr_t)&argument)) {
+	if (!svc_freeargs(transp, arg_proc, (caddr_t)&argument)) {
 		_tt_syslog(errstr, LOG_ERR, "svc_freeargs() == 0");
 		exit(1);
 	}

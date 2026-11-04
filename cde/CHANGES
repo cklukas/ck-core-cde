@@ -337,6 +337,9 @@
   the path as having no partition. `_Tt_dirname` and `_Tt_basename` no longer
   read before the start of a path that has no `/`. The unused `set_real_path`
   of rpc.ttdbserverd is removed.
+- tt: the dispatcher of rpc.ttdbserverd converts the routine that decodes an
+  argument once instead of three times, which takes the warning count of lib/tt
+  back under its recorded baseline.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,
