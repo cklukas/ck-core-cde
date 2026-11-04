@@ -794,10 +794,10 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 	} else if ((rqstp->rq_proc != _TT_MIN_AUTH_LEVEL) &&
 		   (rqstp->rq_proc != _TT_MFS) &&
 		   (rqstp->rq_proc != TT_GET_MIN_AUTH_LEVEL) &&
-		   (rqstp->rq_proc != TT_GET_FILE_PARTITION) &&
-		   (rqstp->rq_proc != TT_IS_FILE_IN_DB) &&
-		   (rqstp->rq_proc != TT_IS_OBJ_IN_DB)) {
-		/* extract the uid and gids from the client's credential */
+		   (rqstp->rq_proc != TT_GET_FILE_PARTITION)) {
+		/* extract the uid and gids from the client's credential: of
+		   every request that works for a user, as the uid and gids
+		   of the request before would be those it ran with */
 		switch (rqstp->rq_cred.oa_flavor) {
 		    case AUTH_UNIX:
 			/* Check authentication level */

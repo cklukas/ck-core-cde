@@ -54,6 +54,8 @@ struct Reply {
 static std::string	g_request;	/* what svc_getargs() decodes */
 static Reply		g_reply;
 static uid_t		g_uid;
+static std::vector<gid_t> g_gids;	/* the first is the primary group */
+static int		g_flavor = AUTH_UNIX;
 static SVCXPRT		g_xprt;
 
 static bool_t
@@ -125,20 +127,19 @@ static Reply
 rpc(u_long proc, const std::string &request)
 {
 	struct authunix_parms	cred;
-	gid_t			gids[1];
+	std::vector<gid_t>	gids = g_gids;
 	struct svc_req		rqst;
 
-	gids[0] = getgid();
 	memset(&cred, 0, sizeof(cred));
 	cred.aup_uid = g_uid;
-	cred.aup_gid = gids[0];
-	cred.aup_len = 1;
-	cred.aup_gids = gids;
+	cred.aup_gid = gids.empty() ? getgid() : gids[0];
+	cred.aup_len = gids.size();
+	cred.aup_gids = gids.empty() ? NULL : &gids[0];
 	memset(&rqst, 0, sizeof(rqst));
 	rqst.rq_prog = TT_DBSERVER_PROG;
 	rqst.rq_vers = TT_DBSERVER_VERS;
 	rqst.rq_proc = proc;
-	rqst.rq_cred.oa_flavor = AUTH_UNIX;
+	rqst.rq_cred.oa_flavor = g_flavor;
 	rqst.rq_clntcred = (char *)&cred;
 	rqst.rq_xprt = &g_xprt;
 
@@ -254,7 +255,23 @@ start_server(const char *name)
 
 	errstr = fopen((g_dir + "/server.log").c_str(), "w");
 	g_uid = getuid();
+	g_gids.assign(1, getgid());
+	g_flavor = AUTH_UNIX;
 	g_xprt.xp_ops = &fake_ops;
+
+	/* Partitions are the mount points of the host and the names in the
+	   partition map.  The legacy tests keep their tables in the directory
+	   of the case: it is a partition that maps to itself (a name that maps
+	   to the same name would be a loop, which maps to nothing). */
+	std::string map = g_dir + "/partition_map";
+	FILE *f = fopen(map.c_str(), "w");
+	if (f == NULL) {
+		perror("partition_map");
+		exit(2);
+	}
+	fprintf(f, "%s %s/.\n", g_dir.c_str(), g_dir.c_str());
+	fclose(f);
+	setenv("TT_PARTITION_MAP", map.c_str(), 1);
 
 	_tt_global = new _Tt_global;
 	db_pr_map = new _Tt_db_partition_redirection_map;
@@ -549,7 +566,14 @@ case_isfd_nothing_to_close(void)
 	start_server("isfd-nothing-to-close");
 
 	/* files that are built, not opened, are not the server's to close:
-	   one table in each of as many directories as there are entries */
+	   one table in each of as many directories as there are entries, and
+	   each directory is a partition of its own */
+	FILE *map = fopen((g_dir + "/partition_map").c_str(), "a");
+	CHECK(map != NULL);
+	for (int i = 0; i < _TT_MAX_ISFD; i++) {
+		fprintf(map, "%s/d%d %s/d%d/.\n", g_dir.c_str(), i, g_dir.c_str(), i);
+	}
+	fclose(map);
 	for (int i = 0; i < _TT_MAX_ISFD; i++) {
 		char dir[16];
 		snprintf(dir, sizeof(dir), "d%d", i);
@@ -1112,6 +1136,7 @@ start_partition(const char *name)
 
 	CHECK(f != NULL);
 	fprintf(f, "%s %s\n", pr->partition, g_dir.c_str());
+	fprintf(f, "%s %s/.\n", g_dir.c_str(), g_dir.c_str());
 	fclose(f);
 	g_mount = pr->partition;
 	free(pr->partition);
@@ -1796,6 +1821,1164 @@ case_xdr_hostile_lengths(void)
 	CHECK(requests > 400);
 }
 
+/* ---- identities, tables and results of the access cases ----------------------- */
+
+/* Send the requests that follow as another user, for as long as this lives. */
+class Caller {
+public:
+	Caller(uid_t uid, const std::vector<gid_t> &gids)
+		: uid_(g_uid), gids_(g_gids), flavor_(g_flavor)
+	{
+		g_uid = uid;
+		g_gids = gids;
+	}
+	Caller(uid_t uid, gid_t gid)
+		: uid_(g_uid), gids_(g_gids), flavor_(g_flavor)
+	{
+		g_uid = uid;
+		g_gids.assign(1, gid);
+	}
+	~Caller()
+	{
+		g_uid = uid_;
+		g_gids = gids_;
+		g_flavor = flavor_;
+	}
+private:
+	uid_t			uid_;
+	std::vector<gid_t>	gids_;
+	int			flavor_;
+};
+
+static bool
+exists(const std::string &path)
+{
+	struct stat st;
+
+	return lstat(path.c_str(), &st) == 0;
+}
+
+static std::string
+slurp(const std::string &path)
+{
+	std::string out;
+	char buf[256];
+	FILE *f = fopen(path.c_str(), "r");
+
+	while (f != NULL) {
+		size_t n = fread(buf, 1, sizeof(buf), f);
+		if (n == 0) {
+			break;
+		}
+		out.append(buf, n);
+	}
+	if (f != NULL) {
+		fclose(f);
+	}
+	return out;
+}
+
+/* The two numbers of an answer of NetISAM. */
+struct Isam {
+	int	result;
+	int	iserrno;
+};
+
+static Isam
+isam_of(const Reply &r)
+{
+	Isam		out = { INT_MIN, INT_MIN };
+	_Tt_isam_results res;
+	XDR		xdrs;
+
+	if (!answered(r)) {
+		return out;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (xdr_Tt_isam_results(&xdrs, &res)) {
+		out.result = res.result;
+		out.iserrno = res.iserrno;
+	}
+	return out;
+}
+
+/* The answer of a request that is refused for want of permission. */
+static bool
+is_denied(const Isam &i)
+{
+	return i.result == -1 && i.iserrno == DM_ACCESS_DENIED;
+}
+
+static int
+build_at(const std::string &path, bool fixed = true)
+{
+	keydesc			key = oid_key();
+	_Tt_isbuild_args	args;
+
+	args.path = (char *)path.c_str();
+	args.reclen = fixed ? fixed_reclen : ISMAXRECLEN;
+	args.key = &key;
+	args.mode = fixed ? fixed_mode : var_mode;
+	args.isreclen = fixed ? fixed_reclen : OID_KEY_LENGTH + MAX_PROP_LENGTH;
+	return reply_result(rpc(_TT_ISBUILD,
+				encode((xdrproc_t)xdr_Tt_isbuild_args, &args)));
+}
+
+static int
+open_at(const std::string &path, int mode)
+{
+	_Tt_isopen_args args;
+
+	args.path = (char *)path.c_str();
+	args.mode = mode;
+	return reply_result(rpc(_TT_ISOPEN,
+				encode((xdrproc_t)xdr_Tt_isopen_args, &args)));
+}
+
+static int
+erase_at(const std::string &path)
+{
+	char *p = (char *)path.c_str();
+
+	return reply_result(rpc(_TT_ISERASE, encode((xdrproc_t)xdr_wrapstring, &p)));
+}
+
+extern "C" { int isbuild(const char *, int, struct keydesc *, int); }
+
+/* A table of NetISAM's own, as an old server would have left it: closed at
+   once, as the server has nothing to do with it. */
+static bool
+make_table(const std::string &path)
+{
+	keydesc	key = oid_key();
+	int	fd = isbuild(path.c_str(), fixed_reclen, &key, fixed_mode);
+
+	if (fd < 0) {
+		return false;
+	}
+	isclose(fd);
+	return true;
+}
+
+/* ---- the table paths of the legacy interface ---------------------------------- */
+
+/* A legacy client names a table of its database <partition>/TT_DB/<table>.
+   isbuild, isopen and iserase serve that and nothing else. */
+static void
+case_legacy_table_paths(void)
+{
+	start_server("legacy-table-paths");
+
+	int isfd = build("oid_access");
+	CHECK(isfd >= 0);
+	CHECK(exists(g_dir + "/TT_DB/access_table.rec"));
+	CHECK(close_table(isfd) == 0);
+	isfd = open_table("oid_access", fixed_mode);
+	CHECK(isfd >= 0);
+	CHECK(close_table(isfd) == 0);
+
+	/* directories that are not TT_DB, but have TT_DB in their names, and
+	   paths that get to the table by way of one */
+	static const char *dirs[] = { "other", "xTT_DBx", "TT_DB.d", "notTT_DB",
+				      "TT_DB/sub", "sub", "rel", "rel/TT_DB",
+				      "evil" };
+	for (size_t i = 0; i < sizeof(dirs) / sizeof(dirs[0]); i++) {
+		mkdir((g_dir + "/" + dirs[i]).c_str(), 0700);
+	}
+	/* tables of an old server where they have no business to be: erase
+	   must leave them alone */
+	static const char *homes[] = { "other", "xTT_DBx", "TT_DB.d", "notTT_DB",
+				       "TT_DB/sub", "" };
+	for (size_t i = 0; i < sizeof(homes) / sizeof(homes[0]); i++) {
+		CHECK(make_table(g_dir + "/" + homes[i] + "/oid_access"));
+	}
+	static const char *bad[] = {
+		"/other/oid_access", "/xTT_DBx/oid_access",
+		"/TT_DB.d/oid_access", "/notTT_DB/oid_access",
+		"/TT_DB/sub/oid_access", "/sub/../TT_DB/oid_access",
+		"/TT_DB/../other/oid_access", "/./TT_DB/oid_access",
+		"/TT_DB/./oid_access", "//TT_DB/oid_access",
+		"/TT_DB/oid_access/", "/oid_access",
+	};
+	for (size_t i = 0; i < sizeof(bad) / sizeof(bad[0]); i++) {
+		std::string path = g_dir + bad[i];
+
+		CHECK(build_at(path) == -1);
+		CHECK(open_at(path, fixed_mode) == -1);
+		CHECK(erase_at(path) == -1);
+	}
+	for (size_t i = 0; i < sizeof(dirs) / sizeof(dirs[0]); i++) {
+		CHECK(!exists(g_dir + "/" + dirs[i] + "/access_table.rec"));
+	}
+	for (size_t i = 0; i < sizeof(homes) / sizeof(homes[0]); i++) {
+		CHECK(exists(g_dir + "/" + homes[i] + "/oid_access.rec"));
+		CHECK(exists(g_dir + "/" + homes[i] + "/oid_access.ind"));
+	}
+
+	/* a relative path, whatever it leads to */
+	CHECK(build_at("rel/TT_DB/oid_access") == -1);
+	CHECK(open_at("rel/TT_DB/oid_access", fixed_mode) == -1);
+	CHECK(!exists(g_dir + "/rel/TT_DB/access_table.rec"));
+
+	/* a directory that is not a partition gets no TT_DB */
+	CHECK(build_at(g_dir + "/evil/TT_DB/oid_access") == -1);
+	CHECK(open_at(g_dir + "/evil/TT_DB/oid_access", fixed_mode) == -1);
+	CHECK(!exists(g_dir + "/evil/TT_DB"));
+
+	/* iserase takes away a table of an old server by the name it had,
+	   never the tables of the layout that replaced them */
+	CHECK(erase_at(g_dir + "/TT_DB/access_table") == -1);
+	CHECK(exists(g_dir + "/TT_DB/access_table.rec"));
+	CHECK(erase_at(g_dir + "/TT_DB/no-such-table") == -1);
+	CHECK(make_table(g_dir + "/TT_DB/oid_prop"));
+	CHECK(erase_at(g_dir + "/TT_DB/sub/../oid_prop") == -1);
+	CHECK(exists(g_dir + "/TT_DB/oid_prop.rec"));
+	CHECK(erase_at(g_dir + "/TT_DB/oid_prop") == 0);
+	CHECK(!exists(g_dir + "/TT_DB/oid_prop.rec"));
+	CHECK(!exists(g_dir + "/TT_DB/oid_prop.ind"));
+}
+
+/* Links do not lead the server out of the TT_DB directory of the partition. */
+static void
+case_legacy_table_links(void)
+{
+	start_server("legacy-table-links");
+
+	/* TT_DB is a link to a directory somewhere else */
+	CHECK(mkdir((g_dir + "/elsewhere").c_str(), 0700) == 0);
+	CHECK(symlink((g_dir + "/elsewhere").c_str(), (g_dir + "/TT_DB").c_str()) == 0);
+	CHECK(build("oid_access") == -1);
+	CHECK(open_table("oid_access", fixed_mode) == -1);
+	CHECK(!exists(g_dir + "/elsewhere/access_table.rec"));
+	CHECK(!exists(g_dir + "/elsewhere/access_table.ind"));
+
+	/* ... and so is a file of the table */
+	CHECK(unlink((g_dir + "/TT_DB").c_str()) == 0);
+	CHECK(mkdir((g_dir + "/TT_DB").c_str(), 0700) == 0);
+	put(g_dir + "/victim", "not a table");
+	CHECK(symlink((g_dir + "/victim").c_str(),
+		      (g_dir + "/TT_DB/access_table.rec").c_str()) == 0);
+	CHECK(build("oid_access") == -1);
+	CHECK(open_table("oid_access", fixed_mode) == -1);
+	CHECK(slurp(g_dir + "/victim") == "not a table");
+}
+
+/* ---- the oid access procedures ------------------------------------------------ */
+
+static Reply
+oid_access_call(u_long proc, int isfd, const char *key, long value)
+{
+	_Tt_oidaccess_args args;
+
+	args.isfd = isfd;
+	args.key.key_len = OID_KEY_LENGTH;
+	args.key.key_val = key;
+	args.value = (short)value;
+	return rpc(proc, encode((xdrproc_t)xdr_Tt_oidaccess_args, &args));
+}
+
+static bool
+oid_access_get(int isfd, const char *key, int *result, long *uid)
+{
+	Reply			r = oid_access_call(_TT_GETOIDACCESS, isfd, key, 0);
+	_Tt_oidaccess_results	res;
+	XDR			xdrs;
+
+	if (!answered(r)) {
+		return false;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_Tt_oidaccess_results(&xdrs, &res)) {
+		return false;
+	}
+	*result = res.result;
+	*uid = (long)res.uid;
+	return true;
+}
+
+/* Like every procedure that works on an isfd, those that read and write the
+   access of an oid refuse a descriptor another user opened. */
+static void
+case_oid_access_stale_fd(void)
+{
+	char oid[OID_KEY_LENGTH];
+	const uid_t owner = getuid() + 10, stranger = getuid() + 11;
+	const gid_t group = getgid();
+
+	memset(oid, 'k', sizeof(oid));
+	start_server("oid-access-stale-fd");
+
+	int isfd;
+	{
+		Caller as(owner, group);
+		isfd = build("oid_access");
+		CHECK(isfd >= 0);
+		/* the owner writes himself into the table: this is allowed */
+		CHECK(isam_of(oid_access_call(_TT_SETOIDUSER, isfd, oid, owner)).result
+		      == DM_OK);
+	}
+
+	Caller as(stranger, group);
+	static const u_long procs[] = { _TT_SETOIDUSER, _TT_SETOIDGROUP,
+					_TT_SETOIDMODE };
+	for (size_t i = 0; i < sizeof(procs) / sizeof(procs[0]); i++) {
+		Isam r = isam_of(oid_access_call(procs[i], isfd, oid, stranger));
+
+		CHECK(r.result == DM_ERROR);
+		CHECK(r.iserrno == ERPC);
+	}
+	int result = 0;
+	long uid = 0;
+	CHECK(oid_access_get(isfd, oid, &result, &uid));
+	CHECK(result == DM_ERROR);
+
+	/* the owner has not been touched */
+	Caller back(owner, group);
+	CHECK(oid_access_get(isfd, oid, &result, &uid));
+	CHECK(result == DM_OK);
+	CHECK(uid == (long)owner);
+}
+
+/* ---- who may read and write what ---------------------------------------------- */
+
+static keydesc
+prop_key(void)
+{
+	keydesc k;
+
+	memset(&k, 0, sizeof(k));
+	k.k_flags = ISDUPS;
+	k.k_nparts = 2;
+	k.k_part[0].kp_start = 0;
+	k.k_part[0].kp_leng = OID_KEY_LENGTH;
+	k.k_part[0].kp_type = BINTYPE;
+	k.k_part[1].kp_start = OID_KEY_LENGTH;
+	k.k_part[1].kp_leng = MAX_PROP_LENGTH;
+	k.k_part[1].kp_type = CHARTYPE;
+	return k;
+}
+
+static int
+build_table(const char *old_name, bool fixed, int reclen, int minlen,
+	    const keydesc &k)
+{
+	std::string	path = table_path(old_name);
+	keydesc		key = k;
+	_Tt_isbuild_args args;
+
+	args.path = (char *)path.c_str();
+	args.reclen = reclen;
+	args.key = &key;
+	args.mode = fixed ? fixed_mode : var_mode;
+	args.isreclen = minlen;
+	return reply_result(rpc(_TT_ISBUILD,
+				encode((xdrproc_t)xdr_Tt_isbuild_args, &args)));
+}
+
+static std::string
+be16(unsigned v)
+{
+	char b[2] = { (char)(v >> 8), (char)v };
+
+	return std::string(b, 2);
+}
+
+/* The access record a client of the old servers wrote: the key, and the
+   owner, group and mode as three 16-bit numbers in network order. */
+static std::string
+short_access(const char *oid, unsigned user, unsigned group, unsigned mode)
+{
+	return std::string(oid, OID_KEY_LENGTH) + be16(user) + be16(group) +
+		be16(mode);
+}
+
+/* a record of the property table: key, name padded to its field, value */
+static std::string
+prop_record(const char *oid, const char *name, const char *value)
+{
+	std::string r(oid, OID_KEY_LENGTH);
+
+	r += name;
+	r.resize(OID_KEY_LENGTH + MAX_PROP_LENGTH, '\0');
+	r += value;
+	return r;
+}
+
+/* the record of a path of the file table: key and path, as long as the
+   shortest record of the table */
+static std::string
+path_record(const char *key, const std::string &path)
+{
+	std::string r(key, OID_KEY_LENGTH);
+
+	r += path;
+	if (r.size() < OID_KEY_LENGTH + MAX_PROP_LENGTH) {
+		r.resize(OID_KEY_LENGTH + MAX_PROP_LENGTH, '\0');
+	}
+	return r;
+}
+
+/* The four tables of a database of the old servers, with their records: the
+   file F (key f) is the file on disk, and holds the objects O0.. (keys o+i),
+   each with a mode of its own; P belongs to somebody else, X has no access
+   record. */
+struct Db {
+	char	f[OID_KEY_LENGTH];
+	char	o[8][OID_KEY_LENGTH];
+	char	p[OID_KEY_LENGTH];
+	char	x[OID_KEY_LENGTH];
+};
+
+static void
+make_db(Db *db, uid_t object_owner, gid_t object_group,
+	const unsigned *modes, size_t nmodes, uid_t other_owner,
+	const std::string &file)
+{
+	Caller root(0, getgid());
+
+	memset(db->f, 'f', sizeof(db->f));
+	for (size_t i = 0; i < 8; i++) {
+		memset(db->o[i], 'a' + (int)i, sizeof(db->o[i]));
+	}
+	memset(db->p, 'p', sizeof(db->p));
+	memset(db->x, 'x', sizeof(db->x));
+
+	int access = build_table("oid_access", true, 22, 22, oid_key());
+	int container = build_table("oid_container", true, 32, 32, oid_key());
+	int paths = build_table("docoid_path", false, 16 + 1024,
+				OID_KEY_LENGTH + MAX_PROP_LENGTH, oid_key());
+	int props = build_table("oid_prop", false, ISMAXRECLEN,
+				OID_KEY_LENGTH + MAX_PROP_LENGTH, prop_key());
+	CHECK(access >= 0 && container >= 0 && paths >= 0 && props >= 0);
+
+	CHECK(write_record(access, short_access(db->f, object_owner, object_group,
+						0xffff)) == 0);
+	CHECK(write_record(paths, path_record(db->f, "localhost:" + file)) == 0);
+	CHECK(write_record(props, prop_record(db->f, "name", "value")) == 0);
+	for (size_t i = 0; i < nmodes; i++) {
+		CHECK(write_record(access, short_access(db->o[i], object_owner,
+							object_group, modes[i])) == 0);
+		CHECK(write_record(container, std::string(db->o[i], OID_KEY_LENGTH) +
+				   std::string(db->f, OID_KEY_LENGTH)) == 0);
+		CHECK(write_record(props, prop_record(db->o[i], "name", "value")) == 0);
+	}
+	CHECK(write_record(access, short_access(db->p, other_owner, object_group,
+						0600)) == 0);
+	CHECK(write_record(container, std::string(db->p, OID_KEY_LENGTH) +
+			   std::string(db->f, OID_KEY_LENGTH)) == 0);
+	CHECK(write_record(props, prop_record(db->p, "name", "value")) == 0);
+	CHECK(write_record(props, prop_record(db->x, "name", "value")) == 0);
+
+	CHECK(close_table(access) == 0);
+	CHECK(close_table(container) == 0);
+	CHECK(close_table(paths) == 0);
+	CHECK(close_table(props) == 0);
+}
+
+/* The requests of a legacy client on the property table: read a record, add
+   one, rewrite one and test-and-set one, all with the key of an object. */
+static Isam
+read_prop(int isfd, const char *key)
+{
+	_Tt_isread_args ra = { isfd, { OID_KEY_LENGTH, (char *)key }, ISFIRST, 0 };
+
+	return isam_of(rpc(_TT_ISREAD, encode((xdrproc_t)xdr_Tt_isread_args, &ra)));
+}
+
+static Isam
+write_prop(int isfd, const char *key)
+{
+	std::string rec = prop_record(key, "added", "by the test");
+	_Tt_iswrite_args wa = { isfd, { (u_int)rec.size(), (char *)rec.data() } };
+
+	return isam_of(rpc(_TT_ISWRITE, encode((xdrproc_t)xdr_Tt_iswrite_args, &wa)));
+}
+
+static Isam
+rewrite_prop(int isfd, const char *key)
+{
+	std::string rec = prop_record(key, "name", "value");
+	_Tt_isrewrec_args wa = { isfd, 1,
+				 { (u_int)rec.size(), (char *)rec.data() } };
+
+	return isam_of(rpc(_TT_ISREWREC,
+			   encode((xdrproc_t)xdr_Tt_isrewrec_args, &wa)));
+}
+
+static Isam
+test_and_set_prop(int isfd, const char *key)
+{
+	keydesc k = prop_key();
+	std::string rec = prop_record(key, "tas", "set");
+	_Tt_test_and_set_args ta = { isfd, &k, OID_KEY_LENGTH + MAX_PROP_LENGTH,
+				     { (u_int)rec.size(), (char *)rec.data() } };
+	Reply r = rpc(_TT_TEST_AND_SET,
+		      encode((xdrproc_t)xdr_Tt_test_and_set_args, &ta));
+	_Tt_test_and_set_results res;
+	XDR xdrs;
+	Isam out = { INT_MIN, INT_MIN };
+
+	if (!answered(r)) {
+		return out;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (xdr_Tt_test_and_set_results(&xdrs, &res)) {
+		out.result = res.isresult.result;
+		out.iserrno = res.isresult.iserrno;
+		xdr_free((xdrproc_t)xdr_Tt_test_and_set_results, (char *)&res);
+	}
+	return out;
+}
+
+/* What the rule says.  The owner may do everything; the group and the others
+   what the bits of their class grant, and a request that reads and writes
+   needs both. */
+static bool
+class_grants(unsigned mode, int klass, bool read, bool write)
+{
+	unsigned r = (klass == 1) ? 040 : 04, w = (klass == 1) ? 020 : 02;
+
+	if (klass == 0) {
+		return true;
+	}
+	return (!read || (mode & r) != 0) && (!write || (mode & w) != 0);
+}
+
+struct Who {
+	const char		*name;
+	int			klass;		/* 0 owner, 1 group, 2 others */
+	uid_t			uid;
+	std::vector<gid_t>	gids;
+};
+
+/* Do the four requests on the object KEY get the answer the rule gives?  What
+   the file allows to the class of the user, and what the mode of the object
+   does, if it has one, counts together: a request is allowed if each of the
+   permissions it needs is given by one of them. */
+static void
+check_access(const Who &who, int isfd, const char *key, unsigned file_mode,
+	     unsigned object_mode)
+{
+	unsigned effective = file_mode | (object_mode != 0xffff ? object_mode : 0);
+	bool want_r = class_grants(effective, who.klass, true, false);
+	bool want_w = class_grants(effective, who.klass, false, true);
+	bool want_rw = class_grants(effective, who.klass, true, true);
+
+	Caller as(who.uid, who.gids);
+	Isam r = read_prop(isfd, key);
+	Isam w = write_prop(isfd, key);
+	Isam rw = test_and_set_prop(isfd, key);
+	Isam re = rewrite_prop(isfd, key);
+
+	if (is_denied(r) == want_r || is_denied(w) == want_w ||
+	    is_denied(rw) == want_rw || is_denied(re) == want_w) {
+		fprintf(stderr, "  %s, file %04o, object %04o: read %s (%d %d), "
+			"write %s (%d %d), test-and-set %s (%d %d), "
+			"rewrite %s (%d %d)\n",
+			who.name, file_mode, object_mode & 07777,
+			is_denied(r) ? "denied" : "allowed", r.result, r.iserrno,
+			is_denied(w) ? "denied" : "allowed", w.result, w.iserrno,
+			is_denied(rw) ? "denied" : "allowed", rw.result, rw.iserrno,
+			is_denied(re) ? "denied" : "allowed", re.result, re.iserrno);
+	}
+	CHECK(is_denied(r) == !want_r);
+	CHECK(is_denied(w) == !want_w);
+	CHECK(is_denied(rw) == !want_rw);
+	CHECK(is_denied(re) == !want_w);
+}
+
+static int
+open_as(const Who &who)
+{
+	Caller as(who.uid, who.gids);
+
+	return open_table("oid_prop", var_mode);
+}
+
+static void
+close_as(const Who &who, int isfd)
+{
+	Caller as(who.uid, who.gids);
+
+	CHECK(close_table(isfd) == 0);
+}
+
+/* A transaction of two records writes both: the access to each is checked. */
+static Isam
+transaction_of(int isfd, const char *first, const char *second)
+{
+	std::string a = prop_record(first, "txn", "1");
+	std::string b = prop_record(second, "txn", "2");
+	_Tt_trans_record two = { 1, 0, { (u_int)b.size(), (char *)b.data() }, NULL };
+	_Tt_trans_record one = { 1, 0, { (u_int)a.size(), (char *)a.data() }, &two };
+	_Tt_transaction_args args = { isfd, &one };
+
+	return isam_of(rpc(_TT_TRANSACTION,
+			   encode((xdrproc_t)xdr_Tt_transaction_args, &args)));
+}
+
+/* The protection of the file decides who may read and write the properties of
+   its objects: the owner of the file or of the object may do anything, the
+   group and the others what the group and other bits of the file give them,
+   or those of the mode of the object. */
+static void
+case_access_rules(void)
+{
+	start_server("access-rules");
+
+	const std::string file = g_dir + "/file";
+	const uid_t file_owner = getuid() ? getuid() : 4000;
+	const gid_t file_group = getuid() ? getgid() : 4000;
+	const uid_t creator = file_owner + 2;
+	Db db;
+
+	put(file, "the file");
+	if (getuid() == 0) {
+		CHECK(chown(file.c_str(), file_owner, file_group) == 0);
+	}
+
+	static const unsigned file_modes[] = { 0600, 0640, 0660, 0604, 0606,
+					       0644, 0666, 0400, 0200 };
+	static const unsigned object_modes[] = { 0600, 0640, 0606, 0620, 0xffff };
+	const size_t nfile = sizeof(file_modes) / sizeof(file_modes[0]);
+	const size_t nobj = sizeof(object_modes) / sizeof(object_modes[0]);
+
+	make_db(&db, creator, file_group + 1, object_modes, nobj, file_owner + 5,
+		file);
+
+	Who owner = { "owner of the file", 0, file_owner, { file_group } };
+	Who made = { "creator of the object", 0, creator, { file_group + 1 } };
+	Who member = { "member of the group", 1, file_owner + 1, { file_group } };
+	Who other = { "others", 2, file_owner + 1, { file_group + 1 } };
+	Who all[] = { owner, made, member, other };
+
+	for (size_t w = 0; w < 4; w++) {
+		int isfd = open_as(all[w]);
+
+		CHECK(isfd >= 0);
+		for (size_t i = 0; i < nfile; i++) {
+			CHECK(chmod(file.c_str(), file_modes[i]) == 0);
+			for (size_t m = 0; m < nobj; m++) {
+				check_access(all[w], isfd, db.o[m], file_modes[i],
+					     object_modes[m]);
+			}
+		}
+		close_as(all[w], isfd);
+	}
+
+	/* the superuser may, whatever the modes say */
+	CHECK(chmod(file.c_str(), 0000) == 0);
+	{
+		Who root = { "root", 0, 0, { 0 } };
+		int isfd = open_as(root);
+
+		CHECK(isfd >= 0);
+		Caller as(0, 0);
+		CHECK(!is_denied(read_prop(isfd, db.o[0])));
+		CHECK(!is_denied(write_prop(isfd, db.o[0])));
+		CHECK(!is_denied(read_prop(isfd, db.x)));
+		CHECK(close_table(isfd) == 0);
+	}
+
+	/* the properties of the file itself are not guarded by its mode, but an
+	   object without an access record, or a key that is not one, is
+	   nobody's to read */
+	CHECK(chmod(file.c_str(), 0600) == 0);
+	int isfd = open_as(other);
+	CHECK(isfd >= 0);
+	{
+		Caller as(other.uid, other.gids);
+		CHECK(!is_denied(read_prop(isfd, db.f)));
+		CHECK(is_denied(read_prop(isfd, db.x)));
+		CHECK(is_denied(read_prop(isfd, db.p)));
+		char shorter[OID_KEY_LENGTH - 1];
+		memset(shorter, 'a', sizeof(shorter));
+		_Tt_isread_args ra = { isfd, { sizeof(shorter), shorter }, ISFIRST, 0 };
+		CHECK(is_denied(isam_of(rpc(_TT_ISREAD,
+					    encode((xdrproc_t)xdr_Tt_isread_args, &ra)))));
+		_Tt_isread_args none = { isfd, { 0, NULL }, ISFIRST, 0 };
+		CHECK(is_denied(isam_of(rpc(_TT_ISREAD,
+					    encode((xdrproc_t)xdr_Tt_isread_args, &none)))));
+	}
+	close_as(other, isfd);
+
+	/* a transaction is for every record in it */
+	isfd = open_as(made);
+	CHECK(isfd >= 0);
+	{
+		Caller as(made.uid, made.gids);
+		CHECK(is_denied(transaction_of(isfd, db.o[0], db.p)));
+		CHECK(is_denied(transaction_of(isfd, db.p, db.o[0])));
+		CHECK(transaction_of(isfd, db.o[0], db.o[1]).result == 0);
+	}
+	close_as(made, isfd);
+
+	/* the server without access checking (rpc.ttdbserverd -n) */
+	isfd = open_as(other);
+	CHECK(isfd >= 0);
+	{
+		Caller as(other.uid, other.gids);
+		CHECK(is_denied(read_prop(isfd, db.o[0])));
+		access_checking = 0;
+		CHECK(!is_denied(read_prop(isfd, db.o[0])));
+		CHECK(!is_denied(write_prop(isfd, db.p)));
+		access_checking = 1;
+		CHECK(is_denied(read_prop(isfd, db.o[0])));
+	}
+	close_as(other, isfd);
+
+	/* a file that cannot be looked at leaves the object to its own owner,
+	   group and mode */
+	CHECK(unlink(file.c_str()) == 0);
+	isfd = open_as(member);
+	CHECK(isfd >= 0);
+	{
+		/* the object's group is file_group + 1: the member of the group
+		   of the file is a stranger to it */
+		Caller as(member.uid, member.gids);
+		CHECK(is_denied(write_prop(isfd, db.o[0])));	/* mode 0600 */
+		CHECK(!is_denied(read_prop(isfd, db.o[2])));	/* mode 0606 */
+		CHECK(!is_denied(write_prop(isfd, db.o[2])));
+	}
+	close_as(member, isfd);
+}
+
+/* An access record is read in the layout of the table it is in. */
+extern int _tt_decode_access(const char *rec, int reclen, uid_t *uid,
+			     gid_t *group, mode_t *mode) __attribute__((weak));
+
+static void
+case_access_layouts(void)
+{
+	uid_t uid;
+	gid_t group;
+	mode_t mode;
+	char oid[OID_KEY_LENGTH];
+
+	memset(oid, 'o', sizeof(oid));
+
+	if (_tt_decode_access == NULL) {
+		/* a server that does not read access records by their layout */
+		CHECK(_tt_decode_access != NULL);
+		return;
+	}
+
+	/* the layout of the old servers: three 16-bit numbers in network order */
+	std::string rec = short_access(oid, 1000, 100, 0640);
+	CHECK(_tt_decode_access(rec.data(), rec.size(), &uid, &group, &mode));
+	CHECK(uid == 1000 && group == 100 && mode == 0640);
+	rec = short_access(oid, 0xffff, 0xffff, 0xffff);
+	CHECK(_tt_decode_access(rec.data(), rec.size(), &uid, &group, &mode));
+	CHECK(uid == (uid_t)-1 && group == (gid_t)-1 && mode == (mode_t)-1);
+	rec = short_access(oid, 65534, 40000, 0100644);
+	CHECK(_tt_decode_access(rec.data(), rec.size(), &uid, &group, &mode));
+	CHECK(uid == 65534 && group == 40000 && mode == 0100644);
+
+	/* the layout of the tables this server makes: a long per number, which
+	   holds the number in network order, after a key of TT_DB_KEY_LENGTH */
+	std::string key(TT_DB_KEY_LENGTH, 'k');
+	std::string tab = key;
+	long n;
+	n = htonl(123456); tab.append((char *)&n, TT_DB_LONG_SIZE);
+	n = htonl(7890); tab.append((char *)&n, TT_DB_LONG_SIZE);
+	n = htonl(0100600); tab.append((char *)&n, TT_DB_LONG_SIZE);
+	CHECK(_tt_decode_access(tab.data(), tab.size(), &uid, &group, &mode));
+	CHECK(uid == 123456 && group == 7890 && mode == 0100600);
+	tab = key;
+	n = htonl((uid_t)-1); tab.append((char *)&n, TT_DB_LONG_SIZE);
+	n = htonl((gid_t)-1); tab.append((char *)&n, TT_DB_LONG_SIZE);
+	n = htonl((mode_t)-1); tab.append((char *)&n, TT_DB_LONG_SIZE);
+	CHECK(_tt_decode_access(tab.data(), tab.size(), &uid, &group, &mode));
+	CHECK(uid == (uid_t)-1 && group == (gid_t)-1 && mode == (mode_t)-1);
+
+	/* any other length is no access record */
+	CHECK(!_tt_decode_access(rec.data(), rec.size() - 1, &uid, &group, &mode));
+	CHECK(!_tt_decode_access(rec.data(), 0, &uid, &group, &mode));
+	CHECK(!_tt_decode_access(tab.data(), tab.size() + 1, &uid, &group, &mode));
+}
+
+/* ---- credentials -------------------------------------------------------------- */
+
+static int
+create_object(const std::string &objid, const std::string &file, unsigned mode)
+{
+	_tt_access	acc = { g_uid, g_gids.empty() ? getgid() : g_gids[0], mode };
+	_tt_property_list none = { 0, NULL };
+	char		otype[] = "otype";
+	_tt_create_obj_args co = { (char *)file.c_str(), (char *)objid.c_str(),
+				   otype, none, acc };
+	Reply		r = rpc(TT_CREATE_OBJ,
+				encode((xdrproc_t)xdr_tt_create_obj_args, &co));
+	_tt_db_cache_results res;
+	XDR		xdrs;
+
+	if (!answered(r)) {
+		return INT_MIN;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_tt_db_cache_results(&xdrs, &res)) {
+		return INT_MIN;
+	}
+	return res.results;
+}
+
+static int
+is_obj_in_db(const std::string &objid, Reply *reply = NULL)
+{
+	_tt_access	acc = { g_uid, g_gids.empty() ? getgid() : g_gids[0], 0 };
+	_tt_is_obj_in_db_args oi = { (char *)objid.c_str(), acc };
+	Reply		r = rpc(TT_IS_OBJ_IN_DB,
+				encode((xdrproc_t)xdr_tt_is_obj_in_db_args, &oi));
+	_tt_is_obj_in_db_results res;
+	XDR		xdrs;
+
+	if (reply != NULL) {
+		*reply = r;
+	}
+	if (!answered(r)) {
+		return INT_MIN;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_tt_is_obj_in_db_results(&xdrs, &res)) {
+		return INT_MIN;
+	}
+	int out = res.results;
+	xdr_free((xdrproc_t)xdr_tt_is_obj_in_db_results, (char *)&res);
+	return out;
+}
+
+static int
+is_file_in_db(const std::string &file)
+{
+	_tt_access	acc = { g_uid, g_gids.empty() ? getgid() : g_gids[0], 0 };
+	_tt_is_file_in_db_args fi = { (char *)file.c_str(), acc };
+	Reply		r = rpc(TT_IS_FILE_IN_DB,
+				encode((xdrproc_t)xdr_tt_is_file_in_db_args, &fi));
+	_tt_is_file_in_db_results res;
+	XDR		xdrs;
+
+	if (!answered(r)) {
+		return INT_MIN;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_tt_is_file_in_db_results(&xdrs, &res)) {
+		return INT_MIN;
+	}
+	return res.results;
+}
+
+static int
+get_obj_type(const std::string &objid)
+{
+	char		*name = (char *)objid.c_str();
+	Reply		r = rpc(TT_GET_OBJ_TYPE,
+				encode((xdrproc_t)xdr_tt_objid_name, &name));
+	_tt_obj_type_results res;
+	XDR		xdrs;
+
+	if (!answered(r)) {
+		return INT_MIN;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_tt_obj_type_results(&xdrs, &res)) {
+		return INT_MIN;
+	}
+	int out = res.results;
+	xdr_free((xdrproc_t)xdr_tt_obj_type_results, (char *)&res);
+	return out;
+}
+
+/* Every request that is not about the server itself runs with the
+   credentials it came with: the answer to a user does not depend on who
+   asked before, and a request without credentials is refused. */
+static void
+case_credentials_per_request(void)
+{
+	std::string file = start_partition("credentials");
+	const uid_t owner = getuid() + 20, stranger = getuid() + 21;
+	const gid_t group = getgid();
+	std::string objid = make_objid(g_mount);
+
+	put(g_dir + "/file", "the file");
+	{
+		Caller as(owner, group);
+		create_file(file);
+		CHECK(create_object(objid, file, 0600) == TT_DB_OK);
+		CHECK(get_obj_type(objid) == TT_DB_OK);
+		CHECK(is_obj_in_db(objid) == TT_DB_OK);
+	}
+
+	/* the owner's request leaves nothing behind for the stranger */
+	{
+		Caller o(owner, group);
+		CHECK(get_obj_type(objid) == TT_DB_OK);
+	}
+	{
+		Caller as(stranger, group);
+		/* the object is the owner's, and nobody else's to ask about */
+		CHECK(is_obj_in_db(objid) == TT_DB_ERR_ACCESS_DENIED);
+	}
+	/* ... and not the other way round */
+	{
+		Caller o(owner, group);
+		CHECK(is_obj_in_db(objid) == TT_DB_OK);
+		CHECK(is_file_in_db(file) == TT_DB_OK);
+	}
+
+	/* a request with no credentials, or with ones of a kind the server does
+	   not serve, is refused before it is looked at */
+	static const int flavors[] = { AUTH_NULL, 9999 };
+	for (size_t i = 0; i < sizeof(flavors) / sizeof(flavors[0]); i++) {
+		Caller as(owner, group);
+		g_flavor = flavors[i];
+		Reply r;
+		CHECK(is_obj_in_db(objid, &r) == INT_MIN);
+		CHECK(r.replied && !r.accepted);
+		CHECK(is_file_in_db(file) == INT_MIN);
+	}
+	/* those that carry no credentials of the user stay open */
+	{
+		Caller as(owner, group);
+		g_flavor = AUTH_NULL;
+		char *path = (char *)g_dir.c_str();
+		Reply r = rpc(TT_GET_FILE_PARTITION,
+			      encode((xdrproc_t)xdr_wrapstring, &path));
+		CHECK(answered(r));
+		r = rpc(TT_GET_MIN_AUTH_LEVEL, encode((xdrproc_t)xdr_void, NULL));
+		CHECK(answered(r));
+	}
+}
+
+/* ---- partitions --------------------------------------------------------------- */
+
+/* The partition of an object id is a name for the directory where the
+   database of the object is: a mount point, or a name of the partition map.
+   Anything else gets no database made for it. */
+static void
+case_object_partitions(void)
+{
+	std::string file = start_partition("object-partitions");
+	const uid_t me = getuid();
+
+	put(g_dir + "/file", "the file");
+	CHECK(mkdir((g_dir + "/evil").c_str(), 0700) == 0);
+	CHECK(mkdir((g_dir + "/relative").c_str(), 0700) == 0);
+	CHECK(mkdir((g_dir + "/relative/path").c_str(), 0700) == 0);
+	create_file(file);
+	CHECK(create_object(make_objid(g_mount), file, 0600) == TT_DB_OK);
+
+	/* the directories of the host that are none of that */
+	const std::string dirs[] = { g_dir + "/evil", g_dir + "/evil/",
+				     g_dir + "/..", g_dir + "/evil/../evil",
+				     g_dir + "/no/such/directory", "relative/path",
+				     g_mount + "/", g_dir + "/evil:more" };
+	for (size_t i = 0; i < sizeof(dirs) / sizeof(dirs[0]); i++) {
+		std::string objid = make_objid(dirs[i]);
+
+		CHECK(create_object(objid, file, 0600) != TT_DB_OK);
+		CHECK(get_obj_type(objid) != TT_DB_OK);
+		CHECK(is_obj_in_db(objid) != TT_DB_OK);
+		CHECK(!exists(dirs[i] + "/TT_DB"));
+	}
+	CHECK(!exists(g_dir + "/evil/TT_DB"));
+	CHECK(!exists(g_dir + "/relative/path/TT_DB"));
+	CHECK(!exists(g_dir + "/relative/TT_DB"));
+
+	/* the answer is the one for an object id that is none */
+	CHECK(get_obj_type(make_objid(g_dir + "/evil")) == TT_DB_ERR_ILLEGAL_OBJECT);
+
+	/* partitions that are known are served */
+	std::string objid = make_objid(g_mount);
+	CHECK(create_object(objid, file, 0600) == TT_DB_OK);
+	CHECK(is_obj_in_db(objid) == TT_DB_OK);
+	objid = make_objid(g_dir);
+	CHECK(create_object(objid, file, 0600) == TT_DB_OK);
+	CHECK(get_obj_type(objid) == TT_DB_OK);
+	(void)me;
+}
+
+/* ---- sessions ----------------------------------------------------------------- */
+
+static Isam
+session_call(u_long proc, int isfd, const char *oid, const std::string &session)
+{
+	keydesc k = prop_key();
+	_Tt_session_args args;
+
+	memset(&args, 0, sizeof(args));
+	args.isfd = isfd;
+	args.key = &k;
+	args.key_len = OID_KEY_LENGTH + MAX_PROP_LENGTH;
+	args.oidkey.oidkey_len = OID_KEY_LENGTH;
+	args.oidkey.oidkey_val = (char *)oid;
+	args.session.session_len = session.size();
+	args.session.session_val = (char *)session.data();
+	return isam_of(rpc(proc, encode((xdrproc_t)xdr_Tt_session_args, &args)));
+}
+
+/* the values of the property NAME of the object OID, in the order the table
+   keeps them */
+static std::vector<std::string>
+prop_values(int isfd, const char *oid, const char *name)
+{
+	std::vector<std::string>	out;
+	keydesc				k = prop_key();
+	std::string			rec = prop_record(oid, name, "");
+	_Tt_isstart_args		sa = { isfd, &k, OID_KEY_LENGTH + MAX_PROP_LENGTH,
+					       { (u_int)rec.size(), (char *)rec.data() },
+					       ISEQUAL };
+
+	if (isam_of(rpc(_TT_ISSTART, encode((xdrproc_t)xdr_Tt_isstart_args, &sa))).result
+	    != 0) {
+		return out;
+	}
+	for (;;) {
+		_Tt_isread_args	ra = { isfd, { (u_int)rec.size(), (char *)rec.data() },
+				       ISNEXT, 0 };
+		Reply		r = rpc(_TT_ISREAD,
+					encode((xdrproc_t)xdr_Tt_isread_args, &ra));
+		_Tt_isread_results res;
+		XDR		xdrs;
+
+		if (!answered(r)) {
+			break;
+		}
+		memset(&res, 0, sizeof(res));
+		xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+		if (!xdr_Tt_isread_results(&xdrs, &res) || res.isresult.result != 0) {
+			xdr_free((xdrproc_t)xdr_Tt_isread_results, (char *)&res);
+			break;
+		}
+		std::string got(res.rec.rec_val, res.rec.rec_len);
+		xdr_free((xdrproc_t)xdr_Tt_isread_results, (char *)&res);
+		if (got.compare(0, OID_KEY_LENGTH, oid, OID_KEY_LENGTH) != 0 ||
+		    strncmp(got.c_str() + OID_KEY_LENGTH, name, MAX_PROP_LENGTH) != 0) {
+			break;
+		}
+		out.push_back(got.substr(OID_KEY_LENGTH + MAX_PROP_LENGTH));
+	}
+	return out;
+}
+
+/* the value of the property _NODE_TYPE of the object OID, "" if gettype
+   finds none */
+static std::string
+gettype_of(int isfd, const char *oid)
+{
+	keydesc		k = prop_key();
+	_Tt_prop	p;
+	_Tt_spec_props	sp;
+	char		name[] = "_NODE_TYPE";	/* xdr_char writes what it encodes */
+
+	memset(&sp, 0, sizeof(sp));
+	memset(&p, 0, sizeof(p));
+	p.propname.propname_len = strlen(name);
+	p.propname.propname_val = name;
+	sp.isfd = isfd;
+	sp.key = &k;
+	sp.key_len = OID_KEY_LENGTH + MAX_PROP_LENGTH;
+	sp.oidkey.oidkey_len = OID_KEY_LENGTH;
+	sp.oidkey.oidkey_val = oid;
+	sp.props.props_len = 1;
+	sp.props.props_val = &p;
+
+	Reply		r = rpc(_TT_GETTYPE, encode((xdrproc_t)xdr_Tt_spec_props, &sp));
+	_Tt_spec_props	res;
+	XDR		xdrs;
+	std::string	out;
+
+	if (!answered(r)) {
+		return "?";
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (xdr_Tt_spec_props(&xdrs, &res)) {
+		if (res.result == 0 && res.props.props_len == 1) {
+			out.assign(res.props.props_val[0].value.value_val,
+				   res.props.props_val[0].value.value_len);
+		}
+		xdr_free((xdrproc_t)xdr_Tt_spec_props, (char *)&res);
+	}
+	return out;
+}
+
+/* A session is added to the sessions of an object once, and taken away
+   again by its id. */
+static void
+case_session_polarity(void)
+{
+	start_server("session-polarity");
+	g_uid = 0;		/* the superuser reads the table back */
+
+	char oid[OID_KEY_LENGTH], other[OID_KEY_LENGTH];
+	memset(oid, 'o', sizeof(oid));
+	memset(other, 'p', sizeof(other));
+
+	int isfd = build_table("oid_prop", false, ISMAXRECLEN,
+			       OID_KEY_LENGTH + MAX_PROP_LENGTH, prop_key());
+	CHECK(isfd >= 0);
+	/* the object has a modification date, as the objects of old servers did */
+	CHECK(write_record(isfd, prop_record(oid, "_MODIFICATION_DATE", "0")) == 0);
+	/* ... and so has another one, with a session of its own */
+	CHECK(write_record(isfd, prop_record(other, "_TT_SESSIONS", "s1")) == 0);
+
+	const std::string s1 = "01 first session", s2 = "01 second session";
+	std::vector<std::string> v;
+
+	CHECK(session_call(_TT_ADDSESSION, isfd, oid, s1).result == 0);
+	v = prop_values(isfd, oid, "_TT_SESSIONS");
+	CHECK(v.size() == 1 && v[0] == s1);
+
+	/* the same session again changes nothing */
+	CHECK(session_call(_TT_ADDSESSION, isfd, oid, s1).result == 0);
+	v = prop_values(isfd, oid, "_TT_SESSIONS");
+	CHECK(v.size() == 1);
+
+	/* another one is added next to it */
+	CHECK(session_call(_TT_ADDSESSION, isfd, oid, s2).result == 0);
+	v = prop_values(isfd, oid, "_TT_SESSIONS");
+	CHECK(v.size() == 2);
+	CHECK(session_call(_TT_ADDSESSION, isfd, oid, s2).result == 0);
+	CHECK(prop_values(isfd, oid, "_TT_SESSIONS").size() == 2);
+
+	/* every change counts in the modification date */
+	v = prop_values(isfd, oid, "_MODIFICATION_DATE");
+	CHECK(v.size() == 1 && v[0] == "2");
+
+	/* a session that is not there cannot be taken away */
+	Isam gone = session_call(_TT_DELSESSION, isfd, oid, "01 third session");
+	CHECK(gone.result == -1 && gone.iserrno == ENOREC);
+	CHECK(prop_values(isfd, oid, "_TT_SESSIONS").size() == 2);
+
+	/* the one that is named goes, the other one stays */
+	CHECK(session_call(_TT_DELSESSION, isfd, oid, s1).result == 0);
+	v = prop_values(isfd, oid, "_TT_SESSIONS");
+	CHECK(v.size() == 1 && v[0] == s2);
+	gone = session_call(_TT_DELSESSION, isfd, oid, s1);
+	CHECK(gone.result == -1 && gone.iserrno == ENOREC);
+	CHECK(session_call(_TT_DELSESSION, isfd, oid, s2).result == 0);
+	CHECK(prop_values(isfd, oid, "_TT_SESSIONS").empty());
+
+	/* the sessions of the other object were not touched */
+	v = prop_values(isfd, other, "_TT_SESSIONS");
+	CHECK(v.size() == 1 && v[0] == "s1");
+	CHECK(session_call(_TT_DELSESSION, isfd, oid, "s1").result == -1);
+	CHECK(prop_values(isfd, other, "_TT_SESSIONS").size() == 1);
+
+	/* the type of an object is the value of a property of it */
+	CHECK(write_record(isfd, prop_record(oid, "_NODE_TYPE", "my_otype")) == 0);
+	CHECK(gettype_of(isfd, oid) == "my_otype");
+	CHECK(gettype_of(isfd, other) == "");
+}
+
+
 /* ---- random requests --------------------------------------------------------- */
 
 static unsigned long long fuzz_state = 88172645463325252ULL;
@@ -1999,6 +3182,14 @@ static const struct {
 	{ "empty-paths", case_empty_paths },
 	{ "cache-level-value", case_cache_level_value },
 	{ "dequeue-sizes", case_dequeue_sizes },
+	{ "legacy-table-paths", case_legacy_table_paths },
+	{ "legacy-table-links", case_legacy_table_links },
+	{ "oid-access-stale-fd", case_oid_access_stale_fd },
+	{ "access-rules", case_access_rules },
+	{ "access-layouts", case_access_layouts },
+	{ "credentials-per-request", case_credentials_per_request },
+	{ "object-partitions", case_object_partitions },
+	{ "session-polarity", case_session_polarity },
 	{ "xdr-null-strings", case_xdr_null_strings },
 	{ "xdr-limits", case_xdr_limits },
 	{ "xdr-hostile-lengths", case_xdr_hostile_lengths },

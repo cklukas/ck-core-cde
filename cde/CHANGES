@@ -312,6 +312,24 @@
   pointer of an object that has none) is sent as the empty string instead of
   failing to encode. The tests have the allocator refuse requests for more than
   64 MiB and decode every limit and the size above it.
+- tt: make rpc.ttdbserverd check who reaches which database. The check that a
+  user may read or write the properties of an object compared the name of the
+  property table with the name the old servers gave it and never applied, so
+  everybody had access to everything through the old interface; the protection
+  of the file the object is in now decides, as rpc.ttdbserverd(1M) says (owner,
+  group and other bits, both permissions for a request that reads and writes,
+  every record of a transaction, `gettype` and the session procedures
+  included). `isbuild`, `isopen` and `iserase` serve only a path
+  `<partition>/TT_DB/<table>` in a partition of the host, never through a link
+  and never a path that merely contains `TT_DB`. The partition in an object id
+  has to be a mount point or a name of the partition map, so a client can no
+  longer have a `TT_DB` directory made anywhere. `TT_IS_FILE_IN_DB` and
+  `TT_IS_OBJ_IN_DB` run with the credentials of their own request and are
+  refused without any, `getoidaccess` and `setoid*` refuse a descriptor another
+  user opened, and `addsession`, `delsession` and `gettype` find the records
+  they are about, `addsession` no longer stops at a session that differs from the
+  new one and `delsession` no longer removes a session that differs from the
+  named one.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

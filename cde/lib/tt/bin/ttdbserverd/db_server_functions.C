@@ -93,7 +93,8 @@ static bool_t _tt_is_file_a_directory (const _Tt_string&);
 static _Tt_string _tt_make_equivalent_object_id(const _Tt_string &objid,
 						const _Tt_string &partition);
 static _Tt_db_results _tt_get_partition_db (const _Tt_string&,
-					    _Tt_db_server_db_ptr&);
+					    _Tt_db_server_db_ptr&,
+					    _Tt_db_results = TT_DB_ERR_ILLEGAL_FILE);
 static _Tt_db_access_ptr
        _tt_get_real_rpc_access (const _tt_access &rpc_access);
 static _Tt_db_access_ptr _tt_get_file_access (const _Tt_string &file,
@@ -231,7 +232,8 @@ _tt_db_cache_results *_tt_create_obj_1 (_tt_create_obj_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_string        real_file = args->file;
   _Tt_db_access_ptr object_access = _tt_get_real_rpc_access(args->access);
@@ -350,7 +352,8 @@ _tt_db_results *_tt_remove_obj_1 (_tt_remove_obj_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results = _tt_get_partition_db(partition, db);
+  results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   if (results == TT_DB_OK) {
     results = db->removeObject(args->objid, accessPtr);
@@ -893,7 +896,8 @@ _tt_obj_props_results *_tt_set_obj_props_1 (_tt_set_obj_props_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -962,7 +966,8 @@ _tt_obj_props_results *_tt_set_obj_prop_1 (_tt_set_obj_prop_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1028,7 +1033,8 @@ _tt_obj_props_results *_tt_add_obj_prop_1 (_tt_add_obj_prop_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1095,7 +1101,8 @@ _tt_obj_props_results *_tt_delete_obj_prop_1 (_tt_del_obj_prop_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1167,7 +1174,8 @@ _tt_obj_prop_results *_tt_get_obj_prop_1 (_tt_get_obj_prop_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1203,7 +1211,8 @@ _tt_obj_props_results *_tt_get_obj_props_1 (_tt_get_obj_props_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1237,7 +1246,8 @@ _tt_db_results *_tt_set_obj_type_1 (_tt_set_obj_type_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results = _tt_get_partition_db(partition, db);
+  results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1259,7 +1269,8 @@ _tt_obj_type_results *_tt_get_obj_type_1 (_tt_get_obj_type_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1296,7 +1307,8 @@ _tt_db_results *_tt_set_obj_file_1 (_tt_set_obj_file_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results = _tt_get_partition_db(partition, db);
+  results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1314,7 +1326,8 @@ _tt_obj_file_results *_tt_get_obj_file_1 (_tt_get_obj_file_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1342,7 +1355,8 @@ _tt_db_results *_tt_set_obj_access_1 (_tt_set_obj_access_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results = _tt_get_partition_db(partition, db);
+  results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1388,7 +1402,8 @@ _tt_obj_access_results *_tt_get_obj_access_1 (_tt_get_obj_access_args *args,
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -1446,7 +1461,8 @@ _tt_is_obj_in_db_results *_tt_is_obj_in_db_1 (_tt_is_obj_in_db_args *args,
   
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
-  results.results = _tt_get_partition_db(partition, db);
+  results.results = _tt_get_partition_db(partition, db,
+					 TT_DB_ERR_ILLEGAL_OBJECT);
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -2230,16 +2246,21 @@ static _Tt_string _tt_make_equivalent_object_id (const _Tt_string &objid,
 }
 
 static _Tt_db_results _tt_get_partition_db (const _Tt_string     &partition,
-					    _Tt_db_server_db_ptr &db)
+					    _Tt_db_server_db_ptr &db,
+					    _Tt_db_results        not_a_partition)
 {
   _Tt_db_partition_global_map_ref db_map;
   _Tt_db_results                  results = TT_DB_OK;
 
-  // The partition comes from the file or object id the client sent.  With
-  // none, there is no database to open: the one of "" would be a TT_DB
-  // directory of the server's own working directory.
-  if (!partition.len()) {
-    return TT_DB_ERR_ILLEGAL_FILE;
+  // The partition of a file is that of the mount point it is in.  That of
+  // an object is part of the object id the client sent: it names the
+  // directory where the TT_DB directory with the database of the object is,
+  // made if it is not there, so it has to be a partition this server keeps
+  // databases for.  With none, there is no database to open: the one of ""
+  // would be a TT_DB directory of the server's own working directory.
+  if (!partition.len() ||
+      !_Tt_db_partition_global_map_ref::isKnownPartition(partition)) {
+    return not_a_partition;
   }
 
   db = db_map.getDB(partition);

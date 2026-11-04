@@ -51,6 +51,7 @@
 #include "tt_isam_file_utils.h"
 #include "tt_isam_record_utils.h"
 #include "tt_db_server_db.h"
+#include "tt_db_partition_global_map_ref.h"
 #include "db_server_globals.h"
 #include "db/tt_db_key.h"
 #include "db/db_server.h"
@@ -66,6 +67,7 @@
 #include "dm/dm_enums.h"
 #include "dm/dm_recfmts.h"
 #include <errno.h>
+#include <limits.h>
 #include <memory.h>
 #include <string.h>
 #include <errno.h>
@@ -73,6 +75,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -131,12 +134,18 @@ const char *_TT_LINK_PROP = "link_prop";
 const char *_TT_LINK_ENDS = "link_ends";
 const char *_TT_OID_ACCESS = "/oid_access";
 const char *_TT_OID_CONTAINER = "/oid_container";
-const char *_TT_OID_PROP = "oid_prop";
+const char *_TT_OID_PROP = "/oid_prop";
 const char *_TT_LOG_FILE = "/log_file";
+// the tables of the layout that replaced those of the old servers; the
+// old names are those of the tables a client of an old server asks for
+const char *_TT_FILE_TABLE = "/" TT_DB_FILE_TABLE_FILE;
+const char *_TT_FILE_OBJECT_MAP = "/" TT_DB_FILE_OBJECT_MAP_FILE;
+const char *_TT_ACCESS_TABLE = "/" TT_DB_ACCESS_TABLE_FILE;
 const int _TT_ROOT_UID = 0;
 
 static _Tt_isam_results res;
 static char _tt_record[ISMAXRECLEN];
+static int _tt_record_len;	/* the length of the record _tt_get_record() read */
 
 enum _Tt_dm_access_category { DM_USER, DM_GROUP, DM_OTHER};
 
@@ -244,6 +253,7 @@ _tt_get_record(int prefix_len, const char *prefix, const char *db_name, char *re
 		cached_isclose(isfd);
 		return 0;
 	}
+	_tt_record_len = isreclen;
 	if (cached_isclose(isfd) == -1) {
 		_tt_syslog(errstr, LOG_ERR, "%s: isclose(): %d", here, iserrno);
 		return 0;
@@ -310,33 +320,70 @@ _tt_write_record(int prefix_len, const char *prefix, const char *db_name,
 }
 
 /*
- *  _tt_get_oid_access - get the input oid's owner, group, and mode
+ *  _tt_decode_access - the owner, group and mode in the access record REC of
+ *  RECLEN bytes, in the layout of the table it was read from:
+ *
+ *  - the tables that rpc.ttdbserverd makes itself have a record of a key of
+ *    TT_DB_KEY_LENGTH bytes and a long for each number, which holds the
+ *    number in network order;
+ *  - the tables that a client of the old servers makes (the length of its
+ *    key is that of OID_KEY_LENGTH) have 16 bits for each number, in network
+ *    order, and 0xffff for "none".
+ *
+ *  "None" is -1 in both.  Returns 0 if the record is of neither layout.
+ */
+
+int
+_tt_decode_access(const char *rec, int reclen, uid_t *uid, gid_t *group,
+		  mode_t *mode)
+{
+	if (reclen == TT_DB_KEY_LENGTH + 3 * TT_DB_LONG_SIZE) {
+		long n_user = 0, n_group = 0, n_mode = 0;
+
+		memcpy(&n_user, rec + TT_DB_ACCESS_USER_OFFSET, TT_DB_LONG_SIZE);
+		memcpy(&n_group, rec + TT_DB_ACCESS_GROUP_OFFSET, TT_DB_LONG_SIZE);
+		memcpy(&n_mode, rec + TT_DB_ACCESS_MODE_OFFSET, TT_DB_LONG_SIZE);
+		*uid = (uid_t)ntohl(n_user);
+		*group = (gid_t)ntohl(n_group);
+		*mode = (mode_t)ntohl(n_mode);
+		return 1;
+	}
+	if (reclen == OID_KEY_LENGTH + 3 * 2) {
+		unsigned short n_user, n_group, n_mode;
+
+		memcpy(&n_user, rec + OID_KEY_LENGTH, sizeof(n_user));
+		memcpy(&n_group, rec + OID_KEY_LENGTH + 2, sizeof(n_group));
+		memcpy(&n_mode, rec + OID_KEY_LENGTH + 4, sizeof(n_mode));
+		n_user = ntohs(n_user);
+		n_group = ntohs(n_group);
+		n_mode = ntohs(n_mode);
+		*uid = (n_user == 0xffff) ? (uid_t)-1 : (uid_t)n_user;
+		*group = (n_group == 0xffff) ? (gid_t)-1 : (gid_t)n_group;
+		*mode = (n_mode == 0xffff) ? (mode_t)-1 : (mode_t)n_mode;
+		return 1;
+	}
+	return 0;
+}
+
+/*
+ *  _tt_get_oid_access - get the input oid's owner, group, and mode from the
+ *  access table of the database of DB_PATH.  The table is read each time: the
+ *  new interface of the server changes it as well, and a cache that keeps
+ *  the record by the oid alone would hand the record of one database to
+ *  the request for another.
+ *  Returns 0 if there is such a record, 1 if there is none or it is none.
  */
 
 int
 _tt_get_oid_access(char *key, int prefix_len, char *db_path,
 		    uid_t &uid, gid_t &group, mode_t &mode)
 {
-	/* lookup in LRU cache */
-	_Tt_oid_access_ptr oa = _tt_oa_cache->lookup(key);
-	if (oa.is_null()) {
-		/* if not in cache, get from OID-ACCESS database */
-		if (_tt_get_record(prefix_len, db_path, _TT_OID_ACCESS, key)) {
-			oa = new _Tt_oid_access(_tt_record);
-			if (!oa.is_null()) {
-				_tt_oa_cache->enqueue(oa);   /* put in LRU cache */
-			}
-		} else {
-			// no oid record in access table
-			return 1;
-		}
-	} else {
-		_tt_oa_cache->promote(oa);	/* update the LRU cache */
+	if (!_tt_get_record(prefix_len, db_path, _TT_ACCESS_TABLE, key)) {
+		// no oid record in access table
+		return 1;
 	}
-	uid = oa->user();
-	group = oa->group();
-	mode = oa->mode();
-	return 0;
+	return _tt_decode_access(_tt_record, _tt_record_len, &uid, &group,
+				 &mode) ? 0 : 1;
 }
 
 /*
@@ -407,38 +454,53 @@ _tt_client_record(char *buf, const char *rec_val, u_int rec_len)
 }
 
 /*
- *  _tt_set_record_key - the session procedures start from a key the client
- *  sent as a pointer to a struct keydesc, which may be null, and a length.
- *  Zeroes the request record and copies the key to the start of it.  Returns
- *  0, and leaves the record alone, if there is no descriptor or the length
- *  is more than the descriptor holds.
+ *  _tt_set_record_key - the session procedures and gettype look for a record
+ *  of the property table by the object it belongs to and the name of the
+ *  property, which is how that table is keyed.  Zeroes the request record
+ *  and puts the key in it: the key of the object, and the NAME of NAMELEN
+ *  bytes in the field of the name.  Returns 0, and leaves the record alone,
+ *  if the key is not there or longer than a key, or the name is none or does
+ *  not fit its field.
  */
 
 static int
-_tt_set_record_key(const keydesc *key, int key_len)
+_tt_set_record_key(const char *oidkey, u_int oidkey_len, const char *name,
+		   size_t namelen)
 {
-	if (key == NULL || key_len < 0 || (size_t)key_len > sizeof(keydesc)) {
+	if (oidkey == NULL || oidkey_len == 0 || oidkey_len > (u_int)OID_KEY_LENGTH ||
+	    name == NULL || namelen == 0 || namelen > (size_t)MAX_PROP_LENGTH) {
 		return 0;
 	}
 	memset(_tt_record, 0, sizeof(_tt_record));
-	memcpy(_tt_record, key, key_len);
+	memcpy(_tt_record, oidkey, oidkey_len);
+	memcpy(_tt_record + OID_KEY_LENGTH, name, namelen);
 	return 1;
 }
 
 /*
  *  _tt_oid_accessp - this function determines whether the client with the
  *  extracted uid and gids have read or write permissions as specified by the
- *  input mode to the OID-PROP or LINK-PROP records.  If no access property
- *  is found, an error has occurred and no permission is given.
+ *  input mode ('r', 'w' or 'r' + 'w') to the properties of the object whose
+ *  key is the first OID_KEY_LENGTH bytes of the record REC of REC_LEN bytes
+ *  in the property table.  The protection of the file the object is in
+ *  decides, as rpc.ttdbserverd(1M) says of the option that turns this off:
+ *
+ *  - the owner of the file or of the object may do anything;
+ *  - a member of the group of the file may do what the group bits of the
+ *    mode of the file, or of the mode of the object, give to the group;
+ *  - everybody else what the other bits give.
+ *
+ *  A request that reads and writes needs both.  The properties of a file
+ *  itself (which has no file of its own to look at) are everybody's.  If no
+ *  access record is found, an error has occurred and no permission is given.
  *  If the client has the access permission, returns 1.  Otherwise, returns 0.
  */
 
 int
-_tt_oid_accessp(int _isfd, char *rec, int mode)
+_tt_oid_accessp(int _isfd, const char *rec, u_int rec_len, int mode)
 {
 	static const char *here = "_tt_oid_accessp()";
 	int prefix_len;
-	mode_t request_mask = 0;
 	_Tt_dm_access_category category = DM_OTHER;
 	uid_t oid_uid, file_uid;
 	gid_t oid_group, file_group;
@@ -470,27 +532,48 @@ _tt_oid_accessp(int _isfd, char *rec, int mode)
 	}
 	int basename_len = _Tt_basename(db_path);
 	char *db_basename = db_path + basename_len;
-	if (strcmp(db_basename, _TT_OID_PROP) == 0) {
+	// The path is that of the table of the current layout (isopen and
+	// isbuild map the name the client used), which is the name to look for.
+	if (strcmp(db_basename, TT_DB_PROPERTY_TABLE_FILE) == 0) {
+		if (rec == NULL || rec_len < (u_int)OID_KEY_LENGTH) {
+			// no object to ask about
+			_tt_syslog(errstr, LOG_ERR, "%s: no object key", here);
+			return 0;
+		}
+		char key[OID_KEY_LENGTH];
+		memcpy(key, rec, sizeof(key));
+
+		bool want_read = (mode == 'r' || mode == 'r' + 'w');
+		bool want_write = (mode == 'w' || mode == 'r' + 'w');
+		if (!want_read && !want_write) {
+			return 0;
+		}
 		/* get the OID-ACCESS info */
-		if (_tt_get_oid_access(rec, prefix_len, db_path,
+		if (_tt_get_oid_access(key, prefix_len, db_path,
 				       oid_uid, oid_group, oid_mode)) {
 			// no record, error
 			_tt_syslog(errstr, LOG_ERR, "_tt_get_oid_access() != 0");
 			return 0;
 		}
 		/* get the document oid */
-		if (!_tt_get_record(prefix_len, db_path, _TT_OID_CONTAINER,
-				    rec)) {
+		if (!_tt_get_record(prefix_len, db_path, _TT_FILE_OBJECT_MAP,
+				    key)) {
 			// only a doc oid has no mapping, allow access
 			return 1;
 		}
 		/* get the document path */
-		if (!_tt_get_record(prefix_len, db_path, _TT_DOCOID_PATH,
+		if (!_tt_get_record(prefix_len, db_path, _TT_FILE_TABLE,
 				    _tt_record + OID_KEY_LENGTH)) {
 			_tt_syslog(errstr, LOG_ERR,
-				   "_tt_get_record(,,_TT_DOCOID_PATH,) == 0");
+				   "_tt_get_record(,,_TT_FILE_TABLE,) == 0");
 			return 0;
 		}
+		if (_tt_record_len <= OID_KEY_LENGTH ||
+		    _tt_record_len >= (int)sizeof(_tt_record)) {
+			_tt_syslog(errstr, LOG_ERR, "%s: no path of the file", here);
+			return 0;
+		}
+		_tt_record[_tt_record_len] = '\0';
 		char *path = _tt_record + OID_KEY_LENGTH;
 		char *p = strchr(path, ':');
 		if (!p) {
@@ -523,59 +606,31 @@ _tt_oid_accessp(int _isfd, char *rec, int mode)
 			return 1;
 		}
 		/* check access request against permissions */
+		mode_t granted = file_mode;
+		mode_t request_mask = 0;
+		if (oid_mode != (mode_t)-1) {
+			granted |= oid_mode;
+		}
 		switch (category) {
 		      case DM_USER:
 			// The owner is allowed all privileges
 			return 1;
-/*			this left here in case we want to check someday
- *			switch (mode) {
- *      		      case 'r':
- *      			request_mask = S_IRUSR;
- *      			break;
- *      		      case 'w':
- *      			request_mask = S_IWUSR;
- *      			break;
- *      		      case ('r' + 'w'):
- *      			request_mask = S_IRUSR + S_IWUSR;
- *      			break;
- *      		}
- *      		break;
- */
-        	      case DM_GROUP:
-			switch (mode) {
-			      case 'r':
-				request_mask = S_IRGRP;
-				break;
-			      case 'w':
-				request_mask = S_IWGRP;
-				break;
-			      case ('r' + 'w'):
-				request_mask = S_IRGRP + S_IWGRP;
-				break;
-			}
+		      case DM_GROUP:
+			request_mask = (want_read ? S_IRGRP : 0) |
+				       (want_write ? S_IWGRP : 0);
 			break;
 		      case DM_OTHER:
-			switch (mode) {
-			      case 'r':
-				request_mask = S_IROTH;
-				break;
-			      case 'w':
-				request_mask = S_IWOTH;
-				break;
-			      case ('r' + 'w'):
-				request_mask = S_IROTH + S_IWOTH;
-				break;
-			}
+			request_mask = (want_read ? S_IROTH : 0) |
+				       (want_write ? S_IWOTH : 0);
 			break;
 		}
-		if ((request_mask & file_mode) == 0 &&
-		    (oid_mode == (mode_t)-1 || (request_mask & oid_mode) == 0)) {
-			return 0;
-		}
+		return (granted & request_mask) == request_mask;
 	} else if (strcmp(db_basename, _TT_LINK_PROP) == 0 ||
 		   strcmp(db_basename, _TT_LINK_ENDS) == 0) {
+		mode_t request_mask = 0;
+
 		/* get the LINK access permissions */
-		if (_tt_get_link_permissions(rec, prefix_len, db_path,
+		if (_tt_get_link_permissions((char *)rec, prefix_len, db_path,
 					     oid_uid, oid_group, oid_mode)) {
 			// no link permissions, error
 			_tt_syslog(errstr, LOG_ERR,
@@ -771,14 +826,24 @@ _tt_write_oid_access(int isfd, const char *key, uid_t uid,
 	return DM_OK;
 }
 
+/*
+ *  _tt_update_modtime - count up the modification date of the object OIDKEY,
+ *  the value of its property _MODIFICATION_DATE, if it has one.  KEY and
+ *  KEY_LEN are those of the request, the descriptor of the key and the length
+ *  of the key.
+ */
+
 void
 _tt_update_modtime(int			  isfd,
 		   keydesc 		* key,
 		   int			  key_len,
+		   const char		* oidkey,
+		   u_int		  oidkey_len,
 		   _Tt_isam_results	& res)
 {
 	static const char *here = "_tt_update_modtime()";
-	if (!_tt_set_record_key(key, key_len)) {
+	if (!_tt_set_record_key(oidkey, oidkey_len, _MP_NODE_MOD_PROP,
+				strlen(_MP_NODE_MOD_PROP))) {
 		res.result = -1;
 		res.iserrno = ERPC;
 		return;
@@ -810,27 +875,146 @@ _tt_update_modtime(int			  isfd,
 		return;
 	}
 
-
-
+	int value_len = isreclen - MAX_PROP_LENGTH - OID_KEY_LENGTH;
+	if (value_len < 0) {
+		value_len = 0;
+	}
 	_Tt_string last_mod_time_string((const unsigned char *)
 					&_tt_record[OID_KEY_LENGTH +
 						    MAX_PROP_LENGTH],
-					isreclen -
-					MAX_PROP_LENGTH - OID_KEY_LENGTH);
+					value_len);
 	long last_mod_time = atol((char *)last_mod_time_string);
-	if (last_mod_time < 0) {
+	if (last_mod_time < 0 || last_mod_time == LONG_MAX) {
 		last_mod_time = 0;
 	}
 	else {
 		last_mod_time++;
 	}
 
-	char mod_string[16];
-	sprintf(&_tt_record[OID_KEY_LENGTH + MAX_PROP_LENGTH],
-		"%ld", (long)last_mod_time);
+	char mod_string[32];
+	snprintf(mod_string, sizeof(mod_string), "%ld", last_mod_time);
+	memcpy(&_tt_record[OID_KEY_LENGTH + MAX_PROP_LENGTH], mod_string,
+	       strlen(mod_string));
+	isreclen = OID_KEY_LENGTH + MAX_PROP_LENGTH + strlen(mod_string);
 	res.result = isrewcurr(isfd, _tt_record);
 	res.iserrno = iserrno;
 	return;
+}
+
+/*
+ *  The clients of the old servers name a table of their database
+ *  <partition>/TT_DB/<table>, where <table> is one of the names the old
+ *  servers gave the tables of a partition (oid_prop, oid_access,
+ *  oid_container, docoid_path).  The server maps those to the tables of the
+ *  layout that replaced them, and builds, opens and erases nothing else:
+ *  every other file is no ToolTalk database (bugid 1049947).
+ *
+ *  _tt_table_path_ok() holds the path to that.  It is an absolute path
+ *  of components that are no "." and no "..", the last of which is the
+ *  table and the one before it is TT_DB itself, not a name that has TT_DB
+ *  in it.  The directory above TT_DB is a partition the server keeps
+ *  databases for, and TT_DB is a directory of its own, not a link to one
+ *  somewhere else.  PARTITION is the name of that partition.
+ */
+
+static int
+_tt_table_path_ok(const char *path, _Tt_string &partition)
+{
+	if (path == NULL || path[0] != '/' || strlen(path) > (size_t)PATH_LENGTH) {
+		return 0;
+	}
+
+	// the start (a slash) of the last two components
+	const char *prev = NULL, *last = NULL;
+	for (const char *p = path; *p != '\0'; ) {
+		const char *name = p + 1;
+		size_t n = strcspn(name, "/");
+
+		if (n == 0 || (name[0] == '.' && (n == 1 ||
+						  (n == 2 && name[1] == '.')))) {
+			return 0;
+		}
+		prev = last;
+		last = p;
+		p = name + n;
+	}
+	if (prev == NULL ||
+	    (size_t)(last - prev - 1) != strlen("TT_DB") ||
+	    memcmp(prev + 1, "TT_DB", strlen("TT_DB")) != 0) {
+		return 0;
+	}
+
+	partition = (prev == path) ? _Tt_string("/") :
+		_Tt_string((const unsigned char *)path, (int)(prev - path));
+	if (!_Tt_db_partition_global_map_ref::isKnownPartition(partition)) {
+		return 0;
+	}
+
+	_Tt_string dir((const unsigned char *)path, (int)(last - path));
+	struct stat st;
+	if (lstat((char *)dir, &st) == 0 && !S_ISDIR(st.st_mode)) {
+		return 0;
+	}
+	return 1;
+}
+
+/*
+ *  The files of a table are TABLE.rec, TABLE.ind and, if the records are of
+ *  varying length, TABLE.var: none of them is to be a link to a file
+ *  somewhere else.  Returns 0 if one is.
+ */
+
+static int
+_tt_table_files_ok(const char *table)
+{
+	static const char *suffixes[] = { ".rec", ".ind", ".var" };
+	size_t len = strlen(table);
+
+	for (size_t i = 0; i < sizeof(suffixes) / sizeof(suffixes[0]); i++) {
+		char *file = (char *)malloc(len + strlen(suffixes[i]) + 1);
+		struct stat st;
+		int link;
+
+		if (file == NULL) {
+			return 0;
+		}
+		strcpy(file, table);
+		strcat(file, suffixes[i]);
+		link = (lstat(file, &st) == 0 && S_ISLNK(st.st_mode));
+		free(file);
+		if (link) {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+/*
+ *  Is the table PATH names one of an old server (the name is one of those,
+ *  which map_old_db_to_new_db() knows)?
+ */
+
+static int
+_tt_old_table_name(const char *path)
+{
+	return find_endstring(path, _TT_DOCOID_PATH) > 0 ||
+		find_endstring(path, _TT_OID_CONTAINER) > 0 ||
+		find_endstring(path, _TT_OID_PROP) > 0 ||
+		find_endstring(path, _TT_OID_ACCESS) > 0;
+}
+
+static _Tt_isam_results *
+_tt_refuse_table()
+{
+	// Might consider logging this one to the console, since it's
+	// evidence of an attempted security violation.
+	res.result = -1;
+	res.iserrno = DM_ACCESS_DENIED;
+	_tt_syslog(errstr, LOG_ERR,
+		   catgets(_ttcatd, 5, 3, "Security violation: "
+			   "RPC call wanted me to open a file that "
+			   "is not a ToolTalk database"));
+	return (&res);
 }
 
 /*
@@ -874,18 +1058,25 @@ _tt_isbuild_1(_Tt_isbuild_args *args, SVCXPRT * /* transp */)
 {
 	static const char *here = "_tt_isbuild_1()";
         _Tt_string db_path = (char *)NULL;
+	_Tt_string partition;
 	mode_t prev_umask;
 	isreclen = args->isreclen;
-	prev_umask = umask(~(S_IRUSR+S_IWUSR));	// Only I can read and write
+	if (!_tt_table_path_ok(args->path, partition) ||
+	    !_tt_table_files_ok(args->path)) {
+		return _tt_refuse_table();
+	}
 	db_path = map_old_db_to_new_db(args->path);
 	if (db_path.is_null() || db_path.len() == 0 || args->key == NULL) {
 		// not a path of a table, or no key descriptor
-		umask(prev_umask);
 		res.result = -1;
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: no table or no key", here);
 		return (&res);
 	}
+	if (!_tt_table_files_ok(db_path)) {
+		return _tt_refuse_table();
+	}
+	prev_umask = umask(~(S_IRUSR+S_IWUSR));	// Only I can read and write
 	res.result = isbuild(db_path, args->reclen, args->key, args->mode);
 	umask(prev_umask);
 	if (res.result == -1) {
@@ -1036,7 +1227,8 @@ _tt_isdelrec_1(_Tt_isdelrec_args *args, SVCXPRT *transp)
 			   here );
 	} else {
 		if (args->rec.rec_len > 0) {
-			if (_tt_oid_accessp(args->isfd, args->rec.rec_val, 'w')) {
+			if (_tt_oid_accessp(args->isfd, args->rec.rec_val,
+						   args->rec.rec_len, 'w')) {
 			  if (msg_q_lock(args->isfd,
 					 args->rec.rec_val,
 					 args->rec.rec_len,
@@ -1068,6 +1260,14 @@ _tt_isdelrec_1(_Tt_isdelrec_args *args, SVCXPRT *transp)
 _Tt_isam_results *
 _tt_iserase_1(char **path, SVCXPRT * /* transp */)
 {
+	_Tt_string partition;
+
+	// the table of an old server by the name it had: the tables of the
+	// layout that replaced them have other names, and are not erased
+	if (path == NULL || !_tt_table_path_ok(*path, partition) ||
+	    !_tt_old_table_name(*path) || !_tt_table_files_ok(*path)) {
+		return _tt_refuse_table();
+	}
 	res.result = iserase(*path);
 	res.iserrno = iserrno;
 	if (res.result == -1) {
@@ -1085,53 +1285,25 @@ _tt_isopen_1(_Tt_isopen_args *args, SVCXPRT * /* transp */)
 {
 	static const char *here = "_tt_isopen_1()";
 	_Tt_string db_path = args->path;
+	_Tt_string partition;
 	if (db_path.is_null()) {
 		res.result = -1;
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: args->path.is_null()", here);
 		return (&res);
 	}
-	// _Tt_dirname() searches for a slash backwards from the end of the
-	// path, and does not stop at the start of a path that has none.
-	int prefix_len = (strchr((char *)db_path, '/') == NULL) ? 0 :
-		_Tt_dirname((char *)db_path) + 1;
-	if (prefix_len < 1) {
-		res.result = -1;
-		res.iserrno = ERPC;
-		_tt_syslog(errstr, LOG_ERR, "%s: _Tt_dirname(db_path) < 0",
-			   here);
-		return (&res);
-	}
 	// bugid 1049947: someone could use our dbserver to get at
-	// other isam files on the same machine.  Protect (lightly)
-	// against this by making sure "TT_DB" is in the path.
-	// Someone could still bypass this by making symlinks to the
-	// file he wants to get at, so the "right way" to fix this
-	// would be to write a distinctive signature into the APPL_MAGIC
-	// bucket, and check for that signature on open.  However,
-	// that's a more widespread change than we want to try to
-	// squeeze in only hours from Beta...  RFM 1/28/90
-
-	int l = db_path.len();
-	int tl = strlen("TT_DB");
-	int j;
-	for (j = 0; j<l; j++) {
-		if (0==strncmp((char *)db_path+j,"TT_DB",tl)) {
-			break;
-		}
+	// other isam files on the same machine.  The path has to be that of
+	// a table of the TT_DB directory of a partition (see
+	// _tt_table_path_ok()), and neither it nor the files of the table
+	// may be a link to somewhere else.  The "right way" to protect the
+	// other files would be to write a distinctive signature into the
+	// APPL_MAGIC bucket, and check for that signature on open.
+	if (!_tt_table_path_ok(args->path, partition) ||
+	    !_tt_table_files_ok(args->path)) {
+		return _tt_refuse_table();
 	}
-	if (j==l) {
-		// Might consider logging this one to the console, since
-		// it's evidence of an attempted security violation.
-		res.result = -1;
-		res.iserrno = DM_ACCESS_DENIED;
-		_tt_syslog(errstr, LOG_ERR,
-			   catgets(_ttcatd, 5, 3, "Security violation: "
-				   "RPC call wanted me to open a file that "
-				   "is not a ToolTalk database"));
-		return(&res);
-	}
-
+	int prefix_len = strrchr((char *)db_path, '/') - (char *)db_path;
 
 	memcpy(_tt_log_file, (char *)db_path, prefix_len);
 	snprintf(_tt_log_file + prefix_len, MAXPATHLEN - prefix_len, "%s", _TT_LOG_FILE);
@@ -1147,6 +1319,9 @@ _tt_isopen_1(_Tt_isopen_args *args, SVCXPRT * /* transp */)
 			   here);
 		return (&res);
 	}
+	if (!_tt_table_files_ok(db_path)) {
+		return _tt_refuse_table();
+	}
 
 	res.result = cached_isopen((char *)db_path, args->mode);
 	if (res.result != -1) {	/* record database name and isfd */
@@ -1159,15 +1334,12 @@ _tt_isopen_1(_Tt_isopen_args *args, SVCXPRT * /* transp */)
 	  // Then call isopen again,
 	  // the files will then exist. bug# 1179660
 	  //
+	  // The database is made in the partition the path is in, which is
+	  // the one the client named.
 	  _Tt_db_server_db	* db;
-	  _tt_file_partition_results *partitionRes;
-	  char			*file = (char *)db_path;
 
-	  partitionRes = _tt_get_file_partition_1(&file, NULL);
-	  db = new _Tt_db_server_db(partitionRes->partition);
+	  db = new _Tt_db_server_db(partition);
 	  delete db;
-	  free(partitionRes->partition);
-	  free(partitionRes->network_path);
 
 	  res.result = cached_isopen((char *)db_path, args->mode);
 	  if (res.result != -1) {	/* record database name and isfd */
@@ -1200,7 +1372,8 @@ _tt_isread_1(_Tt_isread_args *args, SVCXPRT *transp)
 			   here );
 		return (&res);
 	}
-	if (_tt_oid_accessp(args->isfd, args->rec.rec_val, 'r')) {
+	if (_tt_oid_accessp(args->isfd, args->rec.rec_val,
+				   args->rec.rec_len, 'r')) {
 
 		isrecnum = args->isrecnum;
 		_tt_client_record(_tt_record, args->rec.rec_val,
@@ -1304,7 +1477,8 @@ _tt_isrewrec_1(_Tt_isrewrec_args *args, SVCXPRT *transp)
 			   here );
 	} else {
 		if (args->rec.rec_len > 0) {
-			if (_tt_oid_accessp(args->isfd, args->rec.rec_val, 'w')) {
+			if (_tt_oid_accessp(args->isfd, args->rec.rec_val,
+						   args->rec.rec_len, 'w')) {
 			  if (msg_q_lock(args->isfd,
 					 args->rec.rec_val,
 					 args->rec.rec_len,
@@ -1398,7 +1572,8 @@ _tt_iswrite_1(_Tt_iswrite_args *args, SVCXPRT *transp)
 	} else {
 		if (args->rec.rec_len > 0) {
 			if (_tt_oid_accessp(args->isfd,
-					    args->rec.rec_val, 'w')) {
+					    args->rec.rec_val,
+					    args->rec.rec_len, 'w')) {
 			  if (msg_q_lock(args->isfd,
 					 args->rec.rec_val,
 					 args->rec.rec_len,
@@ -1457,7 +1632,8 @@ _tt_test_and_set_1(_Tt_test_and_set_args *args, SVCXPRT *transp)
 		_tt_syslog(errstr, LOG_ERR, "%s: key == 0", here);
 		return (&res);
 	}
-	if (!_tt_oid_accessp(args->isfd, args->rec.rec_val, 'r' + 'w')) {
+	if (!_tt_oid_accessp(args->isfd, args->rec.rec_val,
+				   args->rec.rec_len, 'r' + 'w')) {
 		res.isresult.result = -1;
 		res.isresult.iserrno = DM_ACCESS_DENIED;
 		res.rec.rec_len = 0;
@@ -1559,6 +1735,23 @@ _tt_transaction_error(int fd)
 	return (&res);
 }
 
+/*
+ *  A transaction writes all of its records, so the client needs the
+ *  permission to write each of them, not that of the first alone.
+ */
+
+static int
+_tt_transaction_accessp(int isfd, const _Tt_trans_record *trec)
+{
+	for (; trec != NULL; trec = trec->next) {
+		if (!_tt_oid_accessp(isfd, trec->rec.rec_val, trec->rec.rec_len,
+				     'w')) {
+			return 0;
+		}
+	}
+	return 1;
+}
+
 _Tt_isam_results *
 _tt_transaction_1(_Tt_transaction_args* args, SVCXPRT * /* transp */)
 {
@@ -1581,7 +1774,7 @@ _tt_transaction_1(_Tt_transaction_args* args, SVCXPRT * /* transp */)
 	int fd = -1;
 	_tt_log_file[0] = '\0';
 	/* Must have write permission to start transaction */
-	if (_tt_oid_accessp(args->isfd, trec->rec.rec_val, 'w')) {
+	if (_tt_transaction_accessp(args->isfd, trec)) {
 		char *db_path = _tt_db_table[args->isfd].db_path;
 		if (!db_path) {
 			res.iserrno = ERPC;
@@ -1723,11 +1916,16 @@ _tt_mfs_1(char **path, SVCXPRT * /* transp */)
 
 /*
  *  The oid access procedures work on the oid key the client sent, which is
- *  read as a whole key: returns 1 if the client sent one.
+ *  read as a whole key, in the table of the isfd it sent: returns 1 if the
+ *  client sent one, and is the one who opened the table.
  */
 static int
 _tt_oid_key_ok(const _Tt_oidaccess_args *args)
 {
+	if (!_tt_check_stale_isfd(args->isfd)) {
+		_tt_syslog(errstr, LOG_ERR, "_tt_check_stale_isfd() == 0");
+		return 0;
+	}
 	return args->key.key_val != NULL && args->key.key_len == OID_KEY_LENGTH;
 }
 
@@ -1821,29 +2019,60 @@ _tt_writespec_1(_Tt_spec_props * /* argp */, SVCXPRT * /* transp */)
 }
 
 /*
- *  The session procedures write a session id as the value of a property
- *  record of the object whose oid key the client sent: the key must be there
- *  and the session id must fit in the value of the record.
+ *  The session procedures work on the property _TT_SESSIONS of an object, one
+ *  record for each session joined to it, with the session id as its value.
+ *  The request must name the object (by its key, the first bytes of every
+ *  record of it), carry the length of the key that isstart is to use, and
+ *  the session id must fit in the value of a record.
  */
 static int
 _tt_session_args_ok(const _Tt_session_args *argp)
 {
-	return argp->oidkey.oidkey_val != NULL && argp->oidkey.oidkey_len > 0 &&
+	return argp->key != NULL && argp->key_len > 0 &&
+		argp->key_len <= OID_KEY_LENGTH + MAX_PROP_LENGTH &&
+		argp->oidkey.oidkey_val != NULL && argp->oidkey.oidkey_len > 0 &&
 		argp->oidkey.oidkey_len <= (u_int)OID_KEY_LENGTH &&
 		argp->session.session_len <= sizeof(Table_oid_prop::propval);
 }
 
 /*
  *  Is the session id in the property record just read, which is isreclen
- *  bytes long, not SESSIONID?  The record is compared as it is stored, up to
+ *  bytes long, SESSIONID?  The record is compared as it is stored, up to
  *  its own length, never beyond what the client sent.
  */
 static int
-_tt_session_differs(const _Tt_string &sessionid, const Table_oid_prop *tp)
+_tt_session_matches(const _Tt_string &sessionid, const Table_oid_prop *tp)
 {
 	int len = isreclen - MAX_PROP_LENGTH - OID_KEY_LENGTH;
-	return len != sessionid.len() ||
-		(len > 0 && memcmp((char *) sessionid, tp->propval, len));
+	return len == sessionid.len() &&
+		(len <= 0 || memcmp((char *) sessionid, tp->propval, len) == 0);
+}
+
+/*
+ *  Is the record just read a session of the object the request names?
+ *  Returns 0 once the records of the property of the object are past.
+ */
+static int
+_tt_session_record(const _Tt_session_args *argp, const Table_oid_prop *tp)
+{
+	return strncmp(_TT_FILEJOIN_PROPNAME, tp->propname, MAX_PROP_LENGTH) == 0 &&
+		memcmp(argp->oidkey.oidkey_val, tp->objkey,
+		       argp->oidkey.oidkey_len) == 0;
+}
+
+/*
+ *  The session procedures change the property of an object: its owner, or
+ *  who the protection of its file lets, can.  The record the access is
+ *  asked for is the object's own, which isstart is about to look for.
+ */
+static int
+_tt_session_accessp(const _Tt_session_args *argp)
+{
+	char record[OID_KEY_LENGTH];
+
+	memset(record, 0, sizeof(record));
+	memcpy(record, argp->oidkey.oidkey_val, argp->oidkey.oidkey_len);
+	return _tt_oid_accessp(argp->isfd, record, sizeof(record), 'w');
 }
 
 _Tt_isam_results *
@@ -1865,11 +2094,24 @@ _tt_addsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 		return (&res);
 	}
 	// Start reading session props
-	if (!_tt_session_args_ok(argp) ||
-	    !_tt_set_record_key(argp->key, argp->key_len)) {
+	if (!_tt_session_args_ok(argp)) {
 		res.result = -1;
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: bad key or session", here);
+		return (&res);
+	}
+	if (!_tt_session_accessp(argp)) {
+		res.result = -1;
+		res.iserrno = DM_ACCESS_DENIED;
+		return (&res);
+	}
+	// the check has used the request record to read the other tables
+	if (!_tt_set_record_key((char *)argp->oidkey.oidkey_val,
+				argp->oidkey.oidkey_len,
+				_TT_FILEJOIN_PROPNAME,
+				strlen(_TT_FILEJOIN_PROPNAME))) {
+		res.result = -1;
+		res.iserrno = ERPC;
 		return (&res);
 	}
 	res.result = isstart(isfd, argp->key, argp->key_len,
@@ -1890,22 +2132,19 @@ _tt_addsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 				if (iserrno != ENOREC && iserrno != EENDFILE) {
 					_tt_syslog(errstr, LOG_ERR, "%s: isread"
 						   "(): %d", here, iserrno);
+					res.iserrno = iserrno;
 					return (&res);
 				}
 				break;
 			}
-			if (strcmp((char *) filejoin_prop, tp->propname)) {
-				// ran past the session prop
+			if (!_tt_session_record(argp, tp)) {
+				// ran past the sessions of the object
 				break;
 			}
-			if (memcmp(argp->oidkey.oidkey_val,
-				   tp->objkey, argp->oidkey.oidkey_len)) {
-				// ran past our key
-				break;
-			}
-			if (_tt_session_differs(sessionid, tp)) {
+			if (_tt_session_matches(sessionid, tp)) {
 				// already here so we're done
 				res.result = 0;
+				res.iserrno = 0;
 				return (&res);
 			}
 		}
@@ -1929,6 +2168,8 @@ _tt_addsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 	}
 	_tt_update_modtime(isfd, argp->key,
 			   argp->key_len,
+			   (char *)argp->oidkey.oidkey_val,
+			   argp->oidkey.oidkey_len,
 			   res);
 	return (&res);
 }
@@ -1941,7 +2182,6 @@ _tt_delsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 	_Tt_string sessionid((unsigned char *)argp->session.session_val,
 			     argp->session.session_len);
 	int isfd = argp->isfd;
-	_Tt_string filejoin_prop(_TT_FILEJOIN_PROPNAME);
 
 	if (!_tt_check_stale_isfd(isfd)) {
 		res.result = -1;
@@ -1951,11 +2191,23 @@ _tt_delsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 		return (&res);
 	}
 	// Start reading session props
-	if (!_tt_session_args_ok(argp) ||
-	    !_tt_set_record_key(argp->key, argp->key_len)) {
+	if (!_tt_session_args_ok(argp)) {
 		res.result = -1;
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: bad key or session", here);
+		return (&res);
+	}
+	if (!_tt_session_accessp(argp)) {
+		res.result = -1;
+		res.iserrno = DM_ACCESS_DENIED;
+		return (&res);
+	}
+	if (!_tt_set_record_key((char *)argp->oidkey.oidkey_val,
+				argp->oidkey.oidkey_len,
+				_TT_FILEJOIN_PROPNAME,
+				strlen(_TT_FILEJOIN_PROPNAME))) {
+		res.result = -1;
+		res.iserrno = ERPC;
 		return (&res);
 	}
 	res.result = isstart(isfd, argp->key, argp->key_len,
@@ -1968,23 +2220,23 @@ _tt_delsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 		return (&res);
 	}
 	// look for this session
+	int not_found = ENOREC;
 	for (;;) {
 		res.result = isread(isfd, _tt_record, ISNEXT);
 		if (res.result == -1) {
-			_tt_syslog(errstr, LOG_ERR, "%s: isread(): %d",
-				   here, iserrno);
+			if (iserrno != ENOREC && iserrno != EENDFILE) {
+				_tt_syslog(errstr, LOG_ERR, "%s: isread(): %d",
+					   here, iserrno);
+				not_found = iserrno;
+			}
 			break;
 		}
-		if (strcmp((char *) filejoin_prop, tp->propname)) {
-			// ran past the session prop
+		if (!_tt_session_record(argp, tp)) {
+			// ran past the sessions of the object
+			res.result = -1;
 			break;
 		}
-		if (memcmp(argp->oidkey.oidkey_val,
-			   tp->objkey, argp->oidkey.oidkey_len)) {
-			// ran past our key
-			break;
-		}
-		if (_tt_session_differs(sessionid, tp)) {
+		if (_tt_session_matches(sessionid, tp)) {
 			// we found it, now delete it
 			res.result = isdelcurr(isfd);
 			if (res.result == -1) {
@@ -1993,14 +2245,16 @@ _tt_delsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 				res.iserrno = iserrno;
 				return (&res);
 			}
-			break;
+			_tt_update_modtime(isfd, argp->key,
+					   argp->key_len,
+					   (char *)argp->oidkey.oidkey_val,
+					   argp->oidkey.oidkey_len,
+					   res);
+			return (&res);
 		}
 	}
-
-	_tt_update_modtime(isfd, argp->key,
-			   argp->key_len,
-			   res);
-
+	// the session is not one of the object's: there is no such record
+	res.iserrno = not_found;
 	return (&res);
 }
 
@@ -2022,10 +2276,33 @@ _tt_gettype_1(_Tt_spec_props *argp, SVCXPRT * /* transp */)
 			   here );
 		return (&res);
 	}
-	if (!_tt_set_record_key(argp->key, argp->key_len)) {
+	// the type of the object is the value of the property the request names
+	if (argp->key == NULL || argp->key_len <= 0 ||
+	    argp->key_len > OID_KEY_LENGTH + MAX_PROP_LENGTH ||
+	    argp->props.props_len < 1 || argp->props.props_val == NULL ||
+	    argp->props.props_val[0].propname.propname_val == NULL ||
+	    argp->oidkey.oidkey_val == NULL ||
+	    !_tt_set_record_key(argp->oidkey.oidkey_val, argp->oidkey.oidkey_len,
+				argp->props.props_val[0].propname.propname_val,
+				argp->props.props_val[0].propname.propname_len)) {
 		res.result = -1;
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: bad key", here);
+		return (&res);
+	}
+	// The object's property is read: needs read access to it
+	char oid[OID_KEY_LENGTH];
+	memcpy(oid, _tt_record, sizeof(oid));
+	if (!_tt_oid_accessp(isfd, oid, sizeof(oid), 'r')) {
+		res.result = -1;
+		res.iserrno = DM_ACCESS_DENIED;
+		return (&res);
+	}
+	if (!_tt_set_record_key(argp->oidkey.oidkey_val, argp->oidkey.oidkey_len,
+				argp->props.props_val[0].propname.propname_val,
+				argp->props.props_val[0].propname.propname_len)) {
+		res.result = -1;
+		res.iserrno = ERPC;
 		return (&res);
 	}
 	res.result = isstart(isfd, argp->key, argp->key_len,

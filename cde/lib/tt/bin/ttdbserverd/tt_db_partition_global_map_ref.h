@@ -52,6 +52,9 @@ public:
   void                 removeDB (const _Tt_string &partition);
   _Tt_db_server_db_ptr getDB (const _Tt_string &partition);
 
+  // Is PARTITION one that this server keeps databases for?
+  static bool_t        isKnownPartition (const _Tt_string &partition);
+
   static _Tt_string dbPartitionMapKey (_Tt_object_ptr &db);
 
 private:

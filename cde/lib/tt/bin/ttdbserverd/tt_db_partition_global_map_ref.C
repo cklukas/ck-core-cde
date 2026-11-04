@@ -37,6 +37,8 @@
 #include <sys/stat.h>
 #include "util/tt_port.h"
 #include "util/tt_gettext.h"
+#include "util/tt_file_system.h"
+#include "util/tt_file_system_entry.h"
 #include "tt_isam_file_utils.h"
 #include "tt_isam_record_utils.h"
 #include "tt_db_partition_redirection_map.h"
@@ -102,6 +104,34 @@ _Tt_db_partition_global_map_ref::getDB (const _Tt_string &partition)
   }
 
   return db_ptr;
+}
+
+/*
+ * The partitions are the file systems of the host, the mount points of its
+ * mount table (that is what _tt_get_file_partition() answers for a file), and
+ * those the administrator names in the partition map.  A client says which
+ * partition an object is in, in its object id, and a TT_DB directory with the
+ * tables of a database is made in the partition if it is not there yet: no
+ * other name may make one.  A partition is named as the mount table names it,
+ * with no link, ".." or trailing "/" to get to it.
+ */
+bool_t
+_Tt_db_partition_global_map_ref::isKnownPartition (const _Tt_string &partition)
+{
+  if (!partition.len() || ((char *)partition)[0] != '/' ||
+      memchr((char *)partition, '\0', partition.len()) != NULL) {
+    return FALSE;
+  }
+
+  _Tt_string redirection = db_pr_map->findEntry(partition);
+  if (!redirection.is_null() && redirection.len()) {
+    return TRUE;
+  }
+
+  _Tt_file_system           fs;
+  _Tt_file_system_entry_ptr entry = fs.bestMatchToPath(partition);
+
+  return (!entry.is_null() && entry->getMountPoint() == partition) ? TRUE : FALSE;
 }
 
 _Tt_string

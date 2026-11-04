@@ -164,6 +164,63 @@ A table cannot be moved between a 32-bit and a 64-bit `rpc.ttdbserverd`. On
 was fixed, so the server could not complete the tables of a partition and there
 is no working database of the old layout to convert.
 
+### Who may reach what
+
+- Every request that works for a user runs with the user and groups of its own
+  credentials. Only the questions about the server itself (the authentication
+  level it requires, and the mount point and partition of a path) are served
+  without. `TT_IS_FILE_IN_DB` and `TT_IS_OBJ_IN_DB` skipped the credentials: they
+  ran with those of the request before, and answered a request that had none.
+- The partition in an object id names the directory where the database of the
+  object is, and the server makes a `TT_DB` directory with the tables in it if
+  there is none yet. A partition is accepted if it is a mount point of the host,
+  which is what `TT_GET_FILE_PARTITION` answers for a file in it, or a name of
+  the partition map, spelled as the mount table does (no `..`, no link, no
+  trailing `/`). Any other is refused with `TT_DB_ERR_ILLEGAL_OBJECT`, and no
+  directory is made. Before, any client could have a `TT_DB` directory made in
+  any directory that the daemon, which runs as root, can write to.
+- A client of the old servers names a table `<partition>/TT_DB/<table>`, with
+  `oid_prop`, `oid_access`, `oid_container` or `docoid_path` for the table, and
+  `isbuild`, `isopen` and `iserase` serve that path and no other: `TT_DB` has
+  to be the directory above the table (a name that has `TT_DB` in it, a `..` or
+  `.` component, a relative path or an empty component is refused), the
+  directory above `TT_DB` has to be a partition as above, and neither `TT_DB` nor
+  a file of the table may be a link. `iserase` takes the name of a table of an
+  old server, never the name of a table of the layout that replaced them. It
+  and `isbuild` had no check at all, and `isopen` accepted any path with the
+  letters `TT_DB` somewhere in it. A table that does not exist yet is made in
+  the partition of the path.
+- The tables of the old interface hold the access of an object (owner, group and
+  mode) in the access table, and the check that a user may read or write the
+  properties of an object never applied: it compared the name of the property
+  table with the name the old servers gave it, while the daemon keeps the path
+  of the table under its new name, so it allowed everything. The rule is now the
+  one `rpc.ttdbserverd(1M)` documents for the option that turns it off: the
+  protection of the file the object is in decides. The owner of the file or of
+  the object may do anything; a member of the group of the file may do what the
+  group bits of the mode of the file, or of the mode of the object, give to the
+  group; everybody else what the other bits give. A request that reads and
+  writes needs both permissions. The properties of the file itself, which has no
+  file to look at, are everybody's. An object with no access record, or a
+  request with no object key, is nobody's. The superuser, and any user when the
+  daemon runs with `-n`, may do anything. All the records of a transaction are
+  checked, not the first alone, and the session procedures and `gettype` check
+  the object they work on. The access record is read in the layout of the table
+  it is in: 16 bits for each number after a key of 16 bytes, as the clients of
+  the old servers write it, or a long for each number after the key of the
+  tables the server makes itself. It is read each time and no longer cached by
+  the oid alone.
+- The procedures that read and write the access of an oid (`getoidaccess`,
+  `setoiduser`, `setoidgroup`, `setoidmode`) refuse a descriptor that another
+  user opened, as every other procedure on a descriptor does.
+- `addsession` and `delsession` compared the session ids the wrong way round:
+  adding stopped at a session that was different from the new one, and deleting
+  removed the first session that was different. They also looked for the record
+  with the bytes of a key descriptor, which finds nothing. They now look for the
+  records of the property `_TT_SESSIONS` of the object, add a session that is
+  not there, remove the one that is named (a session that is not there is
+  `ENOREC`), and count up the modification date of the object.
+
 ### Limits of the protocol
 
 The routines that decode a request allocate the storage for a string, a byte
@@ -228,6 +285,14 @@ send a request of each procedure of the new interface with each of its lengths,
 counts and small integers replaced by huge values while the allocator refuses
 any request for more than 64 MiB, and send every reply that has a string
 the server does not have.
+
+They also serve the old interface to users with other credentials: for the
+owner of a file, a member of its group and everybody else, over the modes of the
+file and of the object, whether each of reading, writing, rewriting and
+test-and-set is allowed; the paths of `isbuild`, `isopen` and `iserase`, with
+links and with partitions that are none; the partitions of object ids; the
+credentials of the requests that skip none; the descriptors of the oid access
+procedures; and adding and removing sessions.
 
 `make -C lib/tt/mini_isam check` builds the same test of the width of a long as
 C and as C++ and runs both against `libisam`, so the C library and its C++
