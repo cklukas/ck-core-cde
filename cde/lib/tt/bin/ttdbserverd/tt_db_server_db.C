@@ -1713,7 +1713,11 @@ _Tt_db_server_db::getProperties (const _Tt_string         &key,
 					       ISEQUAL);
   dbLastFileAccessed = propertyTable->getName();
 
-  if (results && (results != ENOREC)) {
+  if (results == ENOREC) {
+    // There are no properties of the key.  (Reading on from here would read
+    // from no position at all, or from where the table was last read.)
+  }
+  else if (results) {
     dbResults = TT_DB_ERR_CORRUPT_DB;
   }
   else {

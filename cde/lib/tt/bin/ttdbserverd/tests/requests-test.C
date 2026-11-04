@@ -2503,6 +2503,42 @@ case_client_stubs(void)
 	ASKS(_tt_delete_session_1, _tt_delete_session_args, TT_DELETE_SESSION);
 }
 
+/* A file or an object with no properties has none to read: asking for them
+   is not an error, whatever the table was last used for. */
+static void
+case_no_properties(void)
+{
+	std::string file = start_partition("no-properties");
+	std::string other = "localhost:" + g_dir + "/other";
+
+	put(g_dir + "/file", "the file");
+	put(g_dir + "/other", "the other file");
+	create_file(file);
+
+	/* the first thing asked of a new database: its table has no records and
+	   has not been read from */
+	_tt_get_file_props_args gp = { (char *)file.c_str(), acting(), -2 };
+	CHECK(results_of(rpc(TT_GET_FILE_PROPS,
+			     encode((xdrproc_t)xdr_tt_get_file_props_args, &gp)),
+			 xdr_tt_file_props_results) == TT_DB_OK);
+
+	/* ... and again, after a request on another file leaves the table
+	   somewhere else */
+	create_file(other);
+	CHECK(set_property(other, "name", "value") == TT_DB_OK);
+	CHECK(results_of(rpc(TT_GET_FILE_PROPS,
+			     encode((xdrproc_t)xdr_tt_get_file_props_args, &gp)),
+			 xdr_tt_file_props_results) == TT_DB_OK);
+
+	/* an object with only what the server gives it is the same */
+	std::string objid = make_objid(g_mount);
+	CHECK(create_object(objid, file, 0600) == TT_DB_OK);
+	_tt_get_obj_props_args op = { (char *)objid.c_str(), acting(), -2 };
+	CHECK(results_of(rpc(TT_GET_OBJ_PROPS,
+			     encode((xdrproc_t)xdr_tt_get_obj_props_args, &op)),
+			 xdr_tt_obj_props_results) == TT_DB_OK);
+}
+
 /* ---- the directory of the tables ---------------------------------------------- */
 
 /* the status of a request to make a file */
@@ -2629,6 +2665,85 @@ case_move_file(void)
 	CHECK(is_file_in_db(moved) == TT_DB_OK);
 }
 
+/* A file moved to another partition is made again there, with its properties
+   and its objects, which get ids of the other partition; the objects of the
+   old file are left as pointers to the new ones, and the file is gone from the
+   old partition. */
+static void
+case_move_file_partition(void)
+{
+	std::string file = start_partition("move-file-partition");
+	std::string other_mount;
+	static const char *candidates[] = { "/dev/shm", "/proc", "/sys", "/dev" };
+	_Tt_file_system fs;
+
+	if (getuid() == 0) {
+		fprintf(stderr, "not run as the superuser\n");
+		return;
+	}
+	for (size_t i = 0; i < sizeof(candidates) / sizeof(candidates[0]); i++) {
+		_Tt_file_system_entry_ptr e = fs.bestMatchToPath(candidates[i]);
+
+		if (!e.is_null() && std::string((char *)e->getMountPoint()) == candidates[i] &&
+		    std::string((char *)e->getMountPoint()) != g_mount) {
+			other_mount = candidates[i];
+			break;
+		}
+	}
+	if (other_mount.empty()) {
+		fprintf(stderr, "no second mount point to move a file to\n");
+		return;
+	}
+
+	/* the second partition is a directory of the case */
+	CHECK(mkdir((g_dir + "/second").c_str(), 0700) == 0);
+	FILE *f = fopen((g_dir + "/partition_map").c_str(), "a");
+	CHECK(f != NULL);
+	fprintf(f, "%s %s/second\n", other_mount.c_str(), g_dir.c_str());
+	fprintf(f, "%s/second %s/second/.\n", g_dir.c_str(), g_dir.c_str());
+	fclose(f);
+	db_pr_map->refresh();
+
+	std::string target = "localhost:" + other_mount + "/ttdb-test-moved-file";
+	std::string objid = make_objid(g_mount);
+	std::string objid2 = make_objid(g_mount);
+
+	put(g_dir + "/file", "the file");
+	create_file(file);
+	CHECK(create_object(objid, file, 0600) == TT_DB_OK);
+	CHECK(create_object(objid2, file, 0640) == TT_DB_OK);
+	CHECK(set_obj_prop(objid, "secret", "top-secret") == TT_DB_OK);
+	CHECK(set_obj_prop(objid2, "secret", "also") == TT_DB_OK);
+	CHECK(set_property(file, "name", "value") == TT_DB_OK);
+
+	_tt_access	acc = { g_uid, getgid(), 0600 };
+	_tt_move_file_args mf = { (char *)file.c_str(), (char *)target.c_str(), acc };
+	int r = status_of(rpc(TT_MOVE_FILE,
+			      encode((xdrproc_t)xdr_tt_move_file_args, &mf)));
+	if (r != TT_DB_OK) {
+		fprintf(stderr, "move to the other partition: %d\n", r);
+	}
+	CHECK(r == TT_DB_OK);
+	CHECK(is_file_in_db(file) != TT_DB_OK);
+	CHECK(is_file_in_db(target) == TT_DB_OK);
+	CHECK(get_file_prop(target, "name") == TT_DB_OK);
+	std::vector<std::string> objects;
+	CHECK(file_objects(target, &objects) == TT_DB_OK);
+	CHECK(objects.size() == 2);
+
+	/* a file with no properties and no objects moves as well */
+	std::string bare = "localhost:" + g_dir + "/bare";
+	std::string bare_target = "localhost:" + other_mount + "/ttdb-test-bare-file";
+	put(g_dir + "/bare", "a file");
+	create_file(bare);
+	mf.file = (char *)bare.c_str();
+	mf.new_file = (char *)bare_target.c_str();
+	CHECK(status_of(rpc(TT_MOVE_FILE,
+			    encode((xdrproc_t)xdr_tt_move_file_args, &mf))) == TT_DB_OK);
+	CHECK(is_file_in_db(bare) != TT_DB_OK);
+	CHECK(is_file_in_db(bare_target) == TT_DB_OK);
+}
+
 /* ---- the partitions the server knows --------------------------------------------- */
 
 /* The partitions are the mount points of the host and the names of the
@@ -2691,8 +2806,10 @@ static const struct {
 	{ "malformed-names", case_malformed_names },
 	{ "queued-messages", case_queued_messages },
 	{ "client-stubs", case_client_stubs },
+	{ "no-properties", case_no_properties },
 	{ "table-directory", case_table_directory },
 	{ "move-file", case_move_file },
+	{ "move-file-partition", case_move_file_partition },
 	{ "known-partitions", case_known_partitions },
 	{ "fuzz-dispatch", case_fuzz_dispatch },
 	{ "access-rule", case_access_rule },

@@ -469,6 +469,14 @@ _tt_db_results *_tt_move_file_1 (_tt_move_file_args *args,
 	  results = db->getFileObjects(real_file, accessPtr, objids);
 	}
 
+	// (a file with no properties or no objects gets none)
+	if (properties.is_null()) {
+	  properties = new _Tt_db_property_list;
+	}
+	if (objids.is_null()) {
+	  objids = new _Tt_string_list;
+	}
+
 	// Create the new file
 	if (results == TT_DB_OK) {
 	  results = new_db->createFile(real_new_file, current_access);
@@ -500,6 +508,9 @@ _tt_db_results *_tt_move_file_1 (_tt_move_file_args *args,
 	    results = db->getObjectProperties(*objids_cursor,
 					      accessPtr,
 					      properties);
+	    if (properties.is_null()) {
+	      properties = new _Tt_db_property_list;
+	    }
 	    if (results == TT_DB_OK) {
 	      results = db->getObjectAccess(*objids_cursor,
 					    accessPtr,

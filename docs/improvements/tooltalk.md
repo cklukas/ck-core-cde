@@ -365,6 +365,14 @@ already. The parts of a message are removed once the last ptype has it.
   passes on `TT_ERR_PROPLEN`, `TT_ERR_ACCESS`, `TT_ERR_DBFULL`,
   `TT_ERR_DBCONSIST` and `TT_ERR_DBUPDATE` as well.
 
+Reading the properties of a key that has none (`getProperties`) went on to read
+the next record of the table after the failed positioning, which is an error
+when the table has no position, so a file or object with no properties made
+`TT_MOVE_FILE` to another partition, the one request that asks for them whole,
+fail with `TT_DB_ERR_CORRUPT_DB`. A key with no properties has no records to
+read. The move then dereferenced the null list that the server gives for none;
+it moves a file with no properties and no objects as well.
+
 ### Mount points and paths
 
 A path that no mount point leads to (the mount table is empty or cannot be read,

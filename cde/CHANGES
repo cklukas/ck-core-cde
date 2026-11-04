@@ -447,6 +447,14 @@
   above 214748. `tt_spec_write` reports `TT_ERR_PROPLEN`, `TT_ERR_ACCESS`,
   `TT_ERR_DBFULL`, `TT_ERR_DBCONSIST` and `TT_ERR_DBUPDATE` instead of
   `TT_ERR_INTERNAL`.
+- tt: fix the move of a file to another partition (`ttmv` across file systems).
+  Reading the properties of a key that has none went on to read the next record
+  of the property table after the failed positioning, which is an error when the
+  table has no position, so a file or object with no properties made the move
+  fail with `TT_DB_ERR_CORRUPT_DB` (`TT_ERR_INTERNAL` for the caller); the move
+  also used the null list the server answers with for no properties. Tests move
+  a file with objects and properties, and one with neither, to another
+  partition.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,
