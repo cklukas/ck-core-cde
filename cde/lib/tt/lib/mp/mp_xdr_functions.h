@@ -104,6 +104,8 @@ struct _Tt_otype_args: public _Tt_allocated {
 };
 
 struct _Tt_rpc_result: public _Tt_allocated {
+	// the whole result is sent, so no member may be left unset
+	_Tt_rpc_result() : status(TT_OK), int_val(0) {}
 	Tt_status	status;
 	_Tt_string	str_val;
 	int		int_val;

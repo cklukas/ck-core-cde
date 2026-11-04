@@ -36,6 +36,7 @@
 #include "mp/mp_arg.h"
 #include "mp/mp_msg_context.h"
 #include "util/tt_iostream.h"
+#include "util/tt_xdr_utils.h"
 
 _Tt_msg_context::_Tt_msg_context()
 {
@@ -132,5 +133,6 @@ _Tt_msg_context::xdr(
 	if (! _Tt_context::xdr( xdrs )) {
 		return 0;
 	}
-	return _value.xdr( xdrs );
+	// _value is set by the constructor and never null
+	return _value.xdr( xdrs ) && _tt_xdr_non_null( xdrs, _value );
 }

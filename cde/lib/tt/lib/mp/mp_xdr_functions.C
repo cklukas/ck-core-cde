@@ -35,6 +35,7 @@
  */
 #include <string.h>
 #include "mp/mp_xdr_functions.h"
+#include "util/tt_xdr_utils.h"
 
 /*
  * XDR function to de/encode args when TT_AUTH_ICEAUTH authorization is
@@ -65,9 +66,18 @@ tt_xdr_bstring(XDR *xdrs, char **sp)
 		return(1);
 	}
 	if (xdrs->x_op == XDR_DECODE) {
-		*sp = (char *)malloc(length+1);
+		// the length came off the wire
+		if (length < 0) return 0;
+		*sp = (char *)malloc((size_t)length+1);
+		if (*sp == (char *)0) return 0;
 	}
-	if (!xdr_string(xdrs, sp, length)) return 0;
+	if (!xdr_string(xdrs, sp, length)) {
+		if (xdrs->x_op == XDR_DECODE) {
+			free((MALLOCTYPE *) *sp);
+			*sp = (char *)0;
+		}
+		return 0;
+	}
 	if (xdrs->x_op == XDR_FREE) {
 		free((MALLOCTYPE *) *sp);
 	}
@@ -81,7 +91,9 @@ tt_xdr_bstring(XDR *xdrs, char **sp)
 bool_t
 tt_xdr_declare_ptype_args(XDR *xdrs, _Tt_declare_ptype_args *args)
 {
-	return(args->procid.xdr(xdrs) && args->ptid.xdr(xdrs));
+	return(args->procid.xdr(xdrs)
+	       && _tt_xdr_non_null(xdrs, args->procid)
+	       && args->ptid.xdr(xdrs));
 }
 
 
@@ -91,7 +103,9 @@ tt_xdr_declare_ptype_args(XDR *xdrs, _Tt_declare_ptype_args *args)
 bool_t
 tt_xdr_file_join_args(XDR *xdrs, _Tt_file_join_args *args)
 {
-	return(args->procid.xdr(xdrs) && args->path.xdr(xdrs));
+	return(args->procid.xdr(xdrs)
+	       && _tt_xdr_non_null(xdrs, args->procid)
+	       && args->path.xdr(xdrs));
 }
 
 
@@ -101,7 +115,10 @@ tt_xdr_file_join_args(XDR *xdrs, _Tt_file_join_args *args)
 bool_t
 tt_xdr_context_join_args(XDR *xdrs, _Tt_context_join_args *args)
 {
-	return args->procid.xdr(xdrs) && args->context.xdr(xdrs);
+	return args->procid.xdr(xdrs)
+	       && _tt_xdr_non_null(xdrs, args->procid)
+	       && args->context.xdr(xdrs)
+	       && _tt_xdr_non_null(xdrs, args->context);
 }
 
 
@@ -112,6 +129,7 @@ bool_t
 tt_xdr_fd_args(XDR *xdrs, _Tt_fd_args *args)
 {
 	return(args->procid.xdr(xdrs)
+	       && _tt_xdr_non_null(xdrs, args->procid)
 	       && xdr_int(xdrs, &args->fd)
 	       && args->start_token.xdr(xdrs));
 }
@@ -169,7 +187,8 @@ bool_t
 tt_xdr_update_args(XDR *xdrs, _Tt_update_args *args)
 {
 	return( xdr_int(xdrs, (int *)&args->newstate) &&
-	       args->message.xdr(xdrs));
+	       args->message.xdr(xdrs) &&
+	       _tt_xdr_non_null(xdrs, args->message));
 }
 
 

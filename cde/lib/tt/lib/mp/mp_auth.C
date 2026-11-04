@@ -65,13 +65,22 @@ generate_auth_cookie()
     _tt_AuthFileEntry   *entry;
     int			 exists;
     char                *filename;
+    char                *cookie;
     int			 original_umask;
     int			 retval;
     Tt_status		 status;
 
     _entries_head = _entries_tail = NULL;
     status = TT_OK;
-    _auth_cookie = _tt_GenerateMagicCookie(_TT_ICEAUTH_MAGIC_COOKIE_LEN);
+    cookie = _tt_GenerateMagicCookie(_TT_ICEAUTH_MAGIC_COOKIE_LEN);
+    if (NULL == cookie) {
+	_tt_syslog(0, LOG_ERR,
+		   "%s:  could not read a cookie from the random number "
+		   "generator.\n", funcname);
+	return TT_ERR_INTERNAL;
+    }
+    _auth_cookie = cookie;
+    free(cookie);
 
     if (! (filename = _tt_AuthFileName())) {
 	_tt_syslog(0, LOG_ERR, "%s:  Missing TTAUTHORITY file.\n", funcname);

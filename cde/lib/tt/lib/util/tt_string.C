@@ -234,27 +234,55 @@ xdr_1(XDR *xdrs)
 {
 	char	*sp;
 	u_int	u_length;
+	int	len = length;
 
-	if (xdr_int(xdrs, &length)) {
-		if (length > 0) {
+	// The length is decoded into a local variable: an invalid
+	// or truncated encoding must not leave this string with a
+	// length its content does not have.
+	if (xdr_int(xdrs, &len)) {
+		if (len > 0) {
 			if (xdrs->x_op == XDR_DECODE) {
-				sp =  (char *)malloc(length + 1);
+				// the length came off the wire
+				sp = (char *)malloc((size_t)len + 1);
+				if (sp == (char *)0) {
+					return 0;
+				}
 			} else {
 				sp = content;
-				u_length = length;
 			}
-			if (xdr_bytes(xdrs, &sp, &u_length, length)) {
+			u_length = len;
+			if (xdr_bytes(xdrs, &sp, &u_length, len)) {
 				if (xdrs->x_op == XDR_DECODE) {
+					// xdr_bytes decodes the length
+					// a second time; the two copies
+					// have to agree.
+					if (u_length != (u_int)len) {
+						free((MALLOCTYPE *)sp);
+						return 0;
+					}
 					if (content != (char *)0) {
 						(void)free((MALLOCTYPE *)content);
 					}
 					content = sp;
-					content[length] = '\0';
+					content[len] = '\0';
+					length = len;
 				}
 			} else {
 				// couldn't xdr content field
+				if (xdrs->x_op == XDR_DECODE) {
+					free((MALLOCTYPE *)sp);
+				}
 				return 0;
 			}
+		} else if (xdrs->x_op == XDR_DECODE) {
+			if (len < 0) {
+				return 0;
+			}
+			if (content != (char *)0) {
+				(void)free((MALLOCTYPE *)content);
+			}
+			content = (char *)0;
+			length = 0;
 		}
 		return 1;
 	} else {
@@ -276,7 +304,11 @@ xdr_2(XDR *xdrs)
 		// if a regular string...
 		if (len > 0) {
 			if (xdrs->x_op == XDR_DECODE) {
-				sp = (char *)malloc(len + 1);
+				// the length came off the wire
+				sp = (char *)malloc((size_t)len + 1);
+				if (sp == (char *)0) {
+					return 0;
+				}
 			} else {
 				sp = content;
 			}
@@ -292,16 +324,23 @@ xdr_2(XDR *xdrs)
 				}
 			} else {
 				// couldn't xdr content field
+				if (xdrs->x_op == XDR_DECODE) {
+					free((MALLOCTYPE *)sp);
+				}
 				return 0;
 			}
 		}
 		// if an empty string ("")...
 		else if (len == 0) {
 			if (xdrs->x_op == XDR_DECODE) {
+				char *empty = (char *)malloc(1);
+				if (empty == (char *)0) {
+					return 0;
+				}
 				if (content != (char *)0) {
 					(void)free((MALLOCTYPE *)content);
 				}
-				content = (char *)malloc(1);
+				content = empty;
 				*content = '\0';
 				length = 0;
 			}
@@ -315,6 +354,10 @@ xdr_2(XDR *xdrs)
 				content = (char *)0;
 				length = 0;
 			}
+		}
+		// no other negative number is a length
+		else {
+			return 0;
 		}
 
 		return 1;

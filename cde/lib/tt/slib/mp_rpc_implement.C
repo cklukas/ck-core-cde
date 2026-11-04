@@ -315,7 +315,8 @@ _tt_service_rpc(svc_req *rqstp, SVCXPRT *transp)
 
 		    const _Tt_string	&svr_cookie =
 	            	_tt_s_mp->initial_s_session->auth_cookie();
-	            if (clnt_cookie != svr_cookie) {
+		    // a session that has no cookie cannot authenticate anyone
+	            if (svr_cookie.len() == 0 || clnt_cookie != svr_cookie) {
 		        svcerr_auth(transp, AUTH_BADCRED);
 		        return;
 		    }
@@ -478,6 +479,12 @@ _tt_update_msg(SVCXPRT *transp, int reply)
 	if (!_tt_svc_getargs(transp,
 			     (xdrproc_t)tt_xdr_update_args,
 			     (char *)&(_tt_s_mp->update_args))) {
+		// The message in update_args is reused by every update.
+		// An encoding of a null message has nulled it; decoding
+		// the next update would then not make a _Tt_s_message.
+		if (_tt_s_mp->update_args.message.is_null()) {
+			_tt_s_mp->update_args.message = new _Tt_s_message();
+		}
 		svcerr_decode(transp);
 		return;
 	}
@@ -572,6 +579,7 @@ _tt_rpc_join_file(SVCXPRT *transp)
 	if (! _tt_svc_getargs(transp, (xdrproc_t)tt_xdr_file_join_args,
 			      (char *)&args)) {
 		svcerr_decode(transp);
+		return;
 	}
 	if (_tt_s_mp->find_proc(args.procid, proc, 1)) {
 		fptr = new _Tt_s_file(args.path);
@@ -597,6 +605,7 @@ _tt_rpc_quit_file(SVCXPRT *transp)
 	if (! _tt_svc_getargs(transp, (xdrproc_t)tt_xdr_file_join_args,
 			      (char *)&args)) {
 		svcerr_decode(transp);
+		return;
 	}
 
 	if (_tt_s_mp->find_proc(args.procid, proc, 1)) {
@@ -681,6 +690,7 @@ _tt_rpc_join_context(SVCXPRT *transp)
 			      (char *)&args))
 	{
 		svcerr_decode(transp);
+		return;
 	}
 	if (_tt_s_mp->find_proc( args.procid, proc, 1 )) {
 		status = ((_Tt_s_msg_context &)*args.context).s_join( proc );
@@ -704,6 +714,7 @@ _tt_rpc_quit_context(SVCXPRT *transp)
 			      (char *)&args))
 	{
 		svcerr_decode(transp);
+		return;
 	}
 	if (_tt_s_mp->find_proc( args.procid, proc, 1 )) {
 		status = ((_Tt_s_msg_context &)*args.context).s_quit( proc );
@@ -974,9 +985,17 @@ _tt_rpc_load_types(SVCXPRT *transp)
 		      XDR_DECODE);
 
 	int junk;
-	status = _Tt_typedb::merge_from(&xdrs,_tt_s_mp->tdb, junk);
+	// The types are merged through a second pointer to the database:
+	// decoding a null database nulls the pointer it is given, and that
+	// must not be the session's own.
+	_Tt_typedb_ptr tdb = _tt_s_mp->tdb;
+	status = _Tt_typedb::merge_from(&xdrs, tdb, junk);
+	if (status == TT_OK && tdb.is_null()) {
+		status = TT_ERR_DBCONSIST;
+	}
 
 	if (status==TT_OK) {
+		_tt_s_mp->tdb = tdb;
 		_tt_s_mp->install_ptable(_tt_s_mp->tdb->ptable);
 		_tt_s_mp->install_otable(_tt_s_mp->tdb->otable);
 	}
@@ -1239,6 +1258,7 @@ _tt_rpc_close_procid(SVCXPRT *transp)
 			      (xdrproc_t)tt_xdr_procid,
 			      (char *)&p)) {
 		svcerr_decode(transp);
+		return;
 	}
 	if (_tt_s_mp->find_proc(p, rp, 0)) {
 		status = _tt_s_mp->s_remove_procid(*rp);
@@ -1411,7 +1431,11 @@ _tt_rpc_otype_is_derived(SVCXPRT *transp)
 			parents =  derived_otype->parents();
 			result.int_val = 0;
 			_Tt_otype_ptr parent;
-			while (!parents->is_empty()) {
+			// Loaded types need not be acyclic: a chain of
+			// parents longer than the table is a cycle.
+			int hops = _tt_s_mp->otable->count();
+			while (hops-- > 0 && !parents.is_null()
+			       && !parents->is_empty()) {
 				parent = _tt_s_mp->otable->
 					lookup(parents->top());
 				if (parent.is_null()) {
@@ -1907,6 +1931,7 @@ _tt_rpc_msgread_2(SVCXPRT *transp)
 			      (xdrproc_t)tt_xdr_procid,
 			      (char *)&p)) {
 		svcerr_decode(transp);
+		return;
 	}
 	if (_tt_s_mp->find_proc(p, rp, 0)) {
 		rp->msgread();

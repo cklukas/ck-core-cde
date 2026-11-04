@@ -40,18 +40,24 @@
  * Copyright (c) 1992 by Sun Microsystems, Inc.
  */
 #include "mp_s_xdr_functions.h"
+#include "util/tt_xdr_utils.h"
 
 bool_t
 tt_s_xdr_add_pattern_args(XDR *xdrs,_Tt_s_add_pattern_args *args)
 {
-	return(args->procid.xdr(xdrs) && args->pattern.xdr(xdrs));
+	return(args->procid.xdr(xdrs)
+	       && _tt_xdr_non_null(xdrs, args->procid)
+	       && args->pattern.xdr(xdrs)
+	       && _tt_xdr_non_null(xdrs, args->pattern));
 }
 
 
 bool_t
 tt_s_xdr_del_pattern_args(XDR *xdrs,_Tt_s_del_pattern_args *args)
 {
-	return(args->procid.xdr(xdrs) && args->pattern_id.xdr(xdrs));
+	return(args->procid.xdr(xdrs)
+	       && _tt_xdr_non_null(xdrs, args->procid)
+	       && args->pattern_id.xdr(xdrs));
 }
 
 
@@ -59,7 +65,8 @@ bool_t
 tt_s_xdr_update_args(XDR *xdrs, _Tt_s_update_args *args)
 {
 	return( xdr_int(xdrs, (int *)&args->newstate) &&
-	       args->message.xdr(xdrs));
+	       args->message.xdr(xdrs) &&
+	       _tt_xdr_non_null(xdrs, args->message));
 }
 
 

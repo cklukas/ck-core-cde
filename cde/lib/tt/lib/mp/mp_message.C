@@ -48,6 +48,7 @@
 #include <mp/mp_session.h>
 #include <util/tt_enumname.h>
 #include <util/tt_port.h>
+#include <util/tt_xdr_utils.h>
 	
 //
 // Base constructor for a message.  ::xdr() relies on this
@@ -749,7 +750,7 @@ set_pattern_id(_Tt_string id)
 bool_t
 tt_xdr_message(XDR *xdrs, _Tt_message_ptr *msgp)
 {
-	return((*msgp).xdr(xdrs));
+	return((*msgp).xdr(xdrs) && _tt_xdr_non_null(xdrs, *msgp));
 }
 
 

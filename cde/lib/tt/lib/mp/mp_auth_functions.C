@@ -52,9 +52,17 @@ Author: Ralph Mor, X Consortium
 
 #include <sys/stat.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <X11/Xos.h>
 #include "mp/mp_auth_functions.h"
+
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
+
+/* how often a zero byte of the cookie is drawn again before giving up */
+#define _TT_COOKIE_ZERO_DRAWS	64
 
 #ifdef X_NOT_STDC_ENV
 extern int errno;
@@ -349,52 +357,74 @@ _tt_GetAuthFileEntry(const char *protocol_name, const char *network_id, const ch
  */
 
 
+/*
+ * Reads exactly len bytes from fd into buf.  Returns 0 if it cannot.
+ */
+static int
+read_exactly(int fd, char *buf, int len)
+{
+    int		used = 0;
+    ssize_t	got;
+
+    while (used < len)
+    {
+	got = read (fd, buf + used, (size_t) (len - used));
+	if (got < 0 && errno == EINTR)
+	    continue;
+	if (got <= 0)
+	    return (0);
+	used += (int) got;
+    }
+    return (1);
+}
+
+
+/*
+ * The cookie is a shared secret, so it is taken from the system's random
+ * number generator.  It is stored, sent and compared as a C string, so none
+ * of its bytes is zero: a zero byte is drawn again.  Returns NULL, with
+ * nothing usable left behind, if the generator cannot supply the bytes.
+ */
 char *
 _tt_GenerateMagicCookie(int len)
 {
+    static const char	randomFile[] = "/dev/urandom";
     char    *auth;
-    long    ldata[2];
-    int	    seed;
-    int	    value;
+    int	    fd;
+    int	    ok;
     int	    i;
-    
-    if ((auth = (char *) malloc (len + 1)) == NULL)
+    int	    draws;
+
+    if (len < 0 || (auth = (char *) malloc ((size_t) len + 1)) == NULL)
 	return (NULL);
 
-#ifdef ITIMER_REAL
+    if ((fd = open (randomFile, O_RDONLY | O_CLOEXEC)) < 0)
     {
-	struct timeval  now;
-	X_GETTIMEOFDAY (&now);
-	ldata[0] = now.tv_sec;
-	ldata[1] = now.tv_usec;
-        seed = (int) ((ldata[0] << 11) ^ ldata[1]);
+	free (auth);
+	return (NULL);
     }
-#else
-    {
-	long    time ();
 
-	ldata[0] = time ((long *) 0);
-	ldata[1] = getpid ();
-        seed = (int) (ldata[0]) + (ldata[1] << 16);
-    }
-#endif
-    srand (seed);
-    for (i = 0; i < len; i++)
+    ok = read_exactly (fd, auth, len);
+    for (i = 0; ok && i < len; i++)
     {
-	value = rand ();
-	auth[i] = (
-		  ( (value & 0xff000000) >> 24) ^
-		  ( (value & 0xff0000) >> 16) ^
-		  ( (value & 0xff00) >> 8)  ^
-		  ( (value & 0xff) )
-		  ) & 0xff;
+	/* a generator that keeps returning zero is broken */
+	for (draws = 0; ok && auth[i] == '\0'; draws++)
+	    ok = (draws < _TT_COOKIE_ZERO_DRAWS) &&
+		 read_exactly (fd, auth + i, 1);
+    }
+    close (fd);
+
+    if (!ok)
+    {
+	free (auth);
+	return (NULL);
     }
     auth[len] = '\0';
 
     return (auth);
 }
 
-
+
 /*
  * local routines
  */

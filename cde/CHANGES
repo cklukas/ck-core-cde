@@ -70,6 +70,14 @@
   resource files and search paths named by the caller's environment, such as
   XENVIRONMENT, with the installed identity, so a user could have a file only
   root can read parsed as resources. A source guard checks the order.
+- tt: harden ttsession's decoding of requests from clients that are not yet
+  authenticated. Strings, byte strings and string lists with a negative or
+  oversized length, session addresses with long host names, null objects and
+  truncated bodies no longer crash the daemon or overrun buffers (one RPC call
+  with a huge cookie length killed ttsession before). The session cookie comes
+  from `/dev/urandom` only, and no session starts if it cannot be read.
+- tt: add sanitizer tests for ttsession's decoding and request handling that
+  run the production code (`make -C lib/tt/slib check`).
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

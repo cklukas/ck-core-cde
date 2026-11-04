@@ -635,7 +635,7 @@ Tt_status _Tt_session::
 parsed_address(_Tt_string &addr_string)
 {
 #define IPVADDRLEN	16
-	char		session_host[IPVADDRLEN];
+	char		session_host[IPVADDRLEN + 1];	// room for the NUL
 	char		strid[BUFSIZ];
 	int		junk_version = 1;
 	Tt_status	status;
@@ -698,6 +698,12 @@ parsed_address(_Tt_string &addr_string)
 		sprintf(fcs1_addr_format, fcs1_addr_format_fmt, IPVADDRLEN);
 		sprintf(addr_format,      addr_format_fmt,      IPVADDRLEN);
 
+		// The version number and a blank come first, the rest of
+		// the address is parsed from str+3.
+		if (strlen(str) < 3) {
+			return TT_ERR_INVALID;
+		}
+
 		// check version number of format first
 
 		// XXX: note that if _TT_XATOM_VERSION is ever changed
@@ -728,14 +734,16 @@ parsed_address(_Tt_string &addr_string)
 		// the server. This is the reason that the first rpc
 		// version parsed from addr_format is thrown away. 
 
-		long long_pid;
-		long long_server_uid;
-		_Tt_auth_level auth_level;
+		long long_pid = 0;
+		long long_server_uid = 0;
+		// The level is read as a plain int and checked: the
+		// address string is not always our own.
+		int scanned_level = 0;
 		if (7 != sscanf(str+3, addr_format,
 				&long_pid,
 				&_rpc_program,
 				&junk_version, /* always 1 ... */
-				&auth_level,
+				&scanned_level,
 				&long_server_uid,
 				session_host,
 				&_rpc_version)) {
@@ -747,7 +755,7 @@ parsed_address(_Tt_string &addr_string)
 					&long_pid,
 					&_rpc_program,
 					&_rpc_version,
-					&auth_level,
+					&scanned_level,
 					&long_server_uid,
 					session_host)) {
 			  	_pid = (pid_t) long_pid;
@@ -759,6 +767,11 @@ parsed_address(_Tt_string &addr_string)
 		}
 		_pid = (pid_t) long_pid;
 		_server_uid = (uid_t) long_server_uid;
+		if (scanned_level < (int)_TT_AUTH_UNIX ||
+		    scanned_level > (int)_TT_AUTH_NONE) {
+			return(TT_ERR_INVALID);
+		}
+		_Tt_auth_level auth_level = (_Tt_auth_level)scanned_level;
 		_hostaddr = session_host;
 		_auth.set_auth_level(auth_level);
 		if ((status = _auth.set_sessionid(
@@ -783,7 +796,6 @@ parsed_address(_Tt_string &addr_string)
 Tt_status _Tt_session::
 set_id(char *id)
 {
-	char			host[64];
 	char			dpname[125];
 	int			svnum;
 	char			*ssid;
@@ -794,10 +806,12 @@ set_id(char *id)
 		      case 'X':
 			// construct a suitable DISPLAY name from the id
 			// which should have the format "X <host> <server_num>"
-			if (sscanf((char *)id, "X %s %d", host, &svnum) != 2) {
+			// Only the server number is used; the host is
+			// skipped (its length is not bounded).
+			if (sscanf((char *)id, "X %*s %d", &svnum) != 1) {
 				return(TT_ERR_SESSION);
 			}
-			/* We _cannot_ set _displayname based solely on host and svnum, 
+			/* We _cannot_ set _displayname based solely on host and svnum,
 			 * because :0 is NOT the same as 127.0.0.1:0 as far as X11
 			 * is concerned: by default, it will only accept connections
 			 * to the former. (XOpenDisplay etc. will fail if you try the below!)

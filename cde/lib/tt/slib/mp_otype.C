@@ -275,7 +275,7 @@ children()
 		plist = c->parents();
 		if (!plist.is_null() && plist->count()!=0) {
 			parname = plist->top();
-			if (! _tt_s_mp->otable->lookup(parname,cparent)) {
+			if (_tt_s_mp->otable->lookup(parname,cparent)) {
 				if (cparent->otid() == otid()) {
 					_children->append(c->otid());
 				}

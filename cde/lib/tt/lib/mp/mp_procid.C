@@ -43,6 +43,7 @@
 #include "mp/mp_stream_socket.h"
 #include "util/tt_int_rec.h"
 #include "util/tt_global_env.h"
+#include "util/tt_xdr_utils.h"
 #include <arpa/inet.h>
 
 #if defined(sgi)
@@ -202,7 +203,7 @@ processing(const _Tt_message &m)
 bool_t
 tt_xdr_procid(XDR *xdrs, _Tt_procid_ptr *patp)
 {
-	return((*patp).xdr(xdrs));
+	return((*patp).xdr(xdrs) && _tt_xdr_non_null(xdrs, *patp));
 }
 
 

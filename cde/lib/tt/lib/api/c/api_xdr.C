@@ -55,16 +55,25 @@ _tt_xdr_cstring_list(XDR *xdrs, char ***ar)
 	}
 	if (!xdr_int(xdrs, &count)) return 0;
 	if (xdrs->x_op == XDR_DECODE) {
-		// allocate a new list
-		tar = (char **)malloc((count+1)*sizeof(char *));
+		// allocate a new list; the count came off the wire
+		if (count < 0) return 0;
+		tar = (char **)calloc((size_t)count+1, sizeof(char *));
 		if (tar==(char **)0) return 0;
-		tar[count] = (char *)0;
 		*ar = tar;
 	} else {
 		tar = *ar;
 	}
 	for (i=0;i<count;++i) {
-		if (!tt_xdr_bstring(xdrs, &tar[i])) return 0;
+		if (!tt_xdr_bstring(xdrs, &tar[i])) {
+			if (xdrs->x_op == XDR_DECODE) {
+				for (int j=0;j<i;++j) {
+					free((MALLOCTYPE *)tar[j]);
+				}
+				free((MALLOCTYPE *)tar);
+				*ar = (char **)0;
+			}
+			return 0;
+		}
 	}
 	if (xdrs->x_op == XDR_FREE) {
 		free((MALLOCTYPE *)tar);

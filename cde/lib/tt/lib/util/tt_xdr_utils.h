@@ -33,9 +33,21 @@
  */
 #ifndef TT_XDR_UTILS_H
 #define TT_XDR_UTILS_H
+#include <rpc/rpc.h>
 #include "util/tt_new.h"
 
 unsigned long	_tt_xdr_sizeof(xdrproc_t f, void *data);
+
+// The encoding of a pointer may say that it is null (_Tt_new_ptr::xdr),
+// and decoding it then leaves the pointer null.  An xdr function whose
+// structure cannot do without the object uses this to reject such an
+// encoding; p is the pointer just passed to its xdr method.
+template <class PTR>
+inline bool_t
+_tt_xdr_non_null(const XDR *xdrs, const PTR &p)
+{
+	return xdrs->x_op != XDR_DECODE || ! p.is_null();
+}
 
 // _Tt_xdr_size_stream is always an automatic object, so it
 // doesn't need to inherit from _Tt_object.  But inherit from
