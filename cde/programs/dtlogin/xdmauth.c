@@ -94,8 +94,6 @@ from the X Consortium.
 static char	auth_name[256];
 static int	auth_name_len;
 
-void GenerateAuthData(char *auth, int len); // genauth.c
-
 void
 XdmPrintDataHex(const char *s, const char *a, int l)
 {
@@ -171,7 +169,13 @@ XdmGetAuthHelper (unsigned short namelen, char *name, int includeRho)
     }
     memmove( (char *)new->name, name, namelen);
     new->name_length = namelen;
-    GenerateAuthData ((char *)new->data, new->data_length);
+    if (!GenerateAuthData ((char *)new->data, new->data_length))
+    {
+	free ((char *) new->name);
+	free ((char *) new->data);
+	free ((char *) new);
+	return (Xauth *) 0;
+    }
     /*
      * set the first byte of the session key to zero as it
      * is a DES key and only uses 56 bits
@@ -203,6 +207,12 @@ void XdmGetXdmcpAuth (struct protoDisplay *pdpy, unsigned short authorizationNam
     Xauth   *fileauth, *xdmcpauth;
 
     if (pdpy->fileAuthorization && pdpy->xdmcpAuthorization)
+	return;
+    /*
+     * the authorization is built from the random number (rho) exchanged
+     * by XDM-AUTHENTICATION-1; without that handshake there is none
+     */
+    if (pdpy->authenticationData.length != 8 || !pdpy->authenticationData.data)
 	return;
     xdmcpauth = XdmGetAuthHelper (authorizationNameLen, authorizationName, FALSE);
     if (!xdmcpauth)
@@ -330,6 +340,7 @@ int XdmCheckAuthentication (struct protoDisplay *pdpy, ARRAY8Ptr displayID,
     XdmcpUnwrap (authenticationData->data, (unsigned char *)&pdpy->key,
 		  authenticationData->data, 8);
     XdmPrintArray8Hex ("Request packet auth", authenticationData);
+    XdmcpDisposeARRAY8 (&pdpy->authenticationData);
     if (!XdmcpCopyARRAY8(authenticationData, &pdpy->authenticationData))
 	return FALSE;
     incoming = (XdmAuthKeyPtr) authenticationData->data;

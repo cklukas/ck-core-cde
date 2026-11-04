@@ -147,11 +147,18 @@ StartServerOnce( struct display *d )
              Debug ("Unable to set permissions on console devices ..\n");
         else {
 #endif
+             /* a server that keeps the privileges of the manager must not be started */
              if(-1 == setgid (puser.pw_gid)) {
                   Debug ("setgid() failed setting %d\n", puser.pw_gid);
+                  LogError ((unsigned char *)"Cannot set group %d for the server of %s: errno = %d\n",
+                            (int) puser.pw_gid, d->name, errno);
+                  exit(1);
              }
              if(-1 == setuid (puser.pw_uid)) {
                   Debug ("setuid() failed setting %d\n", puser.pw_uid);
+                  LogError ((unsigned char *)"Cannot set user %d for the server of %s: errno = %d\n",
+                            (int) puser.pw_uid, d->name, errno);
+                  exit(1);
              }
 #ifdef sun
         }

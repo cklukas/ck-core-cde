@@ -89,7 +89,7 @@ have not had such a review. Fuzz targets exist for none of the components yet.
 | `lib/DtHelp` | help file and markup parsing | string handling (2026-11-02) | 248 | 73 | 34 | none |
 | `programs/dtstyle` | local user program | none recorded | 218 | 12 | 3 | none |
 | `lib/csa` | RPC interface of rpc.cmsd | request decoding used by rpc.cmsd (2026-11-04) | 189 | 8 | 0 | none |
-| `programs/dtlogin` | runs as root; XDMCP network service | environment and arguments (2026-11-02) | 163 | 21 | 9 | none |
+| `programs/dtlogin` | runs as root; XDMCP network service | environment and arguments (2026-11-02); XDMCP, authorization, signals (2026-11-04) | 163 | 21 | 9 | none |
 | `programs/dtksh` | local user program | none recorded | 157 | 15 | 0 | none |
 | `programs/dtinfo` | information browser; C++ | none recorded | 154 | 30 | 7 | none |
 | `programs/dtsearchpath` | dtappgather is always setuid root | none recorded | 46 | 0 | 0 | none |

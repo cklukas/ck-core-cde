@@ -98,6 +98,7 @@ static int  ScanServers( void ) ;
 static void SetAccessFileTime( void ) ;
 static void SetConfigFileTime( void ) ;
 static int  StartGetty( struct display *d) ;
+static void ShutdownManager( void ) ;
 static void StopAll( int arg ) ;
 static long StorePid( void ) ;
 static void TerminateProcess( int pid, int sig) ;
@@ -115,7 +116,8 @@ static void dtmkdir(char *dir, mode_t dir_mode, int force);
  ***************************************************************************/
 struct passwd   puser;		/* pseudo-user password entry		   */
 
-int		Rescan;
+volatile sig_atomic_t	Rescan;
+volatile sig_atomic_t	StopRequested;
 static long	ServersModTime, ConfigModTime, AccessFileModTime;
 int		wakeupTime = -1;
 char		*progPath, *progName;
@@ -292,8 +294,15 @@ main( int argc, char **argv )
 #endif
     while (AnyWellKnownSockets() || AnyDisplaysLeft ())
     {
+	if (StopRequested)
+	{
+	    StopRequested = 0;
+	    ShutdownManager ();
+	    continue;
+	}
 	if (Rescan)
 	{
+	    Debug ("Caught SIGHUP\n");
 	    RescanServers ();
 	    Rescan = 0;
 	}
@@ -314,7 +323,6 @@ main( int argc, char **argv )
 static SIGVAL
 RescanNotify( int arg )
 {
-    Debug ("Caught SIGHUP\n");
     Rescan = 1;
 #if defined(SYSV) || defined(SVR4)
     signal (SIGHUP, RescanNotify);
@@ -481,6 +489,8 @@ static int    dt_shutdown = 0;
 static SIGVAL
 StopAll( int arg )
 {
+    int saved_errno = errno;
+
     if (parent_pid != getpid())
     {
 	/*
@@ -489,22 +499,34 @@ StopAll( int arg )
 	 * dtlogin process before we got a chance to return from
 	 * fork() and remove this signal handler
 	 */
-	Debug ("Child dtlogin caught signal %d before it could become a real child\n", arg);
 	(void) signal (arg, SIG_DFL);		/* ensure no more handler */
 	TerminateProcess (getpid(), arg);	/* and send signal again */
+	errno = saved_errno;
 	return;
     }
 
-    Debug ("Shutting down entire manager\n");
-    DestroyWellKnownSockets ();
-    dt_shutdown = 1;
-    MarkShutdownTime();
-    ForEachDisplay (StopDisplay);
+    /* only a flag here: the main loop does the work (ShutdownManager) */
+    StopRequested = 1;
 #if defined(SYSV) || defined(SVR4)
     /* to avoid another one from killing us unceremoniously */
     (void) signal (SIGTERM, StopAll);
     (void) signal (SIGINT, StopAll);
 #endif
+    errno = saved_errno;
+}
+
+/*
+ * stop all displays and the XDMCP sockets after a SIGTERM or SIGINT
+ */
+
+static void
+ShutdownManager( void )
+{
+    Debug ("Shutting down entire manager\n");
+    DestroyWellKnownSockets ();
+    dt_shutdown = 1;
+    MarkShutdownTime();
+    ForEachDisplay (StopDisplay);
 }
 
 /*
@@ -512,7 +534,7 @@ StopAll( int arg )
  * sub-daemon started
  */
 
-int	ChildReady = 0;
+volatile sig_atomic_t	ChildReady = 0;
 
 #if !defined(SYSV) || defined(_AIX) || defined(__linux__) || defined(CSRG_BASED)
 static SIGVAL
@@ -521,6 +543,35 @@ ChildNotify( int arg )
     ChildReady = 1;
 }
 #endif
+
+/*
+ * The handlers above only set flags.  A main loop that tests the flags and
+ * then sleeps could miss a request that arrives in between, so it blocks
+ * the signals first and sleeps with the previous mask in place (pselect,
+ * sigsuspend), which lets a pending request in as the sleep begins.
+ */
+
+int
+RequestPending( void )
+{
+    return Rescan || ChildReady || StopRequested;
+}
+
+void
+BlockRequestSignals( sigset_t *previous )
+{
+    sigset_t requests;
+
+    sigemptyset (&requests);
+    sigaddset (&requests, SIGTERM);
+    sigaddset (&requests, SIGINT);
+    sigaddset (&requests, SIGHUP);
+#ifdef SIGCHLD
+    sigaddset (&requests, SIGCHLD);
+#endif
+    sigprocmask (SIG_BLOCK, &requests, previous);
+}
+
 
 
 /*
@@ -559,15 +610,42 @@ WaitForChild( void )
 	}
     }
     else {
+#if !defined(SYSV) || defined(_AIX) || defined(__linux__)
+	/*
+	 * Nothing to select on.  Collect the children that have died, including
+	 * any that died before SIGCHLD was caught.  When children are left and
+	 * none has died, sleep until a signal handler reports a dead child or
+	 * another request.
+	 */
+	sigset_t previous;
+	int collected = 0;
+
+	ChildReady = 0;
+	while ((pid = waitpid ((pid_t) -1, &status, WNOHANG)) > 0) {
+	    ProcessChildDeath(pid, status);
+	    collected = 1;
+	}
+	if (!collected && pid == 0) {
+	    BlockRequestSignals (&previous);
+	    if (!RequestPending ())
+		sigsuspend (&previous);
+	    sigprocmask (SIG_SETMASK, &previous, NULL);
+	    ChildReady = 0;
+	    while ((pid = waitpid ((pid_t) -1, &status, WNOHANG)) > 0)
+		ProcessChildDeath(pid, status);
+	}
+#else
 	/* XXX classic sysV signal race condition here with RescanNotify */
 	if ((pid = wait (&status)) != -1)
 	    ProcessChildDeath(pid, status);
+#endif
     }
 
 #else
-    mask = sigblock (sigmask (SIGCHLD) | sigmask (SIGHUP));
+    mask = sigblock (sigmask (SIGCHLD) | sigmask (SIGHUP) |
+		     sigmask (SIGTERM) | sigmask (SIGINT));
     Debug ("Signals blocked, mask was 0x%x\n", mask);
-    if (!ChildReady && !Rescan)
+    if (!ChildReady && !Rescan && !StopRequested)
 	sigpause (mask);
     ChildReady = 0;
     sigsetmask (mask);
@@ -576,7 +654,9 @@ WaitForChild( void )
 	ProcessChildDeath(pid, status);
 #endif
 
-    StartDisplays ();
+    /* a pending shutdown must not see displays started first */
+    if (!StopRequested)
+	StartDisplays ();
 }
         
 
@@ -1320,7 +1400,7 @@ SetTitle( char *name, char *ptr )
 	*t = '\0';
 
     if ( (t = strchr(p,'.')) != NULL )
-	strcpy(t,s);
+	memmove(t, s, strlen(s) + 1);	/* the strings overlap */
     
     /*
      *  if there is enough room shift program name to left,
@@ -1334,7 +1414,7 @@ SetTitle( char *name, char *ptr )
     if ( (t != NULL) && ((t-s+1) >= (strlen(p) + 3)) ) {
 	t++;
 
-	strcpy(s,t);		/* "program"			   */
+	memmove(s, t, strlen(t) + 1);		/* "program"			   */
 	strcat(s," <");		/* "program <"			   */
 	strcat(s,p);		/* "program <displayName"	   */
 	strcat(s,">");		/* "program <displayName>"	   */

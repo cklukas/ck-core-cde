@@ -299,6 +299,11 @@ SetProtoDisplayAuthorization (struct protoDisplay *pdpy, unsigned short	authoriz
     Xauth   *auth;
 
     a = findProtocol (authorizationNameLen, authorizationName);
+    /* a repeated request replaces the authorization of the first one */
+    if (pdpy->fileAuthorization)
+	XauDisposeAuth (pdpy->fileAuthorization);
+    if (pdpy->xdmcpAuthorization)
+	XauDisposeAuth (pdpy->xdmcpAuthorization);
     pdpy->xdmcpAuthorization = pdpy->fileAuthorization = 0;
     if (a)
     {
@@ -356,6 +361,7 @@ static int
 MakeServerAuthFile (struct display *d)
 {
     int len;
+    int fd;
 #ifdef SYSV
 #define NAMELEN	14
 #else
@@ -388,12 +394,16 @@ MakeServerAuthFile (struct display *d)
 	    if (statb.st_uid != 0) {
 		if(-1 == chown(d->authFile, 0, statb.st_gid)) {
                     perror(strerror(errno));
+                    free (d->authFile);
+                    d->authFile = NULL;
                     return FALSE;
                 }
             }
 	    if ((statb.st_mode & 0077) != 0) {
 		if(-1 == chmod(d->authFile, statb.st_mode & 0700)) {
                     perror(strerror(errno));
+                    free (d->authFile);
+                    d->authFile = NULL;
                     return FALSE;
                 }
             }
@@ -415,7 +425,13 @@ MakeServerAuthFile (struct display *d)
 	}
     	sprintf (d->authFile, "%s/%s/%s/A%s-XXXXXX",
 		 authDir, authdir1, authdir2, cleanname);
-    	(void) mktemp (d->authFile);
+	fd = mkstemp (d->authFile);
+	if (fd < 0) {
+	    free (d->authFile);
+	    d->authFile = NULL;
+	    return FALSE;
+	}
+	close (fd);
     }
     return TRUE;
 }
@@ -423,16 +439,21 @@ MakeServerAuthFile (struct display *d)
 int
 SaveServerAuthorizations (struct display *d, Xauth **auths, int count)
 {
-    FILE	*auth_file;
+    FILE	*auth_file = NULL;
     int		mask;
+    int		fd;
     int		ret;
     int		i;
 
     mask = umask (0077);
-    if (!d->authFile && !MakeServerAuthFile (d))
+    if (!d->authFile && !MakeServerAuthFile (d)) {
+	umask (mask);
 	return FALSE;
+    }
     (void) unlink (d->authFile);
-    auth_file = fopen (d->authFile, "w");
+    fd = open (d->authFile, O_WRONLY | O_CREAT | O_EXCL, 0600);
+    if (fd >= 0 && !(auth_file = fdopen (fd, "w")))
+	close (fd);
     umask (mask);
     if (!auth_file) {
 	Debug ("Can't creat auth file %s\n", d->authFile);
@@ -548,13 +569,13 @@ SetAuthorization (struct display *d)
 }
 
 static int
-openFiles (char *name, char *new_name, FILE **oldp, FILE **newp)
+openFiles (char *name, char *new_name, size_t size, FILE **oldp, FILE **newp)
 {
 	int	mask;
 	int	null_data = 0;
 
-	strcpy (new_name, name);
-	strcat (new_name, "-n");
+	if ((size_t) snprintf (new_name, size, "%s-n", name) >= size)
+		return 0;
 	mask = umask (0077);
 	(void) unlink (new_name);
 	*newp = fopen (new_name, "w");
@@ -722,6 +743,7 @@ checkEntry (Xauth *auth)
 }
 
 static int  doWrite;
+static char *writeName;	/* file being written, for log messages */
 
 static int
 writeAuth (FILE *file, Xauth *auth)
@@ -735,7 +757,7 @@ writeAuth (FILE *file, Xauth *auth)
         if (!XauWriteAuth (file, auth) || fflush (file) == EOF)  {
                 LogError(
                     ReadCatalog(MC_LOG_SET,MC_LOG_SRV_WRT,MC_DEF_LOG_SRV_WRT),
-                    file);
+                    writeName);
                 return 0;
         }
         else
@@ -1088,12 +1110,29 @@ writeRemoteAuth (FILE *file, Xauth *auth, XdmcpNetaddr peer, int peerlen, char *
 
 #endif /* XDMCP */
 
+/*
+ * Build the name of the user's authority file below the home directory.
+ * Fails when there is no home directory or when the name and its "-n"
+ * companion would not fit in size bytes.
+ */
+static int
+UserAuthorityPath (const char *home, char *path, size_t size)
+{
+    size_t length = strlen (home);
+    int n;
+
+    if (length == 0)
+	return 0;
+    n = snprintf (path, size, "%s%s.Xauthority", home,
+		  home[length - 1] == '/' ? "" : "/");
+    return n > 0 && (size_t) n + 3 <= size;
+}
+
 void
 SetUserAuthorization (struct display *d, struct verify_info *verify)
 {
     FILE	*old, *new;
     char	home_name[1024], backup_name[1024], new_name[1024];
-    char	home_name_temp[sizeof(home_name)];
     char	*name;
     char	*home;
     char	*envname = 0;
@@ -1110,19 +1149,13 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
     if (auths) {
 	home = getEnv (verify->userEnviron, "HOME");
 	lockStatus = LOCK_ERROR;
-	if (home) {
-	    snprintf(home_name, sizeof(home_name), "%s", home);
-	    if (home[strlen(home) - 1] != '/') {
-	        snprintf(home_name_temp, sizeof(home_name_temp), "%s/", home_name);
-	        strcpy(home_name, home_name_temp);
-	    }
-	    snprintf(home_name_temp, sizeof(home_name_temp), "%s.Xauthority", home_name);
-        strcpy(home_name, home_name_temp);
+	home_name[0] = backup_name[0] = '\0';
+	if (home && UserAuthorityPath (home, home_name, sizeof(home_name))) {
 	    Debug ("XauLockAuth %s\n", home_name);
 	    lockStatus = XauLockAuth (home_name, 1, 2, 10);
 	    Debug ("Lock is %d\n", lockStatus);
 	    if (lockStatus == LOCK_SUCCESS) {
-		if (openFiles (home_name, new_name, &old, &new)) {
+		if (openFiles (home_name, new_name, sizeof(new_name), &old, &new)) {
 		    name = home_name;
 		    setenv = 0;
 		} else {
@@ -1132,25 +1165,32 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 		}	
 	    }
 	}
-	if (lockStatus != LOCK_SUCCESS) {
-	    sprintf (backup_name, "%s/.XauthXXXXXX", d->userAuthDir);
-	    (void) mktemp (backup_name);
-	    Debug ("XauLockAuth %s\n", backup_name);
-	    lockStatus = XauLockAuth (backup_name, 1, 2, 10);
-	    Debug ("backup lock is %d\n", lockStatus);
-	    if (lockStatus == LOCK_SUCCESS) {
-		if (openFiles (backup_name, new_name, &old, &new)) {
-		    name = backup_name;
-		    setenv = 1;
-		} else {
-		    XauUnlockAuth (backup_name);
-		    lockStatus = LOCK_ERROR;
-		}	
+	if (lockStatus != LOCK_SUCCESS && d->userAuthDir) {
+	    int fd = -1;
+	    int n = snprintf (backup_name, sizeof(backup_name),
+			      "%s/.XauthXXXXXX", d->userAuthDir);
+
+	    /* create the file now so that no one else can claim its name */
+	    if (n > 0 && (size_t) n + 3 <= sizeof(backup_name))
+		fd = mkstemp (backup_name);
+	    if (fd >= 0) {
+		close (fd);
+		Debug ("XauLockAuth %s\n", backup_name);
+		lockStatus = XauLockAuth (backup_name, 1, 2, 10);
+		Debug ("backup lock is %d\n", lockStatus);
+		if (lockStatus == LOCK_SUCCESS) {
+		    if (openFiles (backup_name, new_name, sizeof(new_name),
+				   &old, &new)) {
+			name = backup_name;
+			setenv = 1;
+		    } else {
+			XauUnlockAuth (backup_name);
+			lockStatus = LOCK_ERROR;
+		    }
+		}
+		if (lockStatus != LOCK_SUCCESS)
+		    unlink (backup_name);
 	    }
-	    /*
-	     * Won't be using this file so unlock it.
-	     */
-	    XauUnlockAuth (home_name);
 	}
 	if (lockStatus != LOCK_SUCCESS) {
 	    Debug ("can't lock auth file %s or backup %s\n",
@@ -1162,6 +1202,7 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 	}
 	initAddrs ();
 	doWrite = 1;
+	writeName = new_name;
 	Debug ("%d authorization protocols for %s\n", d->authNum, d->name);
 	/*
 	 * Write MIT-MAGIC-COOKIE-1 authorization first, so that
@@ -1223,6 +1264,7 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 	}
 	doneAddrs ();
 	fclose (new);
+	writeName = NULL;
 	Debug ("SetUserAuthorization: name     = %s\n", name);
 	Debug ("SetUserAuthorization: new_name = %s\n", new_name);
 	Debug ("SetUserAuthorization: unlink(%s)\n", name);
@@ -1275,7 +1317,6 @@ RemoveUserAuthorization (struct display *d, struct verify_info *verify)
     char    *home;
     Xauth   **auths, *entry;
     char    name[1024], new_name[1024];
-    char    name_temp[sizeof(name)];
     int	    lockStatus;
     FILE    *old, *new;
     struct stat	statb;
@@ -1283,22 +1324,15 @@ RemoveUserAuthorization (struct display *d, struct verify_info *verify)
     if (!(auths = d->authorizations))
 	return;
     home = getEnv (verify->userEnviron, "HOME");
-    if (!home)
+    if (!home || !UserAuthorityPath (home, name, sizeof(name)))
 	return;
     Debug ("RemoveUserAuthorization\n");
-    snprintf(name, sizeof(name), "%s", home);
-    if (home[strlen(home) - 1] != '/') {
-        snprintf(name_temp, sizeof(name_temp), "%s/", name);
-        strcpy(name, name_temp);
-    }
-    snprintf(name_temp, sizeof(name_temp), "%s.Xauthority", name);
-    strcpy(name, name_temp);
     Debug ("XauLockAuth %s\n", name);
     lockStatus = XauLockAuth (name, 1, 2, 10);
     Debug ("Lock is %d\n", lockStatus);
     if (lockStatus != LOCK_SUCCESS)
 	return;
-    if (openFiles (name, new_name, &old, &new))
+    if (openFiles (name, new_name, sizeof(new_name), &old, &new))
     {
 	initAddrs ();
 	doWrite = 0;
@@ -1312,6 +1346,7 @@ RemoveUserAuthorization (struct display *d, struct verify_info *verify)
 #endif
 	}
 	doWrite = 1;
+	writeName = new_name;
 	if (old) {
 	    if (fstat (fileno (old), &statb) != -1)
 		chmod (new_name, (int) (statb.st_mode & 0777));
@@ -1328,6 +1363,7 @@ RemoveUserAuthorization (struct display *d, struct verify_info *verify)
 	}
 	doneAddrs ();
 	fclose (new);
+	writeName = NULL;
 	if (unlink (name) == -1)
 	    Debug ("unlink %s failed\n", name);
 	if (link (new_name, name) == -1) {

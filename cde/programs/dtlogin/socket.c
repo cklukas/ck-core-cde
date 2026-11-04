@@ -156,6 +156,7 @@ CreateWellKnownSockets (void)
     if (chooserFd > WellKnownSocketsMax)
 	WellKnownSocketsMax = chooserFd;
     FD_SET (chooserFd, &WellKnownSocketsMask);
+    return 1;
 }
 
 int

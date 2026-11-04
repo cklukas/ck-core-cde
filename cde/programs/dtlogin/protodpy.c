@@ -114,6 +114,8 @@ NewProtoDisplay( struct sockaddr *address, int addrlen,
     pdpy = (struct protoDisplay *) malloc (sizeof *pdpy);
     if (!pdpy)
 	return NULL;
+    /* authentication data and key are filled in only by the XDM handshake */
+    bzero ((char *) pdpy, sizeof *pdpy);
     pdpy->address = (struct sockaddr *) malloc (addrlen);
     if (!pdpy->address)
     {
@@ -158,6 +160,8 @@ DisposeProtoDisplay( struct protoDisplay *pdpy )
     else
 	protoDisplays = pdpy->next;
     XdmcpDisposeARRAY8 (&pdpy->connectionAddress);
+    XdmcpDisposeARRAY8 (&pdpy->authenticationName);
+    XdmcpDisposeARRAY8 (&pdpy->authenticationData);
     if (pdpy->fileAuthorization)
 	XauDisposeAuth (pdpy->fileAuthorization);
     if (pdpy->xdmcpAuthorization)

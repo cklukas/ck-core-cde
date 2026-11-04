@@ -42,6 +42,7 @@ nav:
           - docs/improvements/launching.md
           - docs/improvements/subprocess-control.md
           - docs/improvements/calendar-server.md
+          - docs/improvements/login-manager.md
           - docs/improvements/trash.md
           - docs/improvements/validation.md
   - title: Development

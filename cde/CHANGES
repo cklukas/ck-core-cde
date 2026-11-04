@@ -55,6 +55,14 @@
 - dtcm: add request-level regression tests (`make -C programs/dtcm/server
   check`) that include the production log writer and request handlers and run
   under the sanitizers.
+- dtlogin: harden XDMCP, authorization and signal handling. A Request offering
+  only loopback or malformed addresses no longer indexes past its arrays,
+  XDM-AUTHORIZATION-1 without the handshake is declined, and authorization
+  cookies come from /dev/urandom instead of the clock. The Willing status, xrdb
+  run, backup and server authority files no longer use temporary names,
+  redirects or a shell. Signal handlers set flags and the main loop acts on
+  them, failed privilege drops stop the server or session, and sanitizer tests
+  run under `make check`.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

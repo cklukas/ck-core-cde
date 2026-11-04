@@ -644,15 +644,54 @@ ManageSession( struct display *d )
 }
 
 
+/*
+ * Load the resources in file into the X server with the configured resource
+ * loader.  The display name of an XDMCP display comes from the network, so
+ * the arguments are handed to the program as they are, not parsed by a shell.
+ */
+static int
+RunXrdb( struct display *d, const char *authority, const char *file )
+{
+    char	**args = NULL;
+    pid_t	pid;
+    int		status;
+
+    if (!parseArgs (&args, d->xrdb) || !args[0] ||
+	!appendArg (&args, "-display") || !appendArg (&args, d->name) ||
+	!appendArg (&args, "-load") || !appendArg (&args, file)) {
+	freeEnv (args);
+	return -1;
+    }
+    Debug ("Loading resource file: %s -display %s -load %s\n",
+	   args[0], d->name, file);
+
+    switch (pid = fork ()) {
+    case -1:
+	freeEnv (args);
+	return -1;
+    case 0:
+	if (authority[0] && setenv ("XAUTHORITY", authority, 1) == -1)
+	    _exit (127);
+	execvp (args[0], args);
+	_exit (127);
+    }
+    freeEnv (args);
+    while (waitpid (pid, &status, 0) == -1)
+	if (errno != EINTR)
+	    return -1;
+    return 0;
+}
+
+
 int
 LoadXloginResources( struct display *d )
 {
-    char	cmd[1024];
     char	*authority="";
-    char	*auth_key="";
     char        *resources = NULL;
     char	*p;
     char	tmpname[32];
+    int		fd;
+    int		status;
 
     if (d->resources && d->resources[0]) { 
         resources = _ExpandLang(d->resources, d->language);
@@ -674,7 +713,6 @@ LoadXloginResources( struct display *d )
 
 	if (d->authFile && strlen(d->authFile) > 0 ) {
 		authority = d->authFile;
-		auth_key = "XAUTHORITY=";
 	}
 
 	Debug("LoadXloginResources - loading resource db from %s\n", resources);
@@ -685,22 +723,26 @@ LoadXloginResources( struct display *d )
 	LoadAltDtsResources(d); 
 
         strcpy(tmpname,"/var/dt/dtlogin_XXXXXX");
-        (void) mktemp(tmpname);
+	fd = mkstemp(tmpname);
+	if (fd == -1) {
+	    Debug ("mkstemp() failed on %s\n", tmpname);
+	    free(resources);
+	    return -1;
+	}
+	close(fd);
 
         XrmPutFileDatabase(XresourceDB, tmpname);
 
-	sprintf (cmd, "%s%s %s -display %s -load %s",
-			auth_key, authority, d->xrdb, d->name, tmpname);
-	Debug ("Loading resource file: %s\n", cmd);
-
-	if(-1 == system (cmd)) {
-	    Debug ("system() failed on cmd '%s'\n", cmd);
-            return -1;
-        }
+	status = RunXrdb (d, authority, tmpname);
 
 	if (debugLevel <= 10)
 	  if (unlink (tmpname) == -1)
 	    Debug ("unlink() on %s failed\n", tmpname);
+	if (status == -1) {
+	    Debug ("running %s failed\n", d->xrdb);
+	    free(resources);
+	    return -1;
+	}
     }
 
     if (resources) free (resources);
@@ -1162,6 +1204,45 @@ SessionExit( struct display *d, int status )
     exit (status);
 }
 
+#if !defined(sun) && !defined(__AFS) && !defined(SIA)
+/*
+ * Give the session the user's groups.  This can only fail for lack of
+ * privilege when the process has already given up its own, as the PAM code
+ * above may have done; while still privileged a failure is an error, since
+ * the session would keep the groups of the manager.
+ */
+static int
+SetSessionGroups( struct verify_info *verify )
+{
+    if (geteuid () != 0)
+	return 1;
+
+#ifdef NGROUPS
+    /*
+     * if your system does not support "initgroups(3C)", use
+     * the "setgroups()" call instead...
+     */
+    if (setgroups (verify->ngroups, verify->groups) == -1)
+	return 0;
+
+/* setpenv() will set gid for AIX */
+#if !defined (_AIX)
+    if (setgid (verify->groups[0]) == -1)
+	return 0;
+#endif
+#else  /* ! NGROUPS */
+
+/* setpenv() will set gid for AIX */
+#if !defined (_AIX)
+    if (setgid (verify->gid) == -1)
+	return 0;
+#endif
+#endif /* NGROUPS */
+    return 1;
+}
+#endif
+
+
 static int 
 StartClient( struct verify_info *verify, struct display *d, int *pidp )
 {
@@ -1424,30 +1505,11 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
  * so skip them.
  */
 #  ifndef SIA
-#    ifdef NGROUPS
-
-	/*
-	 * if your system does not support "initgroups(3C)", use
-	 * the "setgroups()" call instead...
-	 */
-	 
-	setgroups (verify->ngroups, verify->groups);
-
-/* setpenv() will set gid for AIX */
-#if !defined (_AIX)
-	if(-1 == setgid (verify->groups[0])) {
-            perror(strerror(errno));
-        }
-#endif
-
-#    else  /* ! NGROUPS */
-
-/* setpenv() will set gid for AIX */
-#if !defined (_AIX)
-	setgid (verify->gid);
-#endif
-
-#    endif /* NGROUPS */
+	if (!SetSessionGroups (verify)) {
+	    LogError ((unsigned char *)"Cannot set the groups of user %s, errno = %d\n",
+		      user, errno);
+	    exit (1);
+	}
 #  endif /* !SIA */
 #  endif /* __AFS */
 
@@ -2825,6 +2887,17 @@ AskGreeter(
 
   if (count == sizeof(*phdr))
   {
+   /*
+    * The length comes from the greeter; never read more than the caller
+    * has room for.
+    */
+    if (phdr->length > blen)
+    {
+      Debug("Greeter response of %d bytes does not fit in %d\n",
+            phdr->length, blen);
+      return(0);
+    }
+
    /*
     * Calculate amount of data after header.
     */

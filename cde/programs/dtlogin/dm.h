@@ -65,6 +65,7 @@
  ***************************************************************************/
 
 # include	<errno.h>		/* for errno			   */
+# include	<signal.h>		/* for sig_atomic_t, sigset_t	   */
 # include       <pwd.h>                 /* for passwd structure            */
 # include	<stdio.h>
 # include	<stdlib.h>		/* for exit(), malloc(), abort()   */
@@ -604,12 +605,11 @@ extern int  ValidAuthorization(
                         char *name) ;
 
 
-/*******************************     cryptokey.c  **************************/
+/*******************************     genauth.c    **************************/
 
-extern void GenerateCryptoKey(
+extern int  GenerateAuthData(
 			char *auth,
 			int len) ;
-extern int  InitCryptoKey( void ) ;
 
 
 /*******************************     daemon.c     **************************/
@@ -884,6 +884,11 @@ extern void SendFailed(
                         struct display *d,
                         char *reason) ;
 extern void WaitForSomething( void ) ;
+
+/* set by signal handlers, acted upon from the main loop (dm.c) */
+extern volatile sig_atomic_t Rescan, ChildReady, StopRequested;
+extern int  RequestPending( void ) ;
+extern void BlockRequestSignals( sigset_t *previous ) ;
 
 extern char * localHostname( void ) ;
 

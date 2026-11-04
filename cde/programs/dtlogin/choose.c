@@ -126,6 +126,8 @@ RememberIndirectClient (
 	    connectionType == i->connectionType)
 	    return 1;
     i = (IndirectUsersPtr) malloc (sizeof (IndirectUsersRec));
+    if (!i)
+	return 0;
     if (!XdmcpCopyARRAY8 (clientAddress, &i->client))
     {
 	free ((char *) i);
@@ -357,6 +359,11 @@ AddChooserHost (
     }
 }
 
+/* seconds an accepted chooser connection may stay silent */
+#ifndef CHOOSER_REPLY_TIMEOUT
+#define CHOOSER_REPLY_TIMEOUT 5
+#endif
+
 int
 ProcessChooserSocket (
     int fd)
@@ -368,6 +375,7 @@ ProcessChooserSocket (
     ARRAY8	clientAddress;
     CARD16	connectionType;
     ARRAY8	choice;
+    struct timeval timeout;
 
     Debug ("Process chooser socket\n");
     len = sizeof (buf);
@@ -378,6 +386,10 @@ ProcessChooserSocket (
 	return 0;
     }
     Debug ("Accepted %d\n", client_fd);
+    /* the peer is not trusted: a silent connection must not stall the manager */
+    timeout.tv_sec = CHOOSER_REPLY_TIMEOUT;
+    timeout.tv_usec = 0;
+    setsockopt (client_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof (timeout));
     
     len = read (client_fd, buf, sizeof (buf));
     Debug ("Read returns %d\n", len);

@@ -52,8 +52,6 @@ static int PathInPList(char *path, char **fplist, int listlen);
 static int PathInZList(char *path, char *fplist, int listlen);
 static int SeparateParts( char **path );
 
-void GenerateAuthData(char *auth, int len); // genauth.c
-
 
 static void
 DebugFontPath(char *note, char **path, int nelems)

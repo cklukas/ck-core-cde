@@ -95,329 +95,47 @@ from the X Consortium.
 # include   <X11/Xos.h>
 # include   "dm.h"
 #include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-#ifdef X_NOT_STDC_ENV
-#define Time_t long
-extern Time_t time (Time_t *timer);
-extern int errno;
-#else
-#include <time.h>
-#define Time_t time_t
-#endif
-
-#if !defined(DONT_USE_DES) && !defined(USE_CRYPT)
-# if defined(AIXV3) || defined(__FreeBSD__)
-#  define USE_CRYPT
-# elif defined(__OpenBSD__)
-#  define DONT_USE_DES
-# elif defined(sun)
-#  define USE_CRYPT
-# endif
-# define USE_ENCRYPT
-#endif
-
-#ifdef HASXDMAUTH
-static unsigned char	key[8];
-#else
-static long		key[2];
-#endif
-
-static int sumFile (char *name, long sum[2]);
-
-#ifdef HASXDMAUTH
-
-// Most of this comes from XDMCP's Wrap.h header
-
-typedef unsigned char auth_cblock[8];	/* block size */
-
-typedef struct auth_ks_struct { auth_cblock _; } auth_wrapper_schedule[16];
-
-void _XdmcpWrapperToOddParity(auth_cblock input, auth_cblock output);
-void _XdmcpAuthSetup (auth_cblock key, auth_wrapper_schedule schedule);
-void _XdmcpAuthDoIt (auth_cblock input, auth_cblock output,
-                     auth_wrapper_schedule schedule, int edflag);
-
-static void
-longtochars (long l, unsigned char *c)
-{
-    c[0] = (l >> 24) & 0xff;
-    c[1] = (l >> 16) & 0xff;
-    c[2] = (l >> 8) & 0xff;
-    c[3] = l & 0xff;
-}
-
-static void
-InitXdmcpWrapper (void)
-{
-    long	    sum[2];
-    unsigned char   tmpkey[8];
 /*
- * randomFile is and xdm resource not defined in dtlogin.
- *
- *   if (!sumFile (randomFile, sum)) {
+ * Authorization data is a secret shared with the X server, so it has to be
+ * unpredictable: take it from the system's random number generator.
+ * Returns 0, with nothing usable left in auth, if the generator cannot
+ * supply len bytes.
  */
-    if (!sumFile ("/dev/mem", sum)) {
-	sum[0] = time ((Time_t *) 0);
-	sum[1] = time ((Time_t *) 0);
-    }
-    longtochars (sum[0], tmpkey+0);
-    longtochars (sum[1], tmpkey+4);
-    tmpkey[0] = 0;
-    _XdmcpWrapperToOddParity (tmpkey, key);
-}
-
-#endif /* HASXDMAUTH */
-
-#ifndef HASXDMAUTH
-/* A random number generator that is more unpredictable
-   than that shipped with some systems.
-   This code is taken from the C standard. */
-
-static unsigned long int next = 1;
-
-static int
-xdm_rand(void)
-{
-    next = next * 1103515245 + 12345;
-    return (unsigned int)(next/65536) % 32768;
-}
-
-static void
-xdm_srand(unsigned int seed)
-{
-    next = seed;
-}
-#endif /* no HASXDMAUTH */
-
-#ifdef USE_ENCRYPT
-static void
-bitsToBytes (unsigned long bits[2], char bytes[64])
-{
-    int	bit, byte;
-    int	i;
-
-    i = 0;
-    for (byte = 0; byte < 2; byte++)
-	for (bit = 0; bit < 32; bit++)
-	    bytes[i++] = ((bits[byte] & (1 << bit)) != 0);
-}
-#endif /* USE_ENCRYPT */
-
-# define FILE_LIMIT	1024	/* no more than this many buffers */
-
-/* for linux/csrg we use a simpler method to get 2 random longs from
- *  the OS's random number device.
- */
-
-#define READ_LIMIT (sizeof (long) * 2)
-
-static int
-sumFile (char *name, long sum[2])
-{
-  long    buf[2];
-  int	  fd;
-  int     ret_status = 0;
-
-  if ( (fd = open (name, 0)) < 0 )
-    {
-      LogError((unsigned char *) "Cannot open randomFile \"%s\", errno = %d\n",
-               name, errno);
-      return 0;
-    }
-
-  sum[0] = 0;
-  sum[1] = 0;
-
-  if (read(fd, (char *)buf, READ_LIMIT) != READ_LIMIT)
-    {
-      LogError((unsigned char *) "Could not read %d bytes from '%s'\n",
-               READ_LIMIT, name);
-      /* cheap fallback */
-      sum[0] = (long)time((Time_t *) 0);
-      sum[1] = sum[0];
-    }
-  else
-    {
-      sum[0] = buf[0];
-      sum[1] = buf[1];
-      ret_status = 1;
-    }
-
-  close(fd);
-  return ret_status;
-}
-
-#undef READ_LIMIT
-
-void
+int
 GenerateAuthData (char *auth, int len)
 {
-    long	    ldata[2];
+    static const char	randomFile[] = "/dev/urandom";
+    int			fd;
+    int			used = 0;
+    ssize_t		got;
 
-#ifdef ITIMER_REAL
-    {
-	struct timeval  now;
-
-	X_GETTIMEOFDAY (&now);
-	ldata[0] = now.tv_sec;
-	ldata[1] = now.tv_usec;
-    }
-#else
-    {
-	ldata[0] = time ((Time_t *) 0);
-	ldata[1] = getpid ();
-    }
-#endif /* ITIMER_REAL */
-
-#ifdef HASXDMAUTH
-    {
-    	int		    bit;
-    	int		    i;
-	auth_wrapper_schedule    schedule;
-	unsigned char	    tdata[8];
-	static int	    xdmcpAuthInited;
-    
-	longtochars (ldata[0], tdata+0);
-	longtochars (ldata[1], tdata+4);
-	if (!xdmcpAuthInited)
-	{
-	    InitXdmcpWrapper ();
-	    xdmcpAuthInited = 1;
-	}
-	_XdmcpAuthSetup (key, schedule);
-    	for (i = 0; i < len; i++) {
-	    auth[i] = 0;
-	    for (bit = 1; bit < 256; bit <<= 1) {
-	    	_XdmcpAuthDoIt (tdata, tdata, schedule, 1);
-	    	if (tdata[0] + tdata[1] & 0x4)
-		    auth[i] |= bit;
-	    }
-    	}
-    }
-#else
-
-    InitCryptoKey ();
-
-#if defined(USE_CRYPT)
-    {
-    	int	    i, j, k;
-    	char    *result, *crypt ();
-	char	cdata[9];
-	long	sdata;
-    
-	for (j = 0; j < 2; j++)
-	{
-	    sdata = ldata[j];
-	    for (i = 0; i < 4; i++)
-	    {
-		k = j * 4 + i;
-		cdata[k] = sdata & 0xff;
-		if (cdata[k] == 0)
-		    cdata[k] = 1;
-		sdata >>= 8;
-	    }
-	}
-	cdata[8] = '\0';
-	for (i = 0; i < len; i += 4)
-	{
-	    result = crypt (cdata, (const char *) key);
-	    k = 4;
-	    if (i + k > len)
-		k = len - i;
-	    for (j = 0; j < k; j++)
-		auth[i + j] = result[2 + j];
-	    for (j = 0; j < 8; j++)
-		cdata[j] = result[2 + j];
-	}
-    }
-#elif defined(USE_ENCRYPT)
-    {
-    	char    key_bits[64];
-    	char    data_bits[64];
-    	int	    bit;
-    	int	    i;
-    
-    	bitsToBytes (key, key_bits);
-    	bitsToBytes (ldata, data_bits);
-    	setkey (key_bits);
-    	for (i = 0; i < len; i++) {
-	    auth[i] = 0;
-	    for (bit = 1; bit < 256; bit <<= 1) {
-	    	encrypt (data_bits, 0);
-	    	if (data_bits[bit])
-		    auth[i] |= bit;
-	    }
-    	}
-    }
-#else
-    {
-    	int	    seed;
-    	int	    value;
-    	int	    i;
-    
-    	seed = (ldata[0] + key[0]) +
-	      ((ldata[1] + key[1]) << 16);
-    	xdm_srand (seed);
-    	for (i = 0; i < len; i++)
-    	{
-	    value = xdm_rand ();
-	    auth[i] = (value & 0xff00)  >> 8;
-    	}
-	value = len;
-	if (value > sizeof (key))
-	    value = sizeof (key);
-    	memmove( (char *) key, auth, value);
-    }
-#endif
-#endif
-}
-
-#ifndef HASXDMAUTH
-
-static int  cryptoInited = 0;
-
-int 
-InitCryptoKey( void )
-{
-#if defined(__linux__)
-    /* non-blocking */
-    char    *key_file = "/dev/urandom";
-#elif defined(CSRG_BASED) || defined(sun)
-    /* non-blocking */
-    char    *key_file = "/dev/random";
-#else
-# warning "Using /dev/mem for random bits."
-    /* JET - this seems like a really bad idea. */
-    char    *key_file = "/dev/mem";
-#endif    
-    if (cryptoInited)
+    if (len < 0)
 	return 0;
-
-    /*
-     *  If the sumFile fails to produce a result
-     *  use the time of day.
-     */
-    if (!sumFile (key_file, key)) {
-
-#ifdef ITIMER_REAL
-      {
-	struct timeval  now;
-	struct timezone zone;
-	gettimeofday (&now, &zone);
-	key[0] = now.tv_sec;
-	key[1] = now.tv_usec;
-      }
-#else
-      {
-	key[0] = time ((Time_t *) 0);
-	key[1] = getpid ();
-      }
-#endif
-
+    if ((fd = open (randomFile, O_RDONLY)) < 0)
+    {
+	LogError((unsigned char *) "Cannot open \"%s\", errno = %d\n",
+		 randomFile, errno);
+	return 0;
     }
-    cryptoInited = 1;
-
+    while (used < len)
+    {
+	got = read (fd, auth + used, len - used);
+	if (got < 0 && errno == EINTR)
+	    continue;
+	if (got <= 0)
+	    break;
+	used += got;
+    }
+    close (fd);
+    if (used != len)
+    {
+	LogError((unsigned char *) "Could not read %d bytes from \"%s\"\n",
+		 len, randomFile);
+	bzero (auth, len);
+	return 0;
+    }
     return 1;
 }
-
-#endif /* HASXDMAUTH */

@@ -372,9 +372,10 @@ ProcessRequestSocket (void)
 void WaitForSomething (void)
 {
     FD_TYPE	reads;
-    struct timeval	timeout, *ptimeout;
+    struct timespec	timeout, *ptimeout;
+    sigset_t	previous;
     int	nready;
-    extern int Rescan, ChildReady, wakeupTime;
+    extern int wakeupTime;
 
     Debug ("WaitForSomething\n");
     if (AnyWellKnownSockets () && !ChildReady || wakeupTime > 0 ) {
@@ -382,14 +383,25 @@ void WaitForSomething (void)
 
 	if (wakeupTime >= 0 ) {
 	    timeout.tv_sec  = wakeupTime;
-	    timeout.tv_usec = 10;
+	    timeout.tv_nsec = 10000;
 	    ptimeout = &timeout;
 	    Debug("Setting timer on select() for %d seconds.\n", wakeupTime);
 	}
 	else
 	    ptimeout = NULL;
 
-	nready = select (WellKnownSocketsMax + 1, &reads, 0, 0, ptimeout);
+	/*
+	 * The signal handlers only set flags.  Test the flags with the signals
+	 * blocked and let pselect() unblock them as it sleeps, so that a request
+	 * arriving in between is not missed until the next packet.
+	 */
+	BlockRequestSignals (&previous);
+	if (RequestPending ())
+	    nready = 0;
+	else
+	    nready = pselect (WellKnownSocketsMax + 1, &reads, 0, 0, ptimeout,
+			      &previous);
+	sigprocmask (SIG_SETMASK, &previous, NULL);
 	Debug ("select returns %d.  Rescan: %d  ChildReady: %d\n",
 		nready, Rescan, ChildReady);
 	if (nready > 0)
@@ -399,6 +411,8 @@ void WaitForSomething (void)
 	    if (chooserFd >= 0 && FD_ISSET (chooserFd, &reads))
 		ProcessChooserSocket (chooserFd);
 	}
+	if (StopRequested)
+	    return;
 	if (ChildReady)
 	{
 	    WaitForChild ();
@@ -474,6 +488,9 @@ NetworkAddressToName(CARD16 connectionType, ARRAY8Ptr connectionAddress, CARD16 
 	    char		*name;
 	    char		*localhost;
 
+	    /* the address comes from the display; an IPv4 address has 4 bytes */
+	    if (connectionAddress->length != 4)
+		return NULL;
 	    data = connectionAddress->data;
 	    hostent = gethostbyaddr ((char *)data,
 				     connectionAddress->length, AF_INET);
@@ -826,6 +843,12 @@ request_respond (struct sockaddr *from, int fromlen, int length)
 		authorizationData.length = auth->data_length;
 		authorizationData.data = (CARD8Ptr) auth->data;
 	    }
+	    else
+	    {
+		/* no authorization could be made: do not accept an unprotected display */
+		reason = &noValidAuth;
+		goto decline;
+	    }
 	}
 	if (pdpy)
 	{
@@ -1145,6 +1168,8 @@ NetworkAddressToHostname (CARD16 connectionType, ARRAY8Ptr connectionAddress)
 	    char dotted[20];
 	    char *local_name;
 
+	    if (connectionAddress->length != 4)
+		break;
 	    hostent = gethostbyaddr ((char *)connectionAddress->data,
 				     connectionAddress->length, AF_INET);
 

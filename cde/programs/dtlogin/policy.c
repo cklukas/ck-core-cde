@@ -109,7 +109,7 @@ CheckAuthentication( struct protoDisplay *pdpy, ARRAY8Ptr displayID,
         	     ARRAY8Ptr name, ARRAY8Ptr data )
 {
 #ifdef HASXDMAUTH
-    if (name->length && !strncmp (name->data, "XDM-AUTHENTICATION-1", 20))
+    if (name->length == 20 && !memcmp (name->data, "XDM-AUTHENTICATION-1", 20))
 	return XdmCheckAuthentication (pdpy, displayID, name, data);
 #endif
     return TRUE;
@@ -218,13 +218,20 @@ SelectConnectionTypeIndex( ARRAY16Ptr connectionTypes,
 	loopbackAddress.data[3] = 1;
     }
     
-    for (i = 0; i < connectionAddresses->length; i++) {
-	if (!XdmcpARRAY8Equal (&connectionAddresses->data[i],
+    /*
+     *  only IPv4 addresses can be turned into a display name.  Return -1
+     *  when the display offers no usable address.
+     */
+    for (i = 0; i < connectionAddresses->length &&
+		i < connectionTypes->length; i++) {
+	if (connectionTypes->data[i] == FamilyInternet &&
+	    connectionAddresses->data[i].length == 4 &&
+	    !XdmcpARRAY8Equal (&connectionAddresses->data[i],
 				&loopbackAddress))
-	    break;
+	    return i;
     }
 
-    return i;
+    return -1;
 }
 
 
@@ -244,9 +251,8 @@ static char *
 WillingMsg( void )
 {
     static char retbuf[LINEBUFSIZE];
-    char	tmpbuf[LINEBUFSIZE * 8];
+    char	linebuf[LINEBUFSIZE];
     char	*cp;
-    char	tmpfilename[L_tmpnam + 1];
     FILE	*f;
 
 
@@ -255,31 +261,23 @@ WillingMsg( void )
     /* (useful for selecting host to be managed by) 	*/
 
     strcpy(retbuf, "Willing to Manage");
-    
-    strcpy(tmpbuf,"uptime | ");
-    strcat(tmpbuf,"awk '{printf(\"%s %-.5s  load: %.3s, %.3s, %.3s\",$(NF-6),$(NF-5),$(NF-2),$(NF-1),$NF)}'");
-    strcat(tmpbuf," > ");
 
-    if ( tmpnam(tmpfilename) != (char *)NULL ) {
-
-	strcat(tmpbuf,tmpfilename);
-
-	if(-1 == system(tmpbuf)) {
-            perror(strerror(errno));
-        }
-
-	if ((f = fopen(tmpfilename,"r")) != (FILE *) NULL) {
-	    fgets(tmpbuf,LINEBUFSIZE,f);
-	    if ( (cp = strchr(tmpbuf,'\n')) != NULL) 
+    /*
+     *  read the command output through a pipe; a temporary file named in
+     *  a shared directory could be replaced by a link before it is read.
+     */
+    f = popen ("uptime | awk '{printf(\"%s %-.5s  load: %.3s, %.3s, %.3s\","
+	       "$(NF-6),$(NF-5),$(NF-2),$(NF-1),$NF)}'", "r");
+    if (f != (FILE *) NULL) {
+	if (fgets(linebuf,sizeof(linebuf),f) != NULL) {
+	    if ( (cp = strchr(linebuf,'\n')) != NULL)
 		*cp = '\0';
 
-	    if (strlen(tmpbuf) > 10) 	/* seems reasonable? */
-    		strcpy(retbuf, tmpbuf);
-
-	    fclose(f);
+	    if (strlen(linebuf) > 10) 	/* seems reasonable? */
+		snprintf(retbuf, sizeof(retbuf), "%s", linebuf);
 	}
-	
-	unlink(tmpfilename);
+
+	pclose(f);
     }
 
     return (retbuf);
