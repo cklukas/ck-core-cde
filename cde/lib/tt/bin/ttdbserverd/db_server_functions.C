@@ -1270,6 +1270,7 @@ _tt_obj_type_results *_tt_get_obj_type_1 (_tt_get_obj_type_args *args,
 					  SVCXPRT * /* transp */)
 {
   static _tt_obj_type_results results;
+  results.otype = (char *)NULL;
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
@@ -1285,7 +1286,6 @@ _tt_obj_type_results *_tt_get_obj_type_1 (_tt_get_obj_type_args *args,
 					    accessPtr,
 					    property);
 
-    results.otype = (char *)NULL;
     if (results.results == TT_DB_OK) {
       if (!property.is_null() && !property->is_empty()) {
 	_Tt_string otype = (*property->values) [0];
@@ -1327,6 +1327,7 @@ _tt_obj_file_results *_tt_get_obj_file_1 (_tt_get_obj_file_args *args,
 					  SVCXPRT * /* transp */)
 {
   static _tt_obj_file_results results;
+  results.file = (char *)NULL;
 
   _Tt_string partition = _tt_get_object_partition(args->objid);
   _Tt_db_server_db_ptr db;
@@ -1341,7 +1342,6 @@ _tt_obj_file_results *_tt_get_obj_file_1 (_tt_get_obj_file_args *args,
 					accessPtr,
 					file);
 
-    results.file = (char *)NULL;
     if (results.results == TT_DB_OK) {
       if (file.len()) {
 	results.file = strdup((char *)file);
@@ -2221,13 +2221,17 @@ _tt_garbage_collect_1(void	* /*NOTUSED*/,
 bool_t _tt_is_file_a_directory (const _Tt_string &file)
 {
   // This is sometimes called with a network path and a non-network path.
-  // Make sure we always give stat a non-network path.
-  char *slash = strchr((char *)file, '/');
-  char *path = strchr((char *)file, ':');
-  if (path != slash-1) {
-    path = (char *)NULL;
+  // Make sure we always give stat a non-network path: "host:/path" is the
+  // path after the colon that comes just before the first slash.  A name
+  // that is not there, or empty, is no directory.
+  const char *name = (const char *)file;
+  if (name == NULL || *name == '\0') {
+    return FALSE;
   }
-  DIR *dd = opendir(path ? path+1 : (char *)file);
+  const char *slash = strchr(name, '/');
+  const char *path = (slash != NULL && slash > name && *(slash - 1) == ':') ?
+		     slash : name;
+  DIR *dd = opendir(path);
 
   if (dd) {
     (void)closedir(dd);

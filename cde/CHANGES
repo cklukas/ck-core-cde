@@ -382,6 +382,17 @@
   `tt_isam_cache.C`. The option `-n` now applies to the procedures that remain,
   which it did not before. The tests lose the cases of the removed procedures
   and gain one that the numbers 1 to 24 are refused and do nothing.
+- tt: fix three crashes of rpc.ttdbserverd found by sending its procedures
+  requests that were changed at random. After any request that returned a string
+  or a list, `TT_GET_OBJ_TYPE` and `TT_GET_OBJ_FILE` for an object id of no
+  partition answered with the string the dispatcher had freed, and freed it
+  again; the dispatcher now clears every pointer it frees and the two procedures
+  start with none. `_tt_base64_decode` read through a null pointer for an object
+  id with no key in it and, for a character above 127, before its table. A file
+  name without a `/` made `_tt_is_file_a_directory` compute a pointer from null.
+  New tests send every procedure a successful request and then a failing one,
+  object ids and file names that are not well formed, and (as before, for the
+  procedures that remain) random changes of sound requests.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

@@ -1538,6 +1538,197 @@ case_key_bytes(void)
 	}
 }
 
+/* ---- what the server keeps of one answer for the next ---------------------------- */
+
+static int get_obj_file(const std::string &objid);
+
+/* The answers of the procedures are in storage that is kept from one request
+   to the next, and the dispatcher frees what an answer holds after it was sent.
+   A request that fails before it has anything to answer with must not send what
+   an earlier one had, which is freed by then: any successful request followed
+   by one that fails is what a sanitizer sees. */
+static void
+case_results_after_failure(void)
+{
+	std::string file = start_partition("results-after-failure");
+	put(g_dir + "/file", "the file");
+	create_file(file);
+	std::string objid = make_objid(g_mount);
+	CHECK(create_object(objid, file, 0600) == TT_DB_OK);
+	CHECK(set_property(file, "name", "value") == TT_DB_OK);
+
+	/* an object id of a partition that is none, and a path that is in no
+	   partition: every request on them fails before it reaches a table */
+	const std::string badobj = "key:NFS:localhost:/not/a/partition";
+	const std::string badfile = "localhost:relative/path";
+	std::vector<Sound> good = sound_requests(file, objid);
+	std::vector<Sound> bad = sound_requests(badfile, badobj);
+
+	CHECK(good.size() == bad.size());
+	for (int round = 0; round < 3; round++) {
+		for (size_t i = 0; i < good.size() && i < bad.size(); i++) {
+			CHECK(good[i].proc == bad[i].proc);
+			Reply r = rpc(good[i].proc, good[i].request);
+			CHECK(r.replied || good[i].proc == TT_DELETE_SESSION);
+			r = rpc(bad[i].proc, bad[i].request);
+			CHECK(r.replied || bad[i].proc == TT_DELETE_SESSION);
+		}
+	}
+
+	/* (the requests above have removed the file and the object) and what
+	   the failing requests answer is what they found */
+	create_file(file);
+	objid = make_objid(g_mount);
+	CHECK(create_object(objid, file, 0600) == TT_DB_OK);
+	CHECK(get_obj_type(badobj) == TT_DB_ERR_ILLEGAL_OBJECT);
+	CHECK(get_obj_type(objid) == TT_DB_OK);
+	CHECK(get_obj_file(badobj) == TT_DB_ERR_ILLEGAL_OBJECT);
+	CHECK(get_obj_file(objid) == TT_DB_OK);
+	CHECK(get_obj_type(badobj) == TT_DB_ERR_ILLEGAL_OBJECT);
+	CHECK(get_obj_file(badobj) == TT_DB_ERR_ILLEGAL_OBJECT);
+}
+
+/* The names in a request are the sender's: an object id with no key in it,
+   one with characters above 127, and a file with no host or no path are
+   answered, and nothing else. */
+static void
+case_malformed_names(void)
+{
+	std::string file = start_partition("malformed-names");
+	if (getuid() == 0) {
+		/* a name that is a path in no redirected partition would make a
+		   TT_DB where the superuser can */
+		fprintf(stderr, "not run as the superuser\n");
+		return;
+	}
+	put(g_dir + "/file", "the file");
+	create_file(file);
+
+	const std::string part = g_mount;
+	const std::string objids[] = {
+		"",
+		":",
+		"::::",
+		"nokey:NFS:localhost:" + part,
+		":NFS:localhost:" + part,
+		"|||:NFS:localhost:" + part,
+		"\x80\xff\xfe|\x81:NFS:localhost:" + part,
+		"a|b|c|d:NFS:localhost:" + part,
+		std::string(300, '\xe9') + ":NFS:localhost:" + part,
+	};
+	const std::string files[] = {
+		"",
+		":",
+		"/",
+		"localhost:",
+		"localhost:/",
+		"no-slash",
+		"host-without-path:",
+		"\xff\xfe:\x80",
+	};
+
+	for (size_t o = 0; o < sizeof(objids) / sizeof(objids[0]); o++) {
+		for (size_t f = 0; f < sizeof(files) / sizeof(files[0]); f++) {
+			std::vector<Sound> v = sound_requests(files[f], objids[o]);
+
+			for (size_t i = 0; i < v.size(); i++) {
+				Reply r = rpc(v[i].proc, v[i].request);
+
+				CHECK(r.replied || v[i].proc == TT_DELETE_SESSION);
+			}
+		}
+	}
+}
+
+/* ---- random requests --------------------------------------------------------- */
+
+static unsigned long long fuzz_state = 88172645463325252ULL;
+
+static unsigned
+fuzz_next(void)
+{
+	fuzz_state ^= fuzz_state << 13;
+	fuzz_state ^= fuzz_state >> 7;
+	fuzz_state ^= fuzz_state << 17;
+	return (unsigned)(fuzz_state >> 11);
+}
+
+/* Requests that start as sound ones, with some of their bytes changed, and
+   cut short: the server answers, or refuses to decode them, but does not
+   crash. */
+static void
+case_fuzz_dispatch(void)
+{
+	int iterations = getenv("TTDB_FUZZ_ITERATIONS") ?
+		atoi(getenv("TTDB_FUZZ_ITERATIONS")) : 3000;
+
+	if (getenv("TTDB_FUZZ_SEED")) {
+		fuzz_state ^= strtoull(getenv("TTDB_FUZZ_SEED"), NULL, 10) * 2654435761ULL;
+	}
+	std::string file = start_partition("fuzz-dispatch");
+	if (getuid() == 0) {
+		/* names that a change turns into others would make a TT_DB
+		   where the superuser can */
+		fprintf(stderr, "not run as the superuser\n");
+		return;
+	}
+	put(g_dir + "/file", "the file");
+	std::string objid = make_objid(g_mount);
+	create_file(file);
+	CHECK(create_object(objid, file, 0600) == TT_DB_OK);
+
+	std::vector<Sound> sound = sound_requests(file, objid);
+	char oid[TT_DB_KEY_LENGTH];
+	memset(oid, 'o', sizeof(oid));
+	_tt_get_all_sessions_args sessions;
+	memset(&sessions, 0, sizeof(sessions));
+	sessions.oidkey.oidkey_len = sizeof(oid);
+	sessions.oidkey.oidkey_val = oid;
+	Sound all = { TT_GET_ALL_SESSIONS,
+		      encode((xdrproc_t)xdr_tt_get_all_sessions_args, &sessions) };
+	sound.push_back(all);
+
+	for (int n = 0; n < iterations; n++) {
+		size_t which = fuzz_next() % sound.size();
+		std::string req = sound[which].request;
+
+		switch (fuzz_next() % 4) {
+		case 0:				/* some bytes changed */
+			for (unsigned k = fuzz_next() % 6; k > 0 && !req.empty(); k--) {
+				req[fuzz_next() % req.size()] = (char)fuzz_next();
+			}
+			break;
+		case 1:				/* words changed */
+			for (unsigned k = fuzz_next() % 4; k > 0 && req.size() >= 4; k--) {
+				size_t at = (fuzz_next() % (req.size() / 4)) * 4;
+				static const unsigned vals[] = { 0, 1, 2, 16, 64, 127, 128,
+					32767, 65535, 0x7fffffff, 0x80000000u, 0xffffffffu };
+				unsigned v = htonl(vals[fuzz_next() % 12]);
+				memcpy(&req[at], &v, 4);
+			}
+			break;
+		case 2:				/* cut short */
+			req.resize(fuzz_next() % (req.size() + 1));
+			break;
+		default:			/* both */
+			if (req.size() >= 4) {
+				size_t at = (fuzz_next() % (req.size() / 4)) * 4;
+				unsigned v = htonl(fuzz_next());
+				memcpy(&req[at], &v, 4);
+			}
+			req.resize(fuzz_next() % (req.size() + 1));
+			break;
+		}
+		if (getenv("TTDB_FUZZ_TRACE")) {
+			fprintf(stderr, "%d: procedure %lu, %zu bytes\n", n,
+				sound[which].proc, req.size());
+		}
+		Reply r = rpc(sound[which].proc, req);
+		CHECK(r.replied || sound[which].proc == TT_DELETE_SESSION);
+		(void)fuzz_next();
+	}
+}
+
 /* ---- the access rule of the new interface --------------------------------------- */
 
 /* What a Unix file system does.  The owner (and the superuser) may do
@@ -1986,6 +2177,9 @@ static const struct {
 	{ "xdr-hostile-lengths", case_xdr_hostile_lengths },
 	{ "no-mount-point", case_no_mount_point },
 	{ "path-names", case_path_names },
+	{ "results-after-failure", case_results_after_failure },
+	{ "malformed-names", case_malformed_names },
+	{ "fuzz-dispatch", case_fuzz_dispatch },
 	{ "access-rule", case_access_rule },
 	{ "access-bits", case_access_bits },
 };

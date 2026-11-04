@@ -111,11 +111,18 @@ _tt_base64_encode(unsigned long i)
 unsigned long
 _tt_base64_decode(const char *s)
 {
-	int c,v;
+	int v;
+	unsigned char c;
 	unsigned long r;
 
+	// A string that is not there is no digits at all (the key of an object
+	// id that has no such part comes here with a null pointer), and a
+	// character is an index of the table whatever the sign of char is.
+	if (s == NULL) {
+		return 0;
+	}
 	r = 0;
-	while (c = *s++) {
+	while ((c = (unsigned char)*s++) != '\0') {
 		v = base64_values[c];
 		if (v==64) {	// illegal char, quit early
 			return r;

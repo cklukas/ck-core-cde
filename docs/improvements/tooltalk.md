@@ -169,6 +169,18 @@ The numbers, lengths and pointers of a request are checked before they are used:
   instead of making the number wrap around, and a client that says it has the
   highest level is told that nothing is newer.
 - A position inside a table is not taken from the wire.
+- The answers of the procedures are kept from one request to the next, and the
+  dispatcher frees what an answer holds once it is sent. It left the pointers
+  where they were, and `TT_GET_OBJ_TYPE` and `TT_GET_OBJ_FILE` only reset theirs
+  on the way that reaches a table: after any successful request, a request with
+  an object id of no partition answered with the freed string and freed it a
+  second time, which ends a daemon that runs as root. The dispatcher clears
+  every pointer it has freed, and those two procedures start from none.
+- An object id that has no key (no `|` in it, or characters above 127) decoded
+  with a null pointer in `_tt_base64_decode`, and a character above 127 was a
+  negative index of its table; both are digits that are not there now, and the
+  key is all zero. A file name with no `/` or no characters made
+  `_tt_is_file_a_directory` compute a pointer from a null one.
 - The user, group and mode that come with a request are moved as 32 bit words
   of their own. The routine used to move each as a `long` through a pointer to
   the field, which on a 64-bit build is 8 bytes of a 4 byte field, and the mode,

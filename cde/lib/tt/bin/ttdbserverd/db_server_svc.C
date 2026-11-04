@@ -899,18 +899,26 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 	}
 	
 	//
-	// Free the results
+	// Free the results.  They are in storage the procedures keep from one
+	// request to the next, and a procedure that has nothing to answer with
+	// (a request it refuses) leaves the fields as they are: what has been
+	// freed must not be left there to be sent, and freed, again.
 		switch (rqstp->rq_proc) {
 		    case TT_GET_MIN_AUTH_LEVEL:
 			break;
 			
 		    case TT_GET_FILE_PARTITION:
 			if (result) {
-				if (((_tt_file_partition_results *)result)->partition) {
-					free(((_tt_file_partition_results *)result)->partition);
+				_tt_file_partition_results *res =
+					(_tt_file_partition_results *)result;
+
+				if (res->partition) {
+					free(res->partition);
+					res->partition = NULL;
 				}
-				if (((_tt_file_partition_results *)result)->network_path) {
-					free(((_tt_file_partition_results *)result)->network_path);
+				if (res->network_path) {
+					free(res->network_path);
+					res->network_path = NULL;
 				}
 			}
 			break;
@@ -944,22 +952,31 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 			
 		    case TT_GET_FILE_PROP:
 			if (result) {
-				_tt_free_rpc_property(((_tt_file_prop_results *)
-						       result)->property);
+				_tt_file_prop_results *res =
+					(_tt_file_prop_results *)result;
+
+				_tt_free_rpc_property(res->property);
+				memset(&res->property, 0, sizeof(res->property));
 			}
 			break;
 			
 		    case TT_GET_FILE_PROPS:
 			if (result) {
-				_tt_free_rpc_properties(((_tt_file_props_results *)
-							 result)->properties);
+				_tt_file_props_results *res =
+					(_tt_file_props_results *)result;
+
+				_tt_free_rpc_properties(res->properties);
+				memset(&res->properties, 0, sizeof(res->properties));
 			}
 			break;
 			
 		    case TT_GET_FILE_OBJS:
 			if (result) {
-				_tt_free_rpc_strings(((_tt_file_objs_results *)
-						      result)->objids);
+				_tt_file_objs_results *res =
+					(_tt_file_objs_results *)result;
+
+				_tt_free_rpc_strings(res->objids);
+				memset(&res->objids, 0, sizeof(res->objids));
 			}
 			break;
 			
@@ -983,15 +1000,21 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 			
 		    case TT_GET_OBJ_PROP:
 			if (result) {
-				_tt_free_rpc_property(((_tt_obj_prop_results *)
-						       result)->property);
+				_tt_obj_prop_results *res =
+					(_tt_obj_prop_results *)result;
+
+				_tt_free_rpc_property(res->property);
+				memset(&res->property, 0, sizeof(res->property));
 			}
 			break;
 			
 		    case TT_GET_OBJ_PROPS:
 			if (result) {
-				_tt_free_rpc_properties(((_tt_obj_props_results *)
-							 result)->properties);
+				_tt_obj_props_results *res =
+					(_tt_obj_props_results *)result;
+
+				_tt_free_rpc_properties(res->properties);
+				memset(&res->properties, 0, sizeof(res->properties));
 			}
 			break;
 			
@@ -1000,7 +1023,11 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 			
 		    case TT_GET_OBJ_TYPE:
 			if (result) {
-				free(((_tt_obj_type_results *)result)->otype);
+				_tt_obj_type_results *res =
+					(_tt_obj_type_results *)result;
+
+				free(res->otype);
+				res->otype = NULL;
 			}
 			break;
 			
@@ -1009,7 +1036,11 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 			
 		    case TT_GET_OBJ_FILE:
 			if (result) {
-				free(((_tt_obj_file_results *)result)->file);
+				_tt_obj_file_results *res =
+					(_tt_obj_file_results *)result;
+
+				free(res->file);
+				res->file = NULL;
 			}
 			break;
 			
@@ -1027,6 +1058,8 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 				       result)->forward_pointer) {
 				free(((_tt_is_obj_in_db_results *)
 				      result)->forward_pointer);
+				((_tt_is_obj_in_db_results *)
+				 result)->forward_pointer = NULL;
 			}
 			break;
 			
@@ -1035,8 +1068,11 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 			
 		    case TT_DEQUEUE_MESSAGES:
 			if (result) {
-				_tt_free_rpc_messages(((_tt_dequeue_msgs_results *)
-						       result)->messages);
+				_tt_dequeue_msgs_results *res =
+					(_tt_dequeue_msgs_results *)result;
+
+				_tt_free_rpc_messages(res->messages);
+				memset(&res->messages, 0, sizeof(res->messages));
 			}
 			break;
 			
