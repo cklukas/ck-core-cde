@@ -30,6 +30,8 @@
 
 #include <EUSCompat.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -54,6 +56,19 @@ extern char	*pgname;
 extern int	debug;
 static char	*spool_dir = _DtCMS_DEFAULT_DIR;
 
+/*
+ * A string that grows as it is built.  The strings of a log record come from
+ * the network and have no length limit, so a record is never assembled in a
+ * fixed size buffer.
+ */
+typedef struct {
+	char	*str;
+	size_t	len;
+	size_t	size;
+} Strbuf;
+
+#define NUMSIZE	32
+
 char *tag_string[] = {
 	"0:boolean",
 	"1:enum",
@@ -76,7 +91,7 @@ char *tag_string[] = {
 /*
  * forward declaration of functions used within this file
  */
-static char * cr_to_str(char *s, int size);
+static char * cr_to_str(char *s, size_t size);
 static void periodtostr(Interval_4 i, char *q);
 static void privacytostr(Privacy_Level_4 p, char *q);
 static void apptstatustostr(Appt_Status_4 p, char *q);
@@ -87,9 +102,17 @@ static CSA_return_code append_log(int f, char *buf);
 static CSA_return_code create_log(char *owner, char *file, int version);
 static char *attrs_to_attrliststr(int len, cms_attribute *attrs,
 				boolean_t write_hash, boolean_t entryattrs);
-static char *grow_n_concat(char *base, char *newstr, int newcount);
-static char *get_access_list_string(cms_access_entry *list);
-static char *get_date_time_list_string(CSA_date_time_list list);
+static char *grow_n_concat(char *base, char *newstr, size_t newcount);
+static boolean_t strbuf_add(Strbuf *sb, const char *s);
+static boolean_t strbuf_add_escaped(Strbuf *sb, const char *s, size_t size);
+static boolean_t strbuf_cat(Strbuf *sb, const char *s, ...);
+static boolean_t strbuf_cat_quoted(Strbuf *sb, const char *before,
+				const char *s, const char *after);
+static char *numstr(char num[NUMSIZE], long n);
+static char *unumstr(char num[NUMSIZE], unsigned long n);
+static boolean_t add_access_list_string(Strbuf *sb, cms_access_entry *list);
+static boolean_t add_date_time_list_string(Strbuf *sb,
+				CSA_date_time_list list);
 
 
 /*
@@ -151,36 +174,32 @@ extern CSA_return_code
 _DtCmsAppendHTableByFD(int fd, uint size, char **names, int *types)
 {
 	CSA_return_code	stat;
-	char	*tptr, *buf, tmpbuf[BUFSIZ/4];
-	int	i, tcount, count = 15;	/* strlen("(entrytable )\n") + 1 */
+	char	num[NUMSIZE];
+	Strbuf	sb = { NULL, 0, 0 };
+	uint	i;
 
-	if ((buf = malloc(BUFSIZ)) == NULL) return (CSA_E_INSUFFICIENT_MEMORY);
-	tcount = BUFSIZ;
-	strcpy(buf, "(entrytable ");
+	if (!strbuf_add(&sb, "(entrytable "))
+		goto nomem;
 
 	for (i = 1; i <= size; i++) {
-		sprintf(tmpbuf, "(%d \"%s\" \"%s\")\n", i, names[i],
-			tag_string[types[i]]);
-
-		count += strlen(tmpbuf);
-		if (tcount < count) {
-			if ((tptr = grow_n_concat(buf, tmpbuf, tcount + BUFSIZ))
-			    == NULL) {
-				free(buf);
-				return (CSA_E_INSUFFICIENT_MEMORY);
-			}
-			buf = tptr;
-			tcount += BUFSIZ;
-		} else
-			strcat(buf, tmpbuf);
+		if (!strbuf_cat(&sb, "(", numstr(num, i), " ", NULL) ||
+		    !strbuf_cat_quoted(&sb, "\"", names[i], "\" ") ||
+		    !strbuf_cat_quoted(&sb, "\"", tag_string[types[i]],
+		    "\")\n"))
+			goto nomem;
 	}
 
-	strcat(buf, ")\n");
+	if (!strbuf_add(&sb, ")\n"))
+		goto nomem;
 
-	stat = append_log(fd, buf);
+	stat = append_log(fd, sb.str);
 
-	free(buf);
+	free(sb.str);
 	return (stat);
+
+nomem:
+	free(sb.str);
+	return (CSA_E_INSUFFICIENT_MEMORY);
 }
 
 extern CSA_return_code
@@ -204,14 +223,16 @@ extern CSA_return_code
 _DtCmsAppendEntryByFD(int f, cms_entry *entry, _DtCmsLogOps op)
 {
 	CSA_return_code	stat;
-	int	count;
+	size_t	count;
 	char	*cptr, *tptr, *buf;
 	char	isotime[25];
 
+	if (_csa_tick_to_iso8601(entry->key.time, isotime))
+		return (CSA_E_INVALID_DATE_TIME);
+
 	if ((buf = malloc(100)) == NULL) return (CSA_E_INSUFFICIENT_MEMORY);
 
-	_csa_tick_to_iso8601(entry->key.time, isotime);
-	sprintf(buf, "(%s \"%s\" key: %ld%s",
+	snprintf(buf, 100, "(%s \"%s\" key: %ld%s",
 		(op == _DtCmsLogAdd ? "add" : "remove"),
 		isotime, entry->key.id,
 		(op == _DtCmsLogAdd ? "\nhashedattributes: (" : ""));
@@ -272,7 +293,7 @@ _DtCmsAppendCalAttrsByFD(int f, int size, cms_attribute * attrs)
 	char	*buf, *attrstr;
 	char	*prefix = "(calendarattributes ";
 	char	*subfix = ")\n";
-	int	count;
+	size_t	count;
 
 	if ((attrstr = attrs_to_attrliststr(size, attrs, B_FALSE, B_FALSE))
 	    == NULL)
@@ -313,112 +334,124 @@ extern CSA_return_code
 _DtCmsAppendAppt4ByFD(int f, Appt_4 *appt, _DtCmsLogOps op)
 {
 	char *cptr;
-	char tmpbuf[BUFSIZ];
-	char buf[BUFSIZ*3], buf2[BUFSIZ*2]; /* 1 BUFSIZ for what fields, 
-					       1 BUFSIZ for mailto field,
-					       and 1 BUFSIZ for the rest */
+	char tmpbuf[BUFSIZ], num[NUMSIZE];
+	Strbuf sb = { NULL, 0, 0 };
+	CSA_return_code stat;
 
-	cptr = ctime (&appt->appt_id.tick);
+	if ((cptr = ctime (&appt->appt_id.tick)) == NULL)
+		return (CSA_E_INVALID_DATE_TIME);
 	cptr[24] = '\0';		/* strip off CR */
 
-	buf[0] = '\0';
 	switch (op) {
 	case _DtCmsLogAdd:
-		sprintf(buf, "(add \"%s\" key: %ld ", cptr, appt->appt_id.key);
-		if (appt->what) {
-			cptr = cr_to_str(appt->what, strlen(appt->what));
-			if (cptr != NULL) {
-				sprintf(buf2, "what: \"%s\" ", cptr);
-				strcat(buf, buf2);
-				free(cptr);
-			} else {
-				return (CSA_E_INSUFFICIENT_MEMORY);
-			}
-		}
-		if (appt->client_data) {
-			sprintf(buf2, "details: \"%s\" ", appt->client_data);
-			strcat(buf, buf2);
-		}
-		if (appt->duration) {
-			sprintf(buf2, "duration: %d ", appt->duration);
-			strcat(buf, buf2);
-		}
+		if (!strbuf_cat(&sb, "(add \"", cptr, "\" key: ",
+		    numstr(num, appt->appt_id.key), " ", NULL))
+			goto nomem;
+		if (appt->what &&
+		    !strbuf_cat_quoted(&sb, "what: \"", appt->what, "\" "))
+			goto nomem;
+		if (appt->client_data && !strbuf_cat_quoted(&sb, "details: \"",
+		    appt->client_data, "\" "))
+			goto nomem;
+		if (appt->duration && !strbuf_cat(&sb, "duration: ",
+		    numstr(num, appt->duration), " ", NULL))
+			goto nomem;
 
 		periodtostr (appt->period.period, tmpbuf);
-		sprintf(buf2, "period: %s ", tmpbuf);
-		strcat(buf, buf2);
+		if (!strbuf_cat(&sb, "period: ", tmpbuf, " ", NULL))
+			goto nomem;
 
-		if (appt->period.nth != 0) {
-			sprintf (buf2, "nth: %d ", appt->period.nth);
-			strcat(buf, buf2);
-		}
+		if (appt->period.nth != 0 && !strbuf_cat(&sb, "nth: ",
+		    numstr(num, appt->period.nth), " ", NULL))
+			goto nomem;
 		if (appt->period.enddate != 0) {
-			cptr = ctime (&(appt->period.enddate));
+			if ((cptr = ctime (&(appt->period.enddate))) == NULL) {
+				free(sb.str);
+				return (CSA_E_INVALID_DATE_TIME);
+			}
 			cptr[24] = '\0'; /* strip off CR */
-			sprintf(buf2, "enddate: \"%s\" ", cptr);
-			strcat(buf, buf2);
+			if (!strbuf_cat(&sb, "enddate: \"", cptr, "\" ", NULL))
+				goto nomem;
 		}
 
-		sprintf(buf2, "ntimes: %d ", appt->ntimes);
-		strcat(buf, buf2);
+		if (!strbuf_cat(&sb, "ntimes: ", numstr(num, appt->ntimes), " ",
+		    NULL))
+			goto nomem;
 
 		if (appt->exception != NULL) {
 			struct Except_4 *e = appt->exception;
-			strcat(buf, "exceptions: (");
+			if (!strbuf_add(&sb, "exceptions: ("))
+				goto nomem;
 			while(e != NULL) {
-				sprintf(buf2, "%d ", e->ordinal);
-				strcat(buf, buf2);
+				if (!strbuf_cat(&sb, numstr(num, e->ordinal),
+				    " ", NULL))
+					goto nomem;
 				e = e->next;
 			}
-			strcat(buf, ") ");
+			if (!strbuf_add(&sb, ") "))
+				goto nomem;
 		}
 
-		if (appt->author != NULL) {
-			sprintf(buf2, "author: \"%s\" ", appt->author);
-			strcat(buf, buf2);
-		}
+		if (appt->author != NULL && !strbuf_cat_quoted(&sb, "author: \"",
+		    appt->author, "\" "))
+			goto nomem;
 		if (appt->attr != NULL) {
 			struct Attribute_4 *item = appt->attr;
-			strcat(buf, "attributes: (");
+			if (!strbuf_add(&sb, "attributes: ("))
+				goto nomem;
 			while(item != NULL) {
-				sprintf(buf2, "(\"%s\",\"%s\",\"%s\")",
-					item->attr, item->value,
-					item->clientdata);
-				strcat(buf, buf2);
+				if (!strbuf_cat_quoted(&sb, "(\"", item->attr,
+				    "\",\"") ||
+				    !strbuf_cat_quoted(&sb, "", item->value,
+				    "\",\"") ||
+				    !strbuf_cat_quoted(&sb, "", item->clientdata,
+				    "\")"))
+					goto nomem;
 				item = item->next;
 			}
-			strcat(buf, ") ");
+			if (!strbuf_add(&sb, ") "))
+				goto nomem;
 		}
 		if (appt->tag != NULL) {
 			struct Tag_4 *item = appt->tag;
-			strcat(buf, "tags: (");
+			if (!strbuf_add(&sb, "tags: ("))
+				goto nomem;
 			while(item != NULL) {
 				tagstostr(item->tag, tmpbuf);
-				sprintf(buf2, "(%s , %d)", tmpbuf,
-					item->showtime);
-				strcat(buf, buf2);
+				if (!strbuf_cat(&sb, "(", tmpbuf, " , ",
+				    numstr(num, item->showtime), ")", NULL))
+					goto nomem;
 				item = item->next;
 			}
-			strcat(buf, ") ");
+			if (!strbuf_add(&sb, ") "))
+				goto nomem;
 		}
 
 		apptstatustostr(appt->appt_status, tmpbuf);
-		sprintf(buf2, "apptstat: %s ", tmpbuf);
-		strcat(buf, buf2);
+		if (!strbuf_cat(&sb, "apptstat: ", tmpbuf, " ", NULL))
+			goto nomem;
 
 		privacytostr(appt->privacy, tmpbuf);
-		sprintf(buf2, "privacy: %s )\n", tmpbuf);
-		strcat(buf, buf2);
+		if (!strbuf_cat(&sb, "privacy: ", tmpbuf, " )\n", NULL))
+			goto nomem;
 
 		break;    
 
 	case _DtCmsLogRemove:
-		sprintf(buf, "(remove \"%s\" key: %ld)\n", cptr,
-			appt->appt_id.key);
+		if (!strbuf_cat(&sb, "(remove \"", cptr, "\" key: ",
+		    numstr(num, appt->appt_id.key), ")\n", NULL))
+			goto nomem;
 		break;
 	}
 
-	return (append_log(f, buf));
+	stat = append_log(f, sb.str);
+
+	free(sb.str);
+	return (stat);
+
+nomem:
+	free(sb.str);
+	return (CSA_E_INSUFFICIENT_MEMORY);
 }
 
 extern CSA_return_code
@@ -442,9 +475,8 @@ extern CSA_return_code
 _DtCmsAppendAccessByFD(int f, int type, Access_Entry_4 *p)
 {
 	CSA_return_code	stat;
-	int	count = 12; /* (access  )\n */
 	char	*p_type;
-	char	*buf;
+	Strbuf	sb = { NULL, 0, 0 };
 
 	if (type == access_read_4)
 		p_type = "read";
@@ -457,31 +489,26 @@ _DtCmsAppendAccessByFD(int f, int type, Access_Entry_4 *p)
 	else
 		return (CSA_E_INVALID_PARAMETER);
 
-	count = count + strlen(p_type);
-	if ((buf = malloc(count)) == NULL)
-		return (CSA_E_INSUFFICIENT_MEMORY);
-
-	sprintf(buf, "(access %s ", p_type);
+	if (!strbuf_cat(&sb, "(access ", p_type, " ", NULL))
+		goto nomem;
 
 	while(p != NULL) {
-		if (p->who != NULL) {
-			count = count + strlen(p->who) + 3;
-			if ((buf = realloc(buf, count)) == NULL)
-				return (CSA_E_INSUFFICIENT_MEMORY);
-			else {
-				strcat(buf, "\"");
-				strcat(buf, p->who);
-				strcat(buf, "\" ");
-			}
-		}
+		if (p->who != NULL &&
+		    !strbuf_cat_quoted(&sb, "\"", p->who, "\" "))
+			goto nomem;
 		p = p->next;
 	}
-	strcat(buf, ")\n");
+	if (!strbuf_add(&sb, ")\n"))
+		goto nomem;
 
-	stat = append_log(f, buf);
+	stat = append_log(f, sb.str);
 
-	free(buf);
+	free(sb.str);
 	return(stat);
+
+nomem:
+	free(sb.str);
+	return (CSA_E_INSUFFICIENT_MEMORY);
 }
 
 extern boolean_t
@@ -730,6 +757,7 @@ _DtCmsSetFileMode(
 	boolean_t printerr)
 {
 	int	error;
+	int	result = 0;
 	char	buff[BUFSIZ];
 
 	if (changeeuid == B_TRUE) {
@@ -743,39 +771,42 @@ _DtCmsSetFileMode(
 	if (chmod (file, mode) < 0) {
 		if (printerr == B_TRUE) {
 			error = errno;
-			sprintf (buff, "%s: chmod %s to %lo failed.\n%s: System error",
+			snprintf (buff, sizeof(buff),
+				"%s: chmod %s to %lo failed.\n%s: System error",
 				pgname, file, (long)mode, pgname);
 			errno = error;
 			perror (buff);
 		}
-		return(-1);
-	}
-
-	if (chown (file, uid, gid) < 0) {
+		result = -1;
+	} else if (chown (file, uid, gid) < 0) {
 		if (printerr == B_TRUE) {
 			error = errno;
-			sprintf (buff, "%s: chown %s to (uid=%ld,gid=%ld) failed.\n%s%s",
-				pgname, file, (long)uid, (long)gid, pgname, ": System error");
+			snprintf (buff, sizeof(buff),
+				"%s: chown %s to (uid=%ld,gid=%ld) failed.\n%s%s",
+				pgname, file, (long)uid, (long)gid, pgname,
+				": System error");
 			errno = error;
 			perror (buff);
 		}
-		return(-1);
+		result = -1;
 	}
 
+	/*
+	 * Give up root again whether or not the file was changed, and
+	 * do not go on serving requests as root if that is not possible.
+	 */
 #ifndef AIX
 	if (changeeuid == B_TRUE && seteuid (daemon_uid) < 0)
 	{
-		if (printerr == B_TRUE) {
-			error = errno;
-			sprintf (buff, "%s: Can't switch process uid back to daemon.\n%s%s",
-				pgname, pgname, ": System error");
-			errno = error;
-			perror (buff);
-		}
+		snprintf (buff, sizeof(buff),
+			"%s: Can't switch process uid back to daemon.\n%s%s",
+			pgname, pgname, ": System error");
+		perror (buff);
+		exit (EXIT_FAILURE);
 	}
 #endif /* AIX */
 
-	return(0);
+	return(result);
 }
 
 static void
@@ -915,6 +946,12 @@ get_fname (char *dir, char *fname, char *who)
 {
 	char *buf;
 
+	/* who is a calendar name from the network: it names a file in the
+	 * spool directory, never a path
+	 */
+	if (who == NULL || strchr(who, '/') != NULL)
+		return (NULL);
+
 	buf = (char *)malloc(strlen(dir) + strlen(fname) + strlen(who) + 3);
 	if (buf != NULL)
 		sprintf (buf, "%s/%s.%s", dir, fname, who);
@@ -1002,7 +1039,7 @@ append_log(int f, char *buf)
 }
 
 static char *
-grow_n_concat(char *base, char *newstr, int newcount)
+grow_n_concat(char *base, char *newstr, size_t newcount)
 {
 	char *ptr;
 
@@ -1061,15 +1098,18 @@ attrs_to_attrliststr(
 	boolean_t	write_hash,
 	boolean_t	entryattrs)
 {
-	int	i, count, tcount;
-	char	*ptr, *buf = NULL;
-	char	tmpbuf[BUFSIZ/2], tmpbuf2[BUFSIZ/2], *body;
+	int	i;
+	char	num[NUMSIZE], num2[NUMSIZE];
+	boolean_t ok;
+	Strbuf	sb = { NULL, 0, 0 };
 	CSA_opaque_data *opq;
+	CSA_reminder *rem;
 
-	if ((buf = malloc(BUFSIZ+1)) == NULL) return (NULL);
-	tcount = BUFSIZ;
+	/* the result is an empty string when there is nothing to write */
+	if (!strbuf_add(&sb, ""))
+		return (NULL);
 
-	for (i = 1, count = 0, *buf = '\0'; i <= num_attr; i++) {
+	for (i = 1; i <= num_attr; i++) {
 
 		if (attrs[i].value == NULL || (entryattrs &&
 		    (i == CSA_ENTRY_ATTR_NUMBER_RECURRENCES_I ||
@@ -1082,27 +1122,27 @@ attrs_to_attrliststr(
 
 		if (write_hash)
 			/* open_bracket hash_number open quote for value */
-			sprintf(tmpbuf, "(%d \"", attrs[i].name.num);
+			ok = strbuf_cat(&sb, "(", numstr(num, attrs[i].name.num),
+				" \"", NULL);
 		else
 			/* open bracket name, type, open quote for value */
-			sprintf(tmpbuf, "(\"%s\",\"%s\",\"", attrs[i].name.name,
-				tag_string[attrs[i].value->type]);
+			ok = strbuf_cat_quoted(&sb, "(\"", attrs[i].name.name,
+				"\",\"") && strbuf_cat(&sb,
+				tag_string[attrs[i].value->type], "\",\"", NULL);
 
 		/* value string */
-		body = NULL;
-		*tmpbuf2 = '\0';
 		switch (attrs[i].value->type) {
 		case CSA_VALUE_ENUMERATED:
 		case CSA_VALUE_SINT32:
-			sprintf(tmpbuf2, "%ld",
-				attrs[i].value->item.sint32_value);
+			ok = ok && strbuf_add(&sb, numstr(num,
+				attrs[i].value->item.sint32_value));
 			break;
 
 		case CSA_VALUE_BOOLEAN:
 		case CSA_VALUE_FLAGS:
 		case CSA_VALUE_UINT32:
-			sprintf(tmpbuf2, "%lu",
-				attrs[i].value->item.uint32_value);
+			ok = ok && strbuf_add(&sb, unumstr(num,
+				attrs[i].value->item.uint32_value));
 			break;
 
 		case CSA_VALUE_STRING:
@@ -1110,154 +1150,95 @@ attrs_to_attrliststr(
 		case CSA_VALUE_DATE_TIME_RANGE:
 		case CSA_VALUE_TIME_DURATION:
 		case CSA_VALUE_CALENDAR_USER:
-			if (attrs[i].value->item.string_value) {
-				if ((ptr = cr_to_str(attrs[i].value->\
-				    item.string_value,
-				    strlen(attrs[i].value->item.string_value)))
-				    == NULL) {
-					free(buf);
-					return (NULL);
-				}
-			} else
-				ptr = NULL;
-
-			body = ptr;
+			ok = ok && strbuf_cat_quoted(&sb, "",
+				attrs[i].value->item.string_value, "");
 			break;
 
 		case CSA_VALUE_REMINDER:
-			opq = &attrs[i].value->item.reminder_value->\
-				reminder_data;
-			if (attrs[i].value->item.reminder_value->repeat_count
-			    > 1)
+			rem = attrs[i].value->item.reminder_value;
+			opq = &rem->reminder_data;
+			if (rem->repeat_count > 1)
 			{
-			    sprintf(tmpbuf2, "%s:%s:%lu:%lu:",
-				attrs[i].value->item.reminder_value->lead_time,
-				(attrs[i].value->item.reminder_value->snooze_time ?
-				attrs[i].value->item.reminder_value->snooze_time:""),
-				attrs[i].value->item.reminder_value->repeat_count,
-				opq->size);
+			    ok = ok && strbuf_cat_quoted(&sb, "",
+				rem->lead_time, ":") && strbuf_cat_quoted(&sb,
+				"", (rem->snooze_time ? rem->snooze_time : ""),
+				":") && strbuf_cat(&sb,
+				unumstr(num, rem->repeat_count), ":",
+				unumstr(num2, opq->size), ":", NULL);
 			} else {
-			    sprintf(tmpbuf2, "%s:%lu:",
-				attrs[i].value->item.reminder_value->lead_time,
-				opq->size);
+			    ok = ok && strbuf_cat_quoted(&sb, "",
+				rem->lead_time, ":") && strbuf_cat(&sb,
+				unumstr(num, opq->size), ":", NULL);
 			}
 
-			if (opq->size > 0) {
-				if ((ptr = cr_to_str((char *)opq->data,
-				    opq->size)) == NULL) {
-					free(buf);
-					return (NULL);
-				}
-			} else
-				ptr = NULL;
-			body = ptr;
+			if (ok && opq->size > 0)
+				ok = strbuf_add_escaped(&sb,
+					(char *)opq->data, opq->size);
 
 			break;
 
 		case CSA_VALUE_OPAQUE_DATA:
 			opq = attrs[i].value->item.opaque_data_value;
-			sprintf(tmpbuf2, "%lu:", opq->size);
+			ok = ok && strbuf_cat(&sb, unumstr(num, opq->size), ":",
+				NULL);
 
-			if (opq->size > 0) {
-				if ((ptr = cr_to_str((char *)opq->data,
-				    opq->size)) == NULL) {
-					free(buf);
-					return (NULL);
-				}
-			} else
-				ptr = NULL;
-			body = ptr;
+			if (ok && opq->size > 0)
+				ok = strbuf_add_escaped(&sb,
+					(char *)opq->data, opq->size);
 			break;
 
 		case CSA_VALUE_ACCESS_LIST:
-			if (attrs[i].value->item.access_list_value) {
-				if ((ptr = get_access_list_string(
-				    attrs[i].value->item.access_list_value))
-				    == NULL) {
-					free(buf);
-					return (NULL);
-				}
-			} else
-				ptr = NULL;
-			body = ptr;
+			if (ok && attrs[i].value->item.access_list_value)
+				ok = add_access_list_string(&sb,
+					attrs[i].value->item.access_list_value);
 			break;
 
 		case CSA_VALUE_DATE_TIME_LIST:
-			if (attrs[i].value->item.date_time_list_value) {
-				if ((ptr = get_date_time_list_string(
-				    attrs[i].value->item.date_time_list_value))
-				    == NULL) {
-					free(buf);
-					return (NULL);
-				}
-			} else
-				ptr = NULL;
-			body = ptr;
+			if (ok && attrs[i].value->item.date_time_list_value)
+				ok = add_date_time_list_string(&sb,
+					attrs[i].value->item.date_time_list_value);
 			break;
 		}
 
-		count += strlen(tmpbuf) + strlen(tmpbuf2) +
-				(body ? strlen(body) : 0) + 3; /* closing */
-		if (tcount < count) {
-			if ((ptr = realloc(buf, tcount+BUFSIZ)) == NULL) {
-				if (body) free(body);
-				free(buf);
-				return NULL;
-			}
-			buf = ptr;
-			tcount += BUFSIZ;
+		if (!ok || !strbuf_add(&sb, "\")\n")) {
+			free(sb.str);
+			return (NULL);
 		}
-		strcat(buf, tmpbuf);
-		if (*tmpbuf2 != '\0') strcat(buf, tmpbuf2);
-		if (body) strcat(buf, body);
-		strcat(buf, "\")\n");
-		if (body) free(body);
 	}
 
-	return (buf);
+	return (sb.str);
+}
+
+/*
+ * the access list is written as "user:rights [user:rights]"
+ */
+static boolean_t
+add_access_list_string(Strbuf *sb, cms_access_entry *list)
+{
+	char num[NUMSIZE];
+	const char *separator = "";
+
+	for (; list != NULL; list = list->next) {
+		if (!strbuf_cat_quoted(sb, separator, list->user, ":") ||
+		    !strbuf_add(sb, unumstr(num, list->rights)))
+			return (B_FALSE);
+		separator = " ";
+	}
+	return (B_TRUE);
 }
 
 static char *
-get_access_list_string(cms_access_entry *list)
+cr_to_str(char *s, size_t size)
 {
-	char *ptr = NULL, *tptr, buf[BUFSIZ/4];
-	int count, tcount;
-
-	/* do the first one */
-	if ((ptr = malloc(BUFSIZ+1)) == NULL) return (NULL);
-	tcount = BUFSIZ;
-	sprintf(ptr, "%s:%u", list->user, list->rights);
-	count = strlen(ptr);
-
-	while (list->next) {
-		list = list->next;
-		sprintf(buf, " %s:%u", list->user, list->rights);
-
-		count += strlen(buf);
-		if (tcount < count) {
-			if ((tptr = grow_n_concat(ptr, buf, tcount+BUFSIZ))
-			    == NULL) {
-				free(ptr);
-				return (NULL);
-			}
-			ptr = tptr;
-			tcount += BUFSIZ;
-		} else
-			strcat(ptr, buf);
-	}
-	return (ptr);
-}
-
-static char *
-cr_to_str(char *s, int size)
-{
-	int j, k;
+	size_t j, k;
 	char *newstr;
 
         if (s==NULL)
 		return(NULL);
 
-	if ((newstr = (char *) calloc(1, (unsigned)((2 * size) + 2))) == NULL)
+	if (size > (SIZE_MAX - 2) / 2)
+		return (NULL);
+	if ((newstr = (char *) calloc(1, (2 * size) + 2)) == NULL)
 		return (NULL);
 	k = 0;
 	for (j=0; j<size; j++) {
@@ -1285,37 +1266,125 @@ cr_to_str(char *s, int size)
 	return(newstr);
 }
 
-static char *
-get_date_time_list_string(CSA_date_time_list list)
+/*
+ * the date times are written as "datetime [datetime]"
+ */
+static boolean_t
+add_date_time_list_string(Strbuf *sb, CSA_date_time_list list)
 {
-	char *ptr = NULL, *tptr, buf[80];
-	int count, datestrlen, tcount;
+	const char *separator = "";
 
-	/* do the first one */
-	sprintf(buf, "%s", list->date_time);
-
-	if ((ptr = malloc(BUFSIZ+1)) == NULL) return (NULL);
-	tcount = BUFSIZ;
-	strcpy(ptr, list->date_time);
-	count = strlen(ptr);
-
-	datestrlen = count + 1;
-	while (list->next) {
-		list = list->next;
-		sprintf(buf, " %s", list->date_time);
-
-		count += datestrlen;
-		if (tcount < count) {
-			if ((tptr = grow_n_concat(ptr, buf, tcount+BUFSIZ))
-			    == NULL) {
-				free(ptr);
-				return (NULL);
-			}
-			ptr = tptr;
-			tcount += BUFSIZ;
-		} else
-			strcat(ptr, buf);
+	for (; list != NULL; list = list->next) {
+		if (!strbuf_cat(sb, separator, list->date_time, NULL))
+			return (B_FALSE);
+		separator = " ";
 	}
-	return (ptr);
+	return (B_TRUE);
 }
 
+/*
+ * Make room for EXTRA more characters and the terminating NUL.
+ */
+static boolean_t
+strbuf_reserve(Strbuf *sb, size_t extra)
+{
+	size_t	need, size;
+	char	*p;
+
+	if (extra > SIZE_MAX - sb->len - 1)
+		return (B_FALSE);
+	need = sb->len + extra + 1;
+
+	if (need > sb->size) {
+		size = sb->size ? sb->size : BUFSIZ;
+		while (size < need)
+			size = (size > SIZE_MAX / 2) ? need : size * 2;
+		if ((p = realloc(sb->str, size)) == NULL)
+			return (B_FALSE);
+		sb->str = p;
+		sb->size = size;
+	}
+	return (B_TRUE);
+}
+
+/* a NULL string adds nothing */
+static boolean_t
+strbuf_add(Strbuf *sb, const char *s)
+{
+	size_t	n = s ? strlen(s) : 0;
+
+	if (!strbuf_reserve(sb, n))
+		return (B_FALSE);
+	if (n > 0)
+		memcpy(sb->str + sb->len, s, n);
+	sb->len += n;
+	sb->str[sb->len] = '\0';
+	return (B_TRUE);
+}
+
+/*
+ * add the SIZE characters of S, escaping the ones that would end or
+ * change the quoted string of a log file
+ */
+static boolean_t
+strbuf_add_escaped(Strbuf *sb, const char *s, size_t size)
+{
+	size_t	j;
+	char	*out;
+
+	if (size > (SIZE_MAX - 1) / 2 || !strbuf_reserve(sb, 2 * size))
+		return (B_FALSE);
+
+	out = sb->str + sb->len;
+	for (j = 0; j < size; j++) {
+		if (s[j] == '\n') {
+			*out++ = '\\';
+			*out++ = 'n';
+		} else if (s[j] == '\\' || s[j] == '\"') {
+			*out++ = '\\';
+			*out++ = s[j];
+		} else
+			*out++ = s[j];
+	}
+	*out = '\0';
+	sb->len = out - sb->str;
+	return (B_TRUE);
+}
+
+/* add the strings up to the terminating NULL argument */
+static boolean_t
+strbuf_cat(Strbuf *sb, const char *s, ...)
+{
+	va_list	ap;
+	boolean_t ok = B_TRUE;
+
+	va_start(ap, s);
+	for (; s != NULL && ok; s = va_arg(ap, const char *))
+		ok = strbuf_add(sb, s);
+	va_end(ap);
+	return (ok);
+}
+
+/* add AFTER behind BEFORE and the escaped S */
+static boolean_t
+strbuf_cat_quoted(Strbuf *sb, const char *before, const char *s,
+	const char *after)
+{
+	return (strbuf_add(sb, before) &&
+		strbuf_add_escaped(sb, s ? s : "", s ? strlen(s) : 0) &&
+		strbuf_add(sb, after));
+}
+
+static char *
+numstr(char num[NUMSIZE], long n)
+{
+	snprintf(num, NUMSIZE, "%ld", n);
+	return (num);
+}
+
+static char *
+unumstr(char num[NUMSIZE], unsigned long n)
+{
+	snprintf(num, NUMSIZE, "%lu", n);
+	return (num);
+}

@@ -684,14 +684,17 @@ _GetReminderRefFromInfo(_DtCmsRemInfo *rem, time_t starttime, time_t runtime)
 	size = entry->attrs[CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER_I].value->item.\
 		opaque_data_value->size;
 
-	if ((rptr->entryid = malloc(size)) == NULL) {
+	/* the identifier is sent as a string, so it needs its terminator */
+	if ((rptr->entryid = malloc(size + 1)) == NULL) {
 		free(rptr->reminder_name);
 		free(rptr);
 		return (NULL);
-	} else
-		strncpy(rptr->entryid, (char *)entry->attrs\
+	} else {
+		memcpy(rptr->entryid, (char *)entry->attrs\
 			[CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER_I].value->item.\
 			opaque_data_value->data, size);
+		rptr->entryid[size] = '\0';
+	}
 
 	rptr->key.id = entry->key.id;
 	rptr->key.time = starttime ? starttime : rem->starttime;

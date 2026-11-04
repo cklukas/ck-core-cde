@@ -143,6 +143,11 @@ _DtCmsGetClientInfo(struct svc_req *svcrq, char **source)
 	char *name;
 	char *uname;
 	struct authunix_parms *unix_cred;
+	/*
+	 * The caller gets no ownership of the name: it stays valid until the
+	 * next request asks for its client, so that no request leaks it.
+	 */
+	static char *client = NULL;
 
 	if (source == NULL)
 	{
@@ -157,11 +162,14 @@ _DtCmsGetClientInfo(struct svc_req *svcrq, char **source)
 		if ((name = get_uname (unix_cred->aup_uid)) == NULL)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		if ((uname = malloc(strlen(name) +
-		    strlen(unix_cred->aup_machname) + 2)) == NULL)
+		    strlen(unix_cred->aup_machname) + 2)) == NULL) {
+			free(name);
 			return (CSA_E_INSUFFICIENT_MEMORY);
-		else {
+		} else {
 			sprintf(uname, "%s@%s", name, unix_cred->aup_machname);
-			*source = uname;
+			free(name);
+			free(client);
+			*source = client = uname;
 			return (CSA_SUCCESS);
 		}
 

@@ -1596,14 +1596,15 @@ check_predefined_attrs(
 			    attrs[i].value->type != our_attrs[index].type)
 				return (CSA_E_INVALID_ATTRIBUTE_VALUE);
 
-			if (index == CSA_ENTRY_ATTR_CLASSIFICATION_I) {
+			if (index == CSA_ENTRY_ATTR_CLASSIFICATION_I &&
+			    attrs[i].value) {
 				cl = attrs[i].value->item.uint32_value;
 				if (cl < CSA_CLASS_PUBLIC ||
 				    cl > CSA_CLASS_CONFIDENTIAL)
 					return (CSA_E_INVALID_ATTRIBUTE_VALUE);
 			}
 
-			if (index == CSA_ENTRY_ATTR_TYPE_I) {
+			if (index == CSA_ENTRY_ATTR_TYPE_I && attrs[i].value) {
 				cl = attrs[i].value->item.uint32_value;
 				if (cl < CSA_TYPE_EVENT ||
 				    cl > CSA_X_DT_TYPE_OTHER)
@@ -1707,6 +1708,11 @@ hash_entry_attrs(
 			nattrs[index].name.name = name;
 			nattrs[index].value = val;
 		} else {
+			/* the number a client sends for a name that is not
+			 * predefined is not an index into anything of ours
+			 */
+			if (cmsattrs) cmsattrs[i].name.num = 0;
+
 			nattrs[j].name.name = name;
 			nattrs[j++].value = val;
 		}
@@ -1756,6 +1762,9 @@ hash_cal_attrs(
 			nattrs[index].name.name = name;
 			nattrs[index].value = val;
 		} else {
+			/* see hash_entry_attrs() */
+			if (cmsattrs) cmsattrs[i].name.num = 0;
+
 			nattrs[j].name.name = name;
 			nattrs[j++].value = val;
 		}
@@ -1956,7 +1965,8 @@ _CheckCalendarName(char *owner, char *cname, cms_attribute_value *val)
 {
 	CSA_return_code stat;
 	char		*ptr, *optr;
-	char		user[BUFSIZ];
+	char		*user;
+	size_t		len;
 	boolean_t	isuser;
 
 	if (val->type != CSA_VALUE_STRING)
@@ -1978,8 +1988,15 @@ _CheckCalendarName(char *owner, char *cname, cms_attribute_value *val)
 
 	/* make sure it's the same as the user running the application */
 	if (isuser == B_TRUE) {
-		sprintf(user, "%s%s", val->item.string_value, (ptr ? ptr : ""));
-		return (_CheckNameAtHost(owner, user));
+		/* the name comes from the network, so it has no length limit */
+		len = strlen(val->item.string_value) + (ptr ? strlen(ptr) : 0);
+		if ((user = malloc(len + 1)) == NULL)
+			return (CSA_E_INSUFFICIENT_MEMORY);
+		snprintf(user, len + 1, "%s%s", val->item.string_value,
+			(ptr ? ptr : ""));
+		stat = _CheckNameAtHost(owner, user);
+		free(user);
+		return (stat);
 	}
 
 	/* check the host part */

@@ -35,3 +35,14 @@ parser.c parser.h: parser.y
 	$(SED) -e "s/yy/yyy/g" -e "/# line/d" y.tab.c > parser.c
 	$(SED) -e 's/yy/yyy/g' y.tab.h >  parser.h
 
+# The request-path tests compile the production log.c and cmsfunc.c, rtable4.c
+# and the libcsa sources they exercise with the sanitizers, and link them with
+# the built rpc.cmsd, so they check the code that is shipped.
+EXTRA_DIST = tests/check-requests.py tests/requests-test.c
+
+check-local:
+	CMSD_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rpc_cmsd_CFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
+	CMSD_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
+	CMSD_OBJECTS='$(rpc_cmsd_OBJECTS)' \
+	CMSD_LIBS='$(rpc_cmsd_LDADD) $(LIBS)' \
+	python3 $(srcdir)/tests/check-requests.py $(srcdir) $(top_srcdir)/lib/csa $(top_builddir)/lib/csa

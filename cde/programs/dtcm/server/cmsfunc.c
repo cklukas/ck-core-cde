@@ -913,6 +913,7 @@ cms_insert_entry_5_svc(cms_insert_args *args, struct svc_req *svcrq)
 		if (appt->author) free(appt->author);
 		if ((appt->author = strdup(user)) == NULL) {
 			_DtCm_free_appt4(appt);
+			res.stat = CSA_E_INSUFFICIENT_MEMORY;
 			return (&res);
 		}
 
@@ -1066,7 +1067,7 @@ cms_update_entry_5_svc(cms_update_args *args, struct svc_req *svcrq)
 	if (res.stat == CSA_SUCCESS)
 		cal->modified = B_TRUE;
 	else {
-		free(appt);
+		_DtCm_free_appt4(appt);
 		return (&res);
 	}
 
@@ -1080,8 +1081,6 @@ cms_update_entry_5_svc(cms_update_args *args, struct svc_req *svcrq)
 			args->entry.id, args->scope, args->entry.time,
 			args->pid);
 
-	free(appt);
-
 	/* reply */
 	if (cal->fversion >= _DtCM_FIRST_EXTENSIBLE_DATA_VERSION ||
 	    (cal->fversion < _DtCM_FIRST_EXTENSIBLE_DATA_VERSION &&
@@ -1092,6 +1091,8 @@ cms_update_entry_5_svc(cms_update_args *args, struct svc_req *svcrq)
 
 		_DtCm_free_cms_entry(newentry);
 	}
+
+	_DtCm_free_appt4(appt);
 
 	return (&res);
 }
@@ -1197,8 +1198,8 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 	char		*username;
 	cms_attribute_value val;
 	cms_access_entry aentry;
-	int		nidx = 0, oidx = 0;
-	char		*name, *owner;
+	int		nidx = -1, oidx = -1;
+	char		*name = NULL, *owner = NULL;
 
 	/*
 	 * if calendar name is a user name, make sure that
@@ -1206,6 +1207,12 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 	 */
 	calname = _DtCmGetPrefix(args->cal, '@');
 	username = _DtCmGetPrefix(user, '@');
+
+	if (calname == NULL || username == NULL) {
+		free(calname);
+		free(username);
+		return (CSA_E_INVALID_PARAMETER);
+	}
 
 	if (_DtCmIsUserName(calname) && strcmp(calname, username)) {
 		free(calname);
@@ -1215,6 +1222,9 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 	log = _DtCmsGetLogFN(calname);
 	free(calname);
 	free(username);
+
+	if (log == NULL)
+		return (CSA_E_INVALID_PARAMETER);
 
 	/* create internal calendar data structure */
 	if ((cal = _DtCmsMakeCalendar(user, args->cal)) == NULL) {
@@ -1281,16 +1291,19 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 	}
 
 	/* initialize calendar attribute with info provided by caller */
-	if ((stat = _DtCmUpdateAttributes(args->num_attrs, args->attrs,
+	stat = _DtCmUpdateAttributes(args->num_attrs, args->attrs,
 	    &cal->num_attrs, &cal->attrs, &cal->cal_tbl, B_TRUE,
-	    NULL, B_FALSE)) != CSA_SUCCESS) {
+	    NULL, B_FALSE);
+
+	/* give the names back so that they are freed with the arguments */
+	if (nidx >= 0) args->attrs[nidx].name.name = name;
+	if (oidx >= 0) args->attrs[oidx].name.name = owner;
+
+	if (stat != CSA_SUCCESS) {
 		_DtCmsFreeCalendar(cal);
 		free(log);
 		return (stat);
 	}
-
-	if (nidx) args->attrs[nidx].name.name = name;
-	if (oidx) args->attrs[oidx].name.name = owner;
 
 	/* use passed in char set if client does not supply one */
 	if (cal->attrs[CSA_CAL_ATTR_CHARACTER_SET_I].value == NULL &&
@@ -1314,8 +1327,8 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 	/* dump file */
 	if ((stat = _DtCmsAppendCalAttrsByFN(log, cal->num_attrs, cal->attrs))
 	    != CSA_SUCCESS) {
-		free(log);
 		unlink(log);
+		free(log);
 		_DtCmsFreeCalendar(cal);
 		return (stat);
 	}

@@ -333,7 +333,10 @@ start_log(_DtCmsCalendar *cal, char *filename)
 			return(CSA_X_DT_E_BACKING_STORE_PROBLEM);
 	}
 
-	setinput(f);
+	if (setinput(f) < 0) {
+		fclose(f);
+		return(CSA_X_DT_E_BACKING_STORE_PROBLEM);
+	}
 	currentCalendar = cal;
 	if (yyyparse() == -1) {
 		fprintf(stderr, "%s: unable to parse %s\n", pgname, filename);
@@ -475,8 +478,10 @@ _DtCmsGetCalendarByName(char *target, boolean_t load, _DtCmsCalendar **cal)
 	char	*name;
 	_DtCmsCalendar *clist = calendar_list;
 
-	if ((name = get_calname(target)) == NULL)
-		return (0);
+	if ((name = get_calname(target)) == NULL) {
+		*cal = NULL;
+		return (CSA_E_INSUFFICIENT_MEMORY);
+	}
 
 	while (clist != NULL) {
 		if (strcmp (name, clist->calendar) == 0) {
@@ -689,8 +694,8 @@ _DtCmsGetCalAttrsByName(
 		if (names[i].name == NULL)
 			continue;
 
-		if (names[i].num <= 0)
-			index = names[i].num = _DtCm_get_index_from_table(
+		/* the number from the client is not trusted */
+		index = names[i].num = _DtCm_get_index_from_table(
 					cal->cal_tbl, names[i].name);
 
 		if (index > 0) {
@@ -701,7 +706,8 @@ _DtCmsGetCalAttrsByName(
 					stat = cal->getattrfuncs[index](cal,
 						index, &attrs[j]);
 				}
-			} else if (cal->attrs && cal->attrs[index].value) {
+			} else if (cal->attrs && (uint)index <= cal->num_attrs &&
+			    cal->attrs[index].value) {
 				stat = _DtCm_copy_cms_attribute(&attrs[j],
 					&cal->attrs[index], B_TRUE);
 			}
@@ -887,12 +893,17 @@ _DtCmsUpdateCalAttributesAndLog(
 		if (srcattrs[i].name.name == NULL)
 			continue;
 
-		if (srcattrs[i].name.num <= 0)
-			srcattrs[i].name.num = _DtCm_get_index_from_table(
+		/* the number from the client is not trusted */
+		srcattrs[i].name.num = _DtCm_get_index_from_table(
 						cal->cal_tbl,
 						srcattrs[i].name.name);
 
-		if (srcattrs[i].name.num < 0) {
+		if (srcattrs[i].name.num > (int)cal->num_attrs) {
+
+			/* the name is known but has no attribute yet */
+			stat = CSA_E_FAILURE;
+
+		} else if (srcattrs[i].name.num < 0) {
 			if (!_DTCMS_HAS_INSERT_CALENDAR_ATTR_ACCESS(access))
 				stat = CSA_E_NO_AUTHORITY;
 			else {

@@ -593,15 +593,17 @@ _GetEntryAttrsByName(
 		if (names[i].name == NULL)
 			continue;
 
-		if (names[i].num <= 0)
-			names[i].num = _DtCm_get_index_from_table(
-					cal->entry_tbl, names[i].name);
+		/* the number from the client is not trusted, and an entry
+		 * has no attribute for a name that was added after it
+		 */
+		names[i].num = _DtCm_get_index_from_table(cal->entry_tbl,
+				names[i].name);
 
-		if (names[i].num > 0) {
+		if (names[i].num > 0 && (u_int)names[i].num <= entry->num_attrs) {
 			stat = _DtCm_copy_cms_attribute(&attrs[i],
 			    &entry->attrs[names[i].num], B_TRUE);
 		} else {
-			attrs[i].name.num = -1;
+			attrs[i].name.num = (names[i].num > 0 ? names[i].num : -1);
 			if ((attrs[i].name.name = strdup(names[i].name))==NULL)
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 		}

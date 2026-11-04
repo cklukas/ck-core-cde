@@ -79,8 +79,12 @@ _DtCm_yylex(void)
 	token = scanbuf(&_DtCm_rule_buf, _DtCm_yytext, &yylen);
 	if (token == NUMBER)
 		sscanf(_DtCm_yytext, "%d", &_DtCm_yylval.number);
-	if (token == DATE)
+	if (token == DATE) {
+		/* the token text is not limited to what a date can hold */
+		if (strlen(_DtCm_yytext) >= sizeof(_DtCm_yylval.date))
+			return (ERROR);
 		strcpy(_DtCm_yylval.date, _DtCm_yytext);
+	}
 
 	return (token);
 }

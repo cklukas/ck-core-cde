@@ -75,7 +75,7 @@ have not had such a review. Fuzz targets exist for none of the components yet.
 |---|---|---|---:|---:|---:|---|
 | `programs/dtappbuilder` | developer tool; mostly generated stubs | none recorded | 1,594 | 59 | 28 | none |
 | `programs/dtmail` | setgid mail; mail and MIME parsing | none recorded | 1,369 | 44 | 0 | none |
-| `programs/dtcm` | includes rpc.cmsd (RPC server run as root); calendar | none recorded | 879 | 59 | 5 | none |
+| `programs/dtcm` | includes rpc.cmsd (RPC server run as root); calendar | rpc.cmsd request path (2026-11-04) | 879 | 59 | 5 | none |
 | `programs/dtfile` | file operations; drag and drop | Trash, copy and transfer (2026-11-02, 2026-11-03) | 813 | 203 | 10 | none |
 | `programs/dthelp` | help compiler; SGML parser | none recorded | 644 | 64 | 4 | none |
 | `lib/DtSvc` | SPC protocol shared by dtspcd and its clients; data-type database | SPC wire layer and data-type lookup (Dts.c) (2026-11-04); the rest not reviewed | 412 | 24 | 22 | none |
@@ -88,7 +88,7 @@ have not had such a review. Fuzz targets exist for none of the components yet.
 | `lib/DtTerm` | terminal emulation; escape-sequence parser | parser bounds (2026-11-02); setuid handling (2026-11-04) | 258 | 20 | 14 | none |
 | `lib/DtHelp` | help file and markup parsing | string handling (2026-11-02) | 248 | 73 | 34 | none |
 | `programs/dtstyle` | local user program | none recorded | 218 | 12 | 3 | none |
-| `lib/csa` | RPC interface of rpc.cmsd | none recorded | 189 | 8 | 0 | none |
+| `lib/csa` | RPC interface of rpc.cmsd | request decoding used by rpc.cmsd (2026-11-04) | 189 | 8 | 0 | none |
 | `programs/dtlogin` | runs as root; XDMCP network service | environment and arguments (2026-11-02) | 163 | 21 | 9 | none |
 | `programs/dtksh` | local user program | none recorded | 157 | 15 | 0 | none |
 | `programs/dtinfo` | information browser; C++ | none recorded | 154 | 30 | 7 | none |

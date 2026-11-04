@@ -383,9 +383,22 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
         char *argument = NULL;
         program_handle ph = getph();
         struct rpcgen_table *proc;
+	sigset_t blocked, previous;
 
 	/* set rpc_in_process so that sighup handler won't exit right away */
 	rpc_in_process = 1;
+
+	/*
+	 * The garbage collection and debug handlers work on the calendars
+	 * and registrations a request is working on; hold the signals back
+	 * until the request is done.
+	 */
+	sigemptyset(&blocked);
+	sigaddset(&blocked, SIGALRM);
+	sigaddset(&blocked, SIGUSR1);
+	sigaddset(&blocked, SIGUSR2);
+	sigaddset(&blocked, SIGHUP);
+	sigprocmask(SIG_BLOCK, &blocked, &previous);
  
         /* first do some bounds checking: */
         if (rqstp->rq_vers >= ph->nvers) {
@@ -410,8 +423,15 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
         /* assert - the program number, version and proc numbers are valid */
         proc = &(ph->prog[rqstp->rq_vers].vers[rqstp->rq_proc]);
         argument = (char*)calloc(proc->len_arg, sizeof(char));
+        if (argument == NULL && proc->len_arg != 0) {
+                svcerr_systemerr(transp);
+                goto done;
+        }
         if (!svc_getargs(transp, proc->xdr_arg, argument)) {
                 svcerr_decode(transp);
+                /* free what was decoded before the request was rejected */
+                (void)svc_freeargs(transp, proc->xdr_arg, argument);
+                free(argument);
                 goto done;
         }
 
@@ -428,6 +448,7 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
 
 done:
 	rpc_in_process = 0;
+	sigprocmask(SIG_SETMASK, &previous, NULL);
 
 	/* exit if we have received the SIGHUP signal */
 	if (received_sighup == 1) {
@@ -734,11 +755,14 @@ main(int argc, char **argv)
 #endif /* SunOS */
 
 #ifndef AIX
+	/* never serve requests with the privileges of root */
 	if(-1 == setegid (daemon_gid)) {
 	        perror(strerror(errno));
+	        exit(1);
 	}
 	if(-1 == seteuid (daemon_uid)) {
 	        perror(strerror(errno));
+	        exit(1);
 	}
 #endif /* AIX */
 

@@ -59,21 +59,23 @@ extern char * strdup(const char *);
 extern char *
 _DtCmGetPrefix(char *str, char sep)
 {
-        char buf[BUFSIZ];
-        char *ptr;
+        size_t len;
+        char *prefix;
 
         if (str == NULL)
                 return(NULL);
 
-        ptr = buf;
-        while (*str && *str != sep)
-                *ptr++ = *str++;
-        if (ptr == buf)
+        /* the string comes from the network, so it has no length limit */
+        for (len = 0; str[len] != '\0' && str[len] != sep; len++)
+                ;
+        if (len == 0)
                 return(NULL);
-        else {
-                *ptr = '\0';
-                return(strdup(buf));
-        }
+
+        if ((prefix = malloc(len + 1)) == NULL)
+                return(NULL);
+        memcpy(prefix, str, len);
+        prefix[len] = '\0';
+        return(prefix);
 }
 
 extern char *

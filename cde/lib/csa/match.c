@@ -143,6 +143,8 @@ _DtCmHashCriteria(
 		} else if (index == CSA_ENTRY_ATTR_START_DATE_I && val) {
 			starti = i;
 			keep = B_FALSE;
+			if (val->type != CSA_VALUE_DATE_TIME)
+				return (CSA_E_INVALID_ATTRIBUTE_VALUE);
 			if (_csa_iso8601_to_tick(val->item.date_time_value,
 			    &tick))
 				return (CSA_E_INVALID_DATE_TIME);
@@ -178,6 +180,8 @@ _DtCmHashCriteria(
 		} else if (index == CSA_ENTRY_ATTR_END_DATE_I && val) {
 			endi = i;
 			keep = B_FALSE;
+			if (val->type != CSA_VALUE_DATE_TIME)
+				return (CSA_E_INVALID_ATTRIBUTE_VALUE);
 			if (_csa_iso8601_to_tick(val->item.date_time_value,
 			    &tick))
 				return (CSA_E_INVALID_DATE_TIME);
@@ -212,10 +216,19 @@ _DtCmHashCriteria(
 			}
 		} else if (index == CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER_I) {
 			keep = B_FALSE;
-			if (val && val->item.opaque_data_value &&
+			if (val && val->type == CSA_VALUE_OPAQUE_DATA &&
+			    val->item.opaque_data_value &&
 			    val->item.opaque_data_value->data) {
-				*id = atoi((char *)val->\
-					item.opaque_data_value->data);
+				/* the data is not a terminated string */
+				char	idbuf[32];
+				size_t	idlen = val->item.opaque_data_value->size;
+
+				if (idlen > sizeof(idbuf) - 1)
+					idlen = sizeof(idbuf) - 1;
+				memcpy(idbuf, val->item.opaque_data_value->data,
+					idlen);
+				idbuf[idlen] = '\0';
+				*id = atoi(idbuf);
 			}
 		}
 

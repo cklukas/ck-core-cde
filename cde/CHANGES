@@ -42,6 +42,19 @@
   previously get a shell with root privileges. Returning the window process to
   the user identity is checked the same way. A test with a fake kernel covers
   refused and ignored changes and a remaining way back.
+- dtcm, libcsa: harden the calendar manager request path. Log records, entry
+  tables and attribute lists are built in buffers that grow with the data,
+  escaped, and read back by a lexer sized by the file; calendar names are
+  copied without a fixed buffer, and an empty name or one containing '/' is
+  refused; the operator array of lookup, archive and restore requests no longer
+  overwrites the attribute count; attribute numbers sent by clients are
+  resolved by name and bounded; use-after-free in calendar creation and
+  old-format entry update, deletion of several appointments, re-creation of an
+  existing calendar, and root privilege after a failed chmod or chown are
+  fixed; the garbage-collection signals are held back while a request runs.
+- dtcm: add request-level regression tests (`make -C programs/dtcm/server
+  check`) that include the production log writer and request handlers and run
+  under the sanitizers.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

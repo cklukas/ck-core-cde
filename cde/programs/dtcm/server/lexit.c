@@ -98,9 +98,13 @@ typedef struct token_data {
 				   is found */
 } token_data_t;
 
-static u_char parse_buffer[BUFSIZ*3];
-static u_char initial_mask[255];
-static u_int  sendit_value[255];
+/*
+ * A token cannot be longer than the file, so a buffer that is two characters
+ * longer than the file holds any token and its terminator.
+ */
+static u_char *parse_buffer;
+static u_char initial_mask[256];
+static u_int  sendit_value[256];
 
 /*
   some macros to save my fingers
@@ -355,6 +359,7 @@ yyylex(void)
 	    strescapes((char *) parse_buffer); /* process any escape sequences */
 	    externQuotedString = (char *) strdup((char *)parse_buffer);
 	    return(QUOTEDSTRING);
+	  case 0:
 	  case EOFILE:
 	  case '\n':
 	  case '\r':
@@ -403,6 +408,8 @@ yyywrap(FILE *f)
 {
   fclose (f);
   munmap(start_of_mmapped_area, len);
+  free(parse_buffer);
+  parse_buffer = NULL;
   return (1);
 }
 
@@ -426,6 +433,12 @@ setinput (FILE* f)
 	perror("mmap");
 	return(-1);
       }
+
+  if((parse_buffer = malloc(len + 2)) == NULL) {
+    perror("malloc");
+    munmap(start_of_mmapped_area, len);
+    return(-1);
+  }
 
 #if !defined(__linux__)
   /* no madvise so we lose this optimization */

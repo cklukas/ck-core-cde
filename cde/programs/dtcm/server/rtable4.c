@@ -712,10 +712,15 @@ _DtCm_rtable_delete_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 
 		/* do callback */
 		cal->rlist = _DtCmsDoV1Callback(cal->rlist, user, args->pid, h);
-		for (a = h, p_keys = args->args.Args_4_u.uidopt;
-		    a != NULL; a = a->next) {
-			while (a->appt_id.key != p_keys->appt_id.key)
-				p_keys = p_keys->next;
+		for (a = h; a != NULL; a = a->next) {
+			/* h is in reverse order of the requested keys */
+			for (p_keys = args->args.Args_4_u.uidopt;
+			    p_keys != NULL &&
+			    a->appt_id.key != p_keys->appt_id.key;
+			    p_keys = p_keys->next)
+				;
+			if (p_keys == NULL)
+				continue;
 
 			cal->rlist = _DtCmsDoDeleteEntryCallback(cal->rlist,
 					cal->calendar, user, a->appt_id.key,
@@ -1570,16 +1575,18 @@ _DtCm_rtable_create_4_svc(Table_Op_Args_4 *args, struct svc_req *svcrq)
 		res = tbl_exist_4;
 	else if (stat != CSA_SUCCESS)
 		res = other_4;
-	else
+	else {
 		res = ok_4;
 
-	/* initialize the access list to be "WORLD", access_read_4 */
-	aentry.next = NULL;
-	aentry.who = WORLD;
-	aentry.access_type = access_read_4;
-	if ((stat = _DtCmsAppendAccessByFN(log, access_read_4, &aentry))
-	    != CSA_SUCCESS) {
-		unlink(log);
+		/* initialize the access list to be "WORLD", access_read_4 */
+		aentry.next = NULL;
+		aentry.who = WORLD;
+		aentry.access_type = access_read_4;
+		if (_DtCmsAppendAccessByFN(log, access_read_4, &aentry)
+		    != CSA_SUCCESS) {
+			unlink(log);
+			res = other_4;
+		}
 	}
 
 	free(user);

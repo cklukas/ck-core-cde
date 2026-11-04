@@ -459,6 +459,23 @@ xdr_cms_archive_res(XDR *xdrs, cms_archive_res *objp)
 
 
 /*
+ * The operator array of a request has one element per attribute.  It is
+ * decoded with a count of its own, so that it cannot overwrite the attribute
+ * count the attribute array was decoded with, and the two must agree.
+ */
+static bool_t
+xdr_cms_operators(XDR *xdrs, CSA_enum **ops, u_int num_attrs)
+{
+	u_int	num_ops = num_attrs;
+
+	if (!xdr_array(xdrs, (char **)ops, &num_ops, ~0, sizeof (CSA_enum),
+	    (xdrproc_t) xdr_long))
+		return (FALSE);
+
+	return (xdrs->x_op != XDR_DECODE || num_ops == num_attrs);
+}
+
+/*
  * cms_archive_args - used by CMS_ARCHIVE
  */
 
@@ -474,8 +491,7 @@ xdr_cms_archive_args(XDR *xdrs, cms_archive_args *objp)
 	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
 	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->ops, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (CSA_enum), (xdrproc_t) xdr_long))
+	if (!xdr_cms_operators(xdrs, &objp->ops, objp->num_attrs))
 		return (FALSE);
 	return (TRUE);
 }
@@ -497,8 +513,7 @@ xdr_cms_restore_args(XDR *xdrs, cms_restore_args *objp)
 	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
 	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->ops, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (CSA_enum), (xdrproc_t) xdr_long))
+	if (!xdr_cms_operators(xdrs, &objp->ops, objp->num_attrs))
 		return (FALSE);
 	return (TRUE);
 }
@@ -594,8 +609,7 @@ xdr_cms_lookup_entries_args(XDR *xdrs, cms_lookup_entries_args *objp)
 	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
 	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->ops, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (CSA_enum), (xdrproc_t) xdr_long))
+	if (!xdr_cms_operators(xdrs, &objp->ops, objp->num_attrs))
 		return (FALSE);
 	return (TRUE);
 }
