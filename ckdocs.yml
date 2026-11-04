@@ -45,6 +45,7 @@ nav:
           - docs/improvements/login-manager.md
           - docs/improvements/tooltalk.md
           - docs/improvements/dtsearch.md
+          - docs/improvements/session-manager.md
           - docs/improvements/trash.md
           - docs/improvements/validation.md
   - title: Development

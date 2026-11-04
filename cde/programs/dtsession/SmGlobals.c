@@ -89,6 +89,7 @@
 #include "SmRestore.h"
 #include "SmProtocol.h"
 #include "SmXSMP.h"
+#include "SmPriv.h"
 
 /*
  * Internal Variable Declaraions
@@ -1344,14 +1345,9 @@ RemoveFiles(
         SetSIGPIPEToDefault ();
 
         /*
-         * Set the gid of the process back from bin
+         * Give up the identity dtsession is installed with
          */
-#ifndef SVR4
-        setregid(smGD.runningGID, smGD.runningGID);
-#else
-        setgid(smGD.runningGID);
-        setegid(smGD.runningGID);
-#endif
+        SmPrivDropInChild();
 
         _DtEnvControl(DT_ENV_RESTORE_PRE_DT);
         
@@ -1447,14 +1443,9 @@ MoveDirectory(
         SetSIGPIPEToDefault ();
 
         /*
-         * Set the gid of the process back from bin
+         * Give up the identity dtsession is installed with
          */
-#ifndef SVR4
-        setregid(smGD.runningGID, smGD.runningGID);
-#else
-        setgid(smGD.runningGID);
-        setegid(smGD.runningGID);
-#endif
+        SmPrivDropInChild();
 
         _DtEnvControl(DT_ENV_RESTORE_PRE_DT);
         

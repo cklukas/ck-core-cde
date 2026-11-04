@@ -79,12 +79,14 @@
 #include "SrvPalette.h"
 #include "SmProtocol.h"
 #include "SmXSMP.h"
+#include "SmPriv.h"
 
 /*
  * Internal Functions
  */
 static void StopAll(int i);
 static int RegisterX11ScreenSaver(Display *display, int *ssEventType);
+static int UsesProtectedPasswordFile(void);
 
 /*
  * Internal Defines
@@ -98,6 +100,23 @@ static int RegisterX11ScreenSaver(Display *display, int *ssEventType);
 #ifdef CSRG_BASED
 #define SECURE_SYS_PATH "/etc/master.passwd"
 #endif
+
+/*
+ * Systems that keep the passwords in a file only the super user can read need
+ * the installed identity of dtsession (setuid root) to check a password when
+ * the display is unlocked.
+ */
+static int
+UsesProtectedPasswordFile(void)
+{
+#ifdef SECURE_SYS_PATH
+    struct stat buf;
+
+    return stat(SECURE_SYS_PATH, &buf) != -1;
+#else
+    return 0;
+#endif
+}
 
 
 
@@ -134,11 +153,17 @@ main (int argc, char **argv)
     String                      tmpString;
     XWindowAttributes           windAtt;
     XPropertyEvent              *pEvent = (XPropertyEvent *) &next;
-    int                         status;
-    struct stat                 buf;
     Display                     *srvDisplay;
     struct sigaction            stopvec;
     char		 	*lang;
+
+    /*
+     * Until this has happened the program runs with the identity it is
+     * installed with, so nothing that reads the environment (the locale, the
+     * toolkit) comes before it.  Systems that keep their passwords in a
+     * protected file need the installed identity again to unlock the display.
+     */
+    SmPrivDropInstalledIdentity(UsesProtectedPasswordFile());
 
     setlocale( LC_ALL, "" );
     XtSetLanguageProc( NULL, NULL, NULL );
@@ -168,44 +193,6 @@ main (int argc, char **argv)
     }
 #endif /*  DEBUG */
     /*
-     * Set our effective gid to the real gid until we need it to be
-     * sys (during contention management)
-     */
-    smGD.runningGID = getgid();
-    smGD.conMgmtGID = getegid();
-
-    /*
-     * Set uid up according to whether this is a secure system
-     * Secure systems need root privileges to read the /etc/passwd file
-     */
-    smGD.runningUID = getuid();
-
-# ifdef SECURE_SYS_PATH
-    status = stat(SECURE_SYS_PATH, &buf);
-# else
-    status = -1;
-# endif
-
-    if(status == -1)
-    {
-        /*
-         * this is not a secure system - remove all suid privileges
-         */
-        smGD.unLockUID = smGD.runningUID;
-        smGD.secureSystem = False;
-        SM_SETESUID(smGD.runningUID);
-    }
-    else
-    {
-       /*
-        * Save the root privilege to be restored when trying to unlock
-        */
-        smGD.unLockUID = geteuid();
-        smGD.secureSystem = True;
-        SM_SETEUID(smGD.runningUID);
-    }
-
-    /*
      * Initialize LANG if it isn't defined.
      */
     if ((lang = getenv ("LANG")) == NULL)
@@ -214,13 +201,6 @@ main (int argc, char **argv)
 	(void) strcpy (lang, "LANG=C");
 	(void) putenv (lang);
     }
-
-#ifndef	SVR4
-    setregid(smGD.conMgmtGID, smGD.runningGID);
-#else
-    setgid(smGD.conMgmtGID);
-    setegid(smGD.runningGID);
-#endif /* !SVR4 */
 
    /*
     * Set up POSIX sigaction structs

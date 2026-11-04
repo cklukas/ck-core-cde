@@ -63,10 +63,6 @@
 #endif
 #include <fcntl.h>
 
-#ifdef SIA
-#include <sia.h>
-#endif
- 
 #ifdef USE_HP_SPECIFIC_XLIB
 #include <X11/XHPlib.h>
 #endif /* USE_HP_SPECIFIC_XLIB */
@@ -99,6 +95,7 @@
 #include "SmError.h"
 #include "SmLock.h"
 #include "SmScreen.h"
+#include "SmPriv.h"
 
 /*
  * Variables global to this module only
@@ -555,11 +552,10 @@ FinishLocking(Widget		wid,
 #endif /* USE_HP_SPECIFIC_XLIB */
 
 #if defined (AIXV3) && !defined(_POWER)
-       if(smGD.secureSystem)
+       if(SmPrivRaise())
        {
-         SM_SETEUID(smGD.unLockUID);
          AixEnableHftRing(0);
-         SM_SETEUID(smGD.runningUID);
+         SmPrivLower();
        }
 #endif
 
@@ -1232,11 +1228,10 @@ UnlockDisplay(
 #endif /* USE_HP_SPECIFIC_XLIB */
 
 #if defined (AIXV3) && !defined(_POWER)
-    if(smGD.secureSystem)
+    if(SmPrivRaise())
     {
-      SM_SETEUID(smGD.unLockUID);
       AixEnableHftRing(1);
-      SM_SETEUID(smGD.runningUID);
+      SmPrivLower();
     }
 #endif
 
@@ -1629,71 +1624,6 @@ localAuthenticate(
     return _DtSvcPamAuthenticate(service + 1, pwent->pw_name, NULL, passwd) ==
 	   PAM_SUCCESS;
 }
-#elif defined(SIA)
-
-
-
-  {
-    char *Argv[2] = { "dtsession", NULL };
-
-    SIAENTITY *se = NULL;
-    int code;
-    char *  pw_name;
-    uid_t real_uid;
-
-
-    real_uid = getuid();
-
-    if (-1 == seteuid(0))
-      return FALSE;
-
-
-    if (passwd == NULL)
-    {
-      /*
-      * Caller just checking if it is possible to access 
-      * password file (ie is dtsession suid bit set properly).
-      */
-      seteuid(real_uid);
-      return TRUE;
-    }
-    if (name && name[0])
-      pw_name = name;
-    else if (uid == 0)
-      pw_name = "root";
-    else
-      pw_name = getlogin();
-
-
-    if ( sia_ses_init(&se, 1, Argv, (char *)NULL,
-                      pw_name, NULL, 0 /* don't collect info */, 
-                      NULL) != SIASUCCESS)
-      {
-      seteuid(real_uid);
-      return FALSE;
-      }
-    
-    se->password = (char *)malloc(strlen(passwd) + 1);
-    if ( se->password == (char *)NULL ) 
-    {
-        sia_ses_release(&se);
-      seteuid(real_uid);
-      return FALSE;
-    }
-
-    strcpy(se->password, passwd);
-
-    code = sia_ses_reauthent (NULL, se);
-    sia_ses_release(&se);
-
-    seteuid(real_uid);
-
-    if ( code == SIASUCCESS )
-      return TRUE;
-    else
-      return FALSE;
-}
-    
 #elif defined(__linux__)
 
 {
@@ -1702,11 +1632,7 @@ localAuthenticate(
     Boolean rc = True;
     Boolean done = False;
     struct spwd *sp = NULL;
-
-    if(smGD.secureSystem)
-    {	
-      SM_SETEUID(smGD.unLockUID);
-    }
+    int raised = SmPrivRaise();
 
    /*
     * Get password entry for 'name' or 'uid'.
@@ -1720,9 +1646,9 @@ localAuthenticate(
       done = True;
     }
 
-    if(smGD.secureSystem)
+    if (raised)
     {
-        SM_SETEUID(smGD.runningUID);
+        SmPrivLower();
     }
 
     if (done == False)
@@ -1792,16 +1718,11 @@ localAuthenticate(
     char *p, *q;
     Boolean rc = True;
     Boolean done = False;
-
+    int raised = SmPrivRaise();
 
 #ifdef SVR4
     struct spwd *sp=NULL;
 #endif
-
-    if(smGD.secureSystem)
-    {	
-	SM_SETEUID(smGD.unLockUID);
-    }
 
 #ifdef SVR4
    /*
@@ -1845,9 +1766,9 @@ localAuthenticate(
     }
 #endif /* SVR4 */
 
-    if(smGD.secureSystem)
+    if (raised)
     {
-        SM_SETEUID(smGD.runningUID);
+        SmPrivLower();
     }
 
     if (done == False)
@@ -1907,7 +1828,7 @@ localAuthenticate(
 
     return(rc);
 }
-#endif /* SIA */
+#endif /* HAS_PAM_LIBRARY, __linux__ */
 
 
 /*************************************<->*************************************
@@ -1948,11 +1869,7 @@ Authenticate(
     int reenter;
     char *newname = NULL;
     char *msg;
-
-    if(smGD.secureSystem)
-    {
-        SM_SETEUID(smGD.unLockUID);
-    }
+    int raised = SmPrivRaise();
 
    /*
     * Map uid to name.
@@ -1975,9 +1892,9 @@ Authenticate(
     */ 
     arc = authenticate(name, passwd, &reenter, &msg);
 
-    if(smGD.secureSystem)
+    if (raised)
     {
-        SM_SETEUID(smGD.runningUID);
+        SmPrivLower();
     }
 
     if (msg) free(msg);

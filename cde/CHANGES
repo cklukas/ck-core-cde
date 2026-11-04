@@ -1,4 +1,13 @@
 2026-11-04
+- dtsession: give up the installed identity before anything else and stop if it
+  cannot. When installed setuid root, `main()` returns to the user's identity
+  before it sets the locale, reads the environment or opens the toolkit; every
+  step is checked and verified, and `dtsession` exits instead of running as
+  root when the change fails. Programs started for the user drop the saved
+  user id and the installed group before they exec, and a failed group change
+  no longer goes unnoticed. The unused Tru64 `SIA` authentication code is
+  removed. `make -C programs/dtsession check` runs the new identity test
+  against a fake kernel.
 - build: add the opt-in `--enable-hardening` and `--enable-sanitizers[=LIST]`
   configure switches. Hardening reports truncation, string-constant,
   ignored-result, null-dereference and format defects and adds stack protection

@@ -80,14 +80,6 @@
 #define		SM_FREE(PTR)			XtFree(PTR)
 #define		SM_EXIT(STATUS)			SmExit(STATUS)
 
-#ifndef	SVR4
-#define         SM_SETEUID(EUID)        seteuid(EUID)
-#define         SM_SETESUID(UID)        setreuid(UID, UID)
-#else
-#define         SM_SETEUID(EUID)        seteuid(EUID)
-#define         SM_SETESUID(UID)        (setuid(UID), seteuid(UID))
-#endif
-
 /*
  * Types of states the session manager can be in
  */
@@ -279,9 +271,6 @@ typedef struct
     Tt_pattern		events2Watch;
     Boolean		compatMode;
     Boolean		lockOnTimeoutStatus;
-    gid_t		runningGID, conMgmtGID;
-    uid_t		runningUID, unLockUID;
-    Boolean		secureSystem;
     Boolean		screenSaver;  /* obsolete */
     Boolean		screenSaverRunning; /* obsolete */
     Boolean		userSetWaitWmTimeout;

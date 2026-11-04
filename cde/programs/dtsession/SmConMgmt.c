@@ -63,6 +63,7 @@
 #include "SmProtocol.h"
 #include "SmConMgmt.h"
 #include "SmCommun.h"
+#include "SmPriv.h"
 
 /*
  * Define statements
@@ -159,12 +160,10 @@ GetMemoryUtilization(void)
     int i;
 
 
-#ifndef	SVR4
-    setregid(smGD.runningGID, smGD.conMgmtGID);
-#else
-    setgid(smGD.runningGID);
-    setegid(smGD.conMgmtGID);
-#endif
+    if (!SmPrivUseUserGroup(False))
+    {
+	return(MEM_NOT_AVAILABLE);
+    }
 
     if(!init)
     {
@@ -177,12 +176,7 @@ GetMemoryUtilization(void)
 	    if (namelist[i].n_type == 0 ||
 		namelist[i].n_value == 0)
 	    {
-#ifndef	SVR4
-		setregid(smGD.conMgmtGID, smGD.runningGID);
-#else
-		setgid(smGD.conMgmtGID);
-		setegid(smGD.runningGID);
-#endif
+		SmPrivUseUserGroup(True);
 		return(MEM_NOT_AVAILABLE);
 	    }
 	}
@@ -193,12 +187,7 @@ GetMemoryUtilization(void)
 	kmem = open(KMEM_FILE, O_RDONLY);
 	if (kmem < 0)
 	{
-#ifndef	SVR4
-	    setregid(smGD.conMgmtGID, smGD.runningGID);
-#else
-	    setgid(smGD.conMgmtGID);
-	    setegid(smGD.runningGID);
-#endif
+	    SmPrivUseUserGroup(True);
 	    return(MEM_NOT_AVAILABLE);
 	}
 	(void) lseek(kmem, gpgslim_loc, 0);
@@ -225,12 +214,7 @@ GetMemoryUtilization(void)
     (void) read(kmem, (char *)&freemem, sizeof(int));
 #endif /* mips */
 
-#ifndef	SVR4
-    setregid(smGD.conMgmtGID, smGD.runningGID);
-#else
-    setgid(smGD.conMgmtGID);
-    setegid(smGD.runningGID);
-#endif
+    SmPrivUseUserGroup(True);
 
     if(freemem >= gpgslim)
     {

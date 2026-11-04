@@ -92,6 +92,7 @@ have not had such a review. Fuzz targets exist for none of the components yet.
 | `programs/dtlogin` | runs as root; XDMCP network service | environment and arguments (2026-11-02); XDMCP, authorization, signals (2026-11-04) | 163 | 21 | 9 | none |
 | `programs/dtksh` | local user program | none recorded | 157 | 15 | 0 | none |
 | `programs/dtinfo` | information browser; C++ | none recorded | 154 | 30 | 7 | none |
+| `programs/dtsession` | session manager; setuid root without PAM; reads saved sessions; ICE and X clients | installed identity (2026-11-04) | 135 | 12 | 2 | none |
 | `programs/dtsearchpath` | dtappgather is always setuid root | none recorded | 46 | 0 | 0 | none |
 | `programs/dtspcd` | root daemon from inetd; network; parses requests before authentication | request handlers, registration and privilege drop (2026-11-04) | 6 | 3 | 1 | none |
 | `programs/dtexec` | launches user commands | discovery (2026-11-02) | 5 | 1 | 2 | none |

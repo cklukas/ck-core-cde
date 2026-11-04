@@ -108,6 +108,7 @@
 #include "SmUI.h"
 #include "SmGlobals.h"
 #include "SmXSMP.h"
+#include "SmPriv.h"
 #include "SmDB.h"
 #include "SmProp.h"
 
@@ -892,14 +893,9 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
         SetSIGPIPEToDefault ();
 
 	/*
-	 * Set the gid of the process back from bin
+	 * Give up the identity dtsession is installed with
 	 */
-#ifndef	SVR4
-	setregid(smGD.runningGID, smGD.runningGID);
-#else
-	setgid(smGD.runningGID);
-	setegid(smGD.runningGID);
-#endif
+	SmPrivDropInChild();
 
 #if defined(CSRG_BASED)
         setsid();
@@ -3582,6 +3578,13 @@ StartLocalClient (
         SetSIGPIPEToDefault ();
 
 	/*
+	 * The client runs with the user's identity from the start, not
+	 * just from the exec: nothing below may use the identity dtsession
+	 * is installed with.
+	 */
+	SmPrivDropInChild();
+
+	/*
 	 * Log a warning if the given cwd is not valid
 	 */
 	if (doChdir && cwd) 
@@ -3610,16 +3613,6 @@ StartLocalClient (
 	    for (ppchar = tmpEnv; ppchar && *ppchar; ppchar++) 
 	        putenv (strdup (*ppchar));
 	}
-
-	/*
-	 * Set the gid of the process back from bin
-	 */
-#ifndef SVR4
-	setregid(smGD.runningGID, smGD.runningGID);
-#else
-	setgid(smGD.runningGID);
-	setegid(smGD.runningGID);
-#endif
 
 	_DtEnvControl(DT_ENV_RESTORE_PRE_DT);
 
@@ -3787,14 +3780,9 @@ ForkWM( void )
         SetSIGPIPEToDefault ();
 
 	/*
-	 * Set the gid of the process back from bin
+	 * Give up the identity dtsession is installed with
 	 */
-#ifndef	SVR4
-	setregid(smGD.runningGID, smGD.runningGID);
-#else
-	setgid(smGD.runningGID);
-	setegid(smGD.runningGID);
-#endif
+	SmPrivDropInChild();
 	_DtEnvControl(DT_ENV_RESTORE_PRE_DT);
 
 #if defined(CSRG_BASED)
