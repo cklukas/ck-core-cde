@@ -63,6 +63,8 @@
   redirects or a shell. Signal handlers set flags and the main loop acts on
   them, failed privilege drops stop the server or session, and sanitizer tests
   run under `make check`.
+- scripts/warning-baseline.py: compare a build with the assembled validation
+  record as well as with a bare `record` output.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

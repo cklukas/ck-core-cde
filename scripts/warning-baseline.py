@@ -115,7 +115,9 @@ def main():
         print()
         return 0
 
-    base = json.load(open(args.baseline))["components"]
+    recorded = json.load(open(args.baseline))
+    # A bare `record` output or the assembled validation record
+    base = recorded["components"] if "components" in recorded else recorded["warnings"]["components"]
     worse = []
     for comp, classes in by_comp.items():
         for cls, n in classes.items():
