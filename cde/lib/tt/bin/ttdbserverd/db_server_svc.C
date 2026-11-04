@@ -573,6 +573,7 @@ void
 _tt_process_transaction()
 {
 	int log_fd;
+	ssize_t nbytes;
 
 	LOCK_RPC();
 
@@ -580,8 +581,10 @@ _tt_process_transaction()
 		UNLOCK_RPC();
 		return;
 	}
-	if ((log_fd = open(_tt_log_file, O_RDWR | O_CREAT, S_IREAD + S_IWRITE))
-	    == -1)
+	// The log file is in a directory a client named: never follow a link
+	// that was put in its place.
+	if ((log_fd = open(_tt_log_file, O_RDWR | O_CREAT | O_NOFOLLOW,
+			   S_IREAD + S_IWRITE)) == -1)
 	{
 		_tt_syslog(errstr, LOG_ERR, "open(\"%s\"): %m", _tt_log_file);
 		UNLOCK_RPC();
@@ -598,8 +601,8 @@ _tt_process_transaction()
 		return;
 	}
 	/* Check the transaction flag */
-	int nbytes = read(log_fd, _tt_log_buf, sizeof(int));
-	if (nbytes < sizeof(int)) {
+	nbytes = read(log_fd, _tt_log_buf, sizeof(int));
+	if (nbytes < (ssize_t)sizeof(int)) {
 		_tt_syslog(errstr, LOG_ERR, "read(): %m");
 		_tt_dbserver_prog_cleanup(log_fd);
 		UNLOCK_RPC();
@@ -620,6 +623,13 @@ _tt_process_transaction()
 	nbytes = read(log_fd, _tt_log_buf, MAXPATHLEN+1);
 	if (nbytes == -1) {
 		_tt_syslog(errstr, LOG_ERR, "read(): %m");
+		_tt_dbserver_prog_cleanup(log_fd);
+		UNLOCK_RPC();
+		return;
+	}
+	if (memchr(_tt_log_buf, '\0', nbytes) == NULL) {
+		_tt_syslog(errstr, LOG_ERR, "no database path in \"%s\"",
+			   _tt_log_file);
 		_tt_dbserver_prog_cleanup(log_fd);
 		UNLOCK_RPC();
 		return;
@@ -648,7 +658,7 @@ _tt_process_transaction()
 	_Tt_trans_record trec;
 	nbytes = read(log_fd, _tt_log_buf, _TT_TREC_INFO);
 	while (nbytes) {
-		if (nbytes < _TT_TREC_INFO) {
+		if (nbytes < 0 || (size_t)nbytes < _TT_TREC_INFO) {
 			_tt_syslog(errstr, LOG_ERR, "read(): %m");
 			_tt_dbserver_prog_cleanup(log_fd, isfd);
 			UNLOCK_RPC();
@@ -656,15 +666,25 @@ _tt_process_transaction()
 		}
 		/* process the batch of records just read */
 		buf_rec = _tt_log_buf;
-		trec.newp = *((int *) buf_rec);
+		memcpy(&trec.newp, buf_rec, sizeof(int));
 		buf_rec += sizeof(int);
-		trec.recnum = *((long *) buf_rec);
+		memcpy(&trec.recnum, buf_rec, sizeof(long));
 		buf_rec += sizeof(long);
-		trec.rec.rec_len = *((u_int *) buf_rec);
+		memcpy(&trec.rec.rec_len, buf_rec, sizeof(u_int));
 		buf_rec += sizeof(u_int);
+		/* a record is never longer than NetISAM takes, nor than the
+		   buffer it is read to */
+		if (trec.rec.rec_len > sizeof(_tt_log_buf)) {
+			_tt_syslog(errstr, LOG_ERR,
+				   "record of %u bytes in \"%s\"",
+				   trec.rec.rec_len, _tt_log_file);
+			_tt_dbserver_prog_cleanup(log_fd, isfd);
+			UNLOCK_RPC();
+			return;
+		}
 		/* read the record as a whole */
 		nbytes = read(log_fd, _tt_log_buf, trec.rec.rec_len);
-		if (nbytes < trec.rec.rec_len) {
+		if (nbytes < 0 || (u_int)nbytes < trec.rec.rec_len) {
 			_tt_syslog(errstr, LOG_ERR, "read(): %m");
 			_tt_dbserver_prog_cleanup(log_fd, isfd);
 			UNLOCK_RPC();
@@ -1265,6 +1285,9 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 	memset((char *)&argument, 0, sizeof(argument));
 	if (!svc_getargs(transp, (xdrproc_t)xdr_argument, (caddr_t)&argument)) {
 		svcerr_decode(transp);
+		// free what was decoded before the request turned out malformed
+		(void)svc_freeargs(transp, (xdrproc_t)xdr_argument,
+				   (caddr_t)&argument);
 		UNLOCK_RPC();
 		return;
 	}

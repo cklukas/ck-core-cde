@@ -41,6 +41,7 @@
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdint.h>
 #include <unistd.h>
 
@@ -110,6 +111,8 @@ static _Tt_db_results
 					    const _Tt_db_access_ptr&,
 					    int&);
 static _Tt_string _tt_get_object_partition (const _Tt_string &objid);
+static bool_t _tt_get_cache_level_bytes (const _Tt_db_property_ptr &property,
+					 _Tt_string &cache_level_bytes);
 static _Tt_db_results
 _tt_increment_object_properties_cache_level (const _Tt_db_server_db_ptr&,
 					     const _Tt_string&,
@@ -391,7 +394,10 @@ _tt_db_results *_tt_move_file_1 (_tt_move_file_args *args,
   _Tt_string real_new_file = args->new_file;
 
   // Make sure we really need to do a move
-  if (real_file != real_new_file) {
+  if (!real_file.len() || !real_new_file.len()) {
+    results = TT_DB_ERR_ILLEGAL_FILE;
+  }
+  else if (real_file != real_new_file) {
     _Tt_file_system           fs;
     _Tt_file_system_entry_ptr entry = fs.bestMatchToPath(real_file);
     _Tt_file_system_entry_ptr new_entry = fs.bestMatchToPath(real_new_file);
@@ -1485,7 +1491,8 @@ _tt_db_results *_tt_queue_message_1 (_tt_queue_msg_args *args,
 
   _Tt_db_server_db_ptr db;
   _Tt_string           real_file = args->file;
-  if (!args->message.body.body_len) {
+  if (!args->message.body.body_len ||
+      args->message.body.body_len > (u_int)INT_MAX) {
     results = TT_DB_ERR_ILLEGAL_MESSAGE;
   }
   else {
@@ -1694,7 +1701,12 @@ _tt_dequeue_messages_1 (_tt_dequeue_msgs_args *args,
 		    (char *)*values_cursor,
 		    (*values_cursor).len(),
 		    XDR_DECODE);
-      (void)message_info->xdr(&xdrs);
+      if (!message_info->xdr(&xdrs) || message_info->ptypes.is_null()) {
+	// A property is set by the client like any other: this is not
+	// something _tt_queue_message_1 wrote.  Drop it.
+	values_cursor.remove();
+	continue;
+      }
 
       // Eliminate all of the ptypes from the message info list
       // that match the callers ptype list.
@@ -1716,10 +1728,18 @@ _tt_dequeue_messages_1 (_tt_dequeue_msgs_args *args,
 	  messages = new _Tt_string_list;
 	}
 
-	// Reconstruct the message from the _TT_MSG_<ID#>_<PART#> properties
-	_Tt_string message(message_info->messageSize);
+	// Reconstruct the message from the _TT_MSG_<ID#>_<PART#> properties.
+	// The sizes are those in the stored message info, and of the parts:
+	// no part goes beyond the message, and none starts beyond it.
+	long message_size = message_info->messageSize;
+	if (message_size < 0) {
+	  message_size = 0;
+	}
+	_Tt_string message((int)message_size);
+	memset((char *)message, '\0', (int)message_size);
 	for (int i=0; (results.results == TT_DB_OK) &&
-	              (i < message_info->numParts); i++) {
+	              (i < message_info->numParts) &&
+		      ((long)i * ISMAXRECLEN <= message_size); i++) {
 	  // Construct the property name
 	  char name [64];
 	  sprintf(name, TT_DB_MESSAGE_PROPERTY, message_info->messageID, i);
@@ -1734,9 +1754,14 @@ _tt_dequeue_messages_1 (_tt_dequeue_msgs_args *args,
 	    _Tt_string message_bytes = (*property->values) [0];
 
 	    // Copy each succesive part into a large buffer
-	    memcpy((char *)message+i*ISMAXRECLEN,
-		   (char *)message_bytes,
-		   message_bytes.len());
+	    long offset = (long)i * ISMAXRECLEN;
+	    long length = message_bytes.len();
+	    if (length > message_size - offset) {
+	      length = message_size - offset;
+	    }
+	    if (length > 0) {
+	      memcpy((char *)message+offset, (char *)message_bytes, length);
+	    }
 	  }
 	}
 
@@ -1875,6 +1900,21 @@ _tt_netfile_file_1 (_tt_file_netfile_args *args, SVCXPRT * /* transp */)
 
 
 //
+// NUL terminate the record NetISAM just read, so that its strings can be
+// compared.  A record that fills the buffer has no room for the NUL, and is
+// no session record: it is made to compare as an empty one.
+//
+static void
+_tt_terminate_record(Table_oid_prop *record)
+{
+	if (isreclen >= 0 && (size_t)isreclen < sizeof(*record)) {
+		((char *)record)[isreclen] = '\0';
+	} else {
+		memset(record, 0, sizeof(*record));
+	}
+}
+
+//
 // Delete the named session from the properties table.
 //
 _tt_delete_session_results	*
@@ -1916,13 +1956,17 @@ _tt_delete_session_1(_tt_delete_session_args	*args,
 			
 			// Get the FD and process the file.
 			isfd=cached_isopen(pathName, ISINOUT);
+			if (isfd == -1) {
+				continue;
+			}
 			
 			//
 			// Get the 1st record.
 			//
 			LOCK_RPC();
+			memset(&record, 0, sizeof(record));
 			isread(isfd, (char *)&record, ISFIRST);
-			((char *)(&record))[isreclen] = '\0';
+			_tt_terminate_record(&record);
 
 			// Delte the named session.
 			if (strcmp(sesProp, record.propname) == 0) {
@@ -1946,7 +1990,7 @@ _tt_delete_session_1(_tt_delete_session_args	*args,
 				UNLOCK_RPC();
 				break;
 			    }
-			    ((char *)(&record))[isreclen] = '\0';
+			    _tt_terminate_record(&record);
 			    if (strcmp(sesProp, record.propname) == 0) {
 				if(strcmp(args->session.value,
 					  record.propval) == 0) {
@@ -1979,12 +2023,14 @@ _tt_delete_session_1(_tt_delete_session_args	*args,
 //
 _tt_get_all_sessions_results *
 _tt_get_all_sessions_1(_tt_get_all_sessions_args * args,
-		       SVCXPRT			 * /*NOTUSED*/)
+		       SVCXPRT			 * transp)
 {
 	static _tt_get_all_sessions_results	results;
 
 	static _Tt_string_list		  *list;
-	list = new _Tt_string_list;
+	if (list == NULL) {
+		list = new _Tt_string_list;
+	}
 
 	int			  offset;
 	int			  isfd;
@@ -1997,6 +2043,8 @@ _tt_get_all_sessions_1(_tt_get_all_sessions_args * args,
 	_Tt_string		  propValue;
 	Table_oid_prop		  record;
 
+	memset(&record, '\0', sizeof(record));
+
 	//
 	// Empty out any existing session or key results.
 	//
@@ -2004,7 +2052,10 @@ _tt_get_all_sessions_1(_tt_get_all_sessions_args * args,
 	if (results.oidkey.oidkey_val != NULL) {
 		free((char *)results.oidkey.oidkey_val);
 	}
-	for (offset = 0 ; offset < list->count() ; offset++) {
+	for (offset = 0 ;
+	     results.session_list.values_val != NULL &&
+	     (u_int)offset < results.session_list.values_len ;
+	     offset++) {
 		if (results.session_list.values_val[offset].value != NULL) {
 			free(results.session_list.values_val[offset].value);
 		}
@@ -2038,12 +2089,17 @@ _tt_get_all_sessions_1(_tt_get_all_sessions_args * args,
 						
 			    // Get the FD and process the file.
 			    isfd = cached_isopen(pathName, ISINOUT);
+			    if (isfd == -1) {
+				continue;
+			    }
 
 			    //
-			    // If the user passed in a starting key,
-			    // then use it.
+			    // If the caller passed in a starting key,
+			    // then use it.  It is a NetISAM position, which
+			    // NetISAM does not check: take it from callers in
+			    // this process, not from the wire.
 			    //
-			    if (args->oidkey.oidkey_len > 0
+			    if (transp == NULL && args->oidkey.oidkey_len > 0
 				&& args->oidkey.oidkey_val != NULL) {
 				issetcurpos(isfd,
 					    (char *)args->oidkey.oidkey_val);
@@ -2053,7 +2109,7 @@ _tt_get_all_sessions_1(_tt_get_all_sessions_args * args,
 			    // Get the 1st record.
 			    //
 			    isread(isfd, (char *)&record, ISFIRST);
-			    ((char *)(&record))[isreclen] = '\0';
+			    _tt_terminate_record(&record);
 			    if (strcmp(sesProp, record.propname) == 0) {
 				propValue = record.propval;
 				
@@ -2064,7 +2120,7 @@ _tt_get_all_sessions_1(_tt_get_all_sessions_args * args,
 			    }
 			    
 			    while(isread(isfd, (char *)&record,ISNEXT) != -1) {
-			      ((char *)(&record))[isreclen] = '\0';
+			      _tt_terminate_record(&record);
 				if (strcmp(sesProp, record.propname) == 0) {
 				    propValue = record.propval;
 				    list->append(propValue);
@@ -2176,6 +2232,13 @@ static _Tt_db_results _tt_get_partition_db (const _Tt_string     &partition,
   _Tt_db_partition_global_map_ref db_map;
   _Tt_db_results                  results = TT_DB_OK;
 
+  // The partition comes from the file or object id the client sent.  With
+  // none, there is no database to open: the one of "" would be a TT_DB
+  // directory of the server's own working directory.
+  if (!partition.len()) {
+    return TT_DB_ERR_ILLEGAL_FILE;
+  }
+
   db = db_map.getDB(partition);
   if (db.is_null()) {
     results = TT_DB_ERR_DB_OPEN_FAILED;
@@ -2247,10 +2310,30 @@ static _Tt_string _tt_get_file_partition (const _Tt_string &file)
   _Tt_string local_path = file;
   local_path = local_path.split(':', temp_string);
 
+  // No mount point is the best match to an empty path, and
+  // bestMatchToPath() does not say so.
+  if (!local_path.len()) {
+    return _Tt_string("");
+  }
+
   _Tt_file_system           fs;
   _Tt_file_system_entry_ptr entry = fs.bestMatchToPath(local_path);
 
   return entry->getMountPoint();
+}
+
+// The cache level of a file or an object is the value of a property, as the
+// bytes of an int.  Clients can set any property to any value: take the
+// bytes only if there are as many as an int has.
+static bool_t _tt_get_cache_level_bytes (const _Tt_db_property_ptr &property,
+					 _Tt_string &cache_level_bytes)
+{
+  if (property.is_null() || property->is_empty()) {
+    return FALSE;
+  }
+
+  cache_level_bytes = (*property->values) [0];
+  return cache_level_bytes.len() >= (int)sizeof(int);
 }
 
 static _Tt_db_results
@@ -2270,7 +2353,10 @@ _tt_increment_file_properties_cache_level
 			property);
 
   if (results == TT_DB_OK) {
-    _Tt_string cache_level_bytes = (*property->values) [0];
+    _Tt_string cache_level_bytes;
+    if (!_tt_get_cache_level_bytes(property, cache_level_bytes)) {
+      return TT_DB_ERR_PROPS_CACHE_ERROR;
+    }
     memcpy ((char *)&cache_level, (char *)cache_level_bytes, sizeof(int));
 
     cache_level++;
@@ -2325,7 +2411,10 @@ _tt_get_file_properties_cache_level (const _Tt_db_server_db_ptr &db,
 			accessPtr,
 			property);
   if (results == TT_DB_OK) {
-    _Tt_string cache_level_bytes = (*property->values) [0];
+    _Tt_string cache_level_bytes;
+    if (!_tt_get_cache_level_bytes(property, cache_level_bytes)) {
+      return TT_DB_ERR_PROPS_CACHE_ERROR;
+    }
     memcpy ((char *)&cache_level, (char *)cache_level_bytes, sizeof(int));
   }
   // The file was probably created for an object.  The cache level
@@ -2374,7 +2463,10 @@ _tt_increment_object_properties_cache_level
 			  property);
 
   if (results == TT_DB_OK) {
-    _Tt_string cache_level_bytes = (*property->values) [0];
+    _Tt_string cache_level_bytes;
+    if (!_tt_get_cache_level_bytes(property, cache_level_bytes)) {
+      return TT_DB_ERR_PROPS_CACHE_ERROR;
+    }
     memcpy ((char *)&cache_level, (char *)cache_level_bytes, sizeof(int));
 
     cache_level++;
@@ -2430,7 +2522,10 @@ _tt_get_object_properties_cache_level (const _Tt_db_server_db_ptr &db,
 			  property);
 
   if (results == TT_DB_OK) {
-    _Tt_string cache_level_bytes = (*property->values) [0];
+    _Tt_string cache_level_bytes;
+    if (!_tt_get_cache_level_bytes(property, cache_level_bytes)) {
+      return TT_DB_ERR_PROPS_CACHE_ERROR;
+    }
     memcpy ((char *)&cache_level, (char *)cache_level_bytes, sizeof(int));
   }
   else {
@@ -2464,6 +2559,13 @@ static _Tt_string _tt_get_local_path (const _Tt_string &network_path,
 {
   _Tt_string temp_string = network_path;
   _Tt_string local_path = _tt_realpath (temp_string.split(':', hostname));
+
+  // No mount point is the best match to an empty path, and
+  // bestMatchToPath() does not say so.
+  if (!local_path.len()) {
+    partition = _Tt_string("");
+    return local_path;
+  }
 
   _Tt_file_system file_system;
   _Tt_file_system_entry_ptr entry = file_system.bestMatchToPath(local_path);

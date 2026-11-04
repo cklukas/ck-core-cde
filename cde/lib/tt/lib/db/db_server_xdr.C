@@ -35,6 +35,7 @@
  * This file contains xdr functions for the db server's rpc procedures.
  */
 
+#include <stdlib.h>
 #include <isam.h>
 
 #include "db/db_server.h"
@@ -310,18 +311,10 @@ xdr_tt_file_netfile_results(XDR * xdrs, _tt_file_netfile_results * argp)
 }
 
 
-bool_t
-xdr_Tt_trans_record_list(XDR *xdrs, _Tt_trans_record_list *objp)
-{
-	if (!xdr_pointer(xdrs, (char **)objp, sizeof(struct _Tt_trans_record),
-			 (xdrproc_t)xdr_Tt_trans_record)) {
-		return (FALSE);
-	}
-	return (TRUE);
-}
+/* The record without the rest of the list. */
 
-bool_t
-xdr_Tt_trans_record(XDR *xdrs, _Tt_trans_record *objp)
+static bool_t
+xdr_Tt_trans_record_data(XDR *xdrs, _Tt_trans_record *objp)
 {
 	if (!xdr_int(xdrs, &objp->newp)) {
 		return (FALSE);
@@ -330,6 +323,65 @@ xdr_Tt_trans_record(XDR *xdrs, _Tt_trans_record *objp)
 		return (FALSE);
 	}
 	if (!xdr_array(xdrs, (char **)&objp->rec.rec_val, (u_int *)&objp->rec.rec_len, ISMAXRECLEN, sizeof(char), (xdrproc_t)xdr_char)) {
+		return (FALSE);
+	}
+	return TRUE;
+}
+
+/*
+ * A list of records goes over the wire as each record behind a flag that
+ * says it is there (what xdr_pointer() does for the pointer to a record that
+ * has a list in it) and a last flag that says it is not.  The length of the
+ * list is up to the sender, so it is walked here, not recursed into: a
+ * request can hold more records than there is stack.
+ */
+
+bool_t
+xdr_Tt_trans_record_list(XDR *xdrs, _Tt_trans_record_list *objp)
+{
+	if (xdrs->x_op == XDR_FREE) {
+		_Tt_trans_record *rec = *objp;
+
+		while (rec != NULL) {
+			_Tt_trans_record *next = rec->next;
+
+			(void)xdr_Tt_trans_record_data(xdrs, rec);
+			free(rec);
+			rec = next;
+		}
+		*objp = NULL;
+		return (TRUE);
+	}
+
+	for (;;) {
+		_Tt_trans_record *rec = *objp;
+		bool_t more = (rec != NULL);
+
+		if (!xdr_bool(xdrs, &more)) {
+			return (FALSE);
+		}
+		if (!more) {
+			*objp = NULL;
+			return (TRUE);
+		}
+		if (rec == NULL) {
+			rec = (_Tt_trans_record *)calloc(1, sizeof(*rec));
+			if (rec == NULL) {
+				return (FALSE);
+			}
+			*objp = rec;
+		}
+		if (!xdr_Tt_trans_record_data(xdrs, rec)) {
+			return (FALSE);
+		}
+		objp = &rec->next;
+	}
+}
+
+bool_t
+xdr_Tt_trans_record(XDR *xdrs, _Tt_trans_record *objp)
+{
+	if (!xdr_Tt_trans_record_data(xdrs, objp)) {
 		return (FALSE);
 	}
 	if (!xdr_Tt_trans_record_list(xdrs, &objp->next)) {
@@ -455,7 +507,8 @@ xdr_Tt_session_args(XDR *xdrs, _Tt_session_args *objp)
 	if (!xdr_array(xdrs, (char **)&objp->oidkey.oidkey_val, (u_int *)&objp->oidkey.oidkey_len, OID_KEY_LENGTH, sizeof(char), (xdrproc_t)xdr_char)) {
 		return (FALSE);
 	}
-	if (!xdr_array(xdrs, (char **)&objp->session.session_val, (u_int *)&objp->session.session_len, ~0, sizeof(char), (xdrproc_t)xdr_char)) {
+	/* the session id is the value of a property record: it takes no more */
+	if (!xdr_array(xdrs, (char **)&objp->session.session_val, (u_int *)&objp->session.session_len, ISMAXRECLEN-OID_KEY_LENGTH-MAX_PROP_LENGTH, sizeof(char), (xdrproc_t)xdr_char)) {
 		return (FALSE);
 	}
 	return (TRUE);

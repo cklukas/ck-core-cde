@@ -103,6 +103,7 @@ isopen(char *isfname, int mode)
     if (_am_open(fab)) {
 	_seterr_errcode(&fab->errcode);
 	_fab_destroy(fab);
+	_isfd_delete(isfd);		     /* it does not describe a file */
 	return (NOISFD);
     }
 

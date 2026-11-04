@@ -1,6 +1,6 @@
 ---
 title: ToolTalk
-description: How ttsession decodes requests, authenticates clients and prepares the environment of the programs it starts.
+description: How ttsession and rpc.ttdbserverd validate requests, how sessions are authenticated and how the programs ttsession starts get their environment.
 ---
 
 # ToolTalk
@@ -10,7 +10,8 @@ Programs connect to it over ONC RPC, register the messages they handle and send
 messages that it routes; it starts the program of an installed ptype when a
 message needs a handler that is not running. Everything a client sends reaches
 `ttsession` as RPC arguments, and the daemon decodes them before it knows who
-sent them.
+sent them. `rpc.ttdbserverd` keeps the files and objects ToolTalk knows about
+in NetISAM tables and answers requests for them in the same way.
 
 ## What a session protects
 
@@ -117,6 +118,38 @@ A program that used to receive one of the dropped variables from a message stops
 getting it. Approve the name in `TOOLTALK_START_ENV`, or set the variable in the
 start string of the ptype, which the person who installs the ptype controls.
 
+## Database server
+
+`rpc.ttdbserverd` keeps the files and objects ToolTalk knows about, with their
+properties, queued messages and joined sessions, in NetISAM tables, and answers
+ONC RPC requests for them. It is usually started by `inetd` as root. It decides
+what a client may do by the user id in the unix credentials of the request, or
+the secure RPC credentials in builds that have them, and refuses a request with
+no credentials. Unix credentials are written by the client, so those user ids
+are as trustworthy as the clients and the network between them.
+
+The numbers, lengths and pointers of a request are checked before they are used:
+
+- A file descriptor outside the table of open files is refused. NetISAM hands
+  out more descriptors than the table has entries: one beyond the table is
+  closed and the open fails, and a failed `isopen` or `isbuild` no longer leaves
+  a descriptor behind that points at freed memory.
+- Records a client sends are copied into zero-padded buffers, because NetISAM
+  takes the record length from the buffer. Key descriptors, object keys, session
+  ids and paths that are missing, too short or too long are refused.
+- The transaction log is opened without following links, the length of each
+  record is checked against the buffer, and a transaction with a stale
+  descriptor no longer closes a descriptor of the server or removes the log of
+  an earlier request. A list of records is decoded in a loop, so its length
+  cannot exhaust the stack.
+- Properties a client can set, such as cache levels and the information about a
+  queued message, are validated before the server uses them to size or index
+  anything.
+- A position inside a table is no longer taken from the wire.
+- The record lengths of a table are kept when the table is opened, so record
+  buffers have the size of the records, and overlapping entries of a b-tree are
+  moved with `memmove`.
+
 ## Checks
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
@@ -125,3 +158,9 @@ process. The program builds its requests by hand, with lengths and null markers
 that libtt never produces, and serves them through the dispatcher `ttsession`
 uses. The cases cover each authentication level, the cookie comparison, the
 environment policy and the start environment of a message.
+
+`make -C lib/tt/bin/ttdbserverd check` does the same for the database server: it
+runs the real request dispatcher on requests it makes up, and a mutation of
+those requests, under the sanitizers. Two cases that need a database of a
+partition are skipped on builds whose feature macros hide `LONG_BIT` from
+NetISAM.

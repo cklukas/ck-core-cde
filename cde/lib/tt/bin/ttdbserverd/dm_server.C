@@ -372,15 +372,56 @@ _tt_get_link_permissions(char *key, int prefix_len, char *db_path,
 
 /*
  *  Check for stale NetISAM file descriptor.  Returns 1 if client's uid matches
- *  database opener's uid.  Otherwise returns 0.
+ *  database opener's uid.  Otherwise returns 0.  The descriptor is the
+ *  client's own number: one that is not an entry of _tt_db_table is stale too.
  */
 
 int
 _tt_check_stale_isfd(int isfd)
 {
+	if (isfd < 0 || isfd >= _TT_MAX_ISFD) {
+		return 0;
+	}
 	if (_tt_uid != _tt_db_table[isfd].opener_uid) {
 		return 0;
 	}
+	return 1;
+}
+
+/*
+ *  _tt_client_record - copy a record sent by a client to BUF, which holds
+ *  ISMAXRECLEN bytes, and zero what follows it.  NetISAM takes the record
+ *  length of the file it works on, or the key fields of an index, from the
+ *  buffer it is given, whatever number of bytes the client sent.  Given the
+ *  client's own, shorter buffer it would read past the end of it, and store
+ *  what it found in the file.
+ */
+
+static void
+_tt_client_record(char *buf, const char *rec_val, u_int rec_len)
+{
+	memset(buf, 0, ISMAXRECLEN);
+	if (rec_val != NULL && rec_len > 0) {
+		memcpy(buf, rec_val, rec_len < ISMAXRECLEN ? rec_len : ISMAXRECLEN);
+	}
+}
+
+/*
+ *  _tt_set_record_key - the session procedures start from a key the client
+ *  sent as a pointer to a struct keydesc, which may be null, and a length.
+ *  Zeroes the request record and copies the key to the start of it.  Returns
+ *  0, and leaves the record alone, if there is no descriptor or the length
+ *  is more than the descriptor holds.
+ */
+
+static int
+_tt_set_record_key(const keydesc *key, int key_len)
+{
+	if (key == NULL || key_len < 0 || (size_t)key_len > sizeof(keydesc)) {
+		return 0;
+	}
+	memset(_tt_record, 0, sizeof(_tt_record));
+	memcpy(_tt_record, key, key_len);
 	return 1;
 }
 
@@ -737,8 +778,11 @@ _tt_update_modtime(int			  isfd,
 		   _Tt_isam_results	& res)
 {
 	static const char *here = "_tt_update_modtime()";
-	memset(_tt_record, 0, sizeof(_tt_record));
-	memcpy(_tt_record, key, key_len);
+	if (!_tt_set_record_key(key, key_len)) {
+		res.result = -1;
+		res.iserrno = ERPC;
+		return;
+	}
 	res.result = isstart(isfd, key, key_len, _tt_record, ISEQUAL);
 	if (res.result == -1) {
 		if (iserrno != ENOREC && iserrno != EENDFILE) {
@@ -810,6 +854,9 @@ _tt_isaddindex_1(_Tt_isaddindex_args *args, SVCXPRT * /* transp */)
 	if (!_tt_check_stale_isfd(args->isfd)) {
 		res.result = -1;
 		res.iserrno = ERPC;
+	} else if (args->key == NULL) {
+		res.result = -1;
+		res.iserrno = EBADKEY;
 	} else {
 		res.result = isaddindex(args->isfd, args->key);
 		res.iserrno = iserrno;
@@ -831,6 +878,14 @@ _tt_isbuild_1(_Tt_isbuild_args *args, SVCXPRT * /* transp */)
 	isreclen = args->isreclen;
 	prev_umask = umask(~(S_IRUSR+S_IWUSR));	// Only I can read and write
 	db_path = map_old_db_to_new_db(args->path);
+	if (db_path.is_null() || db_path.len() == 0 || args->key == NULL) {
+		// not a path of a table, or no key descriptor
+		umask(prev_umask);
+		res.result = -1;
+		res.iserrno = ERPC;
+		_tt_syslog(errstr, LOG_ERR, "%s: no table or no key", here);
+		return (&res);
+	}
 	res.result = isbuild(db_path, args->reclen, args->key, args->mode);
 	umask(prev_umask);
 	if (res.result == -1) {
@@ -874,12 +929,6 @@ _tt_isbuild_1(_Tt_isbuild_args *args, SVCXPRT * /* transp */)
 		}
 		free(dir);
 
-		if (db_path.is_null()) {
-			res.iserrno = ERPC;
-			_tt_syslog(errstr, LOG_ERR, "db_path.is_null()");
-			return (&res);
-		}
-
 		prev_umask = umask(~(S_IRUSR+S_IWUSR));
 		res.result = isbuild((char *)db_path, args->reclen,
 				     args->key, args->mode);
@@ -890,6 +939,13 @@ _tt_isbuild_1(_Tt_isbuild_args *args, SVCXPRT * /* transp */)
 			res.iserrno = iserrno;
 			return (&res);
 		}
+	}
+	if (res.result >= _TT_MAX_ISFD) {
+		// NetISAM has more descriptors than _tt_db_table has entries
+		(void)isclose(res.result);
+		res.result = -1;
+		res.iserrno = ETOOMANY;
+		return (&res);
 	}
 	_tt_db_table[res.result].db_path = db_path;
 	_tt_db_table[res.result].opener_uid = _tt_uid;
@@ -916,28 +972,17 @@ _tt_isclose_1(int *isfd, SVCXPRT * /* transp */)
 	  // a local or remote attacker can zero out 4 bytes at any location,
 	  // thereby allowing other exploits (items 2 & 3 - delete or
 	  // overwrite any file on the system.)
-	  // Here, we will just check to make sure: 0 >= isfd < _TT_MAX_ISFD
+	  // _tt_check_stale_isfd() makes sure: 0 >= isfd < _TT_MAX_ISFD
 
-	  if (*isfd < 0 || *isfd >= _TT_MAX_ISFD)
-	    {			// some trickery going on?
-	      res.result = -1;
-	      res.iserrno = ERPC;
-	      _tt_syslog(errstr, LOG_ERR, "%s: _tt_isclose_1: Invalid file descriptor.  This may be an attempted exploit.",
-			 here );
-	    }
-	  else
-	    {
-	      
-	      res.result = cached_isclose(*isfd);
-	      if (res.result != -1) {
-		_tt_db_table[*isfd].db_path = 0;
-		_tt_db_table[*isfd].opener_uid = (uid_t)-1;
-	      } else {
-		_tt_syslog(errstr, LOG_ERR, "%s: isclose(): %d",
-			   here, iserrno);
-	      }
-	      res.iserrno = iserrno;
-	    }
+	  res.result = cached_isclose(*isfd);
+	  if (res.result != -1) {
+	    _tt_db_table[*isfd].db_path = 0;
+	    _tt_db_table[*isfd].opener_uid = (uid_t)-1;
+	  } else {
+	    _tt_syslog(errstr, LOG_ERR, "%s: isclose(): %d",
+		       here, iserrno);
+	  }
+	  res.iserrno = iserrno;
 	}
 	return (&res);
 }
@@ -951,6 +996,7 @@ _tt_iscntl_1(_Tt_iscntl_args *args, SVCXPRT * /* transp */)
 {
 	static const char *here = "_tt_iscntl_1()";
 	static _Tt_iscntl_results res;
+	static char magic[] = "   1";	/* xdr_char() stores what it sends */
 	if (!_tt_check_stale_isfd(args->isfd)) {
 		res.result = -1;
 		res.iserrno = ERPC;
@@ -968,7 +1014,7 @@ _tt_iscntl_1(_Tt_iscntl_args *args, SVCXPRT * /* transp */)
 		}
 */
 		res.iserrno = 0;
-		res.arg.arg_val = "   1";
+		res.arg.arg_val = magic;
 		res.arg.arg_len = 4;
 		res.result = 0;
 	}
@@ -1040,12 +1086,17 @@ _tt_isopen_1(_Tt_isopen_args *args, SVCXPRT * /* transp */)
 	static const char *here = "_tt_isopen_1()";
 	_Tt_string db_path = args->path;
 	if (db_path.is_null()) {
+		res.result = -1;
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: args->path.is_null()", here);
 		return (&res);
 	}
-	int prefix_len = _Tt_dirname((char *)db_path) + 1;
+	// _Tt_dirname() searches for a slash backwards from the end of the
+	// path, and does not stop at the start of a path that has none.
+	int prefix_len = (strchr((char *)db_path, '/') == NULL) ? 0 :
+		_Tt_dirname((char *)db_path) + 1;
 	if (prefix_len < 1) {
+		res.result = -1;
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: _Tt_dirname(db_path) < 0",
 			   here);
@@ -1089,7 +1140,8 @@ _tt_isopen_1(_Tt_isopen_args *args, SVCXPRT * /* transp */)
 	}
 
 	db_path = map_old_db_to_new_db(args->path);
-	if (db_path.is_null()) {
+	if (db_path.is_null() || db_path.len() == 0) {
+		res.result = -1;
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: map_old_db_to_new_db() == 0",
 			   here);
@@ -1114,6 +1166,8 @@ _tt_isopen_1(_Tt_isopen_args *args, SVCXPRT * /* transp */)
 	  partitionRes = _tt_get_file_partition_1(&file, NULL);
 	  db = new _Tt_db_server_db(partitionRes->partition);
 	  delete db;
+	  free(partitionRes->partition);
+	  free(partitionRes->network_path);
 
 	  res.result = cached_isopen((char *)db_path, args->mode);
 	  if (res.result != -1) {	/* record database name and isfd */
@@ -1136,6 +1190,9 @@ _tt_isread_1(_Tt_isread_args *args, SVCXPRT *transp)
 {
 	static const char *here = "_tt_isread_1()";
 	static _Tt_isread_results res;
+	// a reply that fails must not carry the record of an earlier request
+	res.rec.rec_len = 0;
+	res.rec.rec_val = 0;
 	if (!_tt_check_stale_isfd(args->isfd)) {
 		res.isresult.result = -1;
 		res.isresult.iserrno = ERPC;
@@ -1146,7 +1203,8 @@ _tt_isread_1(_Tt_isread_args *args, SVCXPRT *transp)
 	if (_tt_oid_accessp(args->isfd, args->rec.rec_val, 'r')) {
 
 		isrecnum = args->isrecnum;
-		memcpy(_tt_record, args->rec.rec_val, args->rec.rec_len);
+		_tt_client_record(_tt_record, args->rec.rec_val,
+				  args->rec.rec_len);
 
 		if (msg_q_lock(args->isfd,
 			       args->rec.rec_val,
@@ -1251,9 +1309,11 @@ _tt_isrewrec_1(_Tt_isrewrec_args *args, SVCXPRT *transp)
 					 args->rec.rec_val,
 					 args->rec.rec_len,
 					 transp)) {
+			    _tt_client_record(_tt_record, args->rec.rec_val,
+				      args->rec.rec_len);
 			    isreclen = args->rec.rec_len;
 			    res.result = isrewrec(args->isfd, args->recnum,
-						  args->rec.rec_val);
+						  _tt_record);
 			    res.iserrno = iserrno;
 			    if (res.result == -1) {
 				    _tt_syslog(errstr, LOG_ERR, "%s: isrewrec"
@@ -1290,6 +1350,10 @@ _tt_isstart_1(_Tt_isstart_args *args, SVCXPRT *transp)
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: _tt_check_stale_isfd() == 0",
 			   here );
+	} else if (args->key == NULL) {
+		res.result = -1;
+		res.iserrno = EBADKEY;
+		_tt_syslog(errstr, LOG_ERR, "%s: key == 0", here);
 	} else if (args->rec.rec_val==0 && args->mode!=ISFIRST) {
 		res.result = -1;
 		res.iserrno = EBADKEY;
@@ -1298,8 +1362,10 @@ _tt_isstart_1(_Tt_isstart_args *args, SVCXPRT *transp)
 			      args->rec.rec_val,
 			      args->rec.rec_len,
 			      transp)) {
+		_tt_client_record(_tt_record, args->rec.rec_val,
+				  args->rec.rec_len);
 		res.result = isstart(args->isfd, args->key, args->key_len,
-				     args->rec.rec_val, args->mode);
+				     _tt_record, args->mode);
 		res.iserrno = iserrno;
 		if (res.result == -1) {
 			// ENOREC happens a lot even in normal operation.
@@ -1337,8 +1403,10 @@ _tt_iswrite_1(_Tt_iswrite_args *args, SVCXPRT *transp)
 					 args->rec.rec_val,
 					 args->rec.rec_len,
 					 transp)) {
+			    _tt_client_record(_tt_record, args->rec.rec_val,
+				      args->rec.rec_len);
 			    isreclen = args->rec.rec_len;
-			    res.result = iswrite(args->isfd, args->rec.rec_val);
+			    res.result = iswrite(args->isfd, _tt_record);
 			    res.iserrno = iserrno;
 			    if (res.result == -1) {
 				    _tt_syslog(errstr, LOG_ERR, "%s: iswrite"
@@ -1373,11 +1441,20 @@ _tt_test_and_set_1(_Tt_test_and_set_args *args, SVCXPRT *transp)
 {
 	static const char *here = "_tt_test_and_set_1()";
 	static _Tt_test_and_set_results res;
+	// a reply that fails must not carry the record of an earlier request
+	res.rec.rec_len = 0;
+	res.rec.rec_val = 0;
 	if (!_tt_check_stale_isfd(args->isfd)) {
 		res.isresult.result = -1;
 		res.isresult.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: _tt_check_stale_isfd() == 0",
 			   here );
+		return (&res);
+	}
+	if (args->key == NULL) {
+		res.isresult.result = -1;
+		res.isresult.iserrno = EBADKEY;
+		_tt_syslog(errstr, LOG_ERR, "%s: key == 0", here);
 		return (&res);
 	}
 	if (!_tt_oid_accessp(args->isfd, args->rec.rec_val, 'r' + 'w')) {
@@ -1397,14 +1474,14 @@ _tt_test_and_set_1(_Tt_test_and_set_args *args, SVCXPRT *transp)
 		res.rec.rec_val = 0;
 		return (&res);
 	}
-	memcpy(_tt_record, args->rec.rec_val, args->rec.rec_len);
+	_tt_client_record(_tt_record, args->rec.rec_val, args->rec.rec_len);
 	// look for this record
 	if (isstart(args->isfd, args->key, args->key_len,
 		    _tt_record, ISEQUAL) == -1) {
 		if (iserrno == ENOREC) {
 			// not found, we can write ours
 			isreclen = args->rec.rec_len;
-			if (iswrite(args->isfd, args->rec.rec_val)
+			if (iswrite(args->isfd, _tt_record)
 			    != -1) {
 				res.isresult.result = 1;
 				res.rec.rec_len = 0;
@@ -1493,7 +1570,8 @@ _tt_transaction_1(_Tt_transaction_args* args, SVCXPRT * /* transp */)
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: _tt_check_stale_isfd() == 0",
 			   here );
-		return _tt_transaction_error(args->isfd);
+		// no log file of ours yet, and the isfd is not ours to close
+		return _tt_transaction_error(-1);
 	}
 	_Tt_trans_record *trec = args->recs;
 	if (!trec) {
@@ -1537,8 +1615,9 @@ _tt_transaction_1(_Tt_transaction_args* args, SVCXPRT * /* transp */)
 		      }
 		  }
 
-		if ((fd = open(_tt_log_file, O_RDWR | O_CREAT, S_IREAD + S_IWRITE))
-		    == -1) {
+		if ((fd = open(_tt_log_file,
+			       O_RDWR | O_CREAT | O_NOFOLLOW,
+			       S_IREAD + S_IWRITE)) == -1) {
 			res.iserrno = DM_WRITE_FAILED;
 			return _tt_transaction_error(fd);
 		}
@@ -1632,7 +1711,7 @@ char **
 _tt_mfs_1(char **path, SVCXPRT * /* transp */)
 {
 	static char *res;
-	if (!*path) {
+	if (!*path || !**path) {
 		res = "";
 	} else {
 		_Tt_file_system fs;
@@ -1643,6 +1722,16 @@ _tt_mfs_1(char **path, SVCXPRT * /* transp */)
 }
 
 /*
+ *  The oid access procedures work on the oid key the client sent, which is
+ *  read as a whole key: returns 1 if the client sent one.
+ */
+static int
+_tt_oid_key_ok(const _Tt_oidaccess_args *args)
+{
+	return args->key.key_val != NULL && args->key.key_len == OID_KEY_LENGTH;
+}
+
+/*
  *  _tt_getoidaccess_1 - get the uid/group/mode for an oid
  */
 _Tt_oidaccess_results *
@@ -1650,6 +1739,11 @@ _tt_getoidaccess_1(_Tt_oidaccess_args *args, SVCXPRT * /* transp */)
 {
 	static _Tt_oidaccess_results res;
 
+	if (!_tt_oid_key_ok(args)) {
+		res.result = DM_ERROR;
+		res.iserrno = ERPC;
+		return (&res);
+	}
 	res.result = _tt_read_oid_user(args->isfd, args->key.key_val,
 				       res.uid, res.group, res.mode);
 	res.iserrno = iserrno;
@@ -1662,6 +1756,11 @@ _tt_getoidaccess_1(_Tt_oidaccess_args *args, SVCXPRT * /* transp */)
 _Tt_isam_results *
 _tt_setoiduser_1(_Tt_oidaccess_args *args, SVCXPRT * /* transp */)
 {
+	if (!_tt_oid_key_ok(args)) {
+		res.result = DM_ERROR;
+		res.iserrno = ERPC;
+		return (&res);
+	}
 	res.result = _tt_write_oid_access(args->isfd, args->key.key_val,
 					  (uid_t)args->value, (gid_t)-1,
 					  (mode_t)-1);
@@ -1675,6 +1774,11 @@ _tt_setoiduser_1(_Tt_oidaccess_args *args, SVCXPRT * /* transp */)
 _Tt_isam_results *
 _tt_setoidgroup_1(_Tt_oidaccess_args *args, SVCXPRT * /* transp */)
 {
+	if (!_tt_oid_key_ok(args)) {
+		res.result = DM_ERROR;
+		res.iserrno = ERPC;
+		return (&res);
+	}
 	res.result = _tt_write_oid_access(args->isfd, args->key.key_val,
 					  (uid_t)-1, (gid_t)args->value,
 					  (mode_t)-1);
@@ -1688,6 +1792,11 @@ _tt_setoidgroup_1(_Tt_oidaccess_args *args, SVCXPRT * /* transp */)
 _Tt_isam_results *
 _tt_setoidmode_1(_Tt_oidaccess_args *args, SVCXPRT * /* transp */)
 {
+	if (!_tt_oid_key_ok(args)) {
+		res.result = DM_ERROR;
+		res.iserrno = ERPC;
+		return (&res);
+	}
 	res.result = _tt_write_oid_access(args->isfd, args->key.key_val,
 					  (uid_t)-1, (gid_t)-1,
 					  (mode_t)args->value);
@@ -1711,6 +1820,32 @@ _tt_writespec_1(_Tt_spec_props * /* argp */, SVCXPRT * /* transp */)
 	return (&res);
 }
 
+/*
+ *  The session procedures write a session id as the value of a property
+ *  record of the object whose oid key the client sent: the key must be there
+ *  and the session id must fit in the value of the record.
+ */
+static int
+_tt_session_args_ok(const _Tt_session_args *argp)
+{
+	return argp->oidkey.oidkey_val != NULL && argp->oidkey.oidkey_len > 0 &&
+		argp->oidkey.oidkey_len <= (u_int)OID_KEY_LENGTH &&
+		argp->session.session_len <= sizeof(Table_oid_prop::propval);
+}
+
+/*
+ *  Is the session id in the property record just read, which is isreclen
+ *  bytes long, not SESSIONID?  The record is compared as it is stored, up to
+ *  its own length, never beyond what the client sent.
+ */
+static int
+_tt_session_differs(const _Tt_string &sessionid, const Table_oid_prop *tp)
+{
+	int len = isreclen - MAX_PROP_LENGTH - OID_KEY_LENGTH;
+	return len != sessionid.len() ||
+		(len > 0 && memcmp((char *) sessionid, tp->propval, len));
+}
+
 _Tt_isam_results *
 _tt_addsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 {
@@ -1727,10 +1862,16 @@ _tt_addsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: _tt_check_stale_isfd() == 0",
 			   here );
+		return (&res);
 	}
 	// Start reading session props
-	memset(_tt_record, 0, sizeof(_tt_record));
-	memcpy(_tt_record, argp->key, argp->key_len);
+	if (!_tt_session_args_ok(argp) ||
+	    !_tt_set_record_key(argp->key, argp->key_len)) {
+		res.result = -1;
+		res.iserrno = ERPC;
+		_tt_syslog(errstr, LOG_ERR, "%s: bad key or session", here);
+		return (&res);
+	}
 	res.result = isstart(isfd, argp->key, argp->key_len,
 			     _tt_record, ISEQUAL);
 	res.iserrno = iserrno;
@@ -1762,8 +1903,7 @@ _tt_addsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 				// ran past our key
 				break;
 			}
-			if (memcmp((char *) sessionid, tp->propval,
-				    isreclen-MAX_PROP_LENGTH-OID_KEY_LENGTH)) {
+			if (_tt_session_differs(sessionid, tp)) {
 				// already here so we're done
 				res.result = 0;
 				return (&res);
@@ -1777,7 +1917,9 @@ _tt_addsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 	memset(_tt_record, 0, sizeof(_tt_record));
 	memcpy(tp->objkey, argp->oidkey.oidkey_val, argp->oidkey.oidkey_len);
 	snprintf(tp->propname, sizeof(tp->propname), "%s", (char *) filejoin_prop);
-	memcpy(tp->propval, (char *) sessionid, sessionid.len());
+	if (sessionid.len() > 0) {
+		memcpy(tp->propval, (char *) sessionid, sessionid.len());
+	}
 	isreclen = OID_KEY_LENGTH+MAX_PROP_LENGTH+sessionid.len();
 	res.result = iswrite(isfd, _tt_record);
 	if (res.result == -1) {
@@ -1806,10 +1948,16 @@ _tt_delsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: _tt_check_stale_isfd() == 0",
 			   here );
+		return (&res);
 	}
 	// Start reading session props
-	memset(_tt_record, 0, sizeof(_tt_record));
-	memcpy(_tt_record, argp->key, argp->key_len);
+	if (!_tt_session_args_ok(argp) ||
+	    !_tt_set_record_key(argp->key, argp->key_len)) {
+		res.result = -1;
+		res.iserrno = ERPC;
+		_tt_syslog(errstr, LOG_ERR, "%s: bad key or session", here);
+		return (&res);
+	}
 	res.result = isstart(isfd, argp->key, argp->key_len,
 			     _tt_record, ISEQUAL);
 	res.iserrno = iserrno;
@@ -1836,8 +1984,7 @@ _tt_delsession_1(_Tt_session_args *argp, SVCXPRT * /* transp */)
 			// ran past our key
 			break;
 		}
-		if (memcmp((char *) sessionid, tp->propval,
-			    isreclen-MAX_PROP_LENGTH-OID_KEY_LENGTH)) {
+		if (_tt_session_differs(sessionid, tp)) {
 			// we found it, now delete it
 			res.result = isdelcurr(isfd);
 			if (res.result == -1) {
@@ -1863,18 +2010,24 @@ _tt_gettype_1(_Tt_spec_props *argp, SVCXPRT * /* transp */)
 	static const char *here = "_tt_gettype_1()";
 	static _Tt_spec_props res;
 	static _Tt_prop props;
-	_Tt_string propname((unsigned char *)argp->props.props_val[0].propname.propname_val,
-			    argp->props.props_val[0].propname.propname_len);
 	int isfd = argp->isfd;
 
+	// a reply that fails must not carry the record of an earlier request
+	res.props.props_len = 0;
+	res.props.props_val = 0;
 	if (!_tt_check_stale_isfd(isfd)) {
 		res.result = -1;
 		res.iserrno = ERPC;
 		_tt_syslog(errstr, LOG_ERR, "%s: _tt_check_stale_isfd() == 0",
 			   here );
+		return (&res);
 	}
-	memset(_tt_record, 0, sizeof(_tt_record));
-	memcpy(_tt_record, argp->key, argp->key_len);
+	if (!_tt_set_record_key(argp->key, argp->key_len)) {
+		res.result = -1;
+		res.iserrno = ERPC;
+		_tt_syslog(errstr, LOG_ERR, "%s: bad key", here);
+		return (&res);
+	}
 	res.result = isstart(isfd, argp->key, argp->key_len,
 			     _tt_record, ISEQUAL);
 
@@ -1964,6 +2117,15 @@ cached_isopen(const char *filepath, int mode)
 
 	for (;;) {
 		isfd = isopen(filepath, mode);
+		if (isfd >= _TT_MAX_ISFD) {
+			// NetISAM has more descriptors than _tt_db_table has
+			// entries (its limit used to be that of the table):
+			// give this one back and go on as if NetISAM had none
+			// left.
+			(void)isclose(isfd);
+			isfd = -1;
+			iserrno = ETOOMANY;
+		}
 		if (isfd!=-1) {
 			// Opened fine.
 			p = _tt_db_table+isfd;
@@ -2015,6 +2177,12 @@ cached_isopen(const char *filepath, int mode)
 			}
 		}
 
+		if (lru_fd < 0) {
+			// None of the descriptors in use is one we opened and
+			// can close (they come from isbuild, or from a
+			// database file opened elsewhere): the table is full.
+			return -1;
+		}
 		isclose(lru_fd);
 
 
@@ -2032,6 +2200,12 @@ cached_isclose(int isfd)
 	int isrc;
 
 	if (-1 == isfd) return ISERROR;
+
+	if (isfd < 0 || isfd >= _TT_MAX_ISFD) {
+		// not one of the descriptors _tt_db_table describes (NetISAM
+		// has more): there is nothing cached about it to keep
+		return isclose(isfd);
+	}
 
 	if (!_tt_db_table[isfd].server_has_open) {
 		// The open was not cached (perhaps because it was an

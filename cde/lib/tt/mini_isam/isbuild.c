@@ -157,6 +157,7 @@ isbuild(char *isfname, int recordlength, struct keydesc *primkey, int mode)
 		 &fab->errcode)) {
 	_seterr_errcode(&fab->errcode);
 	_fab_destroy(fab);
+	_isfd_delete(isfd);		     /* it does not describe a file */
 	return (NOISFD);
     }
 

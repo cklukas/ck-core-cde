@@ -90,6 +90,24 @@
   are not passed on, and `TOOLTALK_START_ENV` lets the owner of the session
   approve names or restrict the set to a list. A variable that cannot be set
   stops the start.
+- tt: harden rpc.ttdbserverd against malformed requests. Descriptors outside
+  the table of open files are refused, a NetISAM descriptor beyond the table
+  is closed (an open that finds nothing to close fails instead of looping), and
+  a failed `isopen` or `isbuild` no longer keeps a descriptor. A transaction
+  with a stale descriptor no longer closes a server descriptor or removes an
+  earlier log, and the log is opened without following links with its record
+  lengths checked. Records from clients are copied into zero-padded buffers;
+  missing key descriptors, short object keys, oversized session ids, empty or
+  table-less paths, and message info or cache levels stored as properties are
+  checked; `iscntl` replies from writable storage; `TT_GET_ALL_SESSIONS` no
+  longer takes a NetISAM position from the wire; transaction record lists are
+  decoded without recursion; requests that fail to decode are freed.
+- tt: keep the record lengths that `_Tt_isam_file` and `_Tt_client_isam_file`
+  read from the file (they were reset to zero afterwards, so every record
+  buffer held one byte), and move overlapping b-tree entries in mini_isam with
+  `memmove`.
+- tt: add sanitizer tests that run the real dispatcher of rpc.ttdbserverd on
+  made-up requests (`make -C lib/tt/bin/ttdbserverd check`).
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

@@ -52,9 +52,6 @@ _Tt_client_isam_file::_Tt_client_isam_file (const _Tt_string        &file,
   else {
     getStatusInfo();
   }
-
-  maxRecordLength = 0;
-  minRecordLength = 0;
 }
 
 _Tt_client_isam_file
@@ -94,8 +91,6 @@ _Tt_client_isam_file
     currentRecordLength = -1;
     currentRecordNumber = -1;
   }
-  maxRecordLength = 0;
-  minRecordLength = 0;
 }
 
 void _Tt_client_isam_file::setTtISAMFileDefaults ()
@@ -103,6 +98,10 @@ void _Tt_client_isam_file::setTtISAMFileDefaults ()
   eraseFlag = FALSE;
   fileName = (char *)NULL;
   fileMode = 0;
+  // getISAMFileInfo() sets the record lengths of an open file: these are
+  // those of a file that is not.
+  maxRecordLength = 0;
+  minRecordLength = 0;
   keyDescriptorList = new _Tt_client_isam_key_descriptor_list;
   newFlag = FALSE;
 
