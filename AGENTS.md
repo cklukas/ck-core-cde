@@ -23,6 +23,24 @@ files may add rules for their subtree, but must not weaken these requirements.
   Related fixes may share one cohesive topic commit; do not split every small
   fix into its own commit. Record validation and confirm both remote revisions.
   Release creation remains a separate action requiring an explicit request.
+- Publish the primary branch (`master`) with these commands and confirm each
+  result:
+  - rpi4: `ckgit publish --branch master --no-tags --dry-run` shows the plan; it
+    must update only `refs/heads/master`. Run the same command with `--yes`
+    instead of `--dry-run`, then compare `git ls-remote ckgit refs/heads/master`
+    with `git rev-parse master`. `ckgit publish` never forces or deletes server
+    refs, and the branch choice is not remembered.
+  - GitHub: `git push origin master`, then compare
+    `git ls-remote origin refs/heads/master` with `git rev-parse master`.
+  - Do not use `ckgit sync` for this: it uploads every local branch and tag,
+    including task branches, worktree branches and branches that belong to other
+    sessions. Publish another branch only when asked to, with
+    `ckgit publish --branch NAME`.
+  - If a push is refused before Git reports anything (for example "permission
+    denied" from the tool that runs the command), the cause is a permission rule
+    of that machine, not Git or the remote. Report it and ask for the rule to be
+    changed or for the push to be run by hand; do not look for another way to
+    run the same push.
 
 ## Maintain the changelog
 
