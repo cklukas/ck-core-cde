@@ -807,12 +807,20 @@ _Tt_db_results _Tt_db_object::processDBResults ()
   // reconnect to it
   if ((dbResults == TT_DB_ERR_DB_CONNECTION_FAILED) ||
       (dbResults == TT_DB_ERR_RPC_CONNECTION_FAILED)) {
+    // The request that failed was not done, and that is what the caller is
+    // told, whether or not the new connection is made: the result of making
+    // it is for the next request.
     if (!dbObjectDatabase.is_null()) {
-      dbHostnameGlobalMapRef.removeDB(dbObjectHostname);
-      dbObjectDatabase = dbHostnameGlobalMapRef.getDB(dbObjectHostname,
-						      dbObjectHostname,
-						      dbResults);
+      _Tt_db_results reconnect_results;
 
+      dbHostnameGlobalMapRef.removeDB(dbObjectHostname);
+      _Tt_db_client_ptr reconnected =
+	dbHostnameGlobalMapRef.getDB(dbObjectHostname,
+				     dbObjectHostname,
+				     reconnect_results);
+      if (!reconnected.is_null()) {
+	dbObjectDatabase = reconnected;
+      }
     }
   }   
   // Else if the results were OK, but the forward pointer flag was set,

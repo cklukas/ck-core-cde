@@ -1515,9 +1515,11 @@ _tt_db_results *_tt_queue_message_1 (_tt_queue_msg_args *args,
 
   _Tt_db_server_db_ptr db;
   _Tt_string           real_file = args->file;
-  if (!args->message.body.body_len ||
-      args->message.body.body_len > (u_int)INT_MAX) {
+  if (!args->message.body.body_len) {
     results = TT_DB_ERR_ILLEGAL_MESSAGE;
+  }
+  else if (args->message.body.body_len > TT_DB_LIMIT_MESSAGE) {
+    results = TT_DB_ERR_MESSAGE_TOO_LONG;
   }
   else {
     _Tt_string partition = _tt_get_file_partition(args->file);
@@ -1556,6 +1558,12 @@ _tt_db_results *_tt_queue_message_1 (_tt_queue_msg_args *args,
       // the property
       int index = property->values->count() - 1;
 
+      // The messages queued on a file are the values of one property, and
+      // the reply that lists them has room for so many.
+      if ((u_int)property->values->count() >= TT_DB_LIMIT_MESSAGES) {
+	results = TT_DB_ERR_DISK_FULL;
+      }
+
       if (index > -1) {
 	// Un-XDR the message info into the "last_message_info" object
 	// and set the new message ID to the message ID in in
@@ -1573,13 +1581,18 @@ _tt_db_results *_tt_queue_message_1 (_tt_queue_msg_args *args,
 
     // It doesn't matter if there were no queued messages, as long as
     // there were no fatal errors
-    if ((results == TT_DB_OK) ||
+    if (results == TT_DB_ERR_DISK_FULL) {
+      // (too many messages are queued already)
+    }
+    else if ((results == TT_DB_OK) ||
 	(results == TT_DB_ERR_NO_SUCH_PROPERTY)) {
       results = TT_DB_OK;
 
       // Put the new message info into the message info structure
       message_info->messageID = message_id;
-      message_info->numParts = (args->message.body.body_len / ISMAXRECLEN) + 1;
+      message_info->numParts = (args->message.body.body_len +
+				TT_DB_LIMIT_PROPERTY_VALUE - 1) /
+			       TT_DB_LIMIT_PROPERTY_VALUE;
       message_info->messageSize = args->message.body.body_len;
       _tt_get_rpc_strings(args->ptypes, message_info->ptypes);
 
@@ -1614,23 +1627,23 @@ _tt_db_results *_tt_queue_message_1 (_tt_queue_msg_args *args,
   }
   
   if (results == TT_DB_OK) {
-    int length = ISMAXRECLEN;
+    int length = TT_DB_LIMIT_PROPERTY_VALUE;
 
-    // Break up the message into ISMAXRECLEN sized parts and store
-    // as separate properties
+    // Break up the message into parts that fill a record of the property
+    // table, and store them as separate properties
     for (int i=0;
 	 (results == TT_DB_OK) && (i < message_info->numParts);
 	 i++) {
-      // If this is the last part, it is probably shorter then
-      // ISMAXRECLEN, so calculate the exact length
+      // If this is the last part, it is probably shorter than a record
+      // takes, so calculate the exact length
       if (i == message_info->numParts-1) {
-	length = message_info->messageSize - (i * ISMAXRECLEN);
+	length = message_info->messageSize - (i * TT_DB_LIMIT_PROPERTY_VALUE);
       }
 
       // Copy the message part into a buffer
       _Tt_string message_part(length);
       memcpy((char *)message_part,
-	     args->message.body.body_val+i*ISMAXRECLEN,
+	     args->message.body.body_val+i*TT_DB_LIMIT_PROPERTY_VALUE,
 	     length);
 
       // Construct a property name of the form:
@@ -1715,10 +1728,15 @@ _tt_dequeue_messages_1 (_tt_dequeue_msgs_args *args,
     _Tt_string_list_cursor dequeue_ptypes_cursor(dequeue_ptypes);
 
     // Loop through the message info property (effectively looping
-    // through the message info entries)
+    // through the message info entries).  The entries that are left, as
+    // they are or with fewer ptypes, are the new values of the property
+    // (the cursor gives the value, not the place it is kept in).
+    _Tt_string_list_ptr kept_values = new _Tt_string_list;
     _Tt_string_list_cursor values_cursor(property->values);
     while (values_cursor.next()) {
       XDR xdrs;
+      bool_t keep = TRUE;
+      _Tt_string updated_value = *values_cursor;
 
       // Un-XDR a message info structure
       xdrmem_create(&xdrs,
@@ -1728,7 +1746,6 @@ _tt_dequeue_messages_1 (_tt_dequeue_msgs_args *args,
       if (!message_info->xdr(&xdrs) || message_info->ptypes.is_null()) {
 	// A property is set by the client like any other: this is not
 	// something _tt_queue_message_1 wrote.  Drop it.
-	values_cursor.remove();
 	continue;
       }
 
@@ -1737,6 +1754,7 @@ _tt_dequeue_messages_1 (_tt_dequeue_msgs_args *args,
       bool_t ptype_matched = FALSE;
       _Tt_string_list_cursor ptypes_cursor(message_info->ptypes);
       while (ptypes_cursor.next()) {
+	dequeue_ptypes_cursor.reset();
 	while (dequeue_ptypes_cursor.next()) {
 	  if (*dequeue_ptypes_cursor == *ptypes_cursor) {
 	    ptypes_cursor.remove();
@@ -1763,7 +1781,7 @@ _tt_dequeue_messages_1 (_tt_dequeue_msgs_args *args,
 	memset((char *)message, '\0', (int)message_size);
 	for (int i=0; (results.results == TT_DB_OK) &&
 	              (i < message_info->numParts) &&
-		      ((long)i * ISMAXRECLEN <= message_size); i++) {
+		      ((long)i * TT_DB_LIMIT_PROPERTY_VALUE < message_size); i++) {
 	  // Construct the property name
 	  char name [64];
 	  sprintf(name, TT_DB_MESSAGE_PROPERTY, message_info->messageID, i);
@@ -1778,7 +1796,7 @@ _tt_dequeue_messages_1 (_tt_dequeue_msgs_args *args,
 	    _Tt_string message_bytes = (*property->values) [0];
 
 	    // Copy each succesive part into a large buffer
-	    long offset = (long)i * ISMAXRECLEN;
+	    long offset = (long)i * TT_DB_LIMIT_PROPERTY_VALUE;
 	    long length = message_bytes.len();
 	    if (length > message_size - offset) {
 	      length = message_size - offset;
@@ -1795,9 +1813,18 @@ _tt_dequeue_messages_1 (_tt_dequeue_msgs_args *args,
 	}
       }
 
-      // No more ptypes left for this message, dequeue it...
+      // No more ptypes left for this message, dequeue it, and the parts
+      // it was kept in...
       if (message_info->ptypes->is_empty()) {
-	values_cursor.remove();
+	keep = FALSE;
+	for (int i=0; i < message_info->numParts && i < (int)TT_DB_LIMIT_MESSAGE; i++) {
+	  char name [64];
+	  sprintf(name, TT_DB_MESSAGE_PROPERTY, message_info->messageID, i);
+
+	  _Tt_db_property_ptr part = new _Tt_db_property;
+	  part->name = name;
+	  (void)db->deleteFileProperty(real_file, part, accessPtr);
+	}
       }
       // Otherwise, update the property value with an updated version
       // of the message_info structure
@@ -1813,12 +1840,18 @@ _tt_dequeue_messages_1 (_tt_dequeue_msgs_args *args,
       	// XDR the message info structure into "temp_string"
       	_Tt_string temp_string((int)length);
       	xdrmem_create(&xdrs, (char *)temp_string, length, XDR_ENCODE);
-      	if (!message_info->xdr(&xdrs)) {
-	  // Update the property value
-	  *values_cursor = temp_string;
+      	if (message_info->xdr(&xdrs)) {
+	  // Update the property value: the ptypes that were sent the message
+	  // are not to be sent it again
+	  updated_value = temp_string;
 	}
       }
+
+      if (keep) {
+	kept_values->append(updated_value);
+      }
     }
+    property->values = kept_values;
 
     // Put the message info property back into the DB.  If all of
     // the message info structures have been deleted from the

@@ -953,6 +953,12 @@ Tt_status _tt_get_api_error(_Tt_db_results db_result, _Tt_api_context context)
 			case TT_DB_ERR_ILLEGAL_FILE:
 				return TT_ERR_PATH;
 
+			case TT_DB_ERR_PROPERTY_TOO_LONG:
+				return TT_ERR_PROPLEN;
+
+			case TT_DB_ERR_MESSAGE_TOO_LONG:
+				return TT_ERR_OVERFLOW;
+
 			case TT_DB_ERR_PROPS_CACHE_ERROR:
 			case TT_DB_ERR_NO_SUCH_FILE:
 			case TT_DB_ERR_ILLEGAL_OBJECT:

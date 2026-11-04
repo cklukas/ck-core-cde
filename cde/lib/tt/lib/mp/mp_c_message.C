@@ -297,7 +297,10 @@ dispatch(int observers_only)
 		args.status = TT_OK;
 	}
 
-	// queue the message if necessary. XXX what to do if queueing fails?
+	// queue the message if necessary.  A message that could not be queued
+	// is delivered to those it reached live, and the sender is told that
+	// the rest will not get it.
+	Tt_status queue_status = TT_OK;
 	if (!(args.qmsg_info).is_null()) {
 		if (_tt_mp->find_file(_file, fptr, 1) == TT_OK) {
 			dbStatus = fptr->queueMessage(args.qmsg_info->ptypes,
@@ -310,6 +313,29 @@ dispatch(int observers_only)
 						     "of internal error %d" ),
 					    (char *)fptr->getLocalPath(),
 					    dbStatus );
+				switch (dbStatus) {
+				    case TT_DB_ERR_MESSAGE_TOO_LONG:
+					queue_status = TT_ERR_OVERFLOW;
+					break;
+				    case TT_DB_ERR_DISK_FULL:
+					queue_status = TT_ERR_DBFULL;
+					break;
+				    case TT_DB_ERR_ACCESS_DENIED:
+					queue_status = TT_ERR_ACCESS;
+					break;
+				    case TT_DB_ERR_DB_CONNECTION_FAILED:
+				    case TT_DB_ERR_RPC_CONNECTION_FAILED:
+				    case TT_DB_ERR_RPC_FAILED:
+				    case TT_DB_ERR_DB_LOCKED:
+					queue_status = TT_ERR_DBAVAIL;
+					break;
+				    case TT_DB_ERR_CORRUPT_DB:
+					queue_status = TT_ERR_DBCONSIST;
+					break;
+				    default:
+					queue_status = TT_ERR_INTERNAL;
+					break;
+				}
 			}
 		}
 	}
@@ -320,6 +346,10 @@ dispatch(int observers_only)
 
 	if (args.status != TT_OK) {
 		return args.status;
+	}
+
+	if (queue_status != TT_OK) {
+		return queue_status;
 	}
 
 	return resolve_status;

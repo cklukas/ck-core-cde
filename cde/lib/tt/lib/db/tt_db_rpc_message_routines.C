@@ -36,6 +36,7 @@
 #include "util/tt_string.h"
 #include "util/tt_xdr_utils.h"
 #include "db/tt_db_rpc_message_routines.h"
+#include "db/db_server.h"
 
 // If this file is being compiled with -g, then DEFINE_NEW_AND_DELETE
 // must be defined in order to prevent a dependency on the libC library.
@@ -108,6 +109,11 @@ _tt_set_rpc_message (const _Tt_message_ptr &message,
 			return TT_DB_ERR_ILLEGAL_MESSAGE;
 		} else {
 			length = (u_int)xdrsz.getsize();
+		}
+
+		// the server queues no more than this of a message
+		if (length > TT_DB_LIMIT_MESSAGE) {
+			return TT_DB_ERR_MESSAGE_TOO_LONG;
 		}
 
 		_Tt_string temp_string((int)length);

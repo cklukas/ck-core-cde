@@ -81,6 +81,7 @@ _tt_get_file_partition_1(char **argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_file_partition_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -98,6 +99,7 @@ _tt_create_file_1(_tt_create_file_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_cache_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -115,6 +117,7 @@ _tt_create_obj_1(_tt_create_obj_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_cache_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -132,6 +135,7 @@ _tt_remove_file_1(_tt_remove_file_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -149,6 +153,7 @@ _tt_remove_obj_1(_tt_remove_obj_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -166,6 +171,7 @@ _tt_move_file_1(_tt_move_file_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -183,6 +189,7 @@ _tt_set_file_props_1(_tt_set_file_props_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_cache_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -200,6 +207,7 @@ _tt_set_file_prop_1(_tt_set_file_prop_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_cache_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -217,6 +225,7 @@ _tt_add_file_prop_1(_tt_add_file_prop_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_cache_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -234,6 +243,7 @@ _tt_delete_file_prop_1(_tt_del_file_prop_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_cache_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -251,6 +261,7 @@ _tt_get_file_prop_1(_tt_get_file_prop_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_file_prop_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -268,6 +279,7 @@ _tt_get_file_props_1(_tt_get_file_props_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_file_props_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -285,6 +297,7 @@ _tt_get_file_objs_1(_tt_get_file_objs_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_file_objs_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -302,6 +315,7 @@ _tt_set_file_access_1(_tt_set_file_access_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -319,6 +333,7 @@ _tt_get_file_access_1(_tt_get_file_access_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_file_access_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -336,6 +351,7 @@ _tt_set_obj_props_1(_tt_set_obj_props_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_obj_props_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -353,6 +369,7 @@ _tt_set_obj_prop_1(_tt_set_obj_prop_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_obj_props_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -370,6 +387,7 @@ _tt_add_obj_prop_1(_tt_add_obj_prop_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_obj_props_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -387,6 +405,7 @@ _tt_delete_obj_prop_1(_tt_del_obj_prop_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_obj_props_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -404,6 +423,7 @@ _tt_get_obj_prop_1(_tt_get_obj_prop_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_obj_prop_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -421,6 +441,7 @@ _tt_get_obj_props_1(_tt_get_obj_props_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_obj_props_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -438,6 +459,7 @@ _tt_set_obj_type_1(_tt_set_obj_type_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -455,6 +477,7 @@ _tt_get_obj_type_1(_tt_get_obj_type_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_obj_type_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -489,6 +512,7 @@ _tt_get_obj_file_1(_tt_get_obj_file_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_obj_file_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -506,6 +530,7 @@ _tt_set_obj_access_1(_tt_set_obj_access_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -523,6 +548,7 @@ _tt_get_obj_access_1(_tt_get_obj_access_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_obj_access_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -540,6 +566,7 @@ _tt_is_file_in_db_1(_tt_is_file_in_db_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_is_file_in_db_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -557,6 +584,7 @@ _tt_is_obj_in_db_1(_tt_is_obj_in_db_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_is_obj_in_db_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -574,6 +602,7 @@ _tt_queue_message_1(_tt_queue_msg_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_db_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);
@@ -591,6 +620,7 @@ _tt_dequeue_messages_1(_tt_dequeue_msgs_args *argp, CLIENT *clnt)
 				     (xdrproc_t) xdr_tt_dequeue_msgs_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
+		rpc_result = result;
 		return (NULL);
 	}
 	return (&res);

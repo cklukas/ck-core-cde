@@ -68,6 +68,56 @@ const int              TT_DB_RPC_RETRIES = 3;
 
 #include "db/tt_db_client_consts.h"
 
+// The server keeps a property value in one record of its table, which holds
+// no more than TT_DB_LIMIT_PROPERTY_VALUE bytes of it.  A value above that is
+// refused here, with a result that says so, rather than failing when it is
+// sent.
+static bool
+propertyFits (const _Tt_db_property_ptr &property)
+{
+	if (property.is_null()) {
+		return true;
+	}
+	_Tt_string_list_cursor values_cursor(property->values);
+	while (values_cursor.next()) {
+		if ((u_int)(*values_cursor).len() > TT_DB_LIMIT_PROPERTY_VALUE) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static bool
+propertiesFit (const _Tt_db_property_list_ptr &properties)
+{
+	if (properties.is_null()) {
+		return true;
+	}
+	_Tt_db_property_list_cursor properties_cursor(properties);
+	while (properties_cursor.next()) {
+		if (!propertyFits(*properties_cursor)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+// The result of a request that got no answer: the connection went away or
+// the call timed out, or what was sent or what came back did not fit the
+// protocol.
+_Tt_db_results _Tt_db_client::rpcFailure () const
+{
+	switch (_tt_get_rpc_result()) {
+	    case RPC_CANTENCODEARGS:
+	    case RPC_CANTDECODEARGS:
+	    case RPC_CANTDECODERES:
+		return TT_DB_ERR_RPC_FAILED;
+
+	    default:
+		return TT_DB_ERR_RPC_CONNECTION_FAILED;
+	}
+}
+
 _Tt_db_client::_Tt_db_client()
 {
   _Tt_string db_hostname = _tt_gethostname();
@@ -343,7 +393,7 @@ _Tt_db_client::getFilePartition (const _Tt_string &file_path,
 		_tt_get_file_partition_1(temp_path_ptr, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	partition = results->partition;
@@ -362,6 +412,9 @@ _Tt_db_client::createFile (const _Tt_string               &file,
 			   const _Tt_db_access_ptr	  &access,
 			   int                            &cache_level)
 {
+	if (!propertiesFit(properties)) {
+		return TT_DB_ERR_PROPERTY_TOO_LONG;
+	}
 	_tt_create_file_args args;
 	
 	args.file = (char *)file;
@@ -374,7 +427,7 @@ _Tt_db_client::createFile (const _Tt_string               &file,
 	_tt_free_rpc_properties(args.properties);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -389,6 +442,9 @@ _Tt_db_client::createObject (const _Tt_string               &file,
 			     const _Tt_db_access_ptr	    &access,
 			     int                            &cache_level)
 {
+	if (!propertiesFit(properties)) {
+		return TT_DB_ERR_PROPERTY_TOO_LONG;
+	}
 	_tt_create_obj_args args;
 	
 	args.file = (char *)file;
@@ -403,7 +459,7 @@ _Tt_db_client::createObject (const _Tt_string               &file,
 	_tt_free_rpc_properties(args.properties);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -422,7 +478,7 @@ _Tt_db_client::removeFile (const _Tt_string &file)
 		_tt_remove_file_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	return *results;
 }
@@ -443,7 +499,7 @@ _Tt_db_client::removeObject (const _Tt_string &objid,
 		_tt_remove_obj_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	return *results;
 }
@@ -462,7 +518,7 @@ _Tt_db_client::moveFile (const _Tt_string &file,
 		_tt_move_file_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	return *results;
 }
@@ -472,6 +528,9 @@ _Tt_db_client::setFileProperty (const _Tt_string          &file,
 				const _Tt_db_property_ptr &property,
 				int                       &cache_level)
 {
+	if (!propertyFits(property)) {
+		return TT_DB_ERR_PROPERTY_TOO_LONG;
+	}
 	_tt_set_file_prop_args args;
 	
 	args.file = (char *)file;
@@ -484,7 +543,7 @@ _Tt_db_client::setFileProperty (const _Tt_string          &file,
 	_tt_free_rpc_property(args.property);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -496,6 +555,9 @@ _Tt_db_results _Tt_db_client
 		     const _Tt_db_property_list_ptr &properties,
 		     int                            &cache_level)
 {
+	if (!propertiesFit(properties)) {
+		return TT_DB_ERR_PROPERTY_TOO_LONG;
+	}
 	_tt_set_file_props_args args;
 	
 	args.file = (char *)file;
@@ -508,7 +570,7 @@ _Tt_db_results _Tt_db_client
 	_tt_free_rpc_properties(args.properties);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -521,6 +583,9 @@ _Tt_db_client::addFileProperty (const _Tt_string          &file,
 				bool_t                     unique,
 				int                       &cache_level)
 {
+	if (!propertyFits(property)) {
+		return TT_DB_ERR_PROPERTY_TOO_LONG;
+	}
 	_tt_add_file_prop_args args;
 	
 	args.file = (char *)file;
@@ -535,7 +600,7 @@ _Tt_db_client::addFileProperty (const _Tt_string          &file,
 	_tt_free_rpc_property(args.property);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -559,7 +624,7 @@ _Tt_db_client::deleteFileProperty (const _Tt_string          &file,
 	_tt_free_rpc_property(args.property);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -585,7 +650,7 @@ _Tt_db_client::getFileProperty (const _Tt_string    &file,
 		_tt_get_file_prop_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -612,7 +677,7 @@ getFileProperties (const _Tt_string         &file,
 		_tt_get_file_props_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -639,7 +704,7 @@ _Tt_db_client::getFileObjects (const _Tt_string    &file,
 		_tt_get_file_objs_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -664,7 +729,7 @@ _Tt_db_client::setFileAccess (const _Tt_string        &file,
 		_tt_set_file_access_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	return *results;
 }
@@ -683,7 +748,7 @@ _Tt_db_client::getFileAccess (const _Tt_string  &file,
 		_tt_get_file_access_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	_tt_get_rpc_access(results->access, access);
@@ -696,6 +761,9 @@ _Tt_db_client::setObjectProperty (const _Tt_string          &objid,
 				  _Tt_db_property_list_ptr  &properties,
 				  int                       &cache_level)
 {
+	if (!propertyFits(property)) {
+		return TT_DB_ERR_PROPERTY_TOO_LONG;
+	}
 	_Tt_db_results retval;	
 	_tt_set_obj_prop_args args;
 	
@@ -710,7 +778,7 @@ _Tt_db_client::setObjectProperty (const _Tt_string          &objid,
 	_tt_free_rpc_property(args.property);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -726,6 +794,9 @@ setObjectProperties (const _Tt_string               &objid,
 		     _Tt_db_property_list_ptr       &out_properties,
 		     int                            &cache_level)
 {
+	if (!propertiesFit(in_properties)) {
+		return TT_DB_ERR_PROPERTY_TOO_LONG;
+	}
 	_Tt_db_results retval;	
 	_tt_set_obj_props_args args;
 	
@@ -740,7 +811,7 @@ setObjectProperties (const _Tt_string               &objid,
 	_tt_free_rpc_properties(args.properties);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -757,6 +828,9 @@ _Tt_db_client::addObjectProperty (const _Tt_string          &objid,
 				  _Tt_db_property_list_ptr  &properties,
 				  int                       &cache_level)
 {
+	if (!propertyFits(property)) {
+		return TT_DB_ERR_PROPERTY_TOO_LONG;
+	}
 	_Tt_db_results retval;	
 	_tt_add_obj_prop_args args;
 	
@@ -772,7 +846,7 @@ _Tt_db_client::addObjectProperty (const _Tt_string          &objid,
 	_tt_free_rpc_property(args.property);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -802,7 +876,7 @@ deleteObjectProperty (const _Tt_string          &objid,
 	_tt_free_rpc_property(args.property);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	_tt_get_rpc_properties(results->properties, properties);
@@ -831,7 +905,7 @@ _Tt_db_client::getObjectProperty (const _Tt_string    &objid,
 		_tt_get_obj_prop_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -858,7 +932,7 @@ getObjectProperties (const _Tt_string         &objid,
 		_tt_get_obj_props_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	cache_level = results->cache_level;
@@ -882,7 +956,7 @@ _Tt_db_results _Tt_db_client::setObjectType (const _Tt_string &objid,
 		_tt_set_obj_type_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	return *results;
 }
@@ -900,7 +974,7 @@ _Tt_db_results _Tt_db_client::getObjectType (const _Tt_string &objid,
 	_tt_obj_type_results *results;
 	results = _tt_get_obj_type_1(&args, dbServer);
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	retval = results->results;
 	otype = results->otype;
@@ -922,7 +996,7 @@ _Tt_db_results _Tt_db_client::setObjectFile (const _Tt_string &objid,
 		_tt_set_obj_file_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	return *results;
 }
@@ -942,7 +1016,7 @@ _Tt_db_results _Tt_db_client::getObjectFile (const _Tt_string &objid,
 		_tt_get_obj_file_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	retval = results->results;
@@ -966,7 +1040,7 @@ _Tt_db_client::setObjectAccess (const _Tt_string        &objid,
 		_tt_set_obj_access_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	return *results;
 }
@@ -985,7 +1059,7 @@ _Tt_db_client::getObjectAccess (const _Tt_string  &objid,
 		_tt_get_obj_access_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	_tt_get_rpc_access(results->access, access);
@@ -1006,7 +1080,7 @@ isFileInDatabase (const _Tt_string &file,
 		_tt_is_file_in_db_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	directory_flag = results->directory_flag;
@@ -1028,7 +1102,7 @@ isObjectInDatabase (const _Tt_string &objid,
 		_tt_is_obj_in_db_1(&args, dbServer);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	forward_pointer = results->forward_pointer;
@@ -1046,8 +1120,10 @@ _Tt_db_client::queueMessage (const _Tt_string          &file,
 	
 	args.file = (char *)file;
 	_tt_set_rpc_strings(ptypes, args.ptypes);
-	if (_tt_set_rpc_message(message, args.message) != TT_DB_OK) {
-		return (TT_DB_ERR_ILLEGAL_MESSAGE);
+	_Tt_db_results packed = _tt_set_rpc_message(message, args.message);
+	if (packed != TT_DB_OK) {
+		_tt_free_rpc_strings(args.ptypes);
+		return packed;
 	}
 	
 	createAuth();
@@ -1057,7 +1133,7 @@ _Tt_db_client::queueMessage (const _Tt_string          &file,
 	_tt_free_rpc_message(args.message);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	return *results;
 }
@@ -1078,7 +1154,7 @@ _Tt_db_client::dequeueMessages (const _Tt_string          &file,
 	_tt_free_rpc_strings(args.ptypes);
 	
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	_tt_get_rpc_messages(results->messages, messages);
@@ -1128,7 +1204,7 @@ file_netfile(const _Tt_string &file, _Tt_string &netfile)
 	//XXX - this needs to detect that we tried contacting an old dbserver
 		//	so we can return TT_ERR_UNIMP
 			if (!results) {
-				return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+				return rpcFailure();
 			}
 	
 	// prepare what we're passing back to the caller.
@@ -1157,7 +1233,7 @@ netfile_file(const _Tt_string &netfile, _Tt_string &file)
 	// XXX - this needs to detect that we tried contacting an old dbserver
 	//	so we can return TT_ERR_UNIMP
 	if (!results) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	
 	// prepare what we're passing back to the caller.
@@ -1221,7 +1297,7 @@ _Tt_db_client::delete_session(_Tt_string session)
 
 	res = _tt_delete_session_1(&args, dbServer);
 	if (!res) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	return TT_DB_OK;
 }
@@ -1234,7 +1310,7 @@ _Tt_db_client::garbage_collect_in_server()
 
 	res = _tt_garbage_collect_1(NULL, dbServer);
 	if (!res) {
-		return (TT_DB_ERR_RPC_CONNECTION_FAILED);
+		return rpcFailure();
 	}
 	return results;
 }

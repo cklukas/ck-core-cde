@@ -98,7 +98,7 @@ fake_reply(SVCXPRT *, struct rpc_msg *msg)
 	if (g_reply.stat != SUCCESS) {
 		return TRUE;
 	}
-	static char out[1 << 17];
+	static char out[1 << 26];
 	XDR xdrs;
 
 	xdrmem_create(&xdrs, out, sizeof(out), XDR_ENCODE);
@@ -161,7 +161,7 @@ rpc(u_long proc, const std::string &request)
 static std::string
 encode(xdrproc_t proc, void *args)
 {
-	static char	buf[1 << 20];
+	static char	buf[1 << 26];
 	XDR		xdrs;
 
 	xdrmem_create(&xdrs, buf, sizeof(buf), XDR_ENCODE);
@@ -2183,6 +2183,150 @@ case_access_bits(void)
 	}
 }
 
+/* ---- queued messages ------------------------------------------------------------ */
+
+static int
+queue_message(const std::string &file, const std::vector<std::string> &ptypes,
+	      const std::string &body)
+{
+	std::vector<std::string> names = ptypes;
+	std::vector<_tt_string> strs(names.size());
+	std::string b = body;
+
+	for (size_t i = 0; i < names.size(); i++) {
+		strs[i].value = &names[i][0];
+	}
+	_tt_queue_msg_args qm;
+	memset(&qm, 0, sizeof(qm));
+	qm.file = (char *)file.c_str();
+	qm.ptypes.values_len = strs.size();
+	qm.ptypes.values_val = &strs[0];
+	qm.message.body.body_len = b.size();
+	qm.message.body.body_val = &b[0];
+	return status_of(rpc(TT_QUEUE_MESSAGE,
+			     encode((xdrproc_t)xdr_tt_queue_msg_args, &qm)));
+}
+
+/* the messages queued for the ptypes, taken off the queue */
+static int
+dequeue_messages(const std::string &file, const std::vector<std::string> &ptypes,
+		 std::vector<std::string> *out)
+{
+	std::vector<std::string> names = ptypes;
+	std::vector<_tt_string> strs(names.size());
+
+	for (size_t i = 0; i < names.size(); i++) {
+		strs[i].value = &names[i][0];
+	}
+	_tt_dequeue_msgs_args dq;
+	memset(&dq, 0, sizeof(dq));
+	dq.file = (char *)file.c_str();
+	dq.ptypes.values_len = strs.size();
+	dq.ptypes.values_val = &strs[0];
+	Reply r = rpc(TT_DEQUEUE_MESSAGES,
+		      encode((xdrproc_t)xdr_tt_dequeue_msgs_args, &dq));
+	_tt_dequeue_msgs_results res;
+	XDR xdrs;
+
+	out->clear();
+	if (!answered(r)) {
+		return INT_MIN;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_tt_dequeue_msgs_results(&xdrs, &res)) {
+		return INT_MIN;
+	}
+	for (u_int i = 0; i < res.messages.messages_len; i++) {
+		out->push_back(std::string(res.messages.messages_val[i].body.body_val,
+					   res.messages.messages_val[i].body.body_len));
+	}
+	int status = res.results;
+	xdr_free((xdrproc_t)xdr_tt_dequeue_msgs_results, (char *)&res);
+	return status;
+}
+
+/* A message is kept in parts that fill a record of the property table (the
+   record also holds the key of the file and the name of the property, so the
+   part is the rest of it): a message of any size up to the limit comes back
+   whole, to each ptype it was queued for and once, whatever the order of the
+   ptypes is, and the parts are not kept after the last of them has it. */
+static void
+case_queued_messages(void)
+{
+	std::string file = start_partition("queued-messages");
+	const size_t part = TT_DB_LIMIT_PROPERTY_VALUE;
+	const size_t sizes[] = { 1, 1000, 16000, 30000, part - 1, part, part + 1,
+				 2 * part, 100 * 1024, 2 * 1024 * 1024,
+				 TT_DB_LIMIT_MESSAGE };
+	std::vector<std::string> both, onlyb, onlya, got;
+
+	both.push_back("ptype-a");
+	both.push_back("ptype-b");
+	onlya.push_back("ptype-a");
+	onlyb.push_back("ptype-b");
+	put(g_dir + "/file", "the file");
+	create_file(file);
+
+	for (size_t i = 0; i < sizeof(sizes) / sizeof(sizes[0]); i++) {
+		std::string body(sizes[i], '\0');
+
+		for (size_t k = 0; k < body.size(); k++) {
+			body[k] = (char)((k * 7 + sizes[i]) & 0xff);
+		}
+		CHECK(queue_message(file, both, body) == TT_DB_OK);
+
+		/* the parts are in the database until both have the message */
+		CHECK(get_file_prop(file, "_TT_MSG_1_0") == TT_DB_OK);
+
+		/* the second ptype of the message first */
+		CHECK(dequeue_messages(file, onlyb, &got) == TT_DB_OK);
+		CHECK(got.size() == 1);
+		if (got.size() == 1) {
+			CHECK(got[0] == body);
+			if (got[0] != body) {
+				fprintf(stderr, "  size %zu: %zu bytes came back\n",
+					sizes[i], got[0].size());
+			}
+		}
+		CHECK(dequeue_messages(file, onlyb, &got) == TT_DB_OK);
+		CHECK(got.empty());
+		CHECK(get_file_prop(file, "_TT_MSG_1_0") == TT_DB_OK);
+
+		CHECK(dequeue_messages(file, onlya, &got) == TT_DB_OK);
+		CHECK(got.size() == 1 && got[0] == body);
+		CHECK(dequeue_messages(file, both, &got) == TT_DB_OK);
+		CHECK(got.empty());
+		CHECK(get_file_prop(file, "_TT_MSG_1_0") == TT_DB_ERR_NO_SUCH_PROPERTY);
+	}
+
+	/* two messages, dequeued by one call for both ptypes, in the order
+	   they were queued */
+	CHECK(queue_message(file, onlya, "first") == TT_DB_OK);
+	CHECK(queue_message(file, both, "second") == TT_DB_OK);
+	CHECK(dequeue_messages(file, both, &got) == TT_DB_OK);
+	CHECK(got.size() == 2 && got[0] == "first" && got[1] == "second");
+
+	/* more than the limit is not queued; an empty message is none */
+	Raw big;
+	big.string(file.c_str()).u32(1).string("ptype-a").bytes(std::string(TT_DB_LIMIT_MESSAGE + 1, 'x'));
+	Reply r = rpc(TT_QUEUE_MESSAGE, big.s);
+	CHECK(r.replied && r.stat == GARBAGE_ARGS);
+	CHECK(queue_message(file, onlya, "") == TT_DB_ERR_ILLEGAL_MESSAGE);
+
+	/* so many messages are queued that the reply that lists them would be
+	   too long for the protocol: no more are queued */
+	Raw many;
+	many.string(file.c_str()).string("_TT_QUEUED_MSGS").u32(TT_DB_LIMIT_MESSAGES);
+	for (u_int k = 0; k < TT_DB_LIMIT_MESSAGES; k++) {
+		many.bytes("junk");
+	}
+	access_of(many);
+	r = rpc(TT_SET_FILE_PROP, many.s);
+	CHECK(answered(r));
+	CHECK(queue_message(file, onlya, "one more") == TT_DB_ERR_DISK_FULL);
+}
+
 /* ---- the directory of the tables ---------------------------------------------- */
 
 /* the status of a request to make a file */
@@ -2362,6 +2506,7 @@ static const struct {
 	{ "path-names", case_path_names },
 	{ "results-after-failure", case_results_after_failure },
 	{ "malformed-names", case_malformed_names },
+	{ "queued-messages", case_queued_messages },
 	{ "table-directory", case_table_directory },
 	{ "move-file", case_move_file },
 	{ "known-partitions", case_known_partitions },

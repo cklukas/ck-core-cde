@@ -51,33 +51,45 @@
  * length tells them to before they read what it is the length of, so a few
  * bytes of request can demand the whole of a 32-bit length.  Every string,
  * byte array and list of the protocol is therefore bounded, and the XDR
- * routines refuse a longer one, in a request and in a reply.  Each limit is
- * larger than anything a client of libtt sends or a server of it replies with.
+ * routines refuse a longer one, in a request and in a reply.
  *
  * Names are bounded by what the database stores of them: a file is named
  * "host:path", a path is at most MAXPATHLEN, the name of a property is the
- * MAX_PROP_LENGTH bytes of its field in a record, and a session id is the value
- * of a record (TT_DB_LIMIT_RECORD is ISMAXRECLEN of mini_isam/isam.h,
- * which db_server_xdr.C checks).  The object id of an object is its key
- * (below 100 characters in base 64), the file system type, the host and the
- * partition.  Type names are those of ptypes and otypes, which are identifiers.
+ * MAX_PROP_LENGTH bytes of its field in a record.  The object id of an object
+ * is its key (below 100 characters in base 64), the file system type, the host
+ * and the partition.  Type names are those of ptypes and otypes, which are
+ * identifiers.  A netfile holds the host and two paths.
  *
- * Lists are bounded by what the tables could hold in a reply: libtt writes a
- * message in parts of ISMAXRECLEN bytes (the message of a client of libtt
- * is never above a few kilobytes: 16 MiB is 512 records), keeps one value per
- * queued message and one per session in a property, and one record per object.
- * The sizes of the lists in a request are in the same proportion as those of
- * the lists in a reply, as one routine decodes both.
+ * A value is bounded by the record that holds it: a record of the property
+ * table is at most TT_DB_LIMIT_RECORD bytes (ISMAXRECLEN of mini_isam/isam.h,
+ * which db_server_xdr.C checks) and starts with the key of the file or object
+ * and the name of the property, and what is left is the most that a property
+ * value, a session id or a part of a queued message can be.  A message is kept
+ * in as many such parts as it takes, so it is bounded by TT_DB_LIMIT_MESSAGE
+ * only (16 MiB is 515 records).
+ *
+ * Lists are bounded by what a reply could carry of what the tables hold: one
+ * value per queued message and one per session in a property, one record per
+ * object.  The server refuses to queue the message that would make the list
+ * of the queued messages of a file longer than a reply takes.  The sizes of the
+ * lists in a request are in the same proportion as those of the lists in a
+ * reply, as one routine decodes both.
  */
 const u_int TT_DB_LIMIT_RECORD			= 32767;
 const u_int TT_DB_LIMIT_PATH			= MAXPATHLEN;
 const u_int TT_DB_LIMIT_FILE			= HOST_LENGTH + 1 + MAXPATHLEN;
+/* a netfile is "TTN0HOST=a-b,RPATH=c-d,LPATH=e-f:" and the host, the path on
+   the host and the path the client knows the file by (api_filemap.C) */
+const u_int TT_DB_LIMIT_NETFILE			= 128 + HOST_LENGTH + 2 * MAXPATHLEN;
 const u_int TT_DB_LIMIT_OBJID			= 128 + HOST_LENGTH + MAXPATHLEN;
 const u_int TT_DB_LIMIT_TYPE			= 1024;
 const u_int TT_DB_LIMIT_PROPERTY_NAME		= MAX_PROP_LENGTH;
-const u_int TT_DB_LIMIT_SESSION			= TT_DB_LIMIT_RECORD -
+/* what a record of the property table holds of a value: the rest of the
+   record after the key and the name.  A property value, a session id and a
+   part of a queued message each are one record. */
+const u_int TT_DB_LIMIT_PROPERTY_VALUE		= TT_DB_LIMIT_RECORD -
 						  OID_KEY_LENGTH - MAX_PROP_LENGTH;
-const u_int TT_DB_LIMIT_PROPERTY_VALUE		= 1024 * 1024;
+const u_int TT_DB_LIMIT_SESSION			= TT_DB_LIMIT_PROPERTY_VALUE;
 const u_int TT_DB_LIMIT_MESSAGE			= 16 * 1024 * 1024;
 
 const u_int TT_DB_LIMIT_PROPERTIES		= 1 << 16;
@@ -85,7 +97,6 @@ const u_int TT_DB_LIMIT_PROPERTY_VALUES		= 1 << 16;
 const u_int TT_DB_LIMIT_PTYPES			= 1 << 10;
 const u_int TT_DB_LIMIT_OBJECTS			= 1 << 20;
 const u_int TT_DB_LIMIT_MESSAGES		= 1 << 16;
-const u_int TT_DB_LIMIT_SPEC_PROPERTIES		= 16;
 
 typedef enum _Tt_db_results _tt_db_results;
 bool_t xdr_tt_db_results(XDR *, _tt_db_results *);

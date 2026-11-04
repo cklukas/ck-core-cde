@@ -654,12 +654,20 @@ _Tt_db_results _Tt_db_file::processDBResults ()
       (dbResults == TT_DB_ERR_RPC_CONNECTION_FAILED) ||
       (dbResults == TT_DB_ERR_RPC_FAILED) ||
       (dbResults == TT_DB_ERR_DB_OPEN_FAILED)) {
+    // The request that failed was not done, and that is what the caller is
+    // told, whether or not the new connection is made: the result of making
+    // it is for the next request.
     if (!dbFileDatabase.is_null()) {
-      dbHostnameGlobalMapRef.removeDB(dbFileHostname);
-      dbFileDatabase = dbHostnameGlobalMapRef.getDB(dbFileHostname,
-						    dbFileHostname,
-						    dbResults);
+      _Tt_db_results reconnect_results;
 
+      dbHostnameGlobalMapRef.removeDB(dbFileHostname);
+      _Tt_db_client_ptr reconnected =
+	dbHostnameGlobalMapRef.getDB(dbFileHostname,
+				     dbFileHostname,
+				     reconnect_results);
+      if (!reconnected.is_null()) {
+	dbFileDatabase = reconnected;
+      }
     }
   }
 

@@ -410,6 +410,29 @@
   partitions the server takes from the mount table (the part of
   `isKnownPartition` that no case reached) and the limits of the XDR routines
   when the server encodes a reply.
+- tt: tell the caller when a request to the database server fails. After a
+  failed request `_Tt_db_object` and `_Tt_db_file` made a new connection and
+  returned the result of that, `TT_OK`, in place of the failure: `tt_spec_write`
+  of a property value the client could not send returned `TT_OK` and stored
+  nothing. They now keep the failure, and a request that cannot be encoded or
+  whose reply cannot be decoded is `TT_DB_ERR_RPC_FAILED`, apart from a lost
+  connection.
+- tt: make the sizes rpc.ttdbserverd accepts the sizes its tables hold. A record
+  of the property table is at most `ISMAXRECLEN` bytes and starts with the key
+  and the name of the property, but property values and the parts of a queued
+  message were allowed to be as long as a record or longer (a value of 1 MiB),
+  so values from 32672 bytes and every queued message above that failed inside
+  the database, and the sender of a message that could not be queued was told
+  `TT_OK`. A value is limited to what is left of a record (32671 bytes on a
+  64-bit build; `TT_ERR_PROPLEN` for a spec, refused by libtt before it sends),
+  a message is kept in parts of that size and any message up to 16 MiB queues and
+  comes back whole, and a message that cannot be queued gives the sender
+  `TT_ERR_OVERFLOW` or `TT_ERR_DBFULL`. A file takes no more than 65536 queued
+  messages. Taking queued messages compared only the first ptype of a message
+  and never stored the ptypes left, so a message queued for several ptypes was
+  found by the first only and delivered again to the ptype that had it; the
+  parts of a message are removed once the last ptype has it. A netfile may be as
+  long as the name `tt_file_netfile` makes of a host and two paths.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

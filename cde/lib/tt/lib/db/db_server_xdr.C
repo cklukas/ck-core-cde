@@ -79,7 +79,7 @@ xdr_tt_objid_name(XDR *xdrs, char **sp)
 
 bool_t xdr_tt_file_netfile_args(XDR * xdrs, _tt_file_netfile_args * argp)
 {
-        if (!xdr_tt_cstring(xdrs, &argp->file_or_netfile, TT_DB_LIMIT_FILE)) {
+        if (!xdr_tt_cstring(xdrs, &argp->file_or_netfile, TT_DB_LIMIT_NETFILE)) {
                 return (FALSE);
         }
 	return (TRUE);
@@ -88,7 +88,7 @@ bool_t xdr_tt_file_netfile_args(XDR * xdrs, _tt_file_netfile_args * argp)
 bool_t
 xdr_tt_file_netfile_results(XDR * xdrs, _tt_file_netfile_results * argp)
 {
-        if (!xdr_tt_cstring(xdrs, &argp->result_string, TT_DB_LIMIT_FILE)) {
+        if (!xdr_tt_cstring(xdrs, &argp->result_string, TT_DB_LIMIT_NETFILE)) {
                 return (FALSE);
         }
         if (!xdr_tt_db_results(xdrs, &argp->results)) {

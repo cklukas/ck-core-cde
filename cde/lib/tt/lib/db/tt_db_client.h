@@ -307,6 +307,7 @@ private:
   sockaddr_in        dbSocket;
 #endif
 
+  _Tt_db_results rpcFailure () const;
   void createAuth ();
   void setTtDBDefaults ();
   _Tt_db_results connectToDB (const _Tt_string&);

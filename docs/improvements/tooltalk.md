@@ -276,12 +276,13 @@ by the server and libtt, so the limits hold for a reply as well as for a request
 | --- | --- | --- |
 | Path, partition | `MAXPATHLEN` (4096 on Linux) | the longest path of the host |
 | File name `host:path` | `HOST_LENGTH` + 1 + `MAXPATHLEN` (5121) | the form in which libtt names a file |
+| Netfile | 128 + `HOST_LENGTH` + 2 * `MAXPATHLEN` (9344) | the prefix and the host and two paths that `tt_file_netfile` puts in one name |
 | Object id | 128 + `HOST_LENGTH` + `MAXPATHLEN` (5248) | key, file system type, host, partition and three colons |
 | Type name (ptype, otype) | 1024 | identifiers |
 | Property name | `MAX_PROP_LENGTH` (64) | the field of a record that holds a name; the server stores no more of one |
-| Session id | 32767 less the key and name (32671 on a 64-bit build) | what a record of at most `ISMAXRECLEN` (32767) bytes holds after its key and name |
-| Value of a property | 1 MiB | a record holds at most `ISMAXRECLEN` bytes |
-| Body of a message | 16 MiB | libtt marshals the whole message into the body, and the server stores it in properties of `ISMAXRECLEN` bytes each: 513 of them |
+| Value of a property, session id, part of a queued message | 32767 less the key and the name (32671 on a 64-bit build, 32687 on a 32-bit one) | what a record of at most `ISMAXRECLEN` (32767) bytes holds after its key and the name of the property |
+| Body of a message | 16 MiB | libtt marshals the whole message into the body, and the server stores it in properties of the size above: 515 of them |
+| Messages queued on a file | 65536 | one value of one property each, and a reply that lists them |
 | Properties of a file or object | 65536 | one record each |
 | Values of a property | 65536 | one per queued message or joined session |
 | Ptypes of a message | 1024 | |
@@ -291,7 +292,13 @@ by the server and libtt, so the limits hold for a reply as well as for a request
 The limits are chosen far above what libtt sends or the server answers with. A
 request that exceeds one fails to decode, like any other malformed request, and
 the client gets a decode error. A name of a property longer than 64 characters,
-which the server used to cut off without saying so, is refused now. The test has
+which the server used to cut off without saying so, is refused now. A value of a
+property is one record of the table, so it holds no more than the record has room
+for after its key and the name; the limit used to be 1 MiB, which no record can
+hold, and a value above the room of a record failed inside the database with an
+internal error. libtt now refuses a value above the limit before it sends
+anything (`TT_ERR_PROPLEN` for a spec), and a request for more is refused by the
+server in the same way. The test has
 the allocator refuse any request for more than 64 MiB, replaces every length,
 count and small integer of a request of each procedure with huge values, and
 decodes each limit and the size above it.
@@ -302,6 +309,37 @@ pointer has none, so the server answered with a system error instead of the
 result, and a client could not send a request to remove an object that has no
 forward pointer. A string that is not there is now sent as the empty string,
 which the receiver takes for no string.
+
+### Errors of the connection
+
+When a request to the server fails (the connection went away, the call timed
+out, what was sent did not fit the protocol), libtt takes the connection for
+lost and makes a new one for the next request. `_Tt_db_object` and `_Tt_db_file`
+put the result of making that connection in the place of the failure, so a
+caller whose request had not been done was told that it had: `tt_spec_write` of
+a property value that the client could not send returned `TT_OK` and stored
+nothing. The caller is now told the failure. A request that could not be encoded
+or whose reply could not be decoded is `TT_DB_ERR_RPC_FAILED`, which is told
+apart from a connection that failed.
+
+### Queued messages
+
+A message that a sender addresses to a ptype and a file is kept on the file until
+a process of the ptype takes it: its body is stored in as many parts as it takes
+to fill records of the property table (`TT_DB_LIMIT_PROPERTY_VALUE` bytes each),
+and a value of the property `_TT_QUEUED_MSGS` says which message it is, how
+long, in how many parts, and for which ptypes. The parts were as long as a whole
+record (`ISMAXRECLEN`), which leaves no room for the key and the name, so the
+database refused any part that was full: a message longer than 32671 bytes did
+not queue, and the sender was not told. The parts are now what a record holds,
+messages up to 16 MiB are queued and come back whole, and a message that cannot
+be queued (one that is too long, or that would be the 65537th queued on the
+file) is reported to the sender, who gets `TT_ERR_OVERFLOW` (or
+`TT_ERR_DBFULL`). Taking a message also did two things wrong: it compared only
+the first ptype of a message with those that ask for it, so a message queued for
+several ptypes was found only by the first, and it never wrote back the ptypes
+that were left, so a message was delivered again to the ptype that had it
+already. The parts of a message are removed once the last ptype has it.
 
 ### Mount points and paths
 

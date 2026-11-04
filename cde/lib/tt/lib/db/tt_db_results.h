@@ -75,7 +75,13 @@ enum _Tt_db_results {
   // he/she tried to contact, so the user can
   // differentiate this from the case where the
   // RPC call failed due to the server not running, etc.
-  TT_DB_ERR_RPC_UNIMP			= 27
+  TT_DB_ERR_RPC_UNIMP			= 27,
+
+  // A property value does not fit a record of the database, a message is
+  // longer than the database takes, or a list the database keeps (the
+  // messages queued on a file) is as long as a reply can carry.
+  TT_DB_ERR_PROPERTY_TOO_LONG		= 28,
+  TT_DB_ERR_MESSAGE_TOO_LONG		= 29
 };
 
 #endif // _TT_DB_RESULTS_H
