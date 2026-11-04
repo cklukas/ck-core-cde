@@ -512,7 +512,12 @@ RegisterClientProc (
 
 		for (pClientRec = connectedList; pClientRec != NULL; 
 			pClientRec = pClientRec->next) {
-			if (!strcmp (pClientRec->clientId, previousId)) {
+			/*
+			 * A connection that has not registered yet (this
+			 * client is one) has no id.
+			 */
+			if (pClientRec != client && pClientRec->clientId &&
+			    !strcmp (pClientRec->clientId, previousId)) {
 #ifdef DEBUG
 				(void) printf ("\tAlready connected.\n");
 #endif /* DEBUG */
@@ -529,7 +534,8 @@ RegisterClientProc (
 		for (pDbRec = smXSMP.xsmpDbList; 
 		     pDbRec != NULL && found == False; 
 		     pDbRec = pDbRec->next) {
-			if (!strcmp (pDbRec->clientId, previousId)) {
+			if (pDbRec->clientId &&
+			    !strcmp (pDbRec->clientId, previousId)) {
 #ifdef DEBUG
 				(void) printf ("\tClient in DB.\n");
 #endif /* DEBUG */
@@ -553,8 +559,15 @@ RegisterClientProc (
 
 	client->clientId = strdup (id);
 	pchar = SmsClientHostName (smsConn);
-	if (pchar)
-		client->clientHost = (strchr (pchar, '/')) + 1;
+	if (pchar) {
+		/*
+		 * The name is "<transport>/<host>:<port>"; a name without a
+		 * transport is used as it is.
+		 */
+		char		*slash = strchr (pchar, '/');
+
+		client->clientHost = slash ? slash + 1 : pchar;
+	}
 	else
 		client->clientHost = pchar;
 	client->active = True;
@@ -1176,13 +1189,56 @@ void CloseDownClient (
 }
 
 
+/*
+ * The reply to the GetWsmClients request holds the number of clients, their
+ * ids as consecutive null-terminated strings and their workspace numbers as
+ * an array of ints.  Whatever sent it, the lists are only used if they hold
+ * what the count says.
+ */
+static Boolean
+WsmClientListIsValid (
+	int			count,
+	const char		* clientIds,
+	int			clientIdsLength,
+	const int		* workspaceNums,
+	int			workspaceNumsLength)
+{
+	const char		* at = clientIds;
+	const char		* end;
+	int			i;
+
+	if (count < 0)
+		return (False);
+	if (count == 0)
+		return (True);
+	if (!clientIds || !workspaceNums || clientIdsLength <= 0 ||
+	    workspaceNumsLength < 0 ||
+	    (size_t) workspaceNumsLength / sizeof (int) < (size_t) count)
+		return (False);
+
+	end = clientIds + clientIdsLength;
+	for (i = 0; i < count; i++) {
+		const char	* terminator = memchr (at, '\0', end - at);
+
+		if (!terminator)
+			return (False);
+		at = terminator + 1;
+	}
+
+	return (True);
+}
+
 /*ARGSUSED*/
 static 
 Tt_callback_action GetWsmClientsHandler(
 	Tt_message 		message,
 	Tt_pattern 		pattern)
 {
-	int			lenClientIds;
+	int			lenClientIds = 0;
+	int			lenWorkspaceNums = 0;
+	int			numClientIds = 0;
+	char			* clientIds = NULL;
+	int			* workspaceNums = NULL;
 	int			num_args =  tt_message_args_count (message);
 #ifdef DEBUG
 	char			* pchar;	
@@ -1205,17 +1261,29 @@ Tt_callback_action GetWsmClientsHandler(
 		free (smXSMP.saveState.clientIds); 
 	if (smXSMP.saveState.workspaceNums) 
 		free (smXSMP.saveState.workspaceNums);
+	smXSMP.saveState.clientIds = NULL;
+	smXSMP.saveState.workspaceNums = NULL;
+	smXSMP.saveState.numClientIds = 0;
 
-	tt_message_arg_ival (message, 0,
-			&smXSMP.saveState.numClientIds);
-	tt_message_arg_bval (message, 1, 
-			(unsigned char **) &smXSMP.saveState.clientIds, 
+	tt_message_arg_ival (message, 0, &numClientIds);
+	tt_message_arg_bval (message, 1, (unsigned char **) &clientIds, 
 			&lenClientIds);
-	tt_message_arg_bval (message, 2, 
-			(unsigned char **) &smXSMP.saveState.workspaceNums, 
-			&lenClientIds);
+	tt_message_arg_bval (message, 2, (unsigned char **) &workspaceNums, 
+			&lenWorkspaceNums);
 	tt_message_reply (message);
 	tt_message_destroy (message);
+
+	if (WsmClientListIsValid (numClientIds, clientIds, lenClientIds,
+				  workspaceNums, lenWorkspaceNums)) {
+		smXSMP.saveState.numClientIds = numClientIds;
+		smXSMP.saveState.clientIds = clientIds;
+		smXSMP.saveState.workspaceNums = workspaceNums;
+	} else {
+		free (clientIds);
+		free (workspaceNums);
+		ProcessInteract (smXSMP.saveState.interactClient, False);
+		return (TT_CALLBACK_PROCESSED);
+	}
 
 #ifdef DEBUG
 	(void) printf("GetWsmClientsHandler: num clients = %d\n", 
@@ -1342,6 +1410,9 @@ void ProcessInteract (
 	ClientRecPtr		tmp = NULL;
 	char			*pchar;
 
+	if (!client)
+		return;
+
 	if (!getWsmClientOK) {
 		smXSMP.saveState.clientInteracting = True;
 		SmsInteract (client->smConn);
@@ -1367,6 +1438,7 @@ void ProcessInteract (
 
 				if ((currentWorkspace == 
 					smXSMP.saveState.workspaceNums[i]) &&
+			            pClientRec->clientId &&
 			            (!strcmp (pchar, pClientRec->clientId))) {
 
 					smXSMP.saveState.clientInteracting = 

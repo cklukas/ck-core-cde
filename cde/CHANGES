@@ -63,6 +63,13 @@
   read and wrote outside their buffers. The unused `MigrateResources` converter
   is removed. Covered by `programs/dtsession/tests/check-session-parsers.py` and
   `check-palette-parser.py`.
+- dtsession: fix crashes in the XSMP session management callbacks. Registering
+  a client that restarts with the id it had before (the `previousId` of a
+  restored session) compared it with the null id of the connection that was
+  registering and ended `dtsession`; deleting the first property of a client
+  used the freed list head; the list of clients from the window manager was
+  walked as far as its count said, whatever it held. Covered by
+  `programs/dtsession/tests/check-xsmp.py`.
 - build: add the opt-in `--enable-hardening` and `--enable-sanitizers[=LIST]`
   configure switches. Hardening reports truncation, string-constant,
   ignored-result, null-dereference and format defects and adds stack protection

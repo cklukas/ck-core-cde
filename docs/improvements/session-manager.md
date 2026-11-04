@@ -155,6 +155,31 @@ palette the color server loads from the files and resources named in
 - The unused `MigrateResources` converter, which was not part of the build, is
   removed.
 
+## Session management clients
+
+`dtsession` listens on ICE sockets for clients of the X Session Management
+Protocol. A client has to present the user's ICE authority cookie; what it and
+the window manager (which answers the `GetWsmClients` request over ToolTalk)
+send is still checked.
+
+- A client that restarts with the id it had when the session was saved
+  registered with `RegisterClientProc`, which compared the id with those of all
+  connections, including the one that was registering and any other that had no
+  id yet: a null id went to `strcmp` and ended `dtsession`. Restoring a client
+  that uses XSMP therefore ended the session manager. The connections without an
+  id are skipped, and a host name without a transport part (`local/`, `tcp/`) is
+  used as it is.
+- Deleting the first property of a client freed the head of the property list
+  without unlinking it and then went on with the freed record; any client that
+  deleted its first property (`Program`, say) corrupted the session manager.
+  The properties of the name are unlinked from wherever they are in the list.
+- The reply with the clients of the window manager holds a count, the ids as
+  consecutive strings and an array of workspace numbers, and the lists were
+  walked as often as the count said. A reply with fewer ids or numbers than its
+  count, ids without terminators or a negative count is not used; the client
+  that asked to interact is then let interact as if the window manager had
+  not answered. A reply that arrives after the save ended is ignored.
+
 ## Tests
 
 `programs/dtsession/tests` holds regression tests that cut the production code
@@ -178,4 +203,13 @@ file system without hard links, an unwritable and an over-long home directory.
 `check-session-parsers.py` feeds crafted client files and settings to the
 production parsers and `RestoreSettings`, in a UTF-8 and the C locale.
 `check-palette-parser.py` does the same for the palette directory list and
-palette files.
+palette files. `check-xsmp.py` calls the XSMP registration, interaction and
+property callbacks with the messages of clients that restart, delete properties
+or send short lists, with SMlib and ToolTalk replaced by stand-ins.
+
+To check the session end to end, start `Xsession` from a staged install under
+`Xvfb`, open the Style Manager, a Terminal and a File Manager, send `SIGTERM` to
+`dtsession` and start `Xsession` again with the same home directory: the first
+session ends through the event loop and writes `~/.dt/sessions/current`, and the
+second one restores the three windows. This was run on 2026-11-04 with the build
+of this change in the Linux guest.

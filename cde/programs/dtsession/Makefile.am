@@ -7,7 +7,7 @@ EXTRA_DIST = tests/check-session-properties.py tests/check-database-write.py \
              tests/check-lock-authentication.py tests/check-signals.py \
              tests/check-session-save.py \
              tests/check-session-files.py tests/check-session-parsers.py \
-             tests/check-palette-parser.py
+             tests/check-palette-parser.py tests/check-xsmp.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-properties.py
@@ -20,6 +20,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-files.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-parsers.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-palette-parser.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-xsmp.py
 
 bin_SCRIPTS = dtsession_res
 

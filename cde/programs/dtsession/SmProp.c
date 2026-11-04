@@ -180,16 +180,20 @@ DeletePropertiesProc (
 	for (i = 0; i < numProps; i++) {
 
 		PropertyRecPtr   	pProp;
-		PropertyRecPtr   	tmp;
-		PropertyRecPtr   	trail;
+		PropertyRecPtr   	* link = &pClient->props;
 
-		for (pProp = pClient->props, trail = pClient->props ; 
-		     pProp != NULL;
-		     trail = pProp, pProp = pProp->next) {
+		/*
+		 * Unlink every property of this name; the link is either
+		 * the head of the list or the next field of the property
+		 * before.
+		 */
+		while ((pProp = *link) != NULL) {
 
 			if (!strcmp (pProp->prop.name, propNames[i])) {
 
 				int		j;
+
+				*link = pProp->next;
 
 				XtFree (pProp->prop.name);
 				XtFree (pProp->prop.type);
@@ -200,14 +204,10 @@ DeletePropertiesProc (
 
 				if (pProp->prop.num_vals > 0)
 					XtFree ((char *) pProp->prop.vals);
-				/*
-			 	 * Remove the record from the list and then
-			 	 * free the record
-			 	 */
-				trail->next = pProp->next;
+
 				XtFree ((char *) pProp);
-				pProp = trail;
-			}
+			} else
+				link = &pProp->next;
 		}
 		
 		free (propNames[i]);
