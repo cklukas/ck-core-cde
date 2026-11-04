@@ -836,7 +836,7 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
      * session termination.
      */
 
-    for(i = 0;(i < 10) && ((forkrc = vfork()) < 0);i++)
+    for(i = 0;(i < 10) && ((forkrc = fork()) < 0);i++)
     {
 	if(errno != EAGAIN)
 	{
@@ -881,7 +881,7 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
 	    snprintf(clientMessage, (MAXPATHLEN + 256) - 1,
                      ((char *)GETMESSAGE(16, 1, "Unable to exec process %s.  No session resources will be restored.")), pgrm);
 	    PrintErrnoError(DtError, clientMessage);
-	    SM_EXIT(-1);
+	    _exit(EXIT_FAILURE);
 	}
     }
 
@@ -3538,7 +3538,7 @@ StartLocalClient (
     /*
      * Fork and exec the client process
      */
-    clientFork = vfork();
+    clientFork = fork();
     
     /*
      * If the fork fails - Send out an error and return
@@ -3608,7 +3608,7 @@ StartLocalClient (
 	{
 	    snprintf(clientMessage, sizeof(clientMessage), ((char *)GETMESSAGE(16, 3, "Unable to exec %s.")), execArray[0]);
 	    PrintErrnoError(DtError, clientMessage);
-	    SM_EXIT(-1);
+	    _exit(EXIT_FAILURE);
 	}
     }
 
@@ -3733,14 +3733,14 @@ static void
 ForkWM( void )
 {
     pid_t  clientFork;
-    int	   execStatus, i;
+    int	   i;
 
      strcpy(tmpExecWmFile,CDE_INSTALLATION_TOP "/bin/dtwm");
 
     /*
      * Fork and exec the client process
      */
-    clientFork = vfork();
+    clientFork = fork();
     
     /*
      * If the fork fails - Send out an error and return
@@ -3779,7 +3779,7 @@ ForkWM( void )
          * execStatus = execlp(".../dt/bin/dtwm", "dtwm", (char *) 0);
          */
 
-        execStatus = execlp(tmpExecWmFile, "dtwm", (char *) 0);
+        (void) execlp(tmpExecWmFile, "dtwm", (char *) 0);
 
 	/* 
 	 *     ^^^^^  ^^^^^  ^^^^^  ^^^^^  ^^^^^  ^^^^^  
@@ -3787,11 +3787,15 @@ ForkWM( void )
 	 * panacomm dtwm.
 	 */
 
-	if(execStatus != 0 && (!localWmLaunched))
+	/*
+	 * Only a failed exec comes back; this process is the child, so it must
+	 * not go on as a second session manager.
+	 */
+	if(!localWmLaunched)
 	{
 	    PrintErrnoError(DtError, GETMESSAGE(16, 4, "Unable to exec process /usr/dt/bin/dtwm.  No window manager will be started."));
-	    SM_EXIT(-1);
 	}
+	_exit(EXIT_FAILURE);
     }
 }
 				      

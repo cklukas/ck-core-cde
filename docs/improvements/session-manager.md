@@ -180,6 +180,23 @@ send is still checked.
   that asked to interact is then let interact as if the window manager had
   not answered. A reply that arrives after the save ended is ignored.
 
+## Starting clients
+
+`tests/check-client-start.py` runs the production `StartLocalClient` and `ForkWM`
+for real and checks what the sections below describe.
+
+The clients of a saved session, the window manager and the resource loader are
+started in a child process that drops the installed identity, adds the saved
+environment, changes directory and execs. The child was made with `vfork()`,
+which shares the memory of `dtsession` with it until the exec: the `putenv` of
+the saved variables changed the environment of `dtsession` itself and so of
+every client started after it (a variable saved with one client reached the
+next), and a failed exec called `SM_EXIT`, which returns while the session is
+being saved, so the child went on as a second session manager. The children are
+made with `fork()` and a child whose exec fails ends with `_exit`; the window
+manager's child no longer falls through when the exec fails while a local
+window manager was started.
+
 ## Tests
 
 `programs/dtsession/tests` holds regression tests that cut the production code

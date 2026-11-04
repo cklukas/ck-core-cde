@@ -70,6 +70,13 @@
   used the freed list head; the list of clients from the window manager was
   walked as far as its count said, whatever it held. Covered by
   `programs/dtsession/tests/check-xsmp.py`.
+- dtsession: start clients, the window manager and the resource loader with
+  `fork()` instead of `vfork()`. The saved environment of a restored client was
+  put into the environment of `dtsession` itself (the child shares its memory
+  until the exec) and reached every client started after it; a failed exec ended
+  in `SM_EXIT`, which returns while the session is being saved, so the child
+  went on as a second `dtsession`. The child now ends with `_exit`. Covered by
+  `programs/dtsession/tests/check-client-start.py`.
 - build: add the opt-in `--enable-hardening` and `--enable-sanitizers[=LIST]`
   configure switches. Hardening reports truncation, string-constant,
   ignored-result, null-dereference and format defects and adds stack protection
