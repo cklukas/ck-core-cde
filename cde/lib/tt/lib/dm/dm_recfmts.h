@@ -67,11 +67,15 @@ struct Table_oid_container {
 	unsigned char	dockey[OID_KEY_LENGTH];
 };
 
+// The access table of the server (access_table) holds a long for each number,
+// in network byte order, as wide as a long is: 4 bytes on a 32-bit build and
+// 8 on a 64-bit one.  A record is read into this struct, so it has to be
+// as long as the record is.
 struct Table_oid_access {
 	unsigned char 	objkey[OID_KEY_LENGTH];
-	char	owner[XDR_LONG_SIZE]; // uid_t
-	char	group[XDR_LONG_SIZE]; // gid_t
-	char	mode[XDR_LONG_SIZE]; // mode_t
+	char	owner[sizeof(long)]; // uid_t
+	char	group[sizeof(long)]; // gid_t
+	char	mode[sizeof(long)]; // mode_t
 };
 
 struct Table_docoid_path {

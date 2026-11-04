@@ -165,7 +165,7 @@ _tt_move_file_1(_tt_move_file_args *argp, CLIENT *clnt)
 	static _tt_db_results res;
 
 	memset((void *)&res, '\0', sizeof(res));
-	clnt_stat result = clnt_call(clnt, TT_REMOVE_FILE,
+	clnt_stat result = clnt_call(clnt, TT_MOVE_FILE,
 				     (xdrproc_t) xdr_tt_move_file_args,
 				     (caddr_t) argp,
 				     (xdrproc_t) xdr_tt_db_results,

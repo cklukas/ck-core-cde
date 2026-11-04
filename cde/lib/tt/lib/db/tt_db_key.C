@@ -56,7 +56,8 @@ _Tt_db_key::_Tt_db_key (short version_number)
 
   if (key.time_sec != last_time_sec) {
     last_time_sec = key.time_sec;
-    counter       = getpid() * 10000;
+    // (unsigned: a process id of 214749 and above overflows an int)
+    counter       = (long)((unsigned long)getpid() * 10000UL);
   }
   key.counter = counter++;
 }

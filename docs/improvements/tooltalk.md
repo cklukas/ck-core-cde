@@ -281,7 +281,7 @@ by the server and libtt, so the limits hold for a reply as well as for a request
 | Type name (ptype, otype) | 1024 | identifiers |
 | Property name | `MAX_PROP_LENGTH` (64) | the field of a record that holds a name; the server stores no more of one |
 | Value of a property, session id, part of a queued message | 32767 less the key and the name (32671 on a 64-bit build, 32687 on a 32-bit one) | what a record of at most `ISMAXRECLEN` (32767) bytes holds after its key and the name of the property |
-| Body of a message | 16 MiB | libtt marshals the whole message into the body, and the server stores it in properties of the size above: 515 of them |
+| Body of a message | 16 MiB and 64 KiB | libtt marshals the whole message into the body, which holds the arguments (up to 16 MiB) and what else the message has, and the server stores it in properties of the size above: 516 of them |
 | Messages queued on a file | 65536 | one value of one property each, and a reply that lists them |
 | Properties of a file or object | 65536 | one record each |
 | Values of a property | 65536 | one per queued message or joined session |
@@ -340,6 +340,30 @@ the first ptype of a message with those that ask for it, so a message queued for
 several ptypes was found only by the first, and it never wrote back the ptypes
 that were left, so a message was delivered again to the ptype that had it
 already. The parts of a message are removed once the last ptype has it.
+
+### Fixes found by running the tools against the server
+
+- The client stub for `TT_MOVE_FILE` asked the server for `TT_REMOVE_FILE`, so
+  `tt_file_move` and `ttmv` removed the file and its objects from the database
+  instead of moving them. The stub asks for the move. A test calls every stub of
+  `db_server_clnt.C` with a client that only records the number of the procedure
+  it was asked for.
+- The server now moves a file inside a partition (see above); until the stub was
+  fixed no client could reach that code.
+- `ttdbck` read the records of the access table, which hold a `long` for each
+  number (8 bytes on a 64-bit build), into a structure with 4 bytes for each, and
+  wrote 12 bytes beyond it: it ended in a segmentation fault when it exited.
+  The structure is as long as the record.
+- `_Tt_api_spec_map_ref::getSpec` declared a second variable of the same name
+  for the spec it looked up in the database and returned the first, which was
+  null, so the first lookup of an object that this process had not created
+  failed with `TT_ERR_OBJID`: `tttar` could not archive objects and `ttcp -p`
+  could not copy them.
+- The counter of a key started at the process id times 10000 in an `int`, which
+  overflows for a process id above 214748; it is computed unsigned.
+- `tt_spec_write` returned `TT_ERR_INTERNAL` for every failure but a few; it
+  passes on `TT_ERR_PROPLEN`, `TT_ERR_ACCESS`, `TT_ERR_DBFULL`,
+  `TT_ERR_DBCONSIST` and `TT_ERR_DBUPDATE` as well.
 
 ### Mount points and paths
 

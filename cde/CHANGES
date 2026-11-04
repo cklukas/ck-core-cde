@@ -433,6 +433,20 @@
   found by the first only and delivered again to the ptype that had it; the
   parts of a message are removed once the last ptype has it. A netfile may be as
   long as the name `tt_file_netfile` makes of a host and two paths.
+- tt: fix `tt_file_move` and `ttmv`: the client stub for `TT_MOVE_FILE` asked for
+  `TT_REMOVE_FILE`, so a move removed the file and its objects from the
+  database. A test calls every client stub with a client that records the
+  procedure asked for. The 16 MiB limit of a message is the marshalled message
+  (the arguments and the rest of it), 64 KiB over 16 MiB.
+- tt: fix three bugs of the tools. `ttdbck` read a record of the access table
+  into a structure that is 12 bytes shorter on a 64-bit build and ended in a
+  segmentation fault; `tt_spec_*` on an object that the process had not created
+  failed with `TT_ERR_OBJID` on the first lookup because `getSpec` returned a
+  shadowed null variable, so `tttar` could not archive objects and `ttcp -p`
+  could not copy them; the counter of a key overflowed an `int` for a process id
+  above 214748. `tt_spec_write` reports `TT_ERR_PROPLEN`, `TT_ERR_ACCESS`,
+  `TT_ERR_DBFULL`, `TT_ERR_DBCONSIST` and `TT_ERR_DBUPDATE` instead of
+  `TT_ERR_INTERNAL`.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

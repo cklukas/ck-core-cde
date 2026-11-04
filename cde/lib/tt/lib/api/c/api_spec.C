@@ -993,6 +993,11 @@ _tt_spec_write(const char * objid)
                	case TT_ERR_OBJID:
                	case TT_ERR_OTYPE:
                	case TT_ERR_NUM:
+               	case TT_ERR_PROPLEN:
+               	case TT_ERR_ACCESS:
+               	case TT_ERR_DBFULL:
+               	case TT_ERR_DBCONSIST:
+               	case TT_ERR_DBUPDATE:
                       	return result;
                	default:
                        	return TT_ERR_INTERNAL;

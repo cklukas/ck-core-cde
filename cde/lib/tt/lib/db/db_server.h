@@ -66,7 +66,8 @@
  * and the name of the property, and what is left is the most that a property
  * value, a session id or a part of a queued message can be.  A message is kept
  * in as many such parts as it takes, so it is bounded by TT_DB_LIMIT_MESSAGE
- * only (16 MiB is 515 records).
+ * only (16 MiB is 515 records), which leaves room for the arguments of a
+ * message to add up to 16 MiB.
  *
  * Lists are bounded by what a reply could carry of what the tables hold: one
  * value per queued message and one per session in a property, one record per
@@ -90,7 +91,8 @@ const u_int TT_DB_LIMIT_PROPERTY_NAME		= MAX_PROP_LENGTH;
 const u_int TT_DB_LIMIT_PROPERTY_VALUE		= TT_DB_LIMIT_RECORD -
 						  OID_KEY_LENGTH - MAX_PROP_LENGTH;
 const u_int TT_DB_LIMIT_SESSION			= TT_DB_LIMIT_PROPERTY_VALUE;
-const u_int TT_DB_LIMIT_MESSAGE			= 16 * 1024 * 1024;
+/* the marshalled message: the arguments of up to 16 MiB, and the rest of it */
+const u_int TT_DB_LIMIT_MESSAGE			= 16 * 1024 * 1024 + 64 * 1024;
 
 const u_int TT_DB_LIMIT_PROPERTIES		= 1 << 16;
 const u_int TT_DB_LIMIT_PROPERTY_VALUES		= 1 << 16;

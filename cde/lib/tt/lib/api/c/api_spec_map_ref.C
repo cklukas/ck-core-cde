@@ -128,7 +128,7 @@ getSpec(_Tt_string objid)
                 }
 	} else {
 		// search tt_db on disk for spec
-		_Tt_objid_spec_ptr foundSpecP = new _Tt_objid_spec(objid);
+		foundSpecP = new _Tt_objid_spec(objid);
 		_Tt_db_results status;
 
 		status = foundSpecP->getDBResults();

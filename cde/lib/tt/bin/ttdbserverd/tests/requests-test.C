@@ -19,6 +19,7 @@
 #include "tt_db_message_info_utils.h"
 #include "tt_db_server_consts.h"
 #include "db/tt_db_access.h"
+#include "dm/dm_recfmts.h"
 #include "db/tt_db_create_objid.h"
 #include "db/tt_db_key.h"
 #include "tt_db_partition_global_map_ref.h"
@@ -1532,6 +1533,11 @@ case_key_bytes(void)
 	CHECK(OID_KEY_LENGTH == (int)sizeof(_Tt_key_data));
 	CHECK(TT_DB_KEY_LENGTH == OID_KEY_LENGTH);
 
+	/* ttdbck reads the records of the access table into a struct of
+	   dm_recfmts.h, which has to be as long as the record */
+	CHECK(sizeof(Table_oid_access) == (size_t)(TT_DB_KEY_LENGTH + 3 * TT_DB_LONG_SIZE));
+	CHECK(sizeof(Table_oid_container) == (size_t)(2 * TT_DB_KEY_LENGTH));
+
 	/* the bytes that belong to no field */
 	std::vector<bool> field(sizeof(_Tt_key_data), false);
 	for (size_t i = 0; i < sizeof(unsigned short); i++) {
@@ -1969,6 +1975,56 @@ get_obj_file(const std::string &objid)
 			  xdr_tt_obj_file_results);
 }
 
+/* the objects of a file, by their ids */
+static int
+file_objects(const std::string &file, std::vector<std::string> *out)
+{
+	_tt_get_file_objs_args go = { (char *)file.c_str(), acting(), -1 };
+	Reply r = rpc(TT_GET_FILE_OBJS,
+		      encode((xdrproc_t)xdr_tt_get_file_objs_args, &go));
+	_tt_file_objs_results res;
+	XDR xdrs;
+
+	out->clear();
+	if (!answered(r)) {
+		return INT_MIN;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_tt_file_objs_results(&xdrs, &res)) {
+		return INT_MIN;
+	}
+	for (u_int i = 0; i < res.objids.values_len; i++) {
+		out->push_back(res.objids.values_val[i].value);
+	}
+	int status = res.results;
+	xdr_free((xdrproc_t)xdr_tt_file_objs_results, (char *)&res);
+	return status;
+}
+
+/* the file an object is in, by name */
+static std::string
+file_of(const std::string &objid)
+{
+	_tt_get_obj_file_args gf = { (char *)objid.c_str(), acting() };
+	Reply r = rpc(TT_GET_OBJ_FILE,
+		      encode((xdrproc_t)xdr_tt_get_obj_file_args, &gf));
+	_tt_obj_file_results res;
+	XDR xdrs;
+	std::string out;
+
+	if (!answered(r)) {
+		return out;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (xdr_tt_obj_file_results(&xdrs, &res) && res.file != NULL) {
+		out = res.file;
+	}
+	xdr_free((xdrproc_t)xdr_tt_obj_file_results, (char *)&res);
+	return out;
+}
+
 static int
 get_file_prop(const std::string &file, const char *name)
 {
@@ -2327,6 +2383,126 @@ case_queued_messages(void)
 	CHECK(queue_message(file, onlya, "one more") == TT_DB_ERR_DISK_FULL);
 }
 
+/* ---- the client stubs ------------------------------------------------------------ */
+
+/* The client side of the protocol (db_server_clnt.C of libtt) has a stub for
+   each procedure, which calls the number of its procedure.  The stub for a move
+   called the number of the removal, so a move removed the file and its objects.
+   Each stub is called with a client that only says which procedure was asked
+   for. */
+static rpcproc_t g_asked;
+
+static enum clnt_stat
+fake_call(CLIENT *, rpcproc_t proc, xdrproc_t, void *, xdrproc_t, void *,
+	  struct timeval)
+{
+	g_asked = proc;
+	return RPC_CANTSEND;
+}
+
+#define ASKS(fn, argtype, proc) \
+	do { \
+		argtype a; \
+		memset(&a, 0, sizeof(a)); \
+		g_asked = (rpcproc_t)-1; \
+		(void)fn(&a, &fake); \
+		if (g_asked != (proc)) { \
+			fprintf(stderr, "  %s asks for %lu, not %lu\n", #fn, \
+				(unsigned long)g_asked, (unsigned long)(proc)); \
+		} \
+		CHECK(g_asked == (proc)); \
+	} while (0)
+
+extern _tt_auth_level_results *_tt_get_min_auth_level_1(void *, CLIENT *);
+extern _tt_file_partition_results *_tt_get_file_partition_1(char **, CLIENT *);
+extern _tt_db_cache_results *_tt_create_file_1(_tt_create_file_args *, CLIENT *);
+extern _tt_db_cache_results *_tt_create_obj_1(_tt_create_obj_args *, CLIENT *);
+extern _tt_db_results *_tt_remove_file_1(_tt_remove_file_args *, CLIENT *);
+extern _tt_db_results *_tt_remove_obj_1(_tt_remove_obj_args *, CLIENT *);
+extern _tt_db_results *_tt_move_file_1(_tt_move_file_args *, CLIENT *);
+extern _tt_db_cache_results *_tt_set_file_props_1(_tt_set_file_props_args *, CLIENT *);
+extern _tt_db_cache_results *_tt_set_file_prop_1(_tt_set_file_prop_args *, CLIENT *);
+extern _tt_db_cache_results *_tt_add_file_prop_1(_tt_add_file_prop_args *, CLIENT *);
+extern _tt_db_cache_results *_tt_delete_file_prop_1(_tt_del_file_prop_args *, CLIENT *);
+extern _tt_file_prop_results *_tt_get_file_prop_1(_tt_get_file_prop_args *, CLIENT *);
+extern _tt_file_props_results *_tt_get_file_props_1(_tt_get_file_props_args *, CLIENT *);
+extern _tt_file_objs_results *_tt_get_file_objs_1(_tt_get_file_objs_args *, CLIENT *);
+extern _tt_db_results *_tt_set_file_access_1(_tt_set_file_access_args *, CLIENT *);
+extern _tt_file_access_results *_tt_get_file_access_1(_tt_get_file_access_args *, CLIENT *);
+extern _tt_obj_props_results *_tt_set_obj_props_1(_tt_set_obj_props_args *, CLIENT *);
+extern _tt_obj_props_results *_tt_set_obj_prop_1(_tt_set_obj_prop_args *, CLIENT *);
+extern _tt_obj_props_results *_tt_add_obj_prop_1(_tt_add_obj_prop_args *, CLIENT *);
+extern _tt_obj_props_results *_tt_delete_obj_prop_1(_tt_del_obj_prop_args *, CLIENT *);
+extern _tt_obj_prop_results *_tt_get_obj_prop_1(_tt_get_obj_prop_args *, CLIENT *);
+extern _tt_obj_props_results *_tt_get_obj_props_1(_tt_get_obj_props_args *, CLIENT *);
+extern _tt_db_results *_tt_set_obj_type_1(_tt_set_obj_type_args *, CLIENT *);
+extern _tt_obj_type_results *_tt_get_obj_type_1(_tt_get_obj_type_args *, CLIENT *);
+extern _tt_db_results *_tt_set_obj_file_1(_tt_set_obj_file_args *, CLIENT *);
+extern _tt_obj_file_results *_tt_get_obj_file_1(_tt_get_obj_file_args *, CLIENT *);
+extern _tt_db_results *_tt_set_obj_access_1(_tt_set_obj_access_args *, CLIENT *);
+extern _tt_obj_access_results *_tt_get_obj_access_1(_tt_get_obj_access_args *, CLIENT *);
+extern _tt_is_file_in_db_results *_tt_is_file_in_db_1(_tt_is_file_in_db_args *, CLIENT *);
+extern _tt_is_obj_in_db_results *_tt_is_obj_in_db_1(_tt_is_obj_in_db_args *, CLIENT *);
+extern _tt_db_results *_tt_queue_message_1(_tt_queue_msg_args *, CLIENT *);
+extern _tt_dequeue_msgs_results *_tt_dequeue_messages_1(_tt_dequeue_msgs_args *, CLIENT *);
+extern _tt_file_netfile_results *_tt_file_netfile_1(_tt_file_netfile_args *, CLIENT *);
+extern _tt_file_netfile_results *_tt_netfile_file_1(_tt_file_netfile_args *, CLIENT *);
+extern _tt_get_all_sessions_results *_tt_get_all_sessions_1(_tt_get_all_sessions_args *, CLIENT *);
+extern _tt_delete_session_results *_tt_delete_session_1(_tt_delete_session_args *, CLIENT *);
+
+static void
+case_client_stubs(void)
+{
+	typedef __typeof__(*((CLIENT *)0)->cl_ops) clnt_ops_t;
+	static clnt_ops_t ops;
+	CLIENT fake;
+	void *none = NULL;
+
+	memset(&ops, 0, sizeof(ops));
+	memset(&fake, 0, sizeof(fake));
+	ops.cl_call = fake_call;
+	fake.cl_ops = &ops;
+
+	g_asked = (rpcproc_t)-1;
+	(void)_tt_get_min_auth_level_1(none, &fake);
+	CHECK(g_asked == TT_GET_MIN_AUTH_LEVEL);
+	ASKS(_tt_get_file_partition_1, char *, TT_GET_FILE_PARTITION);
+	ASKS(_tt_create_file_1, _tt_create_file_args, TT_CREATE_FILE);
+	ASKS(_tt_create_obj_1, _tt_create_obj_args, TT_CREATE_OBJ);
+	ASKS(_tt_remove_file_1, _tt_remove_file_args, TT_REMOVE_FILE);
+	ASKS(_tt_remove_obj_1, _tt_remove_obj_args, TT_REMOVE_OBJ);
+	ASKS(_tt_move_file_1, _tt_move_file_args, TT_MOVE_FILE);
+	ASKS(_tt_set_file_props_1, _tt_set_file_props_args, TT_SET_FILE_PROPS);
+	ASKS(_tt_set_file_prop_1, _tt_set_file_prop_args, TT_SET_FILE_PROP);
+	ASKS(_tt_add_file_prop_1, _tt_add_file_prop_args, TT_ADD_FILE_PROP);
+	ASKS(_tt_delete_file_prop_1, _tt_del_file_prop_args, TT_DELETE_FILE_PROP);
+	ASKS(_tt_get_file_prop_1, _tt_get_file_prop_args, TT_GET_FILE_PROP);
+	ASKS(_tt_get_file_props_1, _tt_get_file_props_args, TT_GET_FILE_PROPS);
+	ASKS(_tt_get_file_objs_1, _tt_get_file_objs_args, TT_GET_FILE_OBJS);
+	ASKS(_tt_set_file_access_1, _tt_set_file_access_args, TT_SET_FILE_ACCESS);
+	ASKS(_tt_get_file_access_1, _tt_get_file_access_args, TT_GET_FILE_ACCESS);
+	ASKS(_tt_set_obj_props_1, _tt_set_obj_props_args, TT_SET_OBJ_PROPS);
+	ASKS(_tt_set_obj_prop_1, _tt_set_obj_prop_args, TT_SET_OBJ_PROP);
+	ASKS(_tt_add_obj_prop_1, _tt_add_obj_prop_args, TT_ADD_OBJ_PROP);
+	ASKS(_tt_delete_obj_prop_1, _tt_del_obj_prop_args, TT_DELETE_OBJ_PROP);
+	ASKS(_tt_get_obj_prop_1, _tt_get_obj_prop_args, TT_GET_OBJ_PROP);
+	ASKS(_tt_get_obj_props_1, _tt_get_obj_props_args, TT_GET_OBJ_PROPS);
+	ASKS(_tt_set_obj_type_1, _tt_set_obj_type_args, TT_SET_OBJ_TYPE);
+	ASKS(_tt_get_obj_type_1, _tt_get_obj_type_args, TT_GET_OBJ_TYPE);
+	ASKS(_tt_set_obj_file_1, _tt_set_obj_file_args, TT_SET_OBJ_FILE);
+	ASKS(_tt_get_obj_file_1, _tt_get_obj_file_args, TT_GET_OBJ_FILE);
+	ASKS(_tt_set_obj_access_1, _tt_set_obj_access_args, TT_SET_OBJ_ACCESS);
+	ASKS(_tt_get_obj_access_1, _tt_get_obj_access_args, TT_GET_OBJ_ACCESS);
+	ASKS(_tt_is_file_in_db_1, _tt_is_file_in_db_args, TT_IS_FILE_IN_DB);
+	ASKS(_tt_is_obj_in_db_1, _tt_is_obj_in_db_args, TT_IS_OBJ_IN_DB);
+	ASKS(_tt_queue_message_1, _tt_queue_msg_args, TT_QUEUE_MESSAGE);
+	ASKS(_tt_dequeue_messages_1, _tt_dequeue_msgs_args, TT_DEQUEUE_MESSAGES);
+	ASKS(_tt_file_netfile_1, _tt_file_netfile_args, TTDB_FILE_NETFILE);
+	ASKS(_tt_netfile_file_1, _tt_file_netfile_args, TTDB_NETFILE_FILE);
+	ASKS(_tt_get_all_sessions_1, _tt_get_all_sessions_args, TT_GET_ALL_SESSIONS);
+	ASKS(_tt_delete_session_1, _tt_delete_session_args, TT_DELETE_SESSION);
+}
+
 /* ---- the directory of the tables ---------------------------------------------- */
 
 /* the status of a request to make a file */
@@ -2430,6 +2606,13 @@ case_move_file(void)
 	CHECK(is_file_in_db(moved) == TT_DB_OK);
 	CHECK(get_obj_file(objid) == TT_DB_OK);
 	CHECK(get_file_prop(moved, "name") == TT_DB_OK);
+	/* the objects went with it: the object is in the file by its new name,
+	   and the file by that name has the object */
+	std::vector<std::string> objects;
+	CHECK(file_objects(moved, &objects) == TT_DB_OK);
+	CHECK(objects.size() == 1);
+	CHECK(file_of(objid) == moved);
+	CHECK(file_objects(file, &objects) != TT_DB_OK || objects.empty());
 
 	/* a file that is not in the database, and one that is moved to the name
 	   it has */
@@ -2507,6 +2690,7 @@ static const struct {
 	{ "results-after-failure", case_results_after_failure },
 	{ "malformed-names", case_malformed_names },
 	{ "queued-messages", case_queued_messages },
+	{ "client-stubs", case_client_stubs },
 	{ "table-directory", case_table_directory },
 	{ "move-file", case_move_file },
 	{ "known-partitions", case_known_partitions },
