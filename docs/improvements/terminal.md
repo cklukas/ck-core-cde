@@ -24,6 +24,15 @@ root privileges. The same applies when the window process returns to the user's
 effective identity after a privileged operation. `make -C lib/DtTerm check` runs
 a test with a fake kernel for these cases.
 
+The effective identity is lowered first thing in `main()`, before the toolkit
+reads resource files or search paths named by the environment, before the locale
+is set and before the X connection and its authority file are opened. To check an
+installation, run the setuid `dtterm` under `strace -f -u <user> -e
+trace=openat,setresuid` with `XENVIRONMENT` naming a file only root can read:
+the first `setresuid` must come before the open, and the open must fail with
+`EACCES`. `make -C programs/dtterm check` runs a guard that `main()` lowers the
+identity before it touches the environment.
+
 ## Drop files into the shell
 
 Dropping one or more files into a Terminal inserts their paths at the input

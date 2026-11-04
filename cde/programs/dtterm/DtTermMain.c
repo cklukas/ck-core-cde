@@ -64,6 +64,7 @@
 #include "TermPrimLineDrawP.h"
 #include "TermPrimLineFontP.h"
 #include "TermPrimSetUtmp.h"
+#include "TermPrimUtil.h"
 #include "TermBufferP.h"
 #include "TermP.h"
 #include "TermParseTableP.h"
@@ -1214,6 +1215,15 @@ main(int argc, char **argv)
     Boolean 		  iAmTheServer = False;
 #endif /* SUN_TERMINAL_SERVER */
     
+    /*
+    ** dtterm may be installed setuid root.  Everything before the first
+    ** terminal widget, namely the resource files and search paths named by
+    ** the caller's environment, the locale, the X connection and its authority
+    ** file, has to run as the user; privileges are raised only around the
+    ** operations that need them.
+    */
+    (void) _DtTermPrimToggleSuidRoot(False);
+
     (void) atexit(AtExitProc);
 
     if (c = getenv("dttermDebugFlags")) {

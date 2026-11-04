@@ -29,6 +29,12 @@ CPP_TARGETS = dtterm.ti DtTermFallBackResources.c.src	\
 	DtTermFallBackResources.c Dtterm.ad
 
 BUILT_SOURCES = $(CPP_TARGETS)
+
+# A source guard for the first thing main() does; see tests/check-early-drop.py
+EXTRA_DIST = tests/check-early-drop.py
+
+check-local:
+	python3 $(srcdir)/tests/check-early-drop.py
 CLEANFILES = $(CPP_TARGETS)
 
 cfgdir = $(CDE_INSTALLATION_TOP)/config

@@ -65,6 +65,11 @@
   run under `make check`.
 - scripts/warning-baseline.py: compare a build with the assembled validation
   record as well as with a bare `record` output.
+- dtterm: when installed setuid root, return to the user's identity as the first
+  thing main() does. Until the first terminal widget existed, the toolkit read
+  resource files and search paths named by the caller's environment, such as
+  XENVIRONMENT, with the installed identity, so a user could have a file only
+  root can read parsed as resources. A source guard checks the order.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,
