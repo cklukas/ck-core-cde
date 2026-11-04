@@ -67,6 +67,16 @@ SmPamUserName(void)
 #ifdef HAS_PAM_LIBRARY
 
 /*
+ * The file of the PAM service "dtsession" as the build installs it (see
+ * config/Makefile.am).  It has to be there when the display is locked:
+ * without it PAM falls back to a service that may refuse everybody, and the
+ * display could never be unlocked.
+ */
+#ifndef SM_PAM_SERVICE_FILE
+#error SM_PAM_SERVICE_FILE, the installed file of the PAM service, is not defined
+#endif
+
+/*
  * The PAM service of the lock is fixed.  It is not derived from the name the
  * program was started with, which the invoker chooses.
  */
@@ -156,18 +166,30 @@ failed:
     return PAM_CONV_ERR;
 }
 
-Boolean
-SmPamAvailable(void)
+SmPamStatus
+SmPamLockStatus(void)
 {
-    char *name = SmPamUserName();
+    char *name;
 
+    if (access(SM_PAM_SERVICE_FILE, R_OK) != 0)
+    {
+        return SM_PAM_NO_SERVICE;
+    }
+
+    name = SmPamUserName();
     if (name == NULL)
     {
-        return False;
+        return SM_PAM_NO_ACCOUNT;
     }
     free(name);
 
-    return True;
+    return SM_PAM_READY;
+}
+
+const char *
+SmPamServiceFile(void)
+{
+    return SM_PAM_SERVICE_FILE;
 }
 
 Boolean
@@ -224,10 +246,16 @@ SmPamCheckPassword(
 
 #else /* !HAS_PAM_LIBRARY */
 
-Boolean
-SmPamAvailable(void)
+SmPamStatus
+SmPamLockStatus(void)
 {
-    return False;
+    return SM_PAM_NOT_BUILT;
+}
+
+const char *
+SmPamServiceFile(void)
+{
+    return NULL;
 }
 
 Boolean

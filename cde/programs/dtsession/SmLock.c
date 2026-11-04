@@ -56,6 +56,7 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 
@@ -126,6 +127,86 @@ static void BlinkCaret( XtPointer, XtIntervalId *) ;
 
 
 
+/*************************************<->*************************************
+ *
+ *  LockIsAvailable ()
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Tells whether the display can be locked, which it can when it can be
+ *  unlocked again.  If it cannot, the error log says why: the program was
+ *  built without PAM, the file of the PAM service is missing or cannot be
+ *  read (the message names the file), or the user who started the session has
+ *  no account.  The session goes on without the lock.
+ *
+ *
+ *  Inputs:
+ *  ------
+ *
+ *
+ *  Outputs:
+ *  -------
+ *  True if the display can be locked.
+ *
+ *  Comments:
+ *  --------
+ *
+ *************************************<->***********************************/
+Boolean
+LockIsAvailable( void )
+{
+    const char *file, *insert;
+    char *message;
+
+    switch (SmPamLockStatus())
+    {
+        case SM_PAM_READY:
+            return True;
+
+        case SM_PAM_NOT_BUILT:
+            PrintError(DtError, smNLS.noPamErrorString);
+            break;
+
+        case SM_PAM_NO_SERVICE:
+           /*
+            * The text comes from a message catalog: the name of the file
+            * replaces the first "%s" in it and nothing else in it is a format.
+            */
+            file = SmPamServiceFile();
+            message = (char *) malloc(strlen(smNLS.pamServiceErrorString) +
+                                      strlen(file) + 1);
+            if (message == NULL)
+            {
+                PrintErrnoError(DtError, smNLS.cantMallocErrorString);
+                break;
+            }
+            insert = strstr(smNLS.pamServiceErrorString, "%s");
+            if (insert == NULL)
+            {
+                strcpy(message, smNLS.pamServiceErrorString);
+            }
+            else
+            {
+                memcpy(message, smNLS.pamServiceErrorString,
+                       (size_t) (insert - smNLS.pamServiceErrorString));
+                strcpy(message + (insert - smNLS.pamServiceErrorString), file);
+                strcat(message, insert + 2);
+            }
+            PrintError(DtError, message);
+            free(message);
+            break;
+
+        case SM_PAM_NO_ACCOUNT:
+            PrintError(DtError, smNLS.noAccountErrorString);
+            break;
+    }
+
+    return False;
+}
+
+
+
 /*************************************<->*************************************
  *
  *  LockDisplay ()
@@ -202,13 +283,13 @@ LockDisplay(
 
     /*
      * Before anything is done make sure we can unlock if we lock: the
-     * password of the user is checked through PAM, and a program built
-     * without PAM cannot do that.
+     * password of the user is checked through PAM, which needs a build with
+     * PAM, the file of the PAM service and the account of the user.  The
+     * reason is in the error log.
      */
-    if (SmPamAvailable() == False)
+    if (LockIsAvailable() == False)
        {
 	Tt_message msg;
-	PrintError(DtError, smNLS.trustedSystemErrorString);
 
 	XBell(smGD.display, 100);
 	

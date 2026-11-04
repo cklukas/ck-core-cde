@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Check what the screen lock does with a typed password and when it refuses to lock.
 
-The production CheckString() and WipePassword() of SmLock.c and the start of
-LockDisplay() are cut out of the source and compiled, under AddressSanitizer
+The production CheckString(), WipePassword() and LockIsAvailable() of SmLock.c and
+the start of LockDisplay() are cut out of the source and compiled, under AddressSanitizer
 and UndefinedBehaviorSanitizer, with stand-ins for the password check
-(SmPamCheckPassword, SmPamAvailable), the dialogs and ToolTalk.  Every
+(SmPamCheckPassword, SmPamLockStatus), the dialogs and ToolTalk.  Every
 scenario runs in its own process.
 
 The display is unlocked by the password check of SmPam.c and by nothing else:
@@ -36,7 +36,8 @@ code = {p.name: re.sub(r"/\*.*?\*/", "", p.read_text(errors="replace"), flags=re
 # 1. no other way to check a password and no other account: not in the lock, not anywhere in the program
 forbidden = [r"\bcrypt\s*\(", r"<crypt\.h>", r"<shadow\.h>", r"\bgetspnam\b", r"\bgetpwnam\w*\s*\(",
              r"\bkeyholders\b", r"\bSmNkeys\b", r"\bPasswordMatchesHash\b", r"\bCanReAuthenticate\b",
-             r"\bCheckPassword\b", r"\bAuthenticate\s*\(", r"\blocalAuthenticate\b", r"_DtSvcPamAuthenticate"]
+             r"\bCheckPassword\b", r"\bAuthenticate\s*\(", r"\blocalAuthenticate\b", r"_DtSvcPamAuthenticate",
+             r"\bSmPamAvailable\b", r"\btrustedSystemErrorString\b"]
 for name, content in code.items():
     for pattern in forbidden:
         if re.search(pattern, content):
@@ -91,6 +92,16 @@ expected = [("auth", "required", "pam_unix.so"), ("account", "required", "pam_un
 if stack != expected:
     problems.append("the PAM service in config/dtsession.src is %r, not %r" % (stack, expected))
 
+# the service file the program looks for is the one the build installs: pamdir of config/Makefile.am
+config_text = (source / "config" / "Makefile.am").read_text()
+installed = set(re.findall(r"^pamdir\s*=\s*(\S+)", config_text, re.M))
+looked_for = set(re.findall(r'SM_PAM_SERVICE_FILE=\\"([^"\\]+)\\"', (source / "Makefile.am").read_text()))
+if not installed or {d + "/dtsession" for d in installed} != looked_for:
+    problems.append("dtsession looks for %s, config/Makefile.am installs the service in %s" % (sorted(looked_for), sorted(installed)))
+main_code = code.get("SmMain.c", "")
+if "LockIsAvailable()" not in main_code:
+    problems.append("SmMain.c does not check at startup whether the display can be locked")
+
 # 5. dtsession is installed with the identity of the user who runs it, and the service as pam.d/dtsession
 makefile = (source / "Makefile.am").read_text()
 if re.search(r"install-exec-hook|chmod\s+[0-7]*[4-7][0-7]{3}|chown", makefile):
@@ -134,14 +145,18 @@ typedef unsigned char Boolean;
 
 /* the password check: what it was asked and what it answers */
 static char seen_password[256];
-static int checks, correct_password, pam_available, unlocked, bells;
+static int checks, correct_password, unlocked, bells;
 static Boolean SmPamCheckPassword(const char *typed)
 {
     snprintf(seen_password, sizeof seen_password, "%s", typed);
     checks++;
     return correct_password;
 }
-static Boolean SmPamAvailable(void) { return pam_available; }
+typedef enum { SM_PAM_READY, SM_PAM_NOT_BUILT, SM_PAM_NO_SERVICE, SM_PAM_NO_ACCOUNT } SmPamStatus;
+static SmPamStatus pam_status = SM_PAM_READY;
+static SmPamStatus SmPamLockStatus(void) { return pam_status; }
+static const char *service_file = "/etc/pam.d/dtsession";
+static const char *SmPamServiceFile(void) { return service_file; }
 
 /* what the typed characters go through before they are compared */
 #define SM_REALLOC(p, n) tracked_realloc(p, n)
@@ -160,7 +175,7 @@ typedef struct { unsigned long pixel; } XColor;
 #define TT_SESSION 1
 static struct { int saverTimeout, lockTimeout; } smSaverRes = { 600, 0 };
 static struct { int coverScreen; void *display; } smGD;
-static struct { char *trustedSystemErrorString; char *cantMallocErrorString; } smNLS;
+static struct { char *noPamErrorString, *pamServiceErrorString, *noAccountErrorString, *cantMallocErrorString; } smNLS;
 typedef int XtIntervalId;
 static XtIntervalId timerId, lockTimeId, lockDelayId, cycleId, flash_id;
 static int errors_printed, notices_sent, system_ready;
@@ -171,7 +186,7 @@ static void tt_message_send(Tt_message m) { (void) m; notices_sent++; }
 static void tt_message_destroy(Tt_message m) { (void) m; }
 static void SetSystemReady(void) { system_ready++; }
 
-''' + whole("static void\nWipePassword(") + "\n" + lock_start() + "\n" + whole("static void \nCheckString(") + r'''
+''' + whole("static void\nWipePassword(") + "\n" + whole("Boolean\nLockIsAvailable(") + "\n" + lock_start() + "\n" + whole("static void \nCheckString(") + r'''
 
 #define CHECK(condition) do { if (!(condition)) { fprintf(stderr, "failed: %s\n", #condition); return 1; } } while (0)
 
@@ -245,20 +260,71 @@ static int long_password(void)
     CHECK(!in_memory("xxxxxxxx"));
     return 0;
 }
-static int refuses_to_lock_without_a_password_check(void)
+static void messages(void)
 {
-    smNLS.trustedSystemErrorString = "Unable to lock display due to security restrictions";
-    pam_available = 0;
+    smNLS.noPamErrorString = "Unable to lock the display: dtsession was built without PAM, which checks the password.";
+    smNLS.pamServiceErrorString = "Unable to lock the display: the PAM service file %s is missing or cannot be read.";
+    smNLS.noAccountErrorString = "Unable to lock the display: the account of the user who started the session was not found.";
+}
+static int refuses_to_lock_without_pam(void)
+{
+    messages();
+    pam_status = SM_PAM_NOT_BUILT;
     CHECK(LockDisplayStart(True) == 0);
-    CHECK(errors_printed == 1 && !strcmp(printed, smNLS.trustedSystemErrorString));
+    CHECK(errors_printed == 1 && !strcmp(printed, smNLS.noPamErrorString));       /* its own message, not a generic one */
     CHECK(bells == 1 && notices_sent == 1 && system_ready == 1);
     CHECK(LockDisplayStart(False) == 0);              /* also for the lock after a time-out */
     CHECK(errors_printed == 2 && notices_sent == 2 && system_ready == 2);
     return 0;
 }
+static int refuses_to_lock_without_the_service_file(void)
+{
+    messages();
+    pam_status = SM_PAM_NO_SERVICE;
+    CHECK(LockDisplayStart(True) == 0);
+    CHECK(errors_printed == 1);
+    CHECK(strstr(printed, "/etc/pam.d/dtsession") && !strstr(printed, "%s"));      /* it names the file */
+    CHECK(!strcmp(printed, "Unable to lock the display: the PAM service file /etc/pam.d/dtsession is missing or cannot be read."));
+    CHECK(bells == 1 && notices_sent == 1 && system_ready == 1);
+    return 0;
+}
+static int service_file_message_from_a_catalog(void)
+{
+    messages();
+    pam_status = SM_PAM_NO_SERVICE;
+    service_file = "/usr/local/etc/pam.d/dtsession";
+    smNLS.pamServiceErrorString = "%s fehlt %d %s";                   /* a translation can say anything: only the first %s is replaced */
+    CHECK(LockIsAvailable() == False);
+    CHECK(!strcmp(printed, "/usr/local/etc/pam.d/dtsession fehlt %d %s"));
+    smNLS.pamServiceErrorString = "no insert at all";
+    CHECK(LockIsAvailable() == False && !strcmp(printed, "no insert at all"));
+    smNLS.pamServiceErrorString = "ends with it: %s";
+    CHECK(LockIsAvailable() == False && !strcmp(printed, "ends with it: /usr/local/etc/pam.d/dtsession"));
+    return 0;
+}
+static int refuses_to_lock_without_an_account(void)
+{
+    messages();
+    pam_status = SM_PAM_NO_ACCOUNT;
+    CHECK(LockDisplayStart(True) == 0);
+    CHECK(errors_printed == 1 && !strcmp(printed, smNLS.noAccountErrorString));
+    CHECK(bells == 1 && notices_sent == 1 && system_ready == 1);
+    return 0;
+}
+static int startup_check_says_why(void)
+{
+    messages();
+    pam_status = SM_PAM_NO_SERVICE;
+    CHECK(LockIsAvailable() == False && errors_printed == 1);          /* the check main() makes: one message, no dialog, no notice */
+    CHECK(bells == 0 && notices_sent == 0 && system_ready == 0);
+    pam_status = SM_PAM_READY;
+    CHECK(LockIsAvailable() == True && errors_printed == 1);           /* nothing to say when it is fine */
+    return 0;
+}
 static int locks_when_the_check_is_there(void)
 {
-    pam_available = 1;
+    messages();
+    pam_status = SM_PAM_READY;
     CHECK(LockDisplayStart(True) == 1);
     CHECK(errors_printed == 0 && bells == 0 && notices_sent == 0 && system_ready == 0);
     CHECK(smGD.coverScreen == 1);
@@ -273,7 +339,11 @@ static struct { const char *name; int (*run)(void); } scenarios[] = {
     {"password_wiped_by_backspace", password_wiped_by_backspace},
     {"password_wiped_when_the_dialog_times_out", password_wiped_when_the_dialog_times_out},
     {"long_password", long_password},
-    {"refuses_to_lock_without_a_password_check", refuses_to_lock_without_a_password_check},
+    {"refuses_to_lock_without_pam", refuses_to_lock_without_pam},
+    {"refuses_to_lock_without_the_service_file", refuses_to_lock_without_the_service_file},
+    {"service_file_message_from_a_catalog", service_file_message_from_a_catalog},
+    {"refuses_to_lock_without_an_account", refuses_to_lock_without_an_account},
+    {"startup_check_says_why", startup_check_says_why},
     {"locks_when_the_check_is_there", locks_when_the_check_is_there},
     {NULL, NULL}
 };

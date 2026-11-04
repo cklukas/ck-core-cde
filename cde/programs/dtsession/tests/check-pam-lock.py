@@ -78,6 +78,7 @@ COMMON = r"""
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <errno.h>
 #include <pwd.h>
 #include <unistd.h>
 
@@ -122,6 +123,18 @@ static char *counted_strdup(const char *s)
     if (fail_at && ++allocations == fail_at) return NULL;
     return strdup(s);
 }
+/* the file of the PAM service: whether it can be read, and what the code asked */
+static int service_file_errno;                 /* 0: readable */
+static char accessed[128];
+static int access_calls, accessed_mode;
+static int fake_access(const char *path, int mode)
+{
+    access_calls++; accessed_mode = mode;
+    snprintf(accessed, sizeof accessed, "%s", path);
+    if (service_file_errno) { errno = service_file_errno; return -1; }
+    return 0;
+}
+#define access fake_access
 #define getuid fake_getuid
 #define getpwuid fake_getpwuid
 #define endpwent fake_endpwent
@@ -162,6 +175,7 @@ static void reset(void)
     pam.expected = "secret";
     real_uid = 1234; smGD.programName = NULL; entry_without_name = 0;
     allocations = 0; fail_at = 0;
+    service_file_errno = 0; accessed[0] = 0; access_calls = 0; accessed_mode = 0;
 }
 static void note(char call) { size_t n = strlen(pam.order); if (n + 1 < sizeof(pam.order)) pam.order[n] = call; }
 
@@ -433,21 +447,44 @@ static int user_is_the_one_of_the_real_uid(void)
     }
     return 0;
 }
-static int user_without_an_account(void)
+static int lock_status(void)
 {
     reset();
-    real_uid = 4321;
-    CHECK(SmPamAvailable() == False);
-    CHECK(ask("secret") == False);
-    CHECK(pam.start_calls == 0);
+    CHECK(SmPamLockStatus() == SM_PAM_READY);
+    CHECK(access_calls == 1 && !strcmp(accessed, "/etc/pam.d/dtsession") && accessed_mode == R_OK);
+    CHECK(pam.start_calls == 0);                  /* looking is not authenticating */
+    reset(); service_file_errno = ENOENT;        /* the file is not there */
+    CHECK(SmPamLockStatus() == SM_PAM_NO_SERVICE);
+    reset(); service_file_errno = EACCES;        /* it cannot be read */
+    CHECK(SmPamLockStatus() == SM_PAM_NO_SERVICE);
+    reset(); service_file_errno = ENOTDIR;
+    CHECK(SmPamLockStatus() == SM_PAM_NO_SERVICE);
+    reset(); real_uid = 4321;                     /* no account for the user */
+    CHECK(SmPamLockStatus() == SM_PAM_NO_ACCOUNT);
+    reset(); entry_without_name = 1;
+    CHECK(SmPamLockStatus() == SM_PAM_NO_ACCOUNT);
+    reset(); real_uid = 4321; service_file_errno = ENOENT;   /* the file is looked at first */
+    CHECK(SmPamLockStatus() == SM_PAM_NO_SERVICE);
+    return 0;
+}
+static int service_file_name(void)
+{
     reset();
-    entry_without_name = 1;
-    CHECK(SmPamAvailable() == False);
-    CHECK(ask("secret") == False);
-    CHECK(pam.start_calls == 0);
+    CHECK(!strcmp(SmPamServiceFile(), "/etc/pam.d/dtsession"));
+    CHECK(access_calls == 0);
+    return 0;
+}
+static int check_password_does_not_depend_on_the_file(void)
+{
+    reset(); service_file_errno = ENOENT;         /* the check of the password is only reached when the lock exists */
+    CHECK(ask("secret") == True);
+    return 0;
+}
+static int no_password(void)
+{
     reset();
-    CHECK(SmPamAvailable() == True);
-    CHECK(pam.start_calls == 0);                 /* looking for the account is not authenticating */
+    CHECK(SmPamCheckPassword(NULL) == False);
+    CHECK(pam.start_calls == 0);
     return 0;
 }
 static int user_name_for_the_dialog(void)
@@ -471,13 +508,6 @@ static int user_name_for_the_dialog(void)
     CHECK(SmPamUserName() == NULL);
     return 0;
 }
-static int no_password(void)
-{
-    reset();
-    CHECK(SmPamCheckPassword(NULL) == False);
-    CHECK(pam.start_calls == 0);
-    return 0;
-}
 
 static struct { const char *name; int (*run)(void); } scenarios[] = {
     {"success", success}, {"wrong_password", wrong_password}, {"start_failure", start_failure},
@@ -492,7 +522,9 @@ static struct { const char *name; int (*run)(void); } scenarios[] = {
     {"allocation_failures", allocation_failures},
     {"service_name_is_fixed", service_name_is_fixed},
     {"user_is_the_one_of_the_real_uid", user_is_the_one_of_the_real_uid},
-    {"user_without_an_account", user_without_an_account},
+    {"lock_status", lock_status},
+    {"service_file_name", service_file_name},
+    {"check_password_does_not_depend_on_the_file", check_password_does_not_depend_on_the_file},
     {"user_name_for_the_dialog", user_name_for_the_dialog},
     {"no_password", no_password},
     {NULL, NULL}
@@ -505,7 +537,9 @@ static int no_pam(void)
     char *name = SmPamUserName();
     CHECK(name && !strcmp(name, "bob"));         /* the name of the user does not depend on PAM */
     free(name);
-    CHECK(SmPamAvailable() == False);
+    CHECK(SmPamLockStatus() == SM_PAM_NOT_BUILT);  /* nothing of PAM, the service file included, is looked at */
+    CHECK(SmPamServiceFile() == NULL);
+    CHECK(access_calls == 0);
     CHECK(SmPamCheckPassword("secret") == False);
     CHECK(SmPamCheckPassword("") == False);
     CHECK(SmPamCheckPassword(NULL) == False);
@@ -544,7 +578,7 @@ with tempfile.TemporaryDirectory(prefix="dtsession-pam-", dir=os.environ.get("TM
     (work / "include" / "security" / "pam_appl.h").write_text(PAM_HEADER)
     (work / "include" / "X11" / "Intrinsic.h").write_text(TOOLKIT_HEADER)
 
-    variants = (("pam", ["-DHAS_PAM_LIBRARY"], PAM_STANDIN + '#include "%s"\n' % (source / "SmPam.c") + PAM_SCENARIOS),
+    variants = (("pam", ["-DHAS_PAM_LIBRARY", '-DSM_PAM_SERVICE_FILE="/etc/pam.d/dtsession"'], PAM_STANDIN + '#include "%s"\n' % (source / "SmPam.c") + PAM_SCENARIOS),
                 ("nopam", [], '#include "%s"\n' % (source / "SmPam.c") + NOPAM_SCENARIOS))
     for name, define, body in variants:
         # SmPam.c itself is compiled with warnings as errors, apart from the harness

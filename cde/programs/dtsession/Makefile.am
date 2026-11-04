@@ -53,6 +53,16 @@ dtsession_SOURCES = SmMain.c SmHelp.c SmGlobals.c SmCommun.c		\
 
 dtsession_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(PAMLIB)
 
+# The file of the PAM service that unlocks the display, where config/Makefile.am
+# installs it.  dtsession checks for it when it starts and before it locks.
+if HAS_PAM_LIBRARY
+if FREEBSD
+dtsession_CFLAGS += -DSM_PAM_SERVICE_FILE=\"/usr/local/etc/pam.d/dtsession\"
+else
+dtsession_CFLAGS += -DSM_PAM_SERVICE_FILE=\"/etc/pam.d/dtsession\"
+endif
+endif
+
 if SOLARIS
 dtsession_SOURCES += OWsync.c
 dtsession_LDADD += -lelf

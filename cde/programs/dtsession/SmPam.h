@@ -53,10 +53,31 @@
 extern char *SmPamUserName(void);
 
 /*
- * Whether the display can be locked: the program was built with PAM and the
- * user who started it has an entry in the password database.
+ * Why the display can or cannot be locked.  The lock needs a way to unlock it
+ * again, and that way is the PAM service "dtsession" for the user who started
+ * the session.
  */
-extern Boolean SmPamAvailable(void);
+typedef enum
+{
+    SM_PAM_READY,       /* it can be locked */
+    SM_PAM_NOT_BUILT,   /* the program was built without PAM */
+    SM_PAM_NO_SERVICE,  /* the file of the PAM service is missing or unreadable */
+    SM_PAM_NO_ACCOUNT   /* the user who started the session has no account */
+} SmPamStatus;
+
+/*
+ * Check, without authenticating anyone, that the display can be locked: the
+ * program was built with PAM, the file of the PAM service can be read and the
+ * user who started it has an entry in the password database.  The checks are
+ * made in that order.
+ */
+extern SmPamStatus SmPamLockStatus(void);
+
+/*
+ * The file of the PAM service (config/dtsession.src, installed as
+ * pam.d/dtsession), or null in a program built without PAM.
+ */
+extern const char *SmPamServiceFile(void);
 
 /*
  * Whether the given password is the one of the user who started the session

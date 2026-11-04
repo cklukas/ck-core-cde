@@ -1492,7 +1492,9 @@ InitNlsStrings( void )
     /*
      * Error message when trying to lock display on trusted system
      */
-    smNLS.trustedSystemErrorString = strdup (((char *)GETMESSAGE(4, 10, "Unable to lock display due to security restrictions")));
+    smNLS.noPamErrorString = strdup (((char *)GETMESSAGE(4, 13, "Unable to lock the display: dtsession was built without PAM, which checks the password.")));
+    smNLS.pamServiceErrorString = strdup (((char *)GETMESSAGE(4, 14, "Unable to lock the display: the PAM service file %s is missing or cannot be read.")));
+    smNLS.noAccountErrorString = strdup (((char *)GETMESSAGE(4, 15, "Unable to lock the display: the account of the user who started the session was not found.")));
 }
  
                                       

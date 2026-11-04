@@ -85,10 +85,17 @@ checked through PAM, and with no other password.
 - The conversation with the PAM modules answers the password prompt and
   nothing else. A module that asks a visible question, such as a user name,
   fails the conversation.
-- A `dtsession` built without PAM cannot lock the display. The request is
-  refused with the message "Unable to lock display due to security
-  restrictions" in the error log, and the rest of the session works. Systems
-  without PAM have no screen lock.
+- The display is locked only when it can be unlocked again. `dtsession` checks
+  that when it starts and before every lock: it was built with PAM, the file of
+  the PAM service (`/etc/pam.d/dtsession`, `/usr/local/etc/pam.d/dtsession` on
+  FreeBSD, where `config/Makefile.am` installs it) can be read, and the user who
+  started the session has an account. If one of them is missing, the error log
+  says which (a build without PAM; the PAM service file, named in the message,
+  is missing or cannot be read; no account for the user), the lock request is
+  refused, and the rest of the session works. A missing service file used to
+  show only when somebody tried to unlock: PAM then falls back to a stack that
+  may refuse everybody, and the display stayed locked. Systems without PAM have
+  no screen lock.
 - An administrator ends a locked session from the console, by logging in on
   another terminal and terminating `dtsession` or the session.
 - The typed password is overwritten in memory once it has been checked, when
@@ -314,12 +321,14 @@ identity, for a `dtsession` installed setuid, setgid, both and not at all; it
 also guards the source (the identity is given up first in `main()` and no other
 code changes one). `check-pam-lock.py` compiles `SmPam.c` against a stand-in for
 the PAM library (a right and a wrong password, a start that fails, an
-authentication or an account check that fails, a module that asks something
-else than the password, failing allocations, other program names and
-environments) and once more without PAM. `check-lock-authentication.py` runs
-the password input and the start of the lock and guards the source: no other
-way to check a password, a PAM service that lets only the user in, no setuid
-installation.
+authentication or an account check that fails, a password that expired during
+the session, a module that asks something else than the password, failing
+allocations, other program names and environments, a missing or unreadable
+service file) and once more without PAM. `check-lock-authentication.py` runs
+the password input, the start of the lock and the messages that say why it
+cannot be made, and guards the source: no other way to check a password, a PAM
+service that lets only the user in, the file that is looked for is the one that
+is installed, no setuid installation.
 `check-signals.py` raises `SIGTERM` against the production handler and checks
 that nothing of the shutdown runs inside it. `check-session-files.py` runs the
 error-log rotation, the directory moves, copies and removals and the session
@@ -346,13 +355,15 @@ with `config/dtsession.src` temporarily installed as `/etc/pam.d/dtsession`.
 `dtaction LockDisplay` covers the screen; a wrong password, an empty password
 and the password of another user leave it covered (the journal shows the
 failures of `pam_unix` for the service `dtsession`), and the user's password
-uncovers it. With `SmPam.c` built without PAM the same request is refused with
-the message in `~/.dt/errorlog`, `dtsession` keeps running and a Terminal still
-opens. A root-owned setuid or setgid copy of `dtsession`, started as the user
-under `strace -f -u <user>`, shows `setreuid` (or `setregid`) to the user, the
-refused attempts to take the installed identity back, and only then the first
-open of a locale file. `chage -E` (expired account) and `passwd -l` (locked
-account) make the real `pam_unix` check refuse the right password, while `chage
--d 0` (password expired) does not keep the user out; a wrong password and the
-password of another user are refused in every case. This was run on 2026-11-04
-in the Linux guest with the build of this change.
+uncovers it. With `SmPam.c` built without PAM, or without
+`/etc/pam.d/dtsession`, the same request is refused, `~/.dt/errorlog` says why
+(and names the file) from the start of the session on, `dtsession` keeps
+running and a Terminal still opens. A root-owned setuid or setgid copy of
+`dtsession`, started as the user under `strace -f -u <user>`, shows `setreuid`
+(or `setregid`) to the user, the refused attempts to take the installed
+identity back, and only then the first open of a locale file. `chage -E`
+(expired account) and `passwd -l` (locked account) make the real `pam_unix`
+check refuse the right password, while `chage -d 0` (password expired) does not
+keep the user out; a wrong password and the password of another user are
+refused in every case. This was run on 2026-11-04 in the Linux guest with the
+build of this change.

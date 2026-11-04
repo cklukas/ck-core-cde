@@ -80,6 +80,7 @@
 #include "SmCommun.h"
 #include "SmRestore.h"
 #include "SmUI.h"
+#include "SmLock.h"
 #include "SrvPalette.h"
 #include "SmProtocol.h"
 #include "SmXSMP.h"
@@ -372,6 +373,12 @@ main (int argc, char **argv)
     }
 
     InitSMGlobals();
+
+    /*
+     * Say now, in the error log, if the display cannot be locked, instead of
+     * when somebody asks for the lock.
+     */
+    (void) LockIsAvailable();
 
     /*
      * Put the program into a wait state

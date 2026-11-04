@@ -44,11 +44,23 @@
   the password fails the conversation; the typed password is wiped from memory
   after the check. The code that read the password database and called
   `crypt()` is removed, and with it the setuid installation of `dtsession` on
-  systems without PAM: a `dtsession` built without PAM cannot lock the display,
-  logs the existing "Unable to lock display due to security restrictions"
-  message and carries on. The `account` entry of the `dtsession` PAM service
-  uses `pam_unix` (it was `pam_deny`, which the check of the account would have
-  run into). Covered by `programs/dtsession/tests/check-pam-lock.py` and
+  systems without PAM: a `dtsession` built without PAM cannot lock the display
+  (it says so in the error log and carries on). The `account` entry of the
+  `dtsession` PAM service uses `pam_unix` (it was `pam_deny`, which the check
+  of the account would have run into). Covered by
+  `programs/dtsession/tests/check-pam-lock.py` and
+  `check-lock-authentication.py`.
+- dtsession: lock the display only when it can be unlocked, and say why when it
+  cannot. At startup and before every lock request `dtsession` checks that it
+  was built with PAM, that the file of the PAM service (`/etc/pam.d/dtsession`,
+  `/usr/local/etc/pam.d/dtsession` on FreeBSD) exists and can be read, and that
+  the user who started the session has an account. If not, the error log names
+  the reason (the message for the service file names the file), the lock
+  request is refused with a bell, and the session goes on. Before, a missing
+  service file was found out when somebody tried to unlock, and a build without
+  PAM reused the generic "Unable to lock display due to security restrictions"
+  message, which is replaced by three specific ones. Covered by
+  `programs/dtsession/tests/check-pam-lock.py` and
   `check-lock-authentication.py`.
 - dtsession: carry out a `SIGTERM` shutdown from the event loop. The handler
   ran the complete shutdown (ToolTalk notices, saving the session, an X event

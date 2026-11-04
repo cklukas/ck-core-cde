@@ -81,7 +81,9 @@
 typedef struct _NlsStrings
 {
     char	*cantLockErrorString;
-    char	*trustedSystemErrorString;
+    char	*noPamErrorString;
+    char	*pamServiceErrorString;
+    char	*noAccountErrorString;
     char	*cantMallocErrorString;
     char	*cantOpenFileString;
     char	*cantForkClientString;
