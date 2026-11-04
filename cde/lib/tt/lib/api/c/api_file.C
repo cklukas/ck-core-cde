@@ -259,6 +259,9 @@ _tt_file_destroy(const char *path)
 	_Tt_db_results dberr = file->remove();
 	switch (dberr) { // XXX
 	    case TT_DB_OK:
+	    case TT_DB_ERR_NO_SUCH_FILE:
+		// (a file that the database knows nothing of has no specs to
+		// destroy)
 		status = TT_OK;
 		break;
 	    case TT_DB_ERR_DB_CONNECTION_FAILED:

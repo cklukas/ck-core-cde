@@ -455,6 +455,11 @@
   also used the null list the server answers with for no properties. Tests move
   a file with objects and properties, and one with neither, to another
   partition.
+- tt: fix `ttrm -r` and `ttrmdir`. The test of whether a path may be destroyed
+  answered no for every path when `-r` was given, so the objects of the tree were
+  left in the database; it now answers yes below the path named (never for a
+  link), and `ttrmdir` asks for the objects of an empty directory only.
+  `tt_file_destroy` of a file the database knows nothing of is `TT_OK`.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

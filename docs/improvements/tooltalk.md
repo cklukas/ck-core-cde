@@ -373,6 +373,14 @@ fail with `TT_DB_ERR_CORRUPT_DB`. A key with no properties has no records to
 read. The move then dereferenced the null list that the server gives for none;
 it moves a file with no properties and no objects as well.
 
+`ttrm -r` destroyed the objects of nothing: its test of whether a path may be
+destroyed (`remover::can_rm`) answered no for every path when the `-r` option was
+given, so the objects of the whole tree stayed in the database after the files
+were removed. It answers yes for the paths below the one named (a link never),
+and `ttrmdir` asks for the objects of an empty directory only, as `rmdir(1)`
+removes nothing else. `tt_file_destroy` of a file that the database knows
+nothing of is `TT_OK`: it has no objects to destroy.
+
 ### Mount points and paths
 
 A path that no mount point leads to (the mount table is empty or cannot be read,

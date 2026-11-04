@@ -201,43 +201,50 @@ _ttrm_paths( _Tt_string_list_ptr paths )
 bool_t remover::
 can_rm( _Tt_string path )
 {
-	if (_am_rmdir) {
-	} else {
-		if (! _recurse) {
-			struct stat lstat_buf;
+	struct stat lstat_buf;
 
-			if (lstat( (char *)path, &lstat_buf) == 0) {
-				if (S_ISDIR(lstat_buf.st_mode)) {
-					/*
-					 * rm(1) without the -r flag
-					 * won't remove directories,
-					 * but tt_file_destroy() will,
-					 * so we make sure not to ask
-					 * it to.
-					 */
-					if (! _force) {
-						fprintf( stderr, "%s: %s: %s\n",
-							 (char *)_prog_name,
-							 (char *)path,
-							 strerror(EISDIR) );
-					}
-					return FALSE;
-				} else if (S_ISLNK(lstat_buf.st_mode)) {
-					/*
-					 * Don't tt_file_destroy() a symlink,
-					 * or TT will tt_file_destroy() the
-					 * linked file.
-					 */
-					return FALSE;
-				} else {
-					return TRUE;
-				}
-			} else {
-				return FALSE;
-			}
-		}
+	if (lstat( (char *)path, &lstat_buf) != 0) {
+		return FALSE;
 	}
-	return FALSE;
+	if (S_ISLNK(lstat_buf.st_mode)) {
+		/*
+		 * Don't tt_file_destroy() a symlink,
+		 * or TT will tt_file_destroy() the
+		 * linked file.
+		 */
+		return FALSE;
+	}
+	if (S_ISDIR(lstat_buf.st_mode)) {
+		if (_am_rmdir) {
+			/*
+			 * rmdir(1) removes an empty directory only, and
+			 * tt_file_destroy() takes the objects of the
+			 * files below it too.
+			 */
+			return _tt_dir_entries( path, FALSE )->is_empty();
+		}
+		if (_recurse) {
+			return TRUE;
+		}
+		/*
+		 * rm(1) without the -r flag
+		 * won't remove directories,
+		 * but tt_file_destroy() will,
+		 * so we make sure not to ask
+		 * it to.
+		 */
+		if (! _force) {
+			fprintf( stderr, "%s: %s: %s\n",
+				 (char *)_prog_name,
+				 (char *)path,
+				 strerror(EISDIR) );
+		}
+		return FALSE;
+	}
+	/*
+	 * rmdir(1) refuses what is not a directory.
+	 */
+	return ! _am_rmdir;
 }
 
 /*
