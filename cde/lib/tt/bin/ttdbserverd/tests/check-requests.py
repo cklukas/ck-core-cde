@@ -13,7 +13,7 @@ lib/tt/bin/ttdbserverd/Makefile.am):
   TTDB_TEST_JOBS    how many compilations run at once (default 2)
   TTDB_TEST_CASES   run only these cases, a blank separated list of names
   TTDB_TEST_KEEP    keep the work directory (programs, files of the cases)
-The test program includes the production db_server_svc.C; dm_server.C,
+The test program includes the production db_server_svc.C; tt_isam_cache.C,
 db_server_functions.C and the XDR layer db_server_xdr.C are compiled next to
 it, and it is linked with the rest of the built rpc.ttdbserverd and the built
 libraries.  Each case runs in its own process; any case that fails or crashes
@@ -66,12 +66,12 @@ def fail(message):
 
 # The test replaces these objects with its own compilation of the same code:
 # db_server_svc.C is part of the test program itself.
-instrumented = ("db_server_svc", "dm_server", "db_server_functions")
+instrumented = ("db_server_svc", "tt_isam_cache", "db_server_functions")
 kept = [o for o in objects if o.rsplit("-", 1)[-1].split(".")[0] not in instrumented]
 if len(kept) != len(objects) - len(instrumented):
     fail("unexpected object list: " + " ".join(objects))
 
-sources = [tests / "requests-test.C", srcdir / "dm_server.C",
+sources = [tests / "requests-test.C", srcdir / "tt_isam_cache.C",
            srcdir / "db_server_functions.C", dbdir / "db_server_xdr.C"]
 
 

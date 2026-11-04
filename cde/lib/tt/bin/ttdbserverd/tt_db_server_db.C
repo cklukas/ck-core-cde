@@ -48,6 +48,7 @@
 #include "db/tt_db_access.h"
 
 extern FILE *errstr;
+extern int access_checking;	// rpc.ttdbserverd -n turns it off
 
 _Tt_db_server_db::_Tt_db_server_db ()
 {
@@ -1148,7 +1149,10 @@ _Tt_db_server_db::verifyAccess (const _Tt_string        &key,
 		     ((char *)record_ptr->getRecord()+TT_DB_ACCESS_MODE_OFFSET);
       stored.mode = (mode_t)ntohl(n_mode);
 
-      dbResults = stored.permits(*access, write, user_only) ?
+      // The server run with -n lets anybody read and write, and still
+      // leaves what is the owner's alone to the owner.
+      dbResults = ((!access_checking && !user_only) ||
+		   stored.permits(*access, write, user_only)) ?
 		    TT_DB_OK : TT_DB_ERR_ACCESS_DENIED;
     }
   }

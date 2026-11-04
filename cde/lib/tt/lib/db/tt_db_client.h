@@ -48,11 +48,6 @@
 #include "db/tt_db_property.h"
 #include "db/tt_db_results.h"
 
-// ********** Old DB Compatibility Include Files **********
-#include "db/tt_old_db_results.h"
-#include "db/tt_client_isam.h"
-// ********** Old DB Compatibility Include Files **********
-
 class _Tt_db_client : public _Tt_object {
 public:
   // Connects to rpc.ttdbserverd on the specified host.  If no hostname
@@ -301,40 +296,6 @@ public:
   // Delete the named session.
   _Tt_db_results delete_session(_Tt_string session);
 
-// ********** Old DB Server Compatibility Members **********
-
-  // The following members are used to provide compatibility
-  // with old DB servers.  All of the member functions map directly
-  // to an old DB server RPC call.  The names of these member functions
-  // have been kept the same as the base name of the corresponding
-  // RPC call.
-  _Tt_string mfs (const _Tt_string &path);
-  _Tt_db_results addsession (const _Tt_string &file,
-			     const _Tt_string &session);
-  _Tt_db_results delsession (const _Tt_string &file,
-			     const _Tt_string &session);
-  _Tt_db_results gettype (const _Tt_string &objid,
-			  _Tt_string       &type);
-  int isaddindex (int, struct keydesc*);
-  int isbuild (char*, int, struct keydesc*, int);
-  int isclose (int);
-  int iscntl (int, int, char*);
-  int isdelrec (int, long, char*);
-  int iserase (char*);
-  int isopen (char*, int);
-  int isread (int, char*, int);
-  int isrewrec (int, long, char*);
-  int isstart (int, struct keydesc*, int, char*, int);
-  int iswrite (int, char*);
-
-  // Data members used by the old DB server compatibility member
-  // functions.
-  int  iserrno;
-  long isrecnum;
-  int  isreclen;
-
-// ********** Old DB Server Compatibility Members **********
-
 private:
   _Tt_db_access_ptr  dbAccess;
   int                dbAuthLevel;
@@ -345,20 +306,11 @@ private:
 #if !defined(OPT_TLI)
   sockaddr_in        dbSocket;
 #endif
-  int		     dbVersion;
 
   void createAuth ();
   void setTtDBDefaults ();
   _Tt_db_results connectToDB (const _Tt_string&);
   void SetError(enum clnt_stat cf_stat);
-
-// ********** Old DB Server Compatibility Members **********
-
-  // Helper functions for old DB server function compatibility
-
-_Tt_db_results oldDBToNewDBResults (_Tt_old_db_results old_db_results);
-
-// ********** Old DB Server Compatibility Members **********
 };
 
 #endif // _TT_DB_H

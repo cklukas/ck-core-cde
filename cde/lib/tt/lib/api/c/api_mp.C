@@ -37,7 +37,6 @@
  */
 
 #include "db/tt_db_hostname_global_map_ref.h"
-#include "db/tt_old_db_partition_map_ref.h"
 #include "mp/mp_c_global.h"
 #include "mp/mp_c.h"
 #include "Tt/tt_c.h"
@@ -406,10 +405,6 @@ _tt_close()
 
 		_Tt_db_hostname_global_map_ref db_map;
 		db_map.flush();
-
-		// This map is only required for old DB server compatibility
-		_Tt_old_db_partition_map_ref old_db_map;
-		old_db_map.flush();
 
 		_Tt_api_spec_map_ref spec_map;
 		spec_map.flush();

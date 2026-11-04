@@ -63,7 +63,7 @@
 #include "tt_db_partition_global_map_ref.h"
 #include "tt_db_server_consts.h"
 #include "tt_db_server_db_utils.h"
-#include "dm_access_cache.h"
+#include "tt_isam_cache.h"
 #include "dm/dm_recfmts.h"
 
 
@@ -87,7 +87,6 @@ static	const char		* sesProp = _TT_FILEJOIN_PROPNAME;
 static	const char		* modDate = _MP_NODE_MOD_PROP;
 static	const char		* propTable = "property_table";
 
-extern _Tt_db_info	_tt_db_table[_TT_MAX_ISFD];
 
 static bool_t _tt_is_file_a_directory (const _Tt_string&);
 static _Tt_string _tt_make_equivalent_object_id(const _Tt_string &objid,

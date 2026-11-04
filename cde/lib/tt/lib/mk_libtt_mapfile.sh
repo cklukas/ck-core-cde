@@ -67,14 +67,11 @@ BEGIN {
 /_Tt_mp_prop/	{ mfput("mapfile-rare"); next; }
 # host redirection is rare, too
 /redirect/	{ mfput("mapfile-rare"); next; }
-# Functions for talking to old dbservers should be rare soon
-/_Tt_old/	{ mfput("mapfile-rare"); next; }
 /_Tt_magic/	{ mfput("mapfile-rare"); next; }
 /_Tt_table_desc/{ mfput("mapfile-rare"); next; }
 /_Tt_server/	{ mfput("mapfile-rare"); next; }
 /_Tt_buffer/	{ mfput("mapfile-rare"); next; }
 /_Tt_trans_list/{ mfput("mapfile-rare"); next; }
-/_Tt_client_isam/{ mfput("mapfile-rare"); next; }
 /_old_tt_get_real/{ mfput("mapfile-rare"); next; }
 
 # We hope nobody uses the drag-n-drop library

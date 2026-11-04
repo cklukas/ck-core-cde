@@ -59,11 +59,6 @@ public:
 
 private:
   static _Tt_db_server_db_table_ptr *dbPartitionMap;
-
-  bool_t checkForOldDB (const _Tt_string&);
-  bool_t checkForOldDBTable (const _Tt_string&,
-			     const _Tt_string&,
-			     const _Tt_string&);
 };
 
 #endif // _TT_DB_PARTITION_GLOBAL_MAP_REF_H

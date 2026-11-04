@@ -367,6 +367,21 @@
   (`permits`) that the server calls. Moving an object to another file needed
   only a read of the object and nothing of the file it moved to; it now needs a
   write of the object and of the file.
+- tt: remove the NetISAM procedures of the old servers from rpc.ttdbserverd and
+  libtt. The server answered the procedures 1 to 24 (`isopen`, `isbuild`,
+  `isread`, `iswrite`, `isrewrec`, `isdelrec`, `isstart`, `iserase`, the oid
+  access and session calls) on any table by its path, including the table that
+  holds who may do what, and their access check followed the key a client sent
+  and not the record it read or changed; no patch of that interface is complete,
+  and nothing needs it. They are gone with their XDR routines, the cache of oid
+  access information, the log of their transactions, the conversion of the
+  tables of the old servers when a partition is opened, the `_Tt_old_db` and
+  `_Tt_client_isam` classes of libtt and the fallback of `_Tt_db_client` to them,
+  and a request for a procedure from 1 to 24 is answered as one for a procedure
+  that does not exist. The table of the files the server has open moves to
+  `tt_isam_cache.C`. The option `-n` now applies to the procedures that remain,
+  which it did not before. The tests lose the cases of the removed procedures
+  and gain one that the numbers 1 to 24 are refused and do nothing.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

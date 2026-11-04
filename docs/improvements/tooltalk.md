@@ -128,20 +128,39 @@ the secure RPC credentials in builds that have them, and refuses a request with
 no credentials. Unix credentials are written by the client, so those user ids
 are as trustworthy as the clients and the network between them.
 
+The server has one interface, the requests of a partition based database
+(`TT_GET_FILE_PARTITION`, `TT_CREATE_FILE`, `TT_SET_OBJ_PROP` and so on, numbered
+from 101 in `lib/db/db_server.h`): a client names files, objects and
+properties, and the server decides which tables they are in and what the
+caller may do with them.
+
+### The procedures of the old servers are gone
+
+The servers before this one had a second set of procedures, numbered 1 to 24:
+the NetISAM calls themselves (`isopen`, `isbuild`, `isread`, `iswrite`,
+`isrewrec`, `isdelrec`, `isstart`, `iserase` and the others) on a table named by
+its path, and calls for the access and the sessions of an oid. A client could
+open any table of the server, including the one that holds who may do what, and
+read and rewrite its records; the access check of those procedures depended on
+the key the client sent and not on the record that was read or changed, and no
+check was complete. They cannot be made safe by a patch, and nothing needs them:
+libtt used them only to talk to a server that did not have the procedures above.
+They are removed from
+the server (the procedures, their XDR routines, the cache of oid access
+information and the conversion of old tables to the current layout when a
+partition is opened) and from libtt (the `_Tt_old_db` classes and the NetISAM
+client over RPC, and the fallback to them that `_Tt_db_client` took on a
+server that did not answer the call for the authentication level). A request for
+one of the numbers 1 to 24 is answered as a request for a procedure that does
+not exist, and its arguments are not decoded. The databases of the old servers
+are not read; the options a server of that kind took are the same.
+
+What was kept from the file that held them is the table of the NetISAM files the
+server has open (`tt_isam_cache.h`): `cached_isopen`, `cached_isclose` and the
+compression of the tables, which the current procedures use as before.
+
 The numbers, lengths and pointers of a request are checked before they are used:
 
-- A file descriptor outside the table of open files is refused. NetISAM hands
-  out more descriptors than the table has entries: one beyond the table is
-  closed and the open fails, and a failed `isopen` or `isbuild` no longer leaves
-  a descriptor behind that points at freed memory.
-- Records a client sends are copied into zero-padded buffers, because NetISAM
-  takes the record length from the buffer. Key descriptors, object keys, session
-  ids and paths that are missing, too short or too long are refused.
-- The transaction log is opened without following links, the length of each
-  record is checked against the buffer, and a transaction with a stale
-  descriptor no longer closes a descriptor of the server or removes the log of
-  an earlier request. A list of records is decoded in a loop, so its length
-  cannot exhaust the stack.
 - Properties a client can set, such as cache levels and the information about a
   queued message, are validated before the server uses them to size or index
   anything.
@@ -149,7 +168,7 @@ The numbers, lengths and pointers of a request are checked before they are used:
   that a client can set to any `int`. A change that finds the highest `int` fails
   instead of making the number wrap around, and a client that says it has the
   highest level is told that nothing is newer.
-- A position inside a table is no longer taken from the wire.
+- A position inside a table is not taken from the wire.
 - The user, group and mode that come with a request are moved as 32 bit words
   of their own. The routine used to move each as a `long` through a pointer to
   the field, which on a 64-bit build is 8 bytes of a 4 byte field, and the mode,
@@ -175,24 +194,22 @@ Every record of the tables starts with the key of the file or object it is
 about: the structure `_Tt_key_data` (the version, padding, and the host id, time
 and counter as longs), which is kept in the tables as it is in memory. Its size,
 `OID_KEY_LENGTH` in `lib/tt_const.h`, is 16 bytes on a 32-bit build and 32 bytes
-on a 64-bit one. The code of the old interface had the number 16 for it, so on a
-64-bit build it looked for the name of a property, and the owner of an object,
-in the middle of the key: the access check, the session procedures, `gettype`,
-the modification date, the message queue locks and the session functions of the
-new interface (`TT_GET_ALL_SESSIONS`, `TT_DELETE_SESSION`) could not find their
-records in the tables the server makes. All of them, the key descriptors and the
-bounds of the keys in the protocol now use the length of the structure, the
-access record is the one layout of the access table (a key and a long for each
-number; the 16 bit layout of the first servers is not read any more, as their
-databases are not either), and a key is zeroed before it is filled, so that its
-padding is the same in every copy of it. `ttdbck` takes its smallest and
-largest key from the same length.
+on a 64-bit one. The number 16 was written where the length of a key was meant,
+so on a 64-bit build the code looked for the name of a property, and for the
+owner of an object, in the middle of the key: the session functions
+(`TT_GET_ALL_SESSIONS`, `TT_DELETE_SESSION`) could not find their records in the
+tables the server makes. The session functions, the key descriptors and the
+bounds of the keys in the protocol use the length of the structure, the access
+record is the one layout of the access table (a key and a long for each number),
+and a key is zeroed before it is filled, so that its padding is the same in
+every copy of it. `ttdbck` takes its smallest and largest key from the same
+length.
 
 ### Who may reach what
 
 - Every request that works for a user runs with the user and groups of its own
-  credentials. Only the questions about the server itself (the authentication
-  level it requires, and the mount point and partition of a path) are served
+  credentials. Only the question about the server itself (the authentication
+  level it requires) and the mount point and partition of a path are served
   without. `TT_IS_FILE_IN_DB` and `TT_IS_OBJ_IN_DB` skipped the credentials: they
   ran with those of the request before, and answered a request that had none.
 - The partition in an object id names the directory where the database of the
@@ -203,58 +220,23 @@ largest key from the same length.
   trailing `/`). Any other is refused with `TT_DB_ERR_ILLEGAL_OBJECT`, and no
   directory is made. Before, any client could have a `TT_DB` directory made in
   any directory that the daemon, which runs as root, can write to.
-- A client of the old servers names a table `<partition>/TT_DB/<table>`, with
-  `oid_prop`, `oid_access`, `oid_container` or `docoid_path` for the table, and
-  `isbuild`, `isopen` and `iserase` serve that path and no other: `TT_DB` has
-  to be the directory above the table (a name that has `TT_DB` in it, a `..` or
-  `.` component, a relative path or an empty component is refused), the
-  directory above `TT_DB` has to be a partition as above, and neither `TT_DB` nor
-  a file of the table may be a link. `iserase` takes the name of a table of an
-  old server, never the name of a table of the layout that replaced them. It
-  and `isbuild` had no check at all, and `isopen` accepted any path with the
-  letters `TT_DB` somewhere in it. A table that does not exist yet is made in
-  the partition of the path.
-- The tables of the old interface hold the access of an object (owner, group and
-  mode) in the access table, and the check that a user may read or write the
-  properties of an object never applied: it compared the name of the property
-  table with the name the old servers gave it, while the daemon keeps the path
-  of the table under its new name, so it allowed everything. The rule is now the
-  one `rpc.ttdbserverd(1M)` documents for the option that turns it off: the
-  protection of the file the object is in decides. The owner of the file or of
-  the object may do anything; a member of the group of the file may do what the
-  group bits of the mode of the file, or of the mode of the object, give to the
-  group; everybody else what the other bits give. A request that reads and
-  writes needs both permissions. The properties of the file itself, which has no
-  file to look at, are everybody's. An object with no access record, or a
-  request with no object key, is nobody's. The superuser, and any user when the
-  daemon runs with `-n`, may do anything. All the records of a transaction are
-  checked, not the first alone, and the session procedures and `gettype` check
-  the object they work on. The access record is read in the layout of the access
-  table the server makes: the key, and a long for each number (see the length of
-  a key below). It is read each time and no longer cached by the oid alone.
-- The procedures that read and write the access of an oid (`getoidaccess`,
-  `setoiduser`, `setoidgroup`, `setoidmode`) refuse a descriptor that another
-  user opened, as every other procedure on a descriptor does.
-- `addsession` and `delsession` compared the session ids the wrong way round:
-  adding stopped at a session that was different from the new one, and deleting
-  removed the first session that was different. They also looked for the record
-  with the bytes of a key descriptor, which finds nothing. They now look for the
-  records of the property `_TT_SESSIONS` of the object, add a session that is
-  not there, remove the one that is named (a session that is not there is
-  `ENOREC`), and count up the modification date of the object.
-- The requests of the new interface are checked against the access record of
-  the file or the object (owner, group and mode) by one rule, the one of a file
-  in a Unix file system: the owner and the superuser may do anything; anybody
-  else is in the class of the group if the group that came with the request is
-  the group of the record, and in the class of the others if not, and only the
-  bits of that class count, a read needing the read bit and a write the write
-  bit. A user or group of -1 in a record stands for everybody, and a mode of -1
-  for no protection. The check used to let a write through for a user who only
-  had the read bit of his class, and gave a member of the group the bits of the
-  others when the group bits refused him. A property comes with a cache level
-  that is read first, so writing a property needs the read bit as well. Moving
-  an object to another file is a write of the object and of the file it is
-  moved to; it was a read of the object and nothing else.
+- The requests are checked against the access record of the file or the object
+  (owner, group and mode) by one rule, the one of a file in a Unix file system
+  and of `rpc.ttdbserverd(1M)`, which says that the protection of the file
+  decides: the owner and the superuser may do anything; anybody else is in the
+  class of the group if the group that came with the request is the group of the
+  record, and in the class of the others if not, and only the bits of that class
+  count, a read needing the read bit and a write the write bit. A user or group
+  of -1 in a record stands for everybody, and a mode of -1 for no protection. The
+  check used to let a write through for a user who only had the read bit of his
+  class, and gave a member of the group the bits of the others when the group
+  bits refused him. A property comes with a cache level that is read first, so
+  writing a property needs the read bit as well. Moving an object to another file
+  is a write of the object and of the file it is moved to; it was a read of the
+  object and nothing else. The option `-n`, which turns the checking off, lets
+  anybody read and write and still leaves what is the owner's alone (changing the
+  access, removing) to the owner; it had no effect on these requests, only on
+  the procedures that are gone.
 
 ### Limits of the protocol
 
@@ -280,17 +262,14 @@ by the server and libtt, so the limits hold for a reply as well as for a request
 | Ptypes of a message | 1024 | |
 | Objects of a file | 1048576 | one record each |
 | Messages in one reply | 65536 | |
-| Properties of a spec, old interface | 16 | the server answers with one |
 
 The limits are chosen far above what libtt sends or the server answers with. A
 request that exceeds one fails to decode, like any other malformed request, and
 the client gets a decode error. A name of a property longer than 64 characters,
-which the server used to cut off without saying so, is refused now. The strings
-and records of the old interface that were bounded before (table paths of
-`PATH_LENGTH` characters, records of `ISMAXRECLEN` bytes, object keys) keep
-their bounds. The test has the allocator refuse any request for more than
-64 MiB, replaces every length, count and small integer of a request of each
-procedure with huge values, and decodes each limit and the size above it.
+which the server used to cut off without saying so, is refused now. The test has
+the allocator refuse any request for more than 64 MiB, replaces every length,
+count and small integer of a request of each procedure with huge values, and
+decodes each limit and the size above it.
 
 A string that a reply has none of used to fail to encode: a missing property has
 no name, an object that does not exist has no type and one without a forward
@@ -334,13 +313,17 @@ counts and small integers replaced by huge values while the allocator refuses
 any request for more than 64 MiB, and send every reply that has a string
 the server does not have.
 
-They also serve the old interface to users with other credentials: for the
-owner of a file, a member of its group and everybody else, over the modes of the
-file and of the object, whether each of reading, writing, rewriting and
-test-and-set is allowed; the paths of `isbuild`, `isopen` and `iserase`, with
-links and with partitions that are none; the partitions of object ids; the
-credentials of the requests that skip none; the descriptors of the oid access
-procedures; and adding and removing sessions.
+They also serve the requests to users with other credentials: for the owner of a
+file or object, a member of its group and everybody else, over every combination
+of the group and other read and write bits, whether each of reading a property,
+writing a property, changing the type, reading and changing the file of an
+object, creating an object in a file and moving one into it is allowed, and that
+changing an access is the owner's alone; the rule that decides on its own, for
+all the permission bits, the kinds of caller and the records whose owner or
+group is -1; the partitions of object ids; the credentials of the requests that
+skip none; the sessions of a file in the property table the server made; and
+that the procedures 1 to 24 of the old servers are answered as procedures that
+do not exist and do nothing.
 
 Two more cases call the mount table and path functions of libtt that the server
 uses: a path that no mount point leads to, and the directory and base name of

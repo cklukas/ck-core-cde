@@ -34,7 +34,7 @@
 
 #include "tt_isam_file.h"
 #include "util/tt_port.h"
-#include "dm_access_cache.h"
+#include "tt_isam_cache.h"
 
 extern FILE *errstr;
 
