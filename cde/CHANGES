@@ -1,4 +1,17 @@
 2026-11-04
+- libDtSvc, dtlogin: check the account and keep attempts apart in the PAM
+  helper that dtlogin authenticates with. `_DtSvcPamAuthenticate` now calls
+  `pam_acct_mgmt` after `pam_authenticate` (an expired or locked account or a
+  `pam_nologin` refusal stopped nobody; a password that must be changed is
+  reported as `PAM_NEW_AUTHTOK_REQD`, as dtlogin already expected), starts every
+  authentication from a new handle (the user of an earlier failed attempt stayed
+  in the handle and was the one whose password the next attempt checked), ends
+  the handle of a refused login, no longer reads an uninitialized status or
+  sets `PAM_USER` only when something failed, and keeps the password pointer
+  only for the call. The conversation function reads the messages as the array
+  of pointers PAM passes instead of an array of structs, fails a visible
+  question or a missing password instead of answering with nothing, and frees
+  what it allocated when it fails. Covered by `lib/DtSvc/tests/check-svc-pam.py`.
 - dtsession: install without setuid, and keep a startup guard for the installed
   identity. `dtsession` no longer needs root (it was installed setuid root where
   there is no PAM, to read the password database): the `install-exec-hook` of its

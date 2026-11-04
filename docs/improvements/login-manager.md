@@ -47,6 +47,28 @@ privileges only when that really worked.
   manager's privileges.
 - The length of a message sent to the greeter is checked before it is copied.
 
+## Authentication through PAM
+
+On a system with PAM, `dtlogin` checks passwords with the helper of `libDtSvc`
+(`DtUtil2/SvcPam.c`, which also starts the session and sets the credentials).
+
+- The account is checked as well as the password. `pam_acct_mgmt` runs after a
+  successful `pam_authenticate`, so an expired or locked account and a refusal
+  by `pam_nologin` stop the login; the `account` entries of the `dtlogin`
+  service were never consulted before. A password that has to be changed is
+  reported as such (the greeter's expired-password dialog) and the login goes on.
+- Every authentication starts from a new handle. A handle kept the user of an
+  earlier attempt, so after a failed attempt for one user the next attempt, for
+  another one, checked the password against the first; the helper also read an
+  uninitialized status when it was given a handle without a service name. A
+  refused login ends its handle.
+- The conversation reads the messages as the array of pointers that PAM passes
+  (it stepped through them as an array of structs), answers the hidden prompt
+  with the password, and fails a visible question (a user name) or a prompt
+  when it has no password, instead of answering with nothing. The password is on
+  loan to the conversation for the one call; the pointer stayed in a static
+  afterwards. What a failed conversation allocated is freed.
+
 ## Tests
 
 `programs/dtlogin/tests` holds regression tests for the XDMCP handlers,
@@ -57,6 +79,13 @@ under AddressSanitizer and UndefinedBehaviorSanitizer:
 ```sh
 make -C programs/dtlogin check
 ```
+
+`lib/DtSvc/tests/check-svc-pam.py` compiles the PAM helper against a stand-in for
+the PAM library: a right and a wrong password, an account that may not log in, a
+password that has to be changed, a second attempt for another user, the session
+calls on the handle of the login, setup failures, a conversation with several
+prompts, with a visible question and without a password, and failing
+allocations.
 
 Run against the code from before these changes, the same test files fail 26 of
 their 28 scenarios; the other two check results that did not change.

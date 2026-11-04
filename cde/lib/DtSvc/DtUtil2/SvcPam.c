@@ -44,20 +44,44 @@ static struct pam_conv pam_conv = {login_conv, NULL};
 static char *saved_user_passwd;
 static pam_handle_t *pamh;
 
+/*
+ * End the handle, if there is one.  After pam_end() the handle is invalid
+ * whatever it returned.
+ */
+static void PamEnd(int status)
+{
+    if (pamh) {
+	(void) pam_end(pamh, status);
+	pamh = NULL;
+    }
+}
+
+/*
+ * Get a handle that is set up for the service, user and display.  A handle
+ * that is still there (from the authentication that this call follows) is
+ * given the service and user again; one that cannot be set up is ended.
+ */
 static int PamStart(const char *service_name, const char *user,
 		    const char *display_name)
 {
-    int status;
+    int status = PAM_SUCCESS;
     char *colon, *hostname;
 
     if (pamh) {
 	if (service_name)
 	    status = pam_set_item(pamh, PAM_SERVICE, service_name);
 
-	if (status != PAM_SUCCESS && user) pam_set_item(pamh, PAM_USER, user);
+	if (status == PAM_SUCCESS && user)
+	    status = pam_set_item(pamh, PAM_USER, user);
     }
     else {
 	status = pam_start(service_name, user, &pam_conv, &pamh);
+
+	if (status != PAM_SUCCESS) {
+	    /* there is no handle to end */
+	    pamh = NULL;
+	    return status;
+	}
     }
 
     if (status != PAM_SUCCESS) goto done;
@@ -74,15 +98,14 @@ static int PamStart(const char *service_name, const char *user,
 	goto done;
     }
 
-    if (colon = strrchr(hostname, ':')) *colon = '\0';
+    if ((colon = strrchr(hostname, ':')) != NULL) *colon = '\0';
 
     status = pam_set_item(pamh, PAM_RHOST, hostname);
 
     free(hostname);
 
 done:
-    if (status != PAM_SUCCESS && pamh && pam_end(pamh, status) == PAM_SUCCESS)
-	pamh = NULL;
+    if (status != PAM_SUCCESS) PamEnd(status);
 
     return status;
 }
@@ -91,12 +114,20 @@ done:
  * @brief Authenticate that user / password combination is legal for this
  *        system.
  *
+ * Every call starts from a new handle: the user (and whatever else a module
+ * remembered) of an earlier attempt must not decide whose password is
+ * checked.  A password that is right for an account that may not be used (it
+ * has expired, is locked, or the stack refuses it) is not accepted; only a
+ * password that has to be changed is, which the caller sees as
+ * PAM_NEW_AUTHTOK_REQD.  The handle stays for the session calls below when
+ * the user may log in, and is ended when not.
+ *
  * @param service_name
  * @param user
  * @param display_name
  * @param user_passwd
  *
- * @return See pam_authenticate.
+ * @return See pam_authenticate and pam_acct_mgmt.
  */
 int _DtSvcPamAuthenticate(const char *service_name, const char *user,
 			  const char *display_name, const char *user_passwd)
@@ -105,12 +136,25 @@ int _DtSvcPamAuthenticate(const char *service_name, const char *user,
 
     if (!user_passwd) return PAM_AUTH_ERR;
 
+    PamEnd(PAM_SUCCESS);
+
     if ((status = PamStart(service_name, user, display_name)) != PAM_SUCCESS)
 	return status;
 
+    /* the password is on loan to the conversation for this call only */
     saved_user_passwd = (char *) user_passwd;
 
-    return pam_authenticate(pamh, PAM_DISALLOW_NULL_AUTHTOK);
+    status = pam_authenticate(pamh, PAM_DISALLOW_NULL_AUTHTOK);
+
+    if (status == PAM_SUCCESS)
+	status = pam_acct_mgmt(pamh, PAM_DISALLOW_NULL_AUTHTOK);
+
+    saved_user_passwd = NULL;
+
+    if (status != PAM_SUCCESS && status != PAM_NEW_AUTHTOK_REQD)
+	PamEnd(status);
+
+    return status;
 }
 
 /**
@@ -178,66 +222,60 @@ int _DtSvcPamSetcred(const char *service_name, const char *user,
  *
  * This is a conv (conversation) function called from the PAM
  * authentication scheme.  It returns the user's password when requested by
- * internal PAM authentication modules and also logs any internal PAM error
- * messages.
+ * internal PAM authentication modules.  The password is the one that
+ * _DtSvcPamAuthenticate() has on loan; it answers every request for a hidden
+ * answer with it and nothing else.  A request for a visible answer (a user
+ * name), or for the password when there is none, fails the conversation.
+ * The messages are an array of pointers to messages.
  *****************************************************************************/
 
 static int login_conv(int num_msg, const struct pam_message **msg,
         struct pam_response **response, void *appdata_ptr)
 {
-    const struct pam_message	*m;
-    struct pam_response	*r;
-    char 			*temp;
+    struct pam_response	*answers;
+    char		*p;
     int			k;
 
-#ifdef lint
-    conv_id = conv_id;
-#endif
-    if (num_msg <= 0)
+    (void) appdata_ptr;
+
+    if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG || msg == NULL ||
+	response == NULL)
         return (PAM_CONV_ERR);
 
-    *response = (struct pam_response*)
-        calloc(num_msg, sizeof (struct pam_response));
-    if (*response == NULL)
+    answers = (struct pam_response *) calloc(num_msg, sizeof (struct pam_response));
+    if (answers == NULL)
         return (PAM_BUF_ERR);
 
-    k = num_msg;
-    m = *msg;
-    r = *response;
-    while (k--) {
+    for (k = 0; k < num_msg; k++) {
 
-        switch (m->msg_style) {
+        switch (msg[k]->msg_style) {
 
             case PAM_PROMPT_ECHO_OFF:
-                if (saved_user_passwd != NULL) {
-                    r->resp = (char *) malloc(strlen(saved_user_passwd)+1);
-                    if (r->resp == NULL) {
-                        /* __pam_free_resp(num_msg, *response); */
-                        *response = NULL;
-                        return (PAM_BUF_ERR);
-                    }
-                    (void) strcpy(r->resp, saved_user_passwd);
-                    r->resp_retcode=0;
-                }
-
-                m++;
-                r++;
+                if (saved_user_passwd == NULL ||
+		    (answers[k].resp = strdup(saved_user_passwd)) == NULL)
+		    goto failed;
                 break;
 
             case PAM_ERROR_MSG:
-                m++;
-                r++;
-                break;
-
             case PAM_TEXT_INFO:
-                m++;
-                r++;
                 break;
 
             default:
-                break;
+		goto failed;
         }
     }
 
+    *response = answers;
     return (PAM_SUCCESS);
+
+failed:
+    for (k = 0; k < num_msg; k++) {
+	if (answers[k].resp != NULL) {
+	    for (p = answers[k].resp; *p != '\0'; p++)
+		*(volatile char *) p = '\0';
+	    free(answers[k].resp);
+	}
+    }
+    free(answers);
+    return (PAM_CONV_ERR);
 }
