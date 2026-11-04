@@ -33,6 +33,7 @@
  */
 
 #include <bms/sbport.h> /* NOTE: sbport.h must be the first include. */
+#include <limits.h>
 #include <signal.h>
 
 #include <SPC/spcP.h>
@@ -449,6 +450,24 @@ SPC_Input_Handler(SPC_Channel_Ptr channel,
  * This routine handles initialization which must occur for every channel.
  */
 
+/* A channel is named on the wire by its id.  The ids come from a counter, not
+   from the channel's address, so a peer learns nothing about the memory layout
+   and an id is never negative. */
+/*----------------------------------------------------------------------+*/
+static int SPC_Next_Channel_Id(void)
+/*----------------------------------------------------------------------+*/
+{
+  static int last_cid = 0;
+  int cid;
+
+  _DtSvcProcessLock();
+  if(last_cid == INT_MAX)
+    last_cid = 0;
+  cid = ++last_cid;
+  _DtSvcProcessUnlock();
+  return(cid);
+}
+
 /*----------------------------------------------------------------------+*/
 SPC_Channel_Ptr open_channel_object(SPC_Channel_Ptr channel,
 				    int iomode,
@@ -468,8 +487,7 @@ SPC_Channel_Ptr open_channel_object(SPC_Channel_Ptr channel,
   else
     channel->read_filter=channel->class_ptr->read;
 
-  /* this (cid) should probably just be a long... */
-  channel->cid=(int) ((long)channel & 0xffffffff);
+  channel->cid=SPC_Next_Channel_Id();
   channel->identifier = Channel_Identifier;
   channel->IOMode     = iomode;
   channel->wires[STDIN] = (&dummy_wire);

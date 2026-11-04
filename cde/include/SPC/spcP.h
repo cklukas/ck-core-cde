@@ -92,6 +92,8 @@
 
 #define REQUEST_HEADER_LENGTH 20
 #define MAXREQLEN  (SPC_BUFSIZ+REQUEST_HEADER_LENGTH)
+/* The largest payload a request may carry; the header is not part of it. */
+#define MAXPAYLOADLEN  SPC_BUFSIZ
 #define DEFAULT_ENVP_SIZE     50
 
 /*
@@ -276,7 +278,9 @@ typedef struct _wire {
 } Wire;
 
 typedef struct _buffered_data {
-  XeChar data[MAXREQLEN];
+  /* One byte beyond a full request holds the NUL that SPC_Read_Chars stores
+     after the payload, so parsers can rely on a terminated string. */
+  XeChar data[MAXREQLEN + 1];
   int len, offset;
 } buffered_data, *buffered_data_ptr;
 

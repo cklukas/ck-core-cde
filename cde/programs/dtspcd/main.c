@@ -44,6 +44,8 @@
 
 #include <unistd.h>			/* initgroups() */
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <grp.h>
 
 #include <string.h>
@@ -73,7 +75,7 @@ static void Merge_Lang_Var(SPC_Channel_Ptr channel);
 
 void SPCD_Handle_Client_Data(void *channel, int *source, SbInputId *id );
 int SPCD_Initialize(void);
-void SPCD_Exit(int exitval);
+[[noreturn]] void SPCD_Exit(int exitval);
 void SPCD_Handle_Application_Data(void *chn, XeString text, int size, int conn_type );
 void SPCD_Termination_Handler(SPC_Channel_Ptr channel, int pid, int type, int cause, void *data );
 int Client_Abort(protocol_request_ptr prot);
@@ -106,7 +108,7 @@ int Client_Enhanced_Spawn(protocol_request_ptr prot);
 # define SA_HANDLER_INT_ARG
 #endif /* _AIX */
 
-void conditional_putenv(XeString env_str);
+int conditional_putenv(XeString env_str);
 void SPCD_Reply(SPC_Connection_Ptr connection, protocol_request_ptr prot, int retval, int errval );
 #ifdef SA_HANDLER_INT_ARG
 void SPCD_Alarm_Handler (int);
@@ -339,6 +341,31 @@ int main(int argc, XeString *argv)
   SPCD_Exit(0);
 }
 
+/* The requests that act on a channel of their own; the others (register,
+   open, environment and debug requests) do not name one. */
+/*----------------------------------------------------------------------+*/
+static int Request_Needs_Channel(int type)
+/*----------------------------------------------------------------------+*/
+{
+  switch(type) {
+  case APPLICATION_DATA:
+  case CHANNEL_CLOSE:
+  case CHANNEL_RESET:
+  case CHANNEL_ATTACH:
+  case APPLICATION_SPAWN:
+  case APPLICATION_SIGNAL:
+  case QUERY_DEVICES:
+  case QUERY_LOGFILE:
+  case DELETE_LOGFILE:
+  case CHANNEL_SEND_EOF:
+  case CHANNEL_TERMIOS:
+  case APP_B00_SPAWN:
+    return(TRUE);
+  default:
+    return(FALSE);
+  }
+}
+
 /*----------------------------------------------------------------------+*/
 void SPCD_Handle_Client_Data(void      *channel,
 			     int       *UNUSED_PARM(source),
@@ -368,7 +395,12 @@ void SPCD_Handle_Client_Data(void      *channel,
   }
 
   SPCD_Abort_Okay = TRUE;
-  retval=SPC_Dispatch_Protocol(prot, spcd_protocol_dispatch_table);
+  if(Request_Needs_Channel(prot->request_type) && prot->channel == NULL) {
+    /* The channel id names no channel of this client. */
+    SPC_Error(SPC_Protocol);
+    retval = SPC_ERROR;
+  } else
+    retval=SPC_Dispatch_Protocol(prot, spcd_protocol_dispatch_table);
   SPCD_Abort_Okay = FALSE;
   if(REPLY_EXPECTED(prot->request_type, TRUE) != NO_REPLY_VAL)
     SPCD_Reply(connection, prot, retval, errno);
@@ -488,139 +520,194 @@ int Client_Abort(protocol_request_ptr prot)
   return(print_protocol_request((XeString)"--> ABORT", prot));
 }
 
-#define FREE_USER_PASS(a, b) free(a); free(b);
+
+/* Sixteen hexadecimal digits from the system's random source.  The name of
+   the authentication file is chosen by the daemon, and no other process may be
+   able to guess it. */
+/*----------------------------------------------------------------------+*/
+static int Authentication_Suffix(char *suffix, size_t size)
+/*----------------------------------------------------------------------+*/
+{
+  unsigned char raw[8];
+  size_t i;
+  ssize_t got;
+  int fd;
+
+  if(size < 2 * sizeof(raw) + 1)
+    return(FALSE);
+  fd = open("/dev/urandom", O_RDONLY);
+  if(fd < 0)
+    return(FALSE);
+  do
+    got = read(fd, raw, sizeof(raw));
+  while(got < 0 && errno == EINTR);
+  close(fd);
+  if(got != (ssize_t)sizeof(raw))
+    return(FALSE);
+  for(i = 0; i < sizeof(raw); i++)
+    snprintf(suffix + 2 * i, size - 2 * i, "%02x", raw[i]);
+  return(TRUE);
+}
+
+/* Give up the daemon's identity for the authenticated user's.  inetd starts
+   the daemon as root, and every command the client then asks for would run with
+   that authority if any step here did not take effect, so each step is
+   checked and the caller stops the daemon on failure. */
+/*----------------------------------------------------------------------+*/
+static int Become_User(const char *name, uid_t uid, gid_t gid)
+/*----------------------------------------------------------------------+*/
+{
+  if(geteuid() == 0 && initgroups(name, gid) == -1) {
+    SPC_Format_Log((XeString)"+++> FAILURE: initgroups ('%s', %u): %s",
+		   name, (unsigned int)gid, strerror(errno));
+    return(FALSE);
+  }
+  if((getegid() != gid || getgid() != gid) && setgid(gid) == -1) {
+    SPC_Format_Log((XeString)"+++> FAILURE: setgid (%u): %s",
+		   (unsigned int)gid, strerror(errno));
+    return(FALSE);
+  }
+  if((geteuid() != uid || getuid() != uid) && setuid(uid) == -1) {
+    SPC_Format_Log((XeString)"+++> FAILURE: setuid (%u): %s",
+		   (unsigned int)uid, strerror(errno));
+    return(FALSE);
+  }
+  if(getegid() != gid || getgid() != gid ||
+     geteuid() != uid || getuid() != uid) {
+    SPC_Format_Log((XeString)"+++> FAILURE: the process identity did not change to '%s'.", name);
+    return(FALSE);
+  }
+  /* A process that held root must not be able to take it back. */
+  if(uid != 0 && setuid(0) == 0) {
+    SPC_Format_Log((XeString)"+++> FAILURE: root privileges were not dropped.");
+    return(FALSE);
+  }
+  return(TRUE);
+}
+
+/* Refuse the registration: tell the client, report the error and finish. */
+#define REFUSE_REGISTRATION(code) \
+  do { \
+    SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY, \
+			       FAILED_FILE_NAME, NULL, NULL); \
+    SPC_Error(code); \
+    goto done; \
+  } while(0)
 
 /*----------------------------------------------------------------------+*/
 int Client_Register(protocol_request_ptr prot)
 /*----------------------------------------------------------------------+*/
 {
-  XeString username;
-  XeString passwd;
-  XeString proto_ver;
-  XeString hostinfo;
+  XeString username = NULL;
+  XeString passwd = NULL;
+  XeString proto_ver = NULL;
+  XeString hostinfo = NULL;
   struct passwd *pwent;
-  XeString tmpfile, tmppath;
+  XeString tmpfile = NULL, tmppath = NULL;
+  int free_tmppath = 0;
   XeChar  buffer[MAXPATHLEN * 2];
   struct stat buf;
-  XeString netfile;
+  XeString netfile = NULL;
   int free_netfile = 0;
-  char *spc_prefix = "/.SPC_";
-  char *spc_suffix;
-  char tmpnam_buf[L_tmpnam + 1];
+  XeString env_file = NULL;
+  protocol_request_ptr reply;
+  const char *spc_prefix = "/.SPC_";
+  char suffix[2 * 8 + 1];
   size_t buffsize;
+  uid_t uid;
+  gid_t gid;
+  int version;
+  int result = SPC_ERROR;
 
   print_protocol_request((XeString)"--> REGISTER", prot);
   prot->channel=0;
 
-  READ_REGISTER(prot->dataptr, username, passwd, proto_ver, hostinfo);
-  
-  if(strcmp(username, "") != 0) {
-    SPC_Format_Log ( "+++> Starting authentication for user '%s'\n     from host '%s'.", 
-	    username, hostinfo);
-    /*  
-     * We have a username so generate a temp filename and send it 
-     * back to the client after creating the proper path for the file.
-     */
-    if(SPCD_Authentication_Dir)
-      /*
-       * Use the directory specified on the command line.
-       */
-      tmppath = strdup(SPCD_Authentication_Dir);
-    else {
-      /*
-       * Use the $HOME directory if it can be retrieved from the
-       * password file.
-       */
-      if(!(pwent=getpwnam(username))) {
-	SPC_Format_Log ("+++> FAILURE: username '%s' is unknown.", username);
-	SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-			           FAILED_FILE_NAME, NULL, NULL);
-	FREE_USER_PASS(username, passwd);
-	SPC_Error(SPC_Bad_Username);
-	free(hostinfo);
-	return(SPC_ERROR);
-      }
-      else {
-	tmppath = (XeString)(pwent->pw_dir);
-	   
-        if ((lstat (tmppath, &buf) != 0) || 
-	    (!S_ISDIR(buf.st_mode))     || 
-	    (!(buf.st_mode & S_IRUSR)))
-	  /*
-	   * Use the default directory.
-	   */
-	  tmppath = XeSBTempPath(XeString_NULL);
-      }
-    }
-
-    /*
-     * tempnam(3) has side effects caused by permissions of the directory
-     * given or the TMPDIR envirnoment variable.  Because of these side
-     * effects, the function may return "/tmp/.SPC_xxxxxx" and ignore
-     * tmppath.  The protocol will fail when this occurs.  The fix is
-     * to construct the tmpfile name.
-     */
-    tmpnam(tmpnam_buf);
-    spc_suffix = basename(tmpnam_buf); /* Don't free result - not alloc'd! */
-
-    /* Allocate space for tmppath, spc_prefix, and spc_suffix. */
-    buffsize = strlen(tmppath) + strlen(spc_prefix) + strlen(spc_suffix) + 1;
-    tmpfile = (char *)malloc(buffsize);
-    if(tmpfile) {
-        snprintf(tmpfile, buffsize, "%s%s%s", tmppath, spc_prefix, spc_suffix);
-    }
+  if(READ_REGISTER(prot->dataptr, username, passwd, proto_ver, hostinfo) != TRUE) {
+    SPC_Format_Log((XeString)"+++> FAILURE: malformed REGISTER request.");
+    REFUSE_REGISTRATION(SPC_Protocol);
   }
+
+  if(username[0] == '\0') {
+    /* No username was supplied (this could happen with pre-CDE clients). */
+    SPC_Format_Log((XeString)"+++> FAILURE: NULL username.");
+    REFUSE_REGISTRATION(SPC_Bad_Username);
+  }
+
+  SPC_Format_Log ((XeString)"+++> Starting authentication for user '%s'\n     from host '%s'.",
+		  username, hostinfo);
+  /*
+   * We have a username so generate a temp filename and send it
+   * back to the client after creating the proper path for the file.
+   */
+  if(SPCD_Authentication_Dir)
+    /*
+     * Use the directory specified on the command line.
+     */
+    tmppath = SPCD_Authentication_Dir;
   else {
-#if 0
     /*
-     * No username was supplied (this could happen with pre-CDE
-     * clients) so generate a temp filename.
+     * Use the $HOME directory if it can be retrieved from the
+     * password file.
      */
-    if(SPCD_Authentication_Dir)
-      tmppath = strdup(SPCD_Authentication_Dir);
-    else
+    if(!(pwent=getpwnam(username))) {
+      SPC_Format_Log ((XeString)"+++> FAILURE: username '%s' is unknown.", username);
+      REFUSE_REGISTRATION(SPC_Bad_Username);
+    }
+    tmppath = (XeString)(pwent->pw_dir);
+
+    if ((lstat (tmppath, &buf) != 0) ||
+	(!S_ISDIR(buf.st_mode))     ||
+	(!(buf.st_mode & S_IRUSR))) {
+      /*
+       * Use the default directory.
+       */
       tmppath = XeSBTempPath(XeString_NULL);
-    tmpfile = tempnam(tmppath, ".SPC_" );
-    XeFree(tmppath);
-#endif
-
-    SPC_Format_Log ("+++> FAILURE: NULL username.");
-    SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-			       FAILED_FILE_NAME, NULL, NULL);
-    FREE_USER_PASS(username, passwd);
-    SPC_Error(SPC_Bad_Username);
-    free(hostinfo);
-    return(SPC_ERROR);
-
+      free_tmppath = 1;
+    }
   }
 
+  /*
+   * The file name is built here from a random suffix.  tempnam(3) can ignore
+   * the directory it is given, and tmpnam(3) names are predictable.
+   */
+  if(!Authentication_Suffix(suffix, sizeof(suffix))) {
+    SPC_Format_Log((XeString)"+++> FAILURE: cannot generate an authentication file name.");
+    REFUSE_REGISTRATION(SPC_Bad_Authentication);
+  }
+
+  /* Allocate space for tmppath, spc_prefix, and the suffix. */
+  buffsize = strlen(tmppath) + strlen(spc_prefix) + strlen(suffix) + 1;
+  tmpfile = (char *)malloc(buffsize);
   if(!tmpfile) {
-    SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-			       FAILED_FILE_NAME, NULL, NULL);
-    SPC_Format_Log("+++> FAILURE: cannot malloc.");
-    SPC_Error(SPC_Out_Of_Memory);
-    free(hostinfo);
-    return(SPC_ERROR);
+    SPC_Format_Log((XeString)"+++> FAILURE: cannot malloc.");
+    REFUSE_REGISTRATION(SPC_Out_Of_Memory);
   }
+  snprintf(tmpfile, buffsize, "%s%s%s", tmppath, spc_prefix, suffix);
+  if(free_tmppath) {
+    XeFree(tmppath);
+    free_tmppath = 0;
+  }
+  tmppath = NULL;
 
-  /* 
-   * Store info about the client (protocol version & host type) 
-   * For Pre A.01, this will be defaulted to (hpux 7.0 s300) 
+  /*
+   * Store info about the client (protocol version & host type)
+   * For Pre A.01, this will be defaulted to (hpux 7.0 s300)
    */
   client_connection->hostinfo = hostinfo;
+  hostinfo = NULL;			/* the connection owns it now */
 
   if (proto_ver) {
-      (void) sscanf(proto_ver, "%d", &client_connection->protocol_version);
+      if (sscanf(proto_ver, "%d", &version) == 1)
+	  client_connection->protocol_version = version;
       SPC_client_version_number = client_connection->protocol_version;
-      XeFree(proto_ver);
   }
   else
       /* The client didn't send a protocol_version so set it to "1". */
       SPC_client_version_number = 1;
 
-  SPC_Format_Log("     Client protocol version is '%d'.", 
+  SPC_Format_Log((XeString)"     Client protocol version is '%d'.",
 		 SPC_client_version_number);
-  SPC_Format_Log("+++> Authentication file is '%s'.", tmpfile);
+  SPC_Format_Log((XeString)"+++> Authentication file is '%s'.", tmpfile);
 
   /*
    * For non-CDE clients, the clients expect the daemon to send
@@ -633,62 +720,55 @@ int Client_Register(protocol_request_ptr prot)
      netfile = tt_file_netfile (tmpfile);
 
      if (tt_ptr_error (netfile) != TT_OK) {
-       SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-				  FAILED_FILE_NAME, NULL, NULL);
-       SPC_Format_Log("+++> FAILURE: cannot create a cannonical file name for the authentication file.\n     (%s)", 
+       SPC_Format_Log((XeString)"+++> FAILURE: cannot create a cannonical file name for the authentication file.\n     (%s)",
 		      tt_status_message(tt_pointer_error(netfile)));
-       XeFree(tmpfile);
-       SPC_Error(SPC_Bad_Authentication);
-       return(SPC_ERROR);
+       netfile = NULL;
+       REFUSE_REGISTRATION(SPC_Bad_Authentication);
      }
      free_netfile = 1;
-     SPC_Format_Log("     Authentication 'netfile' is '%s'.", netfile);
+     SPC_Format_Log((XeString)"     Authentication 'netfile' is '%s'.", netfile);
   }
 
   /* As we send the next packet, include protocol and host info about */
   /* us (the server).  If going to a pre A.02 client, it will be      */
   /* ignored by it.                                                   */
 
-  SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY, 
-			     netfile, SPC_PROTOCOL_VERSION_STR, 
-		             SPC_LocalHostinfo());
+  SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
+			     netfile, SPC_PROTOCOL_VERSION_STR,
+			     SPC_LocalHostinfo());
 
-  prot=SPC_Filter_Connection(client_connection, NULL, REGISTER, TRUE);
-  if(prot==SPC_ERROR) {
-    XeFree(tmpfile);
-    return(SPC_ERROR);
-  }
-  sprintf(buffer, (XeString)"--> REGISTER (%s)", netfile);
-  print_protocol_request(buffer, prot);
-  SPC_Free_Protocol_Ptr(prot);
+  reply=SPC_Filter_Connection(client_connection, NULL, REGISTER, TRUE);
+  if(reply==SPC_ERROR)
+    goto done;
+  snprintf(buffer, sizeof(buffer), "--> REGISTER (%s)", netfile);
+  print_protocol_request(buffer, reply);
+  SPC_Free_Protocol_Ptr(reply);
 
   /* Was the client able to create the authentication */
   /* file in the temp directory?		        */
 
   if(lstat(tmpfile, &buf)==ERROR) {
     int terrno = errno;
-    SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-			       FAILED_FILE_NAME, NULL, NULL);
-    SPC_Format_Log("+++> FAILURE: lstat authentication file '%s'.", tmpfile);
-    SPC_Format_Log("+++> FAILURE: lstat() returned error '%s'\n", 
-                   strerror(terrno));
-    if (free_netfile)
-      tt_free(netfile);
-    XeFree(tmpfile);
-    SPC_Error(SPC_Bad_Authentication);
-    return(SPC_ERROR);
+    SPC_Format_Log((XeString)"+++> FAILURE: lstat authentication file '%s'.", tmpfile);
+    SPC_Format_Log((XeString)"+++> FAILURE: lstat() returned error '%s'\n",
+		   strerror(terrno));
+    REFUSE_REGISTRATION(SPC_Bad_Authentication);
   }
 
   if (S_ISLNK(buf.st_mode))
     {				/* somebody is jerkin us around */
-      SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-                                 FAILED_FILE_NAME, NULL, NULL);
-      SPC_Format_Log("+++> FAILURE: lstat authentication file '%s' is a symlink! Possible compromise attempt.", tmpfile);
-      if (free_netfile)
-        tt_free(netfile);
-      XeFree(tmpfile);
-      SPC_Error(SPC_Bad_Authentication);
-      return(SPC_ERROR);
+      SPC_Format_Log((XeString)"+++> FAILURE: lstat authentication file '%s' is a symlink! Possible compromise attempt.", tmpfile);
+      REFUSE_REGISTRATION(SPC_Bad_Authentication);
+    }
+
+  /*
+   * The file must be a plain file with one name.  A hard link to another
+   * user's setuid file passes every test below with that user's identity.
+   */
+  if (!S_ISREG(buf.st_mode) || buf.st_nlink != 1)
+    {
+      SPC_Format_Log((XeString)"+++> FAILURE: authentication file '%s' is not a plain file with a single link. Possible compromise attempt.", tmpfile);
+      REFUSE_REGISTRATION(SPC_Bad_Authentication);
     }
 
   /*
@@ -698,86 +778,98 @@ int Client_Register(protocol_request_ptr prot)
    * not be set and the client will not be able to connect.
    */
   if(!(buf.st_mode & S_ISUID)) {
-    SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-			       FAILED_FILE_NAME, NULL, NULL);
-    SPC_Format_Log("+++> FAILURE: authentication file '%s' does not have the setuid bit set.",
+    SPC_Format_Log((XeString)"+++> FAILURE: authentication file '%s' does not have the setuid bit set.",
 		   tmpfile);
-    if (free_netfile)
-      tt_free(netfile);
-    XeFree(tmpfile);
-    SPC_Error(SPC_Bad_Permission);
-    return(SPC_ERROR);
+    REFUSE_REGISTRATION(SPC_Bad_Permission);
   }
-    
+
   unlink(tmpfile);
-  XeFree(tmpfile);
-    
-  /* 
-   * Is uid associated with the authentication file created by the 
-   * client present in our password file?    
+
+  /*
+   * Is uid associated with the authentication file created by the
+   * client present in our password file?
    */
   if(!(pwent=getpwuid(buf.st_uid))) {
-    SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-			       FAILED_FILE_NAME, NULL, NULL);
-    SPC_Format_Log("+++> FAILURE: the authentication file created by the client has a uid '%d'\n     and this uid is not in the password file.",
-		     buf.st_uid);
-    SPC_Error(SPC_Bad_Username);
-    if (free_netfile)
-      tt_free(netfile);
-    return(SPC_ERROR);
+    SPC_Format_Log((XeString)"+++> FAILURE: the authentication file created by the client has a uid '%d'\n     and this uid is not in the password file.",
+		   (int)buf.st_uid);
+    REFUSE_REGISTRATION(SPC_Bad_Username);
   }
 
   /*
-   * Comapre the user name in the request with the user name in 
+   * Comapre the user name in the request with the user name in
    * the passwd file.  They must be the same to continue.
    */
   if (strcmp (pwent->pw_name, username) != 0) {
-      SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-				 FAILED_FILE_NAME, NULL, NULL);
-      SPC_Format_Log("+++> FAILURE: the request is for username '%s' with uid '%d'\n     but this uid has name '%s' in the password file.",
-		     username,
-		     buf.st_uid,
-		     pwent->pw_name);
-      SPC_Error(SPC_Bad_Password);
-      if (free_netfile)
-	tt_free(netfile);
-      return(SPC_ERROR);
+    SPC_Format_Log((XeString)"+++> FAILURE: the request is for username '%s' with uid '%d'\n     but this uid has name '%s' in the password file.",
+		   username,
+		   (int)buf.st_uid,
+		   pwent->pw_name);
+    REFUSE_REGISTRATION(SPC_Bad_Password);
   }
 
-  client_validated=TRUE;
+  uid = pwent->pw_uid;
+  gid = pwent->pw_gid;
 
   /*
-   * Need to initialize the group access list if a username
-   * was supplied in the request.
+   * Prepare the user's environment before giving up privileges.  The passwd
+   * entry is static storage, so the strings are copied out of it here.
    */
-  if ((initgroups(username, pwent->pw_gid)) == -1) {
-        SPC_Format_Log("+++> FAILURE: initgroups ('%s', '%s')",
-		       username, 
-		       pwent->pw_gid);
+  if(snprintf(HomeDir, sizeof(HomeDir), "HOME=%s", pwent->pw_dir) >= (int)sizeof(HomeDir) ||
+     snprintf(ShellDir, sizeof(ShellDir), "SHELL=%s", pwent->pw_shell) >= (int)sizeof(ShellDir)) {
+    SPC_Format_Log((XeString)"+++> FAILURE: the home directory or shell of '%s' is too long.", username);
+    REFUSE_REGISTRATION(SPC_Env_Too_Big);
   }
+  buffsize = strlen(pwent->pw_dir) + strlen(SPCD_ENV_HOME_DIRECTORY) +
+	     strlen(SPCD_ENV_FILE) + 3;
+  env_file = (XeString)malloc(buffsize);
+  if(!env_file) {
+    SPC_Format_Log((XeString)"+++> FAILURE: cannot malloc.");
+    REFUSE_REGISTRATION(SPC_Out_Of_Memory);
+  }
+  snprintf(env_file, buffsize, "%s/%s/%s", pwent->pw_dir,
+	   SPCD_ENV_HOME_DIRECTORY, SPCD_ENV_FILE);
 
-  /* We have authenticated ourselves.  Set the process identifiers of
-     this process to the looked up ones. */
-  setgid(pwent->pw_gid);
-  setuid(pwent->pw_uid);
+  /*
+   * We have authenticated ourselves.  Set the process identifiers of this
+   * process to the looked up ones.  If that does not work completely the
+   * daemon must not go on: it may still be root.
+   */
+  if(!Become_User(username, uid, gid)) {
+    SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
+			       FAILED_FILE_NAME, NULL, NULL);
+    SPC_Error(SPC_Bad_Permission);
+    SPCD_Exit(1);
+  }
+  client_validated=TRUE;
 
-  Xechdir(pwent->pw_dir);
-  sprintf(HomeDir,  (XeString)"HOME=%s",  pwent->pw_dir);
-  sprintf(ShellDir, (XeString)"SHELL=%s", pwent->pw_shell);
+  Xechdir(HomeDir + strlen("HOME="));
   putenv(HomeDir);
   putenv(ShellDir);
 
-  spc_user_environment_file=(XeString)XeMalloc(MAXPATHLEN);
-  sprintf(spc_user_environment_file, (XeString)"%s/%s/%s", pwent->pw_dir, 
-	  SPCD_ENV_HOME_DIRECTORY, SPCD_ENV_FILE);
+  spc_user_environment_file = env_file;
+  env_file = NULL;			/* kept for the life of the daemon */
   default_environment=
     SPC_Add_Env_File(spc_user_environment_file, default_environment);
 
   SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
 			     PASSED_FILE_NAME, NULL, NULL);
 
-  return(prot->seqno);
+  result = TRUE;
+
+done:
+  if(free_tmppath)
+    XeFree(tmppath);
+  if(free_netfile)
+    tt_free(netfile);
+  XeFree(tmpfile);
+  XeFree(env_file);
+  XeFree(username);
+  XeFree(passwd);
+  XeFree(proto_ver);
+  XeFree(hostinfo);
+  return(result);
 }
+#undef REFUSE_REGISTRATION
 
 /*----------------------------------------------------------------------+*/
 int Client_Unregister(protocol_request_ptr prot)
@@ -790,11 +882,14 @@ int Client_Unregister(protocol_request_ptr prot)
 int Client_Channel_Open(protocol_request_ptr prot)
 /*----------------------------------------------------------------------+*/
 {
-  int iomode;
+  int iomode = 0;
   SPC_Channel_Ptr channel;
 
   print_protocol_request((XeString)"--> CHANNEL_OPEN", prot);
-  READ_OPEN(prot->dataptr, iomode);
+  if(READ_OPEN(prot->dataptr, iomode) != 1) {
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
 
   /* Don't ever wanna wait, do line-oriented reads,
      use the toolkit, or execute as a system command */
@@ -816,7 +911,8 @@ int Client_Channel_Open(protocol_request_ptr prot)
   XeSPCAddInput(channel, SPCD_Handle_Application_Data, channel);
   XeSPCRegisterTerminator(channel, SPCD_Termination_Handler, channel);
 
-  return((int) (intptr_t) channel);
+  /* The client names the channel by this id in its later requests. */
+  return(channel->cid);
 }
 
 /*----------------------------------------------------------------------+*/
@@ -858,11 +954,14 @@ int Client_Channel_Attach(protocol_request_ptr prot)
 /*----------------------------------------------------------------------+*/
 {
   SPC_Channel_Ptr channel=prot->channel;
-  int pid;
+  int pid = 0;
 
   print_protocol_request((XeString)"--> ATTACH", prot);
 
-  READ_ATTACH(prot->dataptr, pid);
+  if(READ_ATTACH(prot->dataptr, pid) != 1) {
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
   return(XeSPCAttach(channel, pid));
 }
 
@@ -912,10 +1011,13 @@ int Client_Application_Spawn(protocol_request_ptr prot)
   int retval;
 
   print_protocol_request((XeString)"--> APPLICATION_SPAWN", prot);
-  READ_APPLICATION_SPAWN(prot->dataptr,
-			 channel->path,
-			 channel->context_dir,
-			 channel->argv, channel->envp);
+  if(READ_APPLICATION_SPAWN(prot->dataptr,
+			    channel->path,
+			    channel->context_dir,
+			    channel->argv, channel->envp) != TRUE) {
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
 
   Merge_Lang_Var(channel);
 
@@ -982,13 +1084,13 @@ int Client_Application_Data(protocol_request_ptr prot)
 int Client_Server_Debug(protocol_request_ptr prot)
 /*----------------------------------------------------------------------+*/
 {
-  SPC_Channel_Ptr channel=prot->channel;
   buffered_data_ptr pdata=prot->dataptr;
-  XeChar filename[MAXPATHLEN];
+  XeString filename;
   time_t timeval;
 
   print_protocol_request((XeString)"--> SERVER_DEBUG", prot);
-  READ_DEBUG(pdata, filename);
+  /* The file name stays in the request buffer, which ends in a NUL. */
+  READ_STRING_NO_COPY(pdata, filename);
 
   if(SPC_Print_Protocol)
     fclose(SPC_Print_Protocol);
@@ -1013,45 +1115,40 @@ int Client_Server_Debug(protocol_request_ptr prot)
 */
 
 /*----------------------------------------------------------------------+*/
-void conditional_putenv(XeString env_str)
+int conditional_putenv(XeString env_str)
 /*----------------------------------------------------------------------+*/
 {
+  /* Returns TRUE when the string was handed to putenv(), which keeps it. */
   if(strncmp(env_str, (XeString)"HOME=", 5) && /* HOME may be different */
      strncmp(env_str, (XeString)"PWD=", 4)     /* PWD set by chdir, may change */
                                                /* Should SHELL be on this list? */
      )
     {
-      putenv(env_str);
+      return(putenv(env_str) == 0);
     }
+  return(FALSE);
 }
 
 /*----------------------------------------------------------------------+*/
 int Client_Environ_Reset(protocol_request_ptr prot)
 /*----------------------------------------------------------------------+*/
 {
-  int num_vars;
-  XeString envp[100];
   char **ret;
   int outlen, i;
 
-  ret = NULL;
-  READ_ENVIRON_RESET(prot->dataptr, num_vars);
-  if(num_vars < 100)
-    ret = envp;
-
   ret = SPC_Get_Multi_Packet(client_connection, prot,
-			     ret, &outlen,
-			     ENVIRON_RESET, "--> ENVIRON_RESET");
+			     &outlen,
+			     ENVIRON_RESET, (XeString)"--> ENVIRON_RESET");
 
   if(ret == NULL)
     return(SPC_ERROR);
 
+  /* putenv() keeps the strings it is given; the others are released. */
   for(i=0; i<outlen; i++)
-    if(ret[i] && *ret[i])
-      conditional_putenv(ret[i]);
+    if(ret[i] && !(*ret[i] && conditional_putenv(ret[i])))
+      free(ret[i]);
 
-  if(ret != envp)
-    free((char *)ret);
+  free((char *)ret);
 
   return(TRUE);
 }
@@ -1147,78 +1244,110 @@ int Client_Channel_Termios(protocol_request_ptr prot)
 
   print_protocol_request((XeString)"--> CHANNEL_TERMIOS", prot);
 
-  READ_TERMIOS(prot->dataptr, connection, side, buffer);
+  if(!SPC_Read_Termios_Request(prot, &connection, &side,
+			       buffer, sizeof(buffer))) {
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
+  memset(&t, 0, sizeof(t));
   SPC_Encode_Termios(buffer, &t);
-  
-  
+
   return(XeSPCSetTermio(channel, connection, side, &t));
 }
 
 int Client_Enhanced_Spawn(protocol_request_ptr prot)
 {
   SPC_Channel_Ptr channel = prot->channel;
-  int num_vars;
-  XeString buf[100];
   char **ret;
-  int numenv, numarg;
-  int return_value, outlen, i;
-
-  ret = NULL;
-  READ_ENVIRON_RESET(prot->dataptr, num_vars);
-  if(num_vars < 100)
-    ret = buf;
+  char *end;
+  long numarg, numenv;
+  int outlen, i;
+  int argc_count, separator, first_env, env_count;
+  int return_value;
 
   ret = SPC_Get_Multi_Packet(client_connection, prot,
-			     ret, &outlen,
-			     APP_B00_SPAWN, "--> APP_B00_SPAWN");
+			     &outlen,
+			     APP_B00_SPAWN, (XeString)"--> APP_B00_SPAWN");
 
   if(ret == NULL)
     return(SPC_ERROR);
 
+  /*
+   * The strings are: path, directory, the counts of the argv and envp
+   * strings (each one more than the strings sent, or zero when there is
+   * none), the argv strings, a separator, and the environment strings.
+   */
+  if(outlen < 5 || !ret[0] || !ret[1] || !ret[2] || !ret[3])
+    goto malformed;
+  numarg = strtol(ret[2], &end, 10);
+  if(ret[2][0] == '\0' || *end != '\0' || numarg < 0 || numarg > outlen)
+    goto malformed;
+  numenv = strtol(ret[3], &end, 10);
+  if(ret[3][0] == '\0' || *end != '\0' || numenv < 0)
+    goto malformed;
+
+  argc_count = numarg > 0 ? (int)numarg - 1 : 0;
+  separator = 4 + argc_count;
+  if(separator >= outlen)
+    goto malformed;
+  for(i=4; i<separator; i++)
+    if(!ret[i])
+      goto malformed;
+  first_env = separator + 1;
+  env_count = outlen - first_env;
+
   channel->path = strdup(ret[0]);
   channel->context_dir  = strdup(ret[1]);
-  
-  numarg = atoi(ret[2]);
-  numenv = atoi(ret[3]);
+  if(!channel->path || !channel->context_dir) {
+    SPC_Error(SPC_Out_Of_Memory);
+    goto failed;
+  }
 
   if(numarg == 0)
     channel->argv = NULL;
   else {
     channel->argv = &ret[4];
-    ret[numarg+3] = NULL;
+    free(ret[separator]);
+    ret[separator] = NULL;		/* terminates argv */
   }
 
   if(numenv == 0)
     channel->envp = NULL;
   else {
-    channel->envp = (char **)XeMalloc((numenv+1)*sizeof(char *));
+    channel->envp = (char **)XeMalloc(((size_t)env_count+1)*sizeof(char *));
     channel->envp[0] = NULL;
-    channel->envp = SPC_Merge_Envp(channel->envp, &ret[numarg+4]);
+    channel->envp = SPC_Merge_Envp(channel->envp, &ret[first_env]);
 
     Merge_Lang_Var(channel);
 
     channel->envp = SPC_Merge_Envp(channel->envp, default_environment);
   }
-  
+
   return_value = XeSPCExecuteProcess(channel);
 
   /* Make the world safe for freeing the channel */
-  
+
   channel->argv = NULL;
-  if(channel->envp == &ret[numarg+4])
+  if(channel->envp == &ret[first_env])
     channel->envp = NULL;
-  
+
   for(i=0; i<outlen; i++)
     if(ret[i])
       free(ret[i]);
-  
-  if(ret != buf)
-    free((char *)ret);
+  free((char *)ret);
 
   if(return_value==SPC_ERROR)
     return(SPC_ERROR);
-  
+
   return(channel->pid);
+
+malformed:
+  SPC_Error(SPC_Protocol);
+failed:
+  for(i=0; i<outlen; i++)
+    free(ret[i]);
+  free((char *)ret);
+  return(SPC_ERROR);
 }
 
 /*----------------------------------------------------------------------+*/

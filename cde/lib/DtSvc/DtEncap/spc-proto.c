@@ -40,6 +40,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <sys/utsname.h>
+#include <ctype.h>
 #include <limits.h>
 #include <stdint.h>
 
@@ -340,6 +341,104 @@ void SPC_Close_Connection(SPC_Connection_Ptr connection)
 
 /*
  **
+ ** Parsing of received requests.  Everything here works on a payload whose
+ ** limit is known (PDEND), never on a bare string pointer.
+ **
+*/
+
+#define SPC_MAX_COUNTED_STRINGS 0xFFFF
+#define SPC_MAX_MULTI_STRINGS   65535
+
+/* Free a vector of malloc'ed strings and the vector itself. */
+static void SPC_Free_Vector(XeString *vect)
+{
+  XeString *p;
+
+  if(vect == NULL)
+    return;
+  for(p = vect; *p; p++)
+    free(*p);
+  free(vect);
+}
+
+/* Read DIGITS hexadecimal digits from S, which must all be hex digits. */
+static int SPC_Parse_Hex_Field(const XeChar *s, int digits, unsigned long *value)
+{
+  unsigned long v = 0;
+  int i;
+
+  for(i = 0; i < digits; i++) {
+    int c = (unsigned char)s[i];
+    int d;
+
+    if(c >= '0' && c <= '9')
+      d = c - '0';
+    else if(c >= 'a' && c <= 'f')
+      d = c - 'a' + 10;
+    else if(c >= 'A' && c <= 'F')
+      d = c - 'A' + 10;
+    else
+      return(FALSE);
+    v = (v << 4) | (unsigned long)d;
+  }
+  *value = v;
+  return(TRUE);
+}
+
+/* Parse the fixed-width header "%08x%02x%04x%04x"; every field character
+   must be a hexadecimal digit. */
+static int SPC_Parse_Header(const XeChar *data, int *cid, int *type,
+			    int *len, int *seqno)
+{
+  unsigned long c, t, l, q;
+
+  if(!SPC_Parse_Hex_Field(data, 8, &c) ||
+     !SPC_Parse_Hex_Field(data + 8, 2, &t) ||
+     !SPC_Parse_Hex_Field(data + 10, 4, &l) ||
+     !SPC_Parse_Hex_Field(data + 14, 4, &q))
+    return(FALSE);
+  *cid = (int)(unsigned int)c;
+  *type = (int)t;
+  *len = (int)l;
+  *seqno = (int)q;
+  return(TRUE);
+}
+
+/* Parse an unsigned decimal number at *CURSOR, not beyond END and not above
+   LIMIT, and leave *CURSOR after its last digit. */
+static int SPC_Scan_Decimal(XeString *cursor, XeString end, long limit,
+			    long *value)
+{
+  XeString cp = *cursor;
+  long v = 0;
+
+  if(cp >= end || !isdigit((unsigned char)*cp))
+    return(FALSE);
+  while(cp < end && isdigit((unsigned char)*cp)) {
+    v = v * 10 + (*cp - '0');
+    if(v > limit)
+      return(FALSE);
+    cp++;
+  }
+  *cursor = cp;
+  *value = v;
+  return(TRUE);
+}
+
+/* Drop a request that cannot be trusted and close its connection. */
+static void SPC_Reject_Request(SPC_Connection_Ptr connection,
+			       protocol_request_ptr prot, int error)
+{
+  XeString connection_hostname = CONNECTION_HOSTNAME(connection);
+
+  SPC_Error(error, connection_hostname);
+  XeFree(connection_hostname);
+  SPC_Close_Connection(connection);
+  SPC_Free_Protocol_Ptr(prot);
+}
+
+/*
+ **
  ** Read the specified number of characters, or die trying.
  **
 */
@@ -355,6 +454,9 @@ int SPC_Read_Chars(SPC_Connection_Ptr   connection,
   int numtoread=request_len;
   int sid=connection->sid;
   
+  if(request_len < 0)
+    return(SPC_ERROR);
+
   numread=0;
 
   while(numread<request_len) {
@@ -456,32 +558,32 @@ protocol_request_ptr SPC_Read_Protocol(SPC_Connection_Ptr connection)
     return(SPC_ERROR);
   }
   
-  /* we have the header.  Parse out the fields */
-  
-  READ_HEADER(dptr,
-	      &channel_id, &prot->request_type, &dptr->len, &prot->seqno);
+  /* we have the header.  Parse out the fields.  Every header character is a
+     hexadecimal digit and the request type is one the protocol defines. */
+
+  if(!SPC_Parse_Header(dptr->data, &channel_id, &prot->request_type,
+		       &dptr->len, &prot->seqno) ||
+     prot->request_type >= NREQS) {
+    SPC_Reject_Request(connection, prot, SPC_Protocol);
+    return(SPC_ERROR);
+  }
   prot->channel=SPC_Lookup_Channel(channel_id, connection);
-  
 
   /* JET - 11/12/2001 - correct an exploitable buffer overrun where the user */
   /* can supply a data len that is larger than the available buffer */
-  /* MAXREQLEN */
   /* CERT - VU#172583 */
+  /* The length counts the payload only: the header is read into the same */
+  /* buffer and the payload starts after it.  The buffer holds one byte */
+  /* beyond a full request for the NUL stored after the payload. */
 
-  if (dptr->len >= MAXREQLEN)
-    {				/* we have a problem.  Initiate DefCon 1 */
-				/* and launch our missiles. */
-      XeString connection_hostname = CONNECTION_HOSTNAME(connection);
-
-      SPC_Error(SPC_Buffer_Overflow, connection_hostname);
-      XeFree(connection_hostname);
-      SPC_Close_Connection(connection);
-      SPC_Free_Protocol_Ptr(prot);
+  if (dptr->len > MAXPAYLOADLEN)
+    {
+      SPC_Reject_Request(connection, prot, SPC_Buffer_Overflow);
       return(SPC_ERROR);
     }
 
-  /* read header */
-  
+  /* read the payload */
+
   len=SPC_Read_Chars(connection, dptr->len, dptr->data+REQUEST_HEADER_LENGTH);
   if(len != dptr->len) {
     SPC_Close_Connection(connection);
@@ -1067,7 +1169,11 @@ int SPC_Waitfor_Reply(SPC_Connection_Ptr connection,
     return(SPC_ERROR);
 
   thisseq = prot->seqno;
-  READ_REPLY(prot->dataptr, retval, errval);
+  if(READ_REPLY(prot->dataptr, retval, errval) != 2) {
+    SPC_Free_Protocol_Ptr(prot);
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
 
   SPC_Free_Protocol_Ptr(prot);
   
@@ -1106,7 +1212,8 @@ int SPC_Dispatch_Protocol(protocol_request_ptr proto,
     return(FALSE);
   req_type=proto->request_type;
   
-  if(req_type<0 || req_type>NREQS)
+  /* The table has NREQS entries and the response-only types have none. */
+  if(req_type<0 || req_type>=NREQS || table[req_type] == NULL)
     return(FALSE);
 
   return((* table[req_type])(proto));
@@ -1211,38 +1318,67 @@ int SPC_Send_Multi_Packet(SPC_Connection_Ptr connection,
   
 }
 
+/* Read the strings of a multi-packet request.  PROT is the first packet.  An
+   empty string ends a packet; the strings then continue in the next packet of
+   the same REQUEST type.  Returns a NULL-terminated vector of malloc'ed
+   strings (an element is NULL for NULL_STR), with its length in *OUTLEN, or
+   NULL after reporting an error. */
 char **SPC_Get_Multi_Packet(SPC_Connection_Ptr connection,
 			    protocol_request_ptr prot,
-			    char **out,
 			    int *outlen,
 			    int request,
 			    XeString name)
 
 {
-  int num_vars, i, len;
-  XeString bufptr;
+  long num_vars, i, packets = 0;
+  XeString bufptr, end, cp, nul;
+  size_t len;
   protocol_request_ptr localprot = NULL;
+  protocol_request_ptr next;
+  char **out;
 
   print_protocol_request(name, prot);
-  READ_ENVIRON_RESET(prot->dataptr, num_vars);
-  bufptr=strchr(PDRP(prot->dataptr), Space)+1;
-  if(out == NULL)
-    out = (char **)malloc((num_vars+1) * sizeof(char **));
-  
+
+  cp = PDRP(prot->dataptr);
+  end = PDEND(prot->dataptr);
+  if(!SPC_Scan_Decimal(&cp, end, SPC_MAX_MULTI_STRINGS, &num_vars) ||
+     cp >= end - 1 || *cp != Space) {
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
+  bufptr = cp + 1;
+
+  out = (char **)calloc((size_t)num_vars + 1, sizeof(char *));
+  if(out == NULL) {
+    SPC_Error(SPC_Out_Of_Memory);
+    return(SPC_ERROR);
+  }
+
   for(i=0; i<num_vars; i++) {
-    len=strlen(bufptr);
-    if(len==0) {
+    for(;;) {
+      if(bufptr < end) {
+	nul = memchr(bufptr, '\0', end - bufptr);
+	if(nul == NULL)
+	  goto malformed;
+	len = nul - bufptr;
+      } else
+	len = 0;
+      if(len > 0)
+	break;
+
+      /* This packet is used up.  A peer may not send more packets than there
+	 are strings to place. */
+      if(packets++ > num_vars)
+	goto malformed;
+      next = SPC_Filter_Connection(connection, NULL, request, TRUE);
+      if(next == SPC_ERROR)
+	goto failed;
       if(localprot)
 	SPC_Free_Protocol_Ptr(localprot);
-      prot=SPC_Filter_Connection(connection, NULL, request, TRUE);
-      if(prot==SPC_ERROR) {
-        free(out);
-        return(SPC_ERROR);
-      }
-      print_protocol_request(name, prot);
-      localprot=prot;
-      bufptr=PDRP(prot->dataptr);
-      len=strlen(bufptr);
+      localprot = next;
+      print_protocol_request(name, localprot);
+      bufptr = PDRP(localprot->dataptr);
+      end = PDEND(localprot->dataptr);
     }
     if(strcmp(bufptr, NULL_STR) == 0)
       out[i] = NULL;
@@ -1251,18 +1387,32 @@ char **SPC_Get_Multi_Packet(SPC_Connection_Ptr connection,
 	out[i] = strdup("");
       else
 	out[i] = strdup(bufptr);
+      if(out[i] == NULL) {
+	SPC_Error(SPC_Out_Of_Memory);
+	goto failed;
+      }
     }
     bufptr += (len+1);
   }
   if(localprot)
     SPC_Free_Protocol_Ptr(localprot);
 
-  *outlen = num_vars;
+  *outlen = (int)num_vars;
   out[num_vars] = NULL;
-  
+
   return(out);
+
+malformed:
+  SPC_Error(SPC_Protocol);
+failed:
+  for(i=0; i<num_vars; i++)
+    free(out[i]);
+  free(out);
+  if(localprot)
+    SPC_Free_Protocol_Ptr(localprot);
+  return(SPC_ERROR);
 }
- 
+
 /*----------------------------------------------------------------------+*/
 int SPC_Send_Environ(SPC_Connection_Ptr connection,
 		     protocol_request_ptr prot)
@@ -1329,35 +1479,78 @@ int sprint_counted_string(XeString buf,
   return(bufptr-buf);
 }
 
+/* Parse "<count in hex> NUL string NUL string NUL ..." from [BUF, END), where
+   END is one past a NUL.  The vector has room for at least REQUIRED + OPTIONAL
+   strings; entries the peer did not send are NULL.  Returns NULL when the
+   input is malformed or has fewer than REQUIRED strings.  *NEWBUF, if given,
+   is set to the first byte after the last string. */
 /*----------------------------------------------------------------------+*/
 XeString *sscan_counted_string(XeString buf,
-  			       XeString *newbuf)
+			       XeString end,
+			       int required,
+			       int optional,
+			       XeString *newbuf)
 /*----------------------------------------------------------------------+*/
 {
-  
-  int i, numstrings, len;
-  XeString bufptr; 
-  XeString *tmpptr;
-  XeString *tmpidx;
-  
-  sscanf(buf, (XeString)"%x", &numstrings);
-  len=strlen(buf)+1;
-  bufptr=buf+len;
-  
-  tmpptr=(XeString*)XeMalloc((numstrings+1) * sizeof(XeString *));
-  tmpidx=tmpptr;
-  
-  for(i=0; i<numstrings; (i++, tmpidx++)){
-    len=strlen(bufptr)+1;  /* len is string SIZE (with room for NULL) */
-    *tmpidx=(XeString)XeMalloc(len);
-    strncpy(*tmpidx, bufptr, len);
-    (*tmpidx)[len-1]='\0';
-    bufptr+= len;
+  XeString bufptr, nul, cp;
+  XeString *vect;
+  unsigned long count = 0;
+  size_t slots, len;
+  int i;
+
+  if(buf == NULL || end == NULL || buf >= end)
+    return(SPC_ERROR);
+
+  nul = memchr(buf, '\0', end - buf);
+  if(nul == NULL)
+    return(SPC_ERROR);
+
+  /* The count is hexadecimal digits followed by blanks. */
+  for(cp = buf; cp < nul && isxdigit((unsigned char)*cp); cp++) {
+    unsigned long d = (*cp <= '9') ? (unsigned long)(*cp - '0')
+				   : (unsigned long)((*cp | 0x20) - 'a' + 10);
+    count = (count << 4) | d;
+    if(count > SPC_MAX_COUNTED_STRINGS)
+      return(SPC_ERROR);
   }
-  *tmpidx=NULL;
+  if(cp == buf)
+    return(SPC_ERROR);
+  while(cp < nul && *cp == Space)
+    cp++;
+  if(cp != nul)
+    return(SPC_ERROR);
+
+  bufptr = nul + 1;
+
+  /* Each string takes at least its NUL. */
+  if(count > (size_t)(end - bufptr) || count < (unsigned long)required)
+    return(SPC_ERROR);
+
+  slots = (size_t)required + (size_t)optional;
+  if(count > slots)
+    slots = count;
+  vect = (XeString *)calloc(slots + 1, sizeof(XeString));
+  if(vect == NULL)
+    return(SPC_ERROR);
+
+  for(i=0; i<(int)count; i++) {
+    nul = memchr(bufptr, '\0', end - bufptr);
+    if(nul == NULL)
+      goto failed;
+    len = (size_t)(nul - bufptr) + 1;  /* string SIZE (with room for NULL) */
+    vect[i] = (XeString)malloc(len);
+    if(vect[i] == NULL)
+      goto failed;
+    memcpy(vect[i], bufptr, len);
+    bufptr += len;
+  }
   if (newbuf)
     *newbuf=bufptr;
-  return(tmpptr);
+  return(vect);
+
+failed:
+  SPC_Free_Vector(vect);
+  return(SPC_ERROR);
 }
 
 /*----------------------------------------------------------------------+*/
@@ -1420,6 +1613,7 @@ sprint_application_data(XeString buf,
 /*----------------------------------------------------------------------+*/
 int
 sscan_application_data(XeString buf,
+		       XeString end,
 		       XeString UNUSED_PARM(fmt),
 		       XeString *path,
 		       XeString *dir,
@@ -1429,28 +1623,48 @@ sscan_application_data(XeString buf,
 /*----------------------------------------------------------------------+*/
 {
   XeString bufptr;
-  XeString *tmp_vect;
-  
+  XeString *path_vect, *dir_vect, *argv_vect, *envp_vect;
+
   bufptr=buf;
 
-  tmp_vect=sscan_counted_string(bufptr, &bufptr);
-  if(tmp_vect==SPC_ERROR)
+  /* The path and the directory are each a vector of exactly one string. */
+  path_vect=sscan_counted_string(bufptr, end, 1, 0, &bufptr);
+  if(path_vect==SPC_ERROR)
     return(SPC_ERROR);
-  *path = (*tmp_vect);
-  
-  tmp_vect=sscan_counted_string(bufptr, &bufptr);
-  if(tmp_vect==SPC_ERROR)
+  if(path_vect[1]) {
+    SPC_Free_Vector(path_vect);
     return(SPC_ERROR);
-  *dir = (*tmp_vect);
-  
-  *argv=sscan_counted_string(bufptr, &bufptr);
-  if(*argv==SPC_ERROR)
-    return(SPC_ERROR);
+  }
 
-  *envp=sscan_counted_string(bufptr, &bufptr);
-  if(*envp==SPC_ERROR)
+  dir_vect=sscan_counted_string(bufptr, end, 1, 0, &bufptr);
+  if(dir_vect==SPC_ERROR || dir_vect[1]) {
+    SPC_Free_Vector(path_vect);
+    SPC_Free_Vector(dir_vect);
     return(SPC_ERROR);
-    
+  }
+
+  argv_vect=sscan_counted_string(bufptr, end, 0, 0, &bufptr);
+  if(argv_vect==SPC_ERROR) {
+    SPC_Free_Vector(path_vect);
+    SPC_Free_Vector(dir_vect);
+    return(SPC_ERROR);
+  }
+
+  envp_vect=sscan_counted_string(bufptr, end, 0, 0, &bufptr);
+  if(envp_vect==SPC_ERROR) {
+    SPC_Free_Vector(path_vect);
+    SPC_Free_Vector(dir_vect);
+    SPC_Free_Vector(argv_vect);
+    return(SPC_ERROR);
+  }
+
+  *path = path_vect[0];
+  free(path_vect);
+  *dir = dir_vect[0];
+  free(dir_vect);
+  *argv = argv_vect;
+  *envp = envp_vect;
+
   return(TRUE);
 }
 
@@ -1484,21 +1698,23 @@ sprint_device_data(XeString buf,
 /*----------------------------------------------------------------------+*/
 int
 sscan_device_data(XeString buf,
-		  XeString *m0, 
-		  XeString *s0, 
-		  XeString *m1, 
-		  XeString *s1, 
-		  XeString *m2, 
+		  XeString end,
+		  XeString *m0,
+		  XeString *s0,
+		  XeString *m1,
+		  XeString *s1,
+		  XeString *m2,
 		  XeString *s2)
 /*----------------------------------------------------------------------+*/
 {
   XeString *args;
+  int i;
 
-  args=sscan_counted_string(buf, NULL);
+  args=sscan_counted_string(buf, end, 6, 0, NULL);
 
   if(args==SPC_ERROR)
     return(SPC_ERROR);
-  
+
   *m0=args[0];
   *s0=args[1];
   *m1=args[2];
@@ -1506,8 +1722,11 @@ sscan_device_data(XeString buf,
   *m2=args[4];
   *s2=args[5];
 
+  /* strings the peer sent beyond the six are not wanted */
+  for(i=6; args[i]; i++)
+    free(args[i]);
   free((char *)args);
-  
+
   return(TRUE);
 }
 
@@ -1535,32 +1754,36 @@ sprint_logfile_data(XeString buf,
 /*----------------------------------------------------------------------+*/
 int
 sscan_logfile_data(XeString buf,
+		   XeString end,
 		   XeString *logfile,
 		   XeString *proto_ver,
 		   XeString *hostinfo)
 /*----------------------------------------------------------------------+*/
 {
   XeString *args;
+  int i;
 
-  args=sscan_counted_string(buf, NULL);
+  args=sscan_counted_string(buf, end, 1, 2, NULL);
 
   if(args==SPC_ERROR)
     return(SPC_ERROR);
-  
+
   *logfile=args[0];
   /* args[1] and args[2] will only be around for protocol revision 2 or later */
 
   *proto_ver = *hostinfo = XeString_NULL;
 
-  if (args[1]) { 
+  if (args[1]) {
       *proto_ver = args[1];
       *hostinfo  = args[2];
   }
-  else
-      *hostinfo = strdup(SPC_UNKNOWN_HOSTINFO_STR);	
+  if (*hostinfo == XeString_NULL)
+      *hostinfo = strdup(SPC_UNKNOWN_HOSTINFO_STR);
 
+  for(i=3; args[i]; i++)
+    free(args[i]);
   free((char *)args);
-  
+
   return(TRUE);
 }
 
@@ -1590,6 +1813,7 @@ sprint_register_data(XeString buf,
 /*----------------------------------------------------------------------+*/
 int
 sscan_register_data(XeString buf,
+		    XeString end,
 		    XeString *username,
 		    XeString *passwd,
 		    XeString *proto_ver,
@@ -1597,12 +1821,13 @@ sscan_register_data(XeString buf,
 /*----------------------------------------------------------------------+*/
 {
   XeString *args;
+  int i;
 
-  args=sscan_counted_string(buf, NULL);
+  args=sscan_counted_string(buf, end, 2, 2, NULL);
 
   if(args==SPC_ERROR)
     return(SPC_ERROR);
-  
+
   *username=args[0];
   *passwd=args[1];
 
@@ -1610,15 +1835,17 @@ sscan_register_data(XeString buf,
 
   *proto_ver = *hostinfo = XeString_NULL;
 
-  if (args[2]) { 
+  if (args[2]) {
       *proto_ver = args[2];
       *hostinfo  = args[3];
   }
-  else
-      *hostinfo = strdup(SPC_UNKNOWN_HOSTINFO_STR);	
+  if (*hostinfo == XeString_NULL)
+      *hostinfo = strdup(SPC_UNKNOWN_HOSTINFO_STR);
 
+  for(i=4; args[i]; i++)
+    free(args[i]);
   free((char *)args);
-  
+
   return(TRUE);
 }
 
@@ -1640,13 +1867,17 @@ int SPC_Query_Devices(SPC_Channel_Ptr channel)
   if(prot==SPC_ERROR)
     return(SPC_ERROR);
   
-  READ_DEVICE_REPLY(prot->dataptr,
-		    &(channel->wires[STDIN]->master_name),
-		    &(channel->wires[STDIN]->slave_name),
-		    &(channel->wires[STDOUT]->master_name),
-		    &(channel->wires[STDOUT]->slave_name),
-		    &(channel->wires[STDERR]->master_name),
-		    &(channel->wires[STDERR]->slave_name));
+  if(READ_DEVICE_REPLY(prot->dataptr,
+		       &(channel->wires[STDIN]->master_name),
+		       &(channel->wires[STDIN]->slave_name),
+		       &(channel->wires[STDOUT]->master_name),
+		       &(channel->wires[STDOUT]->slave_name),
+		       &(channel->wires[STDERR]->master_name),
+		       &(channel->wires[STDERR]->slave_name)) != TRUE) {
+    SPC_Free_Protocol_Ptr(prot);
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
 
   SPC_Free_Protocol_Ptr(prot);
   return (TRUE);
@@ -1665,7 +1896,11 @@ int SPC_Query_Logfile(SPC_Channel_Ptr channel)
   if(prot==SPC_ERROR)
     return(SPC_ERROR);
   
-  READ_LOGFILE_REPLY(prot->dataptr, &channel->logfile, &junk1, &junk2);
+  if(READ_LOGFILE_REPLY(prot->dataptr, &channel->logfile, &junk1, &junk2) != TRUE) {
+    SPC_Free_Protocol_Ptr(prot);
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
   if (junk1) XeFree(junk1);
   if (junk2) XeFree(junk2);
 		     
@@ -1758,7 +1993,12 @@ SPC_Validate_User(XeString hostname,
   /* authentication.  For A.02 and later daemons, it will also contain      */
   /* the spc protocol version and info about the host the daemon is on.     */
 
-  READ_LOGFILE_REPLY(prot->dataptr, &logfile, &proto_ver, &hostinfo);
+  if(READ_LOGFILE_REPLY(prot->dataptr, &logfile, &proto_ver, &hostinfo) != TRUE) {
+    SPC_Free_Protocol_Ptr(prot);
+    XeFree(connection_hostname);
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
 
   /* For Pre A.01, this will be defaulted to (hpux 7.0 s300) */
   connection->hostinfo = hostinfo;
@@ -1842,7 +2082,12 @@ SPC_Validate_User(XeString hostname,
    */
   XeFree(logfile);
   logfile = NULL;
-  READ_LOGFILE_REPLY(prot->dataptr, &logfile, &junk1, &junk2);
+  if(READ_LOGFILE_REPLY(prot->dataptr, &logfile, &junk1, &junk2) != TRUE) {
+    SPC_Free_Protocol_Ptr(prot);
+    XeFree(connection_hostname);
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
   if (junk1) XeFree(junk1);
   if (junk2) XeFree(junk2);
   
@@ -1899,6 +2144,8 @@ int SPC_Get_Termios(protocol_request_ptr prot_request)
     _DtSvcProcessLock();
     if(XeTermioStruct == NULL) {
 	XeTermioStruct = (struct termios *)XeMalloc(sizeof(struct termios));
+	/* Fields the peer's string does not set must not be indeterminate. */
+	memset(XeTermioStruct, 0, sizeof(struct termios));
 
 	for(i=0; i<NCCS; i++) 
 	    XeTermioStruct->c_cc[i] = 0;
@@ -1913,6 +2160,44 @@ int SPC_Get_Termios(protocol_request_ptr prot_request)
 }
 
 
+
+/* Read "<connector> <side> <encoded termios>" from a CHANNEL_TERMIOS request
+   into BUFFER, which holds SIZE bytes.  Returns TRUE only when all three
+   fields are present, numeric where they must be, and the encoded string
+   fits. */
+/*----------------------------------------------------------------------+*/
+int SPC_Read_Termios_Request(protocol_request_ptr prot,
+			     int *connector,
+			     int *side,
+			     XeString buffer,
+			     size_t size)
+/*----------------------------------------------------------------------+*/
+{
+  XeString cp = PDRP(prot->dataptr);
+  XeString end = PDEND(prot->dataptr) - 1;   /* the NUL after the payload */
+  long c, sd;
+  size_t n;
+
+  if(size == 0)
+    return(FALSE);
+  if(!SPC_Scan_Decimal(&cp, end, INT_MAX, &c) || cp >= end || *cp != Space)
+    return(FALSE);
+  cp++;
+  if(!SPC_Scan_Decimal(&cp, end, INT_MAX, &sd))
+    return(FALSE);
+  while(cp < end && isspace((unsigned char)*cp))
+    cp++;
+  for(n = 0; cp + n < end && !isspace((unsigned char)cp[n]); n++)
+    ;
+  if(n == 0 || n >= size)
+    return(FALSE);
+
+  memcpy(buffer, cp, n);
+  buffer[n] = '\0';
+  *connector = (int)c;
+  *side = (int)sd;
+  return(TRUE);
+}
 
 /*----------------------------------------------------------------------+*/
 int SPC_Get_Termio(protocol_request_ptr UNUSED_PARM(prot_request))

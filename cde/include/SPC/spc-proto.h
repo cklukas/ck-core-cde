@@ -125,7 +125,11 @@
 #define PROT_TO_CONNECTOR(a)  a
 #define CONNECTOR_TO_PROT(a)  a
   
-#define PDRP(_pdata) _pdata->data+REQUEST_HEADER_LENGTH
+#define PDRP(_pdata) ((_pdata)->data + REQUEST_HEADER_LENGTH)
+
+/* One past the NUL that SPC_Read_Chars guarantees after a received payload:
+   the limit for every parser of received data. */
+#define PDEND(_pdata) (PDRP(_pdata) + (_pdata)->len + 1)
 
 #define WRITE_INT(pdata, val)\
   sprintf_len(PDRP(pdata), (XeString)"%x", val)
@@ -133,7 +137,6 @@
 
 #define WRITE_STRING(pdata, name)\
   sprintf_len(PDRP(pdata), (XeString)"%s", name)
-#define READ_STRING(pdata, name)   sscanf(PDRP(pdata),  (XeString)"%s", name)
 #define READ_STRING_NO_COPY(pdata, name)   (name = PDRP(pdata))
 
 #define WRITE_ABORT             WRITE_INT
@@ -149,7 +152,6 @@
 #define READ_APPLICATION_DIED   READ_INT
 
 #define WRITE_DEBUG             WRITE_STRING
-#define READ_DEBUG              READ_STRING
 
 #define WRITE_ERROR             WRITE_INT
 #define READ_ERROR              READ_INT
@@ -158,7 +160,7 @@
   sprint_register_data(PDRP(pdata), name, passwd, proto_ver, hostinfo)
 
 #define READ_REGISTER(pdata, name, passwd, proto_rev, hostinfo)\
-  sscan_register_data(PDRP(pdata),  &name, &passwd, &proto_rev, &hostinfo)
+  sscan_register_data(PDRP(pdata), PDEND(pdata), &name, &passwd, &proto_rev, &hostinfo)
 
 #define WRITE_REPLY(pdata, val, err)\
   sprintf_len(PDRP(pdata), (XeString)"%x %x", val, err)
@@ -168,18 +170,18 @@
 #define WRITE_DEVICE_REPLY(pdata, m0, s0, m1, s1, m2, s2) \
   sprint_device_data(PDRP(pdata), m0, s0, m1, s1, m2, s2)
 #define READ_DEVICE_REPLY(pdata, m0, s0, m1, s1, m2, s2) \
-  sscan_device_data(PDRP(pdata), m0, s0, m1, s1, m2, s2)
+  sscan_device_data(PDRP(pdata), PDEND(pdata), m0, s0, m1, s1, m2, s2)
 
 #define WRITE_LOGFILE_REPLY(pdata, logfile, proto_ver, hostinfo) \
   sprint_logfile_data(PDRP(pdata), logfile, proto_ver, hostinfo)
 #define READ_LOGFILE_REPLY(pdata, logfile, proto_ver, hostinfo) \
-  sscan_logfile_data(PDRP(pdata), logfile, proto_ver, hostinfo)
+  sscan_logfile_data(PDRP(pdata), PDEND(pdata), logfile, proto_ver, hostinfo)
 
 #define WRITE_APPLICATION_SPAWN(pdata, path, dir, argv, envp) \
   sprint_application_data(PDRP(pdata), (XeString)"%s %d %d ",  \
 			  path, dir, argv, envp, REQUEST_HEADER_LENGTH)
 #define READ_APPLICATION_SPAWN(pdata, path, dir, argv, envp) \
-  sscan_application_data(PDRP(pdata), (XeString)"%s %d %d ", \
+  sscan_application_data(PDRP(pdata), PDEND(pdata), (XeString)"%s %d %d ", \
 			 &path, &dir, &argv, &envp, REQUEST_HEADER_LENGTH)
 
 #define WRITE_ENVIRON_RESET(pdata, numenv) \
@@ -193,8 +195,8 @@
 /* New B.00 protocol requests */
 #define WRITE_TERMIOS(pdata, connector, side, buffer) \
   sprintf_len(PDRP(pdata), (XeString)"%d %d %s", connector, side, buffer)
-#define READ_TERMIOS(pdata, connector, side, buffer) \
-  sscanf(PDRP(pdata), (XeString)"%d %d %s", &connector, &side, buffer)
+/* READ_TERMIOS is SPC_Read_Termios_Request(): the encoded string has to be
+   bounded by the caller's buffer, which a scanf format cannot express here. */
   
 /* Writing a header is special, as we don't want to be offset by
    REQUEST_HEADER_LENGTH */
@@ -264,15 +266,15 @@ int SPC_Dispatch_Protocol (protocol_request_ptr proto, protocol_request_handler 
 int SPC_Write_Reply (SPC_Connection_Ptr conn, protocol_request_ptr proto, int retval, int errval);
 int SPC_Send_Environ (SPC_Connection_Ptr connection, protocol_request_ptr prot);
 int sprint_counted_string (XeString buf, int count, XeString *vect, int limit);
-XeString *sscan_counted_string (XeString buf, XeString *newbuf);
+XeString *sscan_counted_string (XeString buf, XeString end, int required, int optional, XeString *newbuf);
 int sprint_application_data (XeString buf, XeString fmt, XeString path, XeString dir, XeString *argv, XeString *envp, int chars_used);
-int sscan_application_data (XeString buf, XeString fmt, XeString *path, XeString *dir, XeString **argv, XeString **envp, int offset);
+int sscan_application_data (XeString buf, XeString end, XeString fmt, XeString *path, XeString *dir, XeString **argv, XeString **envp, int offset);
 int sprint_device_data (XeString buf, XeString m0, XeString s0, XeString m1, XeString s1, XeString m2, XeString s2);
-int sscan_device_data (XeString buf, XeString *m0, XeString *s0, XeString *m1, XeString *s1, XeString *m2, XeString *s2);
+int sscan_device_data (XeString buf, XeString end, XeString *m0, XeString *s0, XeString *m1, XeString *s1, XeString *m2, XeString *s2);
 int sprint_logfile_data (XeString buf, XeString logfile, XeString proto_ver, XeString hostinfo);
-int sscan_logfile_data (XeString buf, XeString *logfile, XeString *proto_ver, XeString *hostinfo);
+int sscan_logfile_data (XeString buf, XeString end, XeString *logfile, XeString *proto_ver, XeString *hostinfo);
 int sprint_register_data (XeString buf, XeString username, XeString passwd, XeString proto_ver, XeString hostinfo);
-int sscan_register_data (XeString buf, XeString *username, XeString *passwd, XeString *proto_ver, XeString *hostinfo);
+int sscan_register_data (XeString buf, XeString end, XeString *username, XeString *passwd, XeString *proto_ver, XeString *hostinfo);
 int SPC_Query_Devices (SPC_Channel_Ptr channel);
 int SPC_Query_Logfile (SPC_Channel_Ptr channel);
 int SPC_Validate_User (XeString hostname, SPC_Connection_Ptr connection);
@@ -288,9 +290,13 @@ int SPC_Send_Multi_Packet(SPC_Connection_Ptr connection,
 			  int errid);
 char **SPC_Get_Multi_Packet(SPC_Connection_Ptr connection,
 			    protocol_request_ptr prot,
-			    char **out,
 			    int *outlen,
 			    int request,
 			    XeString name);
+int SPC_Read_Termios_Request(protocol_request_ptr prot,
+			     int *connector,
+			     int *side,
+			     XeString buffer,
+			     size_t size);
 
 #endif /* _spc_proto_h */

@@ -7,6 +7,25 @@
 - docs: record the first hardening warning and cppcheck baseline and a
   per-component audit ledger, and add `scripts/warning-baseline.py` to compare
   a build's warning counts with that baseline.
+- dtspcd, DtSvc: validate SPC requests before using them. The request buffer
+  holds a full-size payload and its terminating NUL, and a payload above
+  `SPC_BUFSIZ` ends the connection instead of overrunning the buffer. Headers
+  must be fixed-width hexadecimal and name a defined request type; the
+  dispatcher no longer indexes one entry past its table or calls a type with no
+  handler; a request that needs a channel and names none is answered with an
+  error. Counted-string and multi-packet readers work within the payload and
+  reject malformed, short or oversized counts instead of reading stale buffer
+  bytes or writing outside their vector. The termios, debug-file and
+  application-spawn handlers check their fields and bound their buffers.
+  Channel ids come from a counter, not the channel address.
+- dtspcd: register a user fail-closed. The authentication file name has a random
+  suffix, must be a regular file with a single link, and its owner must match
+  the user named; the daemon verifies that it gave up root (groups, group,
+  user, and that root cannot be regained) and exits if any step fails, and a
+  home directory or shell that does not fit is refused. A failed `initgroups`
+  is logged correctly instead of passing an integer to `%s`.
+- dtspcd: add request-level regression tests (`make -C programs/dtspcd check`)
+  that link the built `libDtSvc` and run under the sanitizers.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

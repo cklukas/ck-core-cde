@@ -78,7 +78,7 @@ have not had such a review. Fuzz targets exist for none of the components yet.
 | `programs/dtcm` | includes rpc.cmsd (RPC server run as root); calendar | none recorded | 879 | 59 | 5 | none |
 | `programs/dtfile` | file operations; drag and drop | Trash, copy and transfer (2026-11-02, 2026-11-03) | 813 | 203 | 10 | none |
 | `programs/dthelp` | help compiler; SGML parser | none recorded | 644 | 64 | 4 | none |
-| `lib/DtSvc` | SPC protocol shared by dtspcd and its clients; data-type database | none recorded | 412 | 24 | 22 | none |
+| `lib/DtSvc` | SPC protocol shared by dtspcd and its clients; data-type database | SPC wire layer (2026-11-04); the rest not reviewed | 412 | 24 | 22 | none |
 | `programs/dtwm` | window manager; property and request readers | property and request readers (2026-11-02) | 410 | 22 | 42 | none |
 | `lib/tt` | ttsession and rpc.ttdbserverd (sockets, RPC) | none recorded | 394 | 242 | 1 | none |
 | `programs/dtsr` | local user program | none recorded | 370 | 3 | 0 | none |
@@ -93,7 +93,7 @@ have not had such a review. Fuzz targets exist for none of the components yet.
 | `programs/dtksh` | local user program | none recorded | 157 | 15 | 0 | none |
 | `programs/dtinfo` | information browser; C++ | none recorded | 154 | 30 | 7 | none |
 | `programs/dtsearchpath` | dtappgather is always setuid root | none recorded | 46 | 0 | 0 | none |
-| `programs/dtspcd` | root daemon from inetd; network; parses requests before authentication | none recorded | 6 | 3 | 1 | none |
+| `programs/dtspcd` | root daemon from inetd; network; parses requests before authentication | request handlers, registration and privilege drop (2026-11-04) | 6 | 3 | 1 | none |
 | `programs/dtexec` | launches user commands | discovery (2026-11-02) | 5 | 1 | 2 | none |
 
 Components below 150 unique warnings are not listed; see the JSON record for
