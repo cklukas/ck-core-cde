@@ -53,8 +53,12 @@
  *****************************************************************************
  *************************************<+>*************************************/
 
-#include <stdio.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <locale.h>
+#include <signal.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 
@@ -85,8 +89,17 @@
  * Internal Functions
  */
 static void StopAll(int i);
+static void StopRequested(XtPointer client_data, int *source, XtInputId *id);
+static void CatchStopSignal(void);
+static void WatchStopSignal(void);
+static void StopPipeFailed(void);
 static int RegisterX11ScreenSaver(Display *display, int *ssEventType);
 static int UsesProtectedPasswordFile(void);
+
+/*
+ * The pipe a SIGTERM handler leaves its request in
+ */
+static int stopPipe[2] = { -1, -1 };
 
 /*
  * Internal Defines
@@ -217,10 +230,6 @@ main (int argc, char **argv)
     stopvec.sa_handler = SIG_IGN;
     (void) sigaction(SIGPIPE, &stopvec, (struct sigaction *) NULL);
 
-    stopvec.sa_handler = StopAll;
-    sigemptyset(&stopvec.sa_mask);
-    stopvec.sa_flags = 0;
-
     smGD.childvec.sa_handler = WaitChildDeath;
     sigemptyset(&smGD.childvec.sa_mask);
     smGD.childvec.sa_flags = 0;
@@ -270,11 +279,7 @@ main (int argc, char **argv)
     /*
      * Set up to catch SIGTERM
      */
-    stopvec.sa_handler = StopAll;
-    sigemptyset(&stopvec.sa_mask);
-    stopvec.sa_flags = 0;
-
-    sigaction(SIGTERM, &stopvec, (struct sigaction *) NULL);
+    CatchStopSignal();
 
     /*
      * Now set up a communication with the toolkit
@@ -299,6 +304,11 @@ main (int argc, char **argv)
 				SM_RESOURCE_CLASS,
 				NULL, 0, &argc, argv);
     }
+
+    /*
+     * A shutdown requested by SIGTERM is carried out from the event loop
+     */
+    WatchStopSignal();
 
     srvDisplay = XtOpenDisplay(smGD.appCon, NULL, argv[0], SM_RESOURCE_CLASS,
                                  NULL, 0, &argc, argv);
@@ -544,7 +554,131 @@ main (int argc, char **argv)
 static void
 StopAll(int i)
 {
+    int savedErrno = errno;
+    ssize_t n;
+
+    /*
+     * Only async-signal-safe calls are made here.  The shutdown itself talks
+     * to ToolTalk and X, allocates memory and runs a nested event loop, none
+     * of which may run while the interrupted code is inside malloc or Xlib:
+     * the handler leaves a byte in a pipe that the event loop reads.
+     */
+    if (stopPipe[1] != -1)
+    {
+        n = write(stopPipe[1], "x", 1);
+        (void) n;
+    }
+    errno = savedErrno;
+}
+
+/*************************************<->*************************************
+ *
+ *  StopRequested
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Input procedure of the pipe StopAll writes to: carries out the shutdown
+ *  a SIGTERM asked for.  ImmediateExit() drops a request that comes in while
+ *  a shutdown is under way and gives the signal back when the shutdown is
+ *  cancelled.
+ *
+ *************************************<->***********************************/
+
+static void
+StopRequested(XtPointer client_data, int *source, XtInputId *id)
+{
+    char buffer[16];
+    ssize_t n;
+
+    do
+    {
+        n = read(stopPipe[0], buffer, sizeof(buffer));
+    } while (n == (ssize_t) sizeof(buffer));
+
     ImmediateExit(-1, 0, True);
+}
+
+/*************************************<->*************************************
+ *
+ *  CatchStopSignal
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Create the pipe StopAll writes to and catch SIGTERM.  If that cannot be
+ *  done the signal gets its default action, which ends the process at once,
+ *  whatever disposition the program was started with.
+ *
+ *************************************<->***********************************/
+
+static void
+StopPipeFailed(void)
+{
+    PrintErrnoError(DtError, GETMESSAGE(4, 12, "Unable to set up the termination signal.  The process ends at once, without saving the session, when it is terminated."));
+}
+
+static void
+CatchStopSignal(void)
+{
+    struct sigaction action;
+    int i;
+
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+
+    if (pipe(stopPipe) != 0)
+    {
+        StopPipeFailed();
+        stopPipe[0] = stopPipe[1] = -1;
+    }
+    else
+    {
+        /* the handler must never block, and no program started later gets them */
+        for (i = 0; i < 2; i++)
+        {
+            if (fcntl(stopPipe[i], F_SETFL, O_NONBLOCK) != 0 ||
+                fcntl(stopPipe[i], F_SETFD, FD_CLOEXEC) != 0)
+            {
+                StopPipeFailed();
+                close(stopPipe[0]);
+                close(stopPipe[1]);
+                stopPipe[0] = stopPipe[1] = -1;
+                break;
+            }
+        }
+    }
+
+    action.sa_handler = (stopPipe[1] != -1) ? StopAll : SIG_DFL;
+    if (sigaction(SIGTERM, &action, (struct sigaction *) NULL) != 0 &&
+        stopPipe[1] != -1)
+    {
+        StopPipeFailed();
+        close(stopPipe[0]);
+        close(stopPipe[1]);
+        stopPipe[0] = stopPipe[1] = -1;
+    }
+}
+
+/*************************************<->*************************************
+ *
+ *  WatchStopSignal
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Have the event loop of the application read the pipe of CatchStopSignal.
+ *
+ *************************************<->***********************************/
+
+static void
+WatchStopSignal(void)
+{
+    if (stopPipe[0] != -1)
+    {
+        XtAppAddInput(smGD.appCon, stopPipe[0], (XtPointer) XtInputReadMask,
+                      StopRequested, NULL);
+    }
 }
 
 /*************************************<->*************************************

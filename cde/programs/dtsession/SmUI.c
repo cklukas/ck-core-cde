@@ -1153,20 +1153,39 @@ ImmediateExit(
 	Tt_message msg,
 	Boolean doSave)
 {
-    long old;
-    Tt_message notice;
+    static Boolean	inProgress = False;
+    sigset_t		blocked, savedMask;
+    Tt_message		notice;
+
+    /*
+     * Only one shutdown runs at a time: a request that comes in while it is
+     * under way (another logout, a SIGTERM that was already queued) is
+     * dropped.
+     */
+    if (inProgress)
+    {
+	if (msg != 0) {
+	    tt_message_reply( msg );
+	    tt_message_destroy( msg );
+	}
+	return;
+    }
+    inProgress = True;
 
     /*
      * Turn off SIGTERM so we don't catch one in the middle of shutting
-     * down
+     * down.  The signals are held, not lost: they are delivered when the
+     * shutdown ends without exiting (the user cancelled it), and the mask is
+     * put back then.
      */
+    sigemptyset(&blocked);
+    sigaddset(&blocked, SIGTERM);
 #if !defined(SVR4) && !defined(__linux__)
-    old = sigblock(sigmask(SIGTERM));
-    sigblock(sigmask(SIGHUP));
-    sigblock(sigmask(SIGPIPE));
-#else
-    old = sighold(SIGTERM);
+    sigaddset(&blocked, SIGHUP);
+    sigaddset(&blocked, SIGPIPE);
 #endif
+    sigprocmask(SIG_BLOCK, &blocked, &savedMask);
+
     /*
      *
      */
@@ -1184,7 +1203,6 @@ ImmediateExit(
 
     if (doSave)
     {
-	XEvent		next;
 	Tt_message	msg;
 	int		sessionType = smGD.sessionType;
 	XtIntervalId	timerId;
@@ -1224,13 +1242,17 @@ ImmediateExit(
 	timerId = XtAppAddTimeOut (smGD.appCon, smRes.saveYourselfTimeout,
 				   SaveTimeout, NULL);
 
+	/*
+	 * What ends the wait (the replies of the clients, a cancel, the
+	 * timeout) arrives as input and timer callbacks, which
+	 * XtAppNextEvent() runs without returning unless an X event comes
+	 * in; XtAppProcessEvent() returns after each of them.
+	 */
 	while (smXSMP.saveState.saveComplete == False &&
 	       smXSMP.saveState.shutdownCanceled == False) {
 	    if (saveTimeout)
 		break;
-	    XtAppNextEvent(smGD.appCon, &next);
-	    if (next.type != 0)
-		XtDispatchEvent(&next);
+	    XtAppProcessEvent(smGD.appCon, XtIMAll);
 	}
     }
 
@@ -1253,6 +1275,12 @@ ImmediateExit(
 	_DtReleaseLock(smGD.display, SM_RUNNING_LOCK);
 	SM_EXIT(0);
     }
+
+    /*
+     * The shutdown was cancelled: go on as before it was asked for
+     */
+    sigprocmask(SIG_SETMASK, &savedMask, (sigset_t *) NULL);
+    inProgress = False;
 }
 
 

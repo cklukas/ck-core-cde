@@ -19,6 +19,18 @@
   `dtsession` started through the search path names its PAM service correctly
   instead of failing every unlock. Covered by
   `programs/dtsession/tests/check-lock-authentication.py`.
+- dtsession: carry out a `SIGTERM` shutdown from the event loop. The handler
+  ran the complete shutdown (ToolTalk notices, saving the session, an X event
+  loop, the `sessionexit` script) inside the signal handler, which deadlocks or
+  corrupts memory when the signal interrupts `malloc` or Xlib. It now writes a
+  byte to a pipe that the event loop reads; repeated signals cause one shutdown.
+  The shutdown holds the signal while it runs and gives the signal mask back
+  when a client cancels it (it stayed blocked, so the next logout signal was
+  never delivered); the shutdown waits for the clients with `XtAppProcessEvent`
+  (with `XtAppNextEvent` a cancel or the timeout was not noticed until an X event
+  arrived); a request made during a shutdown is dropped; if the signal
+  cannot be set up it is logged and `SIGTERM` keeps its default action. Covered
+  by `programs/dtsession/tests/check-signals.py`.
 - build: add the opt-in `--enable-hardening` and `--enable-sanitizers[=LIST]`
   configure switches. Hardening reports truncation, string-constant,
   ignored-result, null-dereference and format defects and adds stack protection

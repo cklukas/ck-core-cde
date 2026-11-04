@@ -71,6 +71,8 @@ Exiting from Session Manager.
 $ This message is added to the error log if a required temporary
 $ file can not be created by the session manager.
 $ The insert is the name of the temporary file.
+12 Unable to set up the termination signal.  The process ends at once, \
+without saving the session, when it is terminated.
 
 $set 6
 $    THIS COMMENT FOR DTSESSION TEAM ONLY -- SmMsgSrv.c --

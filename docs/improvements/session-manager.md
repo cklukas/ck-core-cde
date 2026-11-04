@@ -61,6 +61,29 @@ before the first open of a locale file, which it did not before.
   `dtsession` started through the search path (no `/` in `argv[0]`) failed every
   unlock attempt.
 
+## Signals
+
+- The shutdown holds `SIGTERM` while it runs and gives the signal mask back
+  when it ends without exiting, which is what happens when a client cancels it;
+  the next signal then starts a new shutdown. A signal that arrives during a
+  shutdown is held until it ends, and a second logout request made while one is
+  under way is dropped. The wait of the shutdown for the answers of the clients
+  runs the event loop with `XtAppProcessEvent`: the answers, a client's cancel and
+  the timeout arrive as callbacks, which `XtAppNextEvent` runs without returning
+  until an X event comes in, so a cancelled shutdown of an idle display never
+  ended. If the signal cannot be set up (the pipe, its flags or
+  the handler), the failure is logged and `SIGTERM` gets its default action,
+  even when the program was started with it ignored.
+- `SIGTERM` (sent by the login manager when the session ends, or by `kill`)
+  starts a normal shutdown. The handler used to run the whole shutdown: it sent
+  ToolTalk notices, saved the session, allocated memory, ran an event loop and
+  started the user's `sessionexit` script from inside the signal handler, which
+  deadlocks or corrupts memory if the signal arrives while the program is in
+  `malloc` or Xlib. The handler now writes one byte to a pipe and returns, and
+  the event loop carries out the shutdown. Several signals cause one shutdown;
+  a shutdown that a client cancels can be requested again. If the pipe cannot
+  be created the signal keeps its default action and ends the process.
+
 ## Tests
 
 `programs/dtsession/tests` holds regression tests that cut the production code
@@ -76,3 +99,5 @@ real, effective and saved ids and can refuse a call, report success without
 changing anything or leave a way back to root, in the builds with and without
 `SVR4`. `check-lock-authentication.py` runs `localAuthenticate()` of the PAM and
 non-PAM builds against a password database and a `crypt()` that can fail.
+`check-signals.py` raises `SIGTERM` against the production handler and checks
+that nothing of the shutdown runs inside it.
