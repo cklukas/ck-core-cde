@@ -272,48 +272,30 @@ _tt_write_record(int prefix_len, const char *prefix, const char *db_name,
 
 /*
  *  _tt_decode_access - the owner, group and mode in the access record REC of
- *  RECLEN bytes, in the layout of the table it was read from:
- *
- *  - the tables that rpc.ttdbserverd makes itself have a record of a key of
- *    TT_DB_KEY_LENGTH bytes and a long for each number, which holds the
- *    number in network order;
- *  - the tables that a client of the old servers makes (the length of its
- *    key is that of OID_KEY_LENGTH) have 16 bits for each number, in network
- *    order, and 0xffff for "none".
- *
- *  "None" is -1 in both.  Returns 0 if the record is of neither layout.
+ *  RECLEN bytes of the access table: the key of the object (OID_KEY_LENGTH
+ *  bytes), and a long for each of the three numbers, which holds the number
+ *  in network order (_Tt_db_server_db::setAccess() writes them, at the
+ *  offsets of tt_db_server_consts.h).  "None" is -1.  Returns 0 if the
+ *  record is not of that layout.
  */
 
 int
 _tt_decode_access(const char *rec, int reclen, uid_t *uid, gid_t *group,
 		  mode_t *mode)
 {
-	if (reclen == TT_DB_KEY_LENGTH + 3 * TT_DB_LONG_SIZE) {
-		long n_user = 0, n_group = 0, n_mode = 0;
-
-		memcpy(&n_user, rec + TT_DB_ACCESS_USER_OFFSET, TT_DB_LONG_SIZE);
-		memcpy(&n_group, rec + TT_DB_ACCESS_GROUP_OFFSET, TT_DB_LONG_SIZE);
-		memcpy(&n_mode, rec + TT_DB_ACCESS_MODE_OFFSET, TT_DB_LONG_SIZE);
-		*uid = (uid_t)ntohl(n_user);
-		*group = (gid_t)ntohl(n_group);
-		*mode = (mode_t)ntohl(n_mode);
-		return 1;
+	if (reclen != OID_KEY_LENGTH + 3 * TT_DB_LONG_SIZE) {
+		return 0;
 	}
-	if (reclen == OID_KEY_LENGTH + 3 * 2) {
-		unsigned short n_user, n_group, n_mode;
 
-		memcpy(&n_user, rec + OID_KEY_LENGTH, sizeof(n_user));
-		memcpy(&n_group, rec + OID_KEY_LENGTH + 2, sizeof(n_group));
-		memcpy(&n_mode, rec + OID_KEY_LENGTH + 4, sizeof(n_mode));
-		n_user = ntohs(n_user);
-		n_group = ntohs(n_group);
-		n_mode = ntohs(n_mode);
-		*uid = (n_user == 0xffff) ? (uid_t)-1 : (uid_t)n_user;
-		*group = (n_group == 0xffff) ? (gid_t)-1 : (gid_t)n_group;
-		*mode = (n_mode == 0xffff) ? (mode_t)-1 : (mode_t)n_mode;
-		return 1;
-	}
-	return 0;
+	long n_user = 0, n_group = 0, n_mode = 0;
+
+	memcpy(&n_user, rec + TT_DB_ACCESS_USER_OFFSET, TT_DB_LONG_SIZE);
+	memcpy(&n_group, rec + TT_DB_ACCESS_GROUP_OFFSET, TT_DB_LONG_SIZE);
+	memcpy(&n_mode, rec + TT_DB_ACCESS_MODE_OFFSET, TT_DB_LONG_SIZE);
+	*uid = (uid_t)ntohl(n_user);
+	*group = (gid_t)ntohl(n_group);
+	*mode = (mode_t)ntohl(n_mode);
+	return 1;
 }
 
 /*
@@ -2490,8 +2472,10 @@ bool_t msg_q_lock(int isfd, const char *record, int length, SVCXPRT *transp)
   }
 
   // See if this is a _TT_QUEUED_MSGS property access...
-  // (with a 16 byte key, the rec length must be at least 31)
-  if ((length > 30) && !memcmp(record+16, "_TT_QUEUED_MSGS", 15)) {
+  // (the name follows the key, and is 15 bytes: the rec length must be at
+  // least the length of the key and 15)
+  if ((length >= OID_KEY_LENGTH + 15) &&
+      !memcmp(record+OID_KEY_LENGTH, "_TT_QUEUED_MSGS", 15)) {
     // Get the address of the client
 #if defined(OPT_TLI) || defined(OPT_TIRPC)
     netbuf *client_address = svc_getrpccaller(transp);
@@ -2506,8 +2490,8 @@ bool_t msg_q_lock(int isfd, const char *record, int length, SVCXPRT *transp)
 #endif
 
     // Get the file key
-    _Tt_string file_key(16);
-    (void)memcpy((char *)file_key, record, 16);
+    _Tt_string file_key(OID_KEY_LENGTH);
+    (void)memcpy((char *)file_key, record, OID_KEY_LENGTH);
 
     // Set a lock for this client and file key and lock the message queue
     // for new DB clients
@@ -2515,8 +2499,9 @@ bool_t msg_q_lock(int isfd, const char *record, int length, SVCXPRT *transp)
     return lock.testAndSetLock(client_id, file_key);
   }
   // Else, see if this is a _TT_MSG_<ID#>_<PART#> property access
-  // (with a 16 byte key, the rec length must be at least 27)
-  else if ((length > 26) && !memcmp(record+16, "_TT_MSG_", 8)) {
+  // (the name is at least "_TT_MSG_", a digit, "_" and a digit after the key)
+  else if ((length >= OID_KEY_LENGTH + 11) &&
+	   !memcmp(record+OID_KEY_LENGTH, "_TT_MSG_", 8)) {
     // Get the address of the client
 #if defined(OPT_TLI) || defined(OPT_TIRPC)
     netbuf *client_address = svc_getrpccaller(transp);
@@ -2530,8 +2515,8 @@ bool_t msg_q_lock(int isfd, const char *record, int length, SVCXPRT *transp)
 #endif
 
     // Get the file key
-    _Tt_string file_key(16);
-    (void)memcpy((char *)file_key, record, 16);
+    _Tt_string file_key(OID_KEY_LENGTH);
+    (void)memcpy((char *)file_key, record, OID_KEY_LENGTH);
 
     // Unlock the message queue for new DB clients
     _Tt_db_msg_q_lock lock;

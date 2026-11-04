@@ -37,19 +37,16 @@
 #include "binkey.h"
 #include <memory.h>
 
-static unsigned char sixteen_zeroes[OID_KEY_LENGTH] = {
-	0,0,0,0,
-	0,0,0,0,
-	0,0,0,0,
-	0,0,0,0};
-static unsigned char sixteen_foxes[OID_KEY_LENGTH] = {
-	255,255,255,255,
-	255,255,255,255,
-	255,255,255,255,
-	255,255,255,255};
+// the smallest and the largest key, of the length of a key
+static unsigned char smallest_key[OID_KEY_LENGTH];
+static unsigned char largest_key[OID_KEY_LENGTH];
 
-Binkey Binkey::smallest(sixteen_zeroes);
-Binkey Binkey::largest(sixteen_foxes);
+static struct Largest_key_init {
+	Largest_key_init() { memset(largest_key, 255, sizeof(largest_key)); }
+} largest_key_init;
+
+Binkey Binkey::smallest(smallest_key);
+Binkey Binkey::largest(largest_key);
 
 static int binkey_compare(const unsigned char *a, const unsigned char *b);
 

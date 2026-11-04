@@ -340,6 +340,16 @@
 - tt: the dispatcher of rpc.ttdbserverd converts the routine that decodes an
   argument once instead of three times, which takes the warning count of lib/tt
   back under its recorded baseline.
+- tt: use the real length of a key in rpc.ttdbserverd. A key is the structure
+  `_Tt_key_data`, 16 bytes on a 32-bit build and 32 bytes on a 64-bit one, but
+  `OID_KEY_LENGTH` was 16, so on a 64-bit build the access check, the session
+  procedures, `gettype`, the modification date, the message queue locks of the
+  old interface and `TT_GET_ALL_SESSIONS` and `TT_DELETE_SESSION` of the new one
+  looked for their records at the wrong offsets of the tables the server makes.
+  `OID_KEY_LENGTH` is now the size of the structure, the access record has one
+  layout (the 16 bit layout of the first servers is dropped), keys are zeroed
+  before they are filled, and `ttdbck` follows. The tests make their databases
+  through the requests of the new interface and read them through the old one.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

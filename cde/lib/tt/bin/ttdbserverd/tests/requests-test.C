@@ -24,6 +24,8 @@
 #include "util/tt_path.h"
 #include "util/tt_xdr_utils.h"
 
+#include <new>
+#include <stddef.h>
 #include <string>
 #include <vector>
 #include <sys/resource.h>
@@ -282,7 +284,7 @@ start_server(const char *name)
 	_tt_oid_keydesc.k_flags = ISNODUPS;
 	_tt_oid_keydesc.k_nparts = 1;
 	_tt_oid_keydesc.k_part[0].kp_start = 0;
-	_tt_oid_keydesc.k_part[0].kp_leng = OID_KEY_LENGTH;
+	_tt_oid_keydesc.k_part[0].kp_leng = TT_DB_KEY_LENGTH;
 	_tt_oid_keydesc.k_part[0].kp_type = BINTYPE;
 
 	if (iscntl(ALLISFD, ISCNTL_FATAL, isamfatalerror) == -1) {
@@ -309,7 +311,7 @@ oid_key(void)
 	k.k_flags = ISNODUPS;
 	k.k_nparts = 1;
 	k.k_part[0].kp_start = 0;
-	k.k_part[0].kp_leng = OID_KEY_LENGTH;
+	k.k_part[0].kp_leng = TT_DB_KEY_LENGTH;
 	k.k_part[0].kp_type = BINTYPE;
 	return k;
 }
@@ -342,7 +344,7 @@ build(const char *old_name)
 	args.reclen = fixed ? fixed_reclen : ISMAXRECLEN;
 	args.key = &key;
 	args.mode = fixed ? fixed_mode : var_mode;
-	args.isreclen = fixed ? fixed_reclen : OID_KEY_LENGTH + MAX_PROP_LENGTH;
+	args.isreclen = fixed ? fixed_reclen : TT_DB_KEY_LENGTH + MAX_PROP_LENGTH;
 	return reply_result(rpc(_TT_ISBUILD,
 				encode((xdrproc_t)xdr_Tt_isbuild_args, &args)));
 }
@@ -373,7 +375,7 @@ record(char fill, unsigned len)
 	std::string r(len, fill);
 
 	/* the key is the first 16 bytes */
-	for (int i = 0; i < OID_KEY_LENGTH && (unsigned)i < len; i++) {
+	for (int i = 0; i < TT_DB_KEY_LENGTH && (unsigned)i < len; i++) {
 		r[i] = 'a' + i;
 	}
 	return r;
@@ -401,7 +403,7 @@ read_first(int isfd, bool *ok)
 	Reply			r;
 	std::string		out;
 
-	char key[OID_KEY_LENGTH] = { 0 };
+	char key[TT_DB_KEY_LENGTH] = { 0 };
 
 	args.isfd = isfd;
 	args.rec.rec_len = sizeof(key);
@@ -437,7 +439,7 @@ case_isfd_range(void)
 				   65536, 1 << 20, INT_MAX, INT_MIN };
 	keydesc key = oid_key();
 	std::string rec = record('x', 64);
-	char oid[OID_KEY_LENGTH];
+	char oid[TT_DB_KEY_LENGTH];
 
 	memset(oid, 'o', sizeof(oid));
 	start_server("isfd-range");
@@ -461,7 +463,7 @@ case_isfd_range(void)
 			encode((xdrproc_t)xdr_Tt_isrewrec_args, &wa));
 		CHECK(reply_result(r) == -1);
 
-		_Tt_isstart_args sa = { isfd, &key, OID_KEY_LENGTH,
+		_Tt_isstart_args sa = { isfd, &key, TT_DB_KEY_LENGTH,
 					{ (u_int)rec.size(), (char *)rec.data() },
 					ISEQUAL };
 		r = rpc(_TT_ISSTART, encode((xdrproc_t)xdr_Tt_isstart_args, &sa));
@@ -472,7 +474,7 @@ case_isfd_range(void)
 		r = rpc(_TT_ISWRITE, encode((xdrproc_t)xdr_Tt_iswrite_args, &ia));
 		CHECK(reply_result(r) == -1);
 
-		_Tt_test_and_set_args ta = { isfd, &key, OID_KEY_LENGTH,
+		_Tt_test_and_set_args ta = { isfd, &key, TT_DB_KEY_LENGTH,
 					     { (u_int)rec.size(),
 					       (char *)rec.data() } };
 		r = rpc(_TT_TEST_AND_SET,
@@ -504,7 +506,7 @@ case_isfd_range(void)
 		memset(&ss, 0, sizeof(ss));
 		ss.isfd = isfd;
 		ss.key = &key;
-		ss.key_len = OID_KEY_LENGTH;
+		ss.key_len = TT_DB_KEY_LENGTH;
 		ss.oidkey.oidkey_len = sizeof(oid);
 		ss.oidkey.oidkey_val = oid;
 		char sid[] = "abcd";	/* xdr_char writes what it encodes */
@@ -521,7 +523,7 @@ case_isfd_range(void)
 		memset(&sp, 0, sizeof(sp));
 		sp.isfd = isfd;
 		sp.key = &key;
-		sp.key_len = OID_KEY_LENGTH;
+		sp.key_len = TT_DB_KEY_LENGTH;
 		r = rpc(_TT_GETTYPE, encode((xdrproc_t)xdr_Tt_spec_props, &sp));
 		CHECK(answered(r));
 	}
@@ -859,7 +861,7 @@ case_null_key(void)
 	int isfd = build("oid_access");
 	CHECK(isfd >= 0);
 
-	_Tt_isstart_args sa = { isfd, NULL, OID_KEY_LENGTH,
+	_Tt_isstart_args sa = { isfd, NULL, TT_DB_KEY_LENGTH,
 				{ (u_int)rec.size(), (char *)rec.data() },
 				ISEQUAL };
 	Reply r = rpc(_TT_ISSTART, encode((xdrproc_t)xdr_Tt_isstart_args, &sa));
@@ -876,7 +878,7 @@ case_null_key(void)
 	CHECK(answered(r));
 	CHECK(reply_result(r) == -1);
 
-	_Tt_test_and_set_args ta = { isfd, NULL, OID_KEY_LENGTH,
+	_Tt_test_and_set_args ta = { isfd, NULL, TT_DB_KEY_LENGTH,
 				     { (u_int)rec.size(), (char *)rec.data() } };
 	r = rpc(_TT_TEST_AND_SET,
 		encode((xdrproc_t)xdr_Tt_test_and_set_args, &ta));
@@ -889,7 +891,7 @@ case_null_key(void)
 	_Tt_isread_args ra = { isfd, { 0, NULL }, ISNEXT, 0 };
 	r = rpc(_TT_ISREAD, encode((xdrproc_t)xdr_Tt_isread_args, &ra));
 	CHECK(answered(r));
-	_Tt_isstart_args ea = { isfd, &key, OID_KEY_LENGTH, { 0, NULL }, ISEQUAL };
+	_Tt_isstart_args ea = { isfd, &key, TT_DB_KEY_LENGTH, { 0, NULL }, ISEQUAL };
 	r = rpc(_TT_ISSTART, encode((xdrproc_t)xdr_Tt_isstart_args, &ea));
 	CHECK(answered(r));
 	CHECK(reply_result(r) == -1);
@@ -945,8 +947,8 @@ case_oid_access_keys(void)
 					_TT_SETOIDGROUP, _TT_SETOIDMODE };
 
 	for (size_t i = 0; i < sizeof(procs) / sizeof(procs[0]); i++) {
-		for (unsigned len = 0; len <= OID_KEY_LENGTH; len += 5) {
-			char key[OID_KEY_LENGTH + 1];
+		for (unsigned len = 0; len <= TT_DB_KEY_LENGTH; len += 5) {
+			char key[TT_DB_KEY_LENGTH + 1];
 			memset(key, 'k', sizeof(key));
 			_Tt_oidaccess_args args;
 			args.isfd = -1;
@@ -970,10 +972,10 @@ case_session_requests(void)
 	int isfd = build("oid_prop");
 	CHECK(isfd >= 0);
 	keydesc key = oid_key();
-	char oid[OID_KEY_LENGTH];
+	char oid[TT_DB_KEY_LENGTH];
 	memset(oid, 'o', sizeof(oid));
 	char session[ISMAXRECLEN + 8000];
-	const unsigned maxsession = ISMAXRECLEN - OID_KEY_LENGTH - MAX_PROP_LENGTH;
+	const unsigned maxsession = ISMAXRECLEN - TT_DB_KEY_LENGTH - MAX_PROP_LENGTH;
 	memset(session, 's', sizeof(session));
 
 	static const u_long procs[] = { _TT_ADDSESSION, _TT_DELSESSION };
@@ -985,13 +987,13 @@ case_session_requests(void)
 			unsigned	sessions;
 		} t[] = {
 			/* a session that is more than the value of a record */
-			{ OID_KEY_LENGTH, &key, sizeof(oid), maxsession + 1 },
-			{ OID_KEY_LENGTH, &key, sizeof(oid), sizeof(session) },
+			{ TT_DB_KEY_LENGTH, &key, sizeof(oid), maxsession + 1 },
+			{ TT_DB_KEY_LENGTH, &key, sizeof(oid), sizeof(session) },
 			{ -1, &key, sizeof(oid), 4 },
 			{ 10000, &key, sizeof(oid), 4 },
 			{ (int)sizeof(key) + 1, &key, sizeof(oid), 4 },
-			{ OID_KEY_LENGTH, NULL, sizeof(oid), 4 },
-			{ OID_KEY_LENGTH, &key, 0, 4 },
+			{ TT_DB_KEY_LENGTH, NULL, sizeof(oid), 4 },
+			{ TT_DB_KEY_LENGTH, &key, 0, 4 },
 		};
 		for (size_t i = 0; i < sizeof(t) / sizeof(t[0]); i++) {
 			_Tt_session_args args;
@@ -1011,7 +1013,7 @@ case_session_requests(void)
 				Raw raw;
 				raw.u32(isfd).u32(1);
 				raw.s += encode((xdrproc_t)xdr_keydesc, &key);
-				raw.u32(OID_KEY_LENGTH);
+				raw.u32(TT_DB_KEY_LENGTH);
 				raw.chars(oid, sizeof(oid));
 				raw.chars(session, t[i].sessions);
 				req = raw.s;
@@ -1051,7 +1053,7 @@ case_sessions_position(void)
 	CHECK(open_table("oid_prop", var_mode) >= 0);
 
 	/* the first two bytes of a position are its length */
-	char pos[OID_KEY_LENGTH];
+	char pos[TT_DB_KEY_LENGTH];
 	memset(pos, 0xff, sizeof(pos));
 	_tt_get_all_sessions_args args;
 	args.oidkey.oidkey_len = sizeof(pos);
@@ -1098,7 +1100,7 @@ case_reply_leftovers(void)
 
 	/* a test_and_set that does */
 	keydesc key = oid_key();
-	_Tt_test_and_set_args ta = { _TT_MAX_ISFD - 1, &key, OID_KEY_LENGTH,
+	_Tt_test_and_set_args ta = { _TT_MAX_ISFD - 1, &key, TT_DB_KEY_LENGTH,
 				     { (u_int)rec.size(), (char *)rec.data() } };
 	r = rpc(_TT_TEST_AND_SET,
 		encode((xdrproc_t)xdr_Tt_test_and_set_args, &ta));
@@ -1922,7 +1924,7 @@ build_at(const std::string &path, bool fixed = true)
 	args.reclen = fixed ? fixed_reclen : ISMAXRECLEN;
 	args.key = &key;
 	args.mode = fixed ? fixed_mode : var_mode;
-	args.isreclen = fixed ? fixed_reclen : OID_KEY_LENGTH + MAX_PROP_LENGTH;
+	args.isreclen = fixed ? fixed_reclen : TT_DB_KEY_LENGTH + MAX_PROP_LENGTH;
 	return reply_result(rpc(_TT_ISBUILD,
 				encode((xdrproc_t)xdr_Tt_isbuild_args, &args)));
 }
@@ -2074,7 +2076,7 @@ oid_access_call(u_long proc, int isfd, const char *key, long value)
 	_Tt_oidaccess_args args;
 
 	args.isfd = isfd;
-	args.key.key_len = OID_KEY_LENGTH;
+	args.key.key_len = TT_DB_KEY_LENGTH;
 	args.key.key_val = key;
 	args.value = (short)value;
 	return rpc(proc, encode((xdrproc_t)xdr_Tt_oidaccess_args, &args));
@@ -2105,7 +2107,7 @@ oid_access_get(int isfd, const char *key, int *result, long *uid)
 static void
 case_oid_access_stale_fd(void)
 {
-	char oid[OID_KEY_LENGTH];
+	char oid[TT_DB_KEY_LENGTH];
 	const uid_t owner = getuid() + 10, stranger = getuid() + 11;
 	const gid_t group = getgid();
 
@@ -2154,9 +2156,9 @@ prop_key(void)
 	k.k_flags = ISDUPS;
 	k.k_nparts = 2;
 	k.k_part[0].kp_start = 0;
-	k.k_part[0].kp_leng = OID_KEY_LENGTH;
+	k.k_part[0].kp_leng = TT_DB_KEY_LENGTH;
 	k.k_part[0].kp_type = BINTYPE;
-	k.k_part[1].kp_start = OID_KEY_LENGTH;
+	k.k_part[1].kp_start = TT_DB_KEY_LENGTH;
 	k.k_part[1].kp_leng = MAX_PROP_LENGTH;
 	k.k_part[1].kp_type = CHARTYPE;
 	return k;
@@ -2179,104 +2181,96 @@ build_table(const char *old_name, bool fixed, int reclen, int minlen,
 				encode((xdrproc_t)xdr_Tt_isbuild_args, &args)));
 }
 
-static std::string
-be16(unsigned v)
-{
-	char b[2] = { (char)(v >> 8), (char)v };
-
-	return std::string(b, 2);
-}
-
-/* The access record a client of the old servers wrote: the key, and the
-   owner, group and mode as three 16-bit numbers in network order. */
-static std::string
-short_access(const char *oid, unsigned user, unsigned group, unsigned mode)
-{
-	return std::string(oid, OID_KEY_LENGTH) + be16(user) + be16(group) +
-		be16(mode);
-}
-
 /* a record of the property table: key, name padded to its field, value */
 static std::string
 prop_record(const char *oid, const char *name, const char *value)
 {
-	std::string r(oid, OID_KEY_LENGTH);
+	std::string r(oid, TT_DB_KEY_LENGTH);
 
 	r += name;
-	r.resize(OID_KEY_LENGTH + MAX_PROP_LENGTH, '\0');
+	r.resize(TT_DB_KEY_LENGTH + MAX_PROP_LENGTH, '\0');
 	r += value;
 	return r;
 }
 
-/* the record of a path of the file table: key and path, as long as the
-   shortest record of the table */
-static std::string
-path_record(const char *key, const std::string &path)
-{
-	std::string r(key, OID_KEY_LENGTH);
-
-	r += path;
-	if (r.size() < OID_KEY_LENGTH + MAX_PROP_LENGTH) {
-		r.resize(OID_KEY_LENGTH + MAX_PROP_LENGTH, '\0');
-	}
-	return r;
-}
-
-/* The four tables of a database of the old servers, with their records: the
-   file F (key f) is the file on disk, and holds the objects O0.. (keys o+i),
-   each with a mode of its own; P belongs to somebody else, X has no access
-   record. */
+/* The keys of the objects of a database the server made: the file F is the
+   file on disk, and holds the objects O0.. (a mode of its own for each); P
+   belongs to somebody else; X has no access record. */
 struct Db {
-	char	f[OID_KEY_LENGTH];
-	char	o[8][OID_KEY_LENGTH];
-	char	p[OID_KEY_LENGTH];
-	char	x[OID_KEY_LENGTH];
+	char	f[TT_DB_KEY_LENGTH];
+	char	o[8][TT_DB_KEY_LENGTH];
+	char	p[TT_DB_KEY_LENGTH];
+	char	x[TT_DB_KEY_LENGTH];
 };
 
+extern "C" { int isread(int, char *, int); }
+static int create_object(const std::string &objid, const std::string &file,
+			 unsigned mode);
+
+/* the key of the object an object id names, as the tables keep it */
 static void
-make_db(Db *db, uid_t object_owner, gid_t object_group,
-	const unsigned *modes, size_t nmodes, uid_t other_owner,
-	const std::string &file)
+key_of(const std::string &objid, char *key)
 {
-	Caller root(0, getgid());
+	_Tt_db_key	k(_Tt_string(objid.c_str()));
+	_Tt_string	b = k.binary();
 
-	memset(db->f, 'f', sizeof(db->f));
-	for (size_t i = 0; i < 8; i++) {
-		memset(db->o[i], 'a' + (int)i, sizeof(db->o[i]));
+	memcpy(key, (char *)b, TT_DB_KEY_LENGTH);
+}
+
+/* the first record of a table of the database, read as NetISAM has it */
+static std::string
+first_record_of(const char *table)
+{
+	std::string	path = g_dir + "/TT_DB/" + table;
+	static char	buf[ISMAXRECLEN];
+	int		fd = isopen(path.c_str(), ISINOUT + ISVARLEN + ISMANULOCK);
+	std::string	out;
+
+	CHECK(fd >= 0);
+	if (fd >= 0) {
+		if (isread(fd, buf, ISFIRST) == 0) {
+			out.assign(buf, isreclen);
+		}
+		isclose(fd);
 	}
-	memset(db->p, 'p', sizeof(db->p));
-	memset(db->x, 'x', sizeof(db->x));
+	return out;
+}
 
-	int access = build_table("oid_access", true, 22, 22, oid_key());
-	int container = build_table("oid_container", true, 32, 32, oid_key());
-	int paths = build_table("docoid_path", false, 16 + 1024,
-				OID_KEY_LENGTH + MAX_PROP_LENGTH, oid_key());
-	int props = build_table("oid_prop", false, ISMAXRECLEN,
-				OID_KEY_LENGTH + MAX_PROP_LENGTH, prop_key());
-	CHECK(access >= 0 && container >= 0 && paths >= 0 && props >= 0);
-
-	CHECK(write_record(access, short_access(db->f, object_owner, object_group,
-						0xffff)) == 0);
-	CHECK(write_record(paths, path_record(db->f, "localhost:" + file)) == 0);
-	CHECK(write_record(props, prop_record(db->f, "name", "value")) == 0);
+/* A database as clients of libtt make it, through the requests of the new
+   interface: the file, objects of it created by CREATOR with the modes
+   given, and one of OTHER_OWNER. */
+static void
+make_db(Db *db, uid_t creator, gid_t creator_group, const unsigned *modes,
+	size_t nmodes, uid_t other_owner, uid_t file_owner, gid_t file_group,
+	const std::string &netfile)
+{
+	{
+		Caller as(file_owner, file_group);
+		create_file(netfile);
+	}
 	for (size_t i = 0; i < nmodes; i++) {
-		CHECK(write_record(access, short_access(db->o[i], object_owner,
-							object_group, modes[i])) == 0);
-		CHECK(write_record(container, std::string(db->o[i], OID_KEY_LENGTH) +
-				   std::string(db->f, OID_KEY_LENGTH)) == 0);
-		CHECK(write_record(props, prop_record(db->o[i], "name", "value")) == 0);
-	}
-	CHECK(write_record(access, short_access(db->p, other_owner, object_group,
-						0600)) == 0);
-	CHECK(write_record(container, std::string(db->p, OID_KEY_LENGTH) +
-			   std::string(db->f, OID_KEY_LENGTH)) == 0);
-	CHECK(write_record(props, prop_record(db->p, "name", "value")) == 0);
-	CHECK(write_record(props, prop_record(db->x, "name", "value")) == 0);
+		std::string objid = make_objid(g_mount);
+		Caller as(creator, creator_group);
 
-	CHECK(close_table(access) == 0);
-	CHECK(close_table(container) == 0);
-	CHECK(close_table(paths) == 0);
-	CHECK(close_table(props) == 0);
+		CHECK(create_object(objid, netfile,
+				    modes[i] == 0xffff ? (unsigned)-1 : modes[i])
+		      == TT_DB_OK);
+		key_of(objid, db->o[i]);
+	}
+	std::string objid = make_objid(g_mount);
+	{
+		Caller as(other_owner, creator_group);
+		CHECK(create_object(objid, netfile, 0600) == TT_DB_OK);
+	}
+	key_of(objid, db->p);
+
+	/* the key of the file is that of the record of its table */
+	std::string rec = first_record_of("file_table");
+	CHECK(rec.size() > (size_t)TT_DB_KEY_LENGTH);
+	if (rec.size() >= (size_t)TT_DB_KEY_LENGTH) {
+		memcpy(db->f, rec.data(), TT_DB_KEY_LENGTH);
+	}
+	memset(db->x, 'x', sizeof(db->x));
 }
 
 /* The requests of a legacy client on the property table: read a record, add
@@ -2284,7 +2278,7 @@ make_db(Db *db, uid_t object_owner, gid_t object_group,
 static Isam
 read_prop(int isfd, const char *key)
 {
-	_Tt_isread_args ra = { isfd, { OID_KEY_LENGTH, (char *)key }, ISFIRST, 0 };
+	_Tt_isread_args ra = { isfd, { TT_DB_KEY_LENGTH, (char *)key }, ISFIRST, 0 };
 
 	return isam_of(rpc(_TT_ISREAD, encode((xdrproc_t)xdr_Tt_isread_args, &ra)));
 }
@@ -2314,7 +2308,7 @@ test_and_set_prop(int isfd, const char *key)
 {
 	keydesc k = prop_key();
 	std::string rec = prop_record(key, "tas", "set");
-	_Tt_test_and_set_args ta = { isfd, &k, OID_KEY_LENGTH + MAX_PROP_LENGTH,
+	_Tt_test_and_set_args ta = { isfd, &k, TT_DB_KEY_LENGTH + MAX_PROP_LENGTH,
 				     { (u_int)rec.size(), (char *)rec.data() } };
 	Reply r = rpc(_TT_TEST_AND_SET,
 		      encode((xdrproc_t)xdr_Tt_test_and_set_args, &ta));
@@ -2429,8 +2423,7 @@ transaction_of(int isfd, const char *first, const char *second)
 static void
 case_access_rules(void)
 {
-	start_server("access-rules");
-
+	const std::string netfile = start_partition("access-rules");
 	const std::string file = g_dir + "/file";
 	const uid_t file_owner = getuid() ? getuid() : 4000;
 	const gid_t file_group = getuid() ? getgid() : 4000;
@@ -2449,7 +2442,7 @@ case_access_rules(void)
 	const size_t nobj = sizeof(object_modes) / sizeof(object_modes[0]);
 
 	make_db(&db, creator, file_group + 1, object_modes, nobj, file_owner + 5,
-		file);
+		file_owner, file_group, netfile);
 
 	Who owner = { "owner of the file", 0, file_owner, { file_group } };
 	Who made = { "creator of the object", 0, creator, { file_group + 1 } };
@@ -2496,7 +2489,7 @@ case_access_rules(void)
 		CHECK(!is_denied(read_prop(isfd, db.f)));
 		CHECK(is_denied(read_prop(isfd, db.x)));
 		CHECK(is_denied(read_prop(isfd, db.p)));
-		char shorter[OID_KEY_LENGTH - 1];
+		char shorter[TT_DB_KEY_LENGTH - 1];
 		memset(shorter, 'a', sizeof(shorter));
 		_Tt_isread_args ra = { isfd, { sizeof(shorter), shorter }, ISFIRST, 0 };
 		CHECK(is_denied(isam_of(rpc(_TT_ISREAD,
@@ -2548,9 +2541,22 @@ case_access_rules(void)
 	close_as(member, isfd);
 }
 
-/* An access record is read in the layout of the table it is in. */
+/* An access record is read in the layout of the access table: the key, and a
+   long for each number, which holds the number in network order. */
 extern int _tt_decode_access(const char *rec, int reclen, uid_t *uid,
 			     gid_t *group, mode_t *mode) __attribute__((weak));
+
+static std::string
+access_record(unsigned long user, unsigned long group, unsigned long mode)
+{
+	std::string	r(TT_DB_KEY_LENGTH, 'k');
+	long		n;
+
+	n = htonl(user); r.append((char *)&n, TT_DB_LONG_SIZE);
+	n = htonl(group); r.append((char *)&n, TT_DB_LONG_SIZE);
+	n = htonl(mode); r.append((char *)&n, TT_DB_LONG_SIZE);
+	return r;
+}
 
 static void
 case_access_layouts(void)
@@ -2558,9 +2564,6 @@ case_access_layouts(void)
 	uid_t uid;
 	gid_t group;
 	mode_t mode;
-	char oid[OID_KEY_LENGTH];
-
-	memset(oid, 'o', sizeof(oid));
 
 	if (_tt_decode_access == NULL) {
 		/* a server that does not read access records by their layout */
@@ -2568,38 +2571,54 @@ case_access_layouts(void)
 		return;
 	}
 
-	/* the layout of the old servers: three 16-bit numbers in network order */
-	std::string rec = short_access(oid, 1000, 100, 0640);
+	std::string rec = access_record(123456, 7890, 0100600);
 	CHECK(_tt_decode_access(rec.data(), rec.size(), &uid, &group, &mode));
-	CHECK(uid == 1000 && group == 100 && mode == 0640);
-	rec = short_access(oid, 0xffff, 0xffff, 0xffff);
-	CHECK(_tt_decode_access(rec.data(), rec.size(), &uid, &group, &mode));
-	CHECK(uid == (uid_t)-1 && group == (gid_t)-1 && mode == (mode_t)-1);
-	rec = short_access(oid, 65534, 40000, 0100644);
-	CHECK(_tt_decode_access(rec.data(), rec.size(), &uid, &group, &mode));
-	CHECK(uid == 65534 && group == 40000 && mode == 0100644);
-
-	/* the layout of the tables this server makes: a long per number, which
-	   holds the number in network order, after a key of TT_DB_KEY_LENGTH */
-	std::string key(TT_DB_KEY_LENGTH, 'k');
-	std::string tab = key;
-	long n;
-	n = htonl(123456); tab.append((char *)&n, TT_DB_LONG_SIZE);
-	n = htonl(7890); tab.append((char *)&n, TT_DB_LONG_SIZE);
-	n = htonl(0100600); tab.append((char *)&n, TT_DB_LONG_SIZE);
-	CHECK(_tt_decode_access(tab.data(), tab.size(), &uid, &group, &mode));
 	CHECK(uid == 123456 && group == 7890 && mode == 0100600);
-	tab = key;
-	n = htonl((uid_t)-1); tab.append((char *)&n, TT_DB_LONG_SIZE);
-	n = htonl((gid_t)-1); tab.append((char *)&n, TT_DB_LONG_SIZE);
-	n = htonl((mode_t)-1); tab.append((char *)&n, TT_DB_LONG_SIZE);
-	CHECK(_tt_decode_access(tab.data(), tab.size(), &uid, &group, &mode));
+	rec = access_record((uid_t)-1, (gid_t)-1, (mode_t)-1);
+	CHECK(_tt_decode_access(rec.data(), rec.size(), &uid, &group, &mode));
 	CHECK(uid == (uid_t)-1 && group == (gid_t)-1 && mode == (mode_t)-1);
 
-	/* any other length is no access record */
+	/* any other length is no access record, nor is the layout of the
+	   clients of the first servers, 16 bits for each number */
 	CHECK(!_tt_decode_access(rec.data(), rec.size() - 1, &uid, &group, &mode));
 	CHECK(!_tt_decode_access(rec.data(), 0, &uid, &group, &mode));
-	CHECK(!_tt_decode_access(tab.data(), tab.size() + 1, &uid, &group, &mode));
+	CHECK(!_tt_decode_access(rec.data(), rec.size() + 1, &uid, &group, &mode));
+	std::string shorts(TT_DB_KEY_LENGTH + 6, 's');
+	CHECK(!_tt_decode_access(shorts.data(), shorts.size(), &uid, &group, &mode));
+
+	/* and the record the server wrote for an object is read back whole */
+	const std::string netfile = start_partition("access-layouts");
+	const uid_t owner = getuid() + 30;
+	const gid_t gid = getgid();
+	std::string objid = make_objid(g_mount);
+
+	put(g_dir + "/file", "the file");
+	{
+		Caller as(owner, gid);
+		create_file(netfile);
+		CHECK(create_object(objid, netfile, 0640) == TT_DB_OK);
+	}
+	char key[TT_DB_KEY_LENGTH];
+	key_of(objid, key);
+
+	std::string path = g_dir + "/TT_DB/access_table";
+	static char buf[ISMAXRECLEN];
+	int fd = isopen(path.c_str(), ISINOUT + ISFIXLEN + ISMANULOCK);
+	CHECK(fd >= 0);
+	int found = 0;
+	for (int r = isread(fd, buf, ISFIRST); fd >= 0 && r == 0;
+	     r = isread(fd, buf, ISNEXT)) {
+		if (memcmp(buf, key, TT_DB_KEY_LENGTH) == 0) {
+			found++;
+			CHECK(isreclen == TT_DB_KEY_LENGTH + 3 * TT_DB_LONG_SIZE);
+			CHECK(_tt_decode_access(buf, isreclen, &uid, &group, &mode));
+			CHECK(uid == owner && group == gid && mode == 0640);
+		}
+	}
+	CHECK(found == 1);
+	if (fd >= 0) {
+		isclose(fd);
+	}
 }
 
 /* ---- credentials -------------------------------------------------------------- */
@@ -2783,11 +2802,12 @@ case_object_partitions(void)
 				     g_mount + "/", g_dir + "/evil:more" };
 	for (size_t i = 0; i < sizeof(dirs) / sizeof(dirs[0]); i++) {
 		std::string objid = make_objid(dirs[i]);
+		bool had = exists(dirs[i] + "/TT_DB");
 
 		CHECK(create_object(objid, file, 0600) != TT_DB_OK);
 		CHECK(get_obj_type(objid) != TT_DB_OK);
 		CHECK(is_obj_in_db(objid) != TT_DB_OK);
-		CHECK(!exists(dirs[i] + "/TT_DB"));
+		CHECK(exists(dirs[i] + "/TT_DB") == had);
 	}
 	CHECK(!exists(g_dir + "/evil/TT_DB"));
 	CHECK(!exists(g_dir + "/relative/path/TT_DB"));
@@ -2817,8 +2837,8 @@ session_call(u_long proc, int isfd, const char *oid, const std::string &session)
 	memset(&args, 0, sizeof(args));
 	args.isfd = isfd;
 	args.key = &k;
-	args.key_len = OID_KEY_LENGTH + MAX_PROP_LENGTH;
-	args.oidkey.oidkey_len = OID_KEY_LENGTH;
+	args.key_len = TT_DB_KEY_LENGTH + MAX_PROP_LENGTH;
+	args.oidkey.oidkey_len = TT_DB_KEY_LENGTH;
 	args.oidkey.oidkey_val = (char *)oid;
 	args.session.session_len = session.size();
 	args.session.session_val = (char *)session.data();
@@ -2833,7 +2853,7 @@ prop_values(int isfd, const char *oid, const char *name)
 	std::vector<std::string>	out;
 	keydesc				k = prop_key();
 	std::string			rec = prop_record(oid, name, "");
-	_Tt_isstart_args		sa = { isfd, &k, OID_KEY_LENGTH + MAX_PROP_LENGTH,
+	_Tt_isstart_args		sa = { isfd, &k, TT_DB_KEY_LENGTH + MAX_PROP_LENGTH,
 					       { (u_int)rec.size(), (char *)rec.data() },
 					       ISEQUAL };
 
@@ -2860,11 +2880,11 @@ prop_values(int isfd, const char *oid, const char *name)
 		}
 		std::string got(res.rec.rec_val, res.rec.rec_len);
 		xdr_free((xdrproc_t)xdr_Tt_isread_results, (char *)&res);
-		if (got.compare(0, OID_KEY_LENGTH, oid, OID_KEY_LENGTH) != 0 ||
-		    strncmp(got.c_str() + OID_KEY_LENGTH, name, MAX_PROP_LENGTH) != 0) {
+		if (got.compare(0, TT_DB_KEY_LENGTH, oid, TT_DB_KEY_LENGTH) != 0 ||
+		    strncmp(got.c_str() + TT_DB_KEY_LENGTH, name, MAX_PROP_LENGTH) != 0) {
 			break;
 		}
-		out.push_back(got.substr(OID_KEY_LENGTH + MAX_PROP_LENGTH));
+		out.push_back(got.substr(TT_DB_KEY_LENGTH + MAX_PROP_LENGTH));
 	}
 	return out;
 }
@@ -2885,8 +2905,8 @@ gettype_of(int isfd, const char *oid)
 	p.propname.propname_val = name;
 	sp.isfd = isfd;
 	sp.key = &k;
-	sp.key_len = OID_KEY_LENGTH + MAX_PROP_LENGTH;
-	sp.oidkey.oidkey_len = OID_KEY_LENGTH;
+	sp.key_len = TT_DB_KEY_LENGTH + MAX_PROP_LENGTH;
+	sp.oidkey.oidkey_len = TT_DB_KEY_LENGTH;
 	sp.oidkey.oidkey_val = oid;
 	sp.props.props_len = 1;
 	sp.props.props_val = &p;
@@ -2919,12 +2939,12 @@ case_session_polarity(void)
 	start_server("session-polarity");
 	g_uid = 0;		/* the superuser reads the table back */
 
-	char oid[OID_KEY_LENGTH], other[OID_KEY_LENGTH];
+	char oid[TT_DB_KEY_LENGTH], other[TT_DB_KEY_LENGTH];
 	memset(oid, 'o', sizeof(oid));
 	memset(other, 'p', sizeof(other));
 
 	int isfd = build_table("oid_prop", false, ISMAXRECLEN,
-			       OID_KEY_LENGTH + MAX_PROP_LENGTH, prop_key());
+			       TT_DB_KEY_LENGTH + MAX_PROP_LENGTH, prop_key());
 	CHECK(isfd >= 0);
 	/* the object has a modification date, as the objects of old servers did */
 	CHECK(write_record(isfd, prop_record(oid, "_MODIFICATION_DATE", "0")) == 0);
@@ -3062,6 +3082,114 @@ case_path_names(void)
 	free(copy);
 }
 
+/* ---- the sessions the server lists ---------------------------------------------- */
+
+/* the session ids TT_GET_ALL_SESSIONS answers with */
+static std::vector<std::string>
+get_all_sessions(bool *answered_ok)
+{
+	std::vector<std::string>	out;
+	_tt_get_all_sessions_args	args;
+	_tt_get_all_sessions_results	res;
+	XDR				xdrs;
+
+	args.oidkey.oidkey_len = 0;
+	args.oidkey.oidkey_val = NULL;
+	Reply r = rpc(TT_GET_ALL_SESSIONS,
+		      encode((xdrproc_t)xdr_tt_get_all_sessions_args, &args));
+	*answered_ok = answered(r);
+	if (!*answered_ok) {
+		return out;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (xdr_tt_get_all_sessions_results(&xdrs, &res)) {
+		for (u_int i = 0; i < res.session_list.values_len; i++) {
+			out.push_back(res.session_list.values_val[i].value);
+		}
+	}
+	xdr_free((xdrproc_t)xdr_tt_get_all_sessions_results, (char *)&res);
+	return out;
+}
+
+/* The sessions joined to a file are values of its property _TT_SESSIONS, in
+   the property table of the database, whose records start with a key as long
+   as the key of an object: the server finds and takes them away there. */
+static void
+case_sessions_real_table(void)
+{
+	const std::string netfile = start_partition("sessions-real-table");
+	bool ok;
+
+	put(g_dir + "/file", "the file");
+	create_file(netfile);
+	CHECK(set_property(netfile, "_TT_SESSIONS", "01 a session") == TT_DB_OK);
+
+	/* this server lists the sessions of the tables it has open for the old
+	   interface */
+	CHECK(open_table("oid_prop", var_mode) >= 0);
+	std::vector<std::string> sessions = get_all_sessions(&ok);
+	CHECK(ok);
+	/* (a table that is open with two modes is listed twice) */
+	CHECK(!sessions.empty());
+	for (size_t i = 0; i < sessions.size(); i++) {
+		CHECK(sessions[i] == "01 a session");
+	}
+
+	_tt_delete_session_args da;
+	char session[] = "01 a session";
+	da.session.value = session;
+	Reply r = rpc(TT_DELETE_SESSION,
+		      encode((xdrproc_t)xdr_tt_delete_session_args, &da));
+	CHECK(answered(r));
+	sessions = get_all_sessions(&ok);
+	CHECK(ok && sessions.empty());
+}
+
+/* ---- the key of an object ------------------------------------------------------- */
+
+/* A key is kept in the tables as it is in memory, and its length is the
+   length of the structure; the bytes between its fields are zero, however the
+   memory it is made in was used before. */
+static void
+case_key_bytes(void)
+{
+	CHECK(OID_KEY_LENGTH == (int)sizeof(_Tt_key_data));
+	CHECK(TT_DB_KEY_LENGTH == OID_KEY_LENGTH);
+
+	/* the bytes that belong to no field */
+	std::vector<bool> field(sizeof(_Tt_key_data), false);
+	for (size_t i = 0; i < sizeof(unsigned short); i++) {
+		field[offsetof(_Tt_key_data, version) + i] = true;
+		field[offsetof(_Tt_key_data, padding) + i] = true;
+	}
+	for (size_t i = 0; i < sizeof(unsigned long); i++) {
+		field[offsetof(_Tt_key_data, hostid) + i] = true;
+		field[offsetof(_Tt_key_data, time_sec) + i] = true;
+		field[offsetof(_Tt_key_data, counter) + i] = true;
+	}
+	/* (the padding field is zero too) */
+	for (size_t i = 0; i < sizeof(unsigned short); i++) {
+		field[offsetof(_Tt_key_data, padding) + i] = false;
+	}
+
+	for (int made = 0; made < 2; made++) {
+		static char mem[sizeof(_Tt_db_key)];
+		memset(mem, 0xaa, sizeof(mem));
+		_Tt_db_key *k = made ?
+			::new (mem) _Tt_db_key(0) :
+			::new (mem) _Tt_db_key(_Tt_string("0|a|b|c"));
+		_Tt_string b = k->binary();
+
+		CHECK(b.len() == OID_KEY_LENGTH);
+		for (size_t i = 0; i < sizeof(_Tt_key_data); i++) {
+			if (!field[i]) {
+				CHECK(((const unsigned char *)(char *)b)[i] == 0);
+			}
+		}
+	}
+}
+
 /* ---- random requests --------------------------------------------------------- */
 
 static unsigned long long fuzz_state = 88172645463325252ULL;
@@ -3105,7 +3233,7 @@ case_fuzz_dispatch(void)
 	int isfd = fixed;
 	keydesc key = oid_key();
 	std::string rec = record('x', fixed_reclen);
-	char oid[OID_KEY_LENGTH];
+	char oid[TT_DB_KEY_LENGTH];
 	memset(oid, 'o', sizeof(oid));
 	char session[40];
 	memset(session, 's', sizeof(session));
@@ -3133,7 +3261,7 @@ case_fuzz_dispatch(void)
 			sound[i] = encode((xdrproc_t)xdr_Tt_isrewrec_args, &a);
 			break; }
 		case _TT_ISSTART: {
-			_Tt_isstart_args a = { isfd, &key, OID_KEY_LENGTH,
+			_Tt_isstart_args a = { isfd, &key, TT_DB_KEY_LENGTH,
 					       { 16, (char *)rec.data() }, ISEQUAL };
 			sound[i] = encode((xdrproc_t)xdr_Tt_isstart_args, &a);
 			break; }
@@ -3142,7 +3270,7 @@ case_fuzz_dispatch(void)
 			sound[i] = encode((xdrproc_t)xdr_Tt_iswrite_args, &a);
 			break; }
 		case _TT_TEST_AND_SET: {
-			_Tt_test_and_set_args a = { isfd, &key, OID_KEY_LENGTH,
+			_Tt_test_and_set_args a = { isfd, &key, TT_DB_KEY_LENGTH,
 						    { 30, (char *)rec.data() } };
 			sound[i] = encode((xdrproc_t)xdr_Tt_test_and_set_args, &a);
 			break; }
@@ -3153,7 +3281,7 @@ case_fuzz_dispatch(void)
 		case _TT_SETOIDUSER:
 		case _TT_SETOIDGROUP:
 		case _TT_SETOIDMODE: {
-			_Tt_oidaccess_args a = { isfd, { OID_KEY_LENGTH, oid }, 5 };
+			_Tt_oidaccess_args a = { isfd, { TT_DB_KEY_LENGTH, oid }, 5 };
 			sound[i] = encode((xdrproc_t)xdr_Tt_oidaccess_args, &a);
 			break; }
 		case _TT_ADDSESSION:
@@ -3162,7 +3290,7 @@ case_fuzz_dispatch(void)
 			memset(&a, 0, sizeof(a));
 			a.isfd = var;
 			a.key = &key;
-			a.key_len = OID_KEY_LENGTH;
+			a.key_len = TT_DB_KEY_LENGTH;
 			a.oidkey.oidkey_len = sizeof(oid);
 			a.oidkey.oidkey_val = oid;
 			a.session.session_len = sizeof(session);
@@ -3176,7 +3304,7 @@ case_fuzz_dispatch(void)
 			memset(&a, 0, sizeof(a));
 			a.isfd = var;
 			a.key = &key;
-			a.key_len = OID_KEY_LENGTH;
+			a.key_len = TT_DB_KEY_LENGTH;
 			a.oidkey.oidkey_len = sizeof(oid);
 			a.oidkey.oidkey_val = oid;
 			sound[i] = encode((xdrproc_t)xdr_Tt_spec_props, &a);
@@ -3261,6 +3389,8 @@ static const struct {
 	{ "oid-access-keys", case_oid_access_keys },
 	{ "session-requests", case_session_requests },
 	{ "sessions-position", case_sessions_position },
+	{ "sessions-real-table", case_sessions_real_table },
+	{ "key-bytes", case_key_bytes },
 	{ "reply-leftovers", case_reply_leftovers },
 	{ "empty-paths", case_empty_paths },
 	{ "cache-level-value", case_cache_level_value },

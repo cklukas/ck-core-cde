@@ -164,6 +164,25 @@ A table cannot be moved between a 32-bit and a 64-bit `rpc.ttdbserverd`. On
 was fixed, so the server could not complete the tables of a partition and there
 is no working database of the old layout to convert.
 
+### The length of a key
+
+Every record of the tables starts with the key of the file or object it is
+about: the structure `_Tt_key_data` (the version, padding, and the host id, time
+and counter as longs), which is kept in the tables as it is in memory. Its size,
+`OID_KEY_LENGTH` in `lib/tt_const.h`, is 16 bytes on a 32-bit build and 32 bytes
+on a 64-bit one. The code of the old interface had the number 16 for it, so on a
+64-bit build it looked for the name of a property, and the owner of an object,
+in the middle of the key: the access check, the session procedures, `gettype`,
+the modification date, the message queue locks and the session functions of the
+new interface (`TT_GET_ALL_SESSIONS`, `TT_DELETE_SESSION`) could not find their
+records in the tables the server makes. All of them, the key descriptors and the
+bounds of the keys in the protocol now use the length of the structure, the
+access record is the one layout of the access table (a key and a long for each
+number; the 16 bit layout of the first servers is not read any more, as their
+databases are not either), and a key is zeroed before it is filled, so that its
+padding is the same in every copy of it. `ttdbck` takes its smallest and
+largest key from the same length.
+
 ### Who may reach what
 
 - Every request that works for a user runs with the user and groups of its own
@@ -205,11 +224,9 @@ is no working database of the old layout to convert.
   request with no object key, is nobody's. The superuser, and any user when the
   daemon runs with `-n`, may do anything. All the records of a transaction are
   checked, not the first alone, and the session procedures and `gettype` check
-  the object they work on. The access record is read in the layout of the table
-  it is in: 16 bits for each number after a key of 16 bytes, as the clients of
-  the old servers write it, or a long for each number after the key of the
-  tables the server makes itself. It is read each time and no longer cached by
-  the oid alone.
+  the object they work on. The access record is read in the layout of the access
+  table the server makes: the key, and a long for each number (see the length of
+  a key below). It is read each time and no longer cached by the oid alone.
 - The procedures that read and write the access of an oid (`getoidaccess`,
   `setoiduser`, `setoidgroup`, `setoidmode`) refuse a descriptor that another
   user opened, as every other procedure on a descriptor does.
@@ -237,7 +254,7 @@ by the server and libtt, so the limits hold for a reply as well as for a request
 | Object id | 128 + `HOST_LENGTH` + `MAXPATHLEN` (5248) | key, file system type, host, partition and three colons |
 | Type name (ptype, otype) | 1024 | identifiers |
 | Property name | `MAX_PROP_LENGTH` (64) | the field of a record that holds a name; the server stores no more of one |
-| Session id | 32687 | what a record of at most `ISMAXRECLEN` (32767) bytes holds after its key and name |
+| Session id | 32767 less the key and name (32671 on a 64-bit build) | what a record of at most `ISMAXRECLEN` (32767) bytes holds after its key and name |
 | Value of a property | 1 MiB | a record holds at most `ISMAXRECLEN` bytes |
 | Body of a message | 16 MiB | libtt marshals the whole message into the body, and the server stores it in properties of `ISMAXRECLEN` bytes each: 513 of them |
 | Properties of a file or object | 65536 | one record each |

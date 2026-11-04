@@ -30,9 +30,10 @@
  *               create unique object keys and object IDs.  The key layout
  *               is:
  *
- * <00> <zero pad:2> <host id:4> <time sec:4> <counter:4>
+ * <00> <zero pad:2> <host id> <time sec> <counter>
  *
- * The padding goes before the host id to align the host id on an int boundary.
+ * The padding goes before the host id to align it, and the host id, time and
+ * counter are longs (see _Tt_key_data in tt_const.h).
  *
  * Copyright (c) 1992 by Sun Microsystems, Inc.
  */
@@ -40,18 +41,12 @@
 #ifndef  _TT_DB_KEY_H
 #define  _TT_DB_KEY_H
 
+#include "tt_const.h"
 #include "util/tt_object.h"
 #include "util/tt_string.h"
 
-struct _Tt_key_data {
-  unsigned short version;
-  unsigned short padding;
-  unsigned long hostid;
-  unsigned long time_sec;
-  unsigned long counter;
-};
-
-const int TT_DB_KEY_LENGTH = sizeof(_Tt_key_data);
+// the structure of a key, and so its length, are in tt_const.h
+const int TT_DB_KEY_LENGTH = OID_KEY_LENGTH;
 
 class _Tt_db_key : public _Tt_object {
 public:

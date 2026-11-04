@@ -47,6 +47,8 @@ _Tt_db_key::_Tt_db_key (short version_number)
   static unsigned int last_time_sec = 0;
   static long counter = 0;
 
+  // the key is kept in the tables as it is in memory: padding included
+  memset(&key, 0, sizeof(key));
   key.version  = version_number;
   key.padding  = 0;
   key.hostid   = _tt_gethostid();
@@ -61,6 +63,8 @@ _Tt_db_key::_Tt_db_key (short version_number)
 
 _Tt_db_key::_Tt_db_key (const _Tt_string &string)
 {
+  memset(&key, 0, sizeof(key));
+
   // If this is an actual key...
   if ((string.len() == TT_DB_KEY_LENGTH) && (string[0] < '0')) {
     (void)memcpy((char *)&key, (char *)string, TT_DB_KEY_LENGTH);

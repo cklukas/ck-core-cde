@@ -48,7 +48,26 @@
  */
 
 const char NULL_CHAR = '\0';
-const int OID_KEY_LENGTH = 16;
+
+/*
+ * The key of an object or a file, which starts every record of the tables of
+ * its database and is the unit of access control: <version:2> <zero pad:2>
+ * <host id> <time sec> <counter>, the last three of them in the width of a
+ * long.  The key is kept in the tables exactly as this structure is in
+ * memory (padding included, so it is zeroed whenever it is made), and so its
+ * length is that of the structure: 16 bytes on a 32-bit build, 32 bytes on a
+ * 64-bit one.  Every length of a key in the code, the tables and the protocol
+ * is OID_KEY_LENGTH, never a number.
+ */
+struct _Tt_key_data {
+  unsigned short version;
+  unsigned short padding;
+  unsigned long hostid;
+  unsigned long time_sec;
+  unsigned long counter;
+};
+
+const int OID_KEY_LENGTH = sizeof(_Tt_key_data);
 const int MAX_PROP_LENGTH = 64;
 const int PATH_LENGTH = 1024;
 const int HOST_LENGTH = 1024;
