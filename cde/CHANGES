@@ -350,6 +350,12 @@
   layout (the 16 bit layout of the first servers is dropped), keys are zeroed
   before they are filled, and `ttdbck` follows. The tests make their databases
   through the requests of the new interface and read them through the old one.
+- tt: fix the XDR routine for the access of a request (user, group and mode).
+  It moved each field as a `long` through a pointer to a 4 byte field, so on a
+  64-bit build it read and wrote 8 bytes of each and the last field ran 4 bytes
+  past the end of the access, in libtt as well as in rpc.ttdbserverd. Each field
+  now goes over the wire as a 32 bit word of its own, -1 as -1; the bytes on the
+  wire are unchanged.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

@@ -1534,6 +1534,73 @@ case_xdr_null_strings(void)
 	CHECK(answered(r));
 }
 
+/* The user, the group and the mode of an access go over the wire as 32 bits
+   each, -1 as -1, and the routine touches the 12 bytes of the access and no
+   others: it used to move each field as a long, which on a 64 bit host is 8
+   bytes of a 4 byte field, the last of them beyond the end of the access. */
+static void
+case_xdr_access(void)
+{
+	static const struct {
+		uid_t	user;
+		gid_t	group;
+		mode_t	mode;
+	} values[] = {
+		{ 0, 0, 0 },
+		{ 1000, 100, 0640 },
+		{ 65534, 65534, 07777 },
+		{ (uid_t)-1, (gid_t)-1, (mode_t)-1 },
+		{ (uid_t)-1, 5, 0600 },
+		{ 5, (gid_t)-1, (mode_t)-1 },
+		{ 4000000000U, 4000000001U, 0100644 },
+	};
+
+	for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++) {
+		/* an access in a block of its size, which a sanitizer guards
+		   on both sides, and a canary behind one that is not */
+		_tt_access *in = (_tt_access *)malloc(sizeof(_tt_access));
+		struct {
+			_tt_access	access;
+			unsigned char	canary[16];
+		} out;
+		unsigned char wire[64];
+		XDR xdrs;
+
+		in->user = values[i].user;
+		in->group = values[i].group;
+		in->mode = values[i].mode;
+		xdrmem_create(&xdrs, (char *)wire, sizeof(wire), XDR_ENCODE);
+		CHECK(xdr_tt_access(&xdrs, in));
+		CHECK(xdr_getpos(&xdrs) == 12);
+
+		/* three words in network order; -1 is all bits set */
+		uint32_t word[3];
+		memcpy(word, wire, sizeof(word));
+		CHECK(ntohl(word[0]) == (in->user == (uid_t)-1 ? 0xffffffffU : in->user));
+		CHECK(ntohl(word[1]) == (in->group == (gid_t)-1 ? 0xffffffffU : in->group));
+		CHECK(ntohl(word[2]) == (in->mode == (mode_t)-1 ? 0xffffffffU : in->mode));
+
+		memset(&out, 0x5a, sizeof(out));
+		xdrmem_create(&xdrs, (char *)wire, 12, XDR_DECODE);
+		CHECK(xdr_tt_access(&xdrs, &out.access));
+		CHECK(out.access.user == values[i].user);
+		CHECK(out.access.group == values[i].group);
+		CHECK(out.access.mode == values[i].mode);
+		for (size_t c = 0; c < sizeof(out.canary); c++) {
+			CHECK(out.canary[c] == 0x5a);
+		}
+
+		/* ... and into a block of its size */
+		_tt_access *back = (_tt_access *)malloc(sizeof(_tt_access));
+		xdrmem_create(&xdrs, (char *)wire, 12, XDR_DECODE);
+		CHECK(xdr_tt_access(&xdrs, back));
+		CHECK(back->user == values[i].user && back->group == values[i].group &&
+		      back->mode == values[i].mode);
+		free(back);
+		free(in);
+	}
+}
+
 /* DECODE decodes BYTES into a T. */
 template <class T>
 static bool
@@ -3404,6 +3471,7 @@ static const struct {
 	{ "object-partitions", case_object_partitions },
 	{ "session-polarity", case_session_polarity },
 	{ "xdr-null-strings", case_xdr_null_strings },
+	{ "xdr-access", case_xdr_access },
 	{ "xdr-limits", case_xdr_limits },
 	{ "xdr-hostile-lengths", case_xdr_hostile_lengths },
 	{ "no-mount-point", case_no_mount_point },

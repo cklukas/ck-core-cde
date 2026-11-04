@@ -613,16 +613,42 @@ xdr_tt_property(XDR *xdrs, _tt_property *objp)
 	return (TRUE);
 }
 
+/*
+ * A user, a group or a mode is 32 bits on the wire, whatever the size of its
+ * type is (mode_t is 16 bits on some hosts), and -1, the wild card of an
+ * access, is -1 on all of them.  The field is moved through a 32 bit value
+ * of its own: a pointer to a uid_t cast to a long * made the routine read and
+ * write 8 bytes of a 4 byte field on a 64 bit host, and the last field of an
+ * access wrote 4 bytes beyond the end of it.
+ */
+template <class T>
+static bool_t
+xdr_tt_id32(XDR *xdrs, T *idp)
+{
+	u_int wire = 0;
+
+	if (xdrs->x_op == XDR_ENCODE) {
+		wire = (*idp == (T)-1) ? 0xffffffffU : (u_int)*idp;
+	}
+	if (!xdr_u_int(xdrs, &wire)) {
+		return (FALSE);
+	}
+	if (xdrs->x_op == XDR_DECODE) {
+		*idp = (wire == 0xffffffffU) ? (T)-1 : (T)wire;
+	}
+	return (TRUE);
+}
+
 bool_t
 xdr_tt_access(XDR *xdrs, _tt_access *objp)
 {
-	if (!xdr_long(xdrs, (long *)&objp->user)) {
+	if (!xdr_tt_id32(xdrs, &objp->user)) {
 		return (FALSE);
 	}
-	if (!xdr_long(xdrs, (long *)&objp->group)) {
+	if (!xdr_tt_id32(xdrs, &objp->group)) {
 		return (FALSE);
 	}
-	if (!xdr_u_long(xdrs, (unsigned long *)&objp->mode)) {
+	if (!xdr_tt_id32(xdrs, &objp->mode)) {
 		return (FALSE);
 	}
 	return (TRUE);

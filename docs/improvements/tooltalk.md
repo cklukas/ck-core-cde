@@ -150,6 +150,11 @@ The numbers, lengths and pointers of a request are checked before they are used:
   instead of making the number wrap around, and a client that says it has the
   highest level is told that nothing is newer.
 - A position inside a table is no longer taken from the wire.
+- The user, group and mode that come with a request are moved as 32 bit words
+  of their own. The routine used to move each as a `long` through a pointer to
+  the field, which on a 64-bit build is 8 bytes of a 4 byte field, and the mode,
+  the last of the three, ran past the end of the access. The same routine is in
+  libtt, which sends them.
 - The record lengths of a table are kept when the table is opened, so record
   buffers have the size of the records, and overlapping entries of a b-tree are
   moved with `memmove`.
