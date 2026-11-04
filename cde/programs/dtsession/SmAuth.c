@@ -184,7 +184,6 @@ writeIceauth (
 {
     FILE *fp = NULL;
     char *path;
-    char *extraPath;
     int oldUmask;
     int i;
     IceAuthDataEntry *dataEntry;
@@ -196,23 +195,15 @@ writeIceauth (
     if ((path = IceAuthFileName()) == (char *)NULL)
 	return 0;
 
+    /*
+     * If the lock cannot be taken, someone else holds it (or the file system
+     * cannot make it); the lock files then belong to that process and are not
+     * removed, and the cookies of this session are not written anywhere but
+     * the user's own authority file, where its clients look for them.
+     */
     if (IceLockAuthFile(path, AUTH_RETRIES, AUTH_TIMEOUT, AUTH_DEADTIME)
-	!= IceAuthLockSuccess) {
-	/*
-	 * Let's try another PATH, in case IceLockAuthFile's call to
-	 * link() fails.  This workaround code was taken from 
-	 * dtlogin/auth.c.
-	 */
-        IceUnlockAuthFile(path);
-	extraPath = XtMalloc (MAXPATHLEN);
-	(void) strcpy (extraPath, CDE_CONFIGURATION_TOP ".ICEauthority");
-	if (IceLockAuthFile(extraPath, AUTH_RETRIES, AUTH_TIMEOUT, AUTH_DEADTIME)
-		!= IceAuthLockSuccess) {
-	    IceUnlockAuthFile (extraPath);
-	    return 0;
-	 }
-	 path = extraPath;
-    }
+	!= IceAuthLockSuccess)
+	return 0;
 
     /* If file exists, read entries into memory. */
     if (access(path, F_OK) == 0)
@@ -329,8 +320,12 @@ SetAuthentication (
     int		i;
     int		nEntries = count * 2;
 
-    if ((*authDataEntries = (IceAuthDataEntry *) XtMalloc (
-	nEntries * sizeof (IceAuthDataEntry))) == NULL)
+    /*
+     * Zeroed: FreeAuthenticationData() frees every entry, also those that
+     * were not filled in when a cookie could not be made.
+     */
+    if ((*authDataEntries = (IceAuthDataEntry *) XtCalloc (
+	nEntries, sizeof (IceAuthDataEntry))) == NULL)
 	return 0;
 
     for (i = 0; i < nEntries; i += 2)
@@ -343,6 +338,8 @@ SetAuthentication (
 	(*authDataEntries)[i].auth_data =
 	    IceGenerateMagicCookie (MAGIC_COOKIE_LEN);
 	(*authDataEntries)[i].auth_data_length = MAGIC_COOKIE_LEN;
+	if ((*authDataEntries)[i].auth_data == NULL)
+	    return 0;
 
 	(*authDataEntries)[i+1].network_id =
 	    IceGetListenConnectionString (listenObjs[i/2]);
@@ -352,6 +349,8 @@ SetAuthentication (
 	(*authDataEntries)[i+1].auth_data = 
 	    IceGenerateMagicCookie (MAGIC_COOKIE_LEN);
 	(*authDataEntries)[i+1].auth_data_length = MAGIC_COOKIE_LEN;
+	if ((*authDataEntries)[i+1].auth_data == NULL)
+	    return 0;
 
 	IceSetHostBasedAuthProc (listenObjs[i/2], HostBasedAuthProc);
     }

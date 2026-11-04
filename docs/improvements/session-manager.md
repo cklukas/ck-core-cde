@@ -197,6 +197,22 @@ made with `fork()` and a child whose exec fails ends with `_exit`; the window
 manager's child no longer falls through when the exec fails while a local
 window manager was started.
 
+## ICE authority file
+
+`tests/check-ice-authority.py` runs the production `writeIceauth` and
+`SetAuthentication` against a libICE stand-in that can refuse the lock.
+
+`dtsession` gives its XSMP clients a cookie by merging it into `~/.ICEauthority`
+under the library's lock. When the lock could not be taken (another process holds
+it, or the file system cannot make the lock file) it removed the lock files, which
+belong to the process that holds the lock, and tried again with the file
+`/etc/dt.ICEauthority` (the path was missing its slash), so the cookies of the
+session would have gone into a system path where no client looks for them, and a
+buffer leaked each time. A lock that cannot be taken now ends the attempt and
+leaves the lock files alone; the user's file is the only one written. A cookie
+that cannot be made no longer leaves unset entries behind for the cleanup to
+free.
+
 ## Tests
 
 `programs/dtsession/tests` holds regression tests that cut the production code
