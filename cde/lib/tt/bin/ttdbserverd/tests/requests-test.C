@@ -1190,6 +1190,29 @@ case_cache_level_value(void)
 			   std::string("x")) != TT_DB_OK);
 	CHECK(set_property(file, "ordinary", std::string("again")) ==
 	      TT_DB_ERR_PROPS_CACHE_ERROR);
+
+	/* ... and the highest level there is has no higher one to count to:
+	   the change that sets it counts it up at once */
+	int highest = INT_MAX;
+	CHECK(set_property(file, TT_DB_PROPS_CACHE_LEVEL_PROPERTY,
+			   std::string((char *)&highest, sizeof(highest))) ==
+	      TT_DB_ERR_PROPS_CACHE_ERROR);
+	CHECK(set_property(file, "ordinary", std::string("once more")) ==
+	      TT_DB_ERR_PROPS_CACHE_ERROR);
+
+	/* a caller that says it has that level is told there is nothing newer */
+	_tt_access acc = { g_uid, getgid(), 0600 };
+	_tt_get_file_objs_args go = { (char *)file.c_str(), acc, INT_MAX };
+	Reply r = rpc(TT_GET_FILE_OBJS,
+		      encode((xdrproc_t)xdr_tt_get_file_objs_args, &go));
+	CHECK(answered(r));
+	_tt_file_objs_results res;
+	XDR xdrs;
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	CHECK(xdr_tt_file_objs_results(&xdrs, &res));
+	CHECK(res.cache_level == INT_MAX && res.objids.values_len == 0);
+	xdr_free((xdrproc_t)xdr_tt_file_objs_results, (char *)&res);
 }
 
 /* The message info a client queued is a property, which a client can set to

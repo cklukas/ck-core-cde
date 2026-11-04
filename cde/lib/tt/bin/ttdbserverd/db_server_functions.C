@@ -790,8 +790,11 @@ _tt_file_objs_results *_tt_get_file_objs_1 (_tt_get_file_objs_args *args,
   static _tt_file_objs_results results;
 
   // Make sure the returned cache level is higher then the callers
-  // cache level, so that the caller will use the returned data
-  results.cache_level = args->cache_level + 1;
+  // cache level, so that the caller will use the returned data.  There is
+  // no higher level than the highest one: a caller that claims it has all
+  // there is to have (the level is the client's to send) is told so.
+  results.cache_level = (args->cache_level == INT_MAX) ?
+			INT_MAX : args->cache_level + 1;
 
   _Tt_db_access_ptr accessPtr = _tt_get_real_rpc_access(args->access);
 
@@ -2359,6 +2362,11 @@ _tt_increment_file_properties_cache_level
     }
     memcpy ((char *)&cache_level, (char *)cache_level_bytes, sizeof(int));
 
+    // The level is the value of a property a client can set to any int.
+    if (cache_level == INT_MAX) {
+      cache_level = -1;
+      return TT_DB_ERR_PROPS_CACHE_ERROR;
+    }
     cache_level++;
     memcpy ((char *)cache_level_bytes, (char *)&cache_level, sizeof(int));
     (*property->values) [0] = cache_level_bytes;
@@ -2469,6 +2477,11 @@ _tt_increment_object_properties_cache_level
     }
     memcpy ((char *)&cache_level, (char *)cache_level_bytes, sizeof(int));
 
+    // The level is the value of a property a client can set to any int.
+    if (cache_level == INT_MAX) {
+      cache_level = -1;
+      return TT_DB_ERR_PROPS_CACHE_ERROR;
+    }
     cache_level++;
     memcpy ((char *)cache_level_bytes, (char *)&cache_level, sizeof(int));
     (*property->values) [0] = cache_level_bytes;

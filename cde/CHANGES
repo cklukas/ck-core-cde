@@ -294,6 +294,12 @@
   and, or, not, exact, stemmed and statistical search, under the sanitizers
   when the compiler has them), and queries it again after `dtsrclean -v` and
   after `dtsrdelete`.
+- tt: keep the cache levels of rpc.ttdbserverd from overflowing. The level of a
+  file or object is the value of a property that clients can set to any `int`,
+  and counting it up, or counting the level a client sent in a request for the
+  objects of a file, overflowed a signed int. A level at the highest `int` is
+  now refused as a malformed level, and a client that sends it is told that
+  nothing is newer.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

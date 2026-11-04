@@ -145,6 +145,10 @@ The numbers, lengths and pointers of a request are checked before they are used:
 - Properties a client can set, such as cache levels and the information about a
   queued message, are validated before the server uses them to size or index
   anything.
+- The cache level of a file or an object, which counts its changes, is a property
+  that a client can set to any `int`. A change that finds the highest `int` fails
+  instead of making the number wrap around, and a client that says it has the
+  highest level is told that nothing is newer.
 - A position inside a table is no longer taken from the wire.
 - The record lengths of a table are kept when the table is opened, so record
   buffers have the size of the records, and overlapping entries of a b-tree are
