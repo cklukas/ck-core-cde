@@ -863,10 +863,12 @@ read/write or read-only):
 <para>Dtsession provides session locking. The current session can be locked
 directly by pressing the lock icon on the front panel. If supported by the
 X server, the current session can be locked after a specified period of inactivity.
-To unlock the session, the user must enter their login password.</para>
-<para>By default, <command>dtsession</command> supports traditional local UNIX authentication
-for unlocking the session. Additional re-authentication functions such as
-those required by DCE may be added by individual vendors.</para>
+To unlock the session, the user who started it must enter their login password.
+No other password unlocks the session.</para>
+<para>The password is checked through PAM, using the service
+<literal>dtsession</literal>. A <command>dtsession</command> built without PAM
+cannot lock the session. An administrator ends a locked session at the console
+or by terminating <command>dtsession</command>.</para>
 </refsect2>
 <refsect2>
 <title>Screen Savers</title>
@@ -1027,11 +1029,6 @@ name and <symbol role="variable">display_number</symbol> is the display number.<
 <entry align="left" valign="top"><literal>Type</literal></entry>
 <entry align="left" valign="top"><literal>Default</literal></entry></row>
 <row>
-<entry align="left" valign="top"><systemitem class="resource">keys</systemitem></entry>
-<entry align="left" valign="top"><classname>Keys</classname></entry>
-<entry align="left" valign="top"><structname role="typdef">unsigned char</structname></entry>
-<entry align="left" valign="top">NULL</entry></row>
-<row>
 <entry align="left" valign="top"><systemitem class="resource">passwordTimeout</systemitem></entry>
 <entry align="left" valign="top"><classname>passwordTimeout</classname></entry>
 <entry align="left" valign="top"><structname role="typdef">unsigned int</structname></entry>
@@ -1153,21 +1150,6 @@ causes all text (foreground) to use either pixel 0 or 1 (Black or White) or
 to have a color cell dedicated to foreground and changes in response to the
 background color (Dynamic) for each ColorSet. If set to White or Black, the
 number of color cells used per ColorSet is reduced by 1.</para>
-</refsect2>
-<refsect2>
-<title>keys</title>
-<para>This resource is a list of keyholders who have the ability to unlock
-the screen any time it is locked by the user. The list is a list of user id's
-separated by commas. For example if user kim has the following resource active
-during a session:</para>
-<variablelist>
-<varlistentry><term>Dtsession*keys: fred,keith</term>
-<listitem>
-<para>Users fred and keith have the ability to unlock the display when kim
-locks it.</para>
-</listitem>
-</varlistentry>
-</variablelist>
 </refsect2>
 <refsect2>
 <title>passwordTimeout</title>

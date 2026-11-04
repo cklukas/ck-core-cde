@@ -63,7 +63,6 @@ char SmNsessionVersion[] = "sessionVersion";
 /* Resources names for session manager behavior*/
 char SmNwmStartup[] = "wmStartupCommand";
 char SmNquerySettings[] = "queryServerSettings";
-char SmNkeys[] = "keys";
 char SmNalarmTime[] = "passwordTimeout";
 char SmNmemThreshold[] = "memThreshold";
 char SmNcontManagement[] = "contManagement";
@@ -125,7 +124,6 @@ char SmCsessionVersion[] = "SessionVersion";
 /* Resources classes for session manager behavior*/
 char SmCwmStartup[] = "WmStartupCommand";
 char SmCquerySettings[] = "QueryServerSettings";
-char SmCkeys[] = "Keys";
 char SmCalarmTime[] = "PasswordTimeout";
 char SmCmemThreshold[] = "MemThreshold";
 char SmCContManagement[] = "ContManagement";

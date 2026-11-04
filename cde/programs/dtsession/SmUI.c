@@ -88,6 +88,7 @@
 #include "SmRestore.h"
 #include "SmHelp.h"
 #include "SmGlobals.h"
+#include "SmPam.h"
 
 #ifdef USE_XINERAMA
 #include <Dt/DtXinerama.h>
@@ -130,6 +131,7 @@ static int CompatModeExit( void ) ;
 static void ExitConfirmed( Widget, XtPointer, XtPointer ) ;
 static void ExitCancelled( Widget, XtPointer, XtPointer ) ;
 static void LockDialogUp( Widget, XtPointer, XtPointer ) ;
+static char *LockMessage( void ) ;
 static void SimpleOK( Widget, XtPointer, XtPointer ) ;
 static void ConfirmOKCB ( Widget, XtPointer, XtPointer ) ;
 static void ConfirmCancelCB ( Widget, XtPointer, XtPointer ) ;
@@ -147,6 +149,26 @@ static Boolean saveTimeout;
 
 
 
+/*
+ * The text that says who locked the display, in memory the caller frees.  The
+ * name is the one of the account whose password unlocks the display, not
+ * LOGNAME from the environment, which may be unset or name someone else.
+ */
+static char *
+LockMessage( void )
+{
+    const char *format = (char *) GETMESSAGE(18, 1, "Display locked by user %s.");
+    char *name = SmPamUserName();
+    size_t length = strlen(format) + (name != NULL ? strlen(name) : 0) + 1;
+    char *message = XtCalloc(1, length);
+
+    snprintf(message, length, format, name != NULL ? name : "");
+    free(name);
+
+    return message;
+}
+
+
 /*************************************<->*************************************
  *
  *  CreateLockDialog ()
@@ -173,13 +195,12 @@ static Boolean saveTimeout;
 Widget
 CreateLockDialog( void )
 {
-  int 	i, slen;
+  int 	i;
     Widget	loginLabel, instructLabel, tmpLock, indFrame;
     Widget  	passwdLabel, passwdForm, picFrame, loginPic, loginFrame;
     Dimension	width;		/* width, height of login label    */
     XmString	lockString, passwordString;
     char	*lockMessage;
-    char	*envLog;
     Pixel   	fg, bg, focus_color;  /* foreground, background colors */
 
     i = 0;
@@ -281,11 +302,7 @@ CreateLockDialog( void )
      *  create the login/password labels...
      */
     i = 0;
-    envLog = getenv("LOGNAME");
-    slen = 100 + strlen(envLog) + 1;
-    lockMessage = XtCalloc(1, slen);
-    snprintf(lockMessage, slen - 1,
-             (char*) GETMESSAGE(18, 1, "Display locked by user %s."), envLog);
+    lockMessage = LockMessage();
     lockString = XmStringCreateLocalized(lockMessage);
     XtSetArg(uiArgs[i], XmNtopAttachment, XmATTACH_POSITION); i++;
     XtSetArg(uiArgs[i], XmNtopPosition, 20); i++;
@@ -819,7 +836,6 @@ CreateLockDialogWithCover(
     Dimension	width;		/* width, height of drop shadow    */
     XmString	lockString, passwordString;
     char	*lockMessage;
-    char	*envLog;
     Pixel   fg, bg, focus_color;         /* foreground, background colors   */
 
     i = 0;
@@ -909,10 +925,7 @@ CreateLockDialogWithCover(
      *  create the login/password labels...
      */
     i = 0;
-    envLog = getenv("LOGNAME");
-    lockMessage = XtCalloc(1, 100 + strlen(envLog));
-    snprintf(lockMessage, 100 + strlen(envLog) - 1,
-	((char *)GETMESSAGE(18, 1, "Display locked by user %s.")), envLog);
+    lockMessage = LockMessage();
     lockString = XmStringCreateLocalized(lockMessage);
     XtSetArg(uiArgs[i], XmNtopAttachment, XmATTACH_POSITION); i++;
     XtSetArg(uiArgs[i], XmNtopPosition, 20); i++;

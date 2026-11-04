@@ -194,8 +194,6 @@ static XtResource sessionResources[]=
    {SmNquerySettings, SmCquerySettings, XtRBoolean, sizeof(Boolean),
         XtOffset(SessionResourcesPtr, querySettings),
         XtRImmediate, (XtPointer) False},
-   {SmNkeys, SmCkeys, XtRString, sizeof(String),
-        XtOffset(SessionResourcesPtr, keyholders), XtRString, NULL},
    {SmNalarmTime, SmCalarmTime, XtRInt, sizeof(int),
         XtOffset(SessionResourcesPtr, alarmTime), 
         XtRImmediate, (XtPointer) 10},
@@ -459,7 +457,6 @@ InitSMGlobals( void )
                       XtNumber(saverResources), NULL, 0);
 
     smGD.wmStartup = SmNewString(smRes.wmStartup);
-    smGD.keyholders = SmNewString(smRes.keyholders);
     smGD.sessionLang = SmNewString(smRes.sessionLang);
     smGD.saverList = SmNewString(smSaverRes.saverList);
 

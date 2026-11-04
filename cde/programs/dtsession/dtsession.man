@@ -29,10 +29,12 @@ the server.  Resources consist of all resources currently stored on the
 .P
 The session is locked by pressing the "lock" button on the workspace manager
 (front panel).
-When the display is locked, no further input is accepted until a correct
-password is entered.  Correct passwords include the user who locked the
-display, the root password for the system, and any users specified in
-the \fBkeys\fP resource.
+When the display is locked, no further input is accepted until the password
+of the user who started the session is entered.  No other password unlocks the
+display.  The password is checked through PAM, using the service
+\fBdtsession\fP; a \fIdtsession\fP built without PAM cannot lock the display.
+An administrator ends a locked session at the console or by terminating
+\fIdtsession\fP.
 .P
 Color allocation provides each client with a set of colors which are used
 in creating visual components.  These colors can then be dynamically
@@ -120,7 +122,6 @@ coverScreen	CoverScreen	Boolean	False
 dynamicColor	DynamicColor	Boolean	True
 foregroundColor	ForegroundColor	int	dynamic*
 lockOnTimeout	LockOnTimeout	Boolean	False
-keys	Keys	unsigned char	NULL
 queryServerSettings	QueryServerSettings	Boolean	False
 shadowPixmaps	ShadowPixmaps	int	dynamic*
 wmStartupCommand	WmStartupCommand	executable path	NULL
@@ -213,16 +214,6 @@ or White) or to have a color cell dedicated to foreground and changes in
 response to the background color (Dynamic) for each ColorSet.
 If set to White or Black, the number of color cells used per ColorSet is
 reduced by 1.
-.IP "\fBkeys\ \ \ \ \      \fP"
-This resource is a list of "keyholders" who have the ability to unlock
-the screen any time it is locked by the user.  The list is a list of user
-id's separated by commas.  For example if user kim has the following
-resource active during a session:
-.sp 1
-\fBDtsession*keys: fred,keith\fP
-.sp 1
-Users fred and keith have the ability to unlock the display when kim
-locks it.
 .IP "\fBlockOnTimeout\fP"
 This resource specifies whether or not dtsession will lock the screen
 when there has been a period of time without pointer or keyboard activity.

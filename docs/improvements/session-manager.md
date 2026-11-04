@@ -9,9 +9,8 @@ description: How dtsession gives up its installed identity, authenticates the sc
 it, locks the screen and saves the session again at logout. It reads the files
 of a saved session, answers X clients and the clients of the X Session
 Management Protocol (XSMP) over ICE sockets, and receives ToolTalk requests.
-On systems without PAM it is installed setuid root so that it can read the
-password database when the screen is unlocked; everywhere else it runs as the
-user who started it.
+It is installed with the identity of the user who starts it, and it locks the
+screen only where it can check the user's password through PAM.
 
 ## Installed identity
 
@@ -42,24 +41,43 @@ before the first open of a locale file, which it did not before.
 
 ## Screen lock
 
+The display is unlocked with the password of the user who started the session,
+checked through PAM, and with no other password.
+
+- `SmPam.c` is the only code that checks a password. It starts the PAM service
+  `dtsession`, authenticates, checks the account with `pam_acct_mgmt` and ends
+  PAM. The code that read the password database and compared a hash from
+  `crypt()` is removed, together with the setuid installation it needed.
+- The user is the account of the real user ID of the process. It is not typed
+  into the dialog and not taken from the environment. Before, the lock also
+  accepted the root password and the passwords of the users named in the `keys`
+  resource; both are gone, and so is the resource.
+- The lock dialog names the same account ("Display locked by user ..."). It
+  took the name from `LOGNAME`, which says anything the environment says, and
+  ended `dtsession` with a null pointer when the variable was not set.
+- The service name is fixed. It was the name `dtsession` was started with
+  (`argv[0]`), which the invoker chooses; a `dtsession` started through the
+  search path failed every unlock attempt.
+  `config/dtsession.src` is installed as `/etc/pam.d/dtsession`. Its stack
+  authenticates the user it is given with `pam_unix` and nothing else: no
+  module that accepts a password for another account. `pam_unix` checks the
+  password of the calling user without help from `dtsession`.
+- An account that is not in order does not unlock the display: an expired
+  account, a password that has to be changed, and an empty password are all
+  refused. Any failure (PAM cannot be started, the account is unknown, a module
+  fails) leaves the display locked.
+- The conversation with the PAM modules answers the password prompt and
+  nothing else. A module that asks a visible question, such as a user name,
+  fails the conversation.
+- A `dtsession` built without PAM cannot lock the display. The request is
+  refused with the message "Unable to lock display due to security
+  restrictions" in the error log, and the rest of the session works. Systems
+  without PAM have no screen lock.
+- An administrator ends a locked session from the console, by logging in on
+  another terminal and terminating `dtsession` or the session.
 - The typed password is overwritten in memory once it has been checked, when
   the line is killed with Escape, when characters are backed over and when the
   dialog times out; it used to stay in the heap buffer.
-- A typed password is compared with the hash of the account only when the
-  account has a usable one. `crypt()` returns a null pointer for the hash of a
-  locked account (`!`, `*`), for the `x` that stands in `/etc/passwd` on a
-  shadowed system and for an empty field, and the C library of some systems
-  returns a failure token instead. The lock used to compare whatever came back
-  with `strcmp`, so a wrong password on such a system ended `dtsession` with a
-  crash, and a hash that is its own failure token (`*0`) accepted any password.
-  Such an account does not unlock the display now, and the comparison does not
-  stop at the first different byte.
-- On a system that has a shadow entry for the account, only the shadow hash is
-  consulted. Before, an old password left in `/etc/passwd` unlocked the display
-  as well.
-- With PAM, the service name is the program name without its directory. A
-  `dtsession` started through the search path (no `/` in `argv[0]`) failed every
-  unlock attempt.
 
 ## Signals
 
@@ -257,7 +275,7 @@ not used.
 `tests/check-debug-code.py` is a source guard for what follows.
 
 Two pieces of code that only existed in `DEBUG` builds are removed. The Xrm
-subtraction code appended the user's resource database (with the keyholder list)
+subtraction code appended the user's resource database
 to the fixed file `/tmp/dtsession.xrm`, opened without `O_NOFOLLOW` in a
 directory every user can write to, and `main()` spun in an endless loop when it
 was started with more than five arguments, waiting for a debugger. A test
@@ -276,8 +294,13 @@ make -C programs/dtsession check
 `check-privileges.py` runs `SmPriv.c` against a fake kernel that models the
 real, effective and saved ids and can refuse a call, report success without
 changing anything or leave a way back to root, in the builds with and without
-`SVR4`. `check-lock-authentication.py` runs `localAuthenticate()` of the PAM and
-non-PAM builds against a password database and a `crypt()` that can fail.
+`SVR4`. `check-pam-lock.py` compiles `SmPam.c` against a stand-in for the PAM library
+(a right and a wrong password, a start that fails, an authentication or an account
+check that fails, a module that asks something else than the password, failing
+allocations, other program names and environments) and once more without PAM.
+`check-lock-authentication.py` runs the password input and the start of the lock
+and guards the source: no other way to check a password, a PAM service that lets
+only the user in, no setuid installation.
 `check-signals.py` raises `SIGTERM` against the production handler and checks
 that nothing of the shutdown runs inside it. `check-session-files.py` runs the
 error-log rotation, the directory moves, copies and removals and the session

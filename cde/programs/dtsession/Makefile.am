@@ -4,7 +4,8 @@ bin_PROGRAMS = dtsession
 
 EXTRA_DIST = tests/check-session-properties.py tests/check-database-write.py \
              tests/check-database-arrays.py tests/check-privileges.py \
-             tests/check-lock-authentication.py tests/check-signals.py \
+             tests/check-lock-authentication.py tests/check-pam-lock.py \
+             tests/check-signals.py \
              tests/check-session-save.py \
              tests/check-session-files.py tests/check-session-parsers.py \
              tests/check-palette-parser.py tests/check-xsmp.py \
@@ -19,6 +20,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-database-arrays.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-privileges.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-lock-authentication.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-pam-lock.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-signals.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-save.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-files.py
@@ -31,12 +33,6 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-debug-code.py
 
 bin_SCRIPTS = dtsession_res
-
-if HAS_PAM_LIBRARY
-DTPAMSVCLIB = $(LIBPAMSVC)
-else
-DTPAMSVCLIB =
-endif
 
 dtsession_CFLAGS = -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\" \
           -DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\" \
@@ -51,10 +47,11 @@ dtsession_SOURCES = SmMain.c SmHelp.c SmGlobals.c SmCommun.c		\
 	SrvFile_io.h SmCommun.h SmHelp.h SmProtocol.h SmWatch.h Srv.h	\
 	SmConMgmt.h SmHftRing.h SmResource.h SmWindow.h SrvPalette.h	\
 	SmDB.h SmLock.h SmRestore.h SmXdef.h SmError.h			\
-	SmSave.h SmXrm.h SmPriv.c SmPriv.h SmFiles.c SmFiles.h
+	SmSave.h SmXrm.h SmPriv.c SmPriv.h SmFiles.c SmFiles.h		\
+	SmPam.c SmPam.h
 
 
-dtsession_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(DTPAMSVCLIB)
+dtsession_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(PAMLIB)
 
 if SOLARIS
 dtsession_SOURCES += OWsync.c
@@ -152,13 +149,3 @@ sys.session: sys.session.src
 sys.session.ive: sys.session.src
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=# $(LOCAL_CPP_DEFINES) -DIVE $< > $@
-
-
-# systems without a PAM library need dtsession to be SUID root
-
-install-exec-hook:
-if !HAS_PAM_LIBRARY
-	chown root $(DESTDIR)$(bindir)/dtsession
-	chmod 4755 $(DESTDIR)$(bindir)/dtsession
-endif
-

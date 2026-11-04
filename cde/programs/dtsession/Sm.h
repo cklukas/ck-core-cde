@@ -170,7 +170,6 @@ typedef struct
 {
     char	*wmStartup;
     Boolean	querySettings;
-    char	*keyholders;
     int		alarmTime;
     int		memThreshold;
     char	*sessionVersion;
@@ -287,7 +286,6 @@ typedef struct
      * This set is the for smRes
      */
     char	*wmStartup;
-    char	*keyholders;
     char	*sessionVersion;
     char	*sessionLang;
 

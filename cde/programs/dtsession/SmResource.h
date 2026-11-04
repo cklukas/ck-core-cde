@@ -70,7 +70,6 @@ extern char SmNsessionVersion[];
  */
 extern char SmNwmStartup[];
 extern char SmNquerySettings[];
-extern char SmNkeys[];
 extern char SmNalarmTime[];
 extern char SmNmemThreshold[];
 extern char SmNcontManagement[];
@@ -131,7 +130,6 @@ extern char SmCsessionVersion[];
  */
 extern char SmCwmStartup[];
 extern char SmCquerySettings[];
-extern char SmCkeys[];
 extern char SmCalarmTime[];
 extern char SmCmemThreshold[];
 extern char SmCContManagement[];

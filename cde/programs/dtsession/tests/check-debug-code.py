@@ -2,9 +2,8 @@
 """Guard against debug-only code in dtsession that writes to a fixed name in /tmp or never returns.
 
 The Xrm subtraction code had a DEBUG trace that appended the resource database
-of the user (which holds the keyholder list, among other things) to
-/tmp/dtsession.xrm: a fixed name, opened in append mode without O_NOFOLLOW, in
-a directory every user can write to.  main() had a DEBUG busy loop for
+of the user to /tmp/dtsession.xrm: a fixed name, opened in append mode without
+O_NOFOLLOW, in a directory every user can write to.  main() had a DEBUG busy loop for
 attaching a debugger that spun for ever when it was started with more than five
 arguments.  Neither belongs in a session manager; this test fails if a
 dtsession source names a file in /tmp or spins in main(), and checks that the

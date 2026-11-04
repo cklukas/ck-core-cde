@@ -56,11 +56,7 @@
 
 #include <stdio.h>
 #include <errno.h>
-#include <pwd.h>
 #include <string.h>
-#if defined(__linux__)
-#include <crypt.h>
-#endif
 #include <fcntl.h>
 
 #ifdef USE_HP_SPECIFIC_XLIB
@@ -72,30 +68,14 @@
 #include <Dt/UserMsg.h>
 #include <Dt/Indicator.h>
 #include <Tt/tttk.h>
-#ifdef SVR4
-#  include <shadow.h>
-#endif
-
-#if defined(__linux__)
-# include <shadow.h>
-#endif
-#if defined(CSRG_BASED)
-#include <sys/types.h>
-#include <pwd.h>
-#endif
-
-#ifdef HAS_PAM_LIBRARY
-#include <security/pam_appl.h>
-#include <Dt/SvcPam.h>
-#endif
 
 #include "Sm.h"
 #include "SmGlobals.h"
 #include "SmUI.h"
 #include "SmError.h"
 #include "SmLock.h"
+#include "SmPam.h"
 #include "SmScreen.h"
-#include "SmPriv.h"
 
 /*
  * Variables global to this module only
@@ -134,13 +114,6 @@ static void FinishLocking(Widget, XtPointer, XEvent *, Boolean *);
 static void RecolorCursor( void ) ;
 static void EventDetected( Widget, XtPointer, XEvent *, Boolean *) ;
 static void CheckString( char *, int ) ;
-static Boolean CheckPassword( char * ) ;
-#if defined (_AIX) && defined (_POWER)
-static Boolean Authenticate( char *, uid_t, char * ) ;
-#else
-#define Authenticate(A,B,C) localAuthenticate(A,B,C)
-#endif
-static Boolean localAuthenticate( char *, uid_t, char * ) ;
 static void UnlockDisplay( Boolean, Boolean ) ;
 static void TakeDownLogin( XtPointer, XtIntervalId * ) ;
 static void PutUpLogin( Boolean, Boolean ) ;
@@ -149,99 +122,6 @@ static void RequirePassword( XtPointer, XtIntervalId *) ;
 static void CycleSaver( XtPointer, XtIntervalId *) ;
 static void BlinkCaret( XtPointer, XtIntervalId *) ;
 
-#if defined(__linux__)
-/* #define JET_AUTHDEBUG */
-
-/* Test for re-auth ability - see if we can re-authenticate via pwd,
- * shadow, or NIS
- */
-static Boolean CanReAuthenticate(char *name, uid_t uid, char *passwd,
-				 struct passwd **pwent, struct spwd **spent)
-{
-  if (!pwent)
-      return False;
-
-  *pwent = (name == NULL) ? getpwuid(uid) : getpwnam(name);
-  if (!*pwent)
-      return False;
-
-  *spent = getspnam((*pwent)->pw_name);
-
-#ifdef JET_AUTHDEBUG
-  fprintf(stderr, "CanReAuthenticate(): uid: %d name: '%s' errno %d %s %s %s\n",
-          uid,
-          (name) ? name : "NULL",
-          errno,
-	  (*pwent) ? "PWENT" : "NULL",
-	  (*spent) ? "SPENT" : "NULL",
-	  (name) ? name : "NULL");
-#endif
-
-  /* some checking for aging stuff on RedPhat */
-
-  if (*pwent && (*pwent)->pw_passwd)
-    {
-      char *loc;
-
-      if ((loc = strchr((*pwent)->pw_passwd, ',')) != NULL)
-	*loc = '\0';
-#ifdef JET_AUTHDEBUG
-      fprintf(stderr, "CanReAuthenticate(): pw: '%s'\n",
-	      (*pwent)->pw_passwd);
-#endif
-
-    }
-
-  if (*spent && (*spent)->sp_pwdp)
-    {
-      char *loc;
-
-      if ((loc = strchr((*spent)->sp_pwdp, ',')) != NULL)
-	*loc = '\0';
-    }
-
-  if (*pwent == NULL)
-    {				/* if we can't get this, we're screwed. */
-#ifdef JET_AUTHDEBUG
-      fprintf(stderr, "CanReAuthenticate(): PWENT == NULL - FALSE\n");
-#endif
-      return False;
-    }
-
-  if ((*pwent)->pw_passwd == NULL)
-    {
-#ifdef JET_AUTHDEBUG
-      fprintf(stderr, "CanReAuthenticate(): (*pwent)->pw_passwd == NULL - FALSE\n");
-#endif
-
-      return False;
-    }
-
-  /* ok, now we have the prequisite data, look first to see if the
-   * passwd field is larger than 1 char - implying NIS, or a shadowed
-   * system.  if not look for *spent being non-NULL
-   */
-  if (*spent == NULL)
-    {				/* if it's null, lets check for the NIS case */
-      if (strlen((*pwent)->pw_passwd) <= 1)
-	{
-#ifdef JET_AUTHDEBUG
-	  fprintf(stderr, "strlen((*pwent)->pw_passwd) <= 1\n");
-#endif
-
-	  return False;		/* not NIS */
-	}
-    }
-
-				/* supposedly we have valid data */
-#ifdef JET_AUTHDEBUG
-      fprintf(stderr, "CanReAuthenticate(): TRUE\n");
-#endif
-
-  return True;
-}
-
-#endif /* linux */
 
 
 
@@ -281,7 +161,6 @@ LockDisplay(
     int	     screenNum;
     Widget   parent = NULL, lockDlg;
     XColor   xcolors[2];
-    struct passwd *pw;
     Boolean  secure;
     int lockDelay;
     int rc;
@@ -322,9 +201,11 @@ LockDisplay(
     }
 
     /*
-     * Before anything is done make sure we can unlock if we lock. 
+     * Before anything is done make sure we can unlock if we lock: the
+     * password of the user is checked through PAM, and a program built
+     * without PAM cannot do that.
      */
-    if (localAuthenticate(NULL, getuid(), NULL) == False)
+    if (SmPamAvailable() == False)
        {
 	Tt_message msg;
 	PrintError(DtError, smNLS.trustedSystemErrorString);
@@ -550,14 +431,6 @@ FinishLocking(Widget		wid,
 #ifdef USE_HP_SPECIFIC_XLIB
        XHPDisableReset(smGD.display);
 #endif /* USE_HP_SPECIFIC_XLIB */
-
-#if defined (AIXV3) && !defined(_POWER)
-       if(SmPrivRaise())
-       {
-         AixEnableHftRing(0);
-         SmPrivLower();
-       }
-#endif
 
 	pointerGrabbed = (XtGrabPointer(grabWidget, False,
 					ButtonPressMask|PointerMotionMask,
@@ -991,13 +864,8 @@ CheckString(
         register char *s,
         register int i )
 {
-  /* maximum supported length of password */
-#if defined(SIA)
-#define MAX_PASSWORD_LENGTH SIAMXPASSWORD
-#else
   /* seems to be reasonable maximal length */
 #define MAX_PASSWORD_LENGTH 65535
-#endif
 
   /* step when allocating/extending buffer */
 #define BUF_ALLOC_LEN 64
@@ -1062,7 +930,7 @@ CheckString(
 		passwd[pw_length] = '\0';	/* terminate string */
 		checked = pw_length;
 		pw_length = 0;			/* reset length */
-		correct = CheckPassword(passwd);
+		correct = SmPamCheckPassword(passwd);
 		WipePassword(passwd, checked + 1);	/* it is not needed again */
 		if (correct)
 		{
@@ -1082,77 +950,6 @@ CheckString(
 	}
     }
     UpdatePasswdField(pw_length > MAX_PASSWORD_LENGTH ? MAX_PASSWORD_LENGTH : pw_length);
-}
-
-
-
-/*************************************<->*************************************
- *
- *  CheckPassword (passwd)
- *
- *
- *  Description:
- *  -----------
- *  Check the password to see if it is the user's, roots, or one of the
- *  users specified in the host string
- *
- *
- *  Inputs:
- *  ------
- *  passwd = password passed in
- *
- * 
- *  Outputs:
- *  -------
- *  True if it is a valid password, false otherwise.
- *
- *  Comments:
- *  --------
- * 
- *************************************<->***********************************/
-static Boolean 
-CheckPassword(
-        char *passwd )
-{
-    char *p, *q;
-    char *keyholderbuf;
-
-    if (Authenticate(NULL, getuid(), passwd) == True)
-    {	
-      return(True);  /* user password ok */
-    }
-
-    if (Authenticate(NULL, 0, passwd) == True)
-    {
-      return(True);  /* root password ok */
-    }
-
-    /* check passwords of users specified as keyholders */
-    if (smGD.keyholders == NULL)
-    {
-	return(False);			/* no keyholders */
-    }
-
-    /* since strtok() is destructive, copy the keyholders string */
-    keyholderbuf = (char *) SM_MALLOC(strlen(smGD.keyholders)+1);
-    if(keyholderbuf == NULL)
-    {
-	PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-	return(False); /* no memory */
-    }
-    
-    strcpy(keyholderbuf, smGD.keyholders);
-    for (p = keyholderbuf; (q = strtok(p, ", \t")) != NULL; p = NULL)
-    {
-        if (Authenticate(q, -1, passwd) == True)
-	{
-          SM_FREE(keyholderbuf);
-          return(True); /* keyholder password ok */
-        }
-    }
-    SM_FREE(keyholderbuf);
-
-    return(False); /* no matches */
 }
 
 
@@ -1250,14 +1047,6 @@ UnlockDisplay(
 #ifdef USE_HP_SPECIFIC_XLIB
     XHPEnableReset(smGD.display);
 #endif /* USE_HP_SPECIFIC_XLIB */
-
-#if defined (AIXV3) && !defined(_POWER)
-    if(SmPrivRaise())
-    {
-      AixEnableHftRing(1);
-      SmPrivLower();
-    }
-#endif
 
     XSync(smGD.display, 0);
 
@@ -1604,389 +1393,3 @@ CycleSaver(XtPointer	ptr,
 
 
 
-#if !defined(HAS_PAM_LIBRARY)
-/*************************************<->*************************************
- *
- *  PasswordMatchesHash (passwd, hash)
- *
- *
- *  Description:
- *  -----------
- *  Tell whether a typed password belongs to the hash stored for an account.
- *
- *  crypt() returns a null pointer for a hash it cannot handle (the "!" or
- *  "*" of a locked account, a placeholder such as the "x" in /etc/passwd of a
- *  shadowed system), and some C libraries return a failure token instead.
- *  Neither is ever compared as if it were a hash: an account without a
- *  usable hash does not unlock the display.  The comparison does not stop at
- *  the first different byte.
- *
- *************************************<->***********************************/
-static Boolean
-PasswordMatchesHash(
-        const char *passwd,
-        const char *hash )
-{
-    const char *crypted;
-    size_t length;
-    size_t i;
-    unsigned char difference;
-
-    if (passwd == NULL || hash == NULL ||
-        hash[0] == '\0' || hash[0] == '!' || hash[0] == '*')
-    {
-        return False;
-    }
-
-    crypted = crypt(passwd, hash);
-    if (crypted == NULL || crypted[0] == '*')
-    {
-        return False;
-    }
-
-    length = strlen(hash);
-    difference = (unsigned char) (strlen(crypted) != length);
-    for (i = 0; i < length && crypted[i] != '\0'; i++)
-    {
-        difference |= (unsigned char) (hash[i] ^ crypted[i]);
-    }
-
-    return difference == 0 ? True : False;
-}
-#endif /* !HAS_PAM_LIBRARY */
-
-
-/*************************************<->*************************************
- *
- *  localAuthenticate (name, uid, passwd)
- *
- *
- *  Description:
- *  -----------
- *
- *
- *  Inputs:
- *  ------
- *
- * 
- *  Outputs:
- *  -------
- *
- *  Comments:
- *  --------
- * 
- *************************************<->***********************************/
-static Boolean 
-localAuthenticate(
-        char *name,
-        uid_t uid,
-        char *passwd )
-#if defined(HAS_PAM_LIBRARY)
-{
-    char *service;
-    struct passwd *pwent;
-    Boolean authenticated;
-
-    if (!(name && name[0])) name = NULL;
-
-    if (!(name || passwd)) return True;
-    if (!passwd) return False;
-    if (!(pwent = name ? getpwnam(name) : getpwuid(uid))) return False;
-
-   /*
-    * The PAM service is named after the program.  Started through the search
-    * path the program name has no directory part; the whole name is the
-    * service then, instead of every unlock attempt failing.
-    */
-    service = strrchr(smGD.programName, '/');
-    service = service ? service + 1 : smGD.programName;
-    if (service[0] == '\0')
-    {
-        endpwent();
-        return False;
-    }
-
-    authenticated = _DtSvcPamAuthenticate(service, pwent->pw_name, NULL,
-                                          passwd) == PAM_SUCCESS;
-    endpwent();
-
-    return authenticated;
-}
-#elif defined(__linux__)
-
-{
-    struct passwd *pwent = NULL;
-    char *p, *q;
-    Boolean rc = True;
-    Boolean done = False;
-    struct spwd *sp = NULL;
-    int raised = SmPrivRaise();
-
-   /*
-    * Get password entry for 'name' or 'uid'.
-    */
-    if (CanReAuthenticate(name, uid, passwd, &pwent, &sp) == False)
-    {
-     /*
-      * Can't get entry.
-      */
-      rc = False;
-      done = True;
-    }
-
-    if (raised)
-    {
-        SmPrivLower();
-    }
-
-    if (done == False)
-    {
-
-      if (pwent->pw_passwd == NULL || pwent->pw_passwd[0] == '*')
-      {
-				/* check sp */
-	if (sp == NULL || sp->sp_pwdp == NULL)
-	  {
-	    /*
-	     * Could not read password.
-	     */
-	    rc = False;
-	    done = True;
-	  }
-      }
-    }
-
-    if (done == False)
-    {
-      if (passwd == NULL)
-      {
-       /*
-        * Caller just checking if it is possible to access 
-        * password file (ie is dtsession suid bit set properly).
-        */
-        rc = True; 
-        done = True;
-      }
-    }
-
-    if (done == False)
-    {
-     /*
-      * Check password.
-      */
-
-     /*
-      * The shadow entry holds the password when there is one; the field in
-      * the password file is then only a placeholder (or an old password).
-      */
-      if (PasswordMatchesHash(passwd, sp != NULL ? sp->sp_pwdp :
-                              pwent->pw_passwd))
-	{			/* a match */
-	  rc = True;
-	  done = True;
-	}
-      else
-	{			/* failure dude! */
-	  rc = False;
-          done = True;
-	}
-    }
-
-    endpwent();
-    endspent();
-
-    return(rc);
-}
-
-#else
-
-{
-    register struct passwd *pwent;
-    char *p, *q;
-    Boolean rc = True;
-    Boolean done = False;
-    int raised = SmPrivRaise();
-
-#ifdef SVR4
-    struct spwd *sp=NULL;
-#endif
-
-#ifdef SVR4
-   /*
-    * Get shadow password entry for 'name' or 'uid'.
-    */
-    if (name == NULL)
-    {
-      pwent = getpwuid(uid);
-      if (pwent != NULL) 
-      {
-        name = pwent->pw_name;
-      }
-    }
-
-    if (name == NULL ||
-	(sp = getspnam(name)) == NULL
-	)
-    {
-     /*
-      * Can't get entry.
-      */
-      rc = False;
-      done = True;
-    }
-#else  /* SVR4 */
-   /*
-    * Get password entry for 'name' or 'uid'.
-    */
-#if defined(__OpenBSD__)
-    if ((pwent = (name == NULL ?
-            getpwuid_shadow(uid) : getpwnam_shadow(name))) == NULL)
-#else
-    if ((pwent = (name == NULL ? getpwuid(uid) : getpwnam(name))) == NULL)
-#endif
-    {
-     /*
-      * Can't get entry.
-      */
-      rc = False;
-      done = True;
-    }
-#endif /* SVR4 */
-
-    if (raised)
-    {
-        SmPrivLower();
-    }
-
-    if (done == False)
-    {
-      if (
-          pwent->pw_passwd == NULL 
-          || pwent->pw_passwd[0] == '*'
-#ifdef SVR4
-          || sp == NULL
-#endif
-          )
-      {
-       /*
-        * Could not read password.
-        */
-        rc = False;
-        done = True;
-      }
-    }
-
-    if (done == False)
-    {
-      if (passwd == NULL)
-      {
-       /*
-        * Caller just checking if it is possible to access 
-        * password file (ie is dtsession suid bit set properly).
-        */
-        rc = True; 
-        done = True;
-      }
-    }
-
-    if (done == False)
-    {
-     /*
-      * Check password.
-      */
-#ifdef SVR4
-      if (!PasswordMatchesHash(passwd, sp->sp_pwdp))
-#else
-      if (!PasswordMatchesHash(passwd, pwent->pw_passwd))
-#endif
-      {
-       /*
-        * Password incorrect.
-        */
-        rc = False;
-        done = True;
-      }
-    }
-
-    endpwent();
-#ifdef SVR4
-    endspent();
-#endif
-
-    return(rc);
-}
-#endif /* HAS_PAM_LIBRARY, __linux__ */
-
-
-/*************************************<->*************************************
- *
- *  Authenticate (name, uid, passwd)
- *
- *
- *  Description:
- *  -----------
- *
- *
- *  Inputs:
- *  ------
- *
- * 
- *  Outputs:
- *  -------
- *
- *  Comments:
- *  --------
- * 
- *************************************<->***********************************/
-
-#if defined (_AIX) && defined(_POWER)
-
-static Boolean 
-Authenticate(
-        char *name,
-        uid_t uid,
-        char *passwd )
-{
-    register struct passwd *pwent;
-    char *p, *q;
-    Boolean rc = True;
-    Boolean done = False;
-
-    int arc;
-    int reenter;
-    char *newname = NULL;
-    char *msg;
-    int raised = SmPrivRaise();
-
-   /*
-    * Map uid to name.
-    */
-    if (name == NULL)
-    {
-      pwent = getpwuid(uid);
-      if (pwent != NULL)
-      {
-        name = newname = strdup(pwent->pw_name);
-      }
-      endpwent();
-    }
- 
-   /* 
-    * Authenticate user. Note: normally, we should check 'reenter' to
-    * see if the user has another challenge. Since the dtsession screen
-    * lock i/f does not yet have the support, our policy is to let the
-    * user back in if they pass the first (password) challenge.
-    */ 
-    arc = authenticate(name, passwd, &reenter, &msg);
-
-    if (raised)
-    {
-        SmPrivLower();
-    }
-
-    if (msg) free(msg);
-    if (newname) free(newname);
-
-    return(arc == 0 ? True : False);
-}
-#endif /* _AIX && _POWER */
