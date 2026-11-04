@@ -393,6 +393,23 @@
   New tests send every procedure a successful request and then a failing one,
   object ids and file names that are not well formed, and (as before, for the
   procedures that remain) random changes of sound requests.
+- tt: make rpc.ttdbserverd work only in a `TT_DB` directory that is its own. The
+  daemon runs as root in partitions that users may write to and opened the
+  tables of a partition by their paths after a `mkdir` that was not looked at,
+  so a user could plant a `TT_DB` that was a link, or a directory of his own, or
+  a table that was a link, and have the daemon make or read tables where he
+  chose. `TT_DB` has to be a directory owned by the user the daemon runs as,
+  that group and others cannot write to, looked at through a descriptor opened
+  without following links, in a partition that group and others cannot write to
+  or that is sticky; no file of a table may be a link. Requests on any other
+  partition fail with `TT_DB_ERR_DB_OPEN_FAILED`.
+- tt: fix `TT_MOVE_FILE`. It looked for the mount point of the whole name
+  `host:path`, a relative path, and so refused every move, and it named the
+  moved file with a `/` after it and the files below it with two. A move inside a
+  partition now renames the file and those below it. The tests also cover the
+  partitions the server takes from the mount table (the part of
+  `isKnownPartition` that no case reached) and the limits of the XDR routines
+  when the server encodes a reply.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

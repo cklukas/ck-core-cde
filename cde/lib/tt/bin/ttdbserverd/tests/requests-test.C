@@ -21,6 +21,7 @@
 #include "db/tt_db_access.h"
 #include "db/tt_db_create_objid.h"
 #include "db/tt_db_key.h"
+#include "tt_db_partition_global_map_ref.h"
 #include "util/tt_file_system_entry.h"
 #include "util/tt_path.h"
 #include "util/tt_xdr_utils.h"
@@ -903,6 +904,32 @@ case_xdr_limits(void)
 	CHECK(!decodes<_tt_string>(xdr_tt_objid, text(TT_DB_LIMIT_OBJID + 1)));
 	CHECK(decodes<_tt_string>(xdr_tt_session, text(TT_DB_LIMIT_SESSION)));
 	CHECK(!decodes<_tt_string>(xdr_tt_session, text(TT_DB_LIMIT_SESSION + 1)));
+
+	/* what the server sends is bounded as what it is sent is: a string above
+	   the limit is not encoded, the one at it is */
+	{
+		static char buf[1 << 14];
+		std::string name(TT_DB_LIMIT_FILE, 'f');
+		std::string toolong(TT_DB_LIMIT_FILE + 1, 'f');
+		char *at = &name[0];
+		XDR xdrs;
+
+		xdrmem_create(&xdrs, buf, sizeof(buf), XDR_ENCODE);
+		CHECK(xdr_tt_file_name(&xdrs, &at));
+		at = &toolong[0];
+		xdrmem_create(&xdrs, buf, sizeof(buf), XDR_ENCODE);
+		CHECK(!xdr_tt_file_name(&xdrs, &at));
+
+		std::string otype(TT_DB_LIMIT_TYPE, 't');
+		std::string longtype(TT_DB_LIMIT_TYPE + 1, 't');
+		_tt_obj_type_results res = { &otype[0], TT_DB_OK };
+
+		xdrmem_create(&xdrs, buf, sizeof(buf), XDR_ENCODE);
+		CHECK(xdr_tt_obj_type_results(&xdrs, &res));
+		res.otype = &longtype[0];
+		xdrmem_create(&xdrs, buf, sizeof(buf), XDR_ENCODE);
+		CHECK(!xdr_tt_obj_type_results(&xdrs, &res));
+	}
 
 	/* the name of a property, the type of an object, the partition of a file */
 	CHECK(decodes<_tt_property>(xdr_tt_property,
@@ -2156,6 +2183,162 @@ case_access_bits(void)
 	}
 }
 
+/* ---- the directory of the tables ---------------------------------------------- */
+
+/* the status of a request to make a file */
+static int
+create_file_status(const std::string &file)
+{
+	_tt_access	acc = { g_uid, getgid(), 0600 };
+	_tt_property_list none = { 0, NULL };
+	_tt_create_file_args cf = { (char *)file.c_str(), none, acc };
+
+	return results_of(rpc(TT_CREATE_FILE,
+			      encode((xdrproc_t)xdr_tt_create_file_args, &cf)),
+			  xdr_tt_db_cache_results);
+}
+
+/* The server runs as root in partitions any user may write to, and opens the
+   tables by their paths: it works in the TT_DB directory of a partition only if
+   that is a directory of its own user that nobody else can write to, a link in
+   its place or a table that is a link is no table, and neither is a TT_DB in a
+   directory anybody may rename things in. */
+static void
+case_table_directory(void)
+{
+	std::string file = start_partition("table-directory");
+	const std::string tt = g_dir + "/TT_DB";
+
+	put(g_dir + "/file", "the file");
+
+	/* a link to a directory in the place of TT_DB */
+	CHECK(mkdir((g_dir + "/elsewhere").c_str(), 0700) == 0);
+	CHECK(symlink((g_dir + "/elsewhere").c_str(), tt.c_str()) == 0);
+	CHECK(create_file_status(file) == TT_DB_ERR_DB_OPEN_FAILED);
+	CHECK(!exists(g_dir + "/elsewhere/property_table.rec"));
+	CHECK(!exists(g_dir + "/elsewhere/file_table.rec"));
+	CHECK(unlink(tt.c_str()) == 0);
+
+	/* a directory that others may write to */
+	CHECK(mkdir(tt.c_str(), 0700) == 0);
+	CHECK(chmod(tt.c_str(), 0777) == 0);
+	CHECK(create_file_status(file) == TT_DB_ERR_DB_OPEN_FAILED);
+	CHECK(chmod(tt.c_str(), 0775) == 0);
+	CHECK(create_file_status(file) == TT_DB_ERR_DB_OPEN_FAILED);
+	CHECK(!exists(tt + "/property_table.rec"));
+
+	/* a table that is a link to a file that is not there yet */
+	CHECK(chmod(tt.c_str(), 0755) == 0);
+	CHECK(symlink((g_dir + "/victim.rec").c_str(),
+		      (tt + "/property_table.rec").c_str()) == 0);
+	CHECK(create_file_status(file) == TT_DB_ERR_DB_OPEN_FAILED);
+	CHECK(!exists(g_dir + "/victim.rec"));
+	CHECK(unlink((tt + "/property_table.rec").c_str()) == 0);
+	static const char *leftovers[] = { "file_table.rec", "file_table.ind",
+					   "file_object_map.rec",
+					   "file_object_map.ind" };
+	for (size_t i = 0; i < sizeof(leftovers) / sizeof(leftovers[0]); i++) {
+		(void)unlink((tt + "/" + leftovers[i]).c_str());
+	}
+
+	/* a directory of somebody else's */
+	if (getuid() == 0) {
+		CHECK(chown(tt.c_str(), 4000, 4000) == 0);
+		CHECK(create_file_status(file) == TT_DB_ERR_DB_OPEN_FAILED);
+		CHECK(chown(tt.c_str(), 0, 0) == 0);
+	}
+
+	/* a partition in which anybody may rename the directory */
+	CHECK(chmod(g_dir.c_str(), 0777) == 0);
+	CHECK(create_file_status(file) == TT_DB_ERR_DB_OPEN_FAILED);
+
+	/* ... unless it is sticky, like /tmp, or the directory is the server's */
+	CHECK(chmod(g_dir.c_str(), 01777) == 0);
+	CHECK(create_file_status(file) == TT_DB_OK);
+}
+
+/* ---- moving a file ---------------------------------------------------------------- */
+
+/* A file is named "host:path", and the partition of the file it is moved to is
+   that of the path: a move inside a partition renames the file in its tables,
+   with the objects in it. */
+static void
+case_move_file(void)
+{
+	std::string file = start_partition("move-file");
+	std::string moved = "localhost:" + g_dir + "/moved";
+	std::string elsewhere = "localhost:/nowhere/at/all";
+	std::string objid = make_objid(g_mount);
+
+	put(g_dir + "/file", "the file");
+	put(g_dir + "/moved", "the file");
+	create_file(file);
+	CHECK(create_object(objid, file, 0600) == TT_DB_OK);
+	CHECK(set_property(file, "name", "value") == TT_DB_OK);
+	CHECK(is_file_in_db(file) == TT_DB_OK);
+	CHECK(is_file_in_db(moved) != TT_DB_OK);
+
+	_tt_access	acc = { g_uid, getgid(), 0600 };
+	_tt_move_file_args mf = { (char *)file.c_str(), (char *)moved.c_str(), acc };
+	CHECK(status_of(rpc(TT_MOVE_FILE,
+			    encode((xdrproc_t)xdr_tt_move_file_args, &mf))) == TT_DB_OK);
+	CHECK(is_file_in_db(file) != TT_DB_OK);
+	CHECK(is_file_in_db(moved) == TT_DB_OK);
+	CHECK(get_obj_file(objid) == TT_DB_OK);
+	CHECK(get_file_prop(moved, "name") == TT_DB_OK);
+
+	/* a file that is not in the database, and one that is moved to the name
+	   it has */
+	mf.file = (char *)elsewhere.c_str();
+	mf.new_file = (char *)file.c_str();
+	int absent = status_of(rpc(TT_MOVE_FILE,
+				   encode((xdrproc_t)xdr_tt_move_file_args, &mf)));
+	CHECK(absent == TT_DB_ERR_NO_SUCH_FILE);
+	mf.file = (char *)moved.c_str();
+	mf.new_file = (char *)moved.c_str();
+	int same = status_of(rpc(TT_MOVE_FILE,
+				 encode((xdrproc_t)xdr_tt_move_file_args, &mf)));
+	CHECK(same == TT_DB_ERR_SAME_FILE);
+	CHECK(is_file_in_db(moved) == TT_DB_OK);
+}
+
+/* ---- the partitions the server knows --------------------------------------------- */
+
+/* The partitions are the mount points of the host and the names of the
+   partition map.  A mount point is one without an entry of the map, and no
+   other name of one is: a longer path, a relative one, one with a ".." or a
+   trailing "/" in it, and one that is not there. */
+static void
+case_known_partitions(void)
+{
+	start_server("known-partitions");
+
+	_Tt_file_system fs;
+	_Tt_file_system_entry_ptr entry = fs.bestMatchToPath(g_dir.c_str());
+
+	CHECK(!entry.is_null());
+	if (entry.is_null()) {
+		return;
+	}
+	std::string mount = (char *)entry->getMountPoint();
+
+	db_pr_map->refresh();	/* (the server reads the map with the first request) */
+	/* (the map of the case has the directory of the case and nothing else) */
+	CHECK(mount != g_dir);
+	CHECK(_Tt_db_partition_global_map_ref::isKnownPartition(mount.c_str()));
+	CHECK(_Tt_db_partition_global_map_ref::isKnownPartition(g_dir.c_str()));
+	CHECK(!_Tt_db_partition_global_map_ref::isKnownPartition(
+		      (g_dir + "/sub").c_str()));
+	CHECK(!_Tt_db_partition_global_map_ref::isKnownPartition(
+		      (g_dir + "/../" + g_dir.substr(g_dir.rfind('/') + 1)).c_str()));
+	CHECK(!_Tt_db_partition_global_map_ref::isKnownPartition(""));
+	CHECK(!_Tt_db_partition_global_map_ref::isKnownPartition("relative"));
+	CHECK(!_Tt_db_partition_global_map_ref::isKnownPartition(
+		      (mount == "/" ? std::string("//") : mount + "/").c_str()));
+	CHECK(!_Tt_db_partition_global_map_ref::isKnownPartition(
+		      (mount + "/does/not/exist").c_str()));
+}
+
 /* ---- driver ------------------------------------------------------------------ */
 
 static const struct {
@@ -2179,6 +2362,9 @@ static const struct {
 	{ "path-names", case_path_names },
 	{ "results-after-failure", case_results_after_failure },
 	{ "malformed-names", case_malformed_names },
+	{ "table-directory", case_table_directory },
+	{ "move-file", case_move_file },
+	{ "known-partitions", case_known_partitions },
 	{ "fuzz-dispatch", case_fuzz_dispatch },
 	{ "access-rule", case_access_rule },
 	{ "access-bits", case_access_bits },

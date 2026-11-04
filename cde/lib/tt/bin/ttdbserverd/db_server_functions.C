@@ -400,18 +400,17 @@ _tt_db_results *_tt_move_file_1 (_tt_move_file_args *args,
     results = TT_DB_ERR_ILLEGAL_FILE;
   }
   else if (real_file != real_new_file) {
-    _Tt_file_system           fs;
-    _Tt_file_system_entry_ptr entry = fs.bestMatchToPath(real_file);
-    _Tt_file_system_entry_ptr new_entry = fs.bestMatchToPath(real_new_file);
+    // The partition of a file is that of the mount point its path is in (the
+    // path after the host: "host:/path" is not a path to look for in the
+    // mount table), and a file that no mount point leads to is in none.
+    _Tt_string partition = _tt_get_file_partition(real_file);
+    _Tt_string new_partition = _tt_get_file_partition(real_new_file);
 
-    // a file that no mount point leads to is in no partition
-    if (entry.is_null() || new_entry.is_null()) {
+    if (!partition.len() || !new_partition.len()) {
       results = TT_DB_ERR_ILLEGAL_FILE;
       return &results;
     }
-    _Tt_string partition = entry->getMountPoint();
-    _Tt_string new_partition = new_entry->getMountPoint();
-    
+
     if (partition == new_partition) {
       // Get a connection to the partition DB
       _Tt_db_server_db_ptr db;
@@ -430,11 +429,13 @@ _tt_db_results *_tt_move_file_1 (_tt_move_file_args *args,
 	else {
 	  _Tt_string_list_cursor children_cursor(children);
 	  while ((results == TT_DB_OK) && children_cursor.next()) {
-	    // Construct the new file name by replacing the part
-	    // that equals the "real_file" with the "real_new_file".
+	    // Construct the new file name by replacing the part that equals
+	    // the "real_file" with the "real_new_file": what follows it in the
+	    // name of a file below it ("/name") stays as it is, and the file
+	    // itself has nothing after it.
 	    int length = (*children_cursor).len() - real_file.len();
-	    _Tt_string new_child = real_new_file.cat("/");
-	    new_child = new_child.cat((*children_cursor).right(length));
+	    _Tt_string new_child =
+		real_new_file.cat((*children_cursor).right(length));
 
 	    // Change the file name in the database
 	    db->setFileFile(*children_cursor, new_child, accessPtr);

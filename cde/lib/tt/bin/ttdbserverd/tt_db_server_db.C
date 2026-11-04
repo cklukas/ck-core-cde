@@ -31,7 +31,9 @@
  * Copyright (c) 1992 by Sun Microsystems, Inc.
  */
 
+#include <fcntl.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -61,6 +63,69 @@ _Tt_db_server_db::_Tt_db_server_db (const _Tt_string &partition)
   connectToDB(partition);
 }
 
+/*
+ * The tables of a partition are in its TT_DB directory, which the server makes
+ * if there is none.  The server runs as root in a partition any user may be
+ * able to write to (a mount point such as /tmp), and opens the tables by their
+ * paths, so it has to be sure that the directory and the tables are its own
+ * and that nobody can put others in their place:
+ *
+ *  - the partition is not writable by group or others, or it has the sticky
+ *    bit, so that nobody can rename or remove a TT_DB that is not theirs;
+ *  - TT_DB is a directory (never a link to one), owned by the user the server
+ *    runs as, and neither the group nor the others may write to it;
+ *  - none of the files of a table is a link.
+ *
+ * The directory is looked at through a descriptor opened without following a
+ * link, so what was looked at is what is there.
+ */
+static bool
+tableFileIsNotALink (const _Tt_string &base_dir, const char *table)
+{
+  static const char *suffixes[] = { ".rec", ".ind", ".var" };
+
+  for (size_t i = 0; i < sizeof(suffixes) / sizeof(suffixes[0]); i++) {
+    _Tt_string path = base_dir.cat(table).cat(suffixes[i]);
+    struct stat st;
+
+    if (lstat(GNU_STRCAST path, &st) == 0 && S_ISLNK(st.st_mode)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool _Tt_db_server_db::tableDirectoryOk (const _Tt_string &partition,
+					 const _Tt_string &base_dir)
+{
+  struct stat st;
+
+  if (stat(GNU_STRCAST partition, &st) != 0 || !S_ISDIR(st.st_mode) ||
+      ((st.st_mode & (S_IWGRP | S_IWOTH)) && !(st.st_mode & S_ISVTX))) {
+    return false;
+  }
+
+  // (a name that ends in a slash is followed through a link to a directory)
+  _Tt_string dir = base_dir.left(base_dir.len() - 1);
+
+  // If mkdir fails, don't worry about it.  The directory is looked at next.
+  (void)mkdir(GNU_STRCAST dir, S_IRWXU+S_IRGRP+S_IXGRP+S_IROTH+S_IXOTH);
+
+  int fd = open(GNU_STRCAST dir, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+  if (fd < 0) {
+    return false;
+  }
+  bool ok = (fstat(fd, &st) == 0 && S_ISDIR(st.st_mode) &&
+	     st.st_uid == geteuid() && !(st.st_mode & (S_IWGRP | S_IWOTH)));
+  (void)close(fd);
+
+  return ok &&
+	 tableFileIsNotALink(base_dir, TT_DB_FILE_TABLE_FILE) &&
+	 tableFileIsNotALink(base_dir, TT_DB_FILE_OBJECT_MAP_FILE) &&
+	 tableFileIsNotALink(base_dir, TT_DB_PROPERTY_TABLE_FILE) &&
+	 tableFileIsNotALink(base_dir, TT_DB_ACCESS_TABLE_FILE);
+}
+
 void _Tt_db_server_db::connectToDB (const _Tt_string &partition)
 {
   dbResults = TT_DB_OK;
@@ -74,9 +139,13 @@ void _Tt_db_server_db::connectToDB (const _Tt_string &partition)
   }
   base_dir = base_dir.cat("TT_DB/");
 
-  // If mkdir fails, don't worry about it.  The problem will be caught
-  // when NetISAM tries to open the table file.
-  (void)mkdir(GNU_STRCAST base_dir, S_IRWXU+S_IRGRP+S_IXGRP+S_IROTH+S_IXOTH);
+  // The tables are made in, and read from, a directory of the partition
+  // that is the server's own.
+  if (!tableDirectoryOk(partition, base_dir)) {
+    dbResults = TT_DB_ERR_DB_OPEN_FAILED;
+    dbLastFileAccessed = base_dir;
+    return;
+  }
 
   _Tt_string file_table_file(TT_DB_FILE_TABLE_FILE);
   file_table_file = base_dir.cat(file_table_file);

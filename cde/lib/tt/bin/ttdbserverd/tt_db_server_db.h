@@ -281,6 +281,9 @@ public:
   _Tt_string		      dbLastFileAccessed;
 
   void connectToDB (const _Tt_string &partition);
+  // Is the TT_DB directory BASE_DIR of PARTITION the server's own?
+  static bool tableDirectoryOk (const _Tt_string &partition,
+				const _Tt_string &base_dir);
 
   _Tt_db_results verifyObjectAccess (const _Tt_string&,
 			             const _Tt_db_access_ptr&,

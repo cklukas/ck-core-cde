@@ -250,6 +250,19 @@ length.
   access, removing) to the owner; it had no effect on these requests, only on
   the procedures that are gone.
 
+- The tables of a partition are in its `TT_DB` directory, which the server makes
+  if there is none, and are opened by their paths. The server works in the
+  directory only if it is the server's own: a directory (never a link to one),
+  owned by the user the server runs as, that neither the group nor the others
+  can write to, in a partition that the group and the others cannot write to or
+  that has the sticky bit (a mount point such as `/tmp`), and none of the files
+  of the tables is a link. The directory is looked at through a descriptor
+  opened without following a link. Any other `TT_DB` makes the requests on that
+  partition fail with `TT_DB_ERR_DB_OPEN_FAILED`, and nothing is created through
+  it. Before, a user could plant a `TT_DB` that was a link, or a directory of his
+  own, in a partition he could write to, and have the daemon make its tables in
+  places it chose or read tables it did not make.
+
 ### Limits of the protocol
 
 The routines that decode a request allocate the storage for a string, a byte
@@ -302,6 +315,12 @@ beginning of the string (`_Tt_dirname()` now returns -1 for such a path, like it
 does for one in the root directory, and `_Tt_basename()` returns 0). The unused
 `set_real_path()` of the server, which copied paths into a buffer without
 checking their length, is gone.
+
+Moving a file (`TT_MOVE_FILE`) looked for the mount point of the whole name
+`host:path`, which is a relative path, and so refused every move; the partition
+is now that of the path. A file moved inside its partition is renamed in the
+tables, and the names of the files below it follow (the name of the file itself
+had a `/` put after it, and those below it two).
 
 ## Checks
 
