@@ -18,6 +18,8 @@
 
 #include "tt_db_message_info_utils.h"
 #include "tt_db_server_consts.h"
+#include "db/tt_db_create_objid.h"
+#include "db/tt_db_key.h"
 #include "util/tt_xdr_utils.h"
 
 #include <string>
@@ -53,7 +55,6 @@ static std::string	g_request;	/* what svc_getargs() decodes */
 static Reply		g_reply;
 static uid_t		g_uid;
 static SVCXPRT		g_xprt;
-static bool		g_encode_results = true;
 
 static bool_t
 fake_recv(SVCXPRT *, struct rpc_msg *)
@@ -89,13 +90,6 @@ fake_reply(SVCXPRT *, struct rpc_msg *msg)
 	if (g_reply.stat != SUCCESS) {
 		return TRUE;
 	}
-	if (!g_encode_results) {
-		/* some replies carry a null string, which xdr_string() cannot
-		   send: a case that does not look at the reply says so */
-		g_reply.results = true;
-		return TRUE;
-	}
-
 	static char out[1 << 17];
 	XDR xdrs;
 
@@ -195,6 +189,13 @@ struct Raw {
 		s.append((4 - n % 4) % 4, '\0');
 		return *this;
 	}
+	/* opaque data of any content, as xdr_bytes() and xdr_string() send it */
+	Raw &bytes(const std::string &d) {
+		u32(d.size());
+		s.append(d);
+		s.append((4 - d.size() % 4) % 4, '\0');
+		return *this;
+	}
 };
 
 static int
@@ -224,6 +225,7 @@ answered(const Reply &r)
 /* ---- the server -------------------------------------------------------------- */
 
 static std::string g_dir;
+static std::string g_mount;	/* the mount point start_partition redirects to g_dir */
 
 /*
  * The same set-up as main() of db_server_svc.C makes, without the network.
@@ -1111,6 +1113,7 @@ start_partition(const char *name)
 	CHECK(f != NULL);
 	fprintf(f, "%s %s\n", pr->partition, g_dir.c_str());
 	fclose(f);
+	g_mount = pr->partition;
 	free(pr->partition);
 	free(pr->network_path);
 	setenv("TT_PARTITION_MAP", map.c_str(), 1);
@@ -1310,7 +1313,6 @@ static void
 case_empty_paths(void)
 {
 	start_server("empty-paths");
-	g_encode_results = false;
 	char empty[] = "";
 	char objid[] = "no-colons-at-all";
 	_tt_access acc = { g_uid, getgid(), 0600 };
@@ -1372,6 +1374,426 @@ case_empty_paths(void)
 	r = rpc(TT_IS_OBJ_IN_DB, encode((xdrproc_t)xdr_tt_is_obj_in_db_args, &oi));
 	CHECK(r.replied);
 	CHECK(::access("TT_DB", F_OK) != 0);
+}
+
+static void
+put(const std::string &path, const std::string &content)
+{
+	FILE *f = fopen(path.c_str(), "w");
+
+	CHECK(f != NULL);
+	if (f != NULL) {
+		fwrite(content.data(), 1, content.size(), f);
+		fclose(f);
+	}
+}
+
+static std::string
+make_objid(const std::string &partition)
+{
+	_Tt_db_key_ptr key = new _Tt_db_key;
+
+	return (char *)_tt_db_create_objid(key, "NFS", "localhost",
+					   _Tt_string(partition.c_str()));
+}
+
+/* ---- the XDR layer: strings that are not there, and the limits --------------- */
+
+/* PROC encodes IN and decodes the result into OUT. */
+template <class T>
+static bool
+roundtrip(bool_t (*proc)(XDR *, T *), T *in, T *out)
+{
+	static char	buf[1 << 16];
+	XDR		xdrs;
+
+	xdrmem_create(&xdrs, buf, sizeof(buf), XDR_ENCODE);
+	if (!(*proc)(&xdrs, in)) {
+		return false;
+	}
+	u_int len = xdr_getpos(&xdrs);
+	memset(out, 0, sizeof(*out));
+	xdrmem_create(&xdrs, buf, len, XDR_DECODE);
+	return (*proc)(&xdrs, out) != 0;
+}
+
+static bool
+is_empty(const char *s)
+{
+	return s != NULL && s[0] == '\0';
+}
+
+/* A string a reply has none of, such as the type of an object that is not
+   there or the forward pointer of one that has none, is sent as the empty
+   string, and so is one of an argument. */
+static void
+case_xdr_null_strings(void)
+{
+	_tt_is_obj_in_db_results ir = { NULL, TT_DB_ERR_NO_SUCH_OBJECT }, ir2;
+	CHECK(roundtrip(xdr_tt_is_obj_in_db_results, &ir, &ir2));
+	CHECK(is_empty(ir2.forward_pointer));
+	CHECK(ir2.results == TT_DB_ERR_NO_SUCH_OBJECT);
+	xdr_free((xdrproc_t)xdr_tt_is_obj_in_db_results, (char *)&ir2);
+
+	_tt_obj_type_results tr = { NULL, TT_DB_ERR_NO_SUCH_OBJECT }, tr2;
+	CHECK(roundtrip(xdr_tt_obj_type_results, &tr, &tr2));
+	CHECK(is_empty(tr2.otype));
+	CHECK(tr2.results == TT_DB_ERR_NO_SUCH_OBJECT);
+	xdr_free((xdrproc_t)xdr_tt_obj_type_results, (char *)&tr2);
+
+	_tt_obj_file_results fr = { NULL, TT_DB_ERR_NO_SUCH_OBJECT }, fr2;
+	CHECK(roundtrip(xdr_tt_obj_file_results, &fr, &fr2));
+	CHECK(is_empty(fr2.file));
+	xdr_free((xdrproc_t)xdr_tt_obj_file_results, (char *)&fr2);
+
+	/* a property that is not there has no name and no values */
+	_tt_obj_prop_results pr, pr2;
+	memset(&pr, 0, sizeof(pr));
+	pr.cache_level = 3;
+	pr.results = TT_DB_ERR_NO_SUCH_PROPERTY;
+	CHECK(roundtrip(xdr_tt_obj_prop_results, &pr, &pr2));
+	CHECK(is_empty(pr2.property.name) && pr2.property.values.values_len == 0);
+	CHECK(is_empty(pr2.file));
+	CHECK(pr2.cache_level == 3 && pr2.results == TT_DB_ERR_NO_SUCH_PROPERTY);
+	xdr_free((xdrproc_t)xdr_tt_obj_prop_results, (char *)&pr2);
+
+	_tt_file_prop_results gr, gr2;
+	memset(&gr, 0, sizeof(gr));
+	CHECK(roundtrip(xdr_tt_file_prop_results, &gr, &gr2));
+	CHECK(is_empty(gr2.property.name));
+	xdr_free((xdrproc_t)xdr_tt_file_prop_results, (char *)&gr2);
+
+	/* ... and a client that removes an object with no forward pointer */
+	_tt_access acc = { getuid(), getgid(), 0600 };
+	char objid[] = "key:NFS:host:/";
+	_tt_remove_obj_args ra = { objid, NULL, acc }, ra2;
+	CHECK(roundtrip(xdr_tt_remove_obj_args, &ra, &ra2));
+	CHECK(is_empty(ra2.forward_pointer));
+	CHECK(strcmp(ra2.objid, objid) == 0);
+	xdr_free((xdrproc_t)xdr_tt_remove_obj_args, (char *)&ra2);
+
+	_tt_file_partition_results pa = { NULL, NULL, TT_DB_ERR_ILLEGAL_FILE }, pa2;
+	CHECK(roundtrip(xdr_tt_file_partition_results, &pa, &pa2));
+	CHECK(is_empty(pa2.partition) && is_empty(pa2.network_path));
+	xdr_free((xdrproc_t)xdr_tt_file_partition_results, (char *)&pa2);
+
+	/* the requests that have such a reply are answered */
+	std::string file = start_partition("xdr-null-strings");
+	create_file(file);
+
+	_tt_access acc2 = { g_uid, getgid(), 0600 };
+	char name[] = "no such property";
+	_tt_get_file_prop_args gp = { (char *)file.c_str(), name, acc2, -1 };
+	Reply r = rpc(TT_GET_FILE_PROP,
+		      encode((xdrproc_t)xdr_tt_get_file_prop_args, &gp));
+	CHECK(answered(r));
+	_tt_file_prop_results res;
+	XDR xdrs;
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	CHECK(xdr_tt_file_prop_results(&xdrs, &res));
+	CHECK(res.results == TT_DB_ERR_NO_SUCH_PROPERTY);
+	CHECK(is_empty(res.property.name));
+	xdr_free((xdrproc_t)xdr_tt_file_prop_results, (char *)&res);
+
+	char absent[] = "key:NFS:localhost:/nowhere";
+	_tt_get_obj_type_args ot = { absent, acc2 };
+	r = rpc(TT_GET_OBJ_TYPE, encode((xdrproc_t)xdr_tt_get_obj_type_args, &ot));
+	CHECK(answered(r));
+	_tt_is_obj_in_db_args oi = { absent, acc2 };
+	r = rpc(TT_IS_OBJ_IN_DB, encode((xdrproc_t)xdr_tt_is_obj_in_db_args, &oi));
+	CHECK(answered(r));
+}
+
+/* DECODE decodes BYTES into a T. */
+template <class T>
+static bool
+decodes(bool_t (*proc)(XDR *, T *), const std::string &bytes)
+{
+	T	obj;
+	XDR	xdrs;
+
+	memset(&obj, 0, sizeof(obj));
+	xdrmem_create(&xdrs, (char *)bytes.data(), bytes.size(), XDR_DECODE);
+	bool ok = (*proc)(&xdrs, &obj) != 0;
+	xdr_free((xdrproc_t)proc, (char *)&obj);
+	return ok;
+}
+
+/* the string of N characters, as the protocol sends it */
+static std::string
+text(size_t n)
+{
+	return Raw().bytes(std::string(n, 'x')).s;
+}
+
+/* N empty strings, empty byte arrays, empty properties and so on */
+static std::string
+repeat(size_t n, const std::string &one)
+{
+	std::string out;
+
+	out.reserve(n * one.size());
+	for (size_t i = 0; i < n; i++) {
+		out += one;
+	}
+	return out;
+}
+
+/*
+ * Every string, byte array and list of the protocol has a limit, which is
+ * served and which is the last one: no longer string is decoded, however
+ * much of it is there.
+ */
+static void
+case_xdr_limits(void)
+{
+	const std::string none = Raw().u32(0).s;	/* "", a list of none */
+
+	/* strings */
+	CHECK(decodes<char *>(xdr_tt_file_name, text(TT_DB_LIMIT_FILE)));
+	CHECK(!decodes<char *>(xdr_tt_file_name, text(TT_DB_LIMIT_FILE + 1)));
+	CHECK(decodes<char *>(xdr_tt_objid_name, text(TT_DB_LIMIT_OBJID)));
+	CHECK(!decodes<char *>(xdr_tt_objid_name, text(TT_DB_LIMIT_OBJID + 1)));
+	CHECK(decodes<char *>(xdr_Tt_path, text(PATH_LENGTH)));
+	CHECK(!decodes<char *>(xdr_Tt_path, text(PATH_LENGTH + 1)));
+	CHECK(decodes<_tt_string>(xdr_tt_ptype, text(TT_DB_LIMIT_TYPE)));
+	CHECK(!decodes<_tt_string>(xdr_tt_ptype, text(TT_DB_LIMIT_TYPE + 1)));
+	CHECK(decodes<_tt_string>(xdr_tt_objid, text(TT_DB_LIMIT_OBJID)));
+	CHECK(!decodes<_tt_string>(xdr_tt_objid, text(TT_DB_LIMIT_OBJID + 1)));
+	CHECK(decodes<_tt_string>(xdr_tt_session, text(TT_DB_LIMIT_SESSION)));
+	CHECK(!decodes<_tt_string>(xdr_tt_session, text(TT_DB_LIMIT_SESSION + 1)));
+
+	/* the name of a property, the type of an object, the partition of a file */
+	CHECK(decodes<_tt_property>(xdr_tt_property,
+				    text(TT_DB_LIMIT_PROPERTY_NAME) + none));
+	CHECK(!decodes<_tt_property>(xdr_tt_property,
+				     text(TT_DB_LIMIT_PROPERTY_NAME + 1) + none));
+	CHECK(decodes<_tt_obj_type_results>(xdr_tt_obj_type_results,
+					    text(TT_DB_LIMIT_TYPE) + none));
+	CHECK(!decodes<_tt_obj_type_results>(xdr_tt_obj_type_results,
+					     text(TT_DB_LIMIT_TYPE + 1) + none));
+	CHECK(decodes<_tt_file_partition_results>(xdr_tt_file_partition_results,
+						  text(TT_DB_LIMIT_PATH) + none + none));
+	CHECK(!decodes<_tt_file_partition_results>(xdr_tt_file_partition_results,
+						   text(TT_DB_LIMIT_PATH + 1) + none + none));
+	CHECK(decodes<_tt_file_partition_results>(xdr_tt_file_partition_results,
+						  none + text(TT_DB_LIMIT_FILE) + none));
+	CHECK(!decodes<_tt_file_partition_results>(xdr_tt_file_partition_results,
+						   none + text(TT_DB_LIMIT_FILE + 1) + none));
+	CHECK(decodes<_tt_delete_session_args>(xdr_tt_delete_session_args,
+					       text(TT_DB_LIMIT_SESSION)));
+	CHECK(!decodes<_tt_delete_session_args>(xdr_tt_delete_session_args,
+						text(TT_DB_LIMIT_SESSION + 1)));
+
+	/* byte arrays: the value of a property, the body of a message */
+	CHECK(decodes<_tt_property_value>(xdr_tt_property_value,
+					  text(TT_DB_LIMIT_PROPERTY_VALUE)));
+	CHECK(!decodes<_tt_property_value>(xdr_tt_property_value,
+					   text(TT_DB_LIMIT_PROPERTY_VALUE + 1)));
+	CHECK(decodes<_tt_message>(xdr_tt_message, text(TT_DB_LIMIT_MESSAGE)));
+	CHECK(!decodes<_tt_message>(xdr_tt_message, text(TT_DB_LIMIT_MESSAGE + 1)));
+
+	/* lists: of properties, of the values of a property, of ptypes, of the
+	   objects of a file, of messages */
+	const std::string empty_property = none + none;	/* no name, no values */
+	const std::string tail = none + none;		/* cache level, results */
+
+	CHECK(decodes<_tt_file_props_results>(
+		      xdr_tt_file_props_results,
+		      Raw().u32(TT_DB_LIMIT_PROPERTIES).s +
+		      repeat(TT_DB_LIMIT_PROPERTIES, empty_property) + tail));
+	CHECK(!decodes<_tt_file_props_results>(
+		      xdr_tt_file_props_results,
+		      Raw().u32(TT_DB_LIMIT_PROPERTIES + 1).s +
+		      repeat(TT_DB_LIMIT_PROPERTIES + 1, empty_property) + tail));
+	CHECK(decodes<_tt_property>(
+		      xdr_tt_property,
+		      none + Raw().u32(TT_DB_LIMIT_PROPERTY_VALUES).s +
+		      repeat(TT_DB_LIMIT_PROPERTY_VALUES, none)));
+	CHECK(!decodes<_tt_property>(
+		      xdr_tt_property,
+		      none + Raw().u32(TT_DB_LIMIT_PROPERTY_VALUES + 1).s +
+		      repeat(TT_DB_LIMIT_PROPERTY_VALUES + 1, none)));
+	CHECK(decodes<_tt_dequeue_msgs_args>(
+		      xdr_tt_dequeue_msgs_args,
+		      none + Raw().u32(TT_DB_LIMIT_PTYPES).s +
+		      repeat(TT_DB_LIMIT_PTYPES, none)));
+	CHECK(!decodes<_tt_dequeue_msgs_args>(
+		      xdr_tt_dequeue_msgs_args,
+		      none + Raw().u32(TT_DB_LIMIT_PTYPES + 1).s +
+		      repeat(TT_DB_LIMIT_PTYPES + 1, none)));
+	CHECK(decodes<_tt_queue_msg_args>(
+		      xdr_tt_queue_msg_args,
+		      none + Raw().u32(TT_DB_LIMIT_PTYPES).s +
+		      repeat(TT_DB_LIMIT_PTYPES, none) + none));
+	CHECK(!decodes<_tt_queue_msg_args>(
+		      xdr_tt_queue_msg_args,
+		      none + Raw().u32(TT_DB_LIMIT_PTYPES + 1).s +
+		      repeat(TT_DB_LIMIT_PTYPES + 1, none) + none));
+	CHECK(decodes<_tt_file_objs_results>(
+		      xdr_tt_file_objs_results,
+		      Raw().u32(TT_DB_LIMIT_OBJECTS).s +
+		      repeat(TT_DB_LIMIT_OBJECTS, none) + tail));
+	CHECK(!decodes<_tt_file_objs_results>(
+		      xdr_tt_file_objs_results,
+		      Raw().u32(TT_DB_LIMIT_OBJECTS + 1).s +
+		      repeat(TT_DB_LIMIT_OBJECTS + 1, none) + tail));
+	CHECK(decodes<_tt_dequeue_msgs_results>(
+		      xdr_tt_dequeue_msgs_results,
+		      Raw().u32(TT_DB_LIMIT_MESSAGES).s +
+		      repeat(TT_DB_LIMIT_MESSAGES, none) + none));
+	CHECK(!decodes<_tt_dequeue_msgs_results>(
+		      xdr_tt_dequeue_msgs_results,
+		      Raw().u32(TT_DB_LIMIT_MESSAGES + 1).s +
+		      repeat(TT_DB_LIMIT_MESSAGES + 1, none) + none));
+
+	/* the properties of a spec, and the name of one (a character a word) */
+	const std::string no_pointer = none;	/* a null keydesc */
+	const std::string spec_head = Raw().u32(3).s + no_pointer + Raw().u32(80).s +
+		none;				/* isfd, key, key_len, oidkey */
+	const std::string spec_prop = Raw().u32(0).u32(0).u32(0).s;
+	const std::string spec_tail = Raw().u32(0).u32(0).s;
+	CHECK(decodes<_Tt_spec_props>(
+		      xdr_Tt_spec_props,
+		      spec_head + Raw().u32(TT_DB_LIMIT_SPEC_PROPERTIES).s +
+		      repeat(TT_DB_LIMIT_SPEC_PROPERTIES, spec_prop) + spec_tail));
+	CHECK(!decodes<_Tt_spec_props>(
+		      xdr_Tt_spec_props,
+		      spec_head + Raw().u32(TT_DB_LIMIT_SPEC_PROPERTIES + 1).s +
+		      repeat(TT_DB_LIMIT_SPEC_PROPERTIES + 1, spec_prop) + spec_tail));
+	CHECK(decodes<_Tt_prop>(
+		      xdr_Tt_prop,
+		      Raw().u32(MAX_PROP_LENGTH).s +
+		      repeat(MAX_PROP_LENGTH, Raw().u32('p').s) + Raw().u32(0).u32(0).s));
+	CHECK(!decodes<_Tt_prop>(
+		      xdr_Tt_prop,
+		      Raw().u32(MAX_PROP_LENGTH + 1).s +
+		      repeat(MAX_PROP_LENGTH + 1, Raw().u32('p').s) + Raw().u32(0).u32(0).s));
+}
+
+/* The requests of the new interface as they are sent, one of each. */
+struct Sound {
+	u_long		proc;
+	std::string	request;
+};
+
+static Raw &
+access_of(Raw &r)
+{
+	return r.u32(getuid()).u32(getgid()).u32(0600);
+}
+
+static Raw &
+one_property(Raw &r)
+{
+	return r.string("property").u32(1).bytes("value");
+}
+
+static Raw &
+properties_of(Raw &r)
+{
+	return one_property(r.u32(1));
+}
+
+static std::vector<Sound>
+sound_requests(const std::string &file, const std::string &objid)
+{
+	const char *f = file.c_str(), *o = objid.c_str();
+	std::vector<Sound> v;
+
+#define SOUND(proc, build) \
+	do { Raw r; build; Sound s = { proc, r.s }; v.push_back(s); } while (0)
+	SOUND(_TT_MIN_AUTH_LEVEL, r.string(""));
+	SOUND(_TT_ISERASE, r.string("/no/such/directory/TT_DB/oid_prop"));
+	SOUND(_TT_MFS, r.string(f));
+	SOUND(TT_GET_FILE_PARTITION, r.string(f));
+	SOUND(TT_CREATE_FILE, access_of(properties_of(r.string(f))));
+	SOUND(TT_CREATE_OBJ, access_of(properties_of(r.string(f).string(o).string("otype"))));
+	SOUND(TT_REMOVE_FILE, access_of(r.string(f)));
+	SOUND(TT_REMOVE_OBJ, access_of(r.string(o).string("forward")));
+	SOUND(TT_MOVE_FILE, access_of(r.string(f).string(f)));
+	SOUND(TT_SET_FILE_PROPS, access_of(properties_of(r.string(f))));
+	SOUND(TT_SET_FILE_PROP, access_of(one_property(r.string(f))));
+	SOUND(TT_ADD_FILE_PROP, access_of(one_property(r.string(f)).u32(0)));
+	SOUND(TT_DELETE_FILE_PROP, access_of(one_property(r.string(f))));
+	SOUND(TT_GET_FILE_PROP, access_of(r.string(f).string("property")).u32(0));
+	SOUND(TT_GET_FILE_PROPS, access_of(r.string(f)).u32(0));
+	SOUND(TT_GET_FILE_OBJS, access_of(r.string(f)).u32(0));
+	SOUND(TT_SET_FILE_ACCESS, access_of(access_of(r.string(f))));
+	SOUND(TT_GET_FILE_ACCESS, access_of(r.string(f)));
+	SOUND(TT_SET_OBJ_PROPS, access_of(properties_of(r.string(o))).u32(0));
+	SOUND(TT_SET_OBJ_PROP, access_of(one_property(r.string(o))).u32(0));
+	SOUND(TT_ADD_OBJ_PROP, access_of(one_property(r.string(o)).u32(0)).u32(0));
+	SOUND(TT_DELETE_OBJ_PROP, access_of(one_property(r.string(o))).u32(0));
+	SOUND(TT_GET_OBJ_PROP, access_of(r.string(o).string("property")).u32(0));
+	SOUND(TT_GET_OBJ_PROPS, access_of(r.string(o)).u32(0));
+	SOUND(TT_SET_OBJ_TYPE, access_of(r.string(o).string("otype")));
+	SOUND(TT_GET_OBJ_TYPE, r.string(o));
+	SOUND(TT_SET_OBJ_FILE, access_of(r.string(o).string(f)));
+	SOUND(TT_GET_OBJ_FILE, access_of(r.string(o)));
+	SOUND(TT_SET_OBJ_ACCESS, access_of(access_of(r.string(o))));
+	SOUND(TT_GET_OBJ_ACCESS, access_of(r.string(o)));
+	SOUND(TT_IS_FILE_IN_DB, access_of(r.string(f)));
+	SOUND(TT_IS_OBJ_IN_DB, access_of(r.string(o)));
+	SOUND(TT_QUEUE_MESSAGE, r.string(f).u32(2).string("ptype").string("other").bytes("a message"));
+	SOUND(TT_DEQUEUE_MESSAGES, r.string(f).u32(2).string("ptype").string("other"));
+	SOUND(TTDB_FILE_NETFILE, r.string(f));
+	SOUND(TTDB_NETFILE_FILE, r.string(f));
+	SOUND(TT_DELETE_SESSION, r.string("session"));
+#undef SOUND
+	return v;
+}
+
+/*
+ * A request of which a length is changed to one that no sender may use is
+ * refused when it is decoded.  Whatever the number at the place of a length,
+ * count or integer of the requests, the server does not allocate for it more
+ * than the limits allow (check-requests.py has the allocator refuse what is
+ * above 64 MiB, the largest message being 16 MiB).
+ */
+static void
+case_xdr_hostile_lengths(void)
+{
+	std::string file = start_partition("xdr-hostile-lengths");
+	std::string objid = make_objid(g_mount);
+
+	if (getuid() == 0) {
+		/* a request on a partition that is not redirected would make
+		   its TT_DB where the superuser can */
+		fprintf(stderr, "not run as the superuser\n");
+		return;
+	}
+	put(g_dir + "/file", "the file");
+	std::vector<Sound> sound = sound_requests(file, objid);
+	static const unsigned hostile[] = { 0xffffffffu, 0x7fffffffu, 0x80000000u,
+					    0x20000000u, 0x04000001u };
+	size_t requests = 0;
+
+	for (size_t i = 0; i < sound.size(); i++) {
+		/* a request made as the client makes it is served */
+		Reply r = rpc(sound[i].proc, sound[i].request);
+		CHECK(r.replied);
+
+		for (size_t at = 0; at + 4 <= sound[i].request.size(); at += 4) {
+			unsigned word;
+
+			memcpy(&word, sound[i].request.data() + at, 4);
+			if (ntohl(word) > 4096) {
+				continue;	/* characters, not a length */
+			}
+			for (size_t h = 0; h < sizeof(hostile) / sizeof(hostile[0]); h++) {
+				std::string req = sound[i].request;
+				unsigned v = htonl(hostile[h]);
+
+				memcpy(&req[at], &v, 4);
+				r = rpc(sound[i].proc, req);
+				CHECK(r.replied);
+				requests++;
+			}
+		}
+	}
+	CHECK(requests > 400);
 }
 
 /* ---- random requests --------------------------------------------------------- */
@@ -1577,6 +1999,9 @@ static const struct {
 	{ "empty-paths", case_empty_paths },
 	{ "cache-level-value", case_cache_level_value },
 	{ "dequeue-sizes", case_dequeue_sizes },
+	{ "xdr-null-strings", case_xdr_null_strings },
+	{ "xdr-limits", case_xdr_limits },
+	{ "xdr-hostile-lengths", case_xdr_hostile_lengths },
 	{ "fuzz-dispatch", case_fuzz_dispatch },
 };
 

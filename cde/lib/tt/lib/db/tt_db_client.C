@@ -1383,7 +1383,7 @@ _Tt_string _Tt_db_client::mfs(const _Tt_string &path)
 	
 	if (char_partition) {
 		retval = *char_partition;
-		xdr_free((xdrproc_t)xdr_wrapstring, (char *)char_partition);
+		xdr_free((xdrproc_t)xdr_tt_file_name, (char *)char_partition);
 		return retval;
 	} else {
 		// Theoretically "should not happen".  If it does just use

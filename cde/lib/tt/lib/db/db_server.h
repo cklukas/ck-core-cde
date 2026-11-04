@@ -38,10 +38,54 @@
 #define  _DB_SERVER_H
 
 #include <rpc/rpc.h>
+#include <sys/param.h>
 
 #include "util/tt_string.h"
 #include "db/tt_db_results.h"
 #include "tt_const.h"
+
+/*
+ * The limits of the protocol.
+ *
+ * The sizes in a request are the sender's.  The XDR routines allocate what a
+ * length tells them to before they read what it is the length of, so a few
+ * bytes of request can demand the whole of a 32-bit length.  Every string,
+ * byte array and list of the protocol is therefore bounded, and the XDR
+ * routines refuse a longer one, in a request and in a reply.  Each limit is
+ * larger than anything a client of libtt sends or a server of it replies with.
+ *
+ * Names are bounded by what the database stores of them: a file is named
+ * "host:path", a path is at most MAXPATHLEN, the name of a property is the
+ * MAX_PROP_LENGTH bytes of its field in a record, and a session id is the value
+ * of a record (TT_DB_LIMIT_RECORD is ISMAXRECLEN of mini_isam/isam.h,
+ * which db_server_xdr.C checks).  The object id of an object is its key
+ * (below 100 characters in base 64), the file system type, the host and the
+ * partition.  Type names are those of ptypes and otypes, which are identifiers.
+ *
+ * Lists are bounded by what the tables could hold in a reply: libtt writes a
+ * message in parts of ISMAXRECLEN bytes (the message of a client of libtt
+ * is never above a few kilobytes: 16 MiB is 512 records), keeps one value per
+ * queued message and one per session in a property, and one record per object.
+ * The sizes of the lists in a request are in the same proportion as those of
+ * the lists in a reply, as one routine decodes both.
+ */
+const u_int TT_DB_LIMIT_RECORD			= 32767;
+const u_int TT_DB_LIMIT_PATH			= MAXPATHLEN;
+const u_int TT_DB_LIMIT_FILE			= HOST_LENGTH + 1 + MAXPATHLEN;
+const u_int TT_DB_LIMIT_OBJID			= 128 + HOST_LENGTH + MAXPATHLEN;
+const u_int TT_DB_LIMIT_TYPE			= 1024;
+const u_int TT_DB_LIMIT_PROPERTY_NAME		= MAX_PROP_LENGTH;
+const u_int TT_DB_LIMIT_SESSION			= TT_DB_LIMIT_RECORD -
+						  OID_KEY_LENGTH - MAX_PROP_LENGTH;
+const u_int TT_DB_LIMIT_PROPERTY_VALUE		= 1024 * 1024;
+const u_int TT_DB_LIMIT_MESSAGE			= 16 * 1024 * 1024;
+
+const u_int TT_DB_LIMIT_PROPERTIES		= 1 << 16;
+const u_int TT_DB_LIMIT_PROPERTY_VALUES		= 1 << 16;
+const u_int TT_DB_LIMIT_PTYPES			= 1 << 10;
+const u_int TT_DB_LIMIT_OBJECTS			= 1 << 20;
+const u_int TT_DB_LIMIT_MESSAGES		= 1 << 16;
+const u_int TT_DB_LIMIT_SPEC_PROPERTIES		= 16;
 
 /* declarations for keydesc */
 struct keydesc;
@@ -326,11 +370,19 @@ bool_t xdr_Tt_session_args(XDR*, _Tt_session_args*);
 typedef enum _Tt_db_results _tt_db_results;
 bool_t xdr_tt_db_results(XDR *, _tt_db_results *);
 
+/* strings of a request and of a reply, each bounded as its kind is above; a
+   string that is not there (a null pointer) is sent as the empty string */
+bool_t xdr_Tt_path(XDR *, char **);
+bool_t xdr_tt_file_name(XDR *, char **);
+bool_t xdr_tt_objid_name(XDR *, char **);
+
 struct _tt_string {
 	char *value;
 };
 typedef struct _tt_string _tt_string;
-bool_t xdr_tt_string(XDR *, _tt_string *);
+bool_t xdr_tt_ptype(XDR *, _tt_string *);
+bool_t xdr_tt_objid(XDR *, _tt_string *);
+bool_t xdr_tt_session(XDR *, _tt_string *);
 
 struct _tt_string_list {
        u_int values_len;

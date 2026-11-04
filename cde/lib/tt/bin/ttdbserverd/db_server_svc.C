@@ -852,7 +852,7 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 	switch (rqstp->rq_proc) {
 	    case _TT_MIN_AUTH_LEVEL:
 		TTDB_DEBUG_SYSLOG("_TT_MIN_AUTH_LEVEL");
-		xdr_argument = (bool_t (*)()) xdr_wrapstring;
+		xdr_argument = (bool_t (*)()) xdr_Tt_path;
 		xdr_result = (bool_t (*)()) xdr_int;
 		local = (char *(*)()) _tt_min_auth_level_1;
 		break;
@@ -894,7 +894,7 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 		
 	    case _TT_ISERASE:
 		TTDB_DEBUG_SYSLOG("_TT_ISERASE");
-		xdr_argument = (bool_t (*)()) xdr_wrapstring;
+		xdr_argument = (bool_t (*)()) xdr_Tt_path;
 		xdr_result = (bool_t (*)()) xdr_Tt_isam_results;
 		local = (char *(*)()) _tt_iserase_1;
 		break;
@@ -950,8 +950,8 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 		
 	    case _TT_MFS:
 		TTDB_DEBUG_SYSLOG("_TT_MFS");
-		xdr_argument = (bool_t (*)()) xdr_wrapstring;
-		xdr_result = (bool_t (*)()) xdr_wrapstring;
+		xdr_argument = (bool_t (*)()) xdr_tt_file_name;
+		xdr_result = (bool_t (*)()) xdr_tt_file_name;
 		local = (char *(*)()) _tt_mfs_1;
 		break;
 		
@@ -1027,7 +1027,7 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 		
 	    case TT_GET_FILE_PARTITION:
 		TTDB_DEBUG_SYSLOG("TT_GET_FILE_PARTITION");
-		xdr_argument = (bool_t (*)()) xdr_wrapstring;
+		xdr_argument = (bool_t (*)()) xdr_tt_file_name;
 		xdr_result = (bool_t (*)()) xdr_tt_file_partition_results;
 		local = (char *(*)()) _tt_get_file_partition_1;
 		break;
@@ -1180,7 +1180,7 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 		
 	    case TT_GET_OBJ_TYPE:
 		TTDB_DEBUG_SYSLOG("TT_GET_OBJ_TYPE");
-		xdr_argument = (bool_t (*)()) xdr_wrapstring;
+		xdr_argument = (bool_t (*)()) xdr_tt_objid_name;
 		xdr_result = (bool_t (*)()) xdr_tt_obj_type_results;
 		local = (char *(*)()) _tt_get_obj_type_1;
 		break;

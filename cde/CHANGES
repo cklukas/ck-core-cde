@@ -300,6 +300,18 @@
   objects of a file, overflowed a signed int. A level at the highest `int` is
   now refused as a malformed level, and a client that sends it is told that
   nothing is newer.
+- tt: bound the size of every string, byte array and list of the rpc.ttdbserverd
+  protocol. A request of 16 bytes could demand a string or list of up to 4 GiB;
+  the XDR routines of the server and libtt now refuse lengths above named limits
+  (`TT_DB_LIMIT_*` in `lib/db/db_server.h`: paths and file names by
+  `MAXPATHLEN`, property names 64, property values 1 MiB, message bodies
+  16 MiB, lists of 1024 to 1048576 entries), including the paths of the old
+  `iserase`, `_TT_MFS` and `TT_GET_FILE_PARTITION` requests. A property name
+  above 64 characters, which the server cut off without saying so, is refused.
+  A string a reply has none of (the name of a missing property, the forward
+  pointer of an object that has none) is sent as the empty string instead of
+  failing to encode. The tests have the allocator refuse requests for more than
+  64 MiB and decode every limit and the size above it.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

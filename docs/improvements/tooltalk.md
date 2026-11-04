@@ -164,6 +164,49 @@ A table cannot be moved between a 32-bit and a 64-bit `rpc.ttdbserverd`. On
 was fixed, so the server could not complete the tables of a partition and there
 is no working database of the old layout to convert.
 
+### Limits of the protocol
+
+The routines that decode a request allocate the storage for a string, a byte
+array or a list as long as the length in the request says, before they read what
+the length counts. A request of 16 bytes could therefore demand 4 GiB. Every
+string, byte array and list of the protocol now has a limit, named in
+`lib/db/db_server.h`, and the XDR routines refuse a longer one. They are shared
+by the server and libtt, so the limits hold for a reply as well as for a request.
+
+| What | Limit | Where it comes from |
+| --- | --- | --- |
+| Path, partition | `MAXPATHLEN` (4096 on Linux) | the longest path of the host |
+| File name `host:path` | `HOST_LENGTH` + 1 + `MAXPATHLEN` (5121) | the form in which libtt names a file |
+| Object id | 128 + `HOST_LENGTH` + `MAXPATHLEN` (5248) | key, file system type, host, partition and three colons |
+| Type name (ptype, otype) | 1024 | identifiers |
+| Property name | `MAX_PROP_LENGTH` (64) | the field of a record that holds a name; the server stores no more of one |
+| Session id | 32687 | what a record of at most `ISMAXRECLEN` (32767) bytes holds after its key and name |
+| Value of a property | 1 MiB | a record holds at most `ISMAXRECLEN` bytes |
+| Body of a message | 16 MiB | libtt marshals the whole message into the body, and the server stores it in properties of `ISMAXRECLEN` bytes each: 513 of them |
+| Properties of a file or object | 65536 | one record each |
+| Values of a property | 65536 | one per queued message or joined session |
+| Ptypes of a message | 1024 | |
+| Objects of a file | 1048576 | one record each |
+| Messages in one reply | 65536 | |
+| Properties of a spec, old interface | 16 | the server answers with one |
+
+The limits are chosen far above what libtt sends or the server answers with. A
+request that exceeds one fails to decode, like any other malformed request, and
+the client gets a decode error. A name of a property longer than 64 characters,
+which the server used to cut off without saying so, is refused now. The strings
+and records of the old interface that were bounded before (table paths of
+`PATH_LENGTH` characters, records of `ISMAXRECLEN` bytes, object keys) keep
+their bounds. The test has the allocator refuse any request for more than
+64 MiB, replaces every length, count and small integer of a request of each
+procedure with huge values, and decodes each limit and the size above it.
+
+A string that a reply has none of used to fail to encode: a missing property has
+no name, an object that does not exist has no type and one without a forward
+pointer has none, so the server answered with a system error instead of the
+result, and a client could not send a request to remove an object that has no
+forward pointer. A string that is not there is now sent as the empty string,
+which the receiver takes for no string.
+
 ## Checks
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
@@ -179,6 +222,12 @@ those requests, under the sanitizers. Every case runs on every build, including
 the two that need the database of a partition: a build in which NetISAM and the
 server disagree on the width of a long cannot make that database, and those
 cases fail.
+
+The request cases also decode every limit of the protocol and the size above it,
+send a request of each procedure of the new interface with each of its lengths,
+counts and small integers replaced by huge values while the allocator refuses
+any request for more than 64 MiB, and send every reply that has a string
+the server does not have.
 
 `make -C lib/tt/mini_isam check` builds the same test of the width of a long as
 C and as C++ and runs both against `libisam`, so the C library and its C++

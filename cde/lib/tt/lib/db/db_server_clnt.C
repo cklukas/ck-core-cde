@@ -61,7 +61,7 @@ _tt_min_auth_level_1(char **argp, CLIENT *clnt, clnt_stat *result)
 
 	memset((char *)&res, 0, sizeof(res));
 	*result = clnt_call(clnt, _TT_MIN_AUTH_LEVEL,
-			    (xdrproc_t)xdr_wrapstring, (caddr_t) argp,
+			    (xdrproc_t)xdr_Tt_path, (caddr_t) argp,
 			    (xdrproc_t)xdr_int, (caddr_t) &res,
 			    TIMEOUT);
 	switch (*result) {
@@ -186,7 +186,7 @@ _tt_iserase_1(char **argp, CLIENT *clnt)
 {
 	memset((char *)&res, 0, sizeof(res));
 	clnt_stat result = clnt_call(clnt, _TT_ISERASE,
-				     (xdrproc_t)xdr_wrapstring, (caddr_t) argp,
+				     (xdrproc_t)xdr_Tt_path, (caddr_t) argp,
 				     (xdrproc_t)xdr_Tt_isam_results, (caddr_t) &res,
 				     TIMEOUT);
 	switch (result) {
@@ -351,7 +351,7 @@ _tt_transaction_1(_Tt_transaction_args *argp, CLIENT *clnt)
  * _tt_mfs_1()
  *	If the (char *) pointed at by the return value is non-null,
  *	the caller has to free it via
- *	xdr_free((xdrproc_t)xdr_wrapstring, *<return_val>).
+ *	xdr_free((xdrproc_t)xdr_tt_file_name, *<return_val>).
  */
 char **
 _tt_mfs_1(char **argp, 	CLIENT *clnt)
@@ -359,8 +359,8 @@ _tt_mfs_1(char **argp, 	CLIENT *clnt)
 	static char *res;
 	res = 0;
 	clnt_stat result = clnt_call(clnt, _TT_MFS,
-				     (xdrproc_t)xdr_wrapstring, (caddr_t) argp,
-				     (xdrproc_t)xdr_wrapstring, (caddr_t) &res,
+				     (xdrproc_t)xdr_tt_file_name, (caddr_t) argp,
+				     (xdrproc_t)xdr_tt_file_name, (caddr_t) &res,
 				     TIMEOUT);
 	switch (result) {
 	      case RPC_SUCCESS:
@@ -563,7 +563,7 @@ _tt_get_file_partition_1(char **argp, CLIENT *clnt)
 
 	memset((void *)&res, '\0', sizeof(res));
 	clnt_stat result = clnt_call(clnt, TT_GET_FILE_PARTITION,
-				     (xdrproc_t) xdr_wrapstring,
+				     (xdrproc_t) xdr_tt_file_name,
 				     (caddr_t) argp,
 				     (xdrproc_t) xdr_tt_file_partition_results,
 				     (caddr_t) &res, TIMEOUT);
@@ -937,7 +937,7 @@ _tt_get_obj_type_1(_tt_get_obj_type_args *argp, CLIENT *clnt)
 
 	memset((void *)&res, '\0', sizeof(res));
 	clnt_stat result = clnt_call(clnt, TT_GET_OBJ_TYPE,
-				     (xdrproc_t) xdr_wrapstring,
+				     (xdrproc_t) xdr_tt_objid_name,
 				     (caddr_t) argp,
 				     (xdrproc_t) xdr_tt_obj_type_results,
 				     (caddr_t) &res, TIMEOUT);
