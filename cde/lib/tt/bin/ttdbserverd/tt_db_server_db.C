@@ -1943,8 +1943,10 @@ _Tt_db_results _Tt_db_server_db::getFile (const _Tt_string &key,
           dbResults = TT_DB_ERR_CORRUPT_DB;
         }
         else {   
-          // Extract the file path from the record
-          file = record_ptr->getBytes(TT_DB_FILE_PATH_OFFSET, 0);
+          // Extract the file path from the record, as the string it is: the
+          // record holds it with the NUL that ends it, which the file names
+          // that are looked for in the table do not have.
+          file = (char *)record_ptr->getBytes(TT_DB_FILE_PATH_OFFSET, 0);
           dbResults = TT_DB_OK;
         }
       } 

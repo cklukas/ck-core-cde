@@ -381,6 +381,16 @@ and `ttrmdir` asks for the objects of an empty directory only, as `rmdir(1)`
 removes nothing else. `tt_file_destroy` of a file that the database knows
 nothing of is `TT_OK`: it has no objects to destroy.
 
+The file an object is in (`getFile` of the server database) was returned with
+the NUL that ends the path in the record, which a file name that is looked up
+does not have, so the fallback of the removal of an object to the owner of its
+file never found the file, and `tt_spec_destroy` by a user who owned neither the
+object nor the file was answered as no such file (`TT_ERR_INTERNAL` for the
+caller) instead of as denied. The path is returned as the string it is: a user
+who owns neither is told `TT_ERR_ACCESS`, and the owner of the file may remove
+the objects in it, as the rule says. Moving an object to the file it is in is
+told apart now (`TT_DB_ERR_SAME_OBJECT`) instead of rewriting its record.
+
 ### Mount points and paths
 
 A path that no mount point leads to (the mount table is empty or cannot be read,

@@ -2047,6 +2047,15 @@ set_file_access(const std::string &file, uid_t user, gid_t group, unsigned mode)
 }
 
 static int
+remove_obj(const std::string &objid)
+{
+	_tt_remove_obj_args ro = { (char *)objid.c_str(), NULL, acting() };
+
+	return status_of(rpc(TT_REMOVE_OBJ,
+			     encode((xdrproc_t)xdr_tt_remove_obj_args, &ro)));
+}
+
+static int
 set_obj_access(const std::string &objid, uid_t user, gid_t group, unsigned mode)
 {
 	_tt_access	now = { user, group, mode };
@@ -2062,9 +2071,10 @@ set_obj_access(const std::string &objid, uid_t user, gid_t group, unsigned mode)
    and is refused as TT_DB_ERR_PROPS_CACHE_ERROR when that cannot be read. */
 static void
 expect_access(const char *what, const char *who, unsigned mode, int got,
-	      bool allowed, int also_denied = TT_DB_ERR_ACCESS_DENIED)
+	      bool allowed, int also_denied = TT_DB_ERR_ACCESS_DENIED,
+	      int also_allowed = TT_DB_OK)
 {
-	bool ok = allowed ? got == TT_DB_OK :
+	bool ok = allowed ? (got == TT_DB_OK || got == also_allowed) :
 		  (got == TT_DB_ERR_ACCESS_DENIED || got == also_denied);
 
 	if (!ok) {
@@ -2144,9 +2154,25 @@ case_access_bits(void)
 				      set_obj_type(objects[bits], "otype"), w);
 			expect_access("read of the file", users[u].name, mode,
 				      get_obj_file(objects[bits]), r);
-			expect_access("move to another file", users[u].name, mode,
-				      set_obj_file(objects[bits], netfile), w);
+			/* (the object is in this file: a move that is let
+			   through says so) */
+			expect_access("move to the file it is in", users[u].name, mode,
+				      set_obj_file(objects[bits], netfile), w,
+				      TT_DB_ERR_ACCESS_DENIED, TT_DB_ERR_SAME_OBJECT);
 		}
+	}
+
+	/* only the owner removes an object, whatever the bits say */
+	{
+		Caller as(owner + 1, group);
+		expect_access("removal of an object", "a member of the group", 0666,
+			      remove_obj(objects[15]), false);
+	}
+
+	{
+		Caller as(owner, group);
+		expect_access("removal of an object", "the owner", 0666,
+			      remove_obj(objects[15]), true);
 	}
 
 	/* only the owner changes the access: a write bit is not that */

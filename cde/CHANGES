@@ -460,6 +460,11 @@
   left in the database; it now answers yes below the path named (never for a
   link), and `ttrmdir` asks for the objects of an empty directory only.
   `tt_file_destroy` of a file the database knows nothing of is `TT_OK`.
+- tt: report a denied removal of an object as denied. The server returned the
+  path of the file an object is in with the NUL that ends it in the record, so
+  it never found the file again by that name: the owner of a file could not
+  remove the objects of others in it, and `tt_spec_destroy` by a user who owned
+  neither was answered with `TT_ERR_INTERNAL` instead of `TT_ERR_ACCESS`.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,
