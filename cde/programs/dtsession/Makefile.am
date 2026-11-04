@@ -6,7 +6,8 @@ EXTRA_DIST = tests/check-session-properties.py tests/check-database-write.py \
              tests/check-database-arrays.py tests/check-privileges.py \
              tests/check-lock-authentication.py tests/check-signals.py \
              tests/check-session-save.py \
-             tests/check-session-files.py
+             tests/check-session-files.py tests/check-session-parsers.py \
+             tests/check-palette-parser.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-properties.py
@@ -17,6 +18,8 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-signals.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-save.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-files.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-session-parsers.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-palette-parser.py
 
 bin_SCRIPTS = dtsession_res
 
@@ -39,7 +42,7 @@ dtsession_SOURCES = SmMain.c SmHelp.c SmGlobals.c SmCommun.c		\
 	SrvFile_io.h SmCommun.h SmHelp.h SmProtocol.h SmWatch.h Srv.h	\
 	SmConMgmt.h SmHftRing.h SmResource.h SmWindow.h SrvPalette.h	\
 	SmDB.h SmLock.h SmRestore.h SmXdef.h SmError.h			\
-	SmMigResources.h SmSave.h SmXrm.h SmPriv.c SmPriv.h SmFiles.c SmFiles.h
+	SmSave.h SmXrm.h SmPriv.c SmPriv.h SmFiles.c SmFiles.h
 
 
 dtsession_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(DTPAMSVCLIB)

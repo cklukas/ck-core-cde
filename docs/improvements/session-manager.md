@@ -122,6 +122,39 @@ before the first open of a locale file, which it did not before.
   instead of overflowing the buffers or, when the directories cannot be created
   at all, dereferencing a null path.
 
+## Saved sessions and palettes
+
+A saved session is read from files in the user's home directory, and the
+palette the color server loads from the files and resources named in
+`Dtstyle.paletteDirectories`. A damaged or hand-edited file used to crash
+`dtsession` while it started, or corrupt its memory.
+
+- The quoting parser for the commands of a CDE 1.0 client file indexed one
+  element past its table of nesting levels when quotes were nested ten deep.
+- The per-screen buffers for hints, commands and remote commands were allocated
+  with room for 5,000 bytes and grown by 5,000 bytes, whatever the length of the
+  line that had to fit, and the check for growing them was off by one byte; a
+  longer command or hint overran the heap. They are now grown to fit.
+- An option without a value (`-screen` at the end of a line, `-cmd` with an
+  empty command) dereferenced a null pointer, and the host or command of one
+  line carried over to the next, which then started a local command as a
+  remote one. The lines of the client file are sorted into the buffers by
+  `ParseClientFile`, which starts every line from nothing.
+- The font path list of the saved settings wrote one pointer past its array
+  at 50 entries and went on through the freed array when it grew. The key
+  mapping divided by a number of keysyms per code of zero, and the modifier
+  map wrote `8 * maxKeyPerMod` bytes into a 5,000 byte buffer for any value
+  the file named; it is accepted up to the 255 the protocol allows.
+- Directories of `Dtstyle.paletteDirectories` are separated by blanks, but the
+  list was walked without skipping them: the second directory of a list sent the
+  color server into an endless loop. An entry longer than 255 bytes overran the
+  stack, and the copy of a directory that held the palette was allocated with
+  the length of the system directory. A palette with more colors than the table
+  (eight), a first line longer than the read buffer or without a newline, or too
+  few colors for a low color display read or wrote outside its buffers.
+- The unused `MigrateResources` converter, which was not part of the build, is
+  removed.
+
 ## Tests
 
 `programs/dtsession/tests` holds regression tests that cut the production code
@@ -142,3 +175,7 @@ that nothing of the shutdown runs inside it. `check-session-files.py` runs the
 error-log rotation, the directory moves, copies and removals and the session
 path set-up on real files, with names that contain spaces and shell syntax, a
 file system without hard links, an unwritable and an over-long home directory.
+`check-session-parsers.py` feeds crafted client files and settings to the
+production parsers and `RestoreSettings`, in a UTF-8 and the C locale.
+`check-palette-parser.py` does the same for the palette directory list and
+palette files.

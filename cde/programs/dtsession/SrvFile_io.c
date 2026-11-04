@@ -158,7 +158,7 @@ char    *palette)
                             &str_type_return, &value_return))
     {
         /* Make Local Copy of string */
-        path = (char *) SRV_MALLOC( value_return.size + 1 );
+        path = (char *) SRV_MALLOC( strlen(value_return.addr) + 1 );
         strcpy (path, value_return.addr);
     }
     else 
@@ -177,14 +177,29 @@ char    *palette)
         p = path;
         while (*p != '\0')
         {
+            size_t length = 0;
+
+            /* the directories are separated by blanks */
+            while (*p == ' ')
+                p++;
+            if (*p == '\0')
+                break;
+
             d = dir;
             while (*p != ' ' && *p != '\0')
-                *d++ = *p++;
+            {
+                if (length < sizeof(dir) - 1)
+                    *d++ = *p;
+                length++;
+                p++;
+            }
             *d = '\0';
-            if (FindPalette (palette, dir))
+
+            /* a name that does not fit is not a directory we look in */
+            if (length < sizeof(dir) && FindPalette (palette, dir))
             {
                 palettePath = (char *)SRV_REALLOC(palettePath, 
-                                                strlen(SYSTEM_PALETTE_DIR) + 1);
+                                                strlen(dir) + 1);
                 strcpy(palettePath, dir);
                 match = True;
                 break;
@@ -324,7 +339,7 @@ ReadPaletteFile(
    **  screen < MAX_NUM_SCREENS (5) then we should never need more. 
    */
    nbytes = read(fd, buf, BUFSIZE);
-   if(nbytes == 0 || nbytes == BUFSIZE)  /* A bogus number of bytes */
+   if(nbytes <= 0 || nbytes == BUFSIZE)  /* A bogus number of bytes */
    { /* read failed */
        /*
 	* Don't forget to add 1 for the NULL byte and 2 for the 
@@ -344,7 +359,7 @@ ReadPaletteFile(
       new_palette = (palettes *)SRV_MALLOC( sizeof(struct _palette) + 1 );
 
       /*  allocate enough space for the name */
-      strcpy(tmpPalette, palette); 
+      snprintf(tmpPalette, sizeof(tmpPalette), "%s", palette);
       for (token1=tmpPalette; *token1; token1++);
       while (token1!=tmpPalette && *token1!='.') token1--;
       if (!strcmp(token1,PALETTE_SUFFIX)) *token1 = '\0';
@@ -418,14 +433,19 @@ ParsePaletteInfo(
 
    buf_count = 0;
   /* read in background colors until end of file */
-   while(buf_count < nbytes && buf[buf_count] != '!')
+   while(buf_count < nbytes && buf[buf_count] != '!' &&
+         num_of_colors < XmCO_MAX_NUM_COLORS)
    {
       count = 0;
 
-     /* read in a BG color */
-      while(buf[buf_count] != '\012')
-         tmpbuf[count++] = buf[buf_count++];
-      tmpbuf[count++] = '\0';
+     /* read in a BG color: one line, which need not end in a newline */
+      while(buf_count < nbytes && buf[buf_count] != '\012')
+      {
+         if(count < (int) sizeof(tmpbuf) - 1)
+            tmpbuf[count++] = buf[buf_count];
+         buf_count++;
+      }
+      tmpbuf[count] = '\0';
       buf_count++;
 
       /* get the RGB value (XColor) of the background */
@@ -499,6 +519,9 @@ ParsePaletteInfo(
    } /* while */
    if(colorSrv.TypeOfMonitor[screen_num] == XmCO_LOW_COLOR) 
    {
+      /* the colors of a low color monitor are taken from the fourth */
+      if(new_palette->num_of_colors < 4)
+         return(-1);
       new_palette->num_of_colors = 2;
       SwitchAItoPS(new_palette);
    }

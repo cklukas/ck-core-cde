@@ -50,6 +50,19 @@
   was moved aside; removing a directory carries on past an entry it cannot
   remove, and a failed session copy is removed. Covered by
   `programs/dtsession/tests/check-session-files.py` and `check-session-save.py`.
+- dtsession: read saved sessions and palettes within the bounds of their
+  buffers. The quoting parser of the CDE 1.0 client file overran its nesting
+  table; the hint, command and remote command buffers overflowed on lines longer
+  than 5,000 bytes (and by a byte before that); options without a value
+  dereferenced a null pointer and the host of one line leaked into the next;
+  the saved font path overran its array at 50 entries, the key mapping divided
+  by zero and the modifier map was written without regard to its size.
+  `Dtstyle.paletteDirectories` with more than one directory hung the color
+  server, long entries overran the stack and a long directory name the heap, and
+  palette files with more colors than the table, long lines or too few colors
+  read and wrote outside their buffers. The unused `MigrateResources` converter
+  is removed. Covered by `programs/dtsession/tests/check-session-parsers.py` and
+  `check-palette-parser.py`.
 - build: add the opt-in `--enable-hardening` and `--enable-sanitizers[=LIST]`
   configure switches. Hardening reports truncation, string-constant,
   ignored-result, null-dereference and format defects and adds stack protection

@@ -56,6 +56,7 @@
  *************************************<+>*************************************/
 
 #include <stdio.h>
+#include <limits.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
@@ -305,6 +306,11 @@ static char *fontclass[] = {
 
 static int RestoreSettings( void ) ;
 static int RestoreClients( void ) ;
+static int ParseClientFile( unsigned char *, unsigned char **, unsigned char **,
+			    unsigned int *, unsigned int *, unsigned int *,
+			    unsigned int *, unsigned int *, unsigned int *,
+			    unsigned int *, int ) ;
+static void FreeClientBuffers( unsigned char **, unsigned char ** ) ;
 static unsigned char * GetNextLine( void ) ;
 static unsigned int PeekAhead( unsigned char *, unsigned int ) ;
 static unsigned char * GetSmartString( unsigned char **) ;
@@ -1033,9 +1039,9 @@ RestoreSettings( void )
     XrmDatabase 	smBase = NULL;
     XKeyboardControl	kbdControl;
     int			kbdControlMask;
-    char		**restorePtrArray, **tmpRestore;
+    char		**restorePtrArray;
     char		*restoreCharArray;
-    int			numArgs, ptrSize, charSize;
+    int			numArgs, ptrSize, charSize, modEntries;
     int			i;
     char		*tmpKey;
     KeySym		*tmpSyms, codeSym;
@@ -1230,27 +1236,28 @@ RestoreSettings( void )
     /*
      * Get the font path.  Then set it.
      */
-    tmpRestore = restorePtrArray;
     numArgs = 0;
-    *tmpRestore = strtok(smGD.fontDirs, ",");
-
-    while(*tmpRestore != NULL)
+    for(tmpKey = strtok(smGD.fontDirs, ",");
+	tmpKey != NULL;
+	tmpKey = strtok(NULL, ","))
     {
-	numArgs++; tmpRestore++;
-	*tmpRestore = strtok(NULL, ",");
-	if((numArgs >= ptrSize) && (*tmpRestore != NULL))
+	if(numArgs == ptrSize)
 	{
+	    char **grown;
+
 	    ptrSize += 50;
-	    restorePtrArray = (char **)SM_REALLOC((char *)
-						  restorePtrArray, ptrSize *
-						  sizeof(char *));
-	    if(restorePtrArray == NULL)
+	    grown = (char **)SM_REALLOC((char *) restorePtrArray,
+					ptrSize * sizeof(char *));
+	    if(grown == NULL)
 	    {
 		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
+		SM_FREE((char *) restorePtrArray);
 		SM_FREE(restoreCharArray);
 		return(-1);
 	    }
+	    restorePtrArray = grown;
 	}
+	restorePtrArray[numArgs++] = tmpKey;
     }
 
     if(numArgs > 0)
@@ -1414,10 +1421,11 @@ RestoreSettings( void )
     /*
      * Restore the key mappings
      */
-    if(smSettings.numKeyCode > 0)
+    if(smSettings.numKeyCode > 0 && smSettings.keySymPerCode > 0)
     {
 	tmpSyms = (KeySym *) restoreCharArray;
 	symSize = (charSize * sizeof(char)) / sizeof(KeySym);
+	numArgs = 0;
 	tmpKey = strtok(smGD.keySyms, ",");
 	for(i = 0;tmpKey != NULL;i++)
 	{
@@ -1440,20 +1448,29 @@ RestoreSettings( void )
 	    }
 	}
 	numArgs /= smSettings.keySymPerCode;
-	XChangeKeyboardMapping(smGD.display, (KeyCode)
-			       smGD.display->min_keycode,
-			       smSettings.keySymPerCode, tmpSyms,
-			       numArgs);
+	if(numArgs > 0)
+	{
+	    XChangeKeyboardMapping(smGD.display, (KeyCode)
+				   smGD.display->min_keycode,
+				   smSettings.keySymPerCode, tmpSyms,
+				   numArgs);
+	}
     }
     
     /*
      * Restore the modifier mappings
      */
-    tmpCode = (KeyCode *) restoreCharArray; 
     tmpKey = strtok(smGD.modSyms, ",");
-    if(tmpKey != NULL)
+    if(tmpKey != NULL && smSettings.maxKeyPerMod > 0 &&
+       smSettings.maxKeyPerMod <= 255)
     {
-	for(i = 0;i < (8 * smSettings.maxKeyPerMod);i++)
+	/*
+	 * The map holds eight modifiers with maxKeyPerMod keycodes each (at
+	 * most 255 in the protocol), which always fits the scratch buffer.
+	 */
+	modEntries = 8 * smSettings.maxKeyPerMod;
+	tmpCode = (KeyCode *) restoreCharArray; 
+	for(i = 0;i < modEntries;i++)
 	{
 	    if(tmpKey != NULL)
 	    {
@@ -1737,6 +1754,164 @@ RestoreIndependentResources( void )
 
 /*************************************<->*************************************
  *
+ *  FreeClientBuffers (hintsBuf, cmdBuf)
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Free the per-screen buffers RestoreClients fills (the hints, the local
+ *  commands and the remote commands).
+ *
+ *************************************<->***********************************/
+static void
+FreeClientBuffers(
+	unsigned char **hintsBuf,
+	unsigned char **cmdBuf )
+{
+    int i;
+
+    for(i = 0;i < smGD.numSavedScreens;i++)
+    {
+	if(hintsBuf[i] != NULL)
+	{
+	    SM_FREE((char *) hintsBuf[i]);
+	    hintsBuf[i] = NULL;
+	}
+	if(cmdBuf[i] != NULL)
+	{
+	    SM_FREE((char *) cmdBuf[i]);
+	    cmdBuf[i] = NULL;
+	}
+	if(remoteBuf[i] != NULL)
+	{
+	    SM_FREE((char *) remoteBuf[i]);
+	    remoteBuf[i] = NULL;
+	}
+    }
+}
+
+
+/*************************************<->*************************************
+ *
+ *  ParseClientFile (...)
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Read the lines of the open client file (cfileP).  A "dtsmcmd" line holds a
+ *  window manager hint, a command to start locally or a command to start on
+ *  a host, for a screen; they are sorted into the per-screen buffers.  Other
+ *  lines are ignored.  Each line starts from nothing: the host, command, hint
+ *  and screen of the line before do not carry over.
+ *
+ *  Returns 0, or -1 if memory is short (the caller frees the buffers).
+ *
+ *************************************<->***********************************/
+static int
+ParseClientFile(
+	unsigned char *remoteDisplay,
+	unsigned char **hintsBuf,
+	unsigned char **cmdBuf,
+	unsigned int  *maxHintsSize,
+	unsigned int  *actHintsSize,
+	unsigned int  *numHints,
+	unsigned int  *maxCmdSize,
+	unsigned int  *actCmdSize,
+	unsigned int  *numCmd,
+	unsigned int  *maxRemoteSize,
+	int	      defaultScreen )
+{
+    unsigned char *lineP, *string;
+    unsigned char *hostPtr, *cmdPtr, *hintPtr;
+    unsigned int  ignoredCount;
+    int		  screenNum = 0;
+
+    while(GetNextLine() != NULL)
+    {
+	lineP = line;
+	string = GetSmartString(&lineP);
+	if( string == NULL || strcmp((char *)string, "dtsmcmd"))
+	{
+	    continue;
+	}
+
+	hostPtr = cmdPtr = hintPtr = NULL;
+	while((string = GetSmartString(&lineP)) != NULL )
+	{
+	    if(!strcmp((char *)string, "-host"))
+	    {
+		/*
+		 * Extract a host pointer - host pointers
+		 * only exist on remote executions
+		 */
+		hostPtr = GetSmartString(&lineP);
+	    }
+	    else if(!strcmp((char *)string, "-cmd"))
+	    {
+		/*
+		 * Extract the command pointer from the
+		 * hints string
+		 */
+		cmdPtr = GetSmartString(&lineP);
+	    }
+	    else if(!strcmp((char *)string, "-screen"))
+	    {
+		/*
+		 * Extract the screen number from the command
+		 */
+		string = GetSmartString(&lineP);
+		if(string != NULL)
+		{
+		    screenNum = atoi((char *)string);
+		}
+	    }
+	    else if(!strcmp((char *)string, "-hints"))
+	    {
+		/*
+		 * Extract the hints string
+		 */
+		hintPtr = GetSmartString(&lineP);
+	    }
+	}
+
+	/*
+	 * Now put our information in buffers
+	 */
+	if(hintPtr != NULL)
+	{
+	    if(FillHintBuf(hintPtr, hintsBuf, maxHintsSize, actHintsSize,
+			   screenNum, numHints) != 0)
+	    {
+		return(-1);
+	    }
+	}
+
+	if(cmdPtr != NULL)
+	{
+	    if(hostPtr == NULL)
+	    {
+		if(FillCmdBuf(cmdPtr, cmdBuf, maxCmdSize, actCmdSize, screenNum,
+			      (screenNum >= 0 && screenNum < MAX_SCREENS_SAVED) ?
+			      &numCmd[screenNum] : &ignoredCount) != 0)
+		{
+		    return(-1);
+		}
+	    }
+	    else if(FillRemoteBuf(cmdPtr, hostPtr, remoteDisplay, remoteBuf,
+				  maxRemoteSize, actRemoteSize, screenNum) != 0)
+	    {
+		return(-1);
+	    }
+	}
+	screenNum = defaultScreen;
+    }
+
+    return(0);
+}
+
+
+/*************************************<->*************************************
+ *
  *  RestoreClients ()
  *
  *
@@ -1774,12 +1949,12 @@ RestoreClients( void )
     unsigned char *lineP, *string;
     char *pch, *dispPtr = NULL;
     char *dispEnv, *dispSav, *dispEnvHelpview, *dispSavHelpview;
-    unsigned char *hostPtr=NULL, *cmdPtr=NULL, *hintPtr = NULL;
+    unsigned char *hostPtr=NULL, *cmdPtr=NULL;
     unsigned char *remoteDisplay;
     char *displayName;
     char *envVal;
     unsigned char  tmpChar[35];
-    int     screenNum = 0, i, j, chlen, numClientsExec;
+    int     i, j, chlen, numClientsExec;
     int	    numRemoteDone = 0;
     Window	dtwmWin = 0;
     Boolean	clientsDone = False, wmHandshake = False, cmdInvInit = False;
@@ -1876,7 +2051,10 @@ RestoreClients( void )
      * Add the display qualifications to the host name
      * screen is added at execution time
      */
-    strcat((char *)remoteDisplay, (char *)dispPtr);
+    if (dispPtr != NULL)
+    {
+	strcat((char *)remoteDisplay, (char *)dispPtr);
+    }
 
     /*
      * Intern the atom needed to put the hints on the root window
@@ -1884,154 +2062,20 @@ RestoreClients( void )
      */
     XaWmDtHints = XInternAtom(smGD.display, _XA_DT_SESSION_HINTS, False);
 
-    while(GetNextLine() != NULL)
+    if(ParseClientFile(remoteDisplay, hintsBuf, cmdBuf, maxHintsSize,
+		       actHintsSize, numHints, maxCmdSize, actCmdSize, numCmd,
+		       maxRemoteSize, XDefaultScreen(smGD.display)) != 0)
     {
-	lineP = line;
-	string = GetSmartString(&lineP);
-	if( string != NULL && !strcmp((char *)string, "dtsmcmd"))
+	FreeClientBuffers(hintsBuf, cmdBuf);
+	fclose(cfileP);
+	cfileP = NULL;
+	free(displayName);
+	SM_FREE((char *) remoteDisplay);
+	if(dispSav != NULL)
 	{
-	    while((string = GetSmartString(&lineP)) != NULL )
-	    {
-		if(!strcmp((char *)string, "-host"))
-		{
-		    /*
-		     * Extract a host pointer - host pointers
-		     * only exist on remote executions
-		     */
-		    string = GetSmartString(&lineP);
-		    hostPtr = string;
-		}
-		else
-		{
-		    if(!strcmp((char *)string, "-cmd"))
-		    {
-			/*
-			 * Extract the command pointer from the
-			 * hints string
-			 */
-			string = GetSmartString(&lineP);
-			cmdPtr = string;
-		    }
-		    else
-		    {
-			if(!strcmp((char *)string, "-screen"))
-			{
-			    /*
-			     * Extract the screen number from the command
-			     */
-			    string = GetSmartString(&lineP);
-			    screenNum = atoi((char *)string);
-
-			}
-			else
-			{
-			    if(!strcmp((char *)string, "-hints"))
-			    {
-				/*
-				 * Extract the hints string
-				 */
-				string = GetSmartString(&lineP);
-				hintPtr = string;
-			    }
-			}
-		    }
-		}
-	    }
-
-	    /*
-	     * Now put our information in buffers and reinitialize the pointers
-	     */
-	    if(hintPtr != NULL)
-	    {
-		if(FillHintBuf(hintPtr, hintsBuf, maxHintsSize,
-			    actHintsSize, screenNum, numHints) != 0)
-		{
-		    /*
-		     * Free all malloc'd buffers and exit
-		     */
-		    for(i = 0;i < smGD.numSavedScreens;i++)
-		    {
-			if(actHintsSize[i] > 0)
-			{
-			    SM_FREE((char *) hintsBuf[i]);
-			}
-			if(actCmdSize[i] > 0)
-			{
-			    SM_FREE((char *) cmdBuf[i]);
-			}
-			if(actRemoteSize[i] > 0)
-			{
-			    SM_FREE((char *) remoteBuf[i]);
-			}
-		    }
-		    free(displayName);
-		    return(-1);
-		}
-		hintPtr = NULL;
-	    }
-
-	    if((cmdPtr != NULL) && (hostPtr == NULL))
-	    {
-		if(FillCmdBuf(cmdPtr, cmdBuf, maxCmdSize,
-			      actCmdSize,screenNum, &numCmd[screenNum]) != 0)
-		{
-		    /*
-		     * Free all malloc'd buffers and exit
-		     */
-		    for(i = 0;i < smGD.numSavedScreens;i++)
-		    {
-			if(actHintsSize[i] > 0)
-			{
-			    SM_FREE((char *) hintsBuf[i]);
-			}
-			if(actCmdSize[i] > 0)
-			{
-			    SM_FREE((char *) cmdBuf[i]);
-			}
-			if(actRemoteSize[i] > 0)
-			{
-			    SM_FREE((char *) remoteBuf[i]);
-			}
-		    }
-		    return(-1);
-		}
-		cmdPtr = NULL;
-	    }
-	    else
-	    {
-		if((cmdPtr != NULL) && (hostPtr != NULL))
-		{
-		    if(FillRemoteBuf(cmdPtr, hostPtr, remoteDisplay,
-				  remoteBuf, maxRemoteSize,
-				  actRemoteSize, screenNum) != 0)
-		    {
-			/*
-			 * Free all malloc'd buffers and exit
-			 */
-			for(i = 0;i < smGD.numSavedScreens;i++)
-			{
-			    if(actHintsSize[i] > 0)
-			    {
-				SM_FREE((char *) hintsBuf[i]);
-			    }
-			    if(actCmdSize[i] > 0)
-			    {
-				SM_FREE((char *) cmdBuf[i]);
-			    }
-			    if(actRemoteSize[i] > 0)
-			    {
-				SM_FREE((char *) remoteBuf[i]);
-			    }
-			}
-                        free(displayName);
-			return(-1);
-		    }
-		    cmdPtr = NULL;
-		    hostPtr = NULL;
-		}
-	    }
-	    screenNum = XDefaultScreen(smGD.display);
+	    SM_FREE(dispSav);
 	}
+	return(-1);
     }
 
     /*
@@ -2087,7 +2131,7 @@ RestoreClients( void )
     }
     else
     {
-	sprintf(envVal,"%s%s%d", DISPLAY_NAME_EQUAL, displayName, i);
+	snprintf(envVal, BUFSIZ, "%s%s%d", DISPLAY_NAME_EQUAL, displayName, i);
 	putenv(envVal);
 
 	linec = 0;
@@ -2256,7 +2300,7 @@ RestoreClients( void )
 	     *  Set up the display environment variable so that the
 	     *  application comes back to the right screen
 	     */
-	    sprintf(envVal,"%s%s%d", DISPLAY_NAME_EQUAL, displayName, i);
+	    snprintf(envVal, BUFSIZ, "%s%s%d", DISPLAY_NAME_EQUAL, displayName, i);
 	    putenv(envVal);
 	    
 	    linec = 0;
@@ -2644,7 +2688,7 @@ GetSmartString(
 		    {
 			if (level > 0) level--;
 		    }
-		    else if (level < MAX_QUOTE_DEPTH)
+		    else if (level + 1 < MAX_QUOTE_DEPTH)
 		    {
 			level++;
 			quoteLevel[level] = checkLev;
@@ -2736,7 +2780,7 @@ GetSmartString(
 		    {
 			if (level > 0) level--;
 		    }
-		    else if (level < MAX_QUOTE_DEPTH)
+		    else if (level + 1 < MAX_QUOTE_DEPTH)
 		    {
 			level++;
 			quoteLevel[level] = checkLev;
@@ -2929,6 +2973,40 @@ ScanWhitespace(
  * 
  *************************************<->***********************************/
 static int
+EnsureBufferRoom(
+	unsigned char **buffer,
+	unsigned int  *maxSize,
+	unsigned int  used,
+	size_t        extra,
+	unsigned int  chunk )
+{
+    size_t need = (size_t) used + extra + 1;	/* and the terminating NUL */
+    size_t size = *maxSize ? *maxSize : chunk;
+    unsigned char *grown;
+
+    if (*buffer != NULL && need <= *maxSize)
+    {
+	return(0);
+    }
+    while (size < need)
+    {
+	size += chunk;
+    }
+    if (size > UINT_MAX)
+    {
+	return(-1);
+    }
+    grown = (unsigned char *) SM_REALLOC((char *) *buffer, size);
+    if (grown == NULL)
+    {
+	return(-1);
+    }
+    *buffer = grown;
+    *maxSize = (unsigned int) size;
+    return(0);
+}
+
+static int
 FillHintBuf(
 	unsigned char *newHint,
 	unsigned char **hintBuf,
@@ -2937,7 +3015,9 @@ FillHintBuf(
 	unsigned int  screen,
 	unsigned int  *numHints)
 {
-    static int hintBufSize = 5000;
+    static const unsigned int hintBufSize = 5000;
+    static const char lengthField[] = "     \n";	/* room for the count */
+    Boolean first;
     
     /*
      * If the screen that this hint was meant for is not in the current
@@ -2949,43 +3029,25 @@ FillHintBuf(
     }
 
     /*
-     * Check to see if this buffer has been malloc'd before - if it hasn't
-     * malloc it.  If it has - check to make sure it's big enough to hold the
-     * new information.
+     * Make sure the buffer is big enough for the new hint, however long it is:
+     * the first time it is allocated, afterwards it grows.
      */
-    if(maxSize[screen] == 0)
+    first = (actSize[screen] == 0);
+    if(EnsureBufferRoom(&hintBuf[screen], &maxSize[screen], first ? 0 : actSize[screen],
+			(first ? sizeof(lengthField) - 1 : 0) +
+			strlen((char *)newHint) + 1, hintBufSize) != 0)
     {
-	hintBuf[screen] = (unsigned char *) SM_MALLOC(hintBufSize * sizeof(char));
-	if(hintBuf[screen] == NULL)
-	{
-	    actSize[screen] = 0;
-	    PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-	    return(-1);
-	}
-	maxSize[screen] = hintBufSize * sizeof(char);
-
-	/*
-	 * Now reserve 4 bytes for the length
-	 */
-	strcpy((char *)hintBuf[screen], "     \n");
+	actSize[screen] = 0;
+	PrintErrnoError(DtError, smNLS.cantMallocErrorString);
+	return(-1);
     }
-    else
+
+    /*
+     * Now reserve 4 bytes for the length
+     */
+    if(first)
     {
-	if((actSize[screen] + strlen((char *)newHint) + 2) >= maxSize[screen])
-	{
-	    hintBuf[screen] = (unsigned char *)
-		SM_REALLOC((char *) hintBuf[screen],
-			   maxSize[screen] +
-			   (hintBufSize *
-			    sizeof(char)));
-	    if(hintBuf[screen] == NULL)
-	    {
-		actSize[screen] = 0;
-		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-		return(-1);
-	    }
-	    maxSize[screen] = maxSize[screen] + (hintBufSize * sizeof(char));
-	}
+	strcpy((char *)hintBuf[screen], lengthField);
     }
 
     /*
@@ -3000,7 +3062,7 @@ FillHintBuf(
 }
 				      
 
-
+
 /*************************************<->*************************************
  *
  *  FillCmdBuf(newCmd, cmdBuf, maxSize, actSize, screen)
@@ -3042,7 +3104,7 @@ FillCmdBuf(
         unsigned int screen,
         unsigned int *numCmd )
 {
-    static int cmdBufSize = 5000;
+    static const unsigned int cmdBufSize = 5000;
     
     /*
      * If the screen that this command was meant for is not in the current
@@ -3054,37 +3116,15 @@ FillCmdBuf(
     }
 
     /*
-     * Check to see if this buffer has been malloc'd before - if it hasn't
-     * malloc it.  If it has - check to make sure it's big enough to hold the
-     * new information.
+     * Make sure the buffer is big enough for the new command (and its
+     * newline), however long it is
      */
-    if(maxSize[screen] == 0)
+    if(EnsureBufferRoom(&cmdBuf[screen], &maxSize[screen], actSize[screen],
+			strlen((char *)newCmd) + 1, cmdBufSize) != 0)
     {
-	cmdBuf[screen] = (unsigned char *) SM_MALLOC(cmdBufSize * sizeof(char));
-	if(cmdBuf[screen] == NULL)
-	{
-	    actSize[screen] = 0;
-	    PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-	    return(-1);
-	}
-	maxSize[screen] = cmdBufSize * sizeof(char);
-    }
-    else
-    {
-	if((actSize[screen] + strlen((char *)newCmd)) >= maxSize[screen])
-	{
-	    cmdBuf[screen] = (unsigned char *) SM_REALLOC((char *)cmdBuf[screen],
-							maxSize[screen] +
-							(cmdBufSize *
-							sizeof(char)));
-	    if(cmdBuf[screen] == NULL)
-	    {
-		actSize[screen] = 0;
-		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-		return(-1);
-	    }
-	    maxSize[screen] = maxSize[screen] + (cmdBufSize * sizeof(char));
-	}
+	actSize[screen] = 0;
+	PrintErrnoError(DtError, smNLS.cantMallocErrorString);
+	return(-1);
     }
 
     if(actSize[screen] == 0)
@@ -3104,7 +3144,7 @@ FillCmdBuf(
 }
 				      
 
-
+
 /*************************************<->*************************************
  *
  *  FillRemoteBuf(newCmd, hostName, displayName, remoteBuf,
@@ -3152,7 +3192,7 @@ FillRemoteBuf(
         unsigned int screen )
 {
     unsigned char *string;
-    static int remoteBufSize = 5000;
+    static const unsigned int remoteBufSize = 5000;
     
     /*
      * If the screen that this command was meant for is not in the current
@@ -3164,41 +3204,17 @@ FillRemoteBuf(
     }
 
     /*
-     * Check to see if this buffer has been malloc'd before - if it hasn't
-     * malloc it.  If it has - check to make sure it's big enough to hold the
-     * new information.
+     * The command is split into words and put back together with single
+     * blanks between them, inside quotes: what is added is no longer than
+     * twice the command, the host name and the framing.
      */
-    if(maxSize[screen] == 0)
+    if(EnsureBufferRoom(&remoteBuf[screen], &maxSize[screen], actSize[screen],
+			2 * strlen((char *)newCmd) + strlen((char *)hostName) +
+			16, remoteBufSize) != 0)
     {
-	remoteBuf[screen] = (unsigned char *)
-	    SM_MALLOC(remoteBufSize * sizeof(char));
-	if(remoteBuf[screen] == NULL)
-	{
-	    actSize[screen] = 0;
-	    PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-	    return(-1);
-	}
-	maxSize[screen] = remoteBufSize * sizeof(char);
-    }
-    else
-    {
-	if((actSize[screen] + strlen((char *)newCmd) +
-	    strlen((char *)hostName) +
-	    strlen((char *)displayName) +
-	    strlen("-display ") + 5) >= maxSize[screen])
-	{
-	    remoteBuf[screen] = (unsigned char *)
-		SM_REALLOC((char *)remoteBuf[screen],
-			   maxSize[screen] +
-			   (remoteBufSize * sizeof(char)));
-	    if(remoteBuf[screen] == NULL)
-	    {
-		actSize[screen] = 0;
-		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-		return(-1);
-	    }
-	    maxSize[screen] = maxSize[screen] + (remoteBufSize * sizeof(char));
-	}
+	actSize[screen] = 0;
+	PrintErrnoError(DtError, smNLS.cantMallocErrorString);
+	return(-1);
     }
 
     if(actSize[screen] == 0)
@@ -3225,7 +3241,10 @@ FillRemoteBuf(
      */
     strcat((char *)remoteBuf[screen], " \"");
     string = GetSmartString(&newCmd);
-    strcat((char *)remoteBuf[screen], (char *)string);
+    if(string != NULL)
+    {
+	strcat((char *)remoteBuf[screen], (char *)string);
+    }
     strcat((char *)remoteBuf[screen], " ");
 
     /*
@@ -3253,7 +3272,7 @@ FillRemoteBuf(
     return(0);
 }
 				      
-
+
 /*************************************<->*************************************
  *
  *  CreateExecString(execString)
@@ -3587,7 +3606,7 @@ StartLocalClient (
 	execStatus = execvp(program, execArray);
 	if(execStatus != 0)
 	{
-	    sprintf(clientMessage, ((char *)GETMESSAGE(16, 3, "Unable to exec %s.")), execArray[0]);
+	    snprintf(clientMessage, sizeof(clientMessage), ((char *)GETMESSAGE(16, 3, "Unable to exec %s.")), execArray[0]);
 	    PrintErrnoError(DtError, clientMessage);
 	    SM_EXIT(-1);
 	}
