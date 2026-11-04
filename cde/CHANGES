@@ -356,6 +356,17 @@
   past the end of the access, in libtt as well as in rpc.ttdbserverd. Each field
   now goes over the wire as a 32 bit word of its own, -1 as -1; the bytes on the
   wire are unchanged.
+- tt: fix the access check of the requests of the new interface in
+  rpc.ttdbserverd. A write was let through for a user whose group or whose
+  others only had the read bit (the check fell through from the write bit to the
+  read bit), and a member of the group of a file, refused by the group bits, got
+  the bits of the others. The rule is now that of a file in a Unix file system
+  and of the old interface: the owner and the superuser may do anything, anybody
+  else is in the one class of the group or the others, a read needs the read bit
+  of the class and a write the write bit. It is a method of `_Tt_db_access`
+  (`permits`) that the server calls. Moving an object to another file needed
+  only a read of the object and nothing of the file it moved to; it now needs a
+  write of the object and of the file.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

@@ -933,8 +933,9 @@ _Tt_db_server_db::setObjectFile (const _Tt_string        &objid,
 				 const _Tt_string        &file,
 				 const _Tt_db_access_ptr &access)
 {
+  // Moving an object changes it, and adds it to the file it moves to.
   _Tt_string object_key = getObjectKey(objid);
-  if (verifyObjectAccess(object_key, access) != TT_DB_OK) {
+  if (verifyObjectAccess(object_key, access, TRUE) != TT_DB_OK) {
     return dbResults;
   }
 
@@ -963,6 +964,10 @@ _Tt_db_server_db::setObjectFile (const _Tt_string        &objid,
 
 	// If the file key was found...
 	if (dbResults == TT_DB_OK) {
+	  if (verifyAccess(file_key, access, TRUE) != TT_DB_OK) {
+	    return dbResults;
+	  }
+
 	  // Put the new file key into the record and update the table
 	  record_ptr->setKeyPartValue(1, 0, file_key);
 	  results = fileObjectMap->updateCurrentRecord(record_ptr);
@@ -1125,77 +1130,26 @@ _Tt_db_server_db::verifyAccess (const _Tt_string        &key,
     if (results) {
       dbResults = TT_DB_ERR_CORRUPT_DB;
     }
-    else if (!results) {
+    else {
+      // The access record: the owner, the group and the mode that protect
+      // the file or the object.
+      _Tt_db_access stored;
+
       long n_user = *(long *)
 		     ((char *)record_ptr->getRecord()+TT_DB_ACCESS_USER_OFFSET);
-      uid_t user = (uid_t)ntohl(n_user);
+      stored.user = (uid_t)ntohl(n_user);
 
       long n_group = *(long *)
 		      ((char *)record_ptr->getRecord()+
 			       TT_DB_ACCESS_GROUP_OFFSET);
-      gid_t group = (gid_t)ntohl(n_group);
+      stored.group = (gid_t)ntohl(n_group);
 
       long n_mode = *(long *)
 		     ((char *)record_ptr->getRecord()+TT_DB_ACCESS_MODE_OFFSET);
-      mode_t mode = (mode_t)ntohl(n_mode);
+      stored.mode = (mode_t)ntohl(n_mode);
 
-      // If the user in the DB is -1, all users match
-      bool_t user_flag = FALSE;
-      if (user == -1) {
-        user_flag = TRUE;
-      }
-      else {
-        if (user == access->user) {
-          user_flag = TRUE;
-        }
-      }
-
-      // If the group in the DB is -1, all groups match
-      bool_t group_flag = FALSE;
-      if (group == -1) {
-        group_flag = TRUE;
-      }
-      else {
-        if (group == access->group) {
-          group_flag = TRUE;
-        }
-      }
-      
-      dbResults = TT_DB_ERR_ACCESS_DENIED;
-
-      // Root can do everything
-      if (access->user == 0) {
-	return (dbResults = TT_DB_OK);
-      }
-      
-      // User of object can do anything
-      if (user_flag) {
-	return (dbResults = TT_DB_OK);
-      }
-
-      if (!user_only) {
-        if (mode == (mode_t)-1) {
-	  return (dbResults = TT_DB_OK);
-        }
-
-        if (group_flag && (dbResults != TT_DB_OK)) {
-	  if (write && (mode&S_IWGRP)) {
-	    return (dbResults = TT_DB_OK);
-	  }
-	  else if (mode&S_IRGRP) {
-	    return (dbResults = TT_DB_OK);
-	  }
-        }
-      
-        if (dbResults != TT_DB_OK) {
-          if (write && (mode&S_IWOTH)) {
-	    return (dbResults = TT_DB_OK);
-          }
-          else if (mode&S_IROTH) {
-            return (dbResults = TT_DB_OK);
-          }
-        }
-      }
+      dbResults = stored.permits(*access, write, user_only) ?
+		    TT_DB_OK : TT_DB_ERR_ACCESS_DENIED;
     }
   }
 

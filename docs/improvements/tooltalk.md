@@ -242,6 +242,19 @@ largest key from the same length.
   records of the property `_TT_SESSIONS` of the object, add a session that is
   not there, remove the one that is named (a session that is not there is
   `ENOREC`), and count up the modification date of the object.
+- The requests of the new interface are checked against the access record of
+  the file or the object (owner, group and mode) by one rule, the one of a file
+  in a Unix file system: the owner and the superuser may do anything; anybody
+  else is in the class of the group if the group that came with the request is
+  the group of the record, and in the class of the others if not, and only the
+  bits of that class count, a read needing the read bit and a write the write
+  bit. A user or group of -1 in a record stands for everybody, and a mode of -1
+  for no protection. The check used to let a write through for a user who only
+  had the read bit of his class, and gave a member of the group the bits of the
+  others when the group bits refused him. A property comes with a cache level
+  that is read first, so writing a property needs the read bit as well. Moving
+  an object to another file is a write of the object and of the file it is
+  moved to; it was a read of the object and nothing else.
 
 ### Limits of the protocol
 

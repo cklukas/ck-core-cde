@@ -18,6 +18,7 @@
 
 #include "tt_db_message_info_utils.h"
 #include "tt_db_server_consts.h"
+#include "db/tt_db_access.h"
 #include "db/tt_db_create_objid.h"
 #include "db/tt_db_key.h"
 #include "util/tt_file_system_entry.h"
@@ -3433,6 +3434,413 @@ case_fuzz_dispatch(void)
 	}
 }
 
+/* ---- the access rule of the new interface --------------------------------------- */
+
+/* What a Unix file system does.  The owner (and the superuser) may do
+   anything; anybody else is in one class only, the group if his group is the
+   group of the file and the others if not, and a read needs the read bit of
+   that class and a write the write bit, whatever the bits of the other
+   classes say. */
+static bool
+unix_permits(unsigned mode, int klass, bool write)
+{
+	if (klass == 0) {
+		return true;
+	}
+	return (mode & ((klass == 1 ? 040 : 04) >> (write ? 1 : 0))) != 0;
+}
+
+/* The rule on its own: every combination of the nine permission bits, every
+   kind of caller and of record (an owner or a group that is -1 stands for
+   everybody), a read and a write, and a request only the owner may make. */
+static void
+case_access_rule(void)
+{
+	struct Caller3 {
+		uid_t	user;
+		gid_t	group;
+	};
+	const uid_t owner = 100;
+	const gid_t group = 200;
+	/* the class each is in for a record of (owner, group) */
+	static const struct { Caller3 who; int klass; } callers[] = {
+		{ { 0, 7 }, 0 },		/* the superuser */
+		{ { owner, 7 }, 0 },		/* the owner, in another group */
+		{ { owner, group }, 0 },	/* the owner, in the group */
+		{ { owner + 1, group }, 1 },	/* a member of the group */
+		{ { owner + 1, group + 1 }, 2 },	/* somebody else */
+		{ { owner + 1, (gid_t)-1 }, 2 },	/* ... with no valid group */
+	};
+	long checked = 0;
+
+	for (unsigned mode = 0; mode <= 0777; mode++) {
+		for (int variant = 0; variant < 3; variant++) {
+			/* 0: a user and a group; 1: the group is everybody's;
+			   2: the owner is everybody */
+			_Tt_db_access record;
+			record.user = variant == 2 ? (uid_t)-1 : owner;
+			record.group = variant == 1 ? (gid_t)-1 : group;
+			record.mode = mode;
+
+			for (size_t c = 0; c < sizeof(callers) / sizeof(callers[0]); c++) {
+				_Tt_db_access caller;
+				int klass = callers[c].klass;
+
+				caller.user = callers[c].who.user;
+				caller.group = callers[c].who.group;
+				if (variant == 2 && klass != 0) {
+					klass = 0;
+				}
+				else if (variant == 1 && klass == 2) {
+					klass = 1;
+				}
+				for (int write = 0; write < 2; write++) {
+					for (int only = 0; only < 2; only++) {
+						bool want = klass == 0 ? true :
+							    only ? false :
+							    unix_permits(mode, klass, write);
+						bool got = record.permits(caller, write, only);
+
+						if (got != want) {
+							fprintf(stderr, "  mode %04o record %d caller %u/%u "
+								"%s%s: %s, should be %s\n",
+								mode, variant, (unsigned)caller.user,
+								(unsigned)caller.group,
+								write ? "write" : "read",
+								only ? " by the owner only" : "",
+								got ? "allowed" : "denied",
+								want ? "allowed" : "denied");
+						}
+						CHECK(got == want);
+						checked++;
+					}
+				}
+			}
+		}
+	}
+
+	/* a record with no mode lets everybody in, except for what is the
+	   owner's alone */
+	_Tt_db_access open, stranger;
+
+	stranger.user = 5;
+	stranger.group = 6;
+	CHECK(open.mode == (mode_t)-1);
+	CHECK(open.permits(stranger, false, false));
+	CHECK(open.permits(stranger, true, false));
+	open.user = 1;
+	open.group = 2;
+	CHECK(open.permits(stranger, false, false));
+	CHECK(open.permits(stranger, true, false));
+	CHECK(!open.permits(stranger, true, true));
+	CHECK(checked == 512 * 3 * 6 * 4);
+}
+
+/* ---- ... and what the requests of the new interface get of it ---- */
+
+template <class R>
+static int
+results_of(const Reply &r, bool_t (*proc)(XDR *, R *))
+{
+	R	res;
+	XDR	xdrs;
+
+	if (!answered(r)) {
+		return INT_MIN;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!(*proc)(&xdrs, &res)) {
+		return INT_MIN;
+	}
+	int out = res.results;
+	xdr_free((xdrproc_t)proc, (char *)&res);
+	return out;
+}
+
+/* ... and a reply that is nothing but the result */
+static int
+status_of(const Reply &r)
+{
+	_tt_db_results	res;
+	XDR		xdrs;
+
+	if (!answered(r)) {
+		return INT_MIN;
+	}
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_tt_db_results(&xdrs, &res)) {
+		return INT_MIN;
+	}
+	return (int)res;
+}
+
+/* who is asking: the credentials of the request win over the access in it,
+   which is the caller's own anyway */
+static _tt_access
+acting(void)
+{
+	_tt_access acc = { g_uid, g_gids.empty() ? getgid() : g_gids[0], 0 };
+
+	return acc;
+}
+
+static int
+set_obj_prop(const std::string &objid, const char *name, const char *value)
+{
+	std::string	nm = name, val = value;
+	_tt_property_value pv;
+	_tt_set_obj_prop_args sp;
+
+	pv.value.value_len = val.size();
+	pv.value.value_val = &val[0];
+	memset(&sp, 0, sizeof(sp));
+	sp.objid = (char *)objid.c_str();
+	sp.property.name = &nm[0];
+	sp.property.values.values_len = 1;
+	sp.property.values.values_val = &pv;
+	sp.access = acting();
+	sp.cache_level = INT_MAX;	/* nobody has updated since this caller read */
+	return results_of(rpc(TT_SET_OBJ_PROP,
+			      encode((xdrproc_t)xdr_tt_set_obj_prop_args, &sp)),
+			  xdr_tt_obj_props_results);
+}
+
+static int
+get_obj_prop(const std::string &objid, const char *name)
+{
+	std::string	nm = name;
+	_tt_get_obj_prop_args gp = { (char *)objid.c_str(), &nm[0], acting(), -1 };
+
+	return results_of(rpc(TT_GET_OBJ_PROP,
+			      encode((xdrproc_t)xdr_tt_get_obj_prop_args, &gp)),
+			  xdr_tt_obj_prop_results);
+}
+
+static int
+set_obj_file(const std::string &objid, const std::string &file)
+{
+	_tt_set_obj_file_args sf = { (char *)objid.c_str(), (char *)file.c_str(),
+				     acting() };
+
+	return status_of(rpc(TT_SET_OBJ_FILE,
+			     encode((xdrproc_t)xdr_tt_set_obj_file_args, &sf)));
+}
+
+static int
+set_obj_type(const std::string &objid, const char *otype)
+{
+	std::string	ot = otype;
+	_tt_set_obj_type_args st = { (char *)objid.c_str(), &ot[0], acting() };
+
+	return status_of(rpc(TT_SET_OBJ_TYPE,
+			     encode((xdrproc_t)xdr_tt_set_obj_type_args, &st)));
+}
+
+static int
+get_obj_file(const std::string &objid)
+{
+	_tt_get_obj_file_args gf = { (char *)objid.c_str(), acting() };
+
+	return results_of(rpc(TT_GET_OBJ_FILE,
+			      encode((xdrproc_t)xdr_tt_get_obj_file_args, &gf)),
+			  xdr_tt_obj_file_results);
+}
+
+static int
+get_file_prop(const std::string &file, const char *name)
+{
+	std::string	nm = name;
+	_tt_get_file_prop_args gp = { (char *)file.c_str(), &nm[0], acting(), -1 };
+
+	return results_of(rpc(TT_GET_FILE_PROP,
+			      encode((xdrproc_t)xdr_tt_get_file_prop_args, &gp)),
+			  xdr_tt_file_prop_results);
+}
+
+static int
+set_file_access(const std::string &file, uid_t user, gid_t group, unsigned mode)
+{
+	_tt_access	now = { user, group, mode };
+	_tt_set_file_access_args sa = { (char *)file.c_str(), now, acting() };
+
+	return status_of(rpc(TT_SET_FILE_ACCESS,
+			     encode((xdrproc_t)xdr_tt_set_file_access_args, &sa)));
+}
+
+static int
+set_obj_access(const std::string &objid, uid_t user, gid_t group, unsigned mode)
+{
+	_tt_access	now = { user, group, mode };
+	_tt_set_obj_access_args sa = { (char *)objid.c_str(), now, acting() };
+
+	return status_of(rpc(TT_SET_OBJ_ACCESS,
+			     encode((xdrproc_t)xdr_tt_set_obj_access_args, &sa)));
+}
+
+/* The answer a request on something with this mode has to get: the request
+   is let through, or it is refused as TT_DB_ERR_ACCESS_DENIED.  A request
+   that comes with the cache level of the properties reads the level first,
+   and is refused as TT_DB_ERR_PROPS_CACHE_ERROR when that cannot be read. */
+static void
+expect_access(const char *what, const char *who, unsigned mode, int got,
+	      bool allowed, int also_denied = TT_DB_ERR_ACCESS_DENIED)
+{
+	bool ok = allowed ? got == TT_DB_OK :
+		  (got == TT_DB_ERR_ACCESS_DENIED || got == also_denied);
+
+	if (!ok) {
+		fprintf(stderr, "  %s by %s, mode %04o: the server says %d, "
+			"should be %s\n", what, who, mode, got,
+			allowed ? "allowed" : "denied");
+	}
+	CHECK(ok);
+}
+
+static unsigned
+mode_of(unsigned bits)
+{
+	return 0600 | ((bits & 1) ? 040 : 0) | ((bits & 2) ? 020 : 0) |
+	       ((bits & 4) ? 04 : 0) | ((bits & 8) ? 02 : 0);
+}
+
+/* Everything a request of the new interface does to a file or an object is
+   a read or a write, and each gets what the bits of the class of the user
+   give: the read bit lets a user read and not write, the write bit write and
+   not read, and neither the one of the other class.  Every combination of
+   the group and the other bits, for the file and for an object, as the owner,
+   a member of the group and somebody else.  (A property travels with a cache
+   level that is read first, so the write of a property needs both.) */
+static void
+case_access_bits(void)
+{
+	const std::string netfile = start_partition("access-bits");
+	const std::string netfile2 = "localhost:" + g_dir + "/file2";
+	const std::string file = g_dir + "/file", file2 = g_dir + "/file2";
+	const uid_t owner = getuid() ? getuid() : 4000;
+	const gid_t group = getuid() ? getgid() : 4000;
+	struct { const char *name; int klass; uid_t uid; gid_t gid; } users[] = {
+		{ "the owner", 0, owner, group },
+		{ "a member of the group", 1, owner + 1, group },
+		{ "somebody else", 2, owner + 2, group + 1 },
+	};
+	const size_t nusers = sizeof(users) / sizeof(users[0]);
+	const int cache = TT_DB_ERR_PROPS_CACHE_ERROR;
+
+	put(file, "the file");
+	put(file2, "the second file");
+	if (getuid() == 0) {
+		CHECK(chown(file.c_str(), owner, group) == 0);
+		CHECK(chown(file2.c_str(), owner, group) == 0);
+	}
+	{
+		Caller as(owner, group);
+		create_file(netfile);
+		create_file(netfile2);
+	}
+
+	/* ---- the objects of a file: a mode of the object for each combination */
+	std::string objects[16];
+
+	for (unsigned bits = 0; bits < 16; bits++) {
+		Caller as(owner, group);
+
+		objects[bits] = make_objid(g_mount);
+		CHECK(create_object(objects[bits], netfile, mode_of(bits)) == TT_DB_OK);
+		CHECK(set_obj_prop(objects[bits], "p", "value") == TT_DB_OK);
+	}
+	for (unsigned bits = 0; bits < 16; bits++) {
+		unsigned mode = mode_of(bits);
+
+		for (size_t u = 0; u < nusers; u++) {
+			Caller as(users[u].uid, users[u].gid);
+			bool r = unix_permits(mode, users[u].klass, false);
+			bool w = unix_permits(mode, users[u].klass, true);
+
+			expect_access("read of a property", users[u].name, mode,
+				      get_obj_prop(objects[bits], "p"), r, cache);
+			expect_access("write of a property", users[u].name, mode,
+				      set_obj_prop(objects[bits], "q", "new"),
+				      r && w, cache);
+			expect_access("change of the type", users[u].name, mode,
+				      set_obj_type(objects[bits], "otype"), w);
+			expect_access("read of the file", users[u].name, mode,
+				      get_obj_file(objects[bits]), r);
+			expect_access("move to another file", users[u].name, mode,
+				      set_obj_file(objects[bits], netfile), w);
+		}
+	}
+
+	/* only the owner changes the access: a write bit is not that */
+	{
+		Caller as(owner + 1, group);
+		expect_access("change of the access", "a member of the group", 0660,
+			      set_obj_access(objects[3], owner + 1, group, 0666), false);
+	}
+	{
+		Caller as(owner, group);
+		expect_access("change of the access", "the owner", 0660,
+			      set_obj_access(objects[3], owner, group, 0640), true);
+	}
+	{
+		/* ... and the mode it has now is that of a read-only group */
+		Caller as(owner + 1, group);
+		expect_access("change of the type after that", "a member of the group",
+			      0640, set_obj_type(objects[3], "otype"), false);
+		expect_access("read of the file after that", "a member of the group",
+			      0640, get_obj_file(objects[3]), true);
+	}
+
+	/* ---- the file: the same, for the properties of it and for what is
+	   put into it */
+	{
+		Caller as(owner, group);
+		CHECK(set_property(netfile2, "p", "value") == TT_DB_OK);
+	}
+	for (unsigned bits = 0; bits < 16; bits++) {
+		unsigned mode = mode_of(bits);
+
+		{
+			Caller as(owner, group);
+			CHECK(set_file_access(netfile2, owner, group, mode) == TT_DB_OK);
+		}
+		for (size_t u = 0; u < nusers; u++) {
+			Caller as(users[u].uid, users[u].gid);
+			bool r = unix_permits(mode, users[u].klass, false);
+			bool w = unix_permits(mode, users[u].klass, true);
+
+			expect_access("read of a property of the file", users[u].name,
+				      mode, get_file_prop(netfile2, "p"), r, cache);
+			/* the cache level of the file is counted up after the
+			   write, which reads it: a user who may write and not
+			   read has the property written and an error to show
+			   for it */
+			int wrote = set_property(netfile2, "q", "new");
+			if (!w || r) {
+				expect_access("write of a property of the file",
+					      users[u].name, mode, wrote, w, cache);
+			}
+			/* an object for the file, and one moved into it: both
+			   are additions to the file.  The user is the owner of
+			   the object he moves, which is in the first file. */
+			expect_access("creation of an object", users[u].name, mode,
+				      create_object(make_objid(g_mount), netfile2, 0600), w);
+			std::string mine = make_objid(g_mount);
+			CHECK(create_object(mine, netfile, 0600) == TT_DB_OK);
+			expect_access("move of an object into the file", users[u].name,
+				      mode, set_obj_file(mine, netfile2), w);
+		}
+	}
+
+	/* the mode of a file is for its owner to change */
+	{
+		Caller as(owner + 1, group);
+		expect_access("change of the access of the file",
+			      "a member of the group", 0666,
+			      set_file_access(netfile2, owner + 1, group, 0666), false);
+	}
+}
+
 /* ---- driver ------------------------------------------------------------------ */
 
 static const struct {
@@ -3467,6 +3875,8 @@ static const struct {
 	{ "oid-access-stale-fd", case_oid_access_stale_fd },
 	{ "access-rules", case_access_rules },
 	{ "access-layouts", case_access_layouts },
+	{ "access-rule", case_access_rule },
+	{ "access-bits", case_access_bits },
 	{ "credentials-per-request", case_credentials_per_request },
 	{ "object-partitions", case_object_partitions },
 	{ "session-polarity", case_session_polarity },

@@ -31,6 +31,8 @@
  * Copyright (c) 1992 by Sun Microsystems, Inc.
  */
 
+#include <sys/stat.h>
+
 #include "db/tt_db_access.h"
 #include "db/tt_db_access_utils.h"
 
@@ -52,3 +54,31 @@ _Tt_db_access::
 ~_Tt_db_access()
 {     
 }     
+
+bool _Tt_db_access::
+permits (const _Tt_db_access &caller, bool write, bool user_only) const
+{
+      if (caller.user == 0) {
+	    return true;
+      }
+
+      if (user == (uid_t)-1 || user == caller.user) {
+	    return true;
+      }
+
+      if (user_only) {
+	    return false;
+      }
+
+      if (mode == (mode_t)-1) {
+	    return true;
+      }
+
+      // One class decides: a member of the group has no more than the group
+      // bits give, even where the bits for the others give more.
+      bool in_group = (group == (gid_t)-1 || group == caller.group);
+      mode_t needed = in_group ? (write ? S_IWGRP : S_IRGRP)
+			       : (write ? S_IWOTH : S_IROTH);
+
+      return (mode & needed) != 0;
+}

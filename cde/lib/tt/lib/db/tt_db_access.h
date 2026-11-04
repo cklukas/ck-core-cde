@@ -47,6 +47,22 @@ public:
   uid_t  user;
   gid_t  group;
   mode_t mode;
+
+  // Is the user CALLER (the user and the group he comes with) let in by
+  // this access, which protects a file or an object?  A request is a read
+  // or, with WRITE, a write; with USER_ONLY it is one that only the owner
+  // may make.  The rules are those of a file in a Unix file system:
+  //
+  //  - the superuser, and the owner, may do anything;
+  //  - everybody else is in one class, the group if the group of the
+  //    caller is the group of this access, otherwise the others, and
+  //    only the bits of that class count: a read needs the read bit and
+  //    a write the write bit, whatever the other bits say;
+  //  - a user or a group of -1 stands for everybody, and a mode of -1 for
+  //    no protection at all.
+  bool permits (const _Tt_db_access &caller,
+		bool                write = false,
+		bool                user_only = false) const;
 };
 
 #endif // _TT_DB_ACCESS_H
