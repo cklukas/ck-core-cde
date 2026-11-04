@@ -252,6 +252,17 @@ font resource with a guess. An unset language is an empty one now; names that
 do not fit are names of no file; a font list or property that is not there is
 not used.
 
+## Debug code
+
+`tests/check-debug-code.py` is a source guard for what follows.
+
+Two pieces of code that only existed in `DEBUG` builds are removed. The Xrm
+subtraction code appended the user's resource database (with the keyholder list)
+to the fixed file `/tmp/dtsession.xrm`, opened without `O_NOFOLLOW` in a
+directory every user can write to, and `main()` spun in an endless loop when it
+was started with more than five arguments, waiting for a debugger. A test
+checks that no source names a file in `/tmp` and that none of them loops there.
+
 ## Tests
 
 `programs/dtsession/tests` holds regression tests that cut the production code

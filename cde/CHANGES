@@ -99,6 +99,11 @@
   name, a missing `*fontList` resource handed the toolkit an uninitialized
   pointer and a missing `RESOURCE_MANAGER` property a null database. Covered by
   `programs/dtsession/tests/check-startup-resources.py`.
+- dtsession: remove two `DEBUG`-only code paths: the trace that appended the
+  user's resource database to the fixed file `/tmp/dtsession.xrm` (no
+  `O_NOFOLLOW`, a directory every user can write to) and the endless loop in
+  `main()` for more than five arguments. `programs/dtsession/tests/check-debug-code.py`
+  guards both.
 - build: add the opt-in `--enable-hardening` and `--enable-sanitizers[=LIST]`
   configure switches. Hardening reports truncation, string-constant,
   ignored-result, null-dereference and format defects and adds stack protection

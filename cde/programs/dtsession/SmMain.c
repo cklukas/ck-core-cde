@@ -195,16 +195,6 @@ main (int argc, char **argv)
      */
     DtProgName = SM_RESOURCE_NAME ;
 
-#ifdef DEBUG
-    if(argc > 5)
-    {
-        int junk = 1;
-        while(junk)
-        {
-           junk = 1;
-        }
-    }
-#endif /*  DEBUG */
     /*
      * Initialize LANG if it isn't defined.
      */

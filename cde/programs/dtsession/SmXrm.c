@@ -43,10 +43,6 @@
  *****************************************************************************
  *************************************<+>*************************************/
 
-#ifdef DEBUG
-#include <stdio.h>
-#endif
-
 #include <X11/Intrinsic.h>
 
 const XrmQuark empty = NULLQUARK;
@@ -59,15 +55,6 @@ struct smSubtractState {
   XrmQuarkList target_quarks;
 };
 
-
-#ifdef DEBUG
-static void _PrintDbEntry(
-  char *,
-  XrmBindingList,
-  XrmQuarkList,
-  XrmRepresentation *,
-  XrmValue *);
-#endif
 
 static Bool _CompareBindingQuarkList(
   XrmBindingList bindings1,
@@ -89,10 +76,6 @@ static Bool _SmEnumerateSource(
   XrmValue *value,
   XPointer closure);
 
-
-#ifndef DEBUG
-#define _PrintDbEntry(a,b,c,d,e)
-#endif /* !DEBUG */
 
 
 /*************************************<->*************************************
@@ -166,67 +149,6 @@ Bool _CompareBindingQuarkList(
 
 /*************************************<->*************************************
  *
- *  _PrintDbEntry()
- *
- *  Description:
- *  -----------
- *  Print an Xrm database entry (DEBUG only)
- *
- *  Inputs:
- *  ------
- *  leader - leading string
- *  bindings - binding list
- *  quarks - quark list
- *  type - element type
- *  value - element value
- *
- *  Outputs:
- *  -------
- *
- *  Return:
- *  ------
- *
- *  Comments:
- *  --------
- *
- *************************************<->***********************************/
-
-#ifdef DEBUG
-static
-void _PrintDbEntry(
-       char *leader,
-       XrmBindingList bindings,
-       XrmQuarkList quarks,
-       XrmRepresentation *type,
-       XrmValue *   value)
-{
-   char *   str;
-   int i;
-
-   FILE *fp = fopen ("/tmp/dtsession.xrm", "a");
-
-   str = XrmQuarkToString(type);
-
-   fprintf(fp, "%8s ", leader);
-
-   i = 0;
-   while ( quarks[i] != NULLQUARK )
-   {
-      str = XrmQuarkToString(quarks[i]);
-      fprintf(fp, "%s", str);
-      i++;
-      if (quarks[i] != NULLQUARK)
-      {
-        fprintf(fp, bindings[i] == XrmBindLoosely ? "*" : ".");
-      }
-   }
-   fprintf(fp, ": %s\n",value->addr);
-   fclose(fp);
-}
-#endif /* DEBUG */
-
-/*************************************<->*************************************
- *
  *  _SmCompareSourceAndTarget()
  *
  *  Description:
@@ -266,8 +188,6 @@ Bool _SmCompareSourceAndTarget(
 {
   struct smSubtractState *state = (struct smSubtractState *)closure;
   Bool rc = False;
-
-  _PrintDbEntry("source", bindings, quarks, type, value);
 
   if (_CompareBindingQuarkList(bindings, quarks,
                               state->target_bindings, state->target_quarks))
@@ -320,8 +240,6 @@ Bool _SmEnumerateSource(
   struct smSubtractState *state = (struct smSubtractState *)closure;
   Bool rc;
 
-  _PrintDbEntry("target", bindings, quarks, type, value);
-
  /* 
   * Enumerate source database and compare each element to current
   * target bindings and quarks. 
@@ -335,7 +253,6 @@ Bool _SmEnumerateSource(
     * Target bindings and quarks don't match any element in source database,
     * so copy target element to result db.
     */
-    _PrintDbEntry("nomatch", bindings, quarks, type, value);
     XrmQPutResource(&state->result_db, bindings, quarks, *type, value); 
   }
   return False;

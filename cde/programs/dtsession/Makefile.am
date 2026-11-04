@@ -10,7 +10,8 @@ EXTRA_DIST = tests/check-session-properties.py tests/check-database-write.py \
              tests/check-palette-parser.py tests/check-xsmp.py \
              tests/check-client-start.py \
              tests/check-ice-authority.py \
-             tests/check-startup-resources.py
+             tests/check-startup-resources.py \
+             tests/check-debug-code.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-properties.py
@@ -27,6 +28,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-client-start.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-ice-authority.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-startup-resources.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-debug-code.py
 
 bin_SCRIPTS = dtsession_res
 
