@@ -236,7 +236,7 @@ stfloat(float f, char *p)
     uval.fval = f;			     /* This fixes compiler bug */
     val = uval.ival;
 
-    p += LONGSIZE;
+    p += FLOATSIZE;
     *--p = val & 255;
     *--p = (val >> 8) & 255;
     *--p = (val >> 16) & 255;

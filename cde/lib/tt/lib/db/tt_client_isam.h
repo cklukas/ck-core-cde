@@ -48,8 +48,19 @@ SMI */
 #define _ISAM_H
 
 #include <limits.h>
+/*
+ * LONG_BIT sets the width of every long in a NetISAM file and key.  glibc hides
+ * it from C code built with the feature macros of the CDE build, while the C++
+ * compilers define _GNU_SOURCE on their own and show it; a fixed fallback of 32
+ * made the library and its C++ clients disagree on a 64 bit machine.  The width
+ * of a long is what the code stores, so take the fallback from that.
+ */
 #ifndef LONG_BIT
+#if ULONG_MAX > 0xffffffffUL
+#define LONG_BIT 64
+#else
 #define LONG_BIT 32
+#endif
 #endif
 
 extern short ldint(const char *p);

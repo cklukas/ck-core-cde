@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 #include <sys/resource.h>
-#include <sys/wait.h>
 
 #if defined(__SANITIZE_ADDRESS__)
 /* from the AddressSanitizer runtime (sanitizer/allocator_interface.h) */
@@ -1141,53 +1140,6 @@ create_file(const std::string &file)
 	return file;
 }
 
-/*
- * Can NetISAM here build the tables of a partition?  It cannot when it is
- * built without LONG_BIT (the feature macros of the build hide it) on a
- * machine with 64 bit longs: it takes the block number -1 of an index for
- * 4294967295 and ends the process, with the message "read failed", on the
- * second index of the first table.  That is found out in a process of its
- * own.  Anything else that goes wrong there is a failure of the test.
- */
-static bool
-partition_tables_work(const char *name)
-{
-	std::string probe = std::string(name) + "-probe";
-	pid_t pid = fork();
-
-	if (pid == 0) {
-		create_file(start_partition(probe.c_str()));
-		_exit(failures ? 1 : 0);
-	}
-	int status = 0;
-	waitpid(pid, &status, 0);
-	if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-		return true;
-	}
-
-	bool cannot_index = false;
-	FILE *f = fopen((std::string(getenv("TTDB_TEST_DIR")) + "/" + probe +
-			 "/server.log").c_str(), "r");
-	char line[512];
-	while (f != NULL && fgets(line, sizeof(line), f) != NULL) {
-		if (strstr(line, "NetISAM: read failed") != NULL) {
-			cannot_index = true;
-		}
-	}
-	if (f != NULL) {
-		fclose(f);
-	}
-	if (cannot_index) {
-		fprintf(stderr, "SKIP %s: NetISAM cannot add an index in this "
-			"build, so no partition database can be made\n", name);
-	} else {
-		fprintf(stderr, "FAIL %s: the database of a partition cannot "
-			"be made\n", name);
-		failures++;
-	}
-	return false;
-}
-
 /* set a property of the file to one value; returns the result of the server */
 static int
 set_property(const std::string &file, const char *name,
@@ -1225,9 +1177,6 @@ set_property(const std::string &file, const char *name,
 static void
 case_cache_level_value(void)
 {
-	if (!partition_tables_work("cache-level-value")) {
-		return;
-	}
 	std::string file = start_partition("cache-level-value");
 
 	create_file(file);
@@ -1248,9 +1197,6 @@ case_cache_level_value(void)
 static void
 case_dequeue_sizes(void)
 {
-	if (!partition_tables_work("dequeue-sizes")) {
-		return;
-	}
 	std::string file = start_partition("dequeue-sizes");
 
 	create_file(file);

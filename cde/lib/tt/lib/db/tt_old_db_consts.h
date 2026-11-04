@@ -40,8 +40,13 @@
 #include "db/tt_db_key.h"
 
 #include <limits.h>
+// Without LONG_BIT take the width of a long, as lib/db/tt_client_isam.h does.
 #ifndef LONG_BIT
+#if ULONG_MAX > 0xffffffffUL
+#define LONG_BIT 64
+#else
 #define LONG_BIT 32
+#endif
 #endif
 
 #define TT_OLD_DB_VERSION			"0001"

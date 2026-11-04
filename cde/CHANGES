@@ -108,6 +108,19 @@
   `memmove`.
 - tt: add sanitizer tests that run the real dispatcher of rpc.ttdbserverd on
   made-up requests (`make -C lib/tt/bin/ttdbserverd check`).
+- tt: make NetISAM and its users agree on the width of a long. On Linux the
+  feature macros of the build hide `LONG_BIT` from glibc's `<limits.h>` in C
+  code while the C++ compilers show it, and the headers fell back to 32, so on
+  a 64-bit build `libisam` stored 4-byte longs where rpc.ttdbserverd and libtt
+  sized keys and records for 8-byte ones: the daemon could not build the tables
+  of a partition (it ended in the second index of the first table), and a
+  stored -1 came back as 4294967295. `isam.h`, `tt_client_isam.h`,
+  `tt_db_server_consts.h` and `tt_old_db_consts.h` now take the fallback from
+  `ULONG_MAX`, so 32-bit builds are unchanged and 64-bit builds use 8-byte
+  longs in C and in C++. `stfloat` stores a float at its own width, not at the
+  width of a long. `make -C lib/tt/mini_isam check` runs the check as C and as
+  C++ against `libisam`, and the partition cases of the rpc.ttdbserverd tests
+  no longer skip.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

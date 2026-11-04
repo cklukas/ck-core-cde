@@ -150,6 +150,16 @@ The numbers, lengths and pointers of a request are checked before they are used:
   buffers have the size of the records, and overlapping entries of a b-tree are
   moved with `memmove`.
 
+A NetISAM table stores its numbers (page and record numbers, the serial of a
+duplicate key, the fields of the access table) in the width of a C `long`:
+4 bytes on a 32-bit build and 8 bytes on a 64-bit build. The width comes from
+`LONG_BIT`, and where `<limits.h>` does not define it the headers take it from
+`ULONG_MAX`, so the C library and the C++ server and client library always agree.
+A table cannot be moved between a 32-bit and a 64-bit `rpc.ttdbserverd`. On
+64-bit Linux the C part stored 4 bytes where the C++ part expected 8 before this
+was fixed, so the server could not complete the tables of a partition and there
+is no working database of the old layout to convert.
+
 ## Checks
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
@@ -161,6 +171,11 @@ environment policy and the start environment of a message.
 
 `make -C lib/tt/bin/ttdbserverd check` does the same for the database server: it
 runs the real request dispatcher on requests it makes up, and a mutation of
-those requests, under the sanitizers. Two cases that need a database of a
-partition are skipped on builds whose feature macros hide `LONG_BIT` from
-NetISAM.
+those requests, under the sanitizers. Every case runs on every build, including
+the two that need the database of a partition: a build in which NetISAM and the
+server disagree on the width of a long cannot make that database, and those
+cases fail.
+
+`make -C lib/tt/mini_isam check` builds the same test of the width of a long as
+C and as C++ and runs both against `libisam`, so the C library and its C++
+clients are held to one layout.
