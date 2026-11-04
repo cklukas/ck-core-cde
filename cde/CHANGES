@@ -121,6 +121,31 @@
   width of a long. `make -C lib/tt/mini_isam check` runs the check as C and as
   C++ against `libisam`, and the partition cases of the rpc.ttdbserverd tests
   no longer skip.
+- DtSearch: give a database one layout on every machine, in C and in C++.
+  `LONG`, `ULONG`, `DB_ADDR` and `F_ADDR` are 8 bytes (with the 2-byte `INT`
+  and the 4-byte fields of the records), defined with fixed-width integers and
+  asserted in `Dt/vista.h` and `Dt/Search.h` instead of taken from `LONG_BIT`,
+  which glibc hides from C code built with the feature macros of the build:
+  the engine (built with `_XOPEN_SOURCE`), the rest of the library and the C++
+  code of DtInfo disagreed on their size. Page and record headers, the set and
+  member pointers, the key pages, the data dictionary (`tiny.c`) and the
+  entries of the `.d99` file follow, and the dictionary version is `V4.dt`, so
+  a database of the earlier layout is refused ("incompatible dictionary file")
+  and has to be made again. The comparison of a key reads its slot by offsets
+  instead of through a misaligned structure.
+- DtSearch: `dtsrclean` and `dtsrdelete` no longer die of a signal when they
+  print their first message (they wrote to a stream that only the engine's
+  start-up sets), `dtsrdelete` keeps the entries of an address list as they
+  are in the file (it wrote them back in host order, which left every list of
+  a word it changed unreadable on a little-endian machine), and it prints the
+  record count with the right format.
+- DtSearch: add tests. `make -C lib/DtSearch check` builds the widths of the
+  types and the layout constants as C and as C++; `make -C programs/dtsr check`
+  makes a database of 420 documents with the tools, reads its `.d99` file for
+  8-byte entries, queries it through the DtSrAPI (single and several words,
+  and, or, not, exact, stemmed and statistical search, under the sanitizers
+  when the compiler has them), and queries it again after `dtsrclean -v` and
+  after `dtsrdelete`.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

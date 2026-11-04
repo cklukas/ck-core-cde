@@ -82,20 +82,23 @@
  * - Prefix all vista utility names with "dt...", also to deconfuse.
  *
  */
-#if defined(__linux__)
-# define __SVR4_I386_ABI_L1__
-#endif
-#include <limits.h>	/* pickup WORD_BIT, LONG_BIT */
-# undef __SVR4_I386_ABI_L1__
-# ifndef WORD_BIT
-# define WORD_BIT 32
-# endif
-# ifndef LONG_BIT
-# define LONG_BIT 32
-# endif
+#include <limits.h>
+#include <stdint.h>
 
-#define db_VERSION "3.dt"	/* was "3.10" */
-#define dbd_VERSION "V3.dt\032"	/* was "V3.00\032" */
+/* A database file stores addresses and timestamps in 8 bytes, so a file made
+ * with another width of these types has another layout: the versions below
+ * name it, and a data dictionary of another version is refused.
+ */
+#define db_VERSION "4.dt"	/* was "3.dt" with 4-byte addresses */
+#define dbd_VERSION "V4.dt\032"	/* was "V3.dt\032" */
+
+#ifndef DT_STATIC_ASSERT
+# ifdef __cplusplus
+#  define DT_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
+# else
+#  define DT_STATIC_ASSERT(cond, msg) _Static_assert(cond, msg)
+# endif
+#endif
 
 /* -------------------status codes-------------------- */
 /* user errors */
@@ -185,34 +188,42 @@
 #define S_LOCKED    8     /* current record's lock bit is set */
 #define S_UNLOCKED  9     /* current record's lock bit is clear */
 
-/* In order to share databases among heterogenous machines,
- * certain integer types must be defined that are invariably
- * 2 and 4 bytes on all architectures.
- * Note WORD_BIT == 32 does not guarantee short == 16.
+/* The integer types of a database file have one width on every machine and in
+ * C and C++ alike: INT is 2 bytes, LONG and ULONG are 8 bytes, and so are
+ * the database address (DB_ADDR) and the file address (F_ADDR) made from them.
+ * The widths do not depend on feature macros or on LONG_BIT.
  */
 
 #ifdef LONG
 #undef LONG
 #endif
 
-#if   (WORD_BIT == 16)
-  typedef int             INT;
-  typedef unsigned int    UINT;
-#elif (WORD_BIT == 32)
-  typedef short           INT;
-  typedef unsigned short  UINT;
-#else
-#error Unable to typedef INT and UINT
-#endif
+typedef int16_t         INT;
+typedef uint16_t        UINT;
+typedef int64_t         LONG;
+typedef uint64_t        ULONG;
 
-#if (LONG_BIT == 32)
-  typedef long            LONG;
-  typedef unsigned long   ULONG;
-#elif   (WORD_BIT == 32)
-  typedef int             LONG;
-  typedef unsigned int    ULONG;
-#else
-#error Unable to typedef LONG and ULONG
+DT_STATIC_ASSERT(sizeof(INT) == 2, "INT is 2 bytes");
+DT_STATIC_ASSERT(sizeof(UINT) == 2, "UINT is 2 bytes");
+DT_STATIC_ASSERT(sizeof(LONG) == 8, "LONG is 8 bytes");
+DT_STATIC_ASSERT(sizeof(ULONG) == 8, "ULONG is 8 bytes");
+
+#ifndef DT_NET64_DEFINED
+#define DT_NET64_DEFINED
+/* Host order to the big-endian ("network") order of a database file and back,
+ * for the 8-byte LONG, ULONG and DB_ADDR; the 4-byte integers of the records
+ * use htonl and ntohl. */
+static inline uint64_t
+dt_net64(uint64_t v)
+{
+    const uint16_t one = 1;
+
+    if (*(const unsigned char *) &one == 0)
+	return v;
+    return (v >> 56) | ((v >> 40) & 0xff00ULL) | ((v >> 24) & 0xff0000ULL) |
+	((v >> 8) & 0xff000000ULL) | ((v & 0xff000000ULL) << 8) |
+	((v & 0xff0000ULL) << 24) | ((v & 0xff00ULL) << 40) | (v << 56);
+}
 #endif
 
 typedef LONG	BOOLEAN;
@@ -227,7 +238,10 @@ typedef LONG	BOOLEAN;
 #define FILE_NO INT   
 
 /* file address: page or record number */
-#define F_ADDR LONG   
+#define F_ADDR LONG
+
+DT_STATIC_ASSERT(sizeof(DB_ADDR) == 8, "DB_ADDR is 8 bytes");
+DT_STATIC_ASSERT(sizeof(F_ADDR) == 8, "F_ADDR is 8 bytes");
 
 /* record number indicator */
 #define RECMARK 10000

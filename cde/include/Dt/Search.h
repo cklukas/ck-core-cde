@@ -62,17 +62,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(__linux__)
-# define __SVR4_I386_ABI_L1__
-#endif
 #include <limits.h>
-#if defined(__linux__)
-# undef __SVR4_I386_ABI_L1__
-# ifndef WORD_BIT
-# define WORD_BIT 32
-# endif
-# ifndef LONG_BIT
-# define LONG_BIT 32
+#include <stdint.h>
+
+#ifndef DT_STATIC_ASSERT
+# ifdef __cplusplus
+#  define DT_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
+# else
+#  define DT_STATIC_ASSERT(cond, msg) _Static_assert(cond, msg)
 # endif
 #endif
 
@@ -97,33 +94,42 @@
 #define DtSrABORT	6	/* fatal engine failure, caller must abort */
 #define DtSrCOMM	7	/* fatal communications failure */
 
-/* In order to share databases among heterogenous machines,
- * certain integer types must be defined that are invariably
- * 2 and 4 bytes on all architectures.
- * Note WORD_BIT == 32 does not guarantee short == 16.
+/* The integer types of a DtSearch database have one width on every machine
+ * and in C and C++ alike: the 2 and 4 byte types of the records, and the
+ * 8 byte database address of vista.h.  The widths do not depend on feature
+ * macros or on LONG_BIT.
  */
-#if   (WORD_BIT == 16)
-  typedef int		  DtSrINT16;
-  typedef unsigned int	  DtSrUINT16;
-#elif (WORD_BIT == 32)                                       
-  typedef short		  DtSrINT16;    
-  typedef unsigned short  DtSrUINT16;
-#else                                       
-#error Unable to typedef DtSrINT16 and DtSrUINT16
-#endif
-   
-#if   (WORD_BIT == 32)
-  typedef int		  DtSrINT32;
-  typedef unsigned int	  DtSrUINT32;
-#elif (LONG_BIT == 32)
-  typedef long		  DtSrINT32;
-  typedef unsigned long	  DtSrUINT32;
-#else                                                      
-#error Unable to typedef DtSrINT32 and DtSrUINT32         
+typedef int16_t		  DtSrINT16;
+typedef uint16_t	  DtSrUINT16;
+typedef int32_t		  DtSrINT32;
+typedef uint32_t	  DtSrUINT32;
+typedef int64_t		  DtSrINT64;
+typedef uint64_t	  DtSrUINT64;
+
+DT_STATIC_ASSERT(sizeof(DtSrINT16) == 2, "DtSrINT16 is 2 bytes");
+DT_STATIC_ASSERT(sizeof(DtSrINT32) == 4, "DtSrINT32 is 4 bytes");
+DT_STATIC_ASSERT(sizeof(DtSrINT64) == 8, "DtSrINT64 is 8 bytes");
+
+#ifndef DT_NET64_DEFINED
+#define DT_NET64_DEFINED
+/* Host order to the big-endian ("network") order of a database file and back,
+ * for the 8-byte LONG, ULONG and DB_ADDR; the 4-byte integers of the records
+ * use htonl and ntohl. */
+static inline uint64_t
+dt_net64(uint64_t v)
+{
+    const uint16_t one = 1;
+
+    if (*(const unsigned char *) &one == 0)
+	return v;
+    return (v >> 56) | ((v >> 40) & 0xff00ULL) | ((v >> 24) & 0xff0000ULL) |
+	((v >> 8) & 0xff000000ULL) | ((v & 0xff000000ULL) << 8) |
+	((v & 0xff0000ULL) << 24) | ((v & 0xff00ULL) << 40) | (v << 56);
+}
 #endif
 
-#ifndef DB_ADDR	
-  typedef DtSrINT32	  DB_ADDR;	/* vista.h: must be 4 bytes */
+#ifndef DB_ADDR
+  typedef DtSrINT64	  DB_ADDR;	/* vista.h: must be 8 bytes */
 #endif
 
 #ifndef TRUE

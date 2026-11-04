@@ -5,6 +5,19 @@ SUBDIRS = raima
 lib_LTLIBRARIES = libDtSearch.la
 
 BUILT_SOURCES = boolyac.h boolyac.c
+
+# The widths of the types of a database file, in C and in C++.
+check_PROGRAMS = check-dtsearch-layout check-dtsearch-layout-cxx
+TESTS = $(check_PROGRAMS)
+
+check_dtsearch_layout_SOURCES = tests/check-dtsearch-layout.c
+check_dtsearch_layout_CPPFLAGS = $(DT_INCDIR) -I$(top_srcdir)/include
+
+check_dtsearch_layout_cxx_SOURCES = tests/check-dtsearch-layout-cxx.cc
+check_dtsearch_layout_cxx_CPPFLAGS = $(DT_INCDIR) -I$(top_srcdir)/include \
+				     -I$(srcdir)/tests
+
+EXTRA_DIST = tests/check-dtsearch-layout.c
 CLEANFILES = boolyac.h boolyac.c
 AM_YFLAGS = -d
 

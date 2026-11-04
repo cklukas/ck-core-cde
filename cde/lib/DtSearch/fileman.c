@@ -236,7 +236,7 @@ FREE_SPACE_STR *find_free_space (DtSrINT32 req_size, FILE_HEADER * flh)
 	    space_found.hole_size = req_size;
 	    space_found.offset = flh->hole_array[k][j].offset;
 	    flh->hole_array[k][j].hole_size -= req_size;
-	    flh->hole_array[k][j].offset += req_size * sizeof(DtSrINT32);
+	    flh->hole_array[k][j].offset += req_size * sizeof(DB_ADDR);
 	    if ((k == 1) &&
 		(flh->hole_array[k][j].hole_size <= HOLE_SIZE_LIMIT)) {
 		del_rec.hole_size = flh->hole_array[k][j].hole_size;

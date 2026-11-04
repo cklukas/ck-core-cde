@@ -112,7 +112,7 @@
  * from d99 file.  Note DBAS_PER_BLOCK * sizeof(DB_ADDR) = 512 bytes,
  * the standard blksize of one hard disk block.
  */
-#define DBAS_PER_BLOCK	128
+#define DBAS_PER_BLOCK	(512 / (int) sizeof(DB_ADDR))
 
 #define RESET_BIT(bv, by, bm)	bv[by] &= (UCHAR) ~bm
 
@@ -1120,7 +1120,7 @@ static DB_ADDR	read_d99 (struct or_hwordrec *wordrec)
     }
 
     /******return *bufptr++;*******/
-    return ntohl (*bufptr++);
+    return (DB_ADDR) dt_net64 ((uint64_t) *bufptr++);
 } /* read_d99() */
 
 

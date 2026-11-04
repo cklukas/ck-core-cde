@@ -847,7 +847,7 @@ static void	put_addrs_2_dtbs_addr_file (
 
 	/* Write foxes to the free holes, if any, no byte swap */
 	for (int32 = 0;  int32 < got_word.or_hwfree;  int32++)
-	    addrs_array [int32] = 0xFFFFFFFF;
+	    addrs_array [int32] = (DB_ADDR) -1;
 	num_writes = fwrite (addrs_array, sizeof(DB_ADDR),
 	    (size_t)got_word.or_hwfree, dtbs_addr_fp);
 	if (num_writes != got_word.or_hwfree) {
@@ -1132,7 +1132,7 @@ void            write_new_word_2_dtbs (void)
 	 * Note that record_addr_word is now available for this action.
 	 */
 	for (int32 = 0;  int32 < got_word.or_hwfree;  int32++)
-	    *(record_addr_word + int32) = 0xFFFFFFFF;
+	    *(record_addr_word + int32) = (DB_ADDR) -1;
 	num_writes = fwrite (record_addr_word, sizeof(DB_ADDR),
 	    (size_t)got_word.or_hwfree, dtbs_addr_fp);
 	if (num_writes != got_word.or_hwfree) {

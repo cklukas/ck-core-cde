@@ -133,7 +133,8 @@ int dbn
       RETURN( dberr(S_EXCLUSIVE) );
 
    time (&local_timestamp);
-   extern_timestamp = htonl ((LONG) local_timestamp);
+   extern_timestamp = (LONG) local_timestamp;
+   HTONL (extern_timestamp);
 
    fno += curr_db_table->ft_offset;
    file_ptr = &file_table[fno];
@@ -162,8 +163,10 @@ int dbn
    page->pg0.bdate =		0;
    if (file_ptr->ft_type == KEY) {
       /*--------- Write KEY FILE PAGE 0 ---------*/
-      page->pg0.dchain =	htonl ((LONG) NONE);
-      page->pg0.next =		htonl (2);
+      page->pg0.dchain =	NONE;
+      HTONL (page->pg0.dchain);
+      page->pg0.next =		2;
+      HTONL (page->pg0.next);
       page->pg0.timestamp =	0; /* not really used by key file */
       DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
 
@@ -183,13 +186,15 @@ int dbn
        * with the system record, otherwise just a generic page 0.
        */
       page->pg0.dchain =	0;
-      page->pg0.timestamp =	htonl (1); 
+      page->pg0.timestamp =	1;
+      HTONL (page->pg0.timestamp);
       /* check to see if this file contains a system record */
       for (rec = 0, rec_ptr = record_table; rec < size_rt; ++rec, ++rec_ptr) {
 	 if ((rec_ptr->rt_fdtot == -1) && (rec_ptr->rt_file == fno)) {
 
 	    /*---Write special DATA FILE PAGE 0 for system record file ---*/
-	    page->pg0.next =	htonl (2);
+	    page->pg0.next =	2;
+	    HTONL (page->pg0.next);
 	    DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
 
 	    /*--------- Write DATA FILE PAGE 1 for system record ---------*/
@@ -209,7 +214,8 @@ int dbn
 	    bytecpy(page->pg1.init_int, &rno, sizeof(INT));
 	    if ( rec_ptr->rt_flags & TIMESTAMPED ) {
 	       /* timestamp system record */
-	       ts =		htonl (1);
+	       ts =		1;
+	       HTONL (ts);
 	       bytecpy(page->pg1.init_crts, &ts, sizeof(ULONG));
 	       bytecpy(page->pg1.init_upts, &ts, sizeof(ULONG));
 	    }
@@ -222,7 +228,8 @@ int dbn
        * a system record, just write a generic page 0.
        */
       if (rec == size_rt) {
-	 page->pg0.next =	htonl (1);
+	 page->pg0.next =	1;
+	 HTONL (page->pg0.next);
 	 DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
       }
    }

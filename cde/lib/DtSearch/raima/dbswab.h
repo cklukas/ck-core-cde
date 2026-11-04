@@ -80,9 +80,10 @@ typedef enum {HTON=1, NTOH} SWABDIR;
 
 extern void	swab_page (char *pgbuf, FILE_ENTRY *file_ptr, SWABDIR direction);
 
-#define HTONL(x)	x = htonl(x)
+/* HTONL and NTOHL convert a 4-byte or an 8-byte integer, by its size. */
+#define HTONL(x)	((x) = (sizeof(x) == 8) ? dt_net64(x) : htonl(x))
 #define HTONS(x)	x = htons(x)
-#define NTOHL(x)	x = ntohl(x)
+#define NTOHL(x)	((x) = (sizeof(x) == 8) ? dt_net64(x) : ntohl(x))
 #define NTOHS(x)	x = ntohs(x)
 
 /******** debug stuff *******/

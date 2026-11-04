@@ -43,6 +43,65 @@
 #define SORT_TABLE_SIZE		0
 #define KEY_TABLE_SIZE		0
 
+/* The layout of the slots, from the widths of dbtype.h, so that the data
+ * dictionary and the engine cannot disagree.  A record slot holds a record's
+ * header, the pointers of the sets it owns and is a member of, and its data;
+ * the data are the structures of SearchP.h, whose sizes dtsrdbrec.c asserts.
+ * A page holds as many slots as fit behind its header.  A key slot is a
+ * prefix, the key, a database address and the pointer to the next node; a key
+ * page starts with the header of a page, the count of used slots and the
+ * pointer before the first slot. */
+#define SETP		(SETPSIZE - sizeof(ULONG))	/* a set pointer */
+#define MEMP		MEMPSIZE			/* a member pointer */
+#define OPTKEY		1	/* optional key flags of OR_MISCREC */
+#define MAXOF(a, b)	((a) > (b) ? (a) : (b))
+#define SLOTS(pgsize, hdr, slsize)	(((pgsize) - (hdr)) / (slsize))
+
+/* where the data of each record starts */
+#define D_DBREC		(RECHDRSIZE + SETP)
+#define D_DBMISCREC	(RECHDRSIZE + MEMP)
+#define D_OBJREC	(RECHDRSIZE + 2 * SETP)
+#define D_MISCREC	(RECHDRSIZE + OPTKEY + MEMP)
+#define D_BLOBREC	(RECHDRSIZE + MEMP)
+#define D_SWORDREC	RECHDRSIZE
+#define D_LWORDREC	RECHDRSIZE
+#define D_HWORDREC	RECHDRSIZE
+
+/* the bytes of data of each record */
+#define L_DBREC		108
+#define L_DBMISCREC	108
+#define L_OBJREC	96
+#define L_MISCREC	107
+#define L_BLOBREC	236
+#define L_SWORDREC	28
+#define L_LWORDREC	52
+#define L_HWORDREC	148
+
+/* the length of each record, and of the slots of each file */
+#define R_DBREC		(D_DBREC + L_DBREC)
+#define R_DBMISCREC	(D_DBMISCREC + L_DBMISCREC)
+#define R_OBJREC	(D_OBJREC + L_OBJREC)
+#define R_MISCREC	(D_MISCREC + L_MISCREC)
+#define R_BLOBREC	(D_BLOBREC + L_BLOBREC)
+#define R_SWORDREC	(D_SWORDREC + L_SWORDREC)
+#define R_LWORDREC	(D_LWORDREC + L_LWORDREC)
+#define R_HWORDREC	(D_HWORDREC + L_HWORDREC)
+#define SLOT_D00	MAXOF(MAXOF(R_DBREC, R_DBMISCREC), \
+			      MAXOF(R_OBJREC, R_MISCREC))
+#define SLOT_D01	R_BLOBREC
+#define SLOT_D21	R_SWORDREC
+#define SLOT_D22	R_LWORDREC
+#define SLOT_D23	R_HWORDREC
+
+/* the key lengths of the key files */
+#define KEYLEN_K00	32
+#define KEYLEN_K01	106
+#define KEYLEN_K21	16
+#define KEYLEN_K22	40
+#define KEYLEN_K23	134
+#define KEYHDR		(PGHDRSIZE + sizeof(INT) + sizeof(F_ADDR))
+#define KSLOT(keylen)	(sizeof(INT) + (keylen) + DB_ADDR_SIZE + sizeof(F_ADDR))
+
 int main(void) {
     fwrite(dbd_VERSION, DBD_COMPAT_LEN, 1, stdout);
 
@@ -66,8 +125,8 @@ int main(void) {
 	    .ft_desc	= 0,
 	    .ft_status	= CLOSED,
 	    .ft_type	= DATA,
-	    .ft_slots	= 0x20,
-	    .ft_slsize	= 0x7E,
+	    .ft_slots	= SLOTS(4096, PGHDRSIZE, SLOT_D00),
+	    .ft_slsize	= SLOT_D00,
 	    .ft_pgsize	= 0x1000,
 	    .ft_flags	= 0
 	},
@@ -75,8 +134,8 @@ int main(void) {
 	    .ft_desc	= 0,
 	    .ft_status	= CLOSED,
 	    .ft_type	= DATA,
-	    .ft_slots	= 0x8,
-	    .ft_slsize	= 0xFE,
+	    .ft_slots	= SLOTS(2048, PGHDRSIZE, SLOT_D01),
+	    .ft_slsize	= SLOT_D01,
 	    .ft_pgsize	= 0x800,
 	    .ft_flags	= 0
 	},
@@ -84,8 +143,8 @@ int main(void) {
 	    .ft_desc	= 0,
 	    .ft_status	= CLOSED,
 	    .ft_type	= DATA,
-	    .ft_slots	= 0x3C,
-	    .ft_slsize	= 0x22,
+	    .ft_slots	= SLOTS(2048, PGHDRSIZE, SLOT_D21),
+	    .ft_slsize	= SLOT_D21,
 	    .ft_pgsize	= 0x800,
 	    .ft_flags	= 0
 	},
@@ -93,8 +152,8 @@ int main(void) {
 	    .ft_desc	= 0,
 	    .ft_status	= CLOSED,
 	    .ft_type	= DATA,
-	    .ft_slots	= 0x23,
-	    .ft_slsize	= 0x3A,
+	    .ft_slots	= SLOTS(2048, PGHDRSIZE, SLOT_D22),
+	    .ft_slsize	= SLOT_D22,
 	    .ft_pgsize	= 0x800,
 	    .ft_flags	= 0
 	},
@@ -102,8 +161,8 @@ int main(void) {
 	    .ft_desc	= 0,
 	    .ft_status	= CLOSED,
 	    .ft_type	= DATA,
-	    .ft_slots	= 0x6,
-	    .ft_slsize	= 0x9A,
+	    .ft_slots	= SLOTS(1024, PGHDRSIZE, SLOT_D23),
+	    .ft_slsize	= SLOT_D23,
 	    .ft_pgsize	= 0x400,
 	    .ft_flags	= 0
 	},
@@ -111,8 +170,8 @@ int main(void) {
 	    .ft_desc	= 0,
 	    .ft_status	= CLOSED,
 	    .ft_type	= KEY,
-	    .ft_slots	= 0x30,
-	    .ft_slsize	= 0x2A,
+	    .ft_slots	= SLOTS(2048, KEYHDR, KSLOT(KEYLEN_K00)),
+	    .ft_slsize	= KSLOT(KEYLEN_K00),
 	    .ft_pgsize	= 0x800,
 	    .ft_flags	= 0
 	},
@@ -120,8 +179,8 @@ int main(void) {
 	    .ft_desc	= 0,
 	    .ft_status	= CLOSED,
 	    .ft_type	= KEY,
-	    .ft_slots	= 0x11,
-	    .ft_slsize	= 0x74,
+	    .ft_slots	= SLOTS(2048, KEYHDR, KSLOT(KEYLEN_K01)),
+	    .ft_slsize	= KSLOT(KEYLEN_K01),
 	    .ft_pgsize	= 0x800,
 	    .ft_flags	= 0
 	},
@@ -129,8 +188,8 @@ int main(void) {
 	    .ft_desc	= 0,
 	    .ft_status	= CLOSED,
 	    .ft_type	= KEY,
-	    .ft_slots	= 0x4E,
-	    .ft_slsize	= 0x1A,
+	    .ft_slots	= SLOTS(2048, KEYHDR, KSLOT(KEYLEN_K21)),
+	    .ft_slsize	= KSLOT(KEYLEN_K21),
 	    .ft_pgsize	= 0x800,
 	    .ft_flags	= 0
 	},
@@ -138,8 +197,8 @@ int main(void) {
 	    .ft_desc	= 0,
 	    .ft_status	= CLOSED,
 	    .ft_type	= KEY,
-	    .ft_slots	= 0x28,
-	    .ft_slsize	= 0x32,
+	    .ft_slots	= SLOTS(2048, KEYHDR, KSLOT(KEYLEN_K22)),
+	    .ft_slsize	= KSLOT(KEYLEN_K22),
 	    .ft_pgsize	= 0x800,
 	    .ft_flags	= 0
 	},
@@ -147,8 +206,8 @@ int main(void) {
 	    .ft_desc	= 0,
 	    .ft_status	= CLOSED,
 	    .ft_type	= KEY,
-	    .ft_slots	= 0x7,
-	    .ft_slsize	= 0x90,
+	    .ft_slots	= SLOTS(1024, KEYHDR, KSLOT(KEYLEN_K23)),
+	    .ft_slsize	= KSLOT(KEYLEN_K23),
 	    .ft_pgsize	= 0x400,
 	    .ft_flags	= 0
 	}
@@ -180,64 +239,64 @@ int main(void) {
     RECORD_ENTRY record_entry[RECORD_TABLE_SIZE] = {
 	{
 	    .rt_file	= 0,
-	    .rt_len	= 0x7E,
-	    .rt_data	= 0x12,
+	    .rt_len	= R_DBREC,
+	    .rt_data	= D_DBREC,
 	    .rt_fields	= 0,
 	    .rt_fdtot	= 0x13,
 	    .rt_flags	= 0
 	},
 	{
 	    .rt_file	= 0,
-	    .rt_len	= 0x7E,
-	    .rt_data	= 0x12,
+	    .rt_len	= R_DBMISCREC,
+	    .rt_data	= D_DBMISCREC,
 	    .rt_fields	= 0x13,
 	    .rt_fdtot	= 0x2,
 	    .rt_flags	= 0
 	},
 	{
 	    .rt_file	= 0,
-	    .rt_len	= 0x7E,
-	    .rt_data	= 0x1E,
+	    .rt_len	= R_OBJREC,
+	    .rt_data	= D_OBJREC,
 	    .rt_fields	= 0x15,
 	    .rt_fdtot	= 0xC,
 	    .rt_flags	= 0
 	},
 	{
 	    .rt_file	= 0,
-	    .rt_len	= 0x7E,
-	    .rt_data	= 0x13,
+	    .rt_len	= R_MISCREC,
+	    .rt_data	= D_MISCREC,
 	    .rt_fields	= 0x21,
 	    .rt_fdtot	= 0x2,
 	    .rt_flags	= 0
 	},
 	{
 	    .rt_file	= 0x1,
-	    .rt_len	= 0xFE,
-	    .rt_data	= 0x12,
+	    .rt_len	= R_BLOBREC,
+	    .rt_data	= D_BLOBREC,
 	    .rt_fields	= 0x23,
 	    .rt_fdtot	= 0x2,
 	    .rt_flags	= 0
 	},
 	{
 	    .rt_file	= 0x2,
-	    .rt_len	= 0x22,
-	    .rt_data	= 0x6,
+	    .rt_len	= R_SWORDREC,
+	    .rt_data	= D_SWORDREC,
 	    .rt_fields	= 0x25,
 	    .rt_fdtot	= 0x4,
 	    .rt_flags	= 0
 	},
 	{
 	    .rt_file	= 0x3,
-	    .rt_len	= 0x3A,
-	    .rt_data	= 0x6,
+	    .rt_len	= R_LWORDREC,
+	    .rt_data	= D_LWORDREC,
 	    .rt_fields	= 0x29,
 	    .rt_fdtot	= 0x4,
 	    .rt_flags	= 0
 	},
 	{
 	    .rt_file	= 0x4,
-	    .rt_len	= 0x9A,
-	    .rt_data	= 0x6,
+	    .rt_len	= R_HWORDREC,
+	    .rt_data	= D_HWORDREC,
 	    .rt_fields	= 0x2D,
 	    .rt_fdtot	= 0x4,
 	    .rt_flags	= 0
@@ -260,89 +319,89 @@ int main(void) {
     FIELD_ENTRY field_entry[FIELD_TABLE_SIZE] = {
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x12,
+	    .fd_ptr	= D_DBREC + 0,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0x4
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x16,
+	    .fd_ptr	= D_DBREC + 4,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0x4
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x1A,
+	    .fd_ptr	= D_DBREC + 8,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x1E,
+	    .fd_ptr	= D_DBREC + 12,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x22,
+	    .fd_ptr	= D_DBREC + 16,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x26,
+	    .fd_ptr	= D_DBREC + 20,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x2A,
+	    .fd_ptr	= D_DBREC + 24,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x2E,
+	    .fd_ptr	= D_DBREC + 28,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -353,7 +412,7 @@ int main(void) {
 	    .fd_dim	= {0x8, 0, 0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x32,
+	    .fd_ptr	= D_DBREC + 32,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -364,7 +423,7 @@ int main(void) {
 	    .fd_dim	= {0x32, 0, 0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x3A,
+	    .fd_ptr	= D_DBREC + 40,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -375,7 +434,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x6C,
+	    .fd_ptr	= D_DBREC + 90,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -386,7 +445,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x6E,
+	    .fd_ptr	= D_DBREC + 92,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -397,7 +456,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x70,
+	    .fd_ptr	= D_DBREC + 94,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -408,7 +467,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x72,
+	    .fd_ptr	= D_DBREC + 96,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -419,7 +478,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x74,
+	    .fd_ptr	= D_DBREC + 98,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -430,7 +489,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x76,
+	    .fd_ptr	= D_DBREC + 100,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -441,7 +500,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x78,
+	    .fd_ptr	= D_DBREC + 102,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -452,7 +511,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x7A,
+	    .fd_ptr	= D_DBREC + 104,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -463,7 +522,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x7C,
+	    .fd_ptr	= D_DBREC + 106,
 	    .fd_rec	= 0,
 	    .fd_flags	= 0
 	},
@@ -474,7 +533,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x12,
+	    .fd_ptr	= D_DBMISCREC + 0,
 	    .fd_rec	= 0x1,
 	    .fd_flags	= 0
 	},
@@ -485,62 +544,62 @@ int main(void) {
 	    .fd_dim	= {0x1, 0x6A, 0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x14,
+	    .fd_ptr	= D_DBMISCREC + 2,
 	    .fd_rec	= 0x1,
 	    .fd_flags	= 0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x1E,
+	    .fd_ptr	= D_OBJREC + 0,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0x4
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x22,
+	    .fd_ptr	= D_OBJREC + 4,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0x4
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x26,
+	    .fd_ptr	= D_OBJREC + 8,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0x0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x2A,
+	    .fd_ptr	= D_OBJREC + 12,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0x0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x2E,
+	    .fd_ptr	= D_OBJREC + 16,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0x0
 	},
@@ -551,7 +610,7 @@ int main(void) {
 	    .fd_dim	= {0x20, 0, 0},
 	    .fd_keyfile	= 0x5,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x32,
+	    .fd_ptr	= D_OBJREC + 20,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0x0
 	},
@@ -562,7 +621,7 @@ int main(void) {
 	    .fd_dim	= {0x22, 0, 0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x52,
+	    .fd_ptr	= D_OBJREC + 52,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0
 	},
@@ -573,7 +632,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x74,
+	    .fd_ptr	= D_OBJREC + 86,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0
 	},
@@ -584,7 +643,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x76,
+	    .fd_ptr	= D_OBJREC + 88,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0
 	},
@@ -595,7 +654,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x78,
+	    .fd_ptr	= D_OBJREC + 90,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0
 	},
@@ -606,7 +665,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x7A,
+	    .fd_ptr	= D_OBJREC + 92,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0
 	},
@@ -617,7 +676,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x7C,
+	    .fd_ptr	= D_OBJREC + 94,
 	    .fd_rec	= 0x2,
 	    .fd_flags	= 0
 	},
@@ -628,7 +687,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x13,
+	    .fd_ptr	= D_MISCREC + 0,
 	    .fd_rec	= 0x3,
 	    .fd_flags	= 0
 	},
@@ -639,7 +698,7 @@ int main(void) {
 	    .fd_dim	= {0x1, 0x69, 0},
 	    .fd_keyfile	= 0x6,
 	    .fd_keyno	= 0x1,
-	    .fd_ptr	= 0x15,
+	    .fd_ptr	= D_MISCREC + 2,
 	    .fd_rec	= 0x3,
 	    .fd_flags	= 0x400
 	},
@@ -650,7 +709,7 @@ int main(void) {
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x12,
+	    .fd_ptr	= D_BLOBREC + 0,
 	    .fd_rec	= 0x4,
 	    .fd_flags	= 0
 	},
@@ -661,7 +720,7 @@ int main(void) {
 	    .fd_dim	= {0xEA, 0x1, 0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x14,
+	    .fd_ptr	= D_BLOBREC + 2,
 	    .fd_rec	= 0x4,
 	    .fd_flags	= 0
 	},
@@ -672,40 +731,40 @@ int main(void) {
 	    .fd_dim	= {0x10, 0, 0},
 	    .fd_keyfile	= 0x7,
 	    .fd_keyno	= 0x2,
-	    .fd_ptr	= 0x6,
+	    .fd_ptr	= D_SWORDREC + 0,
 	    .fd_rec	= 0x5,
 	    .fd_flags	= 0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x16,
+	    .fd_ptr	= D_SWORDREC + 16,
 	    .fd_rec	= 0x5,
 	    .fd_flags	= 0x0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x1A,
+	    .fd_ptr	= D_SWORDREC + 20,
 	    .fd_rec	= 0x5,
 	    .fd_flags	= 0x0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x1E,
+	    .fd_ptr	= D_SWORDREC + 24,
 	    .fd_rec	= 0x5,
 	    .fd_flags	= 0x0
 	},
@@ -716,40 +775,40 @@ int main(void) {
 	    .fd_dim	= {0x28, 0, 0},
 	    .fd_keyfile	= 0x8,
 	    .fd_keyno	= 0x3,
-	    .fd_ptr	= 0x6,
+	    .fd_ptr	= D_LWORDREC + 0,
 	    .fd_rec	= 0x6,
 	    .fd_flags	= 0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x2E,
+	    .fd_ptr	= D_LWORDREC + 40,
 	    .fd_rec	= 0x6,
 	    .fd_flags	= 0x0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x32,
+	    .fd_ptr	= D_LWORDREC + 44,
 	    .fd_rec	= 0x6,
 	    .fd_flags	= 0x0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x36,
+	    .fd_ptr	= D_LWORDREC + 48,
 	    .fd_rec	= 0x6,
 	    .fd_flags	= 0x0
 	},
@@ -760,40 +819,40 @@ int main(void) {
 	    .fd_dim	= {0x86, 0, 0},
 	    .fd_keyfile	= 0x9,
 	    .fd_keyno	= 0x4,
-	    .fd_ptr	= 0x6,
+	    .fd_ptr	= D_HWORDREC + 0,
 	    .fd_rec	= 0x7,
 	    .fd_flags	= 0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x8E,
+	    .fd_ptr	= D_HWORDREC + 136,
 	    .fd_rec	= 0x7,
 	    .fd_flags	= 0x0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x92,
+	    .fd_ptr	= D_HWORDREC + 140,
 	    .fd_rec	= 0x7,
 	    .fd_flags	= 0x0
 	},
 	{
 	    .fd_key	= NOKEY,
-	    .fd_type	= LONGINT,
+	    .fd_type	= REGINT,
 	    .fd_len	= 0x4,
 	    .fd_dim	= {0},
 	    .fd_keyfile	= 0,
 	    .fd_keyno	= 0,
-	    .fd_ptr	= 0x96,
+	    .fd_ptr	= D_HWORDREC + 144,
 	    .fd_rec	= 0x7,
 	    .fd_flags	= 0x0
 	}
@@ -818,7 +877,7 @@ int main(void) {
 	{
 	    .st_order	= LAST,
 	    .st_own_rt	= 0,
-	    .st_own_ptr	= 0x6,
+	    .st_own_ptr	= RECHDRSIZE,
 	    .st_members	= 0,
 	    .st_memtot	= 0x1,
 	    .st_flags	= 0
@@ -826,7 +885,7 @@ int main(void) {
 	{
 	    .st_order	= LAST,
 	    .st_own_rt	= 0x2,
-	    .st_own_ptr	= 0x6,
+	    .st_own_ptr	= RECHDRSIZE,
 	    .st_members	= 0x1,
 	    .st_memtot	= 0x1,
 	    .st_flags	= 0
@@ -834,7 +893,7 @@ int main(void) {
 	{
 	    .st_order	= LAST,
 	    .st_own_rt	= 0x2,
-	    .st_own_ptr	= 0x12,
+	    .st_own_ptr	= RECHDRSIZE + SETP,
 	    .st_members	= 0x2,
 	    .st_memtot	= 0x1,
 	    .st_flags	= 0
@@ -857,19 +916,19 @@ int main(void) {
     MEMBER_ENTRY member_entry[MEMBER_TABLE_SIZE] = {
 	{
 	    .mt_record		= 0x1,
-	    .mt_mem_ptr		= 0x6,
+	    .mt_mem_ptr		= RECHDRSIZE,
 	    .mt_sort_fld	= 0,
 	    .mt_totsf		= 0
 	},
 	{
 	    .mt_record		= 0x4,
-	    .mt_mem_ptr		= 0x6,
+	    .mt_mem_ptr		= RECHDRSIZE,
 	    .mt_sort_fld	= 0,
 	    .mt_totsf		= 0
 	},
 	{
 	    .mt_record		= 0x3,
-	    .mt_mem_ptr		= 0x7,
+	    .mt_mem_ptr		= RECHDRSIZE + OPTKEY,
 	    .mt_sort_fld	= 0,
 	    .mt_totsf		= 0
 	}

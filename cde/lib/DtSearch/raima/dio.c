@@ -941,7 +941,7 @@ LOOKUP_ENTRY * *xlu_ptr /* pointer to lookup table slot for found page*/
 /* Writes a page in the cache to file.
  * For byte order neutrality:
  * Each page is raima header data, then a bunch of slots.
- * The first 4 bytes of the page header is the timestamp
+ * The first PGHDRSIZE bytes of the page header is the timestamp
  * when the page was written, and it's swapped here.
  * Each slot is raima record header and user record data.
  * The user record data must already have been byte
@@ -1211,7 +1211,7 @@ F_ADDR *loc     /* pointer to allocated location */
 	 if ( dio_get( pg, (char * *)&ptr, NOPGHOLD ) != S_OKAY )
 	    return( db_status );
 	/* Get the first key node on the delete chain.
-	 * (sizeof external timestamp set to 4 bytes)
+	 * (the external timestamp is sizeof(ULONG) = PGHDRSIZE bytes)
 	 ****** bytecpy(&pgzero_ptr->pz_dchain,
 	 ****** ptr+sizeof(long)+sizeof(INT), sizeof(F_ADDR)); *********
 	 */
@@ -1271,7 +1271,7 @@ F_ADDR  loc   /* location to be freed */
        * Delete chain ptr in key node page is in location
        * of orphan ptr, bytes 6 - 9, not bytes 4 - 7
        * as printed in raima User Guide.
-       * (sizeof external timestamp set to 4 bytes).
+       * (the external timestamp is sizeof(ULONG) = PGHDRSIZE bytes).
        ****** bytecpy(ptr+sizeof(long)+sizeof(INT),
        ****** &pgzero_ptr->pz_dchain, sizeof(F_ADDR)); *********
        *****************************************/

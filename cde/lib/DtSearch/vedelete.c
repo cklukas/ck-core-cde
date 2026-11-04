@@ -71,8 +71,9 @@
 #define UPDATE_WORD	1
 #define	DELETE_WORD	2
 #define WORDS_PER_DOT	1000
-#define	MAX_REC_READ	128	/* Max number of addresses to be read from
-				 * database addresses file. 128 *
+#define	MAX_REC_READ	(512 / (int) sizeof(DB_ADDR))
+				/* Max number of addresses to be read from
+				 * database addresses file. MAX_REC_READ *
 				 * sizeof(DB_ADDR) = 512 bytes. This is the
 				 * size of one block read from hard disk. */
 
@@ -232,7 +233,7 @@ static int      delete_addrs (void)
 
 	/* INNER LOOP: each dba in this block */
 	for (i = 0; i < num_reads; i++) {
-	    vista_dba = d99_to_dba (ntohl (word_addrs[i]));
+	    vista_dba = d99_to_dba ((DB_ADDR) dt_net64 ((uint64_t) word_addrs[i]));
 	    dba_eq = (char *) bsearch (
 		&vista_dba,	/* key to search for */
 		usrblk.dbatab,	/* start of the table */
@@ -249,8 +250,11 @@ static int      delete_addrs (void)
 		addrs_found = TRUE;
 	    }
 	    else {
-		/* MISS! Keep the dba by copying it to the copy array */
-		copy_addrs[ncopy++] = htonl (word_addrs[i]);
+		/* MISS! Keep the dba by copying it to the copy array, as it
+		 * is in the file: in network order, which the array holds
+		 * until it is written back.  (Converting it again wrote the
+		 * entry in host order.) */
+		copy_addrs[ncopy++] = word_addrs[i];
 	    }
 	}			/* end INNER LOOP for each dba in curr block */
 

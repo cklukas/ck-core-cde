@@ -743,7 +743,8 @@ static void     deleter (char *infname)
 	    "  Database '%s': Current record count = %ld, Batch size = %d.\n") ,
 	    aa_argv0, records_read, records_deleted,
 	    hours, minutes, seconds,
-	    usrblk.dblk->name, usrblk.dblk->dbrec.or_reccount, usrblk.dbacount);
+	    usrblk.dblk->name, (long) usrblk.dblk->dbrec.or_reccount,
+	    usrblk.dbacount);
 	/*****fflush (stdout);*****/
 
 	/* call OE to delete batch of records */
@@ -798,6 +799,7 @@ int             main (int argc, char *argv[])
     char            timebuf[80];
 
     aa_argv0 = argv[0];
+    aa_stderr = stderr;		/* no DtSearchInit() call sets it here */
     setlocale (LC_ALL, "");
     dtsearch_catd = CATOPEN(FNAME_DTSRCAT, 0);
     time (&mytime);

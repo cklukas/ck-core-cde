@@ -861,7 +861,7 @@ int             ve_getrec_dba (LLIST ** bloblist)
  * This is a simpler version of ve_getrec_dba() and will
  * get blobs from any database, not just the one in usrblk.dblk.
  */
-LLIST          *ve_getblobs (DtSrINT32 dba, int vistano)
+LLIST          *ve_getblobs (DB_ADDR dba, int vistano)
 {
     LLIST          *bloblist, *lastnode, **lastlink;
     struct or_blobrec myblobuf;
@@ -919,7 +919,7 @@ LLIST          *ve_getblobs (DtSrINT32 dba, int vistano)
  * (< 32, 0x20) for the keytype char (first char of record key).
  * Also sets usrblk.retncode to OE_OK or OE_WRAPPED.
  */
-DtSrINT32         ve_reckey2dba (void)
+DB_ADDR         ve_reckey2dba (void)
 {
     static char     debugkey[] =
     {0x73, 0x31, 0x67, 0x6E, 0x61, 0x74, 0x75, 0x72, 0x33, 0x00};

@@ -153,14 +153,22 @@ Failure to do so will produce compilation errors.
 #define DOUBLE_SIZE sizeof(double)
 #endif
 #define CHAR_SIZE sizeof(char)
-#define DB_ADDR_SIZE sizeof(LONG)
-#define PGHDRSIZE 4
+/* The file layout is built from these widths: INT is 2 bytes, LONG, ULONG,
+ * DB_ADDR and F_ADDR are 8 bytes (vista.h).  The constants below are plain
+ * numbers so that they can size arrays and sit in the data dictionary; the
+ * assertions after them tie each to the types.
+ */
+#define DB_ADDR_SIZE 8
+/* page header: the page's timestamp */
+#define PGHDRSIZE 8
 #define CTBNAME "vista.ctb"
 
-#define RECHDRSIZE 6
+/* record header: record number (INT) and database address */
+#define RECHDRSIZE 10
 #define NONE -1
 
-/* FILEMASK, ADDRMASK, FILESHIFT always operate on 4-byte variables */
+/* FILEMASK, ADDRMASK, FILESHIFT address a file and a slot within the low
+ * 32 bits of a database address */
 #define FILEMASK 0x000000FF
 #define ADDRMASK 0x00FFFFFF
 #define FILESHIFT 24
@@ -174,27 +182,40 @@ Failure to do so will produce compilation errors.
 /* The following constants all depend on the size of INT and DB_ADDR */
 
 /* creation timestamp in rec hdr = sizeof(INT) + DB_ADDR_SIZE */
-#define RECCRTIME 6
+#define RECCRTIME 10
 /* update timestamp in rec hdr  = RECCRTIME + sizeof(LONG) */
-#define RECUPTIME 10
+#define RECUPTIME 18
 
 /*                           member count   prior + next     timestamp (opt) */
 /* max size of set pointer = sizeof(LONG) + 2*DB_ADDR_SIZE + sizeof(ULONG)   */
-#define SETPSIZE   16
+#define SETPSIZE   32
 /* Offset to total members in set ptr */
-#define SP_MEMBERS 0  
-/* Offset to first member ptr in set ptr */
-#define SP_FIRST   4  
-/* Offset to last member ptr in set ptr = 2+DB_ADDR_SIZE */
-#define SP_LAST    8  
+#define SP_MEMBERS 0
+/* Offset to first member ptr in set ptr = sizeof(LONG) */
+#define SP_FIRST   8
+/* Offset to last member ptr in set ptr = sizeof(LONG) + DB_ADDR_SIZE */
+#define SP_LAST    16
 /* Size of member pointer = 3*DB_ADDR_SIZE */
-#define MEMPSIZE   12 
+#define MEMPSIZE   24
 /* Offset to owner ptr in member ptr */
-#define MP_OWNER   0  
+#define MP_OWNER   0
 /* Offset to previous member ptr in member ptr = DB_ADDR_SIZE */
-#define MP_PREV    4  
+#define MP_PREV    8
 /* Offset to next member ptr in member ptr = 2*DB_ADDR_SIZE */
-#define MP_NEXT    8  
+#define MP_NEXT    16
+
+DT_STATIC_ASSERT(DB_ADDR_SIZE == sizeof(DB_ADDR), "DB_ADDR_SIZE");
+DT_STATIC_ASSERT(PGHDRSIZE == sizeof(ULONG), "PGHDRSIZE");
+DT_STATIC_ASSERT(RECHDRSIZE == sizeof(INT) + DB_ADDR_SIZE, "RECHDRSIZE");
+DT_STATIC_ASSERT(RECCRTIME == RECHDRSIZE, "RECCRTIME");
+DT_STATIC_ASSERT(RECUPTIME == RECCRTIME + sizeof(LONG), "RECUPTIME");
+DT_STATIC_ASSERT(SETPSIZE == sizeof(LONG) + 2*DB_ADDR_SIZE + sizeof(ULONG),
+		 "SETPSIZE");
+DT_STATIC_ASSERT(SP_FIRST == sizeof(LONG), "SP_FIRST");
+DT_STATIC_ASSERT(SP_LAST == SP_FIRST + DB_ADDR_SIZE, "SP_LAST");
+DT_STATIC_ASSERT(MEMPSIZE == 3*DB_ADDR_SIZE, "MEMPSIZE");
+DT_STATIC_ASSERT(MP_PREV == DB_ADDR_SIZE, "MP_PREV");
+DT_STATIC_ASSERT(MP_NEXT == 2*DB_ADDR_SIZE, "MP_NEXT");
 
 /* maximum length of a database file name */
 #define DtSrFILENMLEN	240	/* expand max filename len from 48 */

@@ -64,6 +64,17 @@
  */
 #include "SearchP.h"
 
+/* The data dictionary (tiny.c) gives each record the size of its structure
+ * here, and the slots of a database file are laid out from them. */
+DT_STATIC_ASSERT(sizeof(struct or_dbrec) == 108, "size of OR_DBREC");
+DT_STATIC_ASSERT(sizeof(struct or_dbmiscrec) == 108, "size of OR_DBMISCREC");
+DT_STATIC_ASSERT(sizeof(struct or_objrec) == 96, "size of OR_OBJREC");
+DT_STATIC_ASSERT(sizeof(struct or_miscrec) == 108, "size of OR_MISCREC");
+DT_STATIC_ASSERT(sizeof(struct or_blobrec) == 236, "size of OR_BLOBREC");
+DT_STATIC_ASSERT(sizeof(struct or_swordrec) == 28, "size of OR_SWORDREC");
+DT_STATIC_ASSERT(sizeof(struct or_lwordrec) == 52, "size of OR_LWORDREC");
+DT_STATIC_ASSERT(sizeof(struct or_hwordrec) == 148, "size of OR_HWORDREC");
+
 #define XOS_USE_NO_LOCKING
 #define X_INCLUDE_TIME_H
 #include <X11/Xos_r.h>

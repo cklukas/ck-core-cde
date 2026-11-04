@@ -44,6 +44,7 @@ nav:
           - docs/improvements/calendar-server.md
           - docs/improvements/login-manager.md
           - docs/improvements/tooltalk.md
+          - docs/improvements/dtsearch.md
           - docs/improvements/trash.md
           - docs/improvements/validation.md
   - title: Development

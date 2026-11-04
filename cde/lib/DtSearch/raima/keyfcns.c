@@ -115,7 +115,7 @@ typedef struct {
 
 /* Internal function prototypes */
 static int node_search(const char *, DB_ADDR *, NODE *, int *, int *, F_ADDR *);
-static int keycmp(const char *, KEY_SLOT *, DB_ADDR *);
+static int keycmp(const char *, const char *, DB_ADDR *);
 static int expand(const char *, DB_ADDR, F_ADDR);
 static int split_root(NODE *);
 static int split_node(F_ADDR, NODE *);
@@ -358,7 +358,7 @@ DB_ADDR *dba         /* database address of located key */
    /* save key value and database address for possible repositioning */
    bytecpy(curkey->keyval, key_type.ks.data, key_len);
    MEM_UNLOCK(&curkey->Keyval);
-   bytecpy(&curkey->dba, &key_type.ks.data[key_len], sizeof(DB_ADDR));
+   bytecpy(&curkey->dba, key_type.kd + key_data + key_len, sizeof(DB_ADDR));
 
    /* return database address for d_keyfind */
    if ( *dba == NULL_DBA )
@@ -389,13 +389,13 @@ F_ADDR  *child   /* child ptr of located key */
    while ( u >= l ) {
       i = (l + u)/2;
       node_slot_ptr = &node->slots[slot_pos = i*slot_len];
-      if ( (cmp = keycmp(key_val, (KEY_SLOT *)node_slot_ptr, dba)) < 0 )
+      if ( (cmp = keycmp(key_val, node_slot_ptr, dba)) < 0 )
 	 u = i - 1;
       else if ( cmp > 0 )
 	 l = i + 1;
       else if ( i && !unique && !dba ) {
 	 /* backup to lowest duplicate in node */
-	 while (keycmp(key_val, (KEY_SLOT *)(node_slot_ptr -= slot_len),
+	 while (keycmp(key_val, (node_slot_ptr -= slot_len),
 		       dba) == 0) {
 	    slot_pos -= slot_len;
 	    if (--i == 0) goto have_slot;
@@ -425,10 +425,12 @@ have_slot:
 
 
 /* Compare key value
+ * The slot is in a page buffer at any offset: its fields are reached by
+ * their offsets (see KEY_SLOT), not through a pointer to the structure.
 */
 static int keycmp(
 const char *key_val,  /* key value */
-KEY_SLOT *slot,    /* pointer to key slot to be compared */
+const char *slot,  /* pointer to key slot to be compared */
 DB_ADDR *dba      /* database address included in comparison if not null */
 )
 {
@@ -438,11 +440,14 @@ DB_ADDR *dba      /* database address included in comparison if not null */
 	   = 0 if key_val == slot
 */
    int cmp;
+   DB_ADDR slot_dba;
 
-   if (((cmp = INTcmp((char *)&prefix, (char *)&slot->keyno)) == 0) &&
-       ((cmp = fldcmp(cfld_ptr, key_val, slot->data)) == 0) &&
-       dba)
-      cmp = ADDRcmp(dba, (DB_ADDR *)&slot->data[key_len]);
+   if (((cmp = INTcmp((char *)&prefix, (char *)(slot + sizeof(F_ADDR)))) == 0) &&
+       ((cmp = fldcmp(cfld_ptr, key_val, slot + key_data)) == 0) &&
+       dba) {
+      bytecpy(&slot_dba, slot + key_data + key_len, sizeof(DB_ADDR));
+      cmp = ADDRcmp(dba, &slot_dba);
+   }
 
    return( cmp );
 }
@@ -556,7 +561,7 @@ static void key_found(DB_ADDR *dba)
    /* save key value and database address for possible repositioning */
    bytecpy(curkey->keyval, key_type.ks.data, key_len);
    MEM_UNLOCK(&curkey->Keyval);
-   bytecpy(&curkey->dba, &key_type.ks.data[key_len], sizeof(DB_ADDR));
+   bytecpy(&curkey->dba, key_type.kd + key_data + key_len, sizeof(DB_ADDR));
 
    /* return found db addr */
    *dba = curkey->dba;

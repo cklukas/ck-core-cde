@@ -998,6 +998,7 @@ int             main (int argc, char *argv[])
     struct or_dbrec dbrec;
 
     aa_argv0 = argv[0];
+    aa_stderr = stderr;		/* no DtSearchInit() call sets it here */
     setlocale (LC_ALL, "");
     dtsearch_catd = CATOPEN(FNAME_DTSRCAT, 0);
 
