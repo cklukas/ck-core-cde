@@ -3,13 +3,15 @@ MAINTAINERCLEANFILES = Makefile.in
 bin_PROGRAMS = dtsession
 
 EXTRA_DIST = tests/check-session-properties.py tests/check-database-write.py \
-             tests/check-database-arrays.py tests/check-privileges.py
+             tests/check-database-arrays.py tests/check-privileges.py \
+             tests/check-lock-authentication.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-properties.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-database-write.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-database-arrays.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-privileges.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-lock-authentication.py
 
 bin_SCRIPTS = dtsession_res
 

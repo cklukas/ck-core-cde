@@ -969,6 +969,23 @@ EventDetected(
  *  --------
  * 
  *************************************<->***********************************/
+/*
+ * Overwrite the typed password in memory.  The stores go through a volatile
+ * pointer so that the compiler does not drop them as dead.
+ */
+static void
+WipePassword(
+        char *buffer,
+        int length )
+{
+    volatile char *p = buffer;
+
+    while (length-- > 0)
+    {
+        *p++ = '\0';
+    }
+}
+
 static void 
 CheckString(
         register char *s,
@@ -995,12 +1012,15 @@ CheckString(
     static int pw_buf_length = 0;                          /* length of allocated password buffer */
     static int pw_length = 0;		                   /* password length */
     char * tmpptr;
+    int checked;
+    Boolean correct;
 
     if (s == NULL)
     {
      /*
       * Clear password.
       */
+      WipePassword(passwd, pw_length);
       pw_length = 0;
       return;
     }
@@ -1025,10 +1045,11 @@ CheckString(
 	{
 	    case '\010':
 		if (pw_length)
-		    pw_length--;		/* back up one character */
+		    passwd[--pw_length] = '\0';	/* back up one character */
 		break;
 		
 	    case '':
+		WipePassword(passwd, pw_length);
 		pw_length = 0;			/* kill the character string */
 		break;
 
@@ -1039,8 +1060,11 @@ CheckString(
                     pw_length = MAX_PASSWORD_LENGTH;
                 }
 		passwd[pw_length] = '\0';	/* terminate string */
+		checked = pw_length;
 		pw_length = 0;			/* reset length */
-		if (CheckPassword(passwd))
+		correct = CheckPassword(passwd);
+		WipePassword(passwd, checked + 1);	/* it is not needed again */
+		if (correct)
 		{
 		    UpdatePasswdField(0);
 		    UnlockDisplay(True, True);
@@ -1580,6 +1604,58 @@ CycleSaver(XtPointer	ptr,
 
 
 
+#if !defined(HAS_PAM_LIBRARY)
+/*************************************<->*************************************
+ *
+ *  PasswordMatchesHash (passwd, hash)
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Tell whether a typed password belongs to the hash stored for an account.
+ *
+ *  crypt() returns a null pointer for a hash it cannot handle (the "!" or
+ *  "*" of a locked account, a placeholder such as the "x" in /etc/passwd of a
+ *  shadowed system), and some C libraries return a failure token instead.
+ *  Neither is ever compared as if it were a hash: an account without a
+ *  usable hash does not unlock the display.  The comparison does not stop at
+ *  the first different byte.
+ *
+ *************************************<->***********************************/
+static Boolean
+PasswordMatchesHash(
+        const char *passwd,
+        const char *hash )
+{
+    const char *crypted;
+    size_t length;
+    size_t i;
+    unsigned char difference;
+
+    if (passwd == NULL || hash == NULL ||
+        hash[0] == '\0' || hash[0] == '!' || hash[0] == '*')
+    {
+        return False;
+    }
+
+    crypted = crypt(passwd, hash);
+    if (crypted == NULL || crypted[0] == '*')
+    {
+        return False;
+    }
+
+    length = strlen(hash);
+    difference = (unsigned char) (strlen(crypted) != length);
+    for (i = 0; i < length && crypted[i] != '\0'; i++)
+    {
+        difference |= (unsigned char) (hash[i] ^ crypted[i]);
+    }
+
+    return difference == 0 ? True : False;
+}
+#endif /* !HAS_PAM_LIBRARY */
+
+
 /*************************************<->*************************************
  *
  *  localAuthenticate (name, uid, passwd)
@@ -1609,20 +1685,32 @@ localAuthenticate(
 {
     char *service;
     struct passwd *pwent;
+    Boolean authenticated;
 
     if (!(name && name[0])) name = NULL;
-    if (uid < 0) uid = 0;
 
     if (!(name || passwd)) return True;
     if (!passwd) return False;
     if (!(pwent = name ? getpwnam(name) : getpwuid(uid))) return False;
 
+   /*
+    * The PAM service is named after the program.  Started through the search
+    * path the program name has no directory part; the whole name is the
+    * service then, instead of every unlock attempt failing.
+    */
+    service = strrchr(smGD.programName, '/');
+    service = service ? service + 1 : smGD.programName;
+    if (service[0] == '\0')
+    {
+        endpwent();
+        return False;
+    }
+
+    authenticated = _DtSvcPamAuthenticate(service, pwent->pw_name, NULL,
+                                          passwd) == PAM_SUCCESS;
     endpwent();
 
-    if (!(service = strrchr(smGD.programName, '/'))) return False;
-
-    return _DtSvcPamAuthenticate(service + 1, pwent->pw_name, NULL, passwd) ==
-	   PAM_SUCCESS;
+    return authenticated;
 }
 #elif defined(__linux__)
 
@@ -1687,16 +1775,15 @@ localAuthenticate(
       * Check password.
       */
 
-      if (sp != NULL && !strcmp(sp->sp_pwdp, crypt(passwd,sp->sp_pwdp)))
-	{			/* a shadow match */
+     /*
+      * The shadow entry holds the password when there is one; the field in
+      * the password file is then only a placeholder (or an old password).
+      */
+      if (PasswordMatchesHash(passwd, sp != NULL ? sp->sp_pwdp :
+                              pwent->pw_passwd))
+	{			/* a match */
 	  rc = True;
 	  done = True;
-	}
-      else if (pwent != NULL && 
-	       !strcmp(pwent->pw_passwd, crypt(passwd, pwent->pw_passwd)))
-	{			/* passwd match */
-	  rc = True;
-          done = True;
 	}
       else
 	{			/* failure dude! */
@@ -1808,9 +1895,9 @@ localAuthenticate(
       * Check password.
       */
 #ifdef SVR4
-      if (strcmp(crypt(passwd,sp->sp_pwdp),sp->sp_pwdp) != 0)
+      if (!PasswordMatchesHash(passwd, sp->sp_pwdp))
 #else
-      if (strcmp(pwent->pw_passwd, crypt(passwd, pwent->pw_passwd)) != 0)
+      if (!PasswordMatchesHash(passwd, pwent->pw_passwd))
 #endif
       {
        /*

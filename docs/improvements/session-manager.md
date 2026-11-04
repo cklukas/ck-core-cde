@@ -40,6 +40,27 @@ To check an installation, run the setuid `dtsession` under
 before the first open of a locale file, which it did not before.
 `make -C programs/dtsession check` runs the same source guard.
 
+## Screen lock
+
+- The typed password is overwritten in memory once it has been checked, when
+  the line is killed with Escape, when characters are backed over and when the
+  dialog times out; it used to stay in the heap buffer.
+- A typed password is compared with the hash of the account only when the
+  account has a usable one. `crypt()` returns a null pointer for the hash of a
+  locked account (`!`, `*`), for the `x` that stands in `/etc/passwd` on a
+  shadowed system and for an empty field, and the C library of some systems
+  returns a failure token instead. The lock used to compare whatever came back
+  with `strcmp`, so a wrong password on such a system ended `dtsession` with a
+  crash, and a hash that is its own failure token (`*0`) accepted any password.
+  Such an account does not unlock the display now, and the comparison does not
+  stop at the first different byte.
+- On a system that has a shadow entry for the account, only the shadow hash is
+  consulted. Before, an old password left in `/etc/passwd` unlocked the display
+  as well.
+- With PAM, the service name is the program name without its directory. A
+  `dtsession` started through the search path (no `/` in `argv[0]`) failed every
+  unlock attempt.
+
 ## Tests
 
 `programs/dtsession/tests` holds regression tests that cut the production code
@@ -53,4 +74,5 @@ make -C programs/dtsession check
 `check-privileges.py` runs `SmPriv.c` against a fake kernel that models the
 real, effective and saved ids and can refuse a call, report success without
 changing anything or leave a way back to root, in the builds with and without
-`SVR4`.
+`SVR4`. `check-lock-authentication.py` runs `localAuthenticate()` of the PAM and
+non-PAM builds against a password database and a `crypt()` that can fail.
