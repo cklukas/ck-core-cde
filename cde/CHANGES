@@ -465,6 +465,11 @@
   it never found the file again by that name: the owner of a file could not
   remove the objects of others in it, and `tt_spec_destroy` by a user who owned
   neither was answered with `TT_ERR_INTERNAL` instead of `TT_ERR_ACCESS`.
+- dtlogin: the greeter no longer crashes with SIGSEGV when it exits after a
+  login (it closed a message catalog that was not open), and the shipped PAM
+  stack marks `pam_lastlog` as an optional session module so a system without
+  it logs no error for every login. A test runs the catalog handling in each
+  state the greeter can be in at exit (`tests/check-greeter-catalog.py`).
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

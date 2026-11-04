@@ -735,7 +735,17 @@ LogError( unsigned char *fmt, ...)
 void
 CloseCatalog(void)
 {
+    /*
+     * No catalog was opened when no message was ever read or no language is
+     * set, and a failed open leaves an invalid handle: closing either one
+     * crashes in the C library (the greeter did this at every exit).  A
+     * closed catalog is not used again.
+     */
+    if (nl_fd == (nl_catd) 0 || 0 > (long) nl_fd)
+        return;
+
     CATCLOSE(nl_fd);
+    nl_fd = (nl_catd) -1;
 }
 
 /***************************************************************************

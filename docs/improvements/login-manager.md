@@ -90,9 +90,27 @@ allocations.
 Run against the code from before these changes, the same test files fail 26 of
 their 28 scenarios; the other two check results that did not change.
 
+## Greeter exit and the PAM stack
+
+- The greeter no longer crashes with `SIGSEGV` when it exits after a login. It
+  closed its message catalog whether or not one had been opened, and closing a
+  null or failed handle ends the process in the C library; `dtlogin` logged
+  "signal = 11" after every successful login. The catalog is closed only when
+  it was opened and is not used afterwards.
+- The shipped PAM stack (`config/dtlogin.src`) lists `pam_lastlog` as an
+  optional session module with the `-` prefix, so a system that does not ship
+  the module no longer logs an error for every login.
+
+`tests/check-greeter-catalog.py` runs the catalog functions of the greeter with
+stand-ins that abort on an invalid handle, in each state the greeter can be in
+at exit; the code from before the change fails all four scenarios.
+
 ## Limits
 
 - The tests exercise the functions directly. A complete login through the
-  greeter with PAM has not been run in the check suite.
+  greeter with PAM is not part of the check suite; it was run by hand against
+  real PAM (correct and wrong passwords, a second user after a failed attempt,
+  expired and locked accounts, an expired password, empty passwords and a
+  `pam_nologin` refusal).
 - Session-side signal handling, the chooser socket and allocation-failure paths
   are not yet reviewed.

@@ -6,6 +6,7 @@ auth required pam_unix.so
 account required pam_nologin.so
 account required pam_unix.so
 
-session required pam_lastlog.so
+# Not every system ships pam_lastlog: a missing module is not an error.
+-session optional pam_lastlog.so
 
 password required pam_deny.so

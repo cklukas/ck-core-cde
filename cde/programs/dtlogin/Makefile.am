@@ -3,6 +3,7 @@ SUBDIRS = config
 bin_PROGRAMS = dtlogin dtgreet dtchooser
 
 EXTRA_DIST = tests/check-environment.py tests/check-session-path.py \
+	tests/check-greeter-catalog.py \
 	tests/check-xdmcp.py tests/check-authorization.py tests/check-manager.py
 
 check-local:
@@ -11,6 +12,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-xdmcp.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-authorization.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-manager.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-greeter-catalog.py
 
 XDMDIR = $(CDE_LOGFILES_TOP)
 
