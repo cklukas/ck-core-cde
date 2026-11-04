@@ -109,7 +109,6 @@
 #include "SmUI.h"
 #include "SmGlobals.h"
 #include "SmXSMP.h"
-#include "SmPriv.h"
 #include "SmDB.h"
 #include "SmProp.h"
 
@@ -857,11 +856,6 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
     if(forkrc == 0)
     {
         SetSIGPIPEToDefault ();
-
-	/*
-	 * Give up the identity dtsession is installed with
-	 */
-	SmPrivDropInChild();
 
 #if defined(CSRG_BASED)
         setsid();
@@ -2164,56 +2158,11 @@ RestoreClients( void )
 	parseP = cmdBuf[i];
     }
 
-    /*
-     *  Keep forking one client after the other until the
-     *  memory utilization gets beyond the threshold -
-     *  (but only if the capability exists)  Then go to
-     *  window manager handshaking
-     */
-#ifdef DEBUG_CONT_MANAGEMENT
-    if(smRes.contManagement & SM_CM_SYSTEM)
-    {
-	fprintf(stderr, "SM_CM_SYSTEM flag set in smRes.contManagement\n");
-    }
-    if(smRes.contManagement & SM_CM_HANDSHAKE)
-    {
-	fprintf(stderr, "SM_CM_HANDSHAKE flag set in smRes.contManagement\n");
-    }
-#endif /* DEBUG_CONT */
     numClientsExec = 0;
-    if((smRes.contManagement & SM_CM_SYSTEM) &&
-       ((GetMemoryUtilization() != MEM_NOT_AVAILABLE) && 
-	(clientsDone == False)))
-    {
-	while((GetMemoryUtilization() == MEM_NOT_FULL) &&
-	      (clientsDone == False))
-	{	
-	    GetNextLine();
-	    lineP = line;
-	    CreateExecString((char *) lineP);
-	    if(smExecArray[0] != NULL)
-	    {
-		(void) StartClient(smExecArray[0], (char **)smExecArray, NULL, 
-				NULL, NULL, False, False, -1);
-	    }	
-	    numClientsExec++;
-
-	    /*
-	     * When all the clients have been exec'd for this screen
-	     * go on to the next
-	     */
-	    if(numClientsExec >= numCmd[i])
-	    {
-		ResetScreenInfo(cmdBuf, &i, actCmdSize, &clientsDone,
-				envVal, displayName);
-		numClientsExec = 0;
-	    }
-	}
-    }
 
     /*
-     *  After we've checked memory utilization - finish up
-     *  by handshaking with the worksapce manager - if it's there
+     *  Start the clients, handshaking with the workspace manager
+     *  if it's there
      */
     if(clientsDone == False)
     {
@@ -3583,13 +3532,6 @@ StartLocalClient (
         SetSIGPIPEToDefault ();
 
 	/*
-	 * The client runs with the user's identity from the start, not
-	 * just from the exec: nothing below may use the identity dtsession
-	 * is installed with.
-	 */
-	SmPrivDropInChild();
-
-	/*
 	 * Log a warning if the given cwd is not valid
 	 */
 	if (doChdir && cwd) 
@@ -3784,10 +3726,6 @@ ForkWM( void )
     {
         SetSIGPIPEToDefault ();
 
-	/*
-	 * Give up the identity dtsession is installed with
-	 */
-	SmPrivDropInChild();
 	_DtEnvControl(DT_ENV_RESTORE_PRE_DT);
 
 #if defined(CSRG_BASED)

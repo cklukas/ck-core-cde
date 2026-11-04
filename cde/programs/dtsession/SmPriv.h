@@ -30,12 +30,10 @@
  **  -----------
  **  The identity (user and group ids) dtsession runs with.
  **
- **  dtsession is installed setuid root on systems without PAM, so that it can
- **  read the password database when the screen is unlocked.  Everything it
- **  does besides that runs as the user who started it.  Every change of
- **  identity is checked: a step that cannot be taken or that did not have the
- **  expected effect stops the process (when it gives something up) or is
- **  reported to the caller (when it asks for something).
+ **  dtsession is installed with the identity of the user who runs it: not
+ **  setuid and not setgid.  Nothing it does needs another identity, and every
+ **  program it starts for the user would inherit one.  The one function
+ **  here is the guard for an installation that does not follow that rule.
  **
  *************************************<+>*************************************/
 
@@ -43,41 +41,16 @@
 #define _SmPriv_h
 
 /*
- * Return to the identity of the user who started the program.  Must be the
- * first thing main() does: until it has returned, the program runs with the
- * identity it is installed with.  If keepPasswordAccess is non-zero and the
- * program is installed setuid, the installed user id stays available as the
- * saved set-user-ID, for SmPrivRaise(); otherwise it is given up for good.
- * Does not return if the identity cannot be given up.
+ * Return to the identity of the user who ran the program if it runs with the
+ * identity of a setuid or setgid file (the effective user or group id differs
+ * from the real one): the real, effective and saved ids all become the user's,
+ * and the installed ones are tried once more to make sure that they cannot be
+ * taken back.  Must be the first thing main() does: until it has returned the
+ * program runs with the identity it is installed with.  Does not return if
+ * the identity cannot be given up, or if the way back to it stays open.
+ * Does nothing, and calls nothing, when the ids are the same, and when the
+ * real user is root, which can take any identity anyway.
  */
-extern void SmPrivDropInstalledIdentity(int keepPasswordAccess);
-
-/*
- * Take the installed identity back for a short operation (reading the
- * password database).  Returns 0 if that identity is not available or could
- * not be taken; the program then still has the user's identity.  Every
- * successful SmPrivRaise() is followed by SmPrivLower().
- */
-extern int SmPrivRaise(void);
-
-/*
- * End SmPrivRaise().  Does not return if the user's identity cannot be
- * restored.
- */
-extern void SmPrivLower(void);
-
-/*
- * Give up the installed group, and the saved user id if one was kept, in a
- * process that is about to start a program.  Only calls that are safe in a
- * vfork() child are made.  Does not return if the identity cannot be given up.
- */
-extern void SmPrivDropInChild(void);
-
-/*
- * Switch the effective group between the user's (non-zero) and the group the
- * program is installed with (zero).  Asking for the installed group returns 0
- * if that failed; going back to the user's group does not return on failure.
- */
-extern int SmPrivUseUserGroup(int userGroup);
+extern void SmPrivDropInstalledIdentity(void);
 
 #endif /* _SmPriv_h */

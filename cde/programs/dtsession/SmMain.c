@@ -94,45 +94,12 @@ static void CatchStopSignal(void);
 static void WatchStopSignal(void);
 static void StopPipeFailed(void);
 static int RegisterX11ScreenSaver(Display *display, int *ssEventType);
-static int UsesProtectedPasswordFile(void);
 
 /*
  * The pipe a SIGTERM handler leaves its request in
  */
 static int stopPipe[2] = { -1, -1 };
 
-/*
- * Internal Defines
- */
-#ifdef _AIX
-#define SECURE_SYS_PATH "/etc/security/passwd"
-#endif
-#if defined(SVR4) || defined(__linux__)
-#define SECURE_SYS_PATH "/etc/shadow"
-#endif
-#ifdef CSRG_BASED
-#define SECURE_SYS_PATH "/etc/master.passwd"
-#endif
-
-/*
- * Systems that keep the passwords in a file only the super user can read need
- * the installed identity of dtsession (setuid root) to check a password when
- * the display is unlocked.
- */
-static int
-UsesProtectedPasswordFile(void)
-{
-#ifdef SECURE_SYS_PATH
-    struct stat buf;
-
-    return stat(SECURE_SYS_PATH, &buf) != -1;
-#else
-    return 0;
-#endif
-}
-
-
-
 /*************************************<->*************************************
  *
  *  main (argc, argv)
@@ -171,12 +138,13 @@ main (int argc, char **argv)
     char		 	*lang;
 
     /*
-     * Until this has happened the program runs with the identity it is
-     * installed with, so nothing that reads the environment (the locale, the
-     * toolkit) comes before it.  Systems that keep their passwords in a
-     * protected file need the installed identity again to unlock the display.
+     * dtsession is installed with the identity of the user who runs it.  If it
+     * was started with another one anyway (a setuid or setgid file) that is
+     * given up before anything else: until then the program runs with the
+     * identity it is installed with, so nothing that reads the environment
+     * (the locale, the toolkit) comes before it.
      */
-    SmPrivDropInstalledIdentity(UsesProtectedPasswordFile());
+    SmPrivDropInstalledIdentity();
 
     setlocale( LC_ALL, "" );
     XtSetLanguageProc( NULL, NULL, NULL );

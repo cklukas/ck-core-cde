@@ -14,30 +14,43 @@ screen only where it can check the user's password through PAM.
 
 ## Installed identity
 
-- Giving up the installed identity is the first thing `main()` does, before the
-  locale is set, before the environment is read and before the toolkit or the
-  display are opened. Earlier, the locale files were opened and parsed while the
-  process still ran as root.
-- Every step is checked. When `dtsession` is setuid and cannot return to the
-  user (a user at a process limit makes `setreuid` fail with `EAGAIN`, a kernel
-  or security module can refuse it), it stops with a message instead of running
-  the whole session as root. After the change the real and effective user ids
-  must be the user's, and unless the password database is needed later, the
-  installed user id must not be recoverable.
-- Where passwords are kept in a file only root can read (`/etc/shadow`), the
-  installed user id stays available as the saved set-user-ID. It is taken
-  for the short moment the password database is read, and a failure to give it up
-  again stops the process. Every program `dtsession` starts for the user, and
-  the helper processes it forks, give up the saved id and the installed group
-  before they exec; a client can no longer start with the privileged group
-  because the `setregid` call that was meant to drop it failed unnoticed.
-- The code for the Tru64 security library (`SIA`) is removed. Nothing in the
-  build defined it and it could not take the identity it asked for.
+`dtsession` is installed with the identity of the user who starts it: not
+setuid and not setgid. It used to be installed setuid root on a system without
+PAM, to read the password database when the screen was unlocked, and some
+systems made it setgid for the group that console management needed. Neither
+is needed any more: the password is checked through PAM (see Screen lock) and
+the console-management code that read kernel memory is gone.
 
-To check an installation, run the setuid `dtsession` under
-`strace -f -u <user> -e trace=openat,setresuid`: the first `setresuid` must come
-before the first open of a locale file, which it did not before.
-`make -C programs/dtsession check` runs the same source guard.
+- `SmPrivDropInstalledIdentity()` guards against an installation that does not
+  follow that rule (a package that sets the bit, a copy made by hand). It is the
+  first thing `main()` does, before the locale is set, before the environment
+  is read and before the toolkit or the display are opened; earlier, the locale
+  files were opened and parsed while the process still ran as root. When the
+  effective user or group id differs from the real one, the real, effective and
+  saved ids all become the user's, and the program then tries to take the
+  installed ids back to be sure that it cannot. If a step is refused (a user at
+  a process limit makes `setreuid` fail with `EAGAIN`, a kernel or security
+  module can refuse it), has no effect, or leaves a way back, `dtsession` stops
+  with a message instead of running the session with the installed identity. An
+  installation that is not setuid or setgid makes no identity call at all, and
+  neither does a `dtsession` started by root, which can take any identity.
+- Nothing else in the program changes its identity. The functions that took the
+  installed user id back to read the password database, the group switch for
+  console management and the identity drop that the child processes made before
+  they exec are removed, and a test fails when one of them comes back.
+- Dead code that needed those functions is removed with them:
+  `GetMemoryUtilization()`, which read `/dev/kmem` through the HP-UX kernel
+  symbol table (its Linux variant returned a constant, and on no supported
+  system does the HP-UX kernel exist), the `system` value of `contManagement`
+  that asked for it, the `memThreshold` resource that nothing read, the
+  never-compiled code for the AIX high-function terminal ring and the code for
+  the Tru64 security library (`SIA`).
+
+To check the guard, make a copy of `dtsession` setuid and run it under
+`strace -f -u <user> -e trace=openat,setresuid`: the first `setresuid` comes
+before the first open of a locale file.
+`make -C programs/dtsession check` runs the fake-kernel scenarios and a source
+guard for the order.
 
 ## Screen lock
 
@@ -204,8 +217,8 @@ send is still checked.
 for real and checks what the sections below describe.
 
 The clients of a saved session, the window manager and the resource loader are
-started in a child process that drops the installed identity, adds the saved
-environment, changes directory and execs. The child was made with `vfork()`,
+started in a child process that adds the saved environment, changes
+directory and execs. The child was made with `vfork()`,
 which shares the memory of `dtsession` with it until the exec: the `putenv` of
 the saved variables changed the environment of `dtsession` itself and so of
 every client started after it (a variable saved with one client reached the
@@ -291,16 +304,19 @@ AddressSanitizer and UndefinedBehaviorSanitizer:
 make -C programs/dtsession check
 ```
 
-`check-privileges.py` runs `SmPriv.c` against a fake kernel that models the
-real, effective and saved ids and can refuse a call, report success without
-changing anything or leave a way back to root, in the builds with and without
-`SVR4`. `check-pam-lock.py` compiles `SmPam.c` against a stand-in for the PAM library
-(a right and a wrong password, a start that fails, an authentication or an account
-check that fails, a module that asks something else than the password, failing
-allocations, other program names and environments) and once more without PAM.
-`check-lock-authentication.py` runs the password input and the start of the lock
-and guards the source: no other way to check a password, a PAM service that lets
-only the user in, no setuid installation.
+`check-privileges.py` runs `SmPrivDropInstalledIdentity()` against a fake kernel
+that models the real, effective and saved ids and can refuse a call, report
+success without changing anything or leave a way back to the installed
+identity, for a `dtsession` installed setuid, setgid, both and not at all; it
+also guards the source (the identity is given up first in `main()` and no other
+code changes one). `check-pam-lock.py` compiles `SmPam.c` against a stand-in for
+the PAM library (a right and a wrong password, a start that fails, an
+authentication or an account check that fails, a module that asks something
+else than the password, failing allocations, other program names and
+environments) and once more without PAM. `check-lock-authentication.py` runs
+the password input and the start of the lock and guards the source: no other
+way to check a password, a PAM service that lets only the user in, no setuid
+installation.
 `check-signals.py` raises `SIGTERM` against the production handler and checks
 that nothing of the shutdown runs inside it. `check-session-files.py` runs the
 error-log rotation, the directory moves, copies and removals and the session
@@ -319,3 +335,20 @@ To check the session end to end, start `Xsession` from a staged install under
 session ends through the event loop and writes `~/.dt/sessions/current`, and the
 second one restores the three windows. This was run on 2026-11-04 with the build
 of this change in the Linux guest.
+
+To check the lock end to end, run the session under `Xvfb` as a throw-away user
+in a private mount namespace in which the staged `usr/dt` is mounted and the
+system's `/usr` stays as it is (so that `pam_unix` and its setuid helper work),
+with `config/dtsession.src` temporarily installed as `/etc/pam.d/dtsession`.
+`dtaction LockDisplay` covers the screen; a wrong password, an empty password
+and the password of another user leave it covered (the journal shows the
+failures of `pam_unix` for the service `dtsession`), and the user's password
+uncovers it. With `SmPam.c` built without PAM the same request is refused with
+the message in `~/.dt/errorlog`, `dtsession` keeps running and a Terminal still
+opens. A root-owned setuid or setgid copy of `dtsession`, started as the user
+under `strace -f -u <user>`, shows `setreuid` (or `setregid`) to the user, the
+refused attempts to take the installed identity back, and only then the first
+open of a locale file. `chage -E` (expired account) and `chage -d 0` (password
+that must be changed) make the real `pam_unix` account check refuse the right
+password. This was run on 2026-11-04 in the Linux guest with the build of this
+change.

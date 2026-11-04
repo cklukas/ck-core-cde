@@ -197,9 +197,6 @@ static XtResource sessionResources[]=
    {SmNalarmTime, SmCalarmTime, XtRInt, sizeof(int),
         XtOffset(SessionResourcesPtr, alarmTime), 
         XtRImmediate, (XtPointer) 10},
-   {SmNmemThreshold, SmCmemThreshold, XtRInt, sizeof(int),
-        XtOffset(SessionResourcesPtr, memThreshold), 
-        XtRImmediate, (XtPointer) 100},
    {SmNsessionVersion, SmCsessionVersion, XtRString, sizeof(String),
         XtOffset(SessionResourcesPtr, sessionVersion),
         XtRImmediate, (XtPointer) NULL},
@@ -1693,7 +1690,6 @@ void SmCvtStringToContManagement (XrmValue *args, Cardinal *numArgs, XrmValue *f
  */
 
 #define CM_ALL_STR              (unsigned char *)"all"
-#define CM_SYSTEM_STR           (unsigned char *)"system"
 #define CM_HANDSHAKE_STR        (unsigned char *)"handshake"
 #define CM_NONE_STR             (unsigned char *)"none"
 
@@ -1745,16 +1741,6 @@ void SmCvtStringToContManagement (XrmValue *args, Cardinal *numArgs, XrmValue *f
             {
                 cval = fAddNext ? (cval | SM_CM_ALL) :
                                   (cval & ~SM_CM_ALL);
-                fHit = True;
-            }
-        }
-
-        else if ((*pch == 'S') || (*pch == 's'))
-        {
-            if (_DtWmStringsAreEqual (pch, CM_SYSTEM_STR, len))
-            {
-                cval = fAddNext ? (cval | SM_CM_SYSTEM) :
-                                  (cval & ~SM_CM_SYSTEM);
                 fHit = True;
             }
         }

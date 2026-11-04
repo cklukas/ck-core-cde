@@ -54,59 +54,16 @@
 
 
 #include <stdio.h>
-#include <fcntl.h>
-#if !defined(__linux__)
-#include <nlist.h>
-#endif
 #include <X11/Intrinsic.h>
 #include "Sm.h"
 #include "SmProtocol.h"
 #include "SmConMgmt.h"
 #include "SmCommun.h"
-#include "SmPriv.h"
-
-/*
- * Define statements
- */
-
-#ifdef mips
-#include <sys/fixpoint.h>
-#endif /* mips */
-
-#ifndef KMEM_FILE
-#define KMEM_FILE "/dev/kmem"
-#endif
-
-#ifndef KERNEL_FILE
-# ifdef mips
-#  define KERNEL_FILE "/vmunix"
-# else /* not mips */
-#  define KERNEL_FILE "/hp-ux"
-# endif /* mips */
-#endif
-
-#ifdef mips
-#define GPGSLIM "gpgslim"
-#define FREEMEM "freemem"
-#endif /* mips */
-
-#ifndef GPGSLIM
-#define GPGSLIM "_gpgslim"
-#endif /* not defined GPGSLIM */
-
-#ifndef FREEMEM
-#define FREEMEM "_freemem"
-#endif /* not defined FREEMEM */
-
 
 int clientRunning;
 /*
  * Variables global to this module only
  */
-#if !defined(__linux__)
-static struct nlist namelist[3];
-#endif
-static int freemem_loc, gpgslim_loc, gpgslim, freemem;
 static int clientTimeout;
 
 /*
@@ -116,118 +73,6 @@ static int clientTimeout;
 static void HandleClientMessage(Widget smWidget, XtPointer dummy, 
 				XEvent *event, Boolean *continue_to_dispatch);
 static void WaitClientTimeout(XtPointer, XtIntervalId *);
-
-
-
-/*************************************<->*************************************
- *
- *  GetMemoryUtilization ()
- *
- *
- *  Description:
- *  -----------
- *  Returns 1 of 3 values.  Tells the calling program that memory is not
- *  available, that it is full (paging has started), or that it is not
- *  full.
- *
- *
- *  Inputs:
- *  ------
- *
- * 
- *  Outputs:
- *  -------
- *  An integer value representing the current memory utilization of the
- *  system.
- *
- *
- *  Comments:
- *  --------
- *  WARNING:  This routine, by its very nature is non-portable.  It depends
- *  on an OS having some kind of access to its memory utilization.
- *
- *  DOUBLE WARNING: The mips architecture code has never been tested.
- *  
- * 
- *************************************<->***********************************/
-
-int 
-GetMemoryUtilization(void)
-{
-#if !defined(__linux__)
-    static int init = 0;
-    static int kmem;
-    int i;
-
-
-    if (!SmPrivUseUserGroup(False))
-    {
-	return(MEM_NOT_AVAILABLE);
-    }
-
-    if(!init)
-    {
-	namelist[0].n_name = FREEMEM;
-	namelist[1].n_name = GPGSLIM;
-	namelist[2].n_name = (char *) NULL;
-	nlist( KERNEL_FILE, namelist);
-	for(i = 0; i < 2; i++)
-	{
-	    if (namelist[i].n_type == 0 ||
-		namelist[i].n_value == 0)
-	    {
-		SmPrivUseUserGroup(True);
-		return(MEM_NOT_AVAILABLE);
-	    }
-	}
-	
-	freemem_loc =  namelist[0].n_value;
-	gpgslim_loc =  namelist[1].n_value;
-	
-	kmem = open(KMEM_FILE, O_RDONLY);
-	if (kmem < 0)
-	{
-	    SmPrivUseUserGroup(True);
-	    return(MEM_NOT_AVAILABLE);
-	}
-	(void) lseek(kmem, gpgslim_loc, 0);
-#ifdef mips
-        {
-	    fix temp;
-	    (void) read(kmem, (char *)&temp, sizeof(fix));
-	    gpgslim = FIX_TO_DBL(temp);
-	}
-#else /* not mips */
-	(void) read(kmem, (char *)&gpgslim, sizeof(int));
-#endif /* mips */
-	init = 1;
-    }
-    
-    (void) lseek(kmem, freemem_loc, 0);
-#ifdef mips
-    {
-	fix temp;
-	(void) read(kmem, (char *)&temp, sizeof(fix));
-	freemem = FIX_TO_DBL(temp);
-    }
-#else /* not mips */
-    (void) read(kmem, (char *)&freemem, sizeof(int));
-#endif /* mips */
-
-    SmPrivUseUserGroup(True);
-
-    if(freemem >= gpgslim)
-    {
-	return(MEM_NOT_FULL);
-    }
-    else
-    {
-	return(MEM_FULL);
-    }
-#else /* linux */
-    return(MEM_NOT_FULL);
-#endif /* linux */
-}
 
 
 

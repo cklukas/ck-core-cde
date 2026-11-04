@@ -45,7 +45,7 @@ dtsession_SOURCES = SmMain.c SmHelp.c SmGlobals.c SmCommun.c		\
 	SmWatch.c SmProp.c SmDB.c OWsync.h SmGlobals.h SmProperty.h	\
 	SmScreen.h SmXSMP.h SmAuth.h Sm.h SmProp.h SmUI.h		\
 	SrvFile_io.h SmCommun.h SmHelp.h SmProtocol.h SmWatch.h Srv.h	\
-	SmConMgmt.h SmHftRing.h SmResource.h SmWindow.h SrvPalette.h	\
+	SmConMgmt.h SmResource.h SmWindow.h SrvPalette.h	\
 	SmDB.h SmLock.h SmRestore.h SmXdef.h SmError.h			\
 	SmSave.h SmXrm.h SmPriv.c SmPriv.h SmFiles.c SmFiles.h		\
 	SmPam.c SmPam.h

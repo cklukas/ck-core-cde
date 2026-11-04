@@ -55,14 +55,6 @@
 
 
 /* 
- *  #define statements 
- */
-#define		MEM_NOT_AVAILABLE	-1
-#define		MEM_NOT_FULL		0
-#define		MEM_FULL		1
-
-
-/* 
  * typedef statements 
  */
 
@@ -77,7 +69,6 @@
  */
 
 
-extern int GetMemoryUtilization(void);
 extern void WaitForClientMap(void);
 
 

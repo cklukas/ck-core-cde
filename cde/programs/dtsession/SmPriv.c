@@ -32,7 +32,6 @@
  **
  *************************************<+>*************************************/
 
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -41,21 +40,9 @@
 #include "SmPriv.h"
 
 /*
- * The identity the program was started with.  The user is the one who ran it;
- * the installed identity is what the file system gives the program (setuid
- * root without PAM, setgid for the console-management group on some systems).
- */
-static uid_t userUid, installedUid;
-static gid_t userGid, installedGid;
-
-/* Non-zero while the installed user id is kept as the saved set-user-ID. */
-static int passwordAccess;
-
-/*
  * A program that cannot get rid of an identity it does not need must not go
  * on: everything it did from there on, and every program it started for the
- * user, would carry that identity.  Only write() and _exit() are used, so the
- * function can be called in a vfork() child.
+ * user, would carry that identity.
  */
 static void
 Fatal(const char *message)
@@ -70,124 +57,62 @@ Fatal(const char *message)
     _exit(EXIT_FAILURE);
 }
 
-/*
- * Make the real and the effective group the given ones.  The effective group
- * is what grants access, so it is always checked; the real group, which only
- * matters because it can be swapped back, is checked where the call sets it.
- */
-static int
-SetGroups(gid_t real, gid_t effective)
-{
-#ifndef SVR4
-    if (setregid(real, effective) != 0)
-        return 0;
-    return getgid() == real && getegid() == effective;
-#else
-    if (setgid(real) != 0 || setegid(effective) != 0)
-        return 0;
-    return getegid() == effective;
-#endif
-}
-
-static int
-SetUserIds(uid_t user)
-{
-#ifndef SVR4
-    return setreuid(user, user) == 0;
-#else
-    return setuid(user) == 0 && seteuid(user) == 0;
-#endif
-}
-
 void
-SmPrivDropInstalledIdentity(int keepPasswordAccess)
+SmPrivDropInstalledIdentity(void)
 {
-    userUid = getuid();
-    installedUid = geteuid();
-    userGid = getgid();
-    installedGid = getegid();
-    passwordAccess = 0;
+    uid_t user = getuid(), installedUser = geteuid();
+    gid_t group = getgid(), installedGroup = getegid();
 
-    /* A program that was not installed setuid has nothing to give up. */
-    if (installedUid != userUid && userUid != 0) {
-        if (keepPasswordAccess) {
-            /* real and effective id are the user's, the saved id stays */
-            if (seteuid(userUid) != 0 || getuid() != userUid ||
-                geteuid() != userUid)
-                Fatal("cannot give up root privileges");
-            passwordAccess = 1;
-        } else {
-            if (!SetUserIds(userUid) || getuid() != userUid ||
-                geteuid() != userUid)
-                Fatal("cannot give up root privileges");
-            /* ...and there must be no way back */
-            if (seteuid(installedUid) == 0 || setuid(installedUid) == 0 ||
-                geteuid() != userUid)
-                Fatal("root privileges were not given up");
+    /*
+     * Root has nothing to give up: it can take any identity at will, and a
+     * guard that took one back to prove the opposite would only fail.
+     */
+    if (user == 0)
+    {
+        return;
+    }
+
+    /*
+     * The group first: the installed user may be the one that is allowed to
+     * change it.  The call sets the saved id as well, which is what closes the
+     * way back.
+     */
+    if (installedGroup != group)
+    {
+        if (setregid(group, group) != 0 || getegid() != group)
+        {
+            Fatal("cannot give up the group of the installed program");
+        }
+    }
+
+    if (installedUser != user)
+    {
+        if (setreuid(user, user) != 0 || geteuid() != user)
+        {
+            Fatal("cannot give up the user of the installed program");
         }
     }
 
     /*
-     * The installed group is kept as the real group (so that it can be taken
-     * back for console management) and the user's group becomes effective.
+     * Nothing may lead back.  A saved id that was not changed, or a kernel
+     * that reports success without doing anything, would let the installed
+     * identity be taken again.
      */
-    if (installedGid != userGid && !SetGroups(installedGid, userGid))
-        Fatal("cannot give up the group of the installed program");
-}
-
-int
-SmPrivRaise(void)
-{
-    if (!passwordAccess)
-        return 0;
-    if (seteuid(installedUid) != 0)
-        return 0;
-    if (geteuid() != installedUid) {
-        /* the kernel reported success but nothing changed */
-        SmPrivLower();
-        return 0;
+    if (installedGroup != group)
+    {
+        if (setegid(installedGroup) == 0 || setgid(installedGroup) == 0 ||
+            getegid() != group)
+        {
+            Fatal("the group of the installed program was not given up");
+        }
     }
-    return 1;
-}
 
-void
-SmPrivLower(void)
-{
-    if (!passwordAccess)
-        return;
-    if (seteuid(userUid) != 0 || geteuid() != userUid)
-        Fatal("cannot give up root privileges");
-}
-
-void
-SmPrivDropInChild(void)
-{
-    /* No static state is written here: a vfork() child shares it with its parent. */
-    if (passwordAccess) {
-        /*
-         * The saved set-user-ID goes too: this process is about to exec.  The
-         * installed identity is taken back first because only then does the
-         * change reach the saved id on every kind of system.
-         */
-        if (seteuid(installedUid) != 0 || geteuid() != installedUid ||
-            !SetUserIds(userUid) || getuid() != userUid ||
-            geteuid() != userUid || seteuid(installedUid) == 0 ||
-            geteuid() != userUid)
-            Fatal("cannot give up root privileges");
+    if (installedUser != user)
+    {
+        if (seteuid(installedUser) == 0 || setuid(installedUser) == 0 ||
+            geteuid() != user)
+        {
+            Fatal("the user of the installed program was not given up");
+        }
     }
-    if (!SetGroups(userGid, userGid))
-        Fatal("cannot give up the group of the installed program");
-}
-
-int
-SmPrivUseUserGroup(int userGroup)
-{
-    if (installedGid == userGid)
-        return 1;
-    if (userGroup) {
-        if (!SetGroups(installedGid, userGid))
-            Fatal("cannot give up the group of the installed program");
-        return 1;
-    }
-    return SetGroups(userGid, installedGid);
 }

@@ -66,7 +66,6 @@ static Boolean localWmLaunched;
 static int logged;
 static void PrintErrnoError(int type, const char *m) { (void) type; (void) m; logged++; }
 static void SetSIGPIPEToDefault(void) { }
-static void SmPrivDropInChild(void) { }
 static void _DtEnvControl(int what) { (void) what; }
 static void MarkFileDescriptors(int start, int cmd, int data) { int fd; for (fd = start; fd < 64; fd++) fcntl(fd, cmd, data); }
 static void LogCWDMessage(char *bad, char *app, char *good) { (void) bad; (void) app; (void) good; logged++; }

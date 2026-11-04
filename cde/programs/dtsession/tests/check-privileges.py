@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Run dtsession's identity handling against a fake kernel that can refuse.
+"""Run dtsession's startup guard for its identity against a fake kernel that can refuse.
 
-dtsession is installed setuid root on systems without PAM.  The production
-code (SmPriv.c) is compiled with stand-ins for the process identity (real,
-effective and saved ids, user and group) and for the set*id() calls, including
-a user at a process limit (EAGAIN), a kernel that reports success without
-changing anything and one that leaves a way back to root.  Every scenario runs
-under AddressSanitizer and UndefinedBehaviorSanitizer, in the variants of the
-build with and without SVR4.
+dtsession is installed with the identity of the user who runs it.  Should it be
+installed setuid or setgid anyway, SmPrivDropInstalledIdentity() (SmPriv.c)
+gives the installed identity up for good, before anything else, and stops the
+program when that fails.  The production code is compiled with stand-ins for
+the process identity (real, effective and saved user and group ids) and for the
+set*id() calls, including a user at a process limit (EAGAIN), a kernel that
+reports success without changing anything, and one that leaves the saved id
+untouched so that there is a way back.  Every scenario runs in its own process
+under AddressSanitizer and UndefinedBehaviorSanitizer.
 
-DTSESSION_SOURCE names another copy of the sources to test, for example a
-revision from before SmPriv.c existed: the identity statements of main() and of
-the child processes are then cut out of SmMain.c and SmGlobals.c and run the
-same way.  Such a tree must fail.
+DTSESSION_SOURCE names another copy of the sources to test, for example one
+with a deliberate defect.
 """
 import os
 from pathlib import Path
@@ -23,62 +23,8 @@ import sys
 import tempfile
 
 source = Path(os.environ.get("DTSESSION_SOURCE") or Path(__file__).resolve().parents[1])
-fixed = (source / "SmPriv.c").exists()
-
-if fixed:
-    code = '#include "%s"\n' % (source / "SmPriv.c")
-else:
-    main_c = (source / "SmMain.c").read_text()
-    globals_c = (source / "SmGlobals.c").read_text()
-    sm_h = (source / "Sm.h").read_text()
-    macros = re.search(r"#ifndef\s+SVR4\n#define\s+SM_SETEUID.*?#endif\n", sm_h, re.S)
-    assert macros, "SM_SETEUID wrappers not found"
-    start = main_c.index("    smGD.runningGID = getgid();")
-    stop = main_c.index("    /*\n     * Initialize LANG")
-    identity = main_c[start:stop]
-    identity = re.sub(r"# ifdef SECURE_SYS_PATH\n\s*status = stat\(SECURE_SYS_PATH, &buf\);\n# else\n\s*status = -1;\n# endif",
-                      "status = keep ? 0 : -1;", identity)
-    assert "keep ?" in identity, "secure system test not found"
-    swap = re.search(r"#ifndef\s+SVR4\n\s*setregid\(smGD\.conMgmtGID, smGD\.runningGID\);\n#else.*?#endif[^\n]*\n", main_c, re.S)
-    assert swap, "group swap not found"
-    child = re.search(r"#ifndef\s+SVR4\n\s*setregid\(smGD\.runningGID, smGD\.runningGID\);\n#else.*?#endif\n", globals_c, re.S)
-    assert child, "child group drop not found"
-    code = macros.group(0) + r'''
-#define True 1
-#define False 0
-static struct { gid_t runningGID, conMgmtGID; uid_t runningUID, unLockUID; int secureSystem; } smGD;
-static int dummy_buf;
-void SmPrivDropInstalledIdentity(int keep)
-{
-    int status; struct { int unused; } buf; (void) buf;
-''' + identity + swap.group(0) + r'''
-}
-int SmPrivRaise(void) { if (!smGD.secureSystem) return 0; return SM_SETEUID(smGD.unLockUID) == 0; }
-void SmPrivLower(void) { if (smGD.secureSystem) SM_SETEUID(smGD.runningUID); }
-void SmPrivDropInChild(void) {
-''' + child.group(0) + r'''
-}
-int SmPrivUseUserGroup(int user)
-{
-    if (user) {
-#ifndef SVR4
-        setregid(smGD.conMgmtGID, smGD.runningGID);
-#else
-        setgid(smGD.conMgmtGID); setegid(smGD.runningGID);
-#endif
-    } else {
-#ifndef SVR4
-        setregid(smGD.runningGID, smGD.conMgmtGID);
-#else
-        setgid(smGD.runningGID); setegid(smGD.conMgmtGID);
-#endif
-    }
-    return 1;
-}
-'''
 
 harness = r'''
-#include <assert.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <stdio.h>
@@ -87,9 +33,12 @@ harness = r'''
 #include <sys/types.h>
 #include <unistd.h>
 
+#define CHECK(condition) do { if (!(condition)) { fprintf(stderr, "failed: %s (line %d)\n", #condition, __LINE__); return 1; } } while (0)
+
 /* the fake process identity and the faults a kernel can show */
 static struct { uid_t r, e, s; gid_t gr, ge, gs; } id;
-static int fail_uid_ops, ignore_changes, keep_saved_uid, fail_gid_ops, id_calls;
+static int fail_uid_ops, fail_gid_ops, ignore_changes, keep_saved_uid, keep_saved_gid;
+static int uid_calls, gid_calls, regain_attempts;
 static jmp_buf escape;
 static int exit_code;
 static char message[256];
@@ -103,10 +52,11 @@ static uid_t fake_geteuid(void) { return id.e; }
 static gid_t fake_getgid(void) { return id.gr; }
 static gid_t fake_getegid(void) { return id.ge; }
 
+/* the rules of the Linux calls; the saved id follows the effective one when the real one is set or the effective one changes */
 static int fake_setreuid(uid_t r, uid_t e)
 {
     uid_t old_r = id.r;
-    id_calls++;
+    uid_calls++;
     if (fail_uid_ops) { errno = EAGAIN; return -1; }
     if (ignore_changes) return 0;
     if (!PRIVILEGED && ((r != NONE && !one_of(r, id.r, id.e, id.e)) ||
@@ -118,7 +68,7 @@ static int fake_setreuid(uid_t r, uid_t e)
 }
 static int fake_seteuid(uid_t e)
 {
-    id_calls++;
+    uid_calls++;
     if (fail_uid_ops) { errno = EAGAIN; return -1; }
     if (ignore_changes) return 0;
     if (!PRIVILEGED && !one_of(e, id.r, id.s, id.s)) { errno = EPERM; return -1; }
@@ -127,7 +77,7 @@ static int fake_seteuid(uid_t e)
 }
 static int fake_setuid(uid_t u)
 {
-    id_calls++;
+    uid_calls++;
     if (fail_uid_ops) { errno = EAGAIN; return -1; }
     if (ignore_changes) return 0;
     if (PRIVILEGED) { id.r = id.e = u; if (!keep_saved_uid) id.s = u; return 0; }
@@ -138,17 +88,19 @@ static int fake_setuid(uid_t u)
 static int fake_setregid(gid_t r, gid_t e)
 {
     gid_t old_r = id.gr;
+    gid_calls++;
     if (fail_gid_ops) { errno = EPERM; return -1; }
     if (ignore_changes) return 0;
     if (!PRIVILEGED && ((r != NONE && !one_of(r, id.gr, id.ge, id.ge)) ||
                         (e != NONE && !one_of(e, id.gr, id.ge, id.gs)))) { errno = EPERM; return -1; }
     if (r != NONE) id.gr = r;
     if (e != NONE) id.ge = e;
-    if (r != NONE || (e != NONE && e != old_r)) id.gs = id.ge;
+    if ((r != NONE || (e != NONE && e != old_r)) && !keep_saved_gid) id.gs = id.ge;
     return 0;
 }
 static int fake_setegid(gid_t e)
 {
+    gid_calls++;
     if (fail_gid_ops) { errno = EPERM; return -1; }
     if (ignore_changes) return 0;
     if (!PRIVILEGED && !one_of(e, id.gr, id.gs, id.gs)) { errno = EPERM; return -1; }
@@ -157,9 +109,10 @@ static int fake_setegid(gid_t e)
 }
 static int fake_setgid(gid_t g)
 {
+    gid_calls++;
     if (fail_gid_ops) { errno = EPERM; return -1; }
     if (ignore_changes) return 0;
-    if (PRIVILEGED) { id.gr = id.ge = id.gs = g; return 0; }
+    if (PRIVILEGED) { id.gr = id.ge = g; if (!keep_saved_gid) id.gs = g; return 0; }
     if (g == id.gr || g == id.gs) { id.ge = g; return 0; }
     errno = EPERM;
     return -1;
@@ -186,231 +139,253 @@ static ssize_t fake_write(int fd, const void *buf, size_t n)
 #define write fake_write
 #define _exit(code) (exit_code = (code), longjmp(escape, 1))
 
-''' + code + r'''
+#include "SmPriv.c"
+
 #undef _exit
 #undef write
 
-void SmPrivDropInstalledIdentity(int);
-int SmPrivRaise(void);
-void SmPrivLower(void);
-void SmPrivDropInChild(void);
-int SmPrivUseUserGroup(int);
-
-/* A program started by user 1000, group 100. */
+/* A program started by user 1000, group 100, from a file owned by the given user and group. */
 static void start(uid_t euid, gid_t egid)
 {
     memset(&id, 0, sizeof(id));
     id.r = 1000; id.e = euid; id.s = euid;
     id.gr = 100; id.ge = egid; id.gs = egid;
-    fail_uid_ops = ignore_changes = keep_saved_uid = fail_gid_ops = id_calls = 0;
+    fail_uid_ops = fail_gid_ops = ignore_changes = keep_saved_uid = keep_saved_gid = 0;
+    uid_calls = gid_calls = regain_attempts = 0;
     message[0] = 0;
 }
-static void setuid_root(void) { start(0, 100); }
 
 /* Returns the exit code the code under test asked for, or -1 if it returned. */
-static int keep_flag;
-static void do_drop(void) { SmPrivDropInstalledIdentity(keep_flag); }
-static void do_child(void) { SmPrivDropInChild(); }
-static void do_lower(void) { SmPrivLower(); }
-static int run(void (*fn)(void))
+static int run(void)
 {
     exit_code = -1;
     if (setjmp(escape) == 0)
-        fn();
+        SmPrivDropInstalledIdentity();
     return exit_code;
 }
-static int drop(int keep) { keep_flag = keep; return run(do_drop); }
 
-/* once the program has exited it is no longer root: it did not go on with e == 0 */
-#define MUST_STOP_OR_BE_USER(code) assert((code) != -1 || (id.r == 1000 && id.e == 1000))
+/* what an attacker with a memory corruption would try afterwards: take the installed identity back */
+static int can_regain(uid_t user, gid_t group, uid_t installed_user, gid_t installed_group)
+{
+    struct { uid_t r, e, s; gid_t gr, ge, gs; } before = { id.r, id.e, id.s, id.gr, id.ge, id.gs };
+    int regained = 0;
+    (void) user; (void) group;
+    if (installed_user != 1000 && (fake_seteuid(installed_user) == 0 || fake_setuid(installed_user) == 0 || fake_setreuid(installed_user, installed_user) == 0)) regained = 1;
+    if (installed_group != 100 && (fake_setegid(installed_group) == 0 || fake_setgid(installed_group) == 0 || fake_setregid(installed_group, installed_group) == 0)) regained = 1;
+    if (id.e != before.e || id.ge != before.ge) regained = 1;
+    return regained;
+}
+#define USER_ONLY() (id.r == 1000 && id.e == 1000 && id.s == 1000 && id.gr == 100 && id.ge == 100 && id.gs == 100)
 
-static void drops_for_good(void)
-{
-    setuid_root();
-    assert(drop(0) == -1);
-    assert(id.r == 1000 && id.e == 1000 && id.s == 1000);
-    assert(!SmPrivRaise());
-    assert(id.e == 1000);
-}
-static void keeps_password_access(void)
-{
-    setuid_root();
-    assert(drop(1) == -1);
-    assert(id.r == 1000 && id.e == 1000 && id.s == 0);
-    assert(SmPrivRaise() == 1 && id.e == 0);
-    assert(run(do_lower) == -1 && id.e == 1000);
-    assert(SmPrivRaise() == 1);
-    assert(run(do_lower) == -1);
-}
-static void refused_drop_stops(int keep)
-{
-    int code;
-    setuid_root();
-    fail_uid_ops = 1;                /* the user is at a process limit */
-    code = drop(keep);
-    assert(code != -1);              /* must not return as root */
-    assert(strstr(message, "cannot give up root privileges"));
-}
-static void ignored_drop_stops(int keep)
-{
-    int code;
-    setuid_root();
-    ignore_changes = 1;              /* success is reported, nothing happens */
-    code = drop(keep);
-    assert(code != -1);
-}
-static void way_back_stops(void)
-{
-    int code;
-    setuid_root();
-    keep_saved_uid = 1;              /* the saved id stays root */
-    code = drop(0);
-    assert(code != -1);
-    assert(strstr(message, "not given up"));
-}
-static void plain_install_does_nothing(void)
+static int plain_install_does_nothing(void)
 {
     start(1000, 100);
+    fail_uid_ops = fail_gid_ops = 1;              /* any call at all would fail the program */
+    CHECK(run() == -1);
+    CHECK(uid_calls == 0 && gid_calls == 0);
+    CHECK(id.r == 1000 && id.e == 1000 && id.gr == 100 && id.ge == 100);
+    start(0, 0); id.r = 0; id.gr = 0; id.s = 0; id.gs = 0;     /* started by root */
+    fail_uid_ops = fail_gid_ops = 1;
+    CHECK(run() == -1);
+    CHECK(uid_calls == 0 && gid_calls == 0);
+    return 0;
+}
+static int setuid_root_is_dropped(void)
+{
+    start(0, 100);
+    CHECK(run() == -1);
+    CHECK(USER_ONLY());
+    CHECK(gid_calls == 0);                         /* the group was the user's already */
+    CHECK(!can_regain(1000, 100, 0, 100));
+    return 0;
+}
+static int setuid_other_user_is_dropped(void)
+{
+    start(33, 100);                                /* installed setuid for an account other than root */
+    CHECK(run() == -1);
+    CHECK(USER_ONLY() && !can_regain(1000, 100, 33, 100));
+    return 0;
+}
+static int root_running_a_setuid_program(void)
+{
+    start(33, 5);
+    id.r = 0; id.gr = 0;                           /* root started a program that is setuid and setgid for other accounts */
+    fail_uid_ops = fail_gid_ops = 1;
+    CHECK(run() == -1);                            /* root can take any identity: there is nothing to give up, nothing is called */
+    CHECK(uid_calls == 0 && gid_calls == 0);
+    CHECK(id.r == 0 && id.e == 33 && id.ge == 5);
+    return 0;
+}
+static int setgid_is_dropped(void)
+{
+    start(1000, 5);
+    CHECK(run() == -1);
+    CHECK(USER_ONLY());
+    CHECK(uid_calls == 0);                         /* the user was the user's already */
+    CHECK(!can_regain(1000, 100, 1000, 5));
+    return 0;
+}
+static int setuid_and_setgid_are_dropped(void)
+{
+    start(0, 5);
+    CHECK(run() == -1);
+    CHECK(USER_ONLY() && !can_regain(1000, 100, 0, 5));
+    start(33, 7);
+    CHECK(run() == -1);
+    CHECK(USER_ONLY() && !can_regain(1000, 100, 33, 7));
+    return 0;
+}
+static int the_way_back_is_tried(void)
+{
+    /* the guard does not take the kernel's word for it: it tries to take the installed ids back */
+    start(0, 5);
+    CHECK(run() == -1);
+    CHECK(uid_calls >= 3 && gid_calls >= 3);       /* the drop and at least one attempt each to get back */
+    return 0;
+}
+static int refused_user_drop_stops(void)
+{
+    start(0, 100);
+    fail_uid_ops = 1;                              /* the user is at a process limit */
+    CHECK(run() != -1);                            /* does not return as root */
+    CHECK(strstr(message, "cannot give up the user"));
+    start(33, 5);
     fail_uid_ops = 1;
-    assert(drop(0) == -1 && drop(1) == -1);
-    assert(id_calls == 0);
-    assert(id.r == 1000 && id.e == 1000);
-    assert(!SmPrivRaise());
-    start(0, 100); id.r = 0;         /* started by root */
-    fail_uid_ops = 1;
-    assert(drop(0) == -1 && drop(1) == -1);
-    assert(id_calls == 0);
+    CHECK(run() != -1);
+    return 0;
 }
-static void raise_failures(void)
+static int refused_group_drop_stops(void)
 {
-    setuid_root();
-    assert(drop(1) == -1);
-    fail_uid_ops = 1;
-    assert(SmPrivRaise() == 0 && id.e == 1000);
-    fail_uid_ops = 0; ignore_changes = 1;
-    assert(SmPrivRaise() == 0 && id.e == 1000);
-    ignore_changes = 0;
-    assert(SmPrivRaise() == 1 && id.e == 0);
-    fail_uid_ops = 1;                /* the way back to the user fails */
-    assert(run(do_lower) != -1);
-    assert(strstr(message, "cannot give up root privileges"));
-}
-static void child_drops_everything(void)
-{
-    setuid_root();
-    assert(drop(1) == -1);
-    assert(id.s == 0);
-    assert(run(do_child) == -1);
-    assert(id.r == 1000 && id.e == 1000 && id.s == 1000);
-    assert(id.gr == 100 && id.ge == 100 && id.gs == 100);
-    assert(seteuid(0) != 0 && setuid(0) != 0);
-}
-static void child_drop_refused(int how)
-{
-    int code;
-    setuid_root();
-    assert(drop(1) == -1);
-    if (how == 0) fail_uid_ops = 1;
-    if (how == 1) fail_gid_ops = 1;
-    if (how == 2) ignore_changes = 1;
-    code = run(do_child);
-    assert(code != -1);
-}
-static void group_install(void)
-{
-    start(1000, 5);                  /* setgid for a console group, not setuid */
-    assert(drop(0) == -1);
-    assert(id.ge == 100);            /* the user's group is effective */
-#ifndef SVR4
-    assert(id.gr == 5);              /* the installed group is the real one, to swap back */
-#endif
-    assert(SmPrivUseUserGroup(0) == 1 && id.ge == 5);
-    assert(SmPrivUseUserGroup(1) == 1 && id.ge == 100);
-    assert(run(do_child) == -1);
-    assert(id.ge == 100);
-#ifndef SVR4
-    assert(id.gr == 100 && id.gs == 100);
-#endif
     start(1000, 5);
     fail_gid_ops = 1;
-    assert(drop(0) != -1);           /* cannot swap: stop instead of keeping the group */
-    assert(strstr(message, "group of the installed program"));
+    CHECK(run() != -1);
+    CHECK(strstr(message, "cannot give up the group"));
+    start(0, 5);
+    fail_gid_ops = 1;
+    CHECK(run() != -1);
+    return 0;
 }
+static int ignored_drop_stops(void)
+{
+    start(0, 100);
+    ignore_changes = 1;                            /* success is reported and nothing happens */
+    CHECK(run() != -1);
+    CHECK(strstr(message, "cannot give up the user"));
+    start(1000, 5);
+    ignore_changes = 1;
+    CHECK(run() != -1);
+    CHECK(strstr(message, "cannot give up the group"));
+    start(0, 5);
+    ignore_changes = 1;
+    CHECK(run() != -1);
+    return 0;
+}
+static int open_way_back_to_the_user_stops(void)
+{
+    start(0, 100);
+    keep_saved_uid = 1;                            /* the saved user id stays root */
+    CHECK(run() != -1);
+    CHECK(strstr(message, "user of the installed program was not given up"));
+    return 0;
+}
+static int open_way_back_to_the_group_stops(void)
+{
+    start(1000, 5);
+    keep_saved_gid = 1;                            /* the saved group id stays the installed one */
+    CHECK(run() != -1);
+    CHECK(strstr(message, "group of the installed program was not given up"));
+    start(0, 5);
+    keep_saved_gid = 1;
+    CHECK(run() != -1);
+    return 0;
+}
+
+static struct { const char *name; int (*run)(void); } scenarios[] = {
+    {"plain_install_does_nothing", plain_install_does_nothing},
+    {"setuid_root_is_dropped", setuid_root_is_dropped},
+    {"setuid_other_user_is_dropped", setuid_other_user_is_dropped},
+    {"root_running_a_setuid_program", root_running_a_setuid_program},
+    {"setgid_is_dropped", setgid_is_dropped},
+    {"setuid_and_setgid_are_dropped", setuid_and_setgid_are_dropped},
+    {"the_way_back_is_tried", the_way_back_is_tried},
+    {"refused_user_drop_stops", refused_user_drop_stops},
+    {"refused_group_drop_stops", refused_group_drop_stops},
+    {"ignored_drop_stops", ignored_drop_stops},
+    {"open_way_back_to_the_user_stops", open_way_back_to_the_user_stops},
+    {"open_way_back_to_the_group_stops", open_way_back_to_the_group_stops},
+    {NULL, NULL}
+};
 
 int main(int argc, char **argv)
 {
-    (void) argc; (void) argv;
-    drops_for_good();
-    keeps_password_access();
-    refused_drop_stops(0);
-    refused_drop_stops(1);
-    ignored_drop_stops(0);
-    ignored_drop_stops(1);
-    way_back_stops();
-    plain_install_does_nothing();
-    raise_failures();
-    child_drops_everything();
-    child_drop_refused(0);
-    child_drop_refused(1);
-    child_drop_refused(2);
-    group_install();
-    puts("ok");
-    return 0;
+    int i;
+    if (argc < 2) {
+        for (i = 0; scenarios[i].name; i++) puts(scenarios[i].name);
+        return 0;
+    }
+    for (i = 0; scenarios[i].name; i++)
+        if (!strcmp(argv[1], scenarios[i].name)) return scenarios[i].run();
+    return 2;
 }
 '''
 
-SCENARIOS = {
-    "drops_for_good": "drop(0) gives up root for good",
-    "keeps_password_access": "drop(1) keeps the saved id; raise and lower work",
-    "refused_drop_stops": "a refused drop stops the program",
-    "ignored_drop_stops": "an ignored drop stops the program",
-    "way_back_stops": "a drop that leaves a way back stops the program",
-    "plain_install_does_nothing": "no identity call without setuid",
-    "raise_failures": "raise and lower failures",
-    "child_drops_everything": "a child drops user, saved user and group",
-    "child_drop_refused": "a child that cannot drop does not exec",
-    "group_install": "setgid install: swap, use, drop",
-}
-
 cc = shlex.split(os.environ.get("CC", "gcc"))
-failures = []
+failed = []
+count = 0
 with tempfile.TemporaryDirectory(prefix="dtsession-priv-", dir=os.environ.get("TMPDIR")) as work:
     work = Path(work)
-    for variant in ([], ["-DSVR4"]):
-        name = "svr4" if variant else "bsd"
-        c = work / ("harness-%s.c" % name)
-        c.write_text(harness)
-        binary = work / ("harness-%s" % name)
-        build = cc + ["-std=gnu23", "-O1", "-g", "-fsanitize=address,undefined", "-fno-sanitize-recover=all",
-                      "-fno-omit-frame-pointer", "-Wno-unused-function", "-Wno-unused-variable",
-                      "-I", str(source)] + variant + [str(c), "-o", str(binary)]
-        compiled = subprocess.run(build, capture_output=True, text=True)
-        if compiled.returncode:
-            sys.stderr.write(compiled.stderr)
-            sys.exit("cannot compile the %s variant" % name)
-        run = subprocess.run([str(binary)], capture_output=True, text=True)
-        if run.returncode or "ok" not in run.stdout:
-            failures.append(name)
-            sys.stderr.write("%s variant: %s\n%s" % (name, run.stdout.strip(), run.stderr))
-        else:
-            print("%s variant: all identity scenarios passed" % name)
-if failures:
-    sys.exit("identity handling failed in the %s variant(s)" % ", ".join(failures))
+    c = work / "privileges.c"
+    c.write_text(harness)
+    binary = work / "privileges"
+    build = cc + ["-std=gnu23", "-O1", "-g", "-fsanitize=address,undefined", "-fno-sanitize-recover=all",
+                  "-fno-omit-frame-pointer", "-Wall", "-Wextra", "-Wno-unused-function", "-Wno-unused-variable",
+                  "-I", str(source), str(c), "-o", str(binary)]
+    compiled = subprocess.run(build, capture_output=True, text=True)
+    if compiled.returncode:
+        sys.stderr.write(compiled.stderr)
+        sys.exit("cannot compile the identity harness")
+    names = subprocess.run([str(binary)], capture_output=True, text=True, check=True).stdout.split()
+    for scenario in names:
+        count += 1
+        run = subprocess.run([str(binary), scenario], capture_output=True, text=True)
+        if run.returncode:
+            failed.append(scenario)
+            sys.stderr.write("%s failed:\n%s\n" % (scenario, run.stderr.strip().splitlines()[0] if run.stderr.strip() else "exit %d" % run.returncode))
+if failed:
+    sys.exit("%d of %d identity scenarios failed: %s" % (len(failed), count, ", ".join(failed)))
+print("Identity: %d scenarios passed" % count)
 
-# The identity has to be given up before main() reads the environment: the
-# behaviour needs a setuid binary and a privileged tracer (the procedure is in
-# docs/improvements/session-manager.md), so this is a source guard.
-main_c = (source / "SmMain.c").read_text()
+# The identity has to be given up before main() reads the environment: the behaviour needs a setuid
+# binary and a privileged tracer (the procedure is in docs/improvements/session-manager.md), so this is a
+# source guard.  The other half of it: nothing in the program can take an identity back or needs one.
+problems = []
+main_c = (source / "SmMain.c").read_text(errors="replace")
 match = re.search(r"^main \(int argc, char \*\*argv\)\n\{", main_c, re.M)
-assert match, "main() not found"
+if not match:
+    sys.exit("main() not found")
 body = main_c[match.end():]
 body = body[:body.index("\n}\n")]
-drop = body.find("SmPrivDropInstalledIdentity(")
+drop = body.find("SmPrivDropInstalledIdentity()")
 if drop < 0:
-    sys.exit("main() never gives up the installed identity")
-early = [name for name in ("getenv(", "setlocale(", "XtSetLanguageProc(", "putenv(", "strdup(", "XtOpenDisplay(",
-                           "XtToolkitInitialize(", "_DtEnvControl(", "InitNlsStrings(", "RestoreResources(")
-         if 0 <= body.find(name) < drop]
-if early:
-    sys.exit("main() calls %s before it gives up the installed identity" % ", ".join(early))
-print("main() gives up the installed identity before it touches the environment")
+    problems.append("main() never gives up the installed identity")
+else:
+    early = [name for name in ("getenv(", "setlocale(", "XtSetLanguageProc(", "putenv(", "strdup(", "XtOpenDisplay(",
+                               "XtToolkitInitialize(", "_DtEnvControl(", "InitNlsStrings(", "RestoreResources(")
+             if 0 <= body.find(name) < drop]
+    if early:
+        problems.append("main() calls %s before it gives up the installed identity" % ", ".join(early))
+
+code = {p.name: re.sub(r"/\*.*?\*/", "", p.read_text(errors="replace"), flags=re.S)
+        for p in sorted(source.glob("*.c")) + sorted(source.glob("*.h"))}
+for name, content in code.items():
+    for pattern in (r"\bSmPrivRaise\b", r"\bSmPrivLower\b", r"\bSmPrivDropInChild\b", r"\bSmPrivUseUserGroup\b",
+                    r"\bGetMemoryUtilization\b", r"\bUsesProtectedPasswordFile\b", r"\bAixEnableHftRing\b",
+                    r"\bkeepPasswordAccess\b", r"\bpasswordAccess\b"):
+        if re.search(pattern, content):
+            problems.append("%s still has %s" % (name, pattern))
+if re.search(r"\bsetreuid\s*\(|\bseteuid\s*\(|\bsetregid\s*\(|\bsetegid\s*\(|\bsetuid\s*\(|\bsetgid\s*\(",
+             "".join(c for n, c in code.items() if n != "SmPriv.c")):
+    problems.append("an identity is changed outside SmPriv.c")
+if problems:
+    sys.exit("identity source guard failed:\n  " + "\n  ".join(problems))
+print("Identity source guard: main() gives up the installed identity first; nothing takes one back")

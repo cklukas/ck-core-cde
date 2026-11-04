@@ -107,10 +107,9 @@
 #define 	MAX_SCREENS_SAVED	10
 
 /* contention management definitions */
-#define SM_CM_SYSTEM       (1L << 0)
-#define SM_CM_HANDSHAKE    (1L << 1)
+#define SM_CM_HANDSHAKE    (1L << 0)
 
-#define SM_CM_ALL          (SM_CM_SYSTEM  | SM_CM_HANDSHAKE)
+#define SM_CM_ALL          SM_CM_HANDSHAKE
 #define SM_CM_NONE         0
 
 #define SM_CM_DEFAULT      SM_CM_NONE
@@ -171,7 +170,6 @@ typedef struct
     char	*wmStartup;
     Boolean	querySettings;
     int		alarmTime;
-    int		memThreshold;
     char	*sessionVersion;
     int		displayResolution;
     char	*sessionLang;

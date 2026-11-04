@@ -1,13 +1,22 @@
 2026-11-04
-- dtsession: give up the installed identity before anything else and stop if it
-  cannot. When installed setuid root, `main()` returns to the user's identity
-  before it sets the locale, reads the environment or opens the toolkit; every
-  step is checked and verified, and `dtsession` exits instead of running as
-  root when the change fails. Programs started for the user drop the saved
-  user id and the installed group before they exec, and a failed group change
-  no longer goes unnoticed. The unused Tru64 `SIA` authentication code is
-  removed. `make -C programs/dtsession check` runs the new identity test
-  against a fake kernel.
+- dtsession: install without setuid, and keep a startup guard for the installed
+  identity. `dtsession` no longer needs root (it was installed setuid root where
+  there is no PAM, to read the password database): the `install-exec-hook` of its
+  Makefile is removed, and so are `SmPrivRaise`, `SmPrivLower`, the saved
+  set-user-ID that kept the way back to root, the group switch for console
+  management and the drop that the started clients made before their exec.
+  `SmPrivDropInstalledIdentity()` remains as the first statement of `main()`,
+  before the locale or the environment is touched: if the effective user or
+  group id differs from the real one (an installation made setuid or setgid by
+  hand) it gives the installed identity up for good, tries to take it back to
+  prove that it cannot, and exits with a message when a step is refused, has no
+  effect or leaves a way back (an installation that is not setuid or setgid, and
+  a `dtsession` started by root, make no identity call). Removed with them:
+  `GetMemoryUtilization()` (it read `/dev/kmem` through an HP-UX kernel symbol
+  table), the `system` value of `contManagement`, the unused `memThreshold`
+  resource, the AIX high-function-terminal ring code that was never compiled and
+  the Tru64 `SIA` code. Covered by `programs/dtsession/tests/check-privileges.py`
+  (fake kernel).
 - dtsession: unlock the screen only with the password of the user who started
   the session, checked through PAM. The root password and the passwords of the
   users named in the `keys` resource no longer unlock the display, and the
