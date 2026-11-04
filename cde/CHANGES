@@ -84,6 +84,14 @@
   leaked a buffer; only `~/.ICEauthority` is written now. A cookie that cannot be
   made no longer leaves uninitialized entries for the exit handler to free.
   Covered by `programs/dtsession/tests/check-ice-authority.py`.
+- dtsession: fix the life of XSMP client records. A client that disconnected
+  after asking to interact left its request behind, so the window manager's
+  reply made `dtsession` tell a closed connection to interact (and, with
+  restart hint "never", used the freed record); records of clients that asked
+  not to be restarted were never removed because the match ran after their
+  connection was set to null, and neither they nor the properties' names and
+  types were freed; registration leaked the previous id, the generated id and
+  the host name. Covered by `programs/dtsession/tests/check-xsmp.py`.
 - build: add the opt-in `--enable-hardening` and `--enable-sanitizers[=LIST]`
   configure switches. Hardening reports truncation, string-constant,
   ignored-result, null-dereference and format defects and adds stack protection

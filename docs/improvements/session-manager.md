@@ -213,6 +213,27 @@ leaves the lock files alone; the user's file is the only one written. A cookie
 that cannot be made no longer leaves unset entries behind for the cleanup to
 free.
 
+## Client lifetimes
+
+`tests/check-xsmp.py` also covers these, with the records and the leaks checked
+under LeakSanitizer.
+
+- A client that disconnected after asking to interact stayed in the list with
+  its request: the reply of the window manager then told `SmsInteract` to let a
+  connection that was gone interact, and with a restart hint of "never" the
+  record that the cached request pointed to was freed while the reply was
+  still to come. `CloseDownClient` clears the request and the cached pointer,
+  `ProcessInteract` passes over clients without a connection and lets the
+  clients that are still there interact when the one that asked has left.
+- The record of a client that asked not to be restarted was meant to be
+  removed when it disconnected, but the test for the record ran after its
+  connection had been set to null and never matched, so every such client's
+  record, id, host name and properties stayed for the life of the session
+  (the properties' names and types were not freed even when a record was).
+  The record is unlinked by pointer and freed.
+- Registering a client left its previous id, the id it generated and the host
+  name from SMlib allocated; the record keeps its own copy of the host name.
+
 ## Tests
 
 `programs/dtsession/tests` holds regression tests that cut the production code

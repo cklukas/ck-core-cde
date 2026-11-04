@@ -28,11 +28,14 @@ text = (source / "SmXSMP.c").read_text()
 
 
 def function(signature):
-    start = text.index(signature)
+    start = text.rindex(signature)   # the definition comes after any prototype
     return text[start:text.index("\n}", start) + 3] + "\n"
 
 
-code = function("Status \nRegisterClientProc (") + function("static\nvoid ProcessInteract (")
+code = function("static\nvoid FreeProps (")
+if "RemoveClient" in text:
+    code += function("static void\nRemoveClient (")
+code += function("void CloseDownClient (") + function("Status \nRegisterClientProc (") + function("static\nvoid ProcessInteract (")
 if "WsmClientListIsValid" in text:
     code += function("static Boolean\nWsmClientListIsValid (")
 code += function("Tt_callback_action GetWsmClientsHandler(")
@@ -42,9 +45,11 @@ harness = r'''
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <X11/Intrinsic.h>
 #include <X11/SM/SMlib.h>
 #include "SmXSMP.h"
+#include "SmProp.h"
 
 typedef void *Tt_message;
 typedef void *Tt_pattern;
@@ -56,6 +61,16 @@ ClientRecPtr connectedList;
 static int interacts, generated, replies, saves;
 static char *replied_id, *host_name_result;
 static int workspace = 1;
+static struct { void *display; } smGD;
+#define SM_RUNNING_LOCK "lock"
+static int exits, restart_commands, interact_null;
+static SmsConn interacted[8];
+static void ExecuteCommandProperty(const char *what, ClientRecPtr c) { (void) what; (void) c; restart_commands++; }
+static void _DtReleaseLock(void *d, const char *l) { (void) d; (void) l; }
+#define SM_EXIT(status) (exits++)
+#define SmsCleanUp(c) ((void) (c))
+#define IceSetShutdownNegotiation(c, b) ((void) 0)
+#define IceCloseConnection(c) 0
 
 #define SmsGenerateClientID fake_SmsGenerateClientID
 #define SmsClientHostName fake_SmsClientHostName
@@ -66,7 +81,7 @@ static char *SmsGenerateClientID(SmsConn c) { (void) c; generated++; return strd
 static char *SmsClientHostName(SmsConn c) { (void) c; return host_name_result; }
 static Status SmsRegisterClientReply(SmsConn c, char *id) { (void) c; replies++; replied_id = strdup(id); return 1; }
 static void SmsSaveYourself(SmsConn c, int a, Bool b, int d, Bool e) { (void) c; (void) a; (void) b; (void) d; (void) e; saves++; }
-static void SmsInteract(SmsConn c) { (void) c; interacts++; }
+static void SmsInteract(SmsConn c) { if (!c) interact_null++; if (interacts < 8) interacted[interacts] = c; interacts++; }
 static int GetCurrentWorkspaceNumber(void) { return workspace; }
 
 /* the reply to the GetWsmClients request */
@@ -110,7 +125,14 @@ static void database(const char *id)
     smXSMP.xsmpDbList = d;
 }
 static char *dup_exact(const void *data, size_t n) { char *p = malloc(n ? n : 1); memcpy(p, data, n); return p; }
-static void reset(void) { connectedList = NULL; smXSMP.xsmpDbList = NULL; replies = generated = interacts = saves = 0; host_name_result = NULL; }
+static void reset(void)
+{
+    connectedList = NULL; smXSMP.xsmpDbList = NULL; replies = generated = interacts = saves = 0;
+    exits = restart_commands = interact_null = 0; host_name_result = NULL;
+    memset(&smXSMP.saveState, 0, sizeof smXSMP.saveState);
+}
+static int connections;
+static void connect_client(ClientRecPtr c) { c->smConn = (SmsConn) (uintptr_t) (0x1000 + ++connections); c->iceConn = (IceConn) (uintptr_t) (0x2000 + connections); c->active = 1; }
 
 #define CHECK(c) do { if (!(c)) { fprintf(stderr, "failed: %s (line %d)\n", #c, __LINE__); return 1; } } while (0)
 
@@ -188,7 +210,7 @@ static int wsm_reply_valid(void)
     int nums[2] = {1, 2};
     ClientRecPtr c;
     reset();
-    c = new_client("1a", 1); c->interactRequested = 1;
+    c = new_client("1a", 1); connect_client(c); c->interactRequested = 1;
     smXSMP.saveState.interactClient = c;
     reply(3, 2, "1a\0" "1b\0", 6, nums, sizeof nums);
     CHECK(GetWsmClientsHandler(NULL, NULL) == TT_CALLBACK_PROCESSED);
@@ -200,7 +222,7 @@ static int wsm_reply_shorter_than_its_count(void)
     int nums[2] = {1, 2};
     ClientRecPtr c;
     reset();
-    c = new_client("1a", 1); c->interactRequested = 1;
+    c = new_client("1a", 1); connect_client(c); c->interactRequested = 1;
     smXSMP.saveState.interactClient = c;
     reply(3, 1000, "1a\0" "1b\0", 6, nums, sizeof nums);          /* a thousand clients, two strings */
     CHECK(GetWsmClientsHandler(NULL, NULL) == TT_CALLBACK_PROCESSED);
@@ -232,7 +254,7 @@ static int interact_before_registration(void)
     int nums[1] = {1};
     ClientRecPtr c, early;
     reset();
-    c = new_client("1a", 1); c->interactRequested = 1;
+    c = new_client("1a", 1); connect_client(c); c->interactRequested = 1;
     early = new_client(NULL, 0); early->interactRequested = 1;     /* asked to interact before it registered */
     smXSMP.saveState.interactClient = early;
     reply(3, 1, "1a\0", 3, nums, sizeof nums);
@@ -278,7 +300,127 @@ static int delete_properties(void)
     return 0;
 }
 
+/* --- the life of a client record --- */
+static void set_restart_hint(ClientRecPtr c, int hint)
+{
+    SmProp **props = malloc(sizeof(SmProp *));
+    SmProp *p = malloc(sizeof *p);
+    p->name = strdup(SmRestartStyleHint); p->type = strdup(SmCARD8); p->num_vals = 1;
+    p->vals = malloc(sizeof(SmPropValue));
+    p->vals[0].length = 1; p->vals[0].value = malloc(1); *(char *) p->vals[0].value = (char) hint;
+    props[0] = p;
+    SetPropertiesProc(NULL, c, 1, props);
+}
+static int leak_register_restart(void)
+{
+    ClientRecPtr me;
+    reset();
+    me = new_client(NULL, 0);
+    database("1saved");
+    host_name_result = strdup("local/box:/tmp/.ICE-unix/42");
+    CHECK(RegisterClientProc(NULL, me, strdup("1saved")) == 1);
+    CHECK(!strcmp(me->clientHost, "box:/tmp/.ICE-unix/42"));
+    free(replied_id); free(me->clientId); free(me->clientHost); free(me);
+    free(smXSMP.xsmpDbList->clientId); free(smXSMP.xsmpDbList);
+    return 0;
+}
+static int leak_register_new_client(void)
+{
+    ClientRecPtr me;
+    reset();
+    me = new_client(NULL, 0);
+    host_name_result = strdup("tcp/far:6000");
+    CHECK(RegisterClientProc(NULL, me, NULL) == 1);
+    free(replied_id); free(me->clientId); free(me->clientHost); free(me);
+    return 0;
+}
+static int leak_close_removes_a_client_that_wants_no_restart(void)
+{
+    ClientRecPtr a, b, c;
+    SmProp **props;
+    reset();
+    a = new_client("1a", 1); connect_client(a); a->clientHost = strdup("box");
+    b = new_client("1b", 1); connect_client(b);
+    c = new_client("1c", 1); connect_client(c);
+    set_restart_hint(b, SmRestartNever);
+    props = malloc(sizeof(SmProp *)); props[0] = make_property("Program", "xclock");
+    SetPropertiesProc(NULL, b, 1, props);
+    smXSMP.saveState.interactClient = b;
+    CloseDownClient(b);
+    CHECK(connectedList == a && a->next == c && c->next == NULL);   /* b is out of the list... */
+    CHECK(smXSMP.saveState.interactClient == NULL);                  /* ...nothing points to it... */
+    CHECK(restart_commands == 0);
+    CloseDownClient(a);                                              /* a restart hint of "if running": the record stays */
+    CHECK(connectedList == a && !a->active && a->smConn == NULL);
+    free(a->clientId); free(a->clientHost); free(a); free(c->clientId); free(c);
+    return 0;
+}
+static int first_in_the_list_is_removed(void)
+{
+    ClientRecPtr a, b;
+    reset();
+    a = new_client("1a", 1); connect_client(a);
+    b = new_client("1b", 1); connect_client(b);
+    set_restart_hint(a, SmRestartNever);
+    CloseDownClient(a);
+    CHECK(connectedList == b && b->next == NULL);
+    return 0;
+}
+static int client_that_asked_to_interact_disconnects(void)
+{
+    int nums[1] = {1};
+    ClientRecPtr a, b;
+    int hint;
+    for (hint = 0; hint < 2; hint++) {                              /* a record that stays, and one that is removed */
+        reset();
+        a = new_client("1a", 1); connect_client(a); a->interactRequested = 1;
+        b = new_client("1b", 1); connect_client(b); b->interactRequested = 1;
+        if (hint) set_restart_hint(a, SmRestartNever);
+        smXSMP.saveState.interactClient = a;                        /* the request that is waiting for the window manager */
+        CloseDownClient(a);
+        CHECK(smXSMP.saveState.interactClient == NULL);
+        reply(3, 1, "1b\0", 3, nums, sizeof nums);
+        CHECK(GetWsmClientsHandler(NULL, NULL) == TT_CALLBACK_PROCESSED);
+        CHECK(interact_null == 0);                                    /* nobody is told to interact on a closed connection */
+        CHECK(interacts == 1 && interacted[0] == b->smConn);          /* the client that is still there is */
+        connectedList = NULL;
+    }
+    return 0;
+}
+static int closed_client_before_the_interaction_without_workspaces(void)
+{
+    ClientRecPtr a;
+    reset();
+    a = new_client("1a", 1); connect_client(a); a->interactRequested = 1;
+    smXSMP.saveState.interactClient = a;
+    CloseDownClient(a);
+    reply(2, 0, NULL, 0, NULL, 0);                                    /* the window manager did not answer properly */
+    CHECK(GetWsmClientsHandler(NULL, NULL) == TT_CALLBACK_PROCESSED);
+    CHECK(interact_null == 0 && interacts == 0);
+    return 0;
+}
+static int shutdown_ends_with_the_last_client(void)
+{
+    ClientRecPtr a, b;
+    reset();
+    smXSMP.saveState.shutdown = 1;
+    a = new_client("1a", 1); connect_client(a);
+    b = new_client("1b", 1); connect_client(b);
+    CloseDownClient(a);
+    CHECK(exits == 0);
+    CloseDownClient(b);
+    CHECK(exits == 1);
+    return 0;
+}
+
 static struct { const char *name; int (*run)(void); } scenarios[] = {
+    {"leak_register_restart", leak_register_restart},
+    {"leak_register_new_client", leak_register_new_client},
+    {"leak_close_removes_a_client_that_wants_no_restart", leak_close_removes_a_client_that_wants_no_restart},
+    {"first_in_the_list_is_removed", first_in_the_list_is_removed},
+    {"client_that_asked_to_interact_disconnects", client_that_asked_to_interact_disconnects},
+    {"closed_client_before_the_interaction_without_workspaces", closed_client_before_the_interaction_without_workspaces},
+    {"shutdown_ends_with_the_last_client", shutdown_ends_with_the_last_client},
     {"restart_with_a_saved_id", restart_with_a_saved_id},
     {"connection_without_id_in_the_list", connection_without_id_in_the_list},
     {"unknown_and_reused_ids", unknown_and_reused_ids},
@@ -318,11 +460,15 @@ with tempfile.TemporaryDirectory(prefix="dtsession-xsmp-", dir=os.environ.get("T
     env = dict(os.environ, ASAN_OPTIONS="detect_leaks=0")
     names = subprocess.run([str(binary)], capture_output=True, text=True, check=True, env=env).stdout.split()
     for name in names:
-        run = subprocess.run([str(binary), name], capture_output=True, text=True, timeout=60, env=env)
+        # scenarios named leak_* free everything they allocate: what is left is the code's
+        run_env = dict(os.environ, ASAN_OPTIONS="detect_leaks=%d" % name.startswith("leak_"))
+        run = subprocess.run([str(binary), name], capture_output=True, text=True, timeout=60, env=run_env)
         if run.returncode:
             failed.append(name)
             lines = [l for l in run.stderr.strip().splitlines() if l.strip()]
             sys.stderr.write("%s failed: %s\n" % (name, lines[0] if lines else "exit %d (signal %d)" % (run.returncode, -run.returncode)))
+            if os.environ.get("DTSESSION_VERBOSE"):
+                sys.stderr.write("\n".join(lines[:30]) + "\n")
 if failed:
     sys.exit("%d of %d XSMP scenarios failed: %s" % (len(failed), len(names), ", ".join(failed)))
 print("XSMP: %d scenarios passed" % len(names))

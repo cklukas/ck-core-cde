@@ -503,6 +503,8 @@ RegisterClientProc (
 
 	if (!previousId) {
 		id = SmsGenerateClientID (smsConn);
+		if (!id)
+			return (0);
 		sendSave = True;
 	}
 	else {
@@ -558,21 +560,33 @@ RegisterClientProc (
 	}
 
 	client->clientId = strdup (id);
+	if (!client->clientId) {
+		free (id);
+		return (0);
+	}
 	pchar = SmsClientHostName (smsConn);
 	if (pchar) {
 		/*
 		 * The name is "<transport>/<host>:<port>"; a name without a
-		 * transport is used as it is.
+		 * transport is used as it is.  The record keeps a copy: the
+		 * name from SMlib is the caller's to free.
 		 */
 		char		*slash = strchr (pchar, '/');
 
-		client->clientHost = slash ? slash + 1 : pchar;
+		client->clientHost = strdup (slash ? slash + 1 : pchar);
+		free (pchar);
 	}
 	else
-		client->clientHost = pchar;
+		client->clientHost = NULL;
 	client->active = True;
 
 	SmsRegisterClientReply (smsConn, id);
+
+	/*
+	 * The id is the previous one the client sent or the one just generated:
+	 * either way it is ours to free now.
+	 */
+	free (id);
 
 	if (sendSave)
 		SmsSaveYourself (smsConn, SmSaveLocal, False, 
@@ -1114,6 +1128,8 @@ void FreeProps (
 			XtFree (tmp->prop.vals[i].value);
 		if (tmp->prop.num_vals > 0)
 			XtFree ((char *) tmp->prop.vals);
+		XtFree (tmp->prop.name);
+		XtFree (tmp->prop.type);
 		trail = tmp;
 		tmp = tmp->next;
 		XtFree ((char *) trail);
@@ -1121,23 +1137,53 @@ void FreeProps (
 }
 
 
+/*
+ * Take a client record out of the list of connected clients and free it.
+ */
+static void
+RemoveClient (
+	ClientRecPtr		pClientRec )
+{
+	ClientRecPtr		* link;
+
+	for (link = &connectedList; *link != NULL; link = &(*link)->next) {
+		if (*link == pClientRec) {
+			*link = pClientRec->next;
+			break;
+		}
+	}
+
+	if (smXSMP.saveState.interactClient == pClientRec)
+		smXSMP.saveState.interactClient = NULL;
+
+	FreeProps (pClientRec->props);
+	XtFree (pClientRec->clientId);
+	XtFree (pClientRec->clientHost);
+	XtFree ((char *) pClientRec);
+}
+
+
 void CloseDownClient (
 	ClientRecPtr		pClientRec )
 {
 	int			restartHint;
-	ClientRecPtr	tmp, trail;
-	SmsConn oldConn;
+	ClientRecPtr		tmp;
 
 	SmsCleanUp (pClientRec->smConn);
 	IceSetShutdownNegotiation (pClientRec->iceConn, False);
 	IceCloseConnection (pClientRec->iceConn);
 
-	/* save connection information for later compare */
-	oldConn = pClientRec->smConn;
-
 	pClientRec->iceConn = NULL;
 	pClientRec->smConn = NULL;
 	pClientRec->active = False;
+
+	/*
+	 * The client cannot interact any more, and no reply of the window
+	 * manager is to be about it.
+	 */
+	pClientRec->interactRequested = False;
+	if (smXSMP.saveState.interactClient == pClientRec)
+		smXSMP.saveState.interactClient = NULL;
 
 	if (!GetCardPropertyValue (pClientRec, SmRestartStyleHint, 
 				   &restartHint))
@@ -1153,17 +1199,7 @@ void CloseDownClient (
 		/*
 		 * Remove the client from the list
 		 */
-		for (tmp = trail = connectedList; tmp != NULL; 
-			trail = tmp, tmp = tmp->next) {
-			if (tmp->smConn == oldConn) {
-				FreeProps (pClientRec->props);
-				if (tmp == connectedList)
-					connectedList = tmp->next;
-				trail->next = tmp->next;
-				XtFree ((char *) tmp);
-				break;
-			}
-		}
+		RemoveClient (pClientRec);
 	}
 
 	/*
@@ -1410,10 +1446,7 @@ void ProcessInteract (
 	ClientRecPtr		tmp = NULL;
 	char			*pchar;
 
-	if (!client)
-		return;
-
-	if (!getWsmClientOK) {
+	if (!getWsmClientOK && client && client->smConn) {
 		smXSMP.saveState.clientInteracting = True;
 		SmsInteract (client->smConn);
 		return;
@@ -1421,18 +1454,22 @@ void ProcessInteract (
 
 	/*
 	 * If a client wants to interact and its workspace matches
-	 * the current workspace, then let it interact.
+	 * the current workspace, then let it interact.  Without the
+	 * list of workspaces (or when the client the request came
+	 * from has disconnected meanwhile) the clients that still
+	 * want to interact are the ones to let.
 	 */
-	currentWorkspace = GetCurrentWorkspaceNumber ();      
+	currentWorkspace = getWsmClientOK ? GetCurrentWorkspaceNumber () : -1;
 
 	for (pClientRec = connectedList; 
 	     pClientRec != NULL; 
 	     pClientRec = pClientRec->next) {
 
-		if (pClientRec->interactRequested) {
+		if (pClientRec->interactRequested && pClientRec->smConn) {
 			tmp = pClientRec;
 
 			for (i = 0, pchar = smXSMP.saveState.clientIds; 
+			     getWsmClientOK && 
 			     i < smXSMP.saveState.numClientIds; 
 			     i++, pchar += strlen (pchar) + 1) {
 
