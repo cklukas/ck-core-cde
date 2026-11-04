@@ -32,10 +32,17 @@ files may add rules for their subtree, but must not weaken these requirements.
     refs, and the branch choice is not remembered.
   - GitHub: `git push origin master`, then compare
     `git ls-remote origin refs/heads/master` with `git rev-parse master`.
-  - Do not use `ckgit sync` for this: it uploads every local branch and tag,
-    including task branches, worktree branches and branches that belong to other
-    sessions. Publish another branch only when asked to, with
-    `ckgit publish --branch NAME`.
+  - `ckgit sync --repo .` is a different operation: it uploads every local branch
+    and tag, including task branches, worktree branches and branches that belong
+    to other sessions, so it is not how a finished batch is published. rpi4 is
+    the owner's backup of the repositories, so run `ckgit sync --repo . --dry-run`
+    and then `ckgit sync --repo .` when the owner asks for a full backup, and
+    report what it uploaded. It never forces, and it skips a project whose local
+    branch has diverged from the server (for example after a rebase of a branch
+    that was already uploaded): upload the other branches with
+    `ckgit publish --branch NAME ...` and report the diverged one. Publish a
+    single other branch only when asked to, with `ckgit publish --branch NAME`.
+    Do not rewrite a branch that is already on rpi4.
   - If a push is refused before Git reports anything (for example "permission
     denied" from the tool that runs the command), the cause is a permission rule
     of that machine, not Git or the remote. Report it and ask for the rule to be
