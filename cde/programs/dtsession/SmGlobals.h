@@ -78,7 +78,7 @@ extern int SetRestorePath( unsigned int , char **) ;
 extern int SetSavePath( Boolean , int ) ;
 extern int SetFontSavePath(char *) ;
 extern void InitNlsStrings( void ) ;
-extern void MoveDirectory( char *, char *, Boolean) ;
+extern int MoveDirectory( char *, char *, Boolean) ;
 extern void SetSystemReady(void);
 extern void SmExit ( int exitStatus);
 extern void UndoSetSavePath (void);

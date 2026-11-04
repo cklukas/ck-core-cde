@@ -82,7 +82,6 @@ extern void StartEtc( Boolean ) ;
 extern void CreateExecString(char *) ;
 extern void KillParent( void ) ;
 extern void ScanWhitespace( unsigned char **) ;
-extern void SystemCmd (char *pchCmd);
 
 extern Boolean StartClient (
 	char 			* program, 

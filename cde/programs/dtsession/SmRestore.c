@@ -445,46 +445,6 @@ SetCompatState( void )
 
 /*************************************<->*************************************
  *
- *  SystemCmd (pchCmd)
- *
- *
- *  Description:
- *  -----------
- *  This function fiddles with our signal handling and calls the
- *  system() function to invoke a unix command.
- *
- *
- *  Inputs:
- *  ------
- *  pchCmd = string with the command we want to exec.
- *
- *  Outputs:
- *  -------
- *
- *
- *  Comments:
- *  --------
- *  The system() command is touchy about the SIGCLD behavior. Restore
- *  the default SIGCLD handler during the time we run system().
- *
- *************************************<->***********************************/
-
-void
-SystemCmd (char *pchCmd)
-{
-    void (*signalHandler) (int);
-
-    signalHandler = signal (SIGCHLD, SIG_DFL);
-
-    system (pchCmd);
-
-    signal (SIGCHLD, signalHandler);
-} /* END OF FUNTION SystemCmd */
-
-
-
-/*************************************<->*************************************
- *
  *  RestoreState ()
  *
  *

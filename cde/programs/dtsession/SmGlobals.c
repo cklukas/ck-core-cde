@@ -90,6 +90,7 @@
 #include "SmProtocol.h"
 #include "SmXSMP.h"
 #include "SmPriv.h"
+#include "SmFiles.h"
 
 /*
  * Internal Variable Declaraions
@@ -99,12 +100,24 @@ static char savedOldDir [MAXPATHLEN];
 static char savedTmpDir [MAXPATHLEN];
 
 /*
+ * The names of the session files are put together in buffers of
+ * MAXPATHLEN + 1 bytes from the session directory.  What is added to it (the
+ * session, the database and settings files, an entry of the directory) stays
+ * within this many bytes.
+ */
+#define SM_PATH_MARGIN	512
+
+/*
  * Internal Function Declaraions
  */
 
 static int SetSysDefaults( void ) ;
 static int SetResSet( void ) ;
-static void RemoveFiles( char *) ;
+static char *CreateSessionDirs( Display * ) ;
+static Boolean SetArchivePath( void ) ;
+static int ArchiveSessionDirectory( void ) ;
+static void RememberPath( char *, size_t, const char * ) ;
+static char *GenericHomeSessionDir( void ) ;
 static void TrimErrorlog(void);
 
 static void _SmWaitClientTimeoutDefault (
@@ -588,6 +601,56 @@ InitSMGlobals( void )
 
 /*************************************<->*************************************
  *
+ *  CreateSessionDirs (display)
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Create the directories of the session files and return the one the
+ *  sessions are in (free it with XtFree).  A directory with a name so long
+ *  that the paths of the files in it do not fit in the buffers they are put
+ *  together in is refused like one that cannot be created.
+ *
+ *************************************<->***********************************/
+static char *
+CreateSessionDirs(
+        Display *display )
+{
+    char *path = _DtCreateDtDirs(display);
+
+    if (path != NULL && strlen(path) + SM_PATH_MARGIN > MAXPATHLEN)
+    {
+        XtFree(path);
+        errno = ENAMETOOLONG;
+        path = NULL;
+    }
+
+    return path;
+}
+
+
+/*************************************<->*************************************
+ *
+ *  SetArchivePath ()
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Put the name of the archived version (".old") of the session directory
+ *  smGD.clientPath names into smGD.etcPath.  Returns False if it does not fit.
+ *
+ *************************************<->***********************************/
+static Boolean
+SetArchivePath( void )
+{
+    return snprintf(smGD.etcPath, sizeof(smGD.etcPath), "%s.%s",
+                    smGD.clientPath, SM_OLD_EXTENSION) <
+           (int) sizeof(smGD.etcPath);
+}
+
+
+/*************************************<->*************************************
+ *
  *  SetRestorePath ()
  *
  *
@@ -708,7 +771,7 @@ SetRestorePath(
      * Need to know if the session is for a specific display
      */
     smGD.displaySpecific = True;
-    if (session_option = strrchr (smGD.savePath, '/')) 
+    if (smGD.savePath != NULL && (session_option = strrchr (smGD.savePath, '/')))
     {
 	session_option++;
 	if (!strcmp (session_option, DtSM_SESSION_DIRECTORY))
@@ -721,18 +784,22 @@ SetRestorePath(
     /* 
     ** User's session startup script:
     **   $HOME/.dt/sessions/sessionetc
-    */
-    strcpy(smGD.etcPath, smGD.savePath);
-    strcat(smGD.etcPath, "/");
-    strcat(smGD.etcPath, smEtcFile);
-
-    /* 
     ** User's session shutdown script: 
     **   $HOME/.dt/sessions/sessionexit
+    ** Without a session directory there are none.
     */
-    strcpy(smGD.exitPath, smGD.savePath);
-    strcat(smGD.exitPath, "/");
-    strcat(smGD.exitPath, smExitFile);
+    if (smGD.savePath != NULL)
+    {
+        snprintf(smGD.etcPath, sizeof(smGD.etcPath), "%s/%s", smGD.savePath,
+                 smEtcFile);
+        snprintf(smGD.exitPath, sizeof(smGD.exitPath), "%s/%s", smGD.savePath,
+                 smExitFile);
+    }
+    else
+    {
+        smGD.etcPath[0] = '\0';
+        smGD.exitPath[0] = '\0';
+    }
 
     return(0);
 }
@@ -923,8 +990,6 @@ SetResSet( void )
 void 
 UndoSetSavePath (void)
 {
-	char			* buf;
-
 	if (strcmp ("", savedDir)) {
 
 		/*
@@ -933,10 +998,8 @@ UndoSetSavePath (void)
 		 *    ~/.dt/<session_dir>/current
 		 *    ~/.dt/<session_dir>/home
 		 */
-		buf = XtMalloc (strlen (savedDir) + 9);
-		sprintf (buf, "rm -rf %s", savedDir);
-		SystemCmd (buf);
-		XtFree (buf);
+		if (SmRemoveTree (savedDir) != 0)
+			PrintErrnoError(DtError, GETMESSAGE(4, 4, "Unable to remove session directory.  Make sure write permissions exist on $HOME/.dt directory.  Invalid session files will not be removed."));
 
 		if (strcmp ("", savedOldDir)) {
 
@@ -947,9 +1010,105 @@ UndoSetSavePath (void)
 			}
 		}
 	}
+
+	savedDir[0] = savedOldDir[0] = savedTmpDir[0] = '\0';
 }
 
-
+
+/*
+ * Keep a path for UndoSetSavePath().  A path that does not fit is not kept
+ * (the session paths were accepted with room to spare, so that does not
+ * happen).
+ */
+static void
+RememberPath(
+        char *kept,
+        size_t size,
+        const char *path )
+{
+    size_t length = strlen(path);
+
+    if (length < size)
+    {
+        memcpy(kept, path, length + 1);
+    }
+}
+
+
+/*************************************<->*************************************
+ *
+ *  ArchiveSessionDirectory ()
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Move the session directory smGD.clientPath names to its ".old" version
+ *  (smGD.etcPath).  If a ".old" version exists already, it is moved to a
+ *  directory with a name of its own first; that directory is pruned when the
+ *  session directories are, after the save is complete.  What was moved where
+ *  is kept for UndoSetSavePath().  If no place can be made for the old
+ *  version, it is removed: the new ".old" replaces it.
+ *
+ *  Returns 0, or -1 (after an error message) if the directory could not be
+ *  archived; the session directories are then as they were.
+ *
+ *************************************<->***********************************/
+static int
+ArchiveSessionDirectory( void )
+{
+    struct stat buf;
+    char        *tmpName = NULL;
+
+    if (!SetArchivePath())
+    {
+        PrintErrnoError(DtError, smNLS.cantCreateDirsString);
+        return(-1);
+    }
+
+    if (stat(smGD.etcPath, &buf) == 0)
+    {
+        tmpName = SmMakeTempDirectory(smGD.savePath, smGD.restoreSession);
+        if (tmpName != NULL && MoveDirectory(smGD.etcPath, tmpName, False) == 0)
+        {
+            RememberPath(savedTmpDir, sizeof(savedTmpDir), tmpName);
+        }
+        else
+        {
+            /* no second archive: the older version is dropped */
+            if (tmpName == NULL)
+            {
+                PrintErrnoError(DtError, smNLS.cantCreateDirsString);
+            }
+            else
+            {
+                rmdir(tmpName);
+            }
+            if (SmRemoveTree(smGD.etcPath) != 0)
+            {
+                PrintErrnoError(DtError, GETMESSAGE(4, 4, "Unable to remove session directory.  Make sure write permissions exist on $HOME/.dt directory.  Invalid session files will not be removed."));
+                free(tmpName);
+                return(-1);
+            }
+        }
+        free(tmpName);
+    }
+
+    if (MoveDirectory(smGD.clientPath, smGD.etcPath, False) != 0)
+    {
+        /* put the older archive back */
+        if (savedTmpDir[0] != '\0')
+        {
+            MoveDirectory(savedTmpDir, smGD.etcPath, False);
+            savedTmpDir[0] = '\0';
+        }
+        return(-1);
+    }
+    RememberPath(savedOldDir, sizeof(savedOldDir), smGD.etcPath);
+
+    return(0);
+}
+
+
 /*************************************<->*************************************
  *
  *  SetSavePath (saveToHome, mode)
@@ -1002,7 +1161,7 @@ SetSavePath(
      * directories during the session.  If so - recreate them
      */
     SM_FREE(smGD.savePath);
-    smGD.savePath = _DtCreateDtDirs(smGD.display);
+    smGD.savePath = CreateSessionDirs(smGD.display);
     if(smGD.savePath == NULL)
     {
         PrintErrnoError(DtError, smNLS.cantCreateDirsString);
@@ -1059,44 +1218,16 @@ SetSavePath(
         {
 	    /*
 	     * The "current" directory exists and must be moved to its
-	     * ".old" version.  But first, if the ".old" version exists,
-	     * it must be moved to a temporary directory.  This temporary
-	     * directory will eventually be pruned - when a user next
-	     * runs a Current session and saves the session.
+	     * ".old" version.
 	     */
-	    strcpy (savedDir, smGD.clientPath);
-            snprintf(smGD.etcPath, sizeof(smGD.etcPath), "%s.%s", smGD.clientPath, SM_OLD_EXTENSION);
-            status = stat(smGD.etcPath, &buf);
-            if(status == 0)
+	    if (ArchiveSessionDirectory() != 0)
 	    {
-		char 		* tmpName;
-                int len, tfd;
-
-                strcpy(savedOldDir, smGD.etcPath);
-
-                len = strlen(smGD.savePath) + strlen(smGD.restoreSession) 
-                  + strlen("XXXXXX") + 3;
-		tmpName = (char *) XtCalloc(1, len);
-
-		sprintf(tmpName, "%s/%s.XXXXXX", smGD.savePath, 
-                        smGD.restoreSession);
-
-                if ((tfd = mkstemp(tmpName)) == -1)
-                  {
-                    PrintErrnoError(DtError, smNLS.cantCreateDirsString);
-                  }
-                else
-                  {
-                    close(tfd);
-                    unlink(tmpName);
-
-                    MoveDirectory(smGD.etcPath, tmpName, False);
-                    
-                    strncpy(savedTmpDir, tmpName, len - 1);
-                  }
-                XtFree((char *) tmpName);
+                smGD.clientPath[0] = 0;
+                smGD.settingPath[0] = 0;
+                smGD.resourcePath[0] = 0;
+                return(-1);
 	    }
-	    MoveDirectory(smGD.clientPath, smGD.etcPath, False);
+	    strcpy (savedDir, smGD.clientPath);
         }
 
         smGD.clientPath[0] = 0;
@@ -1105,8 +1236,6 @@ SetSavePath(
     }
     else
     {
-        strcpy (savedDir, smGD.clientPath);
-
         /*
          * If the desired directory doesn't exist, create it.
          */
@@ -1131,45 +1260,15 @@ SetSavePath(
         {
 	    /*
 	     * The desired directory already exists so it must
-	     * be archived by moving it to its ".old" version. But
-	     * first, if its ".old" version already exists, it must
-	     * be moved to a temporary directory that will be removed 
-	     * when the session directories are pruned - after the
-	     * save is complete.
+	     * be archived by moving it to its ".old" version.
 	     */
-	    char 		* tmpName;
-
-            snprintf(smGD.etcPath, sizeof(smGD.etcPath), "%s.%s", smGD.clientPath, SM_OLD_EXTENSION);
-            status = stat(smGD.etcPath, &buf);
-            if(status == 0)
+	    if (ArchiveSessionDirectory() != 0)
 	    {
-              int len, tfd;
-
-              len = strlen(smGD.savePath) + strlen(smGD.restoreSession) 
-                + strlen("XXXXXX") + 3;
-              tmpName = (char *) XtCalloc(1, len);
-              snprintf(tmpName, len, "%s/%s.XXXXXX", smGD.savePath, 
-                      smGD.restoreSession);
-
-              strcpy (savedOldDir, smGD.etcPath);
-
-              if ((tfd = mkstemp(tmpName)) == -1)
-                {
-                  PrintErrnoError(DtError, smNLS.cantCreateDirsString);
-                }
-              else
-                {
-                  close(tfd);
-                  unlink(tmpName);
-
-                  MoveDirectory (smGD.etcPath, tmpName, False);
-              
-                  strcpy (savedTmpDir, tmpName);
-                }
-              XtFree((char *) tmpName);
+                smGD.clientPath[0] = 0;
+                smGD.settingPath[0] = 0;
+                smGD.resourcePath[0] = 0;
+                return(-1);
 	    }
-
-            MoveDirectory(smGD.clientPath, smGD.etcPath, False);
 
             /*
              * Now re-make the directory
@@ -1194,6 +1293,7 @@ SetSavePath(
               }
         }
         
+        strcpy (savedDir, smGD.clientPath);
         strcat(smGD.clientPath, "/");
         strcat(smGD.clientPath, SM_CLIENT_FILE2);
         strcat(smGD.settingPath, "/");
@@ -1294,93 +1394,13 @@ SetFontSavePath(char *langPtr)
 
 /*************************************<->*************************************
  *
- *  RemoveFiles()
- *
- *
- *  Description:
- *  -----------
- *  Remove the files that need to be removed
- *
- *
- *  Inputs:
- *  ------
- * 
- *  Outputs:
- *  -------
- *
- *
- *  Comments:
- *  --------
- * 
- *************************************<->***********************************/
-static void 
-RemoveFiles(
-        char *path )
-{
-    pid_t  clientFork;
-    int    execStatus, childStatus, i, statLoc;
-    String tmpString;
-
-    /*
-     * Fork and exec the client process
-     */
-    sigaction(SIGCHLD, &smGD.defvec, (struct sigaction *) NULL);
-
-    clientFork = vfork();
-    
-    /*
-     * If the fork fails - Send out an error and return
-     */
-    if(clientFork < 0)
-    {
-        PrintErrnoError(DtError, smNLS.cantForkClientString);
-        return;
-    }
-    
-    /*
-     * Fork succeeded - now do the exec
-     */
-    if(clientFork == 0)
-    {
-        SetSIGPIPEToDefault ();
-
-        /*
-         * Give up the identity dtsession is installed with
-         */
-        SmPrivDropInChild();
-
-        _DtEnvControl(DT_ENV_RESTORE_PRE_DT);
-        
-#if defined(CSRG_BASED)
-        setsid();
-#else
-        (void) setpgrp();
-#endif /* CSRG_BASED */
-         
-        execStatus = execlp("rm","rm", "-rf", path, (char *) 0);
-        if(execStatus != 0)
-        {
-            tmpString = ((char *)GETMESSAGE(4, 4, "Unable to remove session directory.  Make sure write permissions exist on $HOME/.dt directory.  Invalid session files will not be removed.")) ;
-            PrintErrnoError(DtError, tmpString);
-            SM_FREE(tmpString);
-            SM_EXIT(-1);
-        }
-    }
-
-    while(wait(&statLoc) != clientFork);
-    
-    sigaction(SIGCHLD, &smGD.childvec, (struct sigaction *) NULL);
-}
-                      
-
-/*************************************<->*************************************
- *
  *  MoveDirectory()
  *
  *  Description:
  *  -----------
  *  Move the directory specified by pathFrom - to the directory specified
- *  by pathTo.
+ *  by pathTo.  The directory is renamed in place (both paths are in the
+ *  session directory); no program is started.
  *
  *  Inputs:
  *  ------
@@ -1391,87 +1411,39 @@ RemoveFiles(
  * 
  *  Outputs:
  *  -------
+ *  Returns 0 if the directory was moved, -1 (after an error message)
+ *  otherwise.
  *
  *  Comments:
  *  --------
  * 
  *************************************<->***********************************/
-void 
+int 
 MoveDirectory(
 	char 		*pathFrom,
 	char 		*pathTo,
 	Boolean		removeDestDir)
 {
-    struct stat buf;
-    pid_t  clientFork;
-    int    status, execStatus, childStatus, i, statLoc;
-    String tmpString;
-
     /*
      * If the pathTo directory exists - remove it
      */
-    if (removeDestDir) 
+    if (removeDestDir && SmRemoveTree(pathTo) != 0)
     {
-        status = stat(pathTo, &buf);
-        if(status != -1)
-        {
-            RemoveFiles(pathTo);
-        }
-    }
-           
-    /*
-     * Fork and exec the client process
-     */
-    sigaction(SIGCHLD, &smGD.defvec, (struct sigaction *) NULL);
-
-    clientFork = vfork();
-    
-    /*
-     * If the fork fails - Send out an error and return
-     */
-    if(clientFork < 0)
-    {
-        PrintErrnoError(DtError, smNLS.cantForkClientString);
-        return;
-    }
-    
-    /*
-     * Fork succeeded - now do the exec
-     */
-    if(clientFork == 0)
-    {
-        SetSIGPIPEToDefault ();
-
-        /*
-         * Give up the identity dtsession is installed with
-         */
-        SmPrivDropInChild();
-
-        _DtEnvControl(DT_ENV_RESTORE_PRE_DT);
-        
-#if defined(CSRG_BASED)
-        setsid();
-#else
-        (void) setpgrp();
-#endif /* CSRG_BASED */
-        
-        execStatus = execlp("mv","mv", pathFrom, pathTo, (char *) 0);
-        if(execStatus != 0)
-        {
-            tmpString = ((char *)GETMESSAGE(4, 4, "Unable to remove session directory.  Make sure write permissions exist on $HOME/.dt directory.  Invalid session files will not be removed.")) ;
-            PrintErrnoError(DtError, tmpString);
-            SM_FREE(tmpString);
-            SM_EXIT(-1);
-        }
+        PrintErrnoError(DtError, GETMESSAGE(4, 4, "Unable to remove session directory.  Make sure write permissions exist on $HOME/.dt directory.  Invalid session files will not be removed."));
+        return(-1);
     }
 
-    while(wait(&statLoc) != clientFork);
-    
-    sigaction(SIGCHLD, &smGD.childvec, (struct sigaction *) NULL);
+    if (rename(pathFrom, pathTo) != 0)
+    {
+        PrintErrnoError(DtError, GETMESSAGE(4, 4, "Unable to remove session directory.  Make sure write permissions exist on $HOME/.dt directory.  Invalid session files will not be removed."));
+        return(-1);
+    }
+
+    return(0);
 }
 
-                                      
-
+
+
 /*************************************<->*************************************
  *
  *  InitNlsStrings()
@@ -1600,71 +1572,53 @@ WaitChildDeath( int i )
 static void
 TrimErrorlog( void )
 {
-    char        *savePath, 	/* common path element for all pathnames */
-		*checkPath1, 
-		*checkPath2;
+    char	*errorlog, *old, *older;
     struct stat buf;
-    int len, status;
     char *home;
 
-    /*
-     * Allocate the strings needed
-     */
-    savePath = (char *) SM_MALLOC(MAXPATHLEN + 1);
-    checkPath1 = (char *) SM_MALLOC(MAXPATHLEN + 1);
-    checkPath2 = (char *) SM_MALLOC(MAXPATHLEN + 1);
     if ((home=getenv("HOME")) == NULL)
         home="";
-    
-    len = strlen(home) + strlen(DtPERSONAL_CONFIG_DIRECTORY) + 2;
-    if (len > MAXPATHLEN) savePath = SM_REALLOC(savePath, len);
-    snprintf(savePath, len, "%s/%s", home, DtPERSONAL_CONFIG_DIRECTORY);
-    
-    /*
-     * If errorlog.old exists and it is not empty, delete
-     * errorlog.older and then move errolog.old to 
-     * errorlog.older
-     */
-    if (len + strlen(DtOLDER_ERRORLOG_FILE) > MAXPATHLEN)
-      checkPath1 = SM_REALLOC(savePath, len + strlen(DtOLDER_ERRORLOG_FILE));
-    sprintf(checkPath1, "%s/%s", savePath, DtOLDER_ERRORLOG_FILE);
 
-    if (len + strlen(DtOLD_ERRORLOG_FILE) > MAXPATHLEN)
-      checkPath2 = SM_REALLOC(savePath, len + strlen(DtOLD_ERRORLOG_FILE));
-    sprintf(checkPath2, "%s/%s", savePath, DtOLD_ERRORLOG_FILE);
-
-    status = stat(checkPath2, &buf);
-    if((status != -1) && (buf.st_size > 0))
+    errorlog = SmJoinPath(home, DtPERSONAL_CONFIG_DIRECTORY,
+                          DtERRORLOG_FILE, NULL);
+    old = SmJoinPath(home, DtPERSONAL_CONFIG_DIRECTORY,
+                     DtOLD_ERRORLOG_FILE, NULL);
+    older = SmJoinPath(home, DtPERSONAL_CONFIG_DIRECTORY,
+                       DtOLDER_ERRORLOG_FILE, NULL);
+    if (errorlog == NULL || old == NULL || older == NULL)
     {
-	(void) unlink(checkPath1);
-        (void) link(checkPath2, checkPath1);
-        (void) unlink(checkPath2);
+        free(errorlog);
+        free(old);
+        free(older);
+        return;
     }
 
     /*
-     * If errorlog exists and it is not empty, move it to
-     * errorlog.old
+     * If errorlog.old exists and it is not empty, it replaces errorlog.older.
+     * A log that cannot be moved stays where it is.
      */
-    if (len + strlen(DtERRORLOG_FILE) > MAXPATHLEN)
-      checkPath1 = SM_REALLOC(savePath, len + strlen(DtERRORLOG_FILE));
-    snprintf(checkPath1, len + strlen(DtERRORLOG_FILE), "%s/%s", savePath, DtERRORLOG_FILE);
-
-    status = stat(checkPath1, &buf);
-    if((status != -1) && (buf.st_size > 0))
+    if ((stat(old, &buf) != -1) && (buf.st_size > 0))
     {
-        (void) link(checkPath1, checkPath2);
-        (void) unlink(checkPath1);
+        (void) rename(old, older);
     }
 
-    SM_FREE((char *) savePath);
-    SM_FREE((char *) checkPath1);
-    SM_FREE((char *) checkPath2);
+    /*
+     * If errorlog exists and it is not empty, it replaces errorlog.old
+     */
+    if ((stat(errorlog, &buf) != -1) && (buf.st_size > 0))
+    {
+        (void) rename(errorlog, old);
+    }
+
+    free(errorlog);
+    free(old);
+    free(older);
 
     return;
 }
 
                                       
-
+
 /*************************************<->*************************************
  *
  *  SetSystemReady()
@@ -2028,7 +1982,14 @@ InitializeGenericSession (
     int 	status;
     char	tmpPath[MAXPATHLEN];
 
-    smGD.savePath = _DtCreateDtDirs(tmpDisplay);
+    smGD.savePath = CreateSessionDirs(tmpDisplay);
+    if (smGD.savePath == NULL)
+    {
+      /* there is nowhere to restore a session from */
+      PrintErrnoError(DtError, smNLS.cantCreateDirsString);
+      SetSysDefaults();
+      return;
+    }
 
     if (session_needed)
     {
@@ -2205,15 +2166,22 @@ InitializeSpecificSession (
 	unsigned int	argc,
 	char		**argv)
 {
-	char		*session_dir = (char *) XtMalloc(MAXPATHLEN);
-	char		*alt_dir = (char *) XtMalloc(MAXPATHLEN);
-        int             len;
+	char		*session_dir = NULL;
+	char		*alt_dir = NULL;
 	struct stat 	buf;
 
 	if (!InternSessionDir (session_option, disp))
 		return (False);
 
 	InitializePaths (smGD.restoreSession, disp);
+
+	if (smGD.savePath == NULL) {
+		/*
+		 * There is no session directory to take a session from
+		 */
+		SetSysDefaults ();
+		return (True);
+	}
 
 	if (!strcmp (session_option, SM_HOME_DIRECTORY)) {
 		/*
@@ -2240,12 +2208,13 @@ InitializeSpecificSession (
 			/*
 			 * Fallback to the generic home session
 			 */
-			(void) sprintf (session_dir, "%s/%s",
-					smGD.savePath, SM_CURRENT_DIRECTORY);
-			(void) sprintf (alt_dir, "%s/%s",
-					smGD.savePath, SM_HOME_DIRECTORY);
+			session_dir = SmJoinPath (smGD.savePath,
+						  SM_CURRENT_DIRECTORY, NULL);
+			alt_dir = SmJoinPath (smGD.savePath,
+					      SM_HOME_DIRECTORY, NULL);
 
-			if (!SetAlternateSession (session_dir, alt_dir, True))
+			if (session_dir == NULL || alt_dir == NULL ||
+			    !SetAlternateSession (session_dir, alt_dir, True))
 				SetSysDefaults ();
 		}
 		smGD.sessionType = CURRENT_SESSION;
@@ -2255,10 +2224,10 @@ InitializeSpecificSession (
 		/*
 		 * Display-specific Home session
 		 */
-		(void) sprintf (session_dir, "%s/%s",
-				smGD.savePath, SM_HOME_DIRECTORY);
+		session_dir = SmJoinPath (smGD.savePath, SM_HOME_DIRECTORY,
+					  NULL);
 
-		if ((stat(session_dir, &buf)) != 0){
+		if (session_dir != NULL && (stat(session_dir, &buf)) != 0){
 			/*
 			 * The session does not exist, give the user a
 			 * change to exit.
@@ -2272,26 +2241,9 @@ InitializeSpecificSession (
 			/*
 			 * Fallback to the generic home session
 			 */
-			char		*home;
-
-			if ((home = getenv ("HOME")) == 0)
-				home = "";
-
-                        /* JET - VU#497553 */
-			len = strlen(home) + 
-			  strlen(DtPERSONAL_CONFIG_DIRECTORY) +
-			  strlen(DtSM_SESSION_DIRECTORY) +
-			  strlen(SM_HOME_DIRECTORY);
-
-			if (len > MAXPATHLEN)
-			  alt_dir = XtRealloc(alt_dir, len + 1);
-
-			(void) sprintf (alt_dir, "%s/%s/%s/%s",
-					home,
-					DtPERSONAL_CONFIG_DIRECTORY,
-					DtSM_SESSION_DIRECTORY,
-					SM_HOME_DIRECTORY);
-			if (!SetAlternateSession (session_dir, alt_dir, True))
+			alt_dir = GenericHomeSessionDir ();
+			if (session_dir == NULL || alt_dir == NULL ||
+			    !SetAlternateSession (session_dir, alt_dir, True))
 				SetSysDefaults ();
 		}
 		smGD.sessionType = HOME_SESSION;
@@ -2301,10 +2253,10 @@ InitializeSpecificSession (
 		/*
 		 * Display-specific Current session
 		 */
-		(void) sprintf (session_dir, "%s/%s",
-				smGD.savePath, SM_CURRENT_DIRECTORY);
+		session_dir = SmJoinPath (smGD.savePath, SM_CURRENT_DIRECTORY,
+					  NULL);
 
-		if ((stat(session_dir, &buf)) != 0){
+		if (session_dir != NULL && (stat(session_dir, &buf)) != 0){
 			/*
 			 * The session does not exist, give the user a
 			 * change to exit.
@@ -2317,34 +2269,19 @@ InitializeSpecificSession (
 			/*
 			 * First, fallback to the display-specific home session
 			 */
-			char		*home;
+			alt_dir = SmJoinPath (smGD.savePath,
+					      SM_HOME_DIRECTORY, NULL);
 
-			(void) sprintf (alt_dir, "%s/%s",
-					smGD.savePath, SM_HOME_DIRECTORY);
-
-			if (!SetAlternateSession (session_dir, alt_dir, False)){
+			if (session_dir == NULL || alt_dir == NULL ||
+			    !SetAlternateSession (session_dir, alt_dir, False)){
 				/*
 				 * Try the generic home session
 				 */
-				if ((home = getenv ("HOME")) == 0)
-					home = "";
+				free (alt_dir);
+				alt_dir = GenericHomeSessionDir ();
 
-                                /* JET - VU#497553 */
-				len = strlen(home) + 
-				  strlen(DtPERSONAL_CONFIG_DIRECTORY) +
-				  strlen(DtSM_SESSION_DIRECTORY) +
-				  strlen(SM_HOME_DIRECTORY);
-
-				if (len > MAXPATHLEN)
-				  alt_dir = XtRealloc(alt_dir, len + 1);
-
-				snprintf(alt_dir, len, "%s/%s/%s/%s",
-                                         home,
-                                         DtPERSONAL_CONFIG_DIRECTORY,
-                                         DtSM_SESSION_DIRECTORY,
-                                         SM_HOME_DIRECTORY);
-
-				if (!SetAlternateSession (session_dir, 
+				if (session_dir == NULL || alt_dir == NULL ||
+				    !SetAlternateSession (session_dir, 
 							  alt_dir, 
 							  True))
 					SetSysDefaults ();
@@ -2354,14 +2291,31 @@ InitializeSpecificSession (
 		smGD.restoreSession = SM_CURRENT_DIRECTORY;
 	}
 	else {
-		if (session_dir) XtFree(session_dir);
-		if (alt_dir) XtFree(alt_dir);
 		return (False);
 	}
 	
-	if (session_dir) XtFree(session_dir);
-	if (alt_dir) XtFree(alt_dir);
+	free (session_dir);
+	free (alt_dir);
 	return (True);
+}
+
+
+/*************************************<->*************************************
+ *
+ *  GenericHomeSessionDir - the directory of the generic (not display-specific)
+ *     home session, in a newly allocated string
+ *
+ *************************************<->***********************************/
+static char *
+GenericHomeSessionDir (void)
+{
+	char		*home;
+
+	if ((home = getenv ("HOME")) == 0)
+		home = "";
+
+	return (SmJoinPath (home, DtPERSONAL_CONFIG_DIRECTORY,
+			    DtSM_SESSION_DIRECTORY, SM_HOME_DIRECTORY, NULL));
 }
 
 
@@ -2395,38 +2349,43 @@ InitializePaths (
 	char		* session_name,
 	Display		* disp)
 {
-	char		*db_file = (char *) XtMalloc(MAXPATHLEN);
+	char		*db_file;
 	struct stat 	buf;
 
-        if (!db_file)
-          {
-            PrintError(DtError, smNLS.cantMallocErrorString);
-            return;
-          }
+	smGD.clientPath[0] = '\0';
+	smGD.settingPath[0] = '\0';
+	smGD.resourcePath[0] = '\0';
 
-	smGD.savePath = _DtCreateDtDirs(disp);
+	smGD.savePath = CreateSessionDirs (disp);
+	if (smGD.savePath == NULL)
+	  {
+	    PrintErrnoError(DtError, smNLS.cantCreateDirsString);
+	    return;
+	  }
 
-	(void) sprintf (smGD.settingPath, "%s/%s/%s", 
+	snprintf (smGD.settingPath, sizeof (smGD.settingPath), "%s/%s/%s", 
 			smGD.savePath, session_name, SM_SETTING_FILE);
 
-	(void) sprintf (smGD.resourcePath, "%s/%s/%s",
+	snprintf (smGD.resourcePath, sizeof (smGD.resourcePath), "%s/%s/%s",
 			smGD.savePath, session_name, SM_RESOURCE_FILE);
 
-
-	smGD.clientPath[0] = '\0';
-
-	(void) sprintf (db_file, "%s/%s/%s", 
-			smGD.savePath, session_name, SM_CLIENT_FILE2);
+	db_file = SmJoinPath (smGD.savePath, session_name, SM_CLIENT_FILE2, NULL);
+	if (db_file == NULL)
+	  {
+	    PrintError(DtError, smNLS.cantMallocErrorString);
+	    return;
+	  }
 
 	if ((stat(db_file, &buf)) == 0)
-		(void) strcpy (smGD.clientPath, db_file);
+		(void) snprintf (smGD.clientPath, sizeof (smGD.clientPath),
+				 "%s", db_file);
 	else {
-		(void) sprintf (db_file, "%s/%s/%s", 
+		snprintf (smGD.clientPath, sizeof (smGD.clientPath), "%s/%s/%s",
 				smGD.savePath, session_name, SM_CLIENT_FILE);
-		if ((stat(db_file, &buf)) == 0)
-			(void) strcpy (smGD.clientPath, db_file);
+		if ((stat(smGD.clientPath, &buf)) != 0)
+			smGD.clientPath[0] = '\0';
 	}
-	XtFree(db_file);
+	free(db_file);
 }
 
 
@@ -2460,16 +2419,10 @@ SetAlternateSession (
 	Boolean		make_dir)
 {
 	char		*tmp_dir = NULL;
-	char		*db_file1 = (char *) XtMalloc(MAXPATHLEN);
-	char		*db_file2 = (char *) XtMalloc(MAXPATHLEN);
+	char		*db_file1 = NULL;
+	char		*db_file2 = NULL;
 	struct stat 	buf;
-
-        if (!db_file1 || !db_file2)
-          {
-            PrintError(DtError, smNLS.cantMallocErrorString);
-            return False;
-          }
-
+	Boolean		result = False;
 
 	if ((stat (session_dir, &buf)) != 0) {
 		/*
@@ -2478,11 +2431,12 @@ SetAlternateSession (
 		 * it exists and has a client database) or by
 		 * calling mkdir.
 		 */
-		
-		(void) sprintf (db_file1, "%s/%s", 
-				alt_dir, SM_CLIENT_FILE2);
-		(void) sprintf (db_file2, "%s/%s", 
-				alt_dir, SM_CLIENT_FILE);
+		db_file1 = SmJoinPath (alt_dir, SM_CLIENT_FILE2, NULL);
+		db_file2 = SmJoinPath (alt_dir, SM_CLIENT_FILE, NULL);
+		if (!db_file1 || !db_file2) {
+			PrintError(DtError, smNLS.cantMallocErrorString);
+			goto done;
+		}
 
 		if ((stat(db_file1, &buf)) == 0)
 			tmp_dir = db_file1;
@@ -2490,13 +2444,11 @@ SetAlternateSession (
 			tmp_dir = db_file2;
 
 		if (!tmp_dir && !make_dir) {
-			if (db_file1) XtFree(db_file1);
-			if (db_file2) XtFree(db_file2);
 			/*
 			 * This alt_dir doesn't have a session database
 			 * return now and try another directory
 			 */
-			return (False);
+			goto done;
 		}
 
 		if (tmp_dir) {
@@ -2505,35 +2457,24 @@ SetAlternateSession (
 			 * a copy of its entire directory because all
 			 * of the sessions state is needed.
 			 */
-			char		*tmp;
-			
-			tmp = XtMalloc (strlen (alt_dir) + 
-					strlen (session_dir) + 10);
-			if (!tmp)
-				return (False);
-
-			(void) sprintf (tmp, "cp -r %s %s",
-					alt_dir, session_dir);
-
-			if ((system (tmp)) == -1)
-				return (False);
-			XtFree (tmp);
-
-			if ((stat(session_dir, &buf)) != 0)
+			if (SmCopyTree (alt_dir, session_dir) != 0) {
+				PrintErrnoError(DtError, 
+					smNLS.cantCreateDirsString);
 				/*
-				 * It should have been created by the cp
+				 * A half-copied session must not be restored
+				 * the next time
 				 */
-				return (False);
+				(void) SmRemoveTree (session_dir);
+				goto done;
+			}
 
 			/*
 			 * The session database needs to be updated.
 			 */
-			if (tmp_dir == db_file1)
-				sprintf (smGD.clientPath, "%s/%s",
-					session_dir, SM_CLIENT_FILE2);
-			else
-				sprintf (smGD.clientPath, "%s/%s",
-					session_dir, SM_CLIENT_FILE);
+			snprintf (smGD.clientPath, sizeof (smGD.clientPath),
+				"%s/%s", session_dir,
+				tmp_dir == db_file1 ? SM_CLIENT_FILE2
+						    : SM_CLIENT_FILE);
 		} else {
 			/*
 			 * The alt_dir did not have a session database.
@@ -2544,7 +2485,7 @@ SetAlternateSession (
 			else {
                 		PrintErrnoError(DtError, 
 					smNLS.cantCreateDirsString);
-				return (False);
+				goto done;
 			}
 			SetSysDefaults ();
 		}
@@ -2559,9 +2500,12 @@ SetAlternateSession (
 		SetSysDefaults ();
 	}
 
-	XtFree(db_file1);
-	XtFree(db_file2);
-	return (True);
+	result = True;
+
+done:
+	free (db_file1);
+	free (db_file2);
+	return (result);
 }
 
 

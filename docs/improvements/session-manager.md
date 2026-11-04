@@ -84,6 +84,44 @@ before the first open of a locale file, which it did not before.
   a shutdown that a client cancels can be requested again. If the pipe cannot
   be created the signal keeps its default action and ends the process.
 
+## Session files and directories
+
+- Saving a session archives the directory it writes, "current" or "home", to
+  its `.old` version and moves an older `.old` aside under a name made with
+  `mkdtemp` (if no such name can be made, the older archive is dropped so that
+  the save can go on). If a write fails, or the save is cancelled, the archive
+  is put back from where it was made: the directory that was written and the
+  one it was archived to are the ones the save chose, not ones derived from the
+  kind of session, so a Home session that saves into "current" at logout no
+  longer loses its Home directory, and the first save of a session, which
+  archives nothing, no longer takes the user's `sessionetc` script for an
+  archive. A cancelled save puts the archive back also when there was no older
+  one. Pruning goes on only if the session was moved aside first, and runs the
+  discard commands with the oldest archive in place.
+- An entry that cannot be removed no longer stops the removal of the rest of a
+  directory (as with `rm -rf`), and a copy of a session that fails is removed
+  instead of being restored half-copied at the next start.
+- Sessions are archived, pruned, restored and copied without a shell and
+  without looking programs up in the search path. Removing a session directory
+  ran `system("rm -rf <path>")` and copying one ran `system("cp -r <from> <to>")`
+  with the unquoted path of the home directory, so a home directory with a
+  space in its name removed or copied the wrong directories, and one with shell
+  syntax in it ran that syntax. Moving a directory started `mv` through the
+  search path in a `vfork` child. These steps are now done in process
+  (`SmRemoveTree`, `SmCopyTree` and `rename`): a symbolic link in a session
+  directory is removed or copied as a link, never followed, and a move onto an
+  existing directory fails instead of nesting one inside the other.
+- The error log is rotated again. The name of `errorlog` was built one
+  character short, so it was never moved to `errorlog.old`; with a long home
+  directory the buffers were resized through the wrong pointer. The files are
+  now renamed instead of linked and unlinked, so a file system without hard
+  links, or an empty `errorlog.old`, no longer loses the log.
+- The paths of the session files are put together in fixed buffers. A home
+  directory so long that they would not fit is refused like a home directory
+  that cannot be written, and `dtsession` starts with the system defaults
+  instead of overflowing the buffers or, when the directories cannot be created
+  at all, dereferencing a null path.
+
 ## Tests
 
 `programs/dtsession/tests` holds regression tests that cut the production code
@@ -100,4 +138,7 @@ changing anything or leave a way back to root, in the builds with and without
 `SVR4`. `check-lock-authentication.py` runs `localAuthenticate()` of the PAM and
 non-PAM builds against a password database and a `crypt()` that can fail.
 `check-signals.py` raises `SIGTERM` against the production handler and checks
-that nothing of the shutdown runs inside it.
+that nothing of the shutdown runs inside it. `check-session-files.py` runs the
+error-log rotation, the directory moves, copies and removals and the session
+path set-up on real files, with names that contain spaces and shell syntax, a
+file system without hard links, an unwritable and an over-long home directory.

@@ -89,6 +89,7 @@
 #include "SmDB.h"
 #include "SmProperty.h"
 #include "SmProp.h"
+#include "SmFiles.h"
 #include "Srv.h"
 #include "SrvFile_io.h"
 
@@ -503,37 +504,43 @@ PruneSessionDirectory (void)
 		 */ 
 
 		char		* tmpName;
-                int len, tfd;
+		Boolean		haveSession;
 
-                len = strlen(smGD.savePath) + strlen(smGD.restoreSession) 
-                  + strlen("XXXXXX") + 3;
-		tmpName = XtCalloc (1, len);
-		sprintf(tmpName, "%s/%s.XXXXXX", smGD.savePath, 
-                        smGD.restoreSession);
+		tmpName = SmMakeTempDirectory (smGD.savePath,
+					       smGD.restoreSession);
+		if (tmpName == NULL) {
+			PrintErrnoError(DtError, smNLS.cantCreateDirsString);
+		} else {
+			sprintf (saveDir, "%s/%s", 
+				 smGD.savePath, smGD.restoreSession);
+			haveSession = (stat (saveDir, &buf) == 0);
 
-                if ((tfd = mkstemp(tmpName)) == -1)
-                  {
-                    PrintErrnoError(DtError, smNLS.cantCreateDirsString);
-                  }
-                else
-                  {
-                    close(tfd);
-                    unlink(tmpName);
+			if (haveSession &&
+			    MoveDirectory (saveDir, tmpName, False) != 0) {
+				/* the session stays where it is */
+				rmdir (tmpName);
+			} else if (MoveDirectory (oldestDir, saveDir, False) != 0) {
+				/* nothing was pruned: put the session back */
+				if (haveSession)
+					MoveDirectory (tmpName, saveDir, False);
+				else
+					rmdir (tmpName);
+			} else {
+				sprintf (clientDB, "%s/%s/%s", smGD.savePath, 
+					 smGD.restoreSession, SM_CLIENT_FILE2);
 
-                    sprintf (saveDir, "%s/%s", 
-                             smGD.savePath, smGD.restoreSession);
+				ExecuteDiscardCommands (clientDB);
 
-                    MoveDirectory (saveDir, tmpName, False);
-                    MoveDirectory (oldestDir, saveDir, False);
-
-                    sprintf (clientDB, "%s/%s/%s", smGD.savePath, 
-                             smGD.restoreSession, SM_CLIENT_FILE2);
-
-                    ExecuteDiscardCommands (clientDB);
-
-                    MoveDirectory (tmpName, saveDir, True);
-                  }
-		XtFree (tmpName);
+				if (haveSession) {
+					MoveDirectory (tmpName, saveDir, True);
+				} else {
+					if (SmRemoveTree (saveDir) != 0)
+						PrintErrnoError(DtError, GETMESSAGE(4, 4, "Unable to remove session directory.  Make sure write permissions exist on $HOME/.dt directory.  Invalid session files will not be removed."));
+					rmdir (tmpName);
+				}
+			}
+			free (tmpName);
+		}
 	}
 
 	/*
@@ -557,8 +564,8 @@ PruneSessionDirectory (void)
                 	if (((stat (saveDir, &buf)) == 0) && 
 					S_ISDIR (buf.st_mode)) {
 
-				sprintf (clientDB, "/bin/rm -rf %s", saveDir);
-				SystemCmd (clientDB);
+				if (SmRemoveTree (saveDir) != 0)
+					PrintErrnoError(DtError, GETMESSAGE(4, 4, "Unable to remove session directory.  Make sure write permissions exist on $HOME/.dt directory.  Invalid session files will not be removed."));
 
 				sprintf (oldestDir, "%s/%s", smGD.savePath, 
 					SM_CURRENT_DIRECTORY);
@@ -1084,21 +1091,13 @@ PrintStartupInfo(
 
     /*
      * On a write error - move the old session back to
-     * be used and exit with an error condition
+     * be used and exit with an error condition.  The directory
+     * that was written and the one it was archived to are the
+     * ones SetSavePath() chose, whatever kind of session this is.
      */
     XFreeStringList(wargv);
 
-    strcat(smGD.savePath, "/");
-    if(smGD.sessionType == HOME_SESSION)
-    {
-        strcat(smGD.savePath, SM_HOME_DIRECTORY);
-    }
-    else
-    {
-        strcat(smGD.savePath, SM_CURRENT_DIRECTORY);
-    }
-
-    MoveDirectory(smGD.etcPath, smGD.savePath, False);
+    UndoSetSavePath();
     SM_EXIT(-1);
   }
 

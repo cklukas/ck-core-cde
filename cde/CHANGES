@@ -31,6 +31,25 @@
   arrived); a request made during a shutdown is dropped; if the signal
   cannot be set up it is logged and `SIGTERM` keeps its default action. Covered
   by `programs/dtsession/tests/check-signals.py`.
+- dtsession: handle the session directories without a shell. Removing and
+  copying a session ran `rm -rf` and `cp -r` through `system()` with the home
+  directory unquoted, and moving one started `mv` through the search path; they
+  are done in process now (symbolic links are not followed, a move onto an
+  existing directory fails instead of nesting). The error log is rotated again
+  (the file name was built one character short, so `errorlog` never became
+  `errorlog.old`), by renaming instead of link and unlink so that a file system
+  without hard links does not lose it, and a long `HOME` no longer corrupts the
+  heap. A home directory too long for the session paths, or one whose
+  `.dt` directories cannot be created, no longer overflows the path buffers or
+  dereferences a null path at startup; `dtsession` starts with the system
+  defaults. A save archives and, when a write fails or the save is cancelled,
+  restores the directory it actually wrote (a Home session that saves into
+  `current` at logout used to be replaced by the archive, and the `sessionetc`
+  script was taken for an archive after the first save); the temporary name for
+  an older archive is made with `mkdtemp`; pruning only goes on once the session
+  was moved aside; removing a directory carries on past an entry it cannot
+  remove, and a failed session copy is removed. Covered by
+  `programs/dtsession/tests/check-session-files.py` and `check-session-save.py`.
 - build: add the opt-in `--enable-hardening` and `--enable-sanitizers[=LIST]`
   configure switches. Hardening reports truncation, string-constant,
   ignored-result, null-dereference and format defects and adds stack protection
