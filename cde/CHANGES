@@ -26,6 +26,17 @@
   is logged correctly instead of passing an integer to `%s`.
 - dtspcd: add request-level regression tests (`make -C programs/dtspcd check`)
   that link the built `libDtSvc` and run under the sanitizers.
+- DtSvc: fix a heap overflow in data-type lookup. The scratch buffer for
+  database attribute text never grew past 100 bytes, so a name pattern, content
+  test or type name of 100 bytes or more overflowed it, and attribute values of
+  1024 bytes or more overflowed the buffer that expands them. Both buffers now
+  grow to the value and report allocation failure. Content tests,
+  `.DtDirDataType` parsing, `%dir%`/`%name%`/`%base%` expansion of names without
+  a directory, backquote expansion (which now closes its pipe and no longer uses
+  command text as a format), attribute and type-name lists (`DtDtsFindAttribute`
+  overran its list when every type matched) and lookup state are bounded or
+  checked as well. Sanitizer-built regression tests run under `make check` in
+  `lib/DtSvc`.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

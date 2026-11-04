@@ -684,14 +684,26 @@ char *
 _DtDtsMMExpandValue(const char *value)
 {
 	char *newval;
+	size_t size;
 
 	if(!value)
 	{
 		return NULL;
 	}
-	newval = (char *)malloc(1024);
+	/* A value of any length is copied; _DtDbFillVariables expects room for a
+	   full line of 1024 bytes at least. */
+	size = strlen(value) + 1;
+	if(size < 1024)
+	{
+		size = 1024;
+	}
+	newval = (char *)malloc(size);
+	if(!newval)
+	{
+		return NULL;
+	}
 
-	strcpy(newval, value);
+	memcpy(newval, value, strlen(value) + 1);
 	_DtDbFillVariables(&newval);
 	return(newval);
 }

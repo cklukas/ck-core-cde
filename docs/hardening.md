@@ -78,7 +78,7 @@ have not had such a review. Fuzz targets exist for none of the components yet.
 | `programs/dtcm` | includes rpc.cmsd (RPC server run as root); calendar | none recorded | 879 | 59 | 5 | none |
 | `programs/dtfile` | file operations; drag and drop | Trash, copy and transfer (2026-11-02, 2026-11-03) | 813 | 203 | 10 | none |
 | `programs/dthelp` | help compiler; SGML parser | none recorded | 644 | 64 | 4 | none |
-| `lib/DtSvc` | SPC protocol shared by dtspcd and its clients; data-type database | SPC wire layer (2026-11-04); the rest not reviewed | 412 | 24 | 22 | none |
+| `lib/DtSvc` | SPC protocol shared by dtspcd and its clients; data-type database | SPC wire layer and data-type lookup (Dts.c) (2026-11-04); the rest not reviewed | 412 | 24 | 22 | none |
 | `programs/dtwm` | window manager; property and request readers | property and request readers (2026-11-02) | 410 | 22 | 42 | none |
 | `lib/tt` | ttsession and rpc.ttdbserverd (sockets, RPC) | none recorded | 394 | 242 | 1 | none |
 | `programs/dtsr` | local user program | none recorded | 370 | 3 | 0 | none |
