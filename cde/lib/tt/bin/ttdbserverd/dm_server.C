@@ -114,8 +114,6 @@ extern int access_checking;
 extern void _tt_process_transaction();
 extern FILE *errstr;
 
-extern char  *_tt_get_realpath(char *, char *);
-
 int        find_endstring(const char *string, const char *end_string);
 bool_t     msg_q_lock(int         isfd,
 		      const char *record,
@@ -151,53 +149,6 @@ enum _Tt_dm_access_category { DM_USER, DM_GROUP, DM_OTHER};
 
 #define DM_TEST_CRASH 0
 
-// XXX We should derive a Tt_path_string class from Tt_string that
-//     has path manipulation member functions built in.
-void
-set_real_path (char *path, char *real_path)
-{       if (path[0] != '/') {
-                // a relative path, make it absolute
-                char wd[MAXPATHLEN+1];
-                if (getcwd(wd,sizeof(wd)) != 0) {
-                        path = _Tt_string(wd).cat("/").cat(path);
-                }
-        }
-
-        _Tt_string right, left, dir, base;
-
-        left = path;
-
-        char *p = _tt_get_realpath((char *) path, real_path);
-
-        while ((p == 0) && (left.len() > 0)) {
-                // realpath failed; drop right components until it
-                // works.
-                base = left.rsplit('/', dir);
-
-                // Takes care of special case of "/file" where
-                // file does not exist.
-                if ((dir.len() <= 0) && (left[0]=='/')) {
-                        dir = "/";
-                }
-                left = dir;
-
-                if (right.len() > 0) {
-                        right = base.cat("/").cat(right);
-                } else {
-                        right = base;
-                }
-                p = _tt_get_realpath((char *)left, real_path);
-        }
- 
-        if (p == 0) {
-                // Give up, use original path.
-                strcpy(real_path, (char *)path);
-        } else if (right.len() > 0) {
-                strcat(real_path, "/");
-                strcat(real_path, (char *)right);
-        }
-}
- 
 /*
  *  _tt_get_record - read a record from the database with the given directory
  *  prefix and db_name.  The input record 'rec' contains the key for searching.
@@ -1087,7 +1038,7 @@ _tt_isbuild_1(_Tt_isbuild_args *args, SVCXPRT * /* transp */)
 		} else {
 			dir_len = 0;
 		}
-		if (dir_len == 0 ||
+		if (dir_len <= 0 ||
 		    ((iserrno != ENOENT) && (iserrno != EFNAME))) {
 			// no root dir to build or strange error
 			_tt_syslog(errstr, LOG_ERR, "%s: isbuild(): %d",
@@ -1904,12 +1855,13 @@ char **
 _tt_mfs_1(char **path, SVCXPRT * /* transp */)
 {
 	static char *res;
-	if (!*path || !**path) {
-		res = "";
-	} else {
+	res = (char *)"";
+	if (*path && **path) {
 		_Tt_file_system fs;
 		_Tt_file_system_entry_ptr fsep = fs.bestMatchToPath(*path);
-		res = fsep->getMountPoint();
+		if (!fsep.is_null()) {
+			res = fsep->getMountPoint();
+		}
 	}
 	return (&res);
 }

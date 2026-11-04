@@ -66,31 +66,46 @@ _tt_get_realpath(char  *pathname, char  *finalpath)
 }
 
 /*
+ *  The index of the last '/' of the path, looking from the character at LEN
+ *  (the end of the path, if LEN is 0) to its start, -1 if there is none.
+ */
+
+static int
+last_slash(const char *path, int len)
+{
+	int i = len ? len : strlen(path);
+
+	while (i >= 0 && path[i] != '/') {
+		--i;
+	}
+	return i;
+}
+
+/*
  *  _Tt_dirname - given a path name, returns the char index to the end of
  *  the path's longest prefix (directory), i.e., excluding the basename and the
  *  last '/'.  e.g., given "/home3/dynamo/tan/text", returns 16
- *  (/home3/dynamo/tan^).
+ *  (/home3/dynamo/tan^).  The path of a file in the root directory
+ *  ("/text") and one with no '/' ("text") have no such prefix: returns -1.
  */
 
 int _Tt_dirname(const char *path, int len)
 {
-	int path_len = len ? len : strlen(path);
-	while (path[path_len] != '/') {	/* discard base name */
-		ASSERT(path_len >= 0, "Invalid path");
-		--path_len;
-	}
-	return (path_len - 1);		/* discard the suffix '/' */
+	int slash = last_slash(path, len);
+
+	/* discard the suffix '/' */
+	return (slash > 0) ? slash - 1 : -1;
 }
 
 /*
  *  _Tt_basename - given a path name, returns the char index to the beginning of
  *  the path's suffix, e.g., given "/home3/dynamo/tan/text", returns 18
- *  (/home3/dynamo/tan/^).
+ *  (/home3/dynamo/tan/^).  The suffix of a path with no '/' is all of it: 0.
  */
 
 int _Tt_basename(const char *path, int len)
 {
-	return (_Tt_dirname(path, len) + 2);
+	return last_slash(path, len) + 1;
 }
 
 /*
@@ -249,6 +264,10 @@ _Tt_string _tt_local_network_path(const _Tt_string &path)
 		_Tt_file_system_entry_ptr entry =
 			file_system.bestMatchToPath(real_path);
 
+		if (entry.is_null()) {
+			// no mount point leads to the path: no network path
+			return network_path;
+		}
 		_Tt_string hostname = entry->getHostname();
 		_Tt_string loop_back_mount_point =
 				entry->getLoopBackMountPoint();

@@ -20,6 +20,8 @@
 #include "tt_db_server_consts.h"
 #include "db/tt_db_create_objid.h"
 #include "db/tt_db_key.h"
+#include "util/tt_file_system_entry.h"
+#include "util/tt_path.h"
 #include "util/tt_xdr_utils.h"
 
 #include <string>
@@ -2979,6 +2981,87 @@ case_session_polarity(void)
 }
 
 
+/* ---- the path and mount table functions of libtt ------------------------------ */
+
+/* A path that no mount point leads to is in no partition, and none of the
+   requests that look for the partition of a file crashes on it. */
+static void
+case_no_mount_point(void)
+{
+	std::string file = start_partition("no-mount-point");
+
+	/* the working directory is gone, so that a relative path leads nowhere
+	   ("/" is the start of every other one) */
+	CHECK(mkdir((g_dir + "/gone").c_str(), 0700) == 0);
+	CHECK(chdir((g_dir + "/gone").c_str()) == 0);
+	CHECK(rmdir((g_dir + "/gone").c_str()) == 0);
+
+	_Tt_file_system fs;
+	CHECK(fs.bestMatchToPath("relative/path").is_null());
+	CHECK(fs.bestMatchToPath("/").is_null() == false);
+	CHECK(_tt_local_network_path("relative/path").len() == 0);
+
+	_tt_access acc = { g_uid, getgid(), 0600 };
+	char *path = (char *)"relative/path";
+	char *netpath = (char *)"localhost:relative/path";
+	Reply r = rpc(TT_GET_FILE_PARTITION, encode((xdrproc_t)xdr_tt_file_name, &path));
+	CHECK(answered(r));
+	_tt_file_partition_results pr;
+	XDR xdrs;
+	memset(&pr, 0, sizeof(pr));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	CHECK(xdr_tt_file_partition_results(&xdrs, &pr));
+	CHECK(pr.partition != NULL && pr.partition[0] == '\0');
+	xdr_free((xdrproc_t)xdr_tt_file_partition_results, (char *)&pr);
+
+	r = rpc(_TT_MFS, encode((xdrproc_t)xdr_tt_file_name, &path));
+	CHECK(answered(r));
+	_tt_move_file_args mf = { netpath, path, acc };
+	r = rpc(TT_MOVE_FILE, encode((xdrproc_t)xdr_tt_move_file_args, &mf));
+	CHECK(answered(r));
+	_tt_create_file_args cf = { netpath, { 0, NULL }, acc };
+	r = rpc(TT_CREATE_FILE, encode((xdrproc_t)xdr_tt_create_file_args, &cf));
+	CHECK(answered(r));
+	_tt_get_file_props_args gp = { netpath, acc, -1 };
+	r = rpc(TT_GET_FILE_PROPS, encode((xdrproc_t)xdr_tt_get_file_props_args, &gp));
+	CHECK(answered(r));
+}
+
+/* The directory and the base name of a path, wherever the first '/' is. */
+static void
+case_path_names(void)
+{
+	static const struct {
+		const char	*path;
+		int		dirname;
+		int		basename;
+	} t[] = {
+		{ "/home3/dynamo/tan/text", 16, 18 },
+		{ "/home3/dynamo/tan/", 16, 18 },
+		{ "/a/b", 1, 3 },
+		{ "/a", -1, 1 },
+		{ "/", -1, 1 },
+		{ "text", -1, 0 },
+		{ "", -1, 0 },
+	};
+
+	for (size_t i = 0; i < sizeof(t) / sizeof(t[0]); i++) {
+		/* in storage of its own, so that a look before it is seen */
+		char *copy = strdup(t[i].path);
+
+		CHECK(_Tt_dirname(copy) == t[i].dirname);
+		CHECK(_Tt_basename(copy) == t[i].basename);
+		free(copy);
+	}
+	/* the length of the path may be given: the search starts there */
+	char *copy = strdup("/a/b/c");
+	CHECK(_Tt_dirname(copy, 4) == 3);
+	CHECK(_Tt_basename(copy, 4) == 5);
+	CHECK(_Tt_dirname(copy, 3) == 1);
+	CHECK(_Tt_basename(copy, 3) == 3);
+	free(copy);
+}
+
 /* ---- random requests --------------------------------------------------------- */
 
 static unsigned long long fuzz_state = 88172645463325252ULL;
@@ -3193,6 +3276,8 @@ static const struct {
 	{ "xdr-null-strings", case_xdr_null_strings },
 	{ "xdr-limits", case_xdr_limits },
 	{ "xdr-hostile-lengths", case_xdr_hostile_lengths },
+	{ "no-mount-point", case_no_mount_point },
+	{ "path-names", case_path_names },
 	{ "fuzz-dispatch", case_fuzz_dispatch },
 };
 

@@ -404,7 +404,12 @@ _tt_db_results *_tt_move_file_1 (_tt_move_file_args *args,
     _Tt_file_system           fs;
     _Tt_file_system_entry_ptr entry = fs.bestMatchToPath(real_file);
     _Tt_file_system_entry_ptr new_entry = fs.bestMatchToPath(real_new_file);
-    
+
+    // a file that no mount point leads to is in no partition
+    if (entry.is_null() || new_entry.is_null()) {
+      results = TT_DB_ERR_ILLEGAL_FILE;
+      return &results;
+    }
     _Tt_string partition = entry->getMountPoint();
     _Tt_string new_partition = new_entry->getMountPoint();
     
@@ -2343,6 +2348,10 @@ static _Tt_string _tt_get_file_partition (const _Tt_string &file)
   _Tt_file_system           fs;
   _Tt_file_system_entry_ptr entry = fs.bestMatchToPath(local_path);
 
+  // no mount point leads to the path either
+  if (entry.is_null()) {
+    return _Tt_string("");
+  }
   return entry->getMountPoint();
 }
 
@@ -2604,6 +2613,10 @@ static _Tt_string _tt_get_local_path (const _Tt_string &network_path,
   _Tt_file_system file_system;
   _Tt_file_system_entry_ptr entry = file_system.bestMatchToPath(local_path);
 
+  if (entry.is_null()) {
+    partition = _Tt_string("");
+    return local_path;
+  }
   partition = entry->getMountPoint();
 
   _Tt_string loop_back_mount_point = entry->getLoopBackMountPoint();

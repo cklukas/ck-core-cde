@@ -248,7 +248,8 @@ createFileSystemEntry(TtMntEntry entry)
 
 /*
  * Finds the best match mount table entry to the specified local path
- * resolving loop back mounts to the true mount point.
+ * resolving loop back mounts to the true mount point.  There is none, and
+ * the entry returned is null, if no mount point is the start of the path.
  */
 _Tt_file_system_entry_ptr _Tt_file_system::
 bestMatchToPath (const _Tt_string &path)
@@ -276,6 +277,12 @@ bestMatchToPath (const _Tt_string &path)
 		first_time = FALSE;
 	}
 
+	if (max_match_entry.is_null()) {
+		// not even "/" leads to the path (the mount table is empty or
+		// could not be read, or the path is relative and the working
+		// directory is gone)
+		return max_match_entry;
+	}
 	max_match_entry->loopBackMountPoint = first_loop_back_mount_point;
 	return max_match_entry;
 }
@@ -323,6 +330,10 @@ findBestMountPoint (_Tt_string &path,
 		}
 	}
 
+	if (max_match_entry.is_null()) {
+		loop_back_flag = FALSE;
+		return max_match_entry;
+	}
 	if (max_match_entry->isLoopBack ()) {
 		loop_back_flag = TRUE;
 

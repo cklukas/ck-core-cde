@@ -330,6 +330,13 @@
   they are about, `addsession` no longer stops at a session that differs from the
   new one and `delsession` no longer removes a session that differs from the
   named one.
+- tt: do not dereference a missing mount point. `bestMatchToPath` of
+  `_Tt_file_system` returned a null entry when no mount point leads to a path
+  (an empty mount table, or a relative path after the working directory was
+  removed), and its callers in libtt and rpc.ttdbserverd used it; they now treat
+  the path as having no partition. `_Tt_dirname` and `_Tt_basename` no longer
+  read before the start of a path that has no `/`. The unused `set_real_path`
+  of rpc.ttdbserverd is removed.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

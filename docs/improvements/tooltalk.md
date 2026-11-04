@@ -264,6 +264,19 @@ result, and a client could not send a request to remove an object that has no
 forward pointer. A string that is not there is now sent as the empty string,
 which the receiver takes for no string.
 
+### Mount points and paths
+
+A path that no mount point leads to (the mount table is empty or cannot be read,
+or the path is relative and the working directory is gone) is in no partition:
+`_Tt_file_system::bestMatchToPath()` returns no entry, and its callers in libtt
+and in the server treat the path as having no partition and no network path
+instead of dereferencing the entry. `_Tt_dirname()` and `_Tt_basename()` stop at
+the start of a path with no `/`, where they used to read backwards from the
+beginning of the string (`_Tt_dirname()` now returns -1 for such a path, like it
+does for one in the root directory, and `_Tt_basename()` returns 0). The unused
+`set_real_path()` of the server, which copied paths into a buffer without
+checking their length, is gone.
+
 ## Checks
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
@@ -293,6 +306,10 @@ test-and-set is allowed; the paths of `isbuild`, `isopen` and `iserase`, with
 links and with partitions that are none; the partitions of object ids; the
 credentials of the requests that skip none; the descriptors of the oid access
 procedures; and adding and removing sessions.
+
+Two more cases call the mount table and path functions of libtt that the server
+uses: a path that no mount point leads to, and the directory and base name of
+paths with and without a `/`.
 
 `make -C lib/tt/mini_isam check` builds the same test of the width of a long as
 C and as C++ and runs both against `libisam`, so the C library and its C++

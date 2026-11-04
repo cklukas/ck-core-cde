@@ -61,6 +61,10 @@ _Tt_db_results _tt_db_network_path (const _Tt_string &path,
 	_Tt_file_system_entry_ptr file_system_entry =
 			    file_system.bestMatchToPath(local_path);
 
+	if (file_system_entry.is_null()) {
+		// no mount point leads to the path
+		return TT_DB_ERR_ILLEGAL_FILE;
+	}
 	hostname = file_system_entry->getHostname();
 
 	if (file_system_entry->isLocal()) {
