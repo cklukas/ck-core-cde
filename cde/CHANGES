@@ -35,19 +35,21 @@
   users named in the `keys` resource no longer unlock the display, and the
   resource is removed. The account is the one of the real user ID, never typed
   into the dialog or taken from the environment; the lock dialog names that
-  same account instead of `LOGNAME` (an unset `LOGNAME` ended `dtsession` with a
-  null pointer). The PAM service is always `dtsession` and no longer follows
+  same account instead of `LOGNAME` (an unset `LOGNAME` ended `dtsession` with
+  a null pointer). The PAM service is always `dtsession` and no longer follows
   `argv[0]` (a `dtsession` started through the search path failed every
-  unlock); an expired account or password and an empty password are refused; a
-  PAM module that asks for anything but the password fails the conversation; the
-  typed password is wiped from memory after the check. The code that read the
-  password database and called `crypt()` is removed, and with it the setuid
-  installation of `dtsession` on systems without PAM: a `dtsession` built
-  without PAM cannot lock the display, logs the existing "Unable to lock
-  display due to security restrictions" message and carries on. The `account`
-  entry of the `dtsession` PAM service uses `pam_unix` (it was `pam_deny`, which
-  the check of the account would have run into). Covered by
-  `programs/dtsession/tests/check-pam-lock.py` and `check-lock-authentication.py`.
+  unlock); an expired, locked or refused account and an empty password are
+  refused, and a password that expired while the user was logged in is not (the
+  change belongs to the next login); a PAM module that asks for anything but
+  the password fails the conversation; the typed password is wiped from memory
+  after the check. The code that read the password database and called
+  `crypt()` is removed, and with it the setuid installation of `dtsession` on
+  systems without PAM: a `dtsession` built without PAM cannot lock the display,
+  logs the existing "Unable to lock display due to security restrictions"
+  message and carries on. The `account` entry of the `dtsession` PAM service
+  uses `pam_unix` (it was `pam_deny`, which the check of the account would have
+  run into). Covered by `programs/dtsession/tests/check-pam-lock.py` and
+  `check-lock-authentication.py`.
 - dtsession: carry out a `SIGTERM` shutdown from the event loop. The handler
   ran the complete shutdown (ToolTalk notices, saving the session, an X event
   loop, the `sessionexit` script) inside the signal handler, which deadlocks or

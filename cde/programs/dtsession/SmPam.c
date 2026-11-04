@@ -176,6 +176,7 @@ SmPamCheckPassword(
 {
     struct pam_conv conversation;
     pam_handle_t *handle = NULL;
+    Boolean accepted = False;
     char *name;
     int status;
 
@@ -202,17 +203,23 @@ SmPamCheckPassword(
 
     /*
      * An empty password is never accepted.  The account has to be in order
-     * as well, not only the password right: an expired account does not
-     * unlock the display.
+     * as well, not only the password right: an expired, locked or denied
+     * account does not unlock the display.  The one exception is a password
+     * that expired while the user was logged in (PAM_NEW_AUTHTOK_REQD from
+     * the account check): the user is inside the session already, and the
+     * change of the password belongs to the next login.  An authentication
+     * that fails, whatever it fails with, is refused.
      */
     status = pam_authenticate(handle, PAM_DISALLOW_NULL_AUTHTOK);
     if (status == PAM_SUCCESS)
     {
         status = pam_acct_mgmt(handle, PAM_DISALLOW_NULL_AUTHTOK);
+        accepted = (status == PAM_SUCCESS || status == PAM_NEW_AUTHTOK_REQD)
+                   ? True : False;
     }
     (void) pam_end(handle, status);
 
-    return status == PAM_SUCCESS ? True : False;
+    return accepted;
 }
 
 #else /* !HAS_PAM_LIBRARY */

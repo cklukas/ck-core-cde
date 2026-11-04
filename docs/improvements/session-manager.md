@@ -75,10 +75,13 @@ checked through PAM, and with no other password.
   authenticates the user it is given with `pam_unix` and nothing else: no
   module that accepts a password for another account. `pam_unix` checks the
   password of the calling user without help from `dtsession`.
-- An account that is not in order does not unlock the display: an expired
-  account, a password that has to be changed, and an empty password are all
-  refused. Any failure (PAM cannot be started, the account is unknown, a module
-  fails) leaves the display locked.
+- An account that is not in order does not unlock the display: an expired,
+  locked or refused account and an empty password are all refused, and so is
+  every failed authentication. Any failure (PAM cannot be started, the account
+  is unknown, a module fails) leaves the display locked. One result of the
+  account check does not keep the user out: a password that expired while the
+  user was logged in (`PAM_NEW_AUTHTOK_REQD`). The user is inside the session
+  already, and the password is changed at the next login.
 - The conversation with the PAM modules answers the password prompt and
   nothing else. A module that asks a visible question, such as a user name,
   fails the conversation.
@@ -348,7 +351,8 @@ the message in `~/.dt/errorlog`, `dtsession` keeps running and a Terminal still
 opens. A root-owned setuid or setgid copy of `dtsession`, started as the user
 under `strace -f -u <user>`, shows `setreuid` (or `setregid`) to the user, the
 refused attempts to take the installed identity back, and only then the first
-open of a locale file. `chage -E` (expired account) and `chage -d 0` (password
-that must be changed) make the real `pam_unix` account check refuse the right
-password. This was run on 2026-11-04 in the Linux guest with the build of this
-change.
+open of a locale file. `chage -E` (expired account) and `passwd -l` (locked
+account) make the real `pam_unix` check refuse the right password, while `chage
+-d 0` (password expired) does not keep the user out; a wrong password and the
+password of another user are refused in every case. This was run on 2026-11-04
+in the Linux guest with the build of this change.

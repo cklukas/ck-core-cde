@@ -289,7 +289,7 @@ static int authentication_error(void)
 }
 static int account_expired(void)
 {
-    static const int errors[] = { PAM_ACCT_EXPIRED, PAM_NEW_AUTHTOK_REQD, PAM_PERM_DENIED, PAM_AUTHINFO_UNAVAIL, PAM_USER_UNKNOWN };
+    static const int errors[] = { PAM_ACCT_EXPIRED, PAM_PERM_DENIED, PAM_AUTHINFO_UNAVAIL, PAM_USER_UNKNOWN, PAM_SYSTEM_ERR };
     size_t i;
     for (i = 0; i < sizeof(errors) / sizeof(errors[0]); i++) {
         reset();
@@ -297,6 +297,30 @@ static int account_expired(void)
         CHECK(ask("secret") == False);
         CHECK(!strcmp(pam.order, "same") && pam.end_status == errors[i]);
     }
+    return 0;
+}
+static int password_expired_during_the_session_unlocks(void)
+{
+    reset();
+    pam.acct_status = PAM_NEW_AUTHTOK_REQD;      /* the password expired while the user was logged in */
+    CHECK(ask("secret") == True);
+    CHECK(!strcmp(pam.order, "same") && pam.end_status == PAM_NEW_AUTHTOK_REQD && pam.end_calls == 1);
+    return 0;
+}
+static int expired_password_does_not_excuse_a_wrong_one(void)
+{
+    reset();
+    pam.acct_status = PAM_NEW_AUTHTOK_REQD;
+    CHECK(ask("wrong") == False);                /* the authentication fails first; the account is not looked at */
+    CHECK(!strcmp(pam.order, "sae"));
+    return 0;
+}
+static int new_authtok_from_the_authentication_is_refused(void)
+{
+    reset();
+    pam.auth_status = PAM_NEW_AUTHTOK_REQD;      /* only the account check may say so */
+    CHECK(ask("secret") == False);
+    CHECK(!strcmp(pam.order, "sae"));
     return 0;
 }
 static int conversation_refuses_visible_questions(void)
@@ -458,6 +482,9 @@ static int no_password(void)
 static struct { const char *name; int (*run)(void); } scenarios[] = {
     {"success", success}, {"wrong_password", wrong_password}, {"start_failure", start_failure},
     {"authentication_error", authentication_error}, {"account_expired", account_expired},
+    {"password_expired_during_the_session_unlocks", password_expired_during_the_session_unlocks},
+    {"expired_password_does_not_excuse_a_wrong_one", expired_password_does_not_excuse_a_wrong_one},
+    {"new_authtok_from_the_authentication_is_refused", new_authtok_from_the_authentication_is_refused},
     {"conversation_refuses_visible_questions", conversation_refuses_visible_questions},
     {"conversation_bad_requests", conversation_bad_requests},
     {"conversation_answers_every_password_prompt", conversation_answers_every_password_prompt},

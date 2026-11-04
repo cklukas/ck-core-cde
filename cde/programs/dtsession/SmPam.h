@@ -62,7 +62,9 @@ extern Boolean SmPamAvailable(void);
  * Whether the given password is the one of the user who started the session
  * and that user's account may be used.  False for every failure: the
  * account cannot be found, PAM cannot be started, the password is wrong, the
- * account has expired or the conversation with a module fails.
+ * account has expired, is locked or is refused by the stack, or the
+ * conversation with a module fails.  A password that expired while the user
+ * was logged in does not keep the user out; its change is for the next login.
  */
 extern Boolean SmPamCheckPassword(const char *password);
 
