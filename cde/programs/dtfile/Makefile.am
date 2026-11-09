@@ -9,7 +9,10 @@ DIST_SUBDIRS = dtcopy dtsync
 bin_PROGRAMS = dtfile
 
 EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
-             tests/trash-metadata.c tests/check-copy-transfer.py tests/copy-transfer.c \
+             tests/trash-metadata.c tests/check-trash-info.py tests/trash-info.c \
+             tests/check-restore-workflow.py tests/restore-workflow.c \
+             tests/check-trash-permissions.py tests/trash-permissions.c \
+             tests/check-copy-transfer.py tests/copy-transfer.c \
              tests/copy-paths.c tests/check-transfer-completion.py \
              tests/transfer-completion.c tests/check-operation-outcome.py \
              tests/check-sync-controller.py tests/sync-controller.c \
@@ -18,6 +21,9 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-writer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-metadata.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-trash-info.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-restore-workflow.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-trash-permissions.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-copy-transfer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-transfer-completion.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-operation-outcome.py
@@ -63,7 +69,7 @@ dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 IconicPath.c    Shelf.c         Mounts.c        Main.c          Menu.c          MkDir.c \
 		 ModAttr.c       ModAttrP.c      MultiView.c     OverWrite.c \
 		 Prefs.c         PrefsP.c        SharedMsgs.c    SharedProcs.c \
-		 ToolTalk.c      Trash.c         TrashMetadata.c TrashMetadata.h Utils.c fsDialog.c \
+		 ToolTalk.c      Trash.c         TrashMetadata.c TrashMetadata.h XdgTrashInfo.c XdgTrashInfo.h Utils.c fsDialog.c \
 		 StorageSize.c
 
 # Mind the quoting here...

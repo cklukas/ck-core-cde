@@ -84,7 +84,7 @@ static int exact(const char *name,const void *bytes,size_t size)
 }
 static int absent(const char *name) { struct stat st; errno=0; return lstat(name,&st)<0 && errno==ENOENT; }
 static void unreachable(void) { fputs("Unexpected directory/UI branch\n",stderr); abort(); }
-static int CheckAccess(char *path,int flags) { return access(path,flags); }
+static int CheckAccess(const char *path,int flags) { return access(path,flags); }
 static int DirectoryBusy(char *path) { (void)path; unreachable(); return 0; }
 static Boolean CopyDir(Widget w,int mode,char *from,char *to,Boolean container,struct stat *st,
                        FileOperationErrorProc handler,Boolean busy,int type)

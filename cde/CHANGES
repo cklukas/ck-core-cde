@@ -470,6 +470,19 @@
   stack marks `pam_lastlog` as an optional session module so a system without
   it logs no error for every login. A test runs the catalog handling in each
   state the greeter can be in at exit (`tests/check-greeter-catalog.py`).
+2026-11-09
+- dtfile: validate complete freedesktop Trash information before importing a
+  payload; preserve first duplicate fields, decode native path bytes safely,
+  resolve relative paths from the Trash parent, and reject malformed, oversized
+  or unreadable records without accepting a partial restore location. Assess
+  complete recursive replacement paths and report directory-read/close failures
+  rather than truncating paths or overlooking incomplete permission checks.
+- dtfile: keep the selected restore destination through overwrite confirmation,
+  perform approved replacement in the worker, and retain Trash mappings after
+  incomplete or malformed completion reports. Keep pending confirmation data
+  owned through Cancel, window close and failed worker admission, and enable
+  the warning's window-manager Close action as cancellation.
+  Reject failed ToolTalk file-list requests instead of replying with success.
 
 2026-11-03
 - dtfile: finish short and interrupted regular-file and dropped-buffer writes,

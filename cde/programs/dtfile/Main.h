@@ -1000,7 +1000,7 @@ extern Boolean FileManip(
                         Boolean checkForBusyDir,
                         int type);
 extern int CheckAccess(
-                        char *fname,
+                        const char *fname,
                         int what);
 
 extern char * DName(

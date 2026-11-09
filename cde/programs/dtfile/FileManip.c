@@ -110,7 +110,7 @@ static char * DTCOPY = CDE_INSTALLATION_TOP "/bin/dtfile_copy";
  ************************************************************************/
 int
 CheckAccess(
-        char *fname,
+        const char *fname,
         int what)
 {
     int access_priv;
