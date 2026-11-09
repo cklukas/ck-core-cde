@@ -105,7 +105,7 @@ def main(argv=None):
     def save():
         (work / "result.json").write_text(json.dumps(record, indent=2) + "\n")
     try:
-        record["transfer_extraction"] = extraction["extract"](source, work)
+        record["transfer_extraction"] = extraction["extract"](source, work, include_workers=False)
         raw = (source / "Trash.c").read_bytes()
         text = raw.decode("utf-8")
         record["trash_sha256"] = sha(raw)

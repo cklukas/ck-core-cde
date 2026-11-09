@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile typed conflict review and worker-side collision safety",
+  "source_base": "7dbcd465ecdecc73901b92c5b834535d1c125a11",
+  "motif_source_revision": "825977e4b521d006213bec172d6c071111639599",
+  "motif_runtime_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "motif_runtime_sha256": "b132508069cfaf329b8504dac3fe9238d7aed33918895108e91400de46f92c8b",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_integration_state": "SDK 0.3 remains frozen; receipt-authorized Apply remains disabled.",
+  "source_sha256": {
+    ".ckgit/ci.yml": "e9ac18116a3f28bc0e4e17f7f7ea2bb9ab4499a7dac4f4f9cf91e1798ad8e591",
+    ".ckgit/motif-revision": "573b8b41823b5e1d74efa4c656145b8a9a7b8de1b6c93b5d847d017484cffde0",
+    "cde/CHANGES": "1911fbdd753047009ba41a600a8d29408af6d26c9631a1b4839b0a51ef15c9aa",
+    "cde/doc/en_US.UTF-8/help/Filemgr/Ref.sgm": "97668f9d58e826006a7d4f7a242d05a15620b19001ec70cf43336384329cafe1",
+    "cde/programs/dtfile/FileOp.c": "7654ef2fb7147dc33d1fea5f93366377486f1a665aa2ad4215546bf39ee9e45f",
+    "cde/programs/dtfile/Makefile.am": "ce89b4c9bc6c72c6063b54042d4790c7843fc02e5b43e5710c4d5dfc4aef392e",
+    "cde/programs/dtfile/dtfile.msg": "dcbb7468e151a033d885204b94143663d927fbd04dde34176683259841eaea87",
+    "cde/programs/dtfile/FileConflict.c": "2ae68926fb8354427da30d1393089aac59f23cadb019aaca81c3d644d3e938dd",
+    "cde/programs/dtfile/FileConflict.h": "455e16bf21148dd99240931ca33e52342d2d6605b146526c20f1f92b855ef8b3",
+    "cde/programs/dtfile/FileConflictWire.c": "c8d7b25c0b1cea1f8270adf3272ab82787b689e72a5a41cbe08fed6ba1d48f30",
+    "cde/programs/dtfile/FileConflictWire.h": "258dc350bb985c431397647a96886a84a904a33f0a2ea7556a94ca0b91df0b6b",
+    "cde/programs/dtfile/FileConflictDialog.c": "19658ba07f3e113fa9bc5fa92d783bbaf9e004812772b52e7d16ece437cb2b70",
+    "cde/programs/dtfile/FileConflictDialog.h": "345bec035917dfd476d9b69bf2ba73e71471579ba3f779787665427ba3fa0396",
+    "cde/programs/dtfile/tests/check-collision-workflow.py": "9ebf8af57c9957e09a10889341f01083fc87f807560959bf341a1877f64a27e3",
+    "cde/programs/dtfile/tests/collision-workflow.c": "f3002b985c8d91d72d1b7ed4b7b62537236c3a81405f9a991193a8a0268077fc",
+    "cde/programs/dtfile/tests/check-transfer-completion.py": "91372635adc5d75657002828105a53777bb25b3befb0ccaa532e8726fa08924e",
+    "cde/programs/dtfile/tests/transfer-completion.c": "7acf1a76ca62c8790fb32e37277e2acf6abebb7973e7717f4f128967740a80d1",
+    "cde/programs/dtfile/tests/check-restore-workflow.py": "bdcd6f8f071bd09eab52d4bfe93eb9b43202966a76bd421e6b0d807278b24db5"
+  },
+  "focused_regressions": {
+    "model_and_wire_codec": {
+      "passed": 27,
+      "sanitizers": "address,undefined",
+      "seconds": 2.1576089169830084,
+      "receipt_sha256": "70f99a074109f8092d9c99bf818d8141ded228fbb8ead1ff65a217e5814233c1"
+    },
+    "worker_paths_and_observations": {
+      "passed": 2,
+      "sanitizers": "address,undefined",
+      "seconds": 0.4266214077360928,
+      "receipt_sha256": "9318cc7beea56d6844eecd1d41b4b5d51b500c73e773cde34bebb671904f0ddd"
+    }
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "cpu_affinity": [1],
+    "changed_objects": [
+      "dtfile-FileOp.o",
+      "dtfile-FileConflict.o",
+      "dtfile-FileConflictWire.o",
+      "dtfile-FileConflictDialog.o"
+    ],
+    "seconds": 1.897,
+    "log_sha256": "e8e6e0b27bb6620e71f87adeacc67889283969766e96a5d9b191bae5d1cdd1d0",
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile",
+    "output_sha256": "249205d25ffa0c872c58d16ddad946d8c2067db058d387fa916d3e2d123a03d4",
+    "full_stack_rebuilt": false,
+    "postcheck": "make -n dtfile requested no compilation; no dtfile executable was running."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 1 make -j1 check-local in programs/dtfile with current source/test overrides",
+    "test_drivers": 13,
+    "pass_lines": 214,
+    "seconds": 15.267,
+    "passed": true,
+    "strict_failure_markers": 0,
+    "log_sha256": "e29099602b49aa3588c13529c3534014630cd65a7747cb2e68dd9097597d2ea2"
+  },
+  "catalog": {
+    "command": "gencat dtfile.cat dtfile.msg",
+    "passed": true,
+    "output_sha256": "8ff361370df6147f7a094cb124d151004a944d5ac35067bfc968c19812c70df6"
+  },
+  "setup_diagnostics": [
+    "The first incremental compile exposed an undeclared fsErase dependency; FileOp now includes the public fsrtns header and only the failed object closure was rebuilt.",
+    "The first broad checkpoint exposed a stale test-fixture collision protocol and an over-broad restore fixture; the tests were updated to the typed protocol and worker-only seams, then the complete component checkpoint passed."
+  ],
+  "limitations": [
+    "This qualification exercised the model, codec, worker helpers, complete transfer and restore matrices, and the native dtfile link; it did not launch or visually inspect a CDE window.",
+    "The fixes were established and qualified against the retained Motif 20a ABI-9 runtime prefix. Revision 825 is pinned as the source dependency for the next checkpoint; its implementation was not reviewed here.",
+    "The worker-side temporary-backup replacement path is a dtfile compatibility implementation, not an ck-core-fs-lib durable receipt or authorization claim."
+  ]
+}

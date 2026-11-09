@@ -72,6 +72,7 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <limits.h>
 #include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -129,6 +130,9 @@
 #include "Help.h"
 #include "SharedMsgs.h"
 #include "sharedFuncs.h"
+#include "FileConflictDialog.h"
+#include "FileConflictWire.h"
+#include "dtcopy/fsrtns.h"
 
 
 /* Static Function declarations */
@@ -163,20 +167,12 @@ static Boolean    IsInParentDir(char *from,char *to);
 #define PIPEMSG_TARGET_TIME      5
 #define PIPEMSG_FILE_MODIFIED    6
 #define PIPEMSG_DONE             7
-#define PIPEMSG_REPLACE_RENAME   8
-#define PIPEMSG_REPLACE_RENAME_SAME 9
-#define PIPEMSG_REPLACE_MERGE       10
-#define PIPEMSG_MULTICOLLIDE        11
-#define PIPEMSG_MULTICOLLIDE_SAME   12
 #define PIPEMSG_MOVE_TO_SAME_DIR    13
+#define PIPEMSG_CONFLICT_BATCH      14
 
 /* the following messages are also defined & used in OverWrite.c */
 #define PIPEMSG_CANCEL           101
 #define PIPEMSG_PROCEED          102
-#define PIPEMSG_MERGE            103
-#define PIPEMSG_REPLACE_BUFFER   104
-#define PIPEMSG_RENAME_BUFFER    105
-#define PIPEMSG_MULTI_PROCEED    106
 
 extern int G_dropx,G_dropy;
 
@@ -209,6 +205,8 @@ typedef struct
    FileOpFinishProc finish_callback;
    XtPointer callback_data;
    int child;
+   DtfileConflictReader *conflict_reader;
+   DtfileConflictDialog *conflict_dialog;
 } FileOpCBData;
 
 
@@ -555,6 +553,296 @@ SendModifyMsg(
  *
  *------------------------------------------------------------------*/
 
+static char *
+FileOpPathJoin(const char *directory, const char *leaf)
+{
+   size_t directory_length, leaf_length, separator;
+   char *path;
+   if (directory == NULL || leaf == NULL || leaf[0] == 0 || strchr(leaf, '/') != NULL)
+   { errno = EINVAL; return NULL; }
+   directory_length = strlen(directory);
+   leaf_length = strlen(leaf);
+   separator = directory_length != 0 && directory[directory_length - 1] == '/' ? 0 : 1;
+   if (directory_length > SIZE_MAX - leaf_length - separator - 1)
+   { errno = ENAMETOOLONG; return NULL; }
+   path = XtMalloc(directory_length + leaf_length + separator + 1);
+   if (path == NULL) return NULL;
+   memcpy(path, directory, directory_length);
+   if (separator != 0) path[directory_length++] = '/';
+   memcpy(path + directory_length, leaf, leaf_length + 1);
+   return path;
+}
+
+static char *
+FileOpParentPath(const char *path)
+{
+   const char *slash;
+   size_t length;
+   char *parent;
+   if (path == NULL || path[0] != '/') { errno = EINVAL; return NULL; }
+   slash = strrchr(path, '/');
+   if (slash == NULL) { errno = EINVAL; return NULL; }
+   length = slash == path ? 1 : (size_t)(slash - path);
+   parent = XtMalloc(length + 1);
+   if (parent == NULL) return NULL;
+   memcpy(parent, path, length);
+   parent[length] = 0;
+   return parent;
+}
+
+static char *
+FileOpDecisionPath(const char *target, const char *leaf)
+{
+   char *parent = FileOpParentPath(target), *path;
+   if (parent == NULL) return NULL;
+   path = FileOpPathJoin(parent, leaf);
+   XtFree(parent);
+   return path;
+}
+
+static char *
+FileOpUniquePath(const char *target)
+{
+   size_t length;
+   unsigned int sequence;
+   char *candidate;
+   struct stat ignored;
+   if (target == NULL) { errno = EINVAL; return NULL; }
+   length = strlen(target);
+   for (sequence = 1; sequence != UINT_MAX; ++sequence)
+   {
+      int suffix = snprintf(NULL, 0, "_%u", sequence);
+      if (suffix < 0 || length > SIZE_MAX - (size_t)suffix - 1)
+      { errno = ENAMETOOLONG; return NULL; }
+      candidate = XtMalloc(length + (size_t)suffix + 1);
+      if (candidate == NULL) return NULL;
+      memcpy(candidate, target, length);
+      (void)snprintf(candidate + length, (size_t)suffix + 1, "_%u", sequence);
+      if (lstat(candidate, &ignored) != 0)
+      {
+         if (errno == ENOENT) return candidate;
+         XtFree(candidate);
+         return NULL;
+      }
+      XtFree(candidate);
+   }
+   errno = EOVERFLOW;
+   return NULL;
+}
+
+static int
+FileOpObservationMatches(const char *target, const struct stat *identity)
+{
+   struct stat current;
+   return target != NULL && identity != NULL && lstat(target, &current) == 0 &&
+          current.st_dev == identity->st_dev && current.st_ino == identity->st_ino &&
+          (current.st_mode & S_IFMT) == (identity->st_mode & S_IFMT) &&
+          current.st_size == identity->st_size &&
+          current.st_mtime == identity->st_mtime &&
+          current.st_ctime == identity->st_ctime;
+}
+
+static DtfileConflictOperation
+FileOpConflictOperation(int mode)
+{
+   switch (mode)
+   {
+      case COPY_FILE: return DTFILE_CONFLICT_COPY;
+      case MOVE_FILE: return DTFILE_CONFLICT_MOVE;
+      case LINK_FILE: return DTFILE_CONFLICT_LINK;
+      case MAKE_BUFFER: return DTFILE_CONFLICT_BUFFER;
+   }
+   return 0;
+}
+
+static int
+FileOpHandleConflicts(int pipe_s2m, int pipe_m2s, char *target_dir,
+                      char *directory, char *to_file, DirUpdate *updates,
+                      int file_count, int mode, int sameCount,
+                      int *sameIndex, unsigned int *sameFlags,
+                      struct stat *sameSourceIdentity,
+                      struct stat *sameTargetIdentity, Boolean *first_op)
+{
+   DtfileConflictBatch batch = {0};
+   DtfileConflictDecision *decisions = NULL;
+   DtfileConflictOperation operation = FileOpConflictOperation(mode);
+   pid_t owner = getppid();
+   short message = PIPEMSG_CONFLICT_BATCH;
+   int answer, failed = 0;
+   size_t row;
+
+   if (operation == 0 || owner <= 0 ||
+       DtfileConflictBatchInit(&batch, operation, (size_t)file_count,
+                               (size_t)sameCount) != 0)
+      goto protocol_failed;
+   for (row = 0; row < (size_t)sameCount; ++row)
+   {
+      int index = sameIndex[row];
+      const char *leaf = to_file == NULL ? updates[index].file : to_file;
+      char *source = NULL, *target;
+      Tt_status status = TT_OK;
+
+      if (mode != MAKE_BUFFER)
+      {
+         source = ResolveLocalPathName(updates[index].host,
+                                       updates[index].directory,
+                                       updates[index].file,
+                                       home_host_name, &status);
+         if (status != TT_OK || source == NULL) goto row_failed;
+      }
+      target = FileOpPathJoin(target_dir, leaf);
+      if (target == NULL) { XtFree(source); goto row_failed; }
+      if (updates[index].app_man_dir)
+         target = _DtResolveAppManPath(target, updates[index].app_man_dir);
+      if (target == NULL) { XtFree(source); goto row_failed; }
+      if (DtfileConflictSetItem(&batch, row, (uint32_t)index, sameFlags[row],
+                                source, source == NULL ? 0 : strlen(source),
+                                target, strlen(target)) != 0)
+      {
+         XtFree(source); XtFree(target); goto row_failed;
+      }
+      XtFree(source);
+      XtFree(target);
+      continue;
+row_failed:
+      failed = errno == 0 ? EIO : errno;
+      goto finished;
+   }
+
+   if (DtfileConflictWriteTaggedRequest(pipe_s2m,
+                                        (unsigned short)message, &batch) != 0)
+      goto protocol_failed;
+   answer = DtfileConflictReadDecisions(pipe_m2s, owner, &batch, &decisions);
+   if (answer <= 0)
+   {
+      if (answer < 0) failed = errno == 0 ? EIO : errno;
+      goto finished;
+   }
+
+   for (row = 0; row < batch.count; ++row)
+   {
+      DtfileConflictItem *item = &batch.items[row];
+      DtfileConflictDecision *decision = &decisions[row];
+      int index = (int)item->request_index;
+      char *destination = NULL, *saved_existing = NULL;
+      const char *leaf;
+      Boolean success = False;
+      Boolean discard_saved = False;
+      int desktop_type = strncmp(directory, desktop_dir, strlen(desktop_dir)) == 0
+                         ? DESKTOP : NOT_DESKTOP;
+
+      if (decision->action == DTFILE_CONFLICT_SKIP) continue;
+      if (mode != MAKE_BUFFER &&
+          !FileOpObservationMatches(item->source, &sameSourceIdentity[row]))
+      {
+         failed = ESTALE;
+         PipeWriteErrmsg(pipe_s2m, -1,
+                         GETMESSAGE(42, 36, "The source changed while its conflict was being reviewed: %s"),
+                         item->source);
+         continue;
+      }
+      if (decision->action == DTFILE_CONFLICT_KEEP_BOTH)
+         destination = FileOpUniquePath(item->target);
+      else if (decision->action == DTFILE_CONFLICT_RENAME_INCOMING)
+         destination = FileOpDecisionPath(item->target, decision->name);
+      else
+         destination = XtNewString(item->target);
+      if (destination == NULL) { failed = errno == 0 ? EIO : errno; continue; }
+
+      if (decision->action == DTFILE_CONFLICT_REPLACE ||
+          decision->action == DTFILE_CONFLICT_RENAME_EXISTING ||
+          decision->action == DTFILE_CONFLICT_MERGE)
+      {
+         if (!FileOpObservationMatches(item->target, &sameTargetIdentity[row]))
+         {
+            failed = ESTALE;
+            PipeWriteErrmsg(pipe_s2m, -1,
+                            GETMESSAGE(42, 35, "The destination changed while its conflict was being reviewed: %s"),
+                            item->target);
+            XtFree(destination);
+            continue;
+         }
+      }
+      if (decision->action == DTFILE_CONFLICT_REPLACE)
+      {
+         saved_existing = FileOpUniquePath(item->target);
+         discard_saved = True;
+         if (saved_existing == NULL ||
+             !FileManip((Widget)(intptr_t)pipe_s2m, MOVE_FILE, item->target,
+                        saved_existing, False, FileOpError, True, desktop_type))
+         {
+            failed = errno == 0 ? EIO : errno;
+            XtFree(saved_existing); XtFree(destination); continue;
+         }
+      }
+      else if (decision->action == DTFILE_CONFLICT_RENAME_EXISTING)
+      {
+         struct stat occupied;
+         saved_existing = FileOpDecisionPath(item->target, decision->name);
+         if (saved_existing == NULL || lstat(saved_existing, &occupied) == 0 || errno != ENOENT ||
+             !FileManip((Widget)(intptr_t)pipe_s2m, MOVE_FILE, item->target,
+                        saved_existing, False, FileOpError, True, desktop_type))
+         {
+            failed = errno == 0 ? EIO : errno;
+            XtFree(saved_existing); XtFree(destination); continue;
+         }
+      }
+
+      leaf = strrchr(destination, '/');
+      leaf = leaf == NULL ? destination : leaf + 1;
+      SendModifyMsg(pipe_s2m, mode, *first_op, target_dir, updates, index,
+                    (char *)leaf);
+      *first_op = False;
+      if (decision->action == DTFILE_CONFLICT_MERGE)
+         success = FileManip((Widget)(intptr_t)pipe_s2m, MERGE_DIR,
+                             item->source, item->target, False,
+                             FileOpError, True, desktop_type);
+      else if (mode == MAKE_BUFFER)
+         success = CreateFileFromBuffer(pipe_s2m, target_dir, destination,
+                                        updates[index].bufferInfo.buf_ptr,
+                                        updates[index].bufferInfo.size);
+      else
+         success = FileManip((Widget)(intptr_t)pipe_s2m, mode, item->source,
+                             destination, False, FileOpError, True, desktop_type);
+      if (!success)
+      {
+         failed = errno == 0 ? EIO : errno;
+         if (saved_existing != NULL)
+         {
+            if (!FileManip((Widget)(intptr_t)pipe_s2m, MOVE_FILE,
+                           saved_existing, item->target, False,
+                           FileOpError, True, desktop_type))
+               PipeWriteErrmsg(pipe_s2m, -1,
+                               GETMESSAGE(42, 34, "The original destination was retained for recovery at %s."),
+                               saved_existing);
+         }
+      }
+      else if (discard_saved)
+      {
+         int erase_error = 0;
+         fsErase(saved_existing, &erase_error, False);
+         if (erase_error != 0)
+         {
+            failed = erase_error;
+            PipeWriteErrmsg(pipe_s2m, -1,
+                            GETMESSAGE(42, 34, "The original destination was retained for recovery at %s."),
+                            saved_existing);
+         }
+      }
+      XtFree(saved_existing);
+      XtFree(destination);
+   }
+   goto finished;
+
+protocol_failed:
+   failed = errno == 0 ? EIO : errno;
+finished:
+   DtfileConflictDecisionsFree(decisions, batch.count);
+   DtfileConflictBatchFree(&batch);
+   if (failed != 0) errno = failed;
+   return failed == 0 ? 0 : -1;
+}
+
 static int
 FileMoveCopyProcess(
         int pipe_s2m,
@@ -568,7 +856,7 @@ FileMoveCopyProcess(
         DesktopRec *desktopWindow)
 {
    char * target_dir, * from = NULL, * to;
-   int i, j, rc, result;
+   int i, rc;
    Boolean return_val = False;
    Boolean operationFailed = False;
    Boolean isContainer;
@@ -578,11 +866,11 @@ FileMoveCopyProcess(
    short pipe_msg;
    int sameCount = 0;
    int errorCount = 0;
-   int *sameIndex = NULL, *sameConfirmType = NULL;
+   int *sameIndex = NULL;
+   unsigned int *sameFlags = NULL;
+   struct stat *sameSourceIdentity = NULL, *sameTargetIdentity = NULL;
    Boolean first_op = True;
    Tt_status tt_status;
-   char * renamed_file;
-   long modify_time;
    String permissionErrors = NULL;
    Boolean targetChecked = FALSE;
    Boolean targetError   = FALSE;
@@ -852,10 +1140,14 @@ FileMoveCopyProcess(
       }
 
       /* check if target file already exists */
-      if (stat(target_file, &stat_buf) == 0)
+      {
+       struct stat source_identity, target_identity, target_type;
+       if (lstat(target_file, &target_identity) == 0)
       {
          /* target file already exists: remember and deal with it later */
-        if(mode == MOVE_FILE && S_ISDIR(stat_buf.st_mode)
+        target_type = target_identity;
+        (void)stat(target_file, &target_type);
+        if(mode == MOVE_FILE && S_ISDIR(target_type.st_mode)
                && DirectoryBusy(target_file))
         {
           char *msg;
@@ -871,44 +1163,46 @@ FileMoveCopyProcess(
          if (sameIndex == NULL)
          {
             sameIndex       = (int *)XtMalloc(file_count*sizeof(int));
-            sameConfirmType = (int *)XtMalloc(file_count*sizeof(int));
+            sameFlags = (unsigned int *)XtCalloc(file_count, sizeof(unsigned int));
+            sameSourceIdentity = (struct stat *)XtCalloc(file_count, sizeof(struct stat));
+            sameTargetIdentity = (struct stat *)XtMalloc(file_count*sizeof(struct stat));
+         }
+         if (mode != MAKE_BUFFER && lstat(from, &source_identity) != 0)
+         {
+            PipeWriteErrmsg(pipe_s2m, -1,
+                            GETMESSAGE(42, 33, "The source object changed before its conflict could be reviewed: %s"),
+                            from);
+            errorCount++;
+            XtFree(from);
+            XtFree(target_file);
+            continue;
          }
          sameIndex[sameCount] = i;
+         if (mode != MAKE_BUFFER) sameSourceIdentity[sameCount] = source_identity;
+         sameTargetIdentity[sameCount] = target_identity;
 
-	 /* determine how to set the pipe message */
-	 if (mode == MAKE_BUFFER)
+	 /* Record the actions this individual conflict can safely offer. */
+	 if (mode != MAKE_BUFFER)
          {
-           sameConfirmType[sameCount] = PIPEMSG_REPLACE_RENAME;
-         }
-         else
-         {
-           stat(from, &from_stat_buf);
+           from_stat_buf = source_identity;
+           (void)stat(from, &from_stat_buf);
            if ( S_ISDIR(from_stat_buf.st_mode) &&
-                S_ISDIR(stat_buf.st_mode)      &&
+                S_ISDIR(target_type.st_mode)   &&
                 mode == COPY_FILE )
            {
-               /* if its a directory and there already is a directory of the
-                * same name the user may want to merge the directories into
-                * one directory.  But if the directory to be copied is being
-                * copied into the same directory it came from, it doesn't make
-                * sense to merge.  Set up message to REPLACE_RENAME_SAME
-                * indicating it is being copied from and to the same directory
+               /* Copying distinct directories can merge; a directory copied
+                * onto its own exact path can only be kept under another name.
                 */
                if(Same)
-                   sameConfirmType[sameCount] = PIPEMSG_REPLACE_RENAME_SAME;
+                   sameFlags[sameCount] |= DTFILE_CONFLICT_SAME_ENTRY;
                else
-                   sameConfirmType[sameCount] = PIPEMSG_REPLACE_MERGE;
+                   sameFlags[sameCount] |= DTFILE_CONFLICT_CAN_MERGE;
            }
            else
            {
-               /* If the copy/move/link is to the same directory, set up a
-                * different case then when the op is happening from different
-                * directories.
-                */
+               /* Exact pathname equality is the only same-entry proof here. */
                if(Same)
-                   sameConfirmType[sameCount] = PIPEMSG_REPLACE_RENAME_SAME;
-               else
-                   sameConfirmType[sameCount] = PIPEMSG_REPLACE_RENAME;
+                   sameFlags[sameCount] |= DTFILE_CONFLICT_SAME_ENTRY;
            }
          } /* endif mode != MAKE_BUFFER */
 
@@ -920,6 +1214,7 @@ FileMoveCopyProcess(
          XtFree ((char *) target_file);
          continue;
       } /* endif targetfile already exists */
+      }
 
       if ((isContainer = (to_file == NULL)))
          to = target_dir;
@@ -1012,275 +1307,18 @@ FileMoveCopyProcess(
     * Now deal with with the cases where we found that the target file
     * already exists.
     */
-   if (sameCount != 0)
-   {
+   if (sameCount != 0 &&
+       FileOpHandleConflicts(pipe_s2m, pipe_m2s, target_dir, directory,
+                             to_file, updates, file_count, mode, sameCount,
+                             sameIndex, sameFlags, sameSourceIdentity,
+                             sameTargetIdentity,
+                             &first_op) != 0)
+      operationFailed = True;
 
-      /*
-       * @@@ Note: The code below for sending a target-time pipe message
-       * at this point shouldn't really be necessary.
-       * The problem is that the target directory time stamp MUST be
-       * obtained BEFORE any changes are made to the directory;
-       * otherwise, the window will be updated and redrawn twice instead
-       * of just once.  Unfortunately, currently, if the user chooses to
-       * replace or rename the existing file, the rename or delete
-       * operation is done in the main process (inside the
-       * replace_rename_ok_callback in Overwrite.c), instead of here in
-       * the child process where it belongs (the main process shouldn't
-       * do any file system operations because they could block for a
-       * long time on a slow server).  If and when overwrite dialog code
-       * is fixed, the code below can be deleted; the target-time
-       * message will then be sent by the call to SendModifyMsg further
-       * below after the call to PipeRead.
-       */
-      if (first_op)
-      {
-         if (stat(target_dir, &stat_buf) == 0)
-         {
-            modify_time = stat_buf.st_mtime;
-            pipe_msg = PIPEMSG_TARGET_TIME;
-            write(pipe_s2m, &pipe_msg, sizeof(short));
-            write(pipe_s2m, &modify_time, sizeof(long));
-         }
-         first_op = False;
-      }
-
-      /* send message to main process to display dialog (and possibly remove/rename files) */
-      if (file_count == 1)
-      {
-         if (to_file == NULL)   /* note target_file here is only file name, above it is full path */
-            target_file = updates[sameIndex[0]].file;
-         else
-            target_file = to_file;
-         pipe_msg =  sameConfirmType[0];
-         DPRINTF(("FileMoveCopyProcess: sending msg %d\n", pipe_msg));
-         write(pipe_s2m, &pipe_msg, sizeof(short));
-         DPRINTF(("FileMoveCopyProcess: sending: mode %d directory \"%s\" file \"%s\" \n",
-                   mode, directory, target_file));
-         write(pipe_s2m, &mode, sizeof(int));
-         PipeWriteString(pipe_s2m, directory);
-         PipeWriteString(pipe_s2m, target_file);
-      }
-      else
-      {
-         int processCount=file_count-errorCount;
-
-         /* If the copy/move/link is to the same directory, set up a
-          * different case then when the op is happening from different
-          * directories.
-          */
-         if(Same)
-             pipe_msg = PIPEMSG_MULTICOLLIDE_SAME;
-         else
-             pipe_msg = PIPEMSG_MULTICOLLIDE;
-
-         DPRINTF(("FileMoveCopyProcess: sending msg %d\n", pipe_msg));
-         write(pipe_s2m, &pipe_msg, sizeof(short));
-         DPRINTF(("FileMoveCopyProcess: sending: mode %d processCount %d sameCount %d directory \"%s\"\n",
-                   mode, processCount, sameCount, directory));
-         write(pipe_s2m, &mode, sizeof(int));
-         write(pipe_s2m, &processCount, sizeof(int));
-         write(pipe_s2m, &sameCount, sizeof(int));
-         PipeWriteString(pipe_s2m, directory);
-         DPRINTF(("FileMoveCopyProcess: sending %d filename strings\n", sameCount));
-         for (i = 0;  i < sameCount; i++)
-            PipeWriteString(pipe_s2m, updates[sameIndex[i]].file);
-      }
-
-      /* wait for reply from main process */
-      rc = -1;
-      if (PipeRead(pipe_m2s, &rc, sizeof(int)) != sizeof(int) ||
-          (rc != PIPEMSG_CANCEL && rc != PIPEMSG_MULTI_PROCEED &&
-           (mode == MAKE_BUFFER
-            ? (rc != PIPEMSG_REPLACE_BUFFER && rc != PIPEMSG_RENAME_BUFFER)
-            : (rc != PIPEMSG_PROCEED && rc != PIPEMSG_MERGE))))
-      {
-         operationFailed = True;
-         rc = PIPEMSG_CANCEL;
-      }
-      DPRINTF(("FileMoveCopyProcess: woke up after confirm, rc %d\n", rc));
-      if (rc != PIPEMSG_CANCEL)
-      {
-         /* affirmative reply: do the operation */
-         for(i = 0; i < sameCount; i++)
-         {
-            j = sameIndex[i];
-            if (rc != PIPEMSG_RENAME_BUFFER)
-            {
-               SendModifyMsg(pipe_s2m, mode, first_op, target_dir, updates, j,
-                             updates[j].file);
-               first_op = FALSE;
-            }
-            if (rc == PIPEMSG_MULTI_PROCEED)
-            {
-               int opvalue;
-               if (PipeRead(pipe_m2s, &opvalue, sizeof(int)) != sizeof(int))
-               {
-                  operationFailed = True;
-                  break;
-               }
-               if (opvalue != 0)
-               {
-                  operationFailed = True;
-                  continue;
-               }
-	    }
-
-            if (mode != MAKE_BUFFER)
-            {
-              from = ResolveLocalPathName( updates[j].host,
-                                           updates[j].directory,
-                                           updates[j].file,
-                                           home_host_name,
-                                           &tt_status);
-              if (TT_OK != tt_status || from == NULL)
-              {
-                 char msg1[2*MAX_PATH];
-
-#ifdef sun
-                 sprintf (msg1, GetSharedMessage(CANNOT_CONNECT_ERROR_1),
-                          updates[j].directory, updates[j].host,
-                          updates[j].host);
-#else
-                 sprintf (msg1, GetSharedMessage(CANNOT_CONNECT_ERROR_2),
-                          updates[j].directory, updates[j].host,
-                          updates[j].host);
-#endif
-                  PipeWriteErrmsg(pipe_s2m, -1, msg1, NULL);
-                  operationFailed = True;
-                  continue;
-              }
-            } /* endif */
-
-
-
-            if ( (isContainer = (to_file == NULL)) )
-            {
-               to = target_dir;
-            }
-            else
-            {
-               to = (char *)XtMalloc(strlen(target_dir) + strlen(to_file) + 2);
-               sprintf(to, "%s/%s", target_dir, to_file);
-            }
-
-
-
-            /* check the return code for type of message and */
-            /* perform the appropriate action                */
-            int operationReply = rc;
-            if (mode == MAKE_BUFFER && rc == PIPEMSG_MULTI_PROCEED)
-               operationReply = PIPEMSG_REPLACE_BUFFER;
-            return_val = False;
-            switch (operationReply)
-            {
-                case PIPEMSG_MERGE:
-
-                    if (strncmp(directory, desktop_dir, strlen(desktop_dir)) == 0)
-                      return_val = FileManip((Widget) (intptr_t) pipe_s2m, MERGE_DIR, from,
-                                             to, isContainer,
-                                             FileOpError, True, DESKTOP);
-                    else
-                      return_val = FileManip((Widget) (intptr_t) pipe_s2m, MERGE_DIR, from,
-                                             to, isContainer,
-                                             FileOpError, True, NOT_DESKTOP);
-                    break;
-
-                case PIPEMSG_REPLACE_BUFFER:
-                    target_file = (char *)XtMalloc(strlen(to) + strlen(updates[j].file)
-                                              + 2);
-                    sprintf(target_file, "%s/%s", to, updates[j].file);
-                    DPRINTF (("file is %s",updates[j].file));
-                    return_val = CreateFileFromBuffer(pipe_s2m,
-                                                      to,
-                                                      target_file,
-                                                      updates[j].bufferInfo.buf_ptr,
-                                                      updates[j].bufferInfo.size);
-                    XtFree((char *)target_file);
-                    target_file = NULL;
-                    break;
-                case PIPEMSG_RENAME_BUFFER:
-
-                    renamed_file = PipeReadString(pipe_m2s);
-                    if (renamed_file == NULL)
-                       break;
-
-                    SendModifyMsg(pipe_s2m, mode, first_op, to, updates, j, renamed_file);
-                    target_file = (char *)XtMalloc(strlen(to) + strlen(renamed_file)
-                                              + 2);
-                    sprintf(target_file, "%s/%s", to, renamed_file);
-                    DPRINTF(("file is %s",renamed_file));
-                    return_val = CreateFileFromBuffer(pipe_s2m,
-                                                      to,
-                                                      target_file,
-                                                      updates[j].bufferInfo.buf_ptr,
-                                                      updates[j].bufferInfo.size);
-                    XtFree((char *) target_file);
-                    target_file = NULL;
-                    XtFree(renamed_file);
-                    renamed_file = NULL;
-
-                    break;
-                default:
-                    if (strncmp(directory, desktop_dir, strlen(desktop_dir)) == 0)
-                      return_val = FileManip((Widget) (intptr_t) pipe_s2m, mode, from, to,
-                                             isContainer,FileOpError, True,
-                                             DESKTOP);
-                    else
-                    {
-                        /* if the operation (move/copy/link) is happening from
-                         * and to the same folder, we want to create a new name
-                         * for the object for which the operation is happening
-                         * on.
-                         */
-                        if(Same)
-                        {
-                            char path[MAX_PATH], newDir[MAX_PATH],
-                            newFile[MAX_PATH];
-                            char *toFile;
-
-                            strcpy(path, from);
-                            generate_NewPath(path,path);
-                            split_path(path, newDir, newFile);
-                            toFile = (char *)XtMalloc(strlen(newDir) +
-                                                      strlen(newFile) + 3);
-                            strcpy(toFile, newDir);
-                            strcat(toFile, "/");
-                            strcat(toFile, newFile);
-
-                            return_val = FileManip((Widget) (intptr_t) pipe_s2m, mode, from,
-                                                   toFile, False, FileOpError,
-                                                   True, NOT_DESKTOP);
-                            XtFree(toFile);
-                        }
-                        else
-                            return_val = FileManip((Widget) (intptr_t) pipe_s2m, mode, from,
-                                                   to, isContainer, FileOpError,
-                                                   True, NOT_DESKTOP);
-                    }
-            } /* endswitch */
-
-           if (!return_val)
-              operationFailed = True;
-           if (mode != MAKE_BUFFER)
-           {
-              XtFree(from);
-              from = NULL;
-           }
-           if (to_file != NULL)
-           {
-               XtFree ((char *) to);
-               to = NULL;
-           }
-         }/* end for */
-      }/*end if rc != PIPEMSG_CANCEL*/
-
-      /* free sameData */
-      XtFree((char *)sameIndex);
-      sameIndex = NULL;
-      XtFree((char *)sameConfirmType);
-      sameConfirmType = NULL;
-      sameCount = 0;
-   } /* endif sameCount != 0 */
+   XtFree((char *)sameIndex);
+   XtFree((char *)sameFlags);
+   XtFree((char *)sameSourceIdentity);
+   XtFree((char *)sameTargetIdentity);
 
 
    pipe_msg = PIPEMSG_DONE;
@@ -1602,6 +1640,42 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
   }
 }
 
+static void
+FileOpConflictInput(FileOpCBData *cb_data)
+{
+   DtfileConflictBatch batch = {0};
+   Widget parent;
+   int result, reply_fd;
+
+   result = DtfileConflictReadAvailable(cb_data->conflict_reader,
+                                        cb_data->pipe_s2m, 64u * 1024u);
+   if (result == 0) return;
+   if (result < 0 ||
+       DtfileConflictReaderTake(cb_data->conflict_reader, &batch) != 0)
+   {
+      if (cb_data->pipe_m2s >= 0)
+      {
+         (void)DtfileConflictWriteCancel(cb_data->pipe_m2s);
+         (void)close(cb_data->pipe_m2s);
+         cb_data->pipe_m2s = -1;
+      }
+      _DtMessage(toplevel, GETMESSAGE(42, 17, "File operation response"),
+                 GETMESSAGE(42, 29, "The conflict request was incomplete. The pending items were cancelled."),
+                 NULL, HelpRequestCB);
+      DtfileConflictReaderFree(cb_data->conflict_reader);
+      cb_data->conflict_reader = NULL;
+      DtfileConflictBatchFree(&batch);
+      return;
+   }
+
+   DtfileConflictReaderFree(cb_data->conflict_reader);
+   cb_data->conflict_reader = NULL;
+   parent = cb_data->file_mgr_rec != NULL ? cb_data->file_mgr_rec->shell : toplevel;
+   reply_fd = cb_data->pipe_m2s;
+   cb_data->pipe_m2s = -1; /* The dialog now owns and closes this endpoint. */
+   cb_data->conflict_dialog = DtfileConflictDialogCreate(parent, &batch, reply_fd);
+}
+
 /*--------------------------------------------------------------------
  * FileOpPipeCB
  *   Read and process data sent through the pipe.
@@ -1617,68 +1691,17 @@ FileOpPipeCB(
    short pipe_msg;
    int i, n, rc;
    char *title, *err_msg, *err_arg;
-   char *directory, *file, *target_file;
+   char *target_file;
    long modify_time;
    Boolean done;
-   int mode;
-   int nSelected, nCollisions;
-   String *fileList;
    static int status = 0;
 
-  static ActionAreaItem replace_rename_actionItems[] = {
-    {"Ok",     9, 27, NULL,  NULL},    /* changed later based on mode */
-    {"Cancel", 9, 28, replace_rename_cancel_callback, NULL},
-    {"Help",   9, 29, HelpRequestCB, HELP_FILE_MANAGER_REP_REN},
-  };
-
-  ActionAreaDefn replace_renameActions = {
-     XtNumber(replace_rename_actionItems),
-     1,                      /* Cancel is default action */
-     replace_rename_actionItems
-  };
-
-  static ActionAreaItem replace_merge_actionItems[] = {
-    {"Ok",     9, 27, replace_merge_ok_callback,     NULL},
-    {"Cancel", 9, 28, replace_merge_cancel_callback, NULL},  /* changed below depending on mode */
-    {"Help",   9, 29, HelpRequestCB, HELP_FILE_MANAGER_REP_MRG},
-  };
-
-  ActionAreaDefn replace_mergeActions = {
-     XtNumber(replace_merge_actionItems),
-     1,                      /* Cancel is default action */
-     replace_merge_actionItems
-  };
-
-  static ActionAreaItem multicollide_actionItems[] = {
-    {"Ok",     9, 27, NULL, NULL}, /* changed later based on Mode */
-    {"Cancel", 9, 28, multicollide_cancel_callback, NULL},  /* changed below depending on mode */
-    {"Help",   9, 29, HelpRequestCB, HELP_FILE_MANAGER_MULTI},
-  };
-
-  ActionAreaDefn multicollideActions = {
-     XtNumber(multicollide_actionItems),
-     1,                      /* Cancel is default action */
-     multicollide_actionItems
-  };
-
-
-   /* Initialize Action Area structures based on mode */
-   /* Set the appropriate callback routines           */
-   mode = cb_data->mode;
-   switch (mode)
+   if (cb_data->conflict_reader != NULL)
    {
-     case MAKE_BUFFER:
-	  replace_rename_actionItems[0].callback =
-	                           buffer_replace_rename_ok_callback;
-          multicollide_actionItems[0].callback =
-				   buffer_multicollide_ok_callback;
-	  break;
-     default:
-	  replace_rename_actionItems[0].callback =
-	                           replace_rename_ok_callback;
-          multicollide_actionItems[0].callback =
-				   multicollide_ok_callback;
-   } /* endswitch */
+      FileOpConflictInput(cb_data);
+      return;
+   }
+
 
 
 
@@ -1730,145 +1753,22 @@ FileOpPipeCB(
          XtFree(title);
          break;
 
-       case PIPEMSG_REPLACE_RENAME_SAME:
-           /* filename collision: display replace/rename dialog */
-           PipeRead(*fd, &mode, sizeof(int));
-           directory = PipeReadString(*fd);
-           file      = PipeReadString(*fd);
-           /* routine can be called with a NULL file_mgr_rec, use the
-            * top level widget if this is the case.
-            */
-
-           /* the object is copying/linking itself to the same folder.  Want
-            * to indicate the to the ok dialog and the building of the replace
-            * name dialog.
-            */
-           replace_rename_actionItems[0].data = (XtPointer)True;
-           if(cb_data->file_mgr_rec)
-               create_replace_rename_dialog(cb_data->file_mgr_rec->shell,
-                                            mode, directory, file,
-                                            cb_data->pipe_m2s,
-                                            replace_renameActions, True);
-           else
-               create_replace_rename_dialog(toplevel,
-                                            mode, directory, file,
-                                            cb_data->pipe_m2s,
-                                            replace_renameActions, True);
-           XtFree(directory);
-           XtFree(file);
-           break;
-
-      case PIPEMSG_REPLACE_RENAME:
-         /* filename collision: display replace/rename dialog */
-         PipeRead(*fd, &mode, sizeof(int));
-         directory = PipeReadString(*fd);
-         file      = PipeReadString(*fd);
-         /* routine can be called with a NULL file_mgr_rec, use the
-          * top level widget if this is the case.
-          */
-         replace_rename_actionItems[0].data = (XtPointer)NULL;
-         if(cb_data->file_mgr_rec)
-            create_replace_rename_dialog(cb_data->file_mgr_rec->shell,
-                                         mode, directory, file,
-                                         cb_data->pipe_m2s,
-                                         replace_renameActions, False);
-         else
-            create_replace_rename_dialog(toplevel,
-                                         mode, directory, file,
-                                         cb_data->pipe_m2s,
-                                         replace_renameActions, False);
-         XtFree(directory);
-         XtFree(file);
-         break;
-
-      case PIPEMSG_REPLACE_MERGE:
-         /* filename collision: display replace/merge dialog */
-         PipeRead(*fd, &mode, sizeof(int));
-         directory = PipeReadString(*fd);
-         file      = PipeReadString(*fd);
-         /* routine can be called with a NULL file_mgr_rec, use the
-          * top level widget if this is the case.
-          */
-         if(cb_data->file_mgr_rec)
-            create_replace_merge_dialog(cb_data->file_mgr_rec->shell,
-                                        mode, directory, file,
-                                        cb_data->pipe_m2s,
-                                        replace_mergeActions);
-         else
-            create_replace_merge_dialog(toplevel,
-                                        mode, directory, file,
-                                        cb_data->pipe_m2s,
-                                        replace_mergeActions);
-         XtFree(directory);
-         XtFree(file);
-         break;
-
-       case PIPEMSG_MULTICOLLIDE_SAME:
-           /* filename collision: display multicollide dialog */
-           PipeRead(*fd, &mode,        sizeof(int));
-           PipeRead(*fd, &nSelected,   sizeof(int));
-           PipeRead(*fd, &nCollisions, sizeof(int));
-           directory = PipeReadString(*fd);
-           file      = XtMalloc( MAX_PATH );
-           fileList  = (String *) XtMalloc(nCollisions * sizeof(String));   /* de- allocated in dialog's callback functions */
-           for (i = 0; i < nCollisions; i++)
-           {
-               fileList[i] = PipeReadString(*fd);
-           }
-           /* routine can be called with a NULL file_mgr_rec, use the
-            * top level widget if this is the case.
-            */
-
-           /* the object is copying/linking itself to the same folder.  Want
-            * to indicate the to the ok dialog and the building of the replace
-            * name dialog.
-            */
-           multicollide_actionItems[0].data = (XtPointer)True;
-           if(cb_data->file_mgr_rec)
-               create_multicollide_dialog(cb_data->file_mgr_rec->shell,
-                                          mode, nSelected, nCollisions,
-                                          directory, fileList,
-                                          cb_data->pipe_m2s,
-                                          multicollideActions, True);
-           else
-               create_multicollide_dialog(toplevel,
-                                          mode, nSelected, nCollisions,
-                                          directory, fileList,
-                                          cb_data->pipe_m2s,
-                                          multicollideActions, True);
-           XtFree(directory);
-           break;
-
-      case PIPEMSG_MULTICOLLIDE:
-         /* filename collision: display multicollide dialog */
-         PipeRead(*fd, &mode,        sizeof(int));
-         PipeRead(*fd, &nSelected,   sizeof(int));
-         PipeRead(*fd, &nCollisions, sizeof(int));
-         directory = PipeReadString(*fd);
-         file      = XtMalloc( MAX_PATH );
-         fileList  = (String *) XtMalloc(nCollisions * sizeof(String));   /* de-allocated in dialog's callback functions */
-         for (i = 0; i < nCollisions; i++)
+      case PIPEMSG_CONFLICT_BATCH:
+         cb_data->conflict_reader = DtfileConflictReaderNew();
+         if (cb_data->conflict_reader == NULL)
          {
-            fileList[i] = PipeReadString(*fd);
+            if (cb_data->pipe_m2s >= 0)
+            {
+               (void)DtfileConflictWriteCancel(cb_data->pipe_m2s);
+               (void)close(cb_data->pipe_m2s);
+               cb_data->pipe_m2s = -1;
+            }
+            _DtMessage(toplevel, GETMESSAGE(42, 17, "File operation response"),
+                       GETMESSAGE(42, 32, "Not enough memory to review the conflicts. The pending items were cancelled."),
+                       NULL, HelpRequestCB);
+            break;
          }
-         /* routine can be called with a NULL file_mgr_rec, use the
-          * top level widget if this is the case.
-          */
-         multicollide_actionItems[0].data = (XtPointer)NULL;
-         if(cb_data->file_mgr_rec)
-            create_multicollide_dialog(cb_data->file_mgr_rec->shell,
-                                       mode, nSelected, nCollisions,
-                                       directory, fileList,
-                                       cb_data->pipe_m2s,
-                                       multicollideActions, False);
-         else
-            create_multicollide_dialog(toplevel,
-                                       mode, nSelected, nCollisions,
-                                       directory, fileList,
-                                       cb_data->pipe_m2s,
-                                       multicollideActions, False);
-
-         XtFree(directory);
+         FileOpConflictInput(cb_data);
          break;
 
       case PIPEMSG_TARGET_TIME:
@@ -1936,8 +1836,15 @@ FileOpPipeCB(
       DPRINTF(("FileOpPipeCB: done, rc %d\n", rc));
 
       /* close the pipe and cancel the callback */
-      close(cb_data->pipe_m2s);
-      close(cb_data->pipe_s2m);
+      if (cb_data->conflict_dialog != NULL)
+      {
+         DtfileConflictDialogFinish(cb_data->conflict_dialog);
+         cb_data->conflict_dialog = NULL;
+      }
+      DtfileConflictReaderFree(cb_data->conflict_reader);
+      cb_data->conflict_reader = NULL;
+      if (cb_data->pipe_m2s >= 0) close(cb_data->pipe_m2s);
+      if (cb_data->pipe_s2m >= 0) close(cb_data->pipe_s2m);
       if (id != NULL)
          XtRemoveInput(*id);
       else
@@ -2144,6 +2051,10 @@ _FileMoveCopy(
    cb_data->directory = XtNewString(directory);
    cb_data->finish_callback = finish_callback;
    cb_data->callback_data = callback_data;
+   cb_data->pipe_m2s = -1;
+   cb_data->pipe_s2m = -1;
+   cb_data->conflict_reader = NULL;
+   cb_data->conflict_dialog = NULL;
 
 
    /* mark the target directory as being modified in the directory cache */

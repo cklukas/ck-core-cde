@@ -1652,157 +1652,75 @@ been moved or copied will stay in its new destination.
 <Graphic Entityref="FM-CopyFoldWarnDialog" Id="HFMGR.REF.fig.11"></Graphic>
 </Sect1>
 <Sect1 Id="FMCopyWarnDialogDE">
-<Title>File Manager Copy Warning Dialog Box (Replace/Merge)</Title>
+<Title>File Manager Conflict Review Dialog Box</Title>
 <Para><Anchor Id="FileManagerCopyWarnDialog">
 <Anchor Id="FMCopyWarnMrgDialogDE">
 <Anchor Id="FMCopyWarnMgrDialogDE">
-</Para>
+<Anchor Id="FileManagerCopyWarnRenDialog">
+<Anchor Id="FileManagerCopyWarnMultiDialog">
+When one or more destination names already exist, this modeless dialog lists
+every pending conflict. Select a row to see its complete source and destination
+and to choose an action for that row. Earlier non-conflicting work remains if
+you cancel.</Para>
 <VariableList>
 <VarListEntry>
-<Term>Message Area</Term>
+<Term>Replace destination</Term>
 <ListItem>
-<Para>Displays the warning message.</Para>
+<Para>Replaces the destination. File Manager keeps a temporary backup until
+the incoming operation succeeds. If automatic recovery cannot finish, an error
+message identifies the retained backup.</Para>
 </ListItem>
 </VarListEntry>
 <VarListEntry>
-<Term>Replace existing folder</Term>
+<Term>Keep both</Term>
 <ListItem>
-<Para>Select this button to delete the existing
-folder and replace it with the new folder that has the same name.</Para>
+<Para>Leaves the destination unchanged and appends a number to the incoming
+object's name.</Para>
 </ListItem>
 </VarListEntry>
 <VarListEntry>
-<Term>Merge contents of the two folders</Term>
+<Term>Rename destination or incoming object</Term>
 <ListItem>
-<Para>Select this button to merge the
-contents of the source folder into the destination folder.</Para>
+<Para>Uses the literal single filename you enter. A slash, an empty name,
+<ComputerOutput>.</ComputerOutput>, or <ComputerOutput>..</ComputerOutput> is
+not accepted.</Para>
 </ListItem>
 </VarListEntry>
 <VarListEntry>
-<Term>Ok</Term>
+<Term>Merge folder contents</Term>
 <ListItem>
-<Para>Completes the Copy command using the method you have choosen.</Para>
+<Para>Merges two distinct folders when that action is available.</Para>
 </ListItem>
 </VarListEntry>
 <VarListEntry>
-<Term>Cancel Copy</Term>
+<Term>Skip this object</Term>
 <ListItem>
-<Para>Cancels the Copy command and closes the
-dialog box.
-</Para>
+<Para>Leaves this conflict unchanged.</Para>
 </ListItem>
 </VarListEntry>
 <VarListEntry>
-<Term>Help</Term>
+<Term>Apply action to compatible conflicts</Term>
 <ListItem>
-<Para>Displays the help for this dialog box.
-</Para>
+<Para>Copies the selected non-rename action only to rows on which that action
+is valid. Incompatible rows keep their previous choices.</Para>
+</ListItem>
+</VarListEntry>
+<VarListEntry>
+<Term>Continue operation</Term>
+<ListItem>
+<Para>Validates all choices and continues the pending work. If a source or
+destination changed while the dialog was open, that row fails rather than
+acting on the changed object.</Para>
+</ListItem>
+</VarListEntry>
+<VarListEntry>
+<Term>Cancel operation</Term>
+<ListItem>
+<Para>Cancels all pending conflict actions and closes the dialog. Work already
+completed before the review remains in place.</Para>
 </ListItem>
 </VarListEntry>
 </VariableList>
-<Graphic Entityref="FM-CopyWarnDialog" Id="HFMGR.REF.fig.12"></Graphic>
-</Sect1>
-<Sect1 Id="FMCopyWarnRenDialogDE">
-<Title>File Manager Copy/Move Warning Dialog Box (Replace/Rename)</Title>
-<Para><Anchor Id="FileManagerCopyWarnRenDialog">
-</Para>
-<VariableList>
-<VarListEntry>
-<Term>Message Area</Term>
-<ListItem>
-<Para>Displays the warning message.</Para>
-</ListItem>
-</VarListEntry>
-<VarListEntry>
-<Term>Replace existing object</Term>
-<ListItem>
-<Para>Select this button to replace the existing
-object with the new object.</Para>
-</ListItem>
-</VarListEntry>
-<VarListEntry>
-<Term>Rename existing object to:</Term>
-<ListItem>
-<Para>Select this button to provide a new name for the
-object in the destination folder. You must provide a name which does
-not already exist in the destination folder. A valid new name will
-be provided.</Para>
-</ListItem>
-</VarListEntry>
-<VarListEntry>
-<Term>Ok</Term>
-<ListItem>
-<Para>Continues the Copy/Move command.</Para>
-</ListItem>
-</VarListEntry>
-<VarListEntry>
-<Term>Cancel Copy/Move</Term>
-<ListItem>
-<Para>Cancels the Copy/Move command and closes the
-dialog box.
-</Para>
-</ListItem>
-</VarListEntry>
-<VarListEntry>
-<Term>Help</Term>
-<ListItem>
-<Para>Displays the help for this dialog box.
-</Para>
-</ListItem>
-</VarListEntry>
-</VariableList>
-<Graphic Entityref="FM-ReplaceRename" Id="HFMGR.REF.fig.13"></Graphic>
-</Sect1>
-<Sect1 Id="FMCopyWarnMultiDialogDE">
-<Title>File Manager Copy/Move Multicollide Warning Dialog Box</Title>
-<Para><Anchor Id="FileManagerCopyWarnMultiDialog">
-</Para>
-<VariableList>
-<VarListEntry>
-<Term>Message Area</Term>
-<ListItem>
-<Para>Displays the warning message.</Para>
-</ListItem>
-</VarListEntry>
-<VarListEntry>
-<Term>Replace existing objects</Term>
-<ListItem>
-<Para>Select this button to replace the existing
-objects with the new objects.</Para>
-</ListItem>
-</VarListEntry>
-<VarListEntry>
-<Term>Rename existing objects by appending a number</Term>
-<ListItem>
-<Para>Select this button to
-have the existing objects renamed in the destination folder.
-A new name will be generated by appending a number to the file name.
-For example, prog.c will become prog_1.c.</Para>
-</ListItem>
-</VarListEntry>
-<VarListEntry>
-<Term>Ok</Term>
-<ListItem>
-<Para>Continues the Copy/Move command.</Para>
-</ListItem>
-</VarListEntry>
-<VarListEntry>
-<Term>Stop Copy/Move</Term>
-<ListItem>
-<Para>Cancels the Copy/Move command and closes the
-dialog box.
-</Para>
-</ListItem>
-</VarListEntry>
-<VarListEntry>
-<Term>Help</Term>
-<ListItem>
-<Para>Displays the help for this dialog box.
-</Para>
-</ListItem>
-</VarListEntry>
-</VariableList>
-<Graphic Entityref="FM-Multicoll" Id="HFMGR.REF.fig.14"></Graphic>
 </Sect1>
 <Sect1 Id="FMCopyDirDialogErrorDE">
 <Title>File Manager Folder Copy and Move Error Dialog Box</Title>

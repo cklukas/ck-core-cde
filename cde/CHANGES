@@ -1,3 +1,24 @@
+2026-11-10
+- dtfile: replace the single/global overwrite response with a bounded per-item
+  conflict review. Each exact native source and destination remains separate
+  from its escaped display text; malformed, oversized, truncated, duplicated,
+  or stale requests fail without publishing a partial choice. Copy, move, link,
+  and dropped-buffer conflicts can independently replace, keep both, rename the
+  destination, rename the incoming object, merge compatible folders, or skip.
+  Literal rename components reject empty names, slashes, `.` and `..`; applying
+  an action changes only compatible rows. The event loop reads bounded request
+  increments, close/cancel owns and closes its reply endpoint, and dialog and
+  help lifetimes remain valid until the worker completes.
+- dtfile: keep conflict filesystem work in the background worker. The UI only
+  returns typed choices and cached open-view constraints; it no longer deletes
+  or renames destinations. Before an existing object is changed, the worker
+  revalidates the exact source and destination identities captured at discovery.
+  Replace retains a temporary backup until the incoming operation succeeds,
+  attempts restoration on failure, and reports any backup that must be kept for
+  recovery. This is dtfile's compatibility path, not an fs-lib execution
+  receipt; the unqualified fs-lib Apply path remains disabled. Covered by
+  `programs/dtfile/tests/check-collision-workflow.py`.
+
 2026-11-04
 - libDtSvc, dtlogin: check the account and keep attempts apart in the PAM
   helper that dtlogin authenticates with. `_DtSvcPamAuthenticate` now calls

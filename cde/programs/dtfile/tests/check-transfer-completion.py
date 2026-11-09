@@ -36,12 +36,7 @@ CASES = (
     "worker-normal-last-fails", "worker-desktop-last-fails",
     "worker-normal-resolve", "worker-desktop-resolve",
     "worker-normal-target-resolve", "worker-desktop-target-resolve",
-    "worker-normal-collision-first-fails", "worker-normal-collision-op-fails",
-    "worker-normal-collision-resolve", "worker-normal-failure-then-cancel",
-    "worker-normal-collision-clean-cancel", "worker-normal-collision-short-reply",
-    "worker-normal-collision-bad-reply", "worker-normal-collision-wrong-mode",
-    "worker-normal-regular-collision-wrong-mode",
-    "worker-normal-collision-short-op", "worker-normal-collision-rename-null",
+    "worker-normal-collision-keep-both", "worker-normal-collision-clean-cancel",
 )
 
 
@@ -115,7 +110,7 @@ def function(text, name):
     # Anchor at a return type, not a call or a comment containing the name.
     pattern = re.compile(
         r"(?m)^(?:static[ \t\r\n]+)?"
-        r"(?:Boolean|int|void|String|char[ \t]*\*)[ \t\r\n]+"
+        r"(?:Boolean|DtfileConflictOperation|int|void|String|char[ \t]*\*)[ \t\r\n]+"
         + re.escape(name) + r"[ \t\r\n]*\("
     )
     definitions = []
@@ -146,9 +141,11 @@ def constant(text, name):
     return matches[0]
 
 
-def extract(source, work):
+def extract(source, work, include_workers=True):
     """Copy complete production definitions verbatim, preserving source lines."""
-    filenames = ("FileManip.c", "FileOp.c", "Main.h", "FileMgr.h", "Common.h", "SharedMsgs.h")
+    filenames = ("FileManip.c", "FileOp.c", "FileConflict.c", "FileConflict.h",
+                 "FileConflictWire.c", "FileConflictWire.h",
+                 "Main.h", "FileMgr.h", "Common.h", "SharedMsgs.h")
     raw = {name: (source / name).read_bytes() for name in filenames}
     text = {name: data.decode("utf-8") for name, data in raw.items()}
     definitions = [
@@ -172,21 +169,19 @@ def extract(source, work):
         ("FileOp.c", name) for name in (
             "PipeRead", "PipeWriteString", "PipeReadString", "PipeWriteErrmsg",
             "FileOpError", "CreateFileFromBuffer", "SendModifyMsg",
-            "appendErrorMessage", "DisplayErrorMessage",
-            "FileMoveCopyProcess", "FileMoveCopyProcessDesktop")
+            "appendErrorMessage", "DisplayErrorMessage")
     ]
+    if include_workers:
+        functions += [("FileOp.c", name) for name in
+                      ("FileOpPathJoin", "FileOpParentPath", "FileOpDecisionPath",
+                       "FileOpUniquePath", "FileOpObservationMatches",
+                       "FileOpConflictOperation", "FileOpHandleConflicts",
+                       "FileMoveCopyProcess", "FileMoveCopyProcessDesktop")]
     output, manifest = [], []
     for filename, name in functions:
         body, line = function(text[filename], name)
         output.append(f"#line {line} {json.dumps(str(source / filename))}\n")
-        # Symbol rename only: the whole real PipeRead body is retained. The
-        # fixture's adapter invokes it, then supplies parent-approved removal
-        # at a successfully read MULTI opvalue. No worker result is substituted.
-        if name == "PipeRead":
-            output.append("#define PipeRead TransferPipeRead\n")
         output.append(body + "\n")
-        if name == "PipeRead":
-            output.append("#undef PipeRead\n")
         manifest.append({"file": filename, "function": name, "line": line,
                          "verbatim_sha256": sha(body.encode()), "bytes": len(body.encode())})
     (work / "transfer-production.inc").write_text("\n".join(output))
@@ -266,14 +261,19 @@ def main(argv=None):
         result_file.write_text(json.dumps(record, indent=2) + "\n")
 
     try:
-        record["extraction"] = extract(source, work)
+        workers = any(name.startswith("worker-") for name in (args.cases or CASES))
+        record["extraction"] = extract(source, work, include_workers=workers)
         command = [*shlex.split(env.get("CC", "cc")), "-std=c11",
                    "-D_POSIX_C_SOURCE=200809L", "-D_DEFAULT_SOURCE", "-D_XOPEN_SOURCE=700",
                    "-O0", "-g", "-Wall", "-Wextra", "-Werror",
                    # Unchanged legacy whole-function declarations/branches:
                    "-Wno-unused-parameter", "-Wno-unused-variable", "-Wno-unused-function",
                    "-Wno-parentheses", "-Wno-dangling-else",
-                   "-I", str(work), "-I", str(source), str(frozen_harness), "-o", str(binary)]
+                   "-I", str(work), "-I", str(source), str(frozen_harness)]
+        if workers:
+            command += ["-DTRANSFER_INCLUDE_WORKERS=1", str(source / "FileConflict.c"),
+                        str(source / "FileConflictWire.c")]
+        command += ["-pthread", "-o", str(binary)]
         if args.sanitizers != "none":
             command += ["-fsanitize=" + args.sanitizers,
                         "-fno-omit-frame-pointer", "-fno-sanitize-recover=all"]

@@ -1839,8 +1839,41 @@ $ ****** Mounts ********
 
 $set 42
 $ ****** Reliable file operations ********
+2 Review the actions for pending conflicts.\nEarlier completed work is kept if you cancel.
+3 Replace destination
+4 Keep both (add a number)
+5 Rename destination
+6 Rename incoming object
+7 Merge folder contents
+8 Skip this object
+9 Conflicts %lu-%lu of %lu
+10 The new name is too long.
+11 Incoming buffer data
+12 Source: %s\nDestination: %s
+13 Not enough memory to update the conflict view.
+14 Applied to %lu conflicts; %lu kept their other action.
+15 Enter a new name for the selected conflict.
+16 Close the open views for this folder, then try again.
+17 File operation response
+18 The response could not be sent. Wait for the operation's result.
+19 Continue operation
+20 Cancel operation
+21 Previous
+22 Next
+23 New name (typed literally):
+24 Apply action to compatible conflicts
+25 Paths display unusual bytes as \xHH.
+26 Not enough memory to keep the new name. Try again.
+27 Conflict choices
+28 Each row has its own action. Select a row to see its complete source\nand destination. Apply action changes only compatible conflicts.\n\nReplace keeps a temporary backup until the incoming operation succeeds.\nIf automatic recovery cannot finish, File Manager reports the retained backup.\nKeep both adds a number to the incoming object's name and leaves\nthe existing destination unchanged.\nRename destination keeps it under the name you enter.\nRename incoming uses your new name for the incoming object.\nEnter one filename without a slash. Type it literally, not as the\ndisplayed byte escapes.\nMerge combines folder contents. Skip leaves the object alone.\n\nCancel or window Close stops pending conflict actions.\nEarlier completed work is kept; cancellation does not undo it.
+29 The conflict request was incomplete. The pending items were cancelled.
 30 Cannot prepare the folder operation for %s.
 31 The folder operation did not complete for %s.
+32 Not enough memory to review the conflicts. The pending items were cancelled.
+33 The source object changed before its conflict could be reviewed: %s
+34 The original destination was retained for recovery at %s.
+35 The destination changed while its conflict was being reviewed: %s
+36 The source changed while its conflict was being reviewed: %s
 
 $set 99
 $ ****** Version Information ********

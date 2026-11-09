@@ -16,6 +16,7 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/copy-paths.c tests/check-transfer-completion.py \
              tests/transfer-completion.c tests/check-operation-outcome.py \
              tests/check-filemanip-safety.py tests/filemanip-safety.c \
+             tests/check-collision-workflow.py tests/collision-workflow.c \
              tests/check-sync-controller.py tests/sync-controller.c \
              tests/check-sync-retry-ui.py SyncFeature.h.in
 
@@ -40,6 +41,14 @@ check-local:
 		--module-source "$(abs_srcdir)" --directories-only \
 		--work-dir "$(abs_builddir)/filemanip-directory-check"
 	CC="$(CC)" python3 $(srcdir)/tests/check-operation-outcome.py
+	$(RM) -r "$(abs_builddir)/collision-model-check"
+	CC="$(CC)" python3 $(srcdir)/tests/check-collision-workflow.py \
+		--module-source "$(abs_srcdir)" --model-only \
+		--work-dir "$(abs_builddir)/collision-model-check"
+	$(RM) -r "$(abs_builddir)/collision-helper-check"
+	CC="$(CC)" python3 $(srcdir)/tests/check-collision-workflow.py \
+		--module-source "$(abs_srcdir)" --helpers-only \
+		--work-dir "$(abs_builddir)/collision-helper-check"
 if HAVE_CK_CORE_FS
 	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-sync-controller.py
 endif
@@ -77,6 +86,8 @@ endif
 dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 Desktop.c       Directory.c     Encaps.c        File.c \
 		 FileDialog.c    FileManip.c     FileMgr.c       FileOp.c \
+		 FileConflict.c FileConflict.h FileConflictWire.c FileConflictWire.h \
+		 FileConflictDialog.c FileConflictDialog.h \
 		 Filter.c        FilterP.c       Find.c          FindP.c \
 		 Help.c          HelpCB.c        HelpP.c         IconWindow.c \
 		 IconicPath.c    Shelf.c         Mounts.c        Main.c          Menu.c          MkDir.c \

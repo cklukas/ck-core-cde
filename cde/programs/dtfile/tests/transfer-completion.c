@@ -3,6 +3,7 @@
  * protocol records and all transfer/completion decisions remain production.
  * Syscall faults are test-only reported returns, not native-device failures. */
 #include <assert.h>
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -30,11 +31,18 @@ typedef void (*FileOperationErrorProc)(Widget, char *, char *);
 #define DPRINTF(args) ((void)0)
 #define GETMESSAGE(set,id,text) (text)
 #define XtMalloc(n) malloc(n)
+#ifdef TRANSFER_INCLUDE_WORKERS
+#define XtCalloc(n,s) calloc(n,s)
+#endif
 #define XtRealloc(p,n) realloc(p,n)
 #define XtNewString(s) strdup(s)
 #define XtFree(p) free(p)
 #include "transfer-definitions.inc"
 #include "SharedMsgs.h"
+#ifdef TRANSFER_INCLUDE_WORKERS
+#include "FileConflict.h"
+#include "FileConflictWire.h"
+#endif
 
 static char *home_host_name = "local", *root_title = "root";
 static char *desktop_dir = "/unused-desktop", *MOVE_CMD = "/bin/mv", *LINK_CMD = "/bin/ln";
@@ -45,8 +53,6 @@ static int injected, write_error, close_error, cleanup_error, target_collision;
 static int resolve_target_error, resolve_first_error, resolve_collision_error, resolve_first_calls;
 static int worker_fault, worker_last_fault, seen_first, seen_second, executable_calls;
 static int same_name_generations, same_path_splits;
-static int parent_reply_fd=-1,parent_stage,parent_response,parent_item;
-static char parent_target[PATH_MAX];
 static char message[4096];
 
 #define CHECK(c) do { if (!(c)) { fprintf(stderr,"FAIL %s:%d: %s\n",case_name,__LINE__,#c); failed=1; } } while (0)
@@ -55,25 +61,6 @@ static void put(const char *name,const void *bytes,size_t size)
 {
     int fd=open(name,O_WRONLY|O_CREAT|O_EXCL,0600); fixture(fd>=0);
     fixture(write(fd,bytes,size)==(ssize_t)size); fixture(close(fd)==0);
-}
-int TransferPipeRead(int,void *,int);
-static int PipeRead(int fd,void *data,int size)
-{
-    int result=TransferPipeRead(fd,data,size);
-    if (fd==parent_reply_fd && size==(int)sizeof(int) && result==size) {
-        int reply;memcpy(&reply,data,sizeof(reply));
-        if (!parent_stage++) parent_response=reply;
-        else if (parent_response==PIPEMSG_MULTI_PROCEED) {
-            /* Real parent-plumbing seam: OverWrite removes an approved old
-             * target before returning opvalue0. Workers still detect the
-             * collision first, then execute actual production transfers. */
-            char path[PATH_MAX];const char *name=parent_item++?"second":"first";
-            fixture(strlen(parent_target)+strlen(name)+2<sizeof(path));
-            strcpy(path,parent_target);strcat(path,"/");strcat(path,name);
-            if (reply==0) fixture(unlink(path)==0);
-        }
-    }
-    return result;
 }
 static int exact(const char *name,const void *bytes,size_t size)
 {
@@ -94,6 +81,10 @@ static Boolean MoveDir(Widget w,char *from,char *to,Boolean container,struct sta
 { (void)w;(void)from;(void)to;(void)container;(void)st;(void)handler;(void)type;unreachable();return False; }
 static int RunFileCommand(char *cmd,char *a,char *b,char *c)
 { (void)cmd;(void)a;(void)b;(void)c;unreachable();return -1; }
+#ifdef TRANSFER_INCLUDE_WORKERS
+static void fsErase(char *path,int *result,int force)
+{ (void)force;*result=unlink(path)==0?0:errno; }
+#endif
 static void DtLastChar(char *text,char **last,int *length)
 { *last=text+strlen(text)-1;*length=1; }
 static char *_DtFollowLink(char *text) { return text; } /* Regular-file fixtures only. */
@@ -284,17 +275,23 @@ static int wire_valid(const unsigned char *wire,size_t bytes,int require_done,in
             if (!wire_take(wire,bytes,&at,&value,sizeof(value)) ||
                 !wire_take(wire,bytes,&at,&timestamp,sizeof(timestamp)) || !wire_string(wire,bytes,&at)) return 0;
             break;
-        case PIPEMSG_REPLACE_RENAME: case PIPEMSG_REPLACE_RENAME_SAME: case PIPEMSG_REPLACE_MERGE:
-            if (!wire_take(wire,bytes,&at,&value,sizeof(value)) ||
-                !wire_string(wire,bytes,&at) || !wire_string(wire,bytes,&at)) return 0;
+        case PIPEMSG_CONFLICT_BATCH: {
+            uint32_t words[5];
+            if (!wire_take(wire,bytes,&at,words,sizeof(words))) return 0;
+            count=(int)ntohl(words[3]);
+            if (ntohl(words[0])!=UINT32_C(0x44434631) || count<1 || count>2) return 0;
+            for (int i=0;i<count;++i) {
+                uint32_t item[4];
+                if (!wire_take(wire,bytes,&at,item,sizeof(item))) return 0;
+                size_t source_length=ntohl(item[2]),target_length=ntohl(item[3]);
+                if (source_length>bytes-at) return 0;at+=source_length;
+                if (target_length>bytes-at) return 0;at+=target_length;
+            }
+            uint32_t trailer;
+            if (!wire_take(wire,bytes,&at,&trailer,sizeof(trailer)) ||
+                ntohl(trailer)!=UINT32_C(0x454e4431)) return 0;
             break;
-        case PIPEMSG_MULTICOLLIDE: case PIPEMSG_MULTICOLLIDE_SAME:
-            if (!wire_take(wire,bytes,&at,&value,sizeof(value)) ||
-                !wire_take(wire,bytes,&at,&value,sizeof(value)) ||
-                !wire_take(wire,bytes,&at,&count,sizeof(count)) || count<0 || count>2 ||
-                !wire_string(wire,bytes,&at)) return 0;
-            for (int i=0;i<count;++i) if (!wire_string(wire,bytes,&at)) return 0;
-            break;
+        }
         case PIPEMSG_MOVE_TO_SAME_DIR:
             if (!wire_take(wire,bytes,&at,&value,sizeof(value))) return 0;
             break;
@@ -351,6 +348,7 @@ static void buffer_case(void)
         } else CHECK(0);
     }
 }
+#ifdef TRANSFER_INCLUDE_WORKERS
 static void worker_case(void)
 {
     char cwd[PATH_MAX],source[PATH_MAX],target[PATH_MAX];
@@ -360,9 +358,8 @@ static void worker_case(void)
     strcpy(source,cwd);strcat(source,"/sources");strcpy(target,cwd);strcat(target,"/targets");
     int desktop=strstr(case_name,"desktop")!=NULL;
     int same_copy=!strcmp(case_name,"worker-normal-same-copy");
-    int copy=same_copy || strstr(case_name,"resolve")!=NULL || strstr(case_name,"regular")!=NULL;
-    int partial_cancel=strstr(case_name,"failure-then-cancel")!=NULL;
-    int collision=same_copy || strstr(case_name,"collision")!=NULL || partial_cancel;
+    int collision=same_copy || strstr(case_name,"collision")!=NULL;
+    int copy=collision || strstr(case_name,"resolve")!=NULL || strstr(case_name,"regular")!=NULL;
     if (same_copy) strcpy(target,source); /* Both actual source paths collide with themselves. */
     DirUpdate updates[2];memset(updates,0,sizeof(updates));
     for (int i=0;i<2;++i) {
@@ -374,33 +371,39 @@ static void worker_case(void)
         put("sources/second",payload+(same_copy?1:0),sizeof(payload)-(same_copy?1:0));
     }
     if (collision && !same_copy) {
-        if (!partial_cancel) put("targets/first","occupied first",14);
+        put("targets/first","occupied first",14);
         put("targets/second","occupied second",15);
     }
     resolve_target_error=strstr(case_name,"target-resolve")!=NULL;
     resolve_first_error=copy && !collision && !resolve_target_error;
-    resolve_collision_error=copy && collision && strstr(case_name,"resolve")!=NULL;
-    worker_fault=strstr(case_name,"first-fails")!=NULL || partial_cancel;
+    resolve_collision_error=0;
+    worker_fault=strstr(case_name,"first-fails")!=NULL;
     worker_last_fault=strstr(case_name,"last-fails")!=NULL;
     int output[2],reply[2];fixture(pipe(output)==0 && pipe(reply)==0);
     if (collision) {
-        if (strstr(case_name,"short-reply")) { char one=1;fixture(write(reply[1],&one,1)==1); }
-        else {
-            int response=same_copy?PIPEMSG_PROCEED:strstr(case_name,"bad-reply")?999:
-                strstr(case_name,"wrong-mode")?(copy?PIPEMSG_REPLACE_BUFFER:PIPEMSG_PROCEED):
-                strstr(case_name,"rename-null")?PIPEMSG_RENAME_BUFFER:
-                strstr(case_name,"cancel")?PIPEMSG_CANCEL:PIPEMSG_MULTI_PROCEED;
-            fixture(write(reply[1],&response,sizeof(response))==sizeof(response));
-            if (response==PIPEMSG_MULTI_PROCEED) {
-                int first=strstr(case_name,"op-fails")?1:0,second=0;
-                fixture(write(reply[1],&first,sizeof(first))==sizeof(first));
-                if (!strstr(case_name,"short-op")) fixture(write(reply[1],&second,sizeof(second))==sizeof(second));
-            }
-            if (response==PIPEMSG_RENAME_BUFFER) { short empty=0;fixture(write(reply[1],&empty,sizeof(empty))==sizeof(empty)); }
+        DtfileConflictBatch batch={0};
+        DtfileConflictDecision decisions[2]={{0}};
+        fixture(DtfileConflictBatchInit(&batch,DTFILE_CONFLICT_COPY,2,2)==0);
+        for (int i=0;i<2;++i) {
+            char source_path[PATH_MAX],target_path[PATH_MAX];
+            const char *leaf=i?"second":"first";
+            fixture(strlen(source)+strlen(leaf)+2<=sizeof(source_path));
+            fixture(strlen(target)+strlen(leaf)+2<=sizeof(target_path));
+            strcpy(source_path,source);strcat(source_path,"/");strcat(source_path,leaf);
+            strcpy(target_path,target);strcat(target_path,"/");strcat(target_path,leaf);
+            fixture(DtfileConflictSetItem(&batch,(size_t)i,(uint32_t)i,
+                    same_copy?DTFILE_CONFLICT_SAME_ENTRY:0,
+                    source_path,strlen(source_path),target_path,strlen(target_path))==0);
+            decisions[i].request_index=(uint32_t)i;
+            decisions[i].action=DTFILE_CONFLICT_KEEP_BOTH;
         }
+        if (strstr(case_name,"cancel"))
+            fixture(DtfileConflictWriteCancel(reply[1])==0);
+        else
+            fixture(DtfileConflictWriteDecisions(reply[1],&batch,decisions)==0);
+        DtfileConflictBatchFree(&batch);
     }
     fixture(close(reply[1])==0);
-    parent_reply_fd=reply[0];strcpy(parent_target,target);
     int rc=desktop?FileMoveCopyProcessDesktop(output[1],reply[0],target,"local",updates,2,copy?COPY_FILE:MAKE_BUFFER,NULL):
         FileMoveCopyProcess(output[1],reply[0],NULL,target,"local",updates,2,copy?COPY_FILE:MAKE_BUFFER,NULL);
     fixture(close(reply[0])==0 && close(output[1])==0);
@@ -411,39 +414,42 @@ static void worker_case(void)
         memcpy(&reported,wire+bytes-sizeof(reported),sizeof(reported));
     }
     CHECK(wire_valid(wire,bytes,1,rc));
-    int success=same_copy || strstr(case_name,"success")!=NULL || strstr(case_name,"clean-cancel")!=NULL;
+    int success=collision || strstr(case_name,"success")!=NULL;
     CHECK(tag==PIPEMSG_DONE && reported==rc && rc==(success?0:-1));
     if (!collision && !resolve_target_error) {
         if (!worker_last_fault) CHECK(exact("targets/second",payload,sizeof(payload)));
         else CHECK(exact("targets/first",payload,sizeof(payload)) && absent("targets/second"));
         if (!copy) CHECK(seen_second);
     }
-    if (collision && (worker_fault || strstr(case_name,"op-fails") || resolve_collision_error)) {
-        if (!partial_cancel) CHECK(exact("targets/second",payload,sizeof(payload)));
-        else CHECK(absent("targets/first") && exact("targets/second","occupied second",15));
-    }
-    if (collision && (strstr(case_name,"clean-cancel") || strstr(case_name,"bad-reply") ||
-                      strstr(case_name,"wrong-mode") || strstr(case_name,"short-reply"))) {
+    if (collision && strstr(case_name,"cancel")) {
         CHECK(exact("targets/first","occupied first",14));
         CHECK(exact("targets/second","occupied second",15));
     }
     if (same_copy) {
-        CHECK(same_name_generations==2 && same_path_splits==2);
         CHECK(exact("sources/first",payload,sizeof(payload)));
         CHECK(exact("sources/second",payload+1,sizeof(payload)-1));
-        CHECK(exact("sources/first-copy",payload,sizeof(payload)));
-        CHECK(exact("sources/second-copy",payload+1,sizeof(payload)-1));
+        CHECK(exact("sources/first_1",payload,sizeof(payload)));
+        CHECK(exact("sources/second_1",payload+1,sizeof(payload)-1));
+    } else if (collision && !strstr(case_name,"cancel")) {
+        CHECK(exact("targets/first","occupied first",14));
+        CHECK(exact("targets/second","occupied second",15));
+        CHECK(exact("targets/first_1",payload,sizeof(payload)));
+        CHECK(exact("targets/second_1",payload,sizeof(payload)));
     } else if (copy) {
         CHECK(exact("sources/first",payload,sizeof(payload)));
         CHECK(exact("sources/second",payload,sizeof(payload)));
     }
 }
+#endif
 int main(int argc,char **argv)
 {
     fixture(argc==3);case_name=argv[1];fixture(chdir(argv[2])==0);
     for (size_t i=0;i<sizeof(payload);++i) payload[i]=(unsigned char)(i%251);
+#ifdef TRANSFER_INCLUDE_WORKERS
     if (!strncmp(case_name,"worker-",7)) worker_case();
-    else if (!strncmp(case_name,"buffer-",7)) buffer_case();
+    else
+#endif
+    if (!strncmp(case_name,"buffer-",7)) buffer_case();
     else copy_case();
     if (!failed) printf("PASS %s\n",case_name);
     return failed?1:0;
