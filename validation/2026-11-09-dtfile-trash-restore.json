@@ -1,0 +1,174 @@
+{
+  "date": "2026-11-09",
+  "topic": "Trash input integrity, complete restore results and captured overwrite destinations",
+  "source_base": "e0219c8d491978930bc79a941906c46125cc4242",
+  "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "source_sha256": {
+    "cde/programs/dtfile/Trash.c": "8fe37850861bd94ead39354845048066dccc7d12524ff5cc0afd59d4d4d7e7b3",
+    "cde/programs/dtfile/FileManip.c": "d077bcdc1d49b89215955ca25accd32d9a6467016c82f755324e90db81725e8e",
+    "cde/programs/dtfile/Main.h": "4da87ed9843dcffc8afc48bc2e460e5f8ed68bcb5af639061a5962a2aa0f9fad",
+    "cde/programs/dtfile/Makefile.am": "c13a3f9e9b4881b73adf9ee8cfcc77886afd30a629f87b1f25f410ba4e24fecc",
+    "cde/programs/dtfile/XdgTrashInfo.c": "3df952f246b19c7ae69d2b42348fb6bfa8c8438ac794dd911e11c46e69b22162",
+    "cde/programs/dtfile/XdgTrashInfo.h": "974d13da009c3216c8c676fa034d56f3a6bf3a29cb140698101746fe1eed9871"
+  },
+  "focused_regressions": {
+    "Clang19:parser": {
+      "passed": 75,
+      "sanitizers": "address,undefined",
+      "receipt_sha256": "e22d2039baf4183e757dd7180b80a223e9691969c9853bd3975af348bb30eb12",
+      "build_seconds": 0.8591703220736235,
+      "coverage_limits": "Actual standalone module, test-only allocator seams; actual production wrapper with reported close/Xt-copy faults. Read EIO is a real stdio callback error after file data. No import/restore mutations or GUI."
+    },
+    "Clang19:permissions": {
+      "passed": 16,
+      "sanitizers": "address,undefined",
+      "receipt_sha256": "8b6a7f446dd7c6cac8f443557a0c00546ba9e36972f7d4d46070908c1ec1f969",
+      "build_seconds": 0.31479392712935805,
+      "coverage_limits": "Whole production permission functions; real private files, test-only syscall failures and root/NFS branch selectors. No native NFS or retained deletion authority claim. Return77 is an explicit unsupported case."
+    },
+    "Clang19:restore": {
+      "passed": 77,
+      "sanitizers": "address,undefined",
+      "receipt_sha256": "a1be269a024ce9df1f2edf724573b857bc9d0b7da67ee5e9368ecbba19db9025",
+      "build_seconds": 1.2189412149600685,
+      "coverage_limits": "Real production restore, callback, parent creation, ledger and regular-file FileManip and fsErase functions. UI widgets/cache/notifications and local resolver/permission adapters only; ToolTalk fixtures use an ASCII tokenizer and canonical-path DtEliminateDots adapter. Reported syscall faults are not native-device faults. No GUI, directory move, overwrite-dialog execution or ownership/privacy qualification."
+    },
+    "GCC:parser": {
+      "passed": 75,
+      "sanitizers": "address,undefined",
+      "receipt_sha256": "f424859ff9952686b0433c51e829d7b1ba2ecfbe594eefa88f51137d1faf6568",
+      "build_seconds": 0.3669636771082878,
+      "coverage_limits": "Actual standalone module, test-only allocator seams; actual production wrapper with reported close/Xt-copy faults. Read EIO is a real stdio callback error after file data. No import/restore mutations or GUI."
+    },
+    "GCC:permissions": {
+      "passed": 16,
+      "sanitizers": "address,undefined",
+      "receipt_sha256": "b01d05e4bb142aa242845ee8e90834a0a96905c022f6acce078e221d1bff45b6",
+      "build_seconds": 0.2679251730442047,
+      "coverage_limits": "Whole production permission functions; real private files, test-only syscall failures and root/NFS branch selectors. No native NFS or retained deletion authority claim. Return77 is an explicit unsupported case."
+    },
+    "GCC:restore": {
+      "passed": 77,
+      "sanitizers": "address,undefined",
+      "receipt_sha256": "5744ba5d9b49c7f8c8167454e895fe38cef5dd90c90d74a491f4010067b4e526",
+      "build_seconds": 1.569559259340167,
+      "coverage_limits": "Real production restore, callback, parent creation, ledger and regular-file FileManip and fsErase functions. UI widgets/cache/notifications and local resolver/permission adapters only; ToolTalk fixtures use an ASCII tokenizer and canonical-path DtEliminateDots adapter. Reported syscall faults are not native-device faults. No GUI, directory move, overwrite-dialog execution or ownership/privacy qualification."
+    }
+  },
+  "unchanged_parser_permission_functions": {
+    "DeletePermissionChild": true,
+    "CheckDeletePermission": true,
+    "CheckDeletePermissionRecur": true,
+    "ParseXdgTrashInfo": true,
+    "XdgTrashInfo.c": true,
+    "XdgTrashInfo.h": true
+  },
+  "old_source_controls": {
+    "parser": "one valid case passes; six malformed/I/O cases fail against unchanged e021 wrapper",
+    "permissions": "two real old-function directory-read/close failure cases fail",
+    "restore": "four unchanged old worker/callback/object behavior cases fail"
+  },
+  "component_checkpoint": [
+    {
+      "test": "check-trash-writer.py",
+      "seconds": 0.7613580049946904,
+      "exit": 0
+    },
+    {
+      "test": "check-trash-metadata.py",
+      "seconds": 0.9977014709729701,
+      "exit": 0
+    },
+    {
+      "test": "check-copy-transfer.py",
+      "seconds": 1.9861365240067244,
+      "exit": 0
+    },
+    {
+      "test": "check-transfer-completion.py",
+      "seconds": 3.9654296720400453,
+      "exit": 0
+    },
+    {
+      "test": "check-operation-outcome.py",
+      "seconds": 0.932970330119133,
+      "exit": 0
+    },
+    {
+      "test": "check-sync-controller.py",
+      "seconds": 23.894686185987666,
+      "exit": 0
+    }
+  ],
+  "native_build": {
+    "compiler": "Clang19 C23, Linux ARM64",
+    "jobs": 1,
+    "header_dependency_closure": {
+      "objects": 38,
+      "seconds": 26.82153552514501,
+      "reason": "Main.h const CheckAccess declaration changes its consumers; add XdgTrashInfo module."
+    },
+    "final_incremental_objects": 1,
+    "final_incremental_seconds": 1.4703333610668778,
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile",
+    "output_sha256": "0ebe3a87b904d13740d4726fc82f6870496d0614da05c9f4147c1ab2f1896c6e",
+    "output_mtime_ns": 1794256797164322761,
+    "full_stack_rebuilt": false
+  },
+  "actual_native_ui": {
+    "normal_build": true,
+    "executable": "/home/klukas/tmp/cde-hardening-20261102-01/trash-native-20261103-01/bin/dtfile",
+    "executable_sha256": "0ebe3a87b904d13740d4726fc82f6870496d0614da05c9f4147c1ab2f1896c6e",
+    "mapped_Xm_sha256": "b83aca86fbc9d50114e3da05025a2ad9ab514ca1101d25f88bd46f0ad7d5afc6",
+    "putback": {
+      "cancel": "pass: dialog dismissed, source/target unchanged",
+      "real_alt_f4": "pass: dialog dismissed, source/target unchanged; no synthetic WM_DELETE",
+      "confirm": "pass: captured target equals original trash bytes, trash payload absent"
+    },
+    "drag_out": {
+      "cancel_preserves_files_and_metadata": true,
+      "confirm_selected_target_exact_payload": true,
+      "original_putback_target_unchanged": true,
+      "source_and_mapping_removed_after_success": true,
+      "unrelated_files_unchanged": true,
+      "payload_sha256": "e110dae76777f32919459742d9d2d9e31164c50cb67432e781cde30914f5d4ac"
+    },
+    "source_and_assets_verified": {
+      "utc": "2026-11-09T20:58:49.408979+00:00",
+      "source_matches": true,
+      "source_mismatches": [],
+      "asset_count": 1833,
+      "asset_matches": true,
+      "asset_mismatches": [],
+      "elf_matches": true
+    },
+    "closed": {
+      "remaining_owned_processes": [],
+      "other_Xvfb_preserved": true,
+      "method": "SIGTERM to exact verified residual owned services and private Xvfb; no graceful whole-process-exit claim"
+    },
+    "limitations": [
+      "GUI run used normal executable, not an ASan-instrumented whole desktop.",
+      "ToolTalk request helper acknowledgment was not qualified; actual Trash UI actions were observed.",
+      "Pathname-based legacy restore is not a held-identity/crash-recoverable backend transaction."
+    ],
+    "putback_process_id": 2656185,
+    "drag_out_process_id": 2662966,
+    "capture_sha256": {
+      "dnd-debug-after-drop.png": "909dcedf7fc584e2f09387fe0ccdcdc02a3912565b387e34a3b3770fdf4abb75",
+      "dnd-debug-confirmed.png": "92d4d79ca1b2f457aad8e3160a2854dfcc889147e1419cbb448997af00f42907"
+    }
+  },
+  "docs": {
+    "command": "ckdocs check --config ckdocs.yml --strict",
+    "pages": 16,
+    "passed": true
+  },
+  "known_separate_checkpoint_failure": "Published e021 rpi4 GCC checkpoint failed three dtksh jobs(C.UTF-8) checks; this is not claimed green or fixed by this topic.",
+  "focused_compiler_versions": {
+    "gcc": "gcc (Debian 14.2.0-19) 14.2.0",
+    "clang": "clang-19"
+  },
+  "component_checkpoint_scope": "Six component checks passed before final dialog/request fixes; affected restore/request regressions were rerun afterward with Clang and GCC."
+}

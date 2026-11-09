@@ -124,6 +124,7 @@
 #include <Xm/PushBG.h>
 #include <Xm/SeparatoG.h>
 #include <Xm/MessageB.h>
+#include <Xm/DialogS.h>
 #include <Xm/MwmUtil.h>
 #include <Xm/XmP.h>
 #include <X11/Shell.h>
@@ -154,6 +155,7 @@
 #include "SharedMsgs.h"
 #include "dtcopy/fsrtns.h"
 #include "TrashMetadata.h"
+#include "XdgTrashInfo.h"
 
 #define AdditionalHeader (GETMESSAGE(27,98, "(Plus %d additional object(s))"))
 
@@ -224,6 +226,23 @@ typedef struct
 } Tt_msg_cache ;
 #endif /* SUN_PERF */
 
+/* Exact native intent, owned by the request, never reconstructed from text. */
+typedef enum {
+   RESTORE_NO_REPLACE,
+   RESTORE_REPLACE_APPROVED
+} RestoreReplacePolicy;
+typedef struct {
+   char *target;
+   RestoreReplacePolicy replacement;
+} RestoreTargetIntent;
+typedef struct {
+   uint32_t request_index;
+   char *source;
+   char *target;
+} RestoreConflict;
+#define RESTORE_PATH_LIMIT 65536U
+#define PIPEMSG_RESTORE_CONFLICT 11
+
 /* callback data RestoreFromTrash */
 typedef struct
 {
@@ -234,6 +253,8 @@ typedef struct
    int *rc;
    Tt_message msg;
    int child;
+   RestoreTargetIntent *intents;
+   RestoreConflict **conflicts;
 } RestoreFromTrashCBData;
 
 /* callback data EmptyTrash */
@@ -312,12 +333,12 @@ static int trashRecsizePipe = -1;
 static String CreateTrashFilename(
 			String baseName,
 			Boolean uniqueTest);
-static void MessageToFileList(
+static Boolean MessageToFileList(
 			Tt_message msg,
 			char ***file_list,
 			int *file_count);
 #ifdef SUN_PERF
-static void MessagesToFileList(
+static Boolean MessagesToFileList(
 			Tt_message *msg_list,
  			int msg_cnt,
 			char ***file_list,
@@ -347,9 +368,9 @@ static Boolean WriteTrashEntries( void ) ;
 static Boolean ImportXdgTrashHome( void );
 static Boolean ParseXdgTrashInfo(
                         const char *info_path,
+                        const char *original_base,
                         char **orig_path,
                         char **deletion_date);
-static char *XdgPercentDecode(const char *src);
 static String CurrentDeletionDate( void );
 static void XdgTrashTimerCB(
                         XtPointer client_data,
@@ -416,20 +437,21 @@ static void MoveToTrash(
 			Boolean do_verify_checks,
 			Tt_message msg,
                         String deletionDate) ;
-static void RestoreFromTrash(
+static int RestoreCountValid(int count);
+static Boolean RestoreFromTrash(
 			char **file_list,
 			int file_count,
 			char *target_host,
 			char *target_dir,
 			Tt_message msg,
-			Boolean CheckedAlready) ;
+                        RestoreTargetIntent *intents) ;
 static void EmptyTrash(
 			DeleteList *del_list,
 			int del_count,
 			int removeType,
 			Tt_message msg) ;
 static int CheckDeletePermissionRecur(
-                        char *dir);
+                        const char *dir);
 static void RestoreVerifyOk(
                         Widget w,
                         XtPointer client_data,
@@ -447,10 +469,9 @@ static int RestoreObject(
         FileOperationErrorProc errorHandler,
         Boolean checkForBusyDir,
         int type ,
-        Boolean CheckedAlready);
+        RestoreReplacePolicy replacement);
 static void CreateRestoreDialog(
-                        char  *source,
-                        char *target);
+                        RestoreConflict *conflict);
 static int EnsureParentDirs(
                         const char *target);
 
@@ -746,23 +767,26 @@ failed:
 static Boolean
 ImportXdgTrashHome( void )
 {
+   char *original_base;
    char *info_dir;
    char *files_dir;
    DIR *dir;
    struct dirent *entry;
    Boolean moved_any = False;
 
-   info_dir = XtMalloc(strlen(users_home_dir) + strlen("/.local/share/Trash/info") + 1);
-   sprintf(info_dir, "%s/.local/share/Trash/info", users_home_dir);
-
-   files_dir = XtMalloc(strlen(users_home_dir) + strlen("/.local/share/Trash/files") + 1);
-   sprintf(files_dir, "%s/.local/share/Trash/files", users_home_dir);
+   original_base = XtMalloc(strlen(users_home_dir) + strlen("/.local/share") + 1);
+   sprintf(original_base, "%s/.local/share", users_home_dir);
+   info_dir = XtMalloc(strlen(original_base) + strlen("/Trash/info") + 1);
+   sprintf(info_dir, "%s/Trash/info", original_base);
+   files_dir = XtMalloc(strlen(original_base) + strlen("/Trash/files") + 1);
+   sprintf(files_dir, "%s/Trash/files", original_base);
 
    dir = opendir(info_dir);
    if (dir == NULL)
    {
       XtFree(info_dir);
       XtFree(files_dir);
+      XtFree(original_base);
       return False;
    }
 
@@ -787,7 +811,7 @@ ImportXdgTrashHome( void )
       info_path = XtMalloc(strlen(info_dir) + strlen(entry->d_name) + 2);
       sprintf(info_path, "%s/%s", info_dir, entry->d_name);
 
-      if (!ParseXdgTrashInfo(info_path, &orig_path, &deletion_date))
+      if (!ParseXdgTrashInfo(info_path, original_base, &orig_path, &deletion_date))
       {
          XtFree(info_path);
          continue;
@@ -857,6 +881,7 @@ ImportXdgTrashHome( void )
    closedir(dir);
    XtFree(info_dir);
    XtFree(files_dir);
+   XtFree(original_base);
 
    if (moved_any)
    {
@@ -875,76 +900,56 @@ ImportXdgTrashHome( void )
 static Boolean
 ParseXdgTrashInfo(
         const char *info_path,
+        const char *original_base,
         char **orig_path,
         char **deletion_date)
 {
+   DtfileXdgTrashInfo record = {0};
    FILE *fp;
-   char buf[4096];
+   struct stat file_info;
+   int fd, status;
+   char *path_copy = NULL, *date_copy = NULL;
 
    *orig_path = NULL;
    *deletion_date = NULL;
-
-   fp = fopen(info_path, "r");
-   if (fp == NULL)
+   /* A metadata FIFO must not block the Xt thread waiting for a writer.
+    * Bind the type check to the opened object and reject a final symlink.
+    */
+   fd = open(info_path, O_RDONLY | O_NONBLOCK | O_NOFOLLOW | O_CLOEXEC);
+   if (fd < 0)
       return False;
-
-   while (fgets(buf, sizeof(buf), fp) != NULL)
+   if (fstat(fd, &file_info) != 0 || !S_ISREG(file_info.st_mode) ||
+       file_info.st_size < 0 ||
+       (uintmax_t)file_info.st_size > DTFILE_XDG_INFO_FILE_LIMIT)
    {
-      if (strncmp(buf, "Path=", 5) == 0)
-      {
-         char *val = buf + 5;
-         char *nl = strchr(val, '\n');
-         if (nl)
-           *nl = '\0';
-         *orig_path = XdgPercentDecode(val);
-      }
-      else if (strncmp(buf, "DeletionDate=", 13) == 0)
-      {
-         char *val = buf + 13;
-         char *nl = strchr(val, '\n');
-         if (nl)
-           *nl = '\0';
-         if (*val)
-           *deletion_date = XtNewString(val);
-      }
+      close(fd);
+      return False;
    }
-
-   fclose(fp);
-   return (*orig_path != NULL);
-}
-
-
-/*--------------------------------------------------------------------
- * XdgPercentDecode
- *   Decode %XX sequences in Path= values.
- *------------------------------------------------------------------*/
-static char *
-XdgPercentDecode(const char *src)
-{
-   size_t len = strlen(src);
-   char *out = XtMalloc(len + 1);
-   char *dst = out;
-   const char *p = src;
-
-   while (*p)
+   fp = fdopen(fd, "r");
+   if (fp == NULL)
    {
-      if (*p == '%' && isxdigit((unsigned char)p[1]) && isxdigit((unsigned char)p[2]))
-      {
-         int hi = p[1];
-         int lo = p[2];
-         hi = (hi <= '9') ? (hi - '0') : (toupper(hi) - 'A' + 10);
-         lo = (lo <= '9') ? (lo - '0') : (toupper(lo) - 'A' + 10);
-         *dst++ = (char)((hi << 4) | lo);
-         p += 3;
-      }
-      else
-      {
-         *dst++ = *p++;
-      }
+      close(fd);
+      return False;
    }
-
-   *dst = '\0';
-   return out;
+   status = DtfileReadXdgTrashInfo(fp, original_base, &record);
+   if (fclose(fp) != 0 && status == DTFILE_XDG_INFO_OK)
+      status = DTFILE_XDG_INFO_IO_ERROR;
+   if (status == DTFILE_XDG_INFO_OK)
+   {
+      /* Keep the reusable parser's malloc ownership separate from Xt callers. */
+      path_copy = XtNewString(record.path);
+      date_copy = XtNewString(record.deletion_date);
+   }
+   DtfileFreeXdgTrashInfo(&record);
+   if (path_copy == NULL || date_copy == NULL)
+   {
+      XtFree(path_copy);
+      XtFree(date_copy);
+      return False;
+   }
+   *orig_path = path_copy;
+   *deletion_date = date_copy;
+   return True;
 }
 
 
@@ -2121,7 +2126,11 @@ TrashRemoveHandler(
      return;
    }
 #ifndef SUN_PERF
-   MessageToFileList(msg, &file_list, &file_count);
+   if (!MessageToFileList(msg, &file_list, &file_count))
+   {
+      tttk_message_fail(msg, TT_DESKTOP_EINVAL, 0, 1);
+      return;
+   }
 #else
    /*
     * When the Dttrash_Remove handler "TrashRemoveHandler" is invoked for
@@ -2153,8 +2162,14 @@ TrashRemoveHandler(
     */
 
    if (global_msg_cnt > 0) {
-   MessagesToFileList(global_msg_list, global_msg_cnt,
-		&file_list, &file_count);
+   if (!MessagesToFileList(global_msg_list, global_msg_cnt, &file_list, &file_count))
+   {
+      int message_index;
+      for (message_index = 0; message_index < global_msg_cnt; ++message_index)
+         tttk_message_fail(global_msg_list[message_index], TT_DESKTOP_EINVAL, 0, 1);
+      global_msg_cnt = 0;
+      return;
+   }
 #endif /* SUN_PERF */
 
    if (file_count == 0)
@@ -2253,7 +2268,6 @@ TrashRemoveHandler(
 
 		msg_cache->msg_list = (Tt_message *)XtMalloc(sizeof(Tt_message) *
 					msg_cache->msg_cnt );
-		msg_cache->msg_list[msg_cache->msg_cnt] = NULL ;
 		memcpy((char *)msg_cache->msg_list, (char *)global_msg_list,
 				sizeof(Tt_message) * msg_cache->msg_cnt ) ;
 		dlog = 	(Widget)_DtMessageDialog(toplevel, title, message, NULL, TRUE,
@@ -2307,10 +2321,22 @@ RemoveOkCB(
 
    /* remove files */
 #ifndef SUN_PERF
-   MessageToFileList(global, &file_list, &file_count);
+   if (!MessageToFileList(global, &file_list, &file_count))
+   {
+      tttk_message_fail(global, TT_DESKTOP_EINVAL, 0, 1);
+      global = 0;
+      return;
+   }
 #else
-   MessagesToFileList( current_msg_cache->msg_list, current_msg_cache->msg_cnt,
-				&file_list, &file_count);
+   if (!MessagesToFileList(current_msg_cache->msg_list, current_msg_cache->msg_cnt,
+                           &file_list, &file_count))
+   {
+      for (i = 0; i < current_msg_cache->msg_cnt; ++i)
+         tttk_message_fail(current_msg_cache->msg_list[i], TT_DESKTOP_EINVAL, 0, 1);
+      XtFree((char *)current_msg_cache->msg_list);
+      XtFree((char *)current_msg_cache);
+      return;
+   }
 #endif /* SUN_PERF */
 
    {
@@ -2415,7 +2441,11 @@ TrashRemoveNoConfirmHandler(
      return;
    }
 
-   MessageToFileList(msg, &file_list, &file_count);
+   if (!MessageToFileList(msg, &file_list, &file_count))
+   {
+      if (msg != 0) tttk_message_fail(msg, TT_DESKTOP_EINVAL, 0, 1);
+      return;
+   }
    {
       String deletionDate = CurrentDeletionDate();
       MoveToTrash(file_list, file_count, False, msg, deletionDate);
@@ -2453,200 +2483,132 @@ TrashRemoveNoConfirmHandler(
  *
  ************************************************************************/
 
-static void
+/* On success, append consumes file. Failure leaves it with the caller. */
+static Boolean
+TrashAppendMessageFile(char ***files, int *count, char *file)
+{
+   char **grown;
+   if (file == NULL || *count < 0 || *count == INT_MAX ||
+       !RestoreCountValid(*count + 1))
+   { errno = EINVAL; return False; }
+   grown = (char **)XtRealloc((char *)*files, ((size_t)*count + 1) * sizeof(*grown));
+   if (grown == NULL) { errno = ENOMEM; return False; }
+   *files = grown;
+   grown[(*count)++] = file;
+   return True;
+}
+
+static Boolean
 MessageToFileList(
         Tt_message msg,
-	char ***file_list,
-	int *file_count)
+        char ***file_list,
+        int *file_count)
 {
-   char *dir;
-   int args;
-   int arg;
-   int dirlen;
+   char *owned_dir = NULL, *owned_value = NULL;
+   const char *dir = "";
+   size_t dirlen, separator;
+   int args, arg, i;
+   char *file;
 
    *file_count = 0;
-   *file_list = 0;
-
-   args = tt_message_args_count( msg );
-   if (tt_is_err(tt_int_error( args ))) {
-	   args = 0;
+   *file_list = NULL;
+   args = tt_message_args_count(msg);
+   if (tt_is_err(tt_int_error(args))) goto failed;
+   owned_dir = tt_message_file(msg);
+   if (tt_is_err(tt_ptr_error(owned_dir)))
+   { owned_dir = NULL; goto failed; }
+   if (owned_dir != NULL) dir = owned_dir;
+   dirlen = strnlen(dir, RESTORE_PATH_LIMIT + 1);
+   if (dirlen > RESTORE_PATH_LIMIT) goto failed;
+   if (args <= 0)
+   {
+      if (owned_dir == NULL || dirlen == 0)
+      { if (owned_dir != NULL) tt_free(owned_dir); return True; }
+      file = XtNewString(dir);
+      if (!TrashAppendMessageFile(file_list, file_count, file))
+      { XtFree(file); goto failed; }
+      tt_free(owned_dir);
+      return True;
    }
-
-   dir = tt_message_file( msg );
-   if ((tt_is_err(tt_ptr_error( dir ))) || (dir == 0)) {
-	   dir = "";
-   } else {
-     if (args <= 0) {
-        /* No args means use tt_message_file() as is */
-       *file_list = (char **)
-         XtRealloc((char *)(*file_list),
-                   (*file_count + 1)*sizeof(char *));
-       (*file_list)[*file_count] = XtNewString(dir);
-       (*file_count)++;
-       tt_free(dir);
-       return;
-     }
-     if (dir[strlen(dir)] != '/') {
-       char *newdir;
-       if (strcmp(dir, "/") == 0)
-       {
-         newdir = (char *)tt_malloc( strlen(dir)+1 );
-         strcpy( newdir, dir );
-       }
-       else
-       {
-         newdir = (char *)tt_malloc( strlen(dir)+2 );
-         strcpy( newdir, dir );
-         strcat( newdir, "/" );
-       }
-       tt_free( dir );
-       dir = newdir;
-     }
+   separator = dirlen != 0 && dir[dirlen - 1] != '/';
+   for (arg = 0; arg < args; ++arg)
+   {
+      char *value;
+      owned_value = tt_message_arg_val(msg, arg);
+      if (tt_is_err(tt_ptr_error(owned_value)))
+      { owned_value = NULL; goto failed; }
+      if (owned_value == NULL) continue;
+      /* The existing ToolTalk contract uses a space-separated first argument;
+       * later arguments each carry one value. Keep that grammar unchanged.
+       */
+      for (value = DtStrtok(owned_value, arg == 0 ? " " : ""); value;
+           value = DtStrtok(NULL, arg == 0 ? " " : ""))
+      {
+         size_t value_length = strcmp(value, "/") == 0 ? 0 :
+                               strnlen(value, RESTORE_PATH_LIMIT + 1);
+         size_t length;
+         if (value_length > RESTORE_PATH_LIMIT || dirlen > RESTORE_PATH_LIMIT - separator ||
+             value_length > RESTORE_PATH_LIMIT - dirlen - separator) goto failed;
+         length = dirlen + separator + value_length;
+         file = XtMalloc(length + 1);
+         if (file == NULL) goto failed;
+         memcpy(file, dir, dirlen);
+         if (separator) file[dirlen] = '/';
+         memcpy(file + dirlen + separator, value, value_length);
+         file[length] = 0;
+         if (!TrashAppendMessageFile(file_list, file_count, DtEliminateDots(file)))
+         { XtFree(file); goto failed; }
+      }
+      tt_free(owned_value);
+      owned_value = NULL;
    }
-   /* Invariant: dir can now be safely concatenated to form a valid path */
-   dirlen = strlen(dir);
-   for (arg = 0; arg < args; arg++) {
-     char *val;
-     char *val2free;
-     char *white;
-     String file;
-     val = tt_message_arg_val( msg, arg );
-     if ((tt_is_err(tt_ptr_error( val ))) || (val == 0)) {
-       continue;
-     }
-     val2free = val;
-     white = "";
-     if (arg == 0) {
-       /* Arg 0 is a space-separated list */
-       white = " ";
-     }
-     for (val = DtStrtok(val, white); val; val = DtStrtok(0, white))
-     {
-       if (strcmp(val, "/") == 0)
-       {
-         file = (char *)XtMalloc( dirlen + 1 );
-         strcpy( file, dir );
-       }
-       else
-       {
-         file = (char *)XtMalloc( dirlen + strlen(val) + 1 );
-         strcpy( file, dir );
-         strcat( file, val );
-       }
-       *file_list = (char **)
-         XtRealloc((char *)(*file_list),
-                   (*file_count + 1)*sizeof(char *));
-       (*file_list)[*file_count] = DtEliminateDots(file);
-       (*file_count)++;
-     }
-     tt_free( val2free );
-   }
-   tt_free( dir );
+   if (owned_dir != NULL) tt_free(owned_dir);
+   return True;
+failed:
+   if (owned_value != NULL) tt_free(owned_value);
+   if (owned_dir != NULL) tt_free(owned_dir);
+   /* Every appended entry has a checked allocation and known capacity. */
+   for (i = 0; i < *file_count; ++i) XtFree((*file_list)[i]);
+   XtFree((char *)*file_list);
+   *file_list = NULL;
+   *file_count = 0;
+   return False;
 }
 
 #ifdef SUN_PERF
-static void
+static Boolean
 MessagesToFileList(
         Tt_message *msg_list,
         int msg_cnt,
-	char ***file_list,
-	int *file_count)
+        char ***file_list,
+        int *file_count)
 {
-   char *dir;
-   int args;
-   int arg;
-   int dirlen;
-   int num_msgs = 0 ;
-   Tt_message msg;
-
+   char **part = NULL;
+   int part_count = 0, i, j;
+   *file_list = NULL;
    *file_count = 0;
-   *file_list = 0;
-
- for (num_msgs = 0 ; num_msgs < msg_cnt ; num_msgs++)
- {
-   msg = msg_list[num_msgs] ;
-
-   args = tt_message_args_count( msg );
-   if (tt_is_err(tt_int_error( args ))) {
-	   args = 0;
+   if (msg_cnt < 0 || (msg_cnt > 0 && msg_list == NULL)) return False;
+   for (i = 0; i < msg_cnt; ++i)
+   {
+      if (!MessageToFileList(msg_list[i], &part, &part_count)) goto failed;
+      for (j = 0; j < part_count; ++j)
+      {
+         if (!TrashAppendMessageFile(file_list, file_count, part[j])) goto failed;
+         part[j] = NULL; /* Transfer only after checked admission. */
+      }
+      XtFree((char *)part);
+      part = NULL;
+      part_count = 0;
    }
-
-   dir = tt_message_file( msg );
-   if ((tt_is_err(tt_ptr_error( dir ))) || (dir == 0)) {
-	   dir = "";
-   } else {
-     if (args <= 0) {
-        /* No args means use tt_message_file() as is */
-       *file_list = (char **)
-         XtRealloc((char *)(*file_list),
-                   (*file_count + 1)*sizeof(char *));
-       (*file_list)[*file_count] = XtNewString(dir);
-       (*file_count)++;
-       tt_free(dir);
-       return;
-     }
-     if (dir[strlen(dir)] != '/') {
-       char *newdir;
-       if (strcmp(dir, "/") == 0)
-       {
-         newdir = (char *)tt_malloc( strlen(dir)+1 );
-         strcpy( newdir, dir );
-       }
-       else
-       {
-         newdir = (char *)tt_malloc( strlen(dir)+2 );
-         strcpy( newdir, dir );
-         strcat( newdir, "/" );
-       }
-       tt_free( dir );
-       dir = newdir;
-     }
-   }
-   /* Invariant: dir can now be safely concatenated to form a valid path */
-   dirlen = strlen(dir);
-   for (arg = 0; arg < args; arg++) {
-     char *val;
-     char *val2free;
-     char *white;
-     String file;
-     val = tt_message_arg_val( msg, arg );
-     if ((tt_is_err(tt_ptr_error( val ))) || (val == 0)) {
-       continue;
-     }
-     val2free = val;
-     white = "";
-     if (arg == 0) {
-       /* Arg 0 is a space-separated list */
-       white = " ";
-     }
-     for (val = DtStrtok(val, white); val; val = DtStrtok(0, white))
-     {
-       if (strcmp(val, "/") == 0)
-       {
-         file = (char *)XtMalloc( dirlen + 1 );
-         strcpy( file, dir );
-       }
-       else if (strcmp(val, "/") == 0 && dirlen == 0)
-       {
-         file = (char *)XtMalloc( strlen(val) + 1 );
-         strcpy( file, val );
-       }
-       else
-       {
-         file = (char *)XtMalloc( dirlen + strlen(val) + 1 );
-         strcpy( file, dir );
-         strcat( file, val );
-       }
-       *file_list = (char **)
-         XtRealloc((char *)(*file_list),
-                   (*file_count + 1)*sizeof(char *));
-       (*file_list)[*file_count] = DtEliminateDots(file);
-       (*file_count)++;
-     }
-     tt_free( val2free );
-   }
-   tt_free( dir );
- }
+   return True;
+failed:
+   for (j = 0; j < part_count; ++j) XtFree(part[j]);
+   XtFree((char *)part);
+   for (j = 0; j < *file_count; ++j) XtFree((*file_list)[j]);
+   XtFree((char *)*file_list);
+   *file_list = NULL;
+   *file_count = 0;
+   return False;
 }
 #endif /* SUN_PERF */
 
@@ -3097,12 +3059,19 @@ TrashRestoreHandler(
      return;
    }
 
+   if (!MessageToFileList(msg, &file_list, &file_count) ||
+       !RestoreCountValid(file_count))
+   {
+      XtFree((char *)file_list); /* Empty builder result; no transferred entries. */
+      if (msg != 0) tttk_message_fail(msg, TT_DESKTOP_EINVAL, 0, 1);
+      return;
+   }
+
    /* Desensitize remove & restore buttons, until we're done */
    XtSetSensitive(*removeBtn, False);
    XtSetSensitive(*restoreBtn, False);
 
-   MessageToFileList(msg, &file_list, &file_count);
-   RestoreFromTrash(file_list, file_count, NULL, NULL, msg,False);
+   RestoreFromTrash(file_list, file_count, NULL, NULL, msg,NULL);
 }
 
 
@@ -3138,7 +3107,7 @@ Restore(
        file_view_data = trashFileMgrData->popup_menu_icon;
 
        /* The object would have been deleted if the following condn is true */
-       if(!file_view_data && !trashFileMgrData->selected_file_count)
+       if(!file_view_data)
            return;
        trashFileMgrData->popup_menu_icon = NULL;
 
@@ -3154,15 +3123,15 @@ Restore(
    else
       match = True;
 
-   /* Desensitize remove & restore buttons, until we're done */
-   XtSetSensitive(*removeBtn, False);
-   XtSetSensitive(*restoreBtn, False);
-   XmUpdateDisplay(w);
-
+   file_count = match ? trashFileMgrData->selected_file_count : 1;
+   if (!RestoreCountValid(file_count))
+   {
+      _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(EINVAL), NULL, HelpRequestCB);
+      return;
+   }
    if (match)
    {
-      file_count = trashFileMgrData->selected_file_count;
-      file_list = (char **)XtMalloc(file_count * sizeof(char *));
+      file_list = (char **)XtMalloc((size_t)file_count * sizeof(char *));
       for (i = 0; i < file_count; i++)
       {
          file_view_data = trashFileMgrData->selection_list[file_count - 1 - i];
@@ -3176,8 +3145,13 @@ Restore(
       file_list[0] = XtNewString(file_view_data->file_data->file_name);
    }
 
+   /* Snapshot selection strings before display updates can dispatch callbacks. */
+   XtSetSensitive(*removeBtn, False);
+   XtSetSensitive(*restoreBtn, False);
+   XmUpdateDisplay(w);
+
    /* Start the background process that will do the restore */
-   RestoreFromTrash(file_list, file_count, NULL, NULL, NULL,False);
+   RestoreFromTrash(file_list, file_count, NULL, NULL, NULL,NULL);
 }
 
 
@@ -3312,6 +3286,12 @@ MoveOutOfTrashCan(
    char *target_dir;
    char **file_list;
 
+   if (!RestoreCountValid(file_count) || file_set == NULL)
+   {
+      _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(EINVAL), NULL, HelpRequestCB);
+      return;
+   }
+
    /*
     * Get target host and directory
     */
@@ -3321,12 +3301,12 @@ MoveOutOfTrashCan(
    /*
     * Create file list and call RestoreFromTrash
     */
-   file_list = (char **)XtMalloc(file_count * sizeof(char *));
+   file_list = (char **)XtMalloc((size_t)file_count * sizeof(char *));
 
    for (i = 0;  i < file_count; i++)
       file_list[i] = XtNewString(file_set[i]);
 
-   RestoreFromTrash(file_list, file_count, target_host, target_dir, NULL,False);
+   RestoreFromTrash(file_list, file_count, target_host, target_dir, NULL,NULL);
 }
 
 
@@ -4233,6 +4213,172 @@ MoveToTrash(
  *   Main routine of background process for RestoreFromTrash
  *------------------------------------------------------------------*/
 
+/* Restore completion is an all-or-nothing protocol record. These writes run
+ * only in the forked restore child; a closed parent pipe must not kill it
+ * before owned paths can be released. */
+#include <signal.h>
+static int
+RestoreWriteAll(int fd, const void *data, size_t length)
+{
+   const char *bytes = data;
+   while (length != 0)
+   {
+      ssize_t n = write(fd, bytes, length);
+      if (n < 0 && errno == EINTR)
+         continue;
+      if (n <= 0)
+      {
+         if (n == 0) errno = EIO;
+         return -1;
+      }
+      bytes += n;
+      length -= (size_t)n;
+   }
+   return 0;
+}
+
+static int
+RestoreWriteResults(int fd, const int *results, int count)
+{
+   struct sigaction ignored, previous;
+   short tag = PIPEMSG_DONE;
+   int result, saved;
+   if (count < 0 || (size_t)count > SIZE_MAX / sizeof(*results))
+      return -1;
+   memset(&ignored, 0, sizeof(ignored));
+   ignored.sa_handler = SIG_IGN;
+   sigemptyset(&ignored.sa_mask);
+   if (sigaction(SIGPIPE, &ignored, &previous) != 0)
+      return -1;
+   result = RestoreWriteAll(fd, &tag, sizeof(tag));
+   if (result == 0)
+      result = RestoreWriteAll(fd, results, (size_t)count * sizeof(*results));
+   saved = errno;
+   (void)sigaction(SIGPIPE, &previous, NULL);
+   errno = saved;
+   return result;
+}
+
+static int
+RestoreCountValid(int count)
+{
+   return count > 0 && count <= INT_MAX / (int)sizeof(int) &&
+          (size_t)count <= UINT_MAX / sizeof(RestoreConflict *) &&
+          (size_t)count <= UINT_MAX / sizeof(RestoreTargetIntent);
+}
+
+static void
+RestoreFreeConflict(RestoreConflict *conflict)
+{
+   if (conflict == NULL) return;
+   free(conflict->source);
+   free(conflict->target);
+   free(conflict);
+}
+
+static void
+RestoreReleaseInputs(char **files, int count, char *host, char *directory,
+                     RestoreTargetIntent *intents)
+{
+   int i;
+   for (i = 0; i < count; ++i)
+   {
+      if (files != NULL) XtFree(files[i]);
+      if (intents != NULL) free(intents[i].target);
+   }
+   XtFree((char *)files);
+   XtFree(host);
+   XtFree(directory);
+   free(intents);
+}
+
+static void
+RestoreReleaseRequest(RestoreFromTrashCBData *request)
+{
+   int i;
+   if (request == NULL) return;
+   RestoreReleaseInputs(request->file_list, request->file_count, request->target_host,
+                        request->target_dir, request->intents);
+   if (request->conflicts != NULL)
+      for (i = 0; i < request->file_count; ++i) RestoreFreeConflict(request->conflicts[i]);
+   free(request->conflicts);
+   free(request->rc);
+   free(request);
+}
+
+static int
+RestoreWriteConflict(int fd, int index, const char *source, const char *target)
+{
+   struct sigaction ignored, previous;
+   uint32_t fields[3];
+   short tag = PIPEMSG_RESTORE_CONFLICT;
+   size_t sourceLength, targetLength;
+   int result, saved;
+   if (index < 0 || source == NULL || target == NULL ||
+       source[0] != '/' || target[0] != '/') { errno = EINVAL; return -1; }
+   sourceLength = strnlen(source, RESTORE_PATH_LIMIT + 1);
+   targetLength = strnlen(target, RESTORE_PATH_LIMIT + 1);
+   if (sourceLength > RESTORE_PATH_LIMIT || targetLength > RESTORE_PATH_LIMIT)
+   { errno = ENAMETOOLONG; return -1; }
+   fields[0] = (uint32_t)index;
+   fields[1] = (uint32_t)sourceLength;
+   fields[2] = (uint32_t)targetLength;
+   memset(&ignored, 0, sizeof(ignored));
+   ignored.sa_handler = SIG_IGN;
+   sigemptyset(&ignored.sa_mask);
+   if (sigaction(SIGPIPE, &ignored, &previous) != 0) return -1;
+   result = RestoreWriteAll(fd, &tag, sizeof(tag));
+   if (result == 0) result = RestoreWriteAll(fd, fields, sizeof(fields));
+   if (result == 0) result = RestoreWriteAll(fd, source, sourceLength);
+   if (result == 0) result = RestoreWriteAll(fd, target, targetLength);
+   saved = errno;
+   (void)sigaction(SIGPIPE, &previous, NULL);
+   errno = saved;
+   return result;
+}
+
+/* Return the last native component without changing any caller-owned bytes.
+ * Trailing separators belong to directory spelling, never to the basename.
+ * Known legacy metadata may be relative or host-prefixed: explicit DND needs
+ * only its leaf. Source and final target absoluteness are checked separately. */
+static int
+RestoreLeaf(const char *path, const char **leaf, size_t *length)
+{
+   const char *end, *start;
+   if (path == NULL || path[0] == '\0') return -1;
+   end = path + strlen(path);
+   while (end > path && end[-1] == '/') --end;
+   start = end;
+   while (start > path && start[-1] != '/') --start;
+   *length = (size_t)(end - start);
+   if (*length == 0 || (*length == 1 && start[0] == '.') ||
+       (*length == 2 && start[0] == '.' && start[1] == '.')) return -1;
+   *leaf = start;
+   return 0;
+}
+
+static char *
+RestoreDestination(const char *directory, const char *original)
+{
+   const char *leaf;
+   size_t leafLength, dirLength;
+   char *target;
+   if (directory == NULL || directory[0] != '/' ||
+       RestoreLeaf(original, &leaf, &leafLength) != 0)
+   { errno = EINVAL; return NULL; }
+   dirLength = strlen(directory);
+   while (dirLength > 1 && directory[dirLength - 1] == '/') --dirLength;
+   if (dirLength > SIZE_MAX - leafLength - 2)
+   { errno = ENAMETOOLONG; return NULL; }
+   target = malloc(dirLength + leafLength + 2);
+   if (target == NULL) return NULL;
+   memcpy(target, directory, dirLength);
+   if (dirLength != 1) target[dirLength++] = '/';
+   memcpy(target + dirLength, leaf, leafLength);
+   target[dirLength + leafLength] = '\0';
+   return target;
+}
+
 static void
 RestoreProcess(
 	int pipe_fd,
@@ -4241,41 +4387,34 @@ RestoreProcess(
 	char *target_host,
 	char *target_dir,
 	int *rc,
-	Boolean CheckedAlready)
+        const RestoreTargetIntent *intents)
 {
-   int i, j, rv;
-   char *full_dirname;
+   int i, j;
+   char *full_dirname = NULL;
    char *from, *to;
-   char *ptr;
-   char buf[MAX_PATH];
-   short pipe_msg;
    int status;
-   char **RestoreList= NULL;
+
+   if (!RestoreCountValid(file_count) || rc == NULL) return;
+   for (i = 0; i < file_count; ++i) rc[i] = -1;
 
    /* get full path name of target directory */
-   if (target_dir)
+   if (target_dir && intents == NULL)
    {
       Tt_status tt_status;
       full_dirname = ResolveLocalPathName(target_host, target_dir,
                                           NULL, home_host_name, &tt_status);
-      if( TT_OK != tt_status )
+      if (TT_OK != tt_status || full_dirname == NULL || full_dirname[0] != '/')
       {
-        /* send return codes back trough the pipe */
-        pipe_msg = PIPEMSG_DONE;
-        rc[0] = -1;
         DPRINTF(("RestoreProcess: Unable to Resolve local path name\n"));
-        rv = write(pipe_fd, &pipe_msg, sizeof(short));
-        rv = write(pipe_fd, rc, sizeof(int));
-        return;
+        goto finished;
       }
    }
-   else
-      full_dirname = NULL;
 
    /* restore the files */
    for (i = 0; i < file_count; i++)
    {
       /* Locate file in trash list */
+      if (file_list[i] == NULL) continue;
       for (j = 0; j < numTrashItems; j++)
       {
          /* file_list[i] may be a complete path or just a file name */
@@ -4287,7 +4426,12 @@ RestoreProcess(
       }
 
       /* determine source and target for the move */
-      if (target_dir == NULL)
+      if (intents != NULL)
+      {
+         from = file_list[i];
+         to = intents[i].target;
+      }
+      else if (target_dir == NULL)
       {
          /* this is a normal restore */
          if (j < numTrashItems)
@@ -4304,40 +4448,42 @@ RestoreProcess(
       else
       {
          /* this is a drag&drop from the trash can to target_dir */
-         from = file_list[i];
-         if (j < numTrashItems)
-            ptr = strrchr(trashCan[j].intOrig, '/');
-         else
-            ptr = strrchr(file_list[i], '/');
-         strcpy(buf, full_dirname);
-         strcat(buf, ptr);
-         to = buf;
+         if (j == numTrashItems && file_list[i][0] != '/') continue;
+         from = j < numTrashItems ? trashCan[j].intNew : file_list[i];
+         to = RestoreDestination(full_dirname,
+                    j < numTrashItems ? trashCan[j].intOrig : file_list[i]);
       }
 
       if (to != NULL)
       {
 
          status = RestoreObject((Widget) (intptr_t) pipe_fd, MOVE_FILE, from,to,
-			TRUE, FileOpError, False, NOT_DESKTOP,CheckedAlready);
+                        False, FileOpError, False, NOT_DESKTOP,
+                        intents != NULL ? intents[i].replacement : RESTORE_NO_REPLACE);
          /* restore was successful */
          if(status == (int) True)
 	   rc[i] = 0;
 	 else if(status == (int) False)
 	   rc[i] = -1;
-	 else
-	   rc[i] = SKIP_FILE;
+         else if (status == SKIP_FILE)
+         {
+            if (RestoreWriteConflict(pipe_fd, i, from, to) != 0)
+            {
+               if (target_dir != NULL && intents == NULL) free(to);
+               goto finished;
+            }
+            rc[i] = SKIP_FILE;
+         }
       }
       else
          /* restore failed */
          rc[i] = -1;
+      if (target_dir != NULL && intents == NULL) free(to);
    }
 
-   /* send return codes back trough the pipe */
-   pipe_msg = PIPEMSG_DONE;
+finished:
    DPRINTF(("RestoreProcess: sending DONE\n"));
-   rv = write(pipe_fd, &pipe_msg, sizeof(short));
-   rv = write(pipe_fd, rc, file_count * sizeof(int));
-
+   (void)RestoreWriteResults(pipe_fd, rc, file_count);
    XtFree(full_dirname);
 }
 
@@ -4346,6 +4492,75 @@ RestoreProcess(
  * RestorePipeCB:
  *   Read and process data sent through the pipe.
  *------------------------------------------------------------------*/
+
+/* Never expose partially received successes to the mapping-removal loop. */
+static int
+RestoreReadConflict(int fd, RestoreFromTrashCBData *request)
+{
+   uint32_t fields[3];
+   RestoreConflict *conflict;
+   const char *leaf;
+   size_t leafLength;
+   if (!RestoreCountValid(request->file_count) || request->conflicts == NULL ||
+       PipeRead(fd, fields, sizeof(fields)) != sizeof(fields) ||
+       fields[0] >= (uint32_t)request->file_count || request->conflicts[fields[0]] != NULL ||
+       fields[1] == 0 || fields[1] > RESTORE_PATH_LIMIT ||
+       fields[2] == 0 || fields[2] > RESTORE_PATH_LIMIT) return -1;
+   conflict = calloc(1, sizeof(*conflict));
+   if (conflict == NULL) return -1;
+   conflict->request_index = fields[0];
+   conflict->source = malloc((size_t)fields[1] + 1);
+   conflict->target = malloc((size_t)fields[2] + 1);
+   if (conflict->source == NULL || conflict->target == NULL ||
+       PipeRead(fd, conflict->source, (int)fields[1]) != (int)fields[1] ||
+       PipeRead(fd, conflict->target, (int)fields[2]) != (int)fields[2] ||
+       memchr(conflict->source, 0, fields[1]) != NULL ||
+       memchr(conflict->target, 0, fields[2]) != NULL) goto failed;
+   conflict->source[fields[1]] = 0;
+   conflict->target[fields[2]] = 0;
+   if (conflict->source[0] != '/' || conflict->target[0] != '/' ||
+       RestoreLeaf(conflict->source, &leaf, &leafLength) != 0 ||
+       RestoreLeaf(conflict->target, &leaf, &leafLength) != 0) goto failed;
+   request->conflicts[fields[0]] = conflict;
+   return 0;
+failed:
+   RestoreFreeConflict(conflict);
+   return -1;
+}
+
+static int
+RestoreReadResults(int fd, int *results, int count, RestoreConflict *const *conflicts)
+{
+   int i, bytes;
+   if (count < 0 || count > INT_MAX / (int)sizeof(*results)) return -1;
+   bytes = count * (int)sizeof(*results);
+   if (PipeRead(fd, results, bytes) == bytes)
+   {
+      for (i = 0; i < count; ++i)
+         if ((results[i] != 0 && results[i] != -1 && results[i] != SKIP_FILE) ||
+             ((results[i] == SKIP_FILE) != (conflicts != NULL && conflicts[i] != NULL)))
+            break;
+      if (i == count) return 0;
+   }
+   for (i = 0; i < count; ++i) results[i] = -1;
+   return -1;
+}
+
+static void
+RestoreUpdateDestination(const char *target)
+{
+   char *directory, *slash;
+   size_t length;
+   if (target == NULL || target[0] != '/') return;
+   directory = strdup(target);
+   if (directory == NULL) return;
+   length = strlen(directory);
+   while (length > 1 && directory[length - 1] == '/') directory[--length] = 0;
+   slash = strrchr(directory, '/');
+   if (slash == directory) slash[1] = 0; else *slash = 0;
+   UpdateDirectory(NULL, home_host_name, directory);
+   free(directory);
+}
 
 static void
 RestorePipeCB(
@@ -4358,25 +4573,33 @@ RestorePipeCB(
    int i, j, k, n, rc;
    char *title, *err_msg, *err_arg;
    String buf;
-   int bufsize,index;
-   int RestoreIndex=0;
-   char **ToRestoreList=NULL;
-   char **FromRestoreList=NULL;
-   char *target_host,*target_dir;
-   Tt_status msg;
+   int bufsize;
+   RestoreConflict **conflicts = cb_data->conflicts;
+   int count = cb_data->file_count;
+
+   for (i = 0; i < cb_data->file_count; ++i) cb_data->rc[i] = -1;
 
    /* read the next msg from the pipe */
    pipe_msg = -1;
    n = PipeRead(*fd, &pipe_msg, sizeof(short));
+   if (n != sizeof(short)) pipe_msg = -1;
    DPRINTF(("RestorePipeCB: n %d, pipe_msg %d\n", n, pipe_msg));
 
    switch (pipe_msg)
    {
+      case PIPEMSG_RESTORE_CONFLICT:
+         if (RestoreReadConflict(*fd, cb_data) == 0) return;
+         break;
       case PIPEMSG_FILEOP_ERROR:
-         PipeRead(*fd, &rc, sizeof(int));
+         if (PipeRead(*fd, &rc, sizeof(int)) != sizeof(int)) break;
          err_msg = PipeReadString(*fd);
          err_arg = PipeReadString(*fd);
-            FileOperationError(toplevel, err_msg, err_arg);
+         if (err_msg == NULL)
+         {
+            XtFree(err_arg);
+            break;
+         }
+         FileOperationError(toplevel, err_msg, err_arg);
          /* This call will popup an error dialog.
 
             FileOperationError(toplevel, err_msg, err_arg);
@@ -4390,7 +4613,7 @@ RestorePipeCB(
          XtFree(err_arg);
          return;
       case PIPEMSG_DONE:
-         PipeRead(*fd, cb_data->rc, cb_data->file_count * sizeof(int));
+         (void)RestoreReadResults(*fd, cb_data->rc, cb_data->file_count, conflicts);
          break;
 
       default:
@@ -4402,7 +4625,7 @@ RestorePipeCB(
    /* close the pipe and cancel the callback */
    DPRINTF(("RestorePipeCB: done\n"));
    close(*fd);
-   XtRemoveInput(*id);
+   if (id != NULL) XtRemoveInput(*id);
 
    buf = NULL;
    bufsize = 0;
@@ -4420,24 +4643,21 @@ RestorePipeCB(
          }
       }
 
-      if (cb_data->rc[i] == SKIP_FILE)
+      if (cb_data->rc[i] == SKIP_FILE && conflicts[i] != NULL)
       {
-	 ToRestoreList = (char **) XtRealloc((char *)ToRestoreList,sizeof(char *) *
-				    (++RestoreIndex));
-	 ToRestoreList[RestoreIndex-1] = XtNewString(trashCan[j].intOrig);
-	 FromRestoreList = (char **) XtRealloc((char *)FromRestoreList,sizeof(char *) *
-				    RestoreIndex);
-	 FromRestoreList[RestoreIndex-1] = XtNewString( trashCan[j].intNew );
 	 continue;
       }
       /* Check the return code from the restore */
       else if (cb_data->rc[i] == 0)
       {
+         if (cb_data->intents != NULL)
+            RestoreUpdateDestination(cb_data->intents[i].target);
          /* restore was successful: remove the file from the trash list */
          if (j < numTrashItems)
          {
             /* arrange for the source directory to be updated */
-            UpdateDirectoryOf(trashCan[j].intOrig);
+            if (cb_data->intents == NULL && cb_data->target_dir == NULL)
+               RestoreUpdateDestination(trashCan[j].intOrig);
 
             /* Remove this entry from the trash list */
             XtFree ((char *) trashCan[j].intNew);
@@ -4463,6 +4683,8 @@ RestorePipeCB(
             AddString(&buf, &bufsize, cb_data->file_list[i], restore_header);
          XtFree(restore_header);
       }
+      RestoreFreeConflict(conflicts[i]);
+      conflicts[i] = NULL;
    }
 
    /* Update the trash information file */
@@ -4499,30 +4721,12 @@ RestorePipeCB(
    if (cb_data->target_dir)
       UpdateDirectory(NULL, cb_data->target_host, cb_data->target_dir);
 
-   target_host = XtNewString(cb_data->target_host);
-   target_dir  = XtNewString(cb_data->target_dir);
-
-   /* free the callback data */
-   for (i = 0; i < cb_data->file_count; i++)
-      XtFree(cb_data->file_list[i]);
-   XtFree((char *)cb_data->file_list);
-   XtFree((char *)cb_data->target_host);
-   XtFree((char *)cb_data->target_dir);
-   XtFree((char *)cb_data->rc);
-   XtFree((char *)cb_data);
-   if(ToRestoreList)
-   {
-     for(i=0;i<RestoreIndex;i++)
-     {
-       CreateRestoreDialog(FromRestoreList[i],ToRestoreList[i]);
-       XtFree(FromRestoreList[i]);
-       XtFree(ToRestoreList[i]);
-     }
-     XtFree((char *) FromRestoreList);
-     XtFree((char *) ToRestoreList);
-   }
-   XtFree(target_host);
-   XtFree(target_dir);
+   /* Dialogs take only the captured conflicts, never request/widget storage. */
+   cb_data->conflicts = NULL;
+   RestoreReleaseRequest(cb_data);
+   for (i = 0; i < count; ++i)
+      if (conflicts[i] != NULL) CreateRestoreDialog(conflicts[i]);
+   free(conflicts);
 }
 
 
@@ -4531,53 +4735,91 @@ RestorePipeCB(
  *    Start the background process and set up callback for the pipe.
  *------------------------------------------------------------------*/
 
-static void
+/* With a valid count, consumes file_list, target_host, target_dir and intents
+ * on both admission outcomes. An invalid count transfers no ownership: only
+ * the caller knows the arrays' actual capacity and can release their entries.
+ * A confirming dialog retains its independent captured conflict. */
+static Boolean
 RestoreFromTrash(
 	char **file_list,
 	int file_count,
 	char *target_host,
 	char *target_dir,
 	Tt_message msg,
-	Boolean CheckedAlready)
+        RestoreTargetIntent *intents)
 {
    static char *pname = "RestoreFromTrash";
    RestoreFromTrashCBData *cb_data;
-   int pipe_fd[2];
-   int pid;
+   int pipe_fd[2] = {-1, -1};
+   int pid, i, saved = EINVAL;
 
-   if( !TrashInitialized )
+   if (!RestoreCountValid(file_count))
    {
+      /* Do not inspect, free, or walk arrays using a rejected count. */
+      errno = EINVAL;
+      return False;
+   }
+   if (!TrashInitialized || file_list == NULL ||
+       (target_dir != NULL && intents != NULL))
+   {
+     if (!TrashInitialized) saved = ENOSPC;
      if (msg != 0) {
        tttk_message_fail( msg, TT_DESKTOP_ENOSPC, 0, 1 );
      }
-     return;
+     RestoreReleaseInputs(file_list, file_count, target_host, target_dir, intents);
+     _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(saved), NULL, HelpRequestCB);
+     errno = saved;
+     return False;
    }
 
    /* set up callback data */
-   cb_data = XtNew(RestoreFromTrashCBData);
+   cb_data = calloc(1, sizeof(*cb_data));
+   if (cb_data == NULL)
+   {
+      if (msg != 0) tttk_message_fail(msg, TT_DESKTOP_ENOSPC, 0, 1);
+      RestoreReleaseInputs(file_list, file_count, target_host, target_dir, intents);
+      _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(ENOMEM), NULL, HelpRequestCB);
+      errno = ENOMEM;
+      return False;
+   }
    cb_data->file_list = file_list;
    cb_data->file_count = file_count;
    cb_data->target_host = target_host;
    cb_data->target_dir = target_dir;
-   cb_data->rc = (int *)XtCalloc(file_count, sizeof(int));
+   cb_data->intents = intents;
+   cb_data->rc = malloc((size_t)file_count * sizeof(*cb_data->rc));
+   cb_data->conflicts = calloc((size_t)file_count, sizeof(*cb_data->conflicts));
    cb_data->msg = msg;
+   if (cb_data->rc == NULL || cb_data->conflicts == NULL) { saved = ENOMEM; goto failed; }
+   for (i = 0; i < file_count; ++i)
+   {
+      cb_data->rc[i] = -1;
+      if (file_list[i] == NULL || strnlen(file_list[i], RESTORE_PATH_LIMIT + 1) > RESTORE_PATH_LIMIT)
+         goto failed;
+      if (intents != NULL && (file_list[i][0] != '/' || intents[i].target == NULL ||
+          intents[i].target[0] != '/' || strnlen(intents[i].target, RESTORE_PATH_LIMIT + 1) > RESTORE_PATH_LIMIT ||
+          (intents[i].replacement != RESTORE_NO_REPLACE && intents[i].replacement != RESTORE_REPLACE_APPROVED)))
+         goto failed;
+   }
 
    /* create a pipe */
    if(-1 == pipe(pipe_fd)) {
+       saved = errno;
        fprintf(stderr,
 		"%s: pipe failed, error %d=%s\n",
 		pname, errno, strerror(errno));
-       return;
+       goto failed;
    }
 
    /* fork the process that does the actual work */
    pid = fork();
    if (pid == -1)
    {
+       saved = errno;
        fprintf(stderr,
 		"%s:  fork failed, ppid %d, pid %d: error %d=%s\n",
 		pname, getppid(), getpid(), errno, strerror(errno));
-       return;
+       goto failed;
    }
 
    if (pid == 0)
@@ -4588,12 +4830,13 @@ RestoreFromTrash(
       close(pipe_fd[0]);  /* child won't read from the pipe */
 
       RestoreProcess(pipe_fd[1], file_list, file_count,
-                     target_host, target_dir, cb_data->rc,CheckedAlready);
+                     target_host, target_dir, cb_data->rc, intents);
       close(pipe_fd[1]);
+      RestoreReleaseRequest(cb_data);
 
       DBGFORK(("%s:  child exiting\n", pname));
 
-      exit(0);
+      _exit(0);
    }
 
    DBGFORK(("%s:  forked child<%d>, pipe %d\n", pname, pid, pipe_fd[0]));
@@ -4606,6 +4849,15 @@ RestoreFromTrash(
    XtAppAddInput(XtWidgetToApplicationContext(toplevel),
                  pipe_fd[0], (XtPointer)XtInputReadMask,
                  RestorePipeCB, (XtPointer)cb_data);
+   return True;
+failed:
+   if (pipe_fd[0] >= 0) close(pipe_fd[0]);
+   if (pipe_fd[1] >= 0) close(pipe_fd[1]);
+   if (msg != 0) tttk_message_fail(msg, TT_DESKTOP_ENOSPC, 0, 1);
+   RestoreReleaseRequest(cb_data);
+   _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(saved), NULL, HelpRequestCB);
+   errno = saved;
+   return False;
 }
 
 
@@ -4934,6 +5186,24 @@ EmptyTrash(
                  EmptyTrashPipeCB, (XtPointer)cb_data);
 }
 
+/* Never truncate an assessment path or append a child into caller storage. */
+static char *
+DeletePermissionChild(const char *parent, const char *name)
+{
+  size_t parent_length = strlen(parent), name_length = strlen(name);
+  size_t separator = parent_length && parent[parent_length - 1] != '/';
+  char *path;
+  if (name_length > SIZE_MAX - separator - 1 ||
+      parent_length > SIZE_MAX - name_length - separator - 1)
+  { errno = ENAMETOOLONG; return NULL; }
+  path = malloc(parent_length + name_length + separator + 1);
+  if (!path) return NULL;
+  memcpy(path, parent, parent_length);
+  if (separator) path[parent_length] = '/';
+  memcpy(path + parent_length + separator, name, name_length + 1);
+  return path;
+}
+
 int
 CheckDeletePermission(
   char *parentdir,
@@ -4946,7 +5216,9 @@ CheckDeletePermission(
 #else
   struct stat statbuf;
 #endif
-  char fname[PATH_MAX];
+  if (parentdir == NULL || destinationPath == NULL ||
+      parentdir[0] == '\0' || destinationPath[0] == '\0')
+  { errno = EINVAL; return -1; }
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__)
   if (statfs(parentdir,&statbuf) < 0)  /* does not exist */
@@ -4969,16 +5241,21 @@ CheckDeletePermission(
     /* nothing - always check if root */
 #endif
     {
-       int fd = -1;
-       char tmpfile[PATH_MAX];
-
-       snprintf(tmpfile, sizeof(tmpfile), "%s/dtfile.XXXXXX", parentdir);
+       int fd, error = 0;
+       char *tmpfile = DeletePermissionChild(parentdir, "dtfile.XXXXXX");
+       if (tmpfile == NULL) return -1;
        fd = mkstemp(tmpfile);
        if (fd < 0)                              /* Create a temporary file */
+       {
+         int saved = errno;
+         free(tmpfile);
+         errno = saved;
          return -1;
-       close(fd);
-       if (remove(tmpfile) < 0)                /* Delete the created file */
-         return -1;
+       }
+       if (close(fd) != 0) error = errno;
+       if (remove(tmpfile) != 0 && !error) error = errno;
+       free(tmpfile);
+       if (error) { errno = error; return -1; }
     }
 
     /* root user can delete anything */
@@ -4989,22 +5266,19 @@ CheckDeletePermission(
   if (CheckAccess(parentdir, W_OK | X_OK) < 0)
       return -1;
 
-  /* copy destinationPath to tmp buffer */
-  snprintf(fname, PATH_MAX, "%s", destinationPath);
-
-  return CheckDeletePermissionRecur(fname);
+  return CheckDeletePermissionRecur(destinationPath);
 }
 
 
 static int
 CheckDeletePermissionRecur(
-  char *destinationPath)
+  const char *destinationPath)
 {
   struct stat statbuf;
   DIR *dirp;
   struct dirent * dp;
   Boolean first_file;
-  char *fnamep;
+  int error = 0;
 
   DPRINTF(("CheckDeletePermissionRecur(\"%s\")\n", destinationPath));
 
@@ -5021,41 +5295,91 @@ CheckDeletePermissionRecur(
 
   first_file = True;
 
-  while (dp = readdir (dirp))
+  for (;;)
   {
+    errno = 0;
+    dp = readdir(dirp);
+    if (dp == NULL)
+    {
+      if (errno == EINTR) continue;
+      error = errno;
+      break;
+    }
     if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
     {
+      char *child;
+      int result, saved;
       if (first_file)
       {
         /* check for write permission in this directory */
         if (CheckAccess(destinationPath, W_OK|X_OK) < 0) {
-          closedir(dirp);
-          return -1;
+          error = errno ? errno : EACCES;
+          break;
         }
-
-        /* append a '/' to the end of directory name */
-        fnamep = destinationPath + strlen(destinationPath);
-        *fnamep++ = '/';
-
         first_file = False;
       }
-
-      /* append file name to end of directory name */
-      strcpy(fnamep, dp->d_name);
-
-      /* recursively check permission on this file */
-      if (CheckDeletePermissionRecur(destinationPath))
+      child = DeletePermissionChild(destinationPath, dp->d_name);
+      if (child == NULL)
       {
-          closedir(dirp);
-          return -1;
+        error = errno ? errno : ENOMEM;
+        break;
+      }
+      result = CheckDeletePermissionRecur(child);
+      saved = errno;
+      free(child);
+      if (result != 0)
+      {
+        error = saved ? saved : EIO;
+        break;
       }
 
     }
   }
 
-  closedir(dirp);
-
+  if (closedir(dirp) != 0 && !error) error = errno;
+  if (error) { errno = error; return -1; }
   return 0;
+}
+
+/* Compare directory identities along native parents, including aliases and
+ * mount boundaries. This is a preflight check, not retained rename authority. */
+static int
+RestoreDirectoryContains(const struct stat *directory, const char *entry)
+{
+  char *parent = strdup(entry), *slash;
+  int fd = -1, next = -1, flags = O_RDONLY, result = -1, saved = 0;
+  struct stat current, above;
+  unsigned depth;
+  if (parent == NULL) return -1;
+  slash = strrchr(parent, '/');
+  if (slash == NULL) { free(parent); errno = EINVAL; return -1; }
+  if (slash == parent) slash[1] = '\0'; else *slash = '\0';
+#ifdef O_DIRECTORY
+  flags |= O_DIRECTORY;
+#endif
+  fd = open(parent, flags);
+  free(parent);
+  if (fd < 0) return -1;
+  for (depth = 0; depth < RESTORE_PATH_LIMIT; ++depth)
+  {
+    if (fstat(fd, &current) != 0 || !S_ISDIR(current.st_mode)) goto finished;
+    if (current.st_dev == directory->st_dev && current.st_ino == directory->st_ino)
+    { result = 1; goto finished; }
+    next = openat(fd, "..", flags);
+    if (next < 0 || fstat(next, &above) != 0) goto finished;
+    if (current.st_dev == above.st_dev && current.st_ino == above.st_ino)
+    { result = 0; goto finished; }
+    if (close(fd) != 0) { fd = -1; goto finished; }
+    fd = next;
+    next = -1;
+  }
+  errno = ELOOP;
+finished:
+  saved = errno;
+  if (fd >= 0 && close(fd) != 0 && result >= 0) { saved = errno; result = -1; }
+  if (next >= 0 && close(next) != 0 && result >= 0) { saved = errno; result = -1; }
+  errno = saved;
+  return result;
 }
 
 static int
@@ -5068,49 +5392,101 @@ RestoreObject(
         FileOperationErrorProc errorHandler,
         Boolean checkForBusyDir,
         int type ,
-        Boolean CheckedAlready)
+        RestoreReplacePolicy replacement)
 {
   struct stat statsrc,stattar;
-  Boolean status;
-  char *localdir = NULL,*chrptr;
-  int rv;
+  char *localdir = NULL, *destination = NULL, *chrptr;
+  const char *leaf;
+  size_t length;
+  int result = (int)False;
 
-  if(!CheckedAlready)
+  if (source == NULL || source[0] != '/' || target == NULL || target[0] != '/' ||
+      RestoreLeaf(target, &leaf, &length) != 0 ||
+      strnlen(source, RESTORE_PATH_LIMIT + 1) > RESTORE_PATH_LIMIT ||
+      strnlen(target, RESTORE_PATH_LIMIT + 1) > RESTORE_PATH_LIMIT ||
+      (replacement != RESTORE_NO_REPLACE && replacement != RESTORE_REPLACE_APPROVED))
   {
+    if (errorHandler) (*errorHandler)(w, strerror(EINVAL), target);
+    return (int)False;
+  }
+  destination = strdup(target);
+  if (destination == NULL)
+  {
+    if (errorHandler) (*errorHandler)(w, strerror(ENOMEM), target);
+    return (int)False;
+  }
+  length = strlen(destination);
+  while (length > 1 && destination[length - 1] == '/') destination[--length] = '\0';
+
     if(stat(source,&statsrc) < 0)
       if(lstat(source,&statsrc) < 0)
-        return 0;
+      {
+        if (errorHandler) (*errorHandler)(w, strerror(errno), source);
+        goto finished;
+      }
 
-    localdir =  strdup(target);
+    localdir = strdup(destination);
+    if (localdir == NULL)
+    {
+      if (errorHandler) (*errorHandler)(w, strerror(ENOMEM), target);
+      goto finished;
+    }
 
     chrptr = strrchr(localdir,'/');
     if(chrptr)
     {
       if(chrptr == localdir) /* Must be root folder */
-         chrptr = "/";
+         chrptr[1] = '\0';
       else
          *chrptr = '\0';
     }
-    if (EnsureParentDirs(localdir) != 0)
+    if (EnsureParentDirs(destination) != 0)
     {
-       free(localdir);
-       return ((int)False);
+       if (errorHandler) (*errorHandler)(w, strerror(errno), target);
+       goto finished;
     }
-    if(stat(target,&stattar) >= 0)  /* Target exists  */
+    if(lstat(destination,&stattar) >= 0)  /* Includes a dangling target link. */
     {
-       if(CheckDeletePermission(localdir,target)) {
-         free(localdir);
-         return ((int)False);
-       } else {
-         free(localdir);
-         return SKIP_FILE;
+       struct stat sourceEntry;
+       int eraseResult, overlap = 0;
+       if (lstat(source, &sourceEntry) != 0) goto finished;
+       if (sourceEntry.st_dev == stattar.st_dev && sourceEntry.st_ino == stattar.st_ino) overlap = 1;
+       if (overlap == 0 && S_ISDIR(stattar.st_mode)) overlap = RestoreDirectoryContains(&stattar, source);
+       if (overlap == 0 && S_ISDIR(sourceEntry.st_mode)) overlap = RestoreDirectoryContains(&sourceEntry, destination);
+       if (overlap != 0)
+       {
+          if (errorHandler) (*errorHandler)(w, strerror(overlap < 0 ? errno : EINVAL), destination);
+          goto finished;
        }
+       if (CheckDeletePermission(localdir,destination))
+       {
+          if (errorHandler) (*errorHandler)(w, strerror(errno), destination);
+          goto finished;
+       }
+       if (replacement == RESTORE_NO_REPLACE) { result = SKIP_FILE; goto finished; }
+       if (S_ISDIR(stattar.st_mode) && DirectoryBusy(destination))
+       {
+          if (errorHandler) (*errorHandler)(w, GETMESSAGE(11,30,
+             "Cannot move or rename the folder %s.\nAll File Manager views displayed for a folder or its sub-folders\nmust be closed before a folder can be moved or renamed."), destination);
+          goto finished;
+       }
+       fsErase(destination, &eraseResult, False);
+       if (eraseResult != 0)
+       {
+          if (errorHandler) (*errorHandler)(w, strerror(eraseResult > 0 ? eraseResult : EIO), destination);
+          goto finished;
+       }
+       /* An ignored erase error must not turn replacement into a move. */
+       if (lstat(destination, &stattar) == 0 || errno != ENOENT) goto finished;
     }
-  }
+    else if (errno != ENOENT) goto finished;
 
+  result = (int)FileManip(w, mode, source, destination, isContainer,
+                          errorHandler, checkForBusyDir, type);
+finished:
   free(localdir);
-  return ((int )FileManip((Widget)w, MOVE_FILE, source, target, TRUE,
-                          FileOpError, False, NOT_DESKTOP));
+  free(destination);
+  return result;
 }
 
 static int
@@ -5121,8 +5497,8 @@ EnsureParentDirs(
   char *p;
   int rc = 0;
 
-  if (target == NULL || *target == '\0')
-    return 0;
+  if (target == NULL || target[0] != '/')
+  { errno = EINVAL; return -1; }
 
   path = strdup(target);
   if (path == NULL)
@@ -5134,9 +5510,12 @@ EnsureParentDirs(
     if (*p == '/')
     {
       *p = '\0';
-      if (mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO) != 0 && errno != EEXIST)
+      struct stat info;
+      if (mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO) != 0 &&
+          (errno != EEXIST || stat(path, &info) != 0 || !S_ISDIR(info.st_mode)))
       {
         rc = -1;
+        if (errno == EEXIST) errno = ENOTDIR;
         *p = '/';
         break;
       }
@@ -5148,28 +5527,65 @@ EnsureParentDirs(
   return rc;
 }
 static void
-CreateRestoreDialog(
-   char  *source,
-   char *target)
+RestoreConflictDestroyed(Widget widget, XtPointer data, XtPointer call)
+{
+    (void)widget; (void)call;
+    RestoreFreeConflict((RestoreConflict *)data);
+}
+
+static void
+CreateRestoreDialog(RestoreConflict *conflict)
 {
     char *tmpbuf,*title;
-    Widget dw;
-    Arg args[4];
-    int n=0;
-    char **dirs = (char **) malloc(sizeof(char *) * 2);
+    Widget shell = NULL, dw = NULL;
+    XmString text = NULL, ok = NULL, cancel = NULL;
+    Arg args[8];
+    Cardinal n;
     char *header    = GETMESSAGE(27,110,"There is already an object named\n\n%s\n\nSelect Ok if you want to replace the object\nwith the object from the Trash.\n\nSelect Cancel if you want to keep the object.\nIf you then rename the object, you will be able\nto repeat the Put Back and keep both objects.");
 
-    dirs[0] = strdup(source);
-    dirs[1] = strdup(target);
-    tmpbuf = XtMalloc(strlen(header) + strlen(target) + 1);
-    sprintf(tmpbuf, header, target);
+    tmpbuf = malloc(strlen(header) + strlen(conflict->target) + 1);
     title = XtNewString(GETMESSAGE(27, 109, "Put Back Warning"));
-    dw = (Widget)_DtMessageDialog(toplevel, title,tmpbuf,NULL,True,RestoreVerifyCancel,
-          RestoreVerifyOk, NULL, HelpRequestCB, False, WARNING_DIALOG);
-
-    XtSetArg(args[n], XmNuserData,dirs); n++;
-    XtSetValues(dw,args,n);
-    XtFree(tmpbuf);
+    if (tmpbuf == NULL || title == NULL) goto finished;
+    sprintf(tmpbuf, header, conflict->target);
+    text = XmStringCreateLocalized(tmpbuf);
+    ok = XmStringCreateLocalized(Dt11GETMESSAGE(28, 1, "OK"));
+    cancel = XmStringCreateLocalized(Dt11GETMESSAGE(28, 2, "Cancel"));
+    if (text == NULL || ok == NULL || cancel == NULL) goto finished;
+    /* MWM hints belong to shell creation, before the first manage/map. */
+    n = 0;
+    XtSetArg(args[n], XmNtitle, title); ++n;
+    XtSetArg(args[n], XmNallowShellResize, True); ++n;
+    XtSetArg(args[n], XmNuseAsyncGeometry, True); ++n;
+    XtSetArg(args[n], XmNmwmFunctions, MWM_FUNC_MOVE | MWM_FUNC_CLOSE); ++n;
+    XtSetArg(args[n], XmNmwmDecorations, MWM_DECOR_BORDER | MWM_DECOR_TITLE | MWM_DECOR_MENU); ++n;
+    XtSetArg(args[n], XmNdeleteResponse, XmDESTROY); ++n;
+    shell = XmCreateDialogShell(toplevel, "restoreConflict_popup", args, n);
+    if (shell == NULL) goto finished;
+    n = 0;
+    XtSetArg(args[n], XmNdialogType, XmDIALOG_WARNING); ++n;
+    XtSetArg(args[n], XmNmessageString, text); ++n;
+    XtSetArg(args[n], XmNokLabelString, ok); ++n;
+    XtSetArg(args[n], XmNcancelLabelString, cancel); ++n;
+    XtSetArg(args[n], XmNautoUnmanage, False); ++n;
+    XtSetArg(args[n], XmNuserData, conflict); ++n;
+    /* Keep the existing dialogStyle resource/default; admission failure must
+     * leave the managed confirmation available for retry. */
+    dw = XmCreateMessageBox(shell, "restoreConflict", args, n);
+    if (dw == NULL) goto finished;
+    XtAddCallback(dw, XmNdestroyCallback, RestoreConflictDestroyed, conflict);
+    XtAddCallback(dw, XmNokCallback, RestoreVerifyOk, dw);
+    XtAddCallback(dw, XmNcancelCallback, RestoreVerifyCancel, dw);
+    XtUnmanageChild(XmMessageBoxGetChild(dw, XmDIALOG_HELP_BUTTON));
+    XtManageChild(dw);
+finished:
+    if (dw == NULL)
+    {
+       if (shell != NULL) XtDestroyWidget(shell);
+       RestoreFreeConflict(conflict);
+       _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(ENOMEM), NULL, HelpRequestCB);
+    }
+    XmStringFree(text); XmStringFree(ok); XmStringFree(cancel);
+    free(tmpbuf);
     XtFree(title);
 }
 
@@ -5179,47 +5595,32 @@ RestoreVerifyOk(
         XtPointer client_data,
         XtPointer call_data )
 {
-    char **dirs;
-    Arg args[4];
-    int n=0;
+    RestoreConflict *conflict = NULL;
+    RestoreTargetIntent *intents;
+    char **files;
     Widget mbox = (Widget)client_data;
+    (void)w; (void)call_data;
 
-    XtSetArg(args[n],XmNuserData,&dirs); n++;
-    XtGetValues(mbox,args,n);
-
-    if(DirectoryBusy(dirs[1]))
+    XtVaGetValues(mbox, XmNuserData, &conflict, NULL);
+    if (conflict == NULL) return;
+    files = (char **)XtCalloc(1, sizeof(*files));
+    intents = calloc(1, sizeof(*intents));
+    if (files != NULL) files[0] = XtNewString(conflict->source);
+    if (intents != NULL)
     {
-       char *msgbuf;
-       char * tmpStr,*title;
-
-       title = XtNewString(GETMESSAGE(27,111,"Put Back Error"));
-       tmpStr = GETMESSAGE(11,30, "Cannot move or rename the folder %s.\nAll File Manager views displayed for a folder or its sub-folders\nmust be closed before a folder can be moved or renamed.");
-       msgbuf = XtMalloc(strlen(tmpStr) + strlen(dirs[1])+1);
-       sprintf (msgbuf, tmpStr, dirs[1]);
-       _DtMessage(toplevel,title,msgbuf,NULL,HelpRequestCB);
-       XtFree(title);
-       XtFree(msgbuf);
+       intents[0].target = strdup(conflict->target);
+       intents[0].replacement = RESTORE_REPLACE_APPROVED;
     }
-    else
+    if (files == NULL || intents == NULL || files[0] == NULL || intents[0].target == NULL)
     {
-      int status,j,k;
-      struct stat s1;
-      char *realTarget,*tptr;
-      Boolean moveop;
-      char **FileList;
-
-      if(lstat(dirs[1],&s1) < 0)
-         goto goback;
-      fsErase(dirs[1],&status,0);
-      FileList = (char **) XtMalloc(sizeof(char *));
-      FileList[0] = XtNewString(dirs[0]);
-      RestoreFromTrash(FileList, (int) 1, NULL, NULL, NULL,True);
+       RestoreReleaseInputs(files, 1, NULL, NULL, intents);
+       _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(ENOMEM), NULL, HelpRequestCB);
+       return;
     }
-goback:
-    free(dirs[0]);
-    free(dirs[1]);
-    free(dirs);
-    XtDestroyWidget(mbox);
+    /* Admission consumes only these copies, on success and failure alike.
+     * The dialog retains its captured conflict until it is destroyed. */
+    if (RestoreFromTrash(files, 1, NULL, NULL, NULL, intents))
+       XtDestroyWidget(XtParent(mbox));
 }
 
 static void
@@ -5229,15 +5630,7 @@ RestoreVerifyCancel(
         XtPointer call_data )
 
 {
-  Arg args[4];
-  int n=0;
-  char **dirs;
   Widget mbox = (Widget)client_data;
-
-  XtSetArg(args[n],XmNuserData,&dirs); n++;
-  XtGetValues(mbox,args,n);
-  free(dirs[0]);
-  free(dirs[1]);
-  free(dirs);
-  XtDestroyWidget(mbox);
+  (void)w; (void)call_data;
+  XtDestroyWidget(XtParent(mbox));
 }
