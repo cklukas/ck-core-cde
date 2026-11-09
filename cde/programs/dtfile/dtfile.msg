@@ -1837,6 +1837,11 @@ $ ****** Mounts ********
 7 Open
 8 Close
 
+$set 42
+$ ****** Reliable file operations ********
+30 Cannot prepare the folder operation for %s.
+31 The folder operation did not complete for %s.
+
 $set 99
 $ ****** Version Information ********
 $ DO NOT TRANSLATE THESE MESSAGES

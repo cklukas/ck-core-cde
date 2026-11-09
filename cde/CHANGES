@@ -1058,14 +1058,27 @@
   until the complete target is available.
 - dtfile: complete short file-copy writes, retry interrupted transfers, report
   zero-byte writes as I/O errors, and preserve transfer and delayed close errors.
+- dtfile: wait for folder-copy and cross-filesystem move helpers and report their
+  real completion result; restore inherited signal state, distinguish exec and
+  signal failures, and reap only the helper that the operation started. Reject
+  occupied exact targets unless the operation worker explicitly resolved the
+  conflict, walk parent directory identities without fixed root-inode or path
+  assumptions, and allocate complete folder, container and symbolic-link paths.
+  A failed source removal now rolls back its new target even without an error
+  callback, relative source names no longer crash the error path, and a failed
+  link resolution no longer dereferences a null result. A failed move fallback
+  no longer falls through and invokes the link fallback. Covered
+  by `programs/dtfile/tests/check-filemanip-safety.py` and the existing transfer
+  completion checkpoint.
 - dtfile: parse Trash metadata with checked unsigned lengths and exact field
   boundaries, support embedded newlines in names, reject escaping internal
   paths and invalid sizes, and preserve metadata when reading fails.
 - dtfile: stage Trash metadata privately beside its destination, check write,
   flush, sync, close and rename failures, and preserve the previous metadata
   until a complete replacement is ready.
-- project: batch ten repair rounds before compilation and regression validation,
-  publish verified fixes in cohesive groups, then continue with the next batch.
+- project: bundle about five to ten related fixes, use focused checks while a
+  bundle is developed, run broader validation once for the completed bundle,
+  publish the qualified fixes in cohesive commits, then continue the next batch.
 - dtwm: reject wrong-format, incomplete and oversized WM_STATE and Motif WM
   info properties, and reject truncated or wrong-format UTF-8 titles; cover
   reply validation and Xlib storage cleanup with sanitizer regression tests.

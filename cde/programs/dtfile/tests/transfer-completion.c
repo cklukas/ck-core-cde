@@ -89,8 +89,9 @@ static int DirectoryBusy(char *path) { (void)path; unreachable(); return 0; }
 static Boolean CopyDir(Widget w,int mode,char *from,char *to,Boolean container,struct stat *st,
                        FileOperationErrorProc handler,Boolean busy,int type)
 { (void)w;(void)mode;(void)from;(void)to;(void)container;(void)st;(void)handler;(void)busy;(void)type;unreachable();return False; }
-static Boolean MoveDir(Widget w,char *from,char *to,struct stat *st,FileOperationErrorProc handler,char **real,int type)
-{ (void)w;(void)from;(void)to;(void)st;(void)handler;(void)real;(void)type;unreachable();return False; }
+static Boolean MoveDir(Widget w,char *from,char *to,Boolean container,struct stat *st,
+                       FileOperationErrorProc handler,int type)
+{ (void)w;(void)from;(void)to;(void)container;(void)st;(void)handler;(void)type;unreachable();return False; }
 static int RunFileCommand(char *cmd,char *a,char *b,char *c)
 { (void)cmd;(void)a;(void)b;(void)c;unreachable();return -1; }
 static void DtLastChar(char *text,char **last,int *length)

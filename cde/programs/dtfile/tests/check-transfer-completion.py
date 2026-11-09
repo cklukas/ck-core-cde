@@ -166,7 +166,9 @@ def extract(source, work):
                     structure(text["FileOp.c"], "DirUpdate")]
     (work / "transfer-definitions.inc").write_text("\n\n".join(definitions) + "\n")
 
-    functions = [("FileManip.c", "FileManip")] + [
+    functions = [("FileManip.c", name) for name in
+                 ("FilePathCopy", "FilePathJoin", "FileParentPath",
+                  "FilePathsFree", "FileReadLink", "FileManip")] + [
         ("FileOp.c", name) for name in (
             "PipeRead", "PipeWriteString", "PipeReadString", "PipeWriteErrmsg",
             "FileOpError", "CreateFileFromBuffer", "SendModifyMsg",

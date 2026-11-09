@@ -51,29 +51,21 @@
  ****************************************************************************
  ************************************<+>*************************************/
 
-#if defined(SVR4)
-#    include <sys/fs/ufs_fs.h>
-#    define ROOTINO UFSROOTINO
-#else
-#  if defined(__linux__) || defined(CSRG_BASED)
-#    define ROOTINO 2
-#  endif
-#  include <sys/param.h>
-#endif	/* SVR4 */
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE 1
+#endif
 
 #include <sys/types.h>
 
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <stdio.h>
 #include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
-
-#if defined(sun) && !defined(SVR4)
-#include <ufs/fs.h>
-#endif
+#include <string.h>
 
 #include <Xm/Xm.h>
 
@@ -101,6 +93,169 @@ static char * MOVE_CMD = "/bin/mv";
 static char * LINK_CMD = "/bin/ln";
 static char * REMOVE_CMD = "/bin/rm";
 static char * DTCOPY = CDE_INSTALLATION_TOP "/bin/dtfile_copy";
+
+/* Operation workers own their directory helpers through completion. */
+typedef struct {
+    sigset_t mask;
+    struct sigaction child_action;
+} FileHelperSignals;
+
+static int
+FileHelperBegin(FileHelperSignals *signals)
+{
+    sigset_t blocked;
+    struct sigaction normal;
+    int saved;
+    sigemptyset(&blocked);
+    sigaddset(&blocked, SIGCHLD);
+    if (sigprocmask(SIG_BLOCK, &blocked, &signals->mask) != 0) return -1;
+    memset(&normal, 0, sizeof(normal));
+    normal.sa_handler = SIG_DFL;
+    sigemptyset(&normal.sa_mask);
+    /* SIG_IGN/SA_NOCLDWAIT must not discard this exact helper's status. */
+    if (sigaction(SIGCHLD, &normal, &signals->child_action) == 0) return 0;
+    saved = errno;
+    (void)sigprocmask(SIG_SETMASK, &signals->mask, NULL);
+    errno = saved;
+    return -1;
+}
+
+static int
+FileHelperRestore(const FileHelperSignals *signals)
+{
+    int saved = 0;
+    if (sigaction(SIGCHLD, &signals->child_action, NULL) != 0) saved = errno;
+    if (sigprocmask(SIG_SETMASK, &signals->mask, NULL) != 0 && saved == 0) saved = errno;
+    if (saved != 0) { errno = saved; return -1; }
+    return 0;
+}
+
+static void
+FileHelperChildSignals(void)
+{
+    sigset_t empty;
+    struct sigaction normal;
+    static const int reset[] = {SIGINT, SIGQUIT, SIGPIPE, SIGTERM, SIGCHLD};
+    size_t i;
+    memset(&normal, 0, sizeof(normal));
+    normal.sa_handler = SIG_DFL;
+    sigemptyset(&normal.sa_mask);
+    for (i = 0; i < sizeof(reset) / sizeof(reset[0]); ++i)
+        if (sigaction(reset[i], &normal, NULL) != 0) _exit(127);
+    sigemptyset(&empty);
+    if (sigprocmask(SIG_SETMASK, &empty, NULL) != 0) _exit(127);
+}
+
+static int
+FileHelperWait(pid_t child, const FileHelperSignals *signals)
+{
+   int status = 0, saved = 0;
+   pid_t result;
+   if (child <= 0)
+   {
+      saved = EINVAL;
+      if (FileHelperRestore(signals) != 0) saved = errno;
+      errno = saved;
+      return -1;
+   }
+   do { result = waitpid(child, &status, 0); } while (result < 0 && errno == EINTR);
+   if (result < 0) saved = errno;
+   if (FileHelperRestore(signals) != 0 && saved == 0) saved = errno;
+   if (saved != 0) { errno = saved; return -1; }
+   if (WIFEXITED(status) && WEXITSTATUS(status) == 0) return 0;
+   errno = WIFEXITED(status) && WEXITSTATUS(status) == 127 ? ENOEXEC :
+           WIFEXITED(status) ? ECANCELED : EIO;
+   return -1;
+}
+
+static char *
+FilePathCopy(const char *value)
+{
+   size_t length;
+   char *copy;
+   if (value == NULL) { errno = EINVAL; return NULL; }
+   length = strlen(value);
+   copy = malloc(length + 1);
+   if (copy != NULL) memcpy(copy, value, length + 1);
+   return copy;
+}
+
+static char *
+FilePathJoin(const char *directory, const char *leaf)
+{
+   size_t directory_len, leaf_len, separator, length;
+   char *path;
+   if (directory == NULL || leaf == NULL || leaf[0] == '\0')
+   { errno = EINVAL; return NULL; }
+   directory_len = strlen(directory);
+   leaf_len = strlen(leaf);
+   separator = directory_len != 0 && directory[directory_len - 1] == '/' ? 0 : 1;
+   if (leaf_len > (size_t)-1 - separator - 1 ||
+       directory_len > (size_t)-1 - leaf_len - separator - 1)
+   { errno = ENAMETOOLONG; return NULL; }
+   length = directory_len + separator + leaf_len;
+   path = malloc(length + 1);
+   if (path == NULL) return NULL;
+   memcpy(path, directory, directory_len);
+   if (separator != 0) path[directory_len++] = '/';
+   memcpy(path + directory_len, leaf, leaf_len + 1);
+   return path;
+}
+
+static char *
+FileParentPath(const char *path)
+{
+   char *parent, *slash;
+   size_t length;
+   if (path == NULL || path[0] == '\0')
+   { errno = EINVAL; return NULL; }
+   length = strlen(path);
+   parent = malloc(length + 1);
+   if (parent == NULL) return NULL;
+   memcpy(parent, path, length + 1);
+   while (length > 1 && parent[length - 1] == '/') parent[--length] = '\0';
+   slash = strrchr(parent, '/');
+   if (slash == NULL)
+      strcpy(parent, ".");
+   else if (slash == parent)
+      parent[1] = '\0';
+   else
+      *slash = '\0';
+   return parent;
+}
+
+static void
+FilePathsFree(char *first, char *second, char *third, char *fourth)
+{
+   free(first);
+   free(second);
+   free(third);
+   free(fourth);
+}
+
+static char *
+FileReadLink(const char *path)
+{
+   size_t capacity = 256;
+   char *value;
+   for (;;)
+   {
+      ssize_t length;
+      value = malloc(capacity + 1);
+      if (value == NULL) return NULL;
+      length = readlink(path, value, capacity);
+      if (length < 0) { int saved = errno; free(value); errno = saved; return NULL; }
+      if ((size_t)length < capacity)
+      {
+         value[length] = '\0';
+         return value;
+      }
+      free(value);
+      if (capacity > (size_t)-1 / 2 || capacity >= 64u * 1024u * 1024u)
+      { errno = ENAMETOOLONG; return NULL; }
+      capacity *= 2;
+   }
+}
 
 
 /************************************************************************
@@ -233,58 +388,72 @@ DName(
  *
  ************************************************************************/
 static int
+FileDirectoryHasAncestor(const char *path, const struct stat *ancestor)
+{
+   struct stat current, parent;
+   int fd = -1, next = -1, result = -1, saved, flags;
+   size_t depth;
+   if (path == NULL || path[0] == '\0' || ancestor == NULL || !S_ISDIR(ancestor->st_mode))
+   { errno = EINVAL; return -1; }
+#if defined(O_SEARCH)
+   flags = O_SEARCH;
+#elif defined(O_PATH)
+   flags = O_PATH;
+#else
+   flags = O_RDONLY;
+#endif
+#ifdef O_DIRECTORY
+   flags |= O_DIRECTORY;
+#endif
+#ifdef O_CLOEXEC
+   flags |= O_CLOEXEC;
+#endif
+   fd = open(path, flags);
+   if (fd < 0) return -1;
+   for (depth = 0; depth < 65536; ++depth)
+   {
+      if (fstat(fd, &current) != 0) goto finished;
+      if (!S_ISDIR(current.st_mode)) { errno = ENOTDIR; goto finished; }
+      if (current.st_dev == ancestor->st_dev && current.st_ino == ancestor->st_ino)
+      { result = 1; goto finished; }
+      next = openat(fd, "..", flags);
+      if (next < 0 || fstat(next, &parent) != 0) goto finished;
+      if (current.st_dev == parent.st_dev && current.st_ino == parent.st_ino)
+      { result = 0; goto finished; }
+      if (close(fd) != 0) { fd = -1; goto finished; }
+      fd = next; next = -1;
+   }
+   errno = ELOOP;
+finished:
+   saved = errno;
+   if (fd >= 0 && close(fd) != 0 && result >= 0) { saved = errno; result = -1; }
+   if (next >= 0 && close(next) != 0 && result >= 0) { saved = errno; result = -1; }
+   errno = saved;
+   return result;
+}
+
+static int
 Check(
         Widget w,
-        char *spth,
-        ino_t dinode,
+        const char *path,
+        const struct stat *source,
         int mode,
-        FileOperationErrorProc errorHandler )
+        FileOperationErrorProc errorHandler)
 {
-   struct stat sbuf;
-   char filename [MAX_PATH];
-   char * msg;
-   char * tmpStr;
-
-   sbuf.st_ino = 0;
-
-   (void) strcpy (filename, spth);
-
-   while (sbuf.st_ino != ROOTINO)
+   int result = FileDirectoryHasAncestor(path, source), saved = errno;
+   if (result == 0) return 0;
+   if (errorHandler)
    {
-      if (lstat (filename, &sbuf) < 0)
-      {
-         if (errorHandler)
-         {
-            tmpStr = (GETMESSAGE(11,33, "Cannot open %s"));
-            msg = XtNewString(tmpStr);
-            (*errorHandler) (w, msg, filename);
-            XtFree(msg);
-         }
-         return (False);
-      }
-
-      if (sbuf.st_ino == dinode)
-      {
-         if (errorHandler)
-         {
-            if (mode == COPY_FILE)
-              tmpStr = GETMESSAGE(11,35, "Cannot copy a folder into itself.");
-            else
-              tmpStr = GETMESSAGE(11,16, "A folder cannot be moved into itself.\n%s");
-            msg = XtNewString(tmpStr);
-            if (mode == COPY_FILE)
-              (*errorHandler) (w, msg, NULL);
-            else
-              (*errorHandler) (w, msg, filename);
-            XtFree(msg);
-         }
-         return(1);
-      }
-
-      (void) strcat (filename, "/..");
+      if (result > 0)
+         (*errorHandler)(w, mode == COPY_FILE
+            ? GETMESSAGE(11,35, "Cannot copy a folder into itself.")
+            : GETMESSAGE(11,16, "A folder cannot be moved into itself.\n%s"),
+            mode == COPY_FILE ? NULL : (char *)path);
+      else
+         (*errorHandler)(w, GETMESSAGE(11,33, "Cannot open %s"), (char *)path);
    }
-
-   return(0);
+   errno = result > 0 ? EINVAL : saved;
+   return 1; /* An incomplete ancestry check is never permission to proceed. */
 }
 
 
@@ -299,45 +468,48 @@ MoveDir(
         Widget w,
         char *source,
         char *target,
+        Boolean isContainer,
         struct stat *sourceStatInfo,
         FileOperationErrorProc errorHandler,
-        char ** targetRtn ,
         int type )
 {
    static char *pname = "MoveDir";
    char *p;
 
-   char * targetDir;            /* original target dir path */
-   char *link_path;
-   int link_result;
-
+   char *targetDir;             /* original target path for diagnostics */
+   char *actualTarget = NULL;
+   char *sourceParent = NULL;
+   char *targetParent = NULL;
    struct stat  s1;             /* status of from file */
    struct stat  s2;             /* status of to file   */
    char * cptr;
    int len, val, val1;
 
-   static char buf [BUF_SIZE];  /* generic buffer */
-   char filename [MAX_PATH];    /* buffer to hold the full file name */
    char * msg;
    char * tmpStr;
-   int child_pid, rc;
+   pid_t child_pid;
+   int rc;
+   FileHelperSignals helper_signals;
 
    /* Copy target so we have it for an error dialog if we need it */
-   targetDir = XtNewString(target);
-   *targetRtn = NULL;
+   targetDir = FilePathCopy(target);
+   if (targetDir == NULL)
+   {
+      if (errorHandler) (*errorHandler)(w, GETMESSAGE(11,33, "Cannot open %s"), target);
+      return False;
+   }
 
    if ((val = stat (target, &s2)) < 0)
       val = lstat(target, &s2);
 
-   /* Check if move to itself */
-   if( sourceStatInfo->st_dev == s2.st_dev)
-   {
-     if (Check (w, target, sourceStatInfo->st_ino, MOVE_FILE, NULL ))
-       return (False);
-   }
-
    if (val >= 0) /* target exists */
    {
+      if (!isContainer)
+      {
+         if (errorHandler) (*errorHandler)(w, GetSharedMessage(CANT_OVERWRITE_ERROR), target);
+         free(targetDir);
+         return False;
+      }
       if ((s2.st_mode & S_IFMT) != S_IFDIR) /* target not directory */
       {
          if (errorHandler)
@@ -348,20 +520,19 @@ MoveDir(
             (*errorHandler) (w, msg, target);
             XtFree(msg);
          }
-         XtFree(targetDir);
+         free(targetDir);
          return (False);
       }
 
-      (void) strcpy (buf, target);
-      target = buf;
-      *targetRtn = buf;
-
-      DtLastChar(buf, &cptr, &len);
-      if ((len != 1) || (*cptr != '/'))
-         (void) strcat (buf, "/");
-      (void) strcat (buf, DName (source));
-
-      if (lstat (target, &s2) >= 0) /* new target exists */
+      actualTarget = FilePathJoin(target, DName(source));
+      if (actualTarget == NULL)
+      {
+         if (errorHandler) (*errorHandler)(w, GETMESSAGE(11,33, "Cannot open %s"), target);
+         free(targetDir);
+         return False;
+      }
+      target = actualTarget;
+      if (lstat(target, &s2) >= 0) /* resolved target exists */
       {
          if (errorHandler)
          {
@@ -372,9 +543,21 @@ MoveDir(
             (*errorHandler) (w, msg, target);
             XtFree(msg);
          }
-         XtFree(targetDir);
+         free(actualTarget);
+         free(targetDir);
          return (False);
       }
+   }
+   else
+   {
+      actualTarget = FilePathCopy(target);
+      if (actualTarget == NULL)
+      {
+         if (errorHandler) (*errorHandler)(w, GETMESSAGE(11,33, "Cannot open %s"), target);
+         free(targetDir);
+         return False;
+      }
+      target = actualTarget;
    }
 
 
@@ -395,17 +578,25 @@ MoveDir(
          (*errorHandler) (w, msg, p);
          XtFree(msg);
       }
-      XtFree(targetDir);
+      FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
       return (False);
    }
 
+   sourceParent = FileParentPath(source);
+   targetParent = FileParentPath(target);
+   if (sourceParent == NULL || targetParent == NULL)
+   {
+      if (errorHandler) (*errorHandler)(w, GETMESSAGE(11, 14, "Cannot find the folders location."), NULL);
+      FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
+      return False;
+   }
 
    /*  parent doesn't exist  */
-   if((val = stat (_DtPName (source), &s1)) < 0)
-      val = lstat (_DtPName (source), &s1);
+   if((val = stat(sourceParent, &s1)) < 0)
+      val = lstat(sourceParent, &s1);
 
-   if((val1 = stat (_DtPName (target), &s2)) < 0)
-      val1 = lstat (_DtPName (target), &s2);
+   if((val1 = stat(targetParent, &s2)) < 0)
+      val1 = lstat(targetParent, &s2);
 
    if (val < 0 || val1 < 0)
    {
@@ -416,13 +607,13 @@ MoveDir(
          (*errorHandler) (w, msg, NULL);
          XtFree(msg);
       }
-      XtFree(targetDir);
+      FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
       return (False);
    }
 
 
    /*  check for target parent not writeable  */
-   if (CheckAccess(_DtPName (target), W_OK) == -1)
+   if (CheckAccess(targetParent, W_OK) == -1)
    {
       if (errorHandler)
       {
@@ -433,13 +624,19 @@ MoveDir(
          (*errorHandler) (w, msg, targetDir);
          XtFree(msg);
       }
-      XtFree(targetDir);
+      FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
       return (False);
    }
 
 
+   if (Check(w, targetParent, sourceStatInfo, MOVE_FILE, errorHandler))
+   {
+      FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
+      return False;
+   }
+
    /* check for source parent not writeable */
-   if (CheckAccess(_DtPName (source), W_OK) == -1)
+   if (CheckAccess(sourceParent, W_OK) == -1)
    {
       if (errorHandler)
       {
@@ -450,7 +647,7 @@ MoveDir(
          (*errorHandler) (w, msg, source);
          XtFree(msg);
       }
-      XtFree(targetDir);
+      FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
       return (False);
    }
    /*
@@ -477,9 +674,18 @@ MoveDir(
       /* Determine correct Geometry Placement fo Move Dialog */
       /* @@@ ... to be added */
 
+      if (FileHelperBegin(&helper_signals) != 0)
+      {
+         if (errorHandler) (*errorHandler)(w, GETMESSAGE(42, 30, "Cannot prepare the folder operation for %s."), source);
+         FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
+         return False;
+      }
       child_pid = fork();
       if (child_pid == -1)
       {
+         int saved = errno;
+         (void)FileHelperRestore(&helper_signals);
+         errno = saved;
          if (errorHandler)
          {
             tmpStr = GETMESSAGE(11, 39, "Cannot create child process.\nThe maximum number of processes for this system has been reached.\nStop some of the processes or programs that are currently\nrunning and then retry this function.");
@@ -487,12 +693,13 @@ MoveDir(
             (*errorHandler) (w, msg, NULL);
             XtFree(msg);
          }
-         XtFree(targetDir);
+         FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
          return False;
       }
 
       if (child_pid == 0)
       {
+         FileHelperChildSignals();
 	 DBGFORK(("%s:  child forked\n", pname));
 
          /* pass in geometry, and other command lines params when available */
@@ -508,29 +715,17 @@ MoveDir(
 
 	 DBGFORK(("%s:  child exiting\n", pname));
 
-         exit (1);
+         _exit (127);
       }
 
       DBGFORK(("%s:  forked child<%d>\n", pname, child_pid));
 
 
-      XtFree(targetDir);
-      return (True);
-   }
-
-   link_path = _DtFollowLink(source);
-
-
-   if (s1.st_ino != s2.st_ino)
-   { /*  different parent inodes  */
-     (void) lstat (source, &s1); /* get source dir ino */
-
-
-     if (Check (w, _DtPName (target), s1.st_ino, MOVE_FILE, errorHandler))
-     { /* move into self */
-       XtFree(targetDir);
-       return(False);
-     }
+      rc = FileHelperWait(child_pid, &helper_signals);
+      if (rc != 0 && errno != ECANCELED && errorHandler)
+         (*errorHandler)(w, GETMESSAGE(42, 31, "The folder operation did not complete for %s."), source);
+      FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
+      return rc == 0;
    }
 
 /*   This part of code was implemented with the idea that the links
@@ -542,7 +737,7 @@ MoveDir(
    {
      if (RunFileCommand (MOVE_CMD, link_path, target, NULL) == 0)
      {
-       XtFree(targetDir);
+       FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
        return (True);
      }
    }
@@ -551,12 +746,12 @@ MoveDir(
    {
      if (RunFileCommand (MOVE_CMD, source, target, NULL) == 0)
      {
-       XtFree(targetDir);
+       FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
        return (True);
      }
    }
 
-   XtFree(targetDir);
+   FilePathsFree(targetDir, actualTarget, sourceParent, targetParent);
    return (False);
 }
 
@@ -579,12 +774,12 @@ CopyDir(
         int type )
 {
    static char *pname = "CopyDir";
-   char * cptr;
-   int len;
-   char target [MAX_PATH];	/* buffer to hold the full file name */
-   char target_dir [MAX_PATH], target_file [MAX_PATH];
+   char *target = NULL;
+   char *target_dir = NULL;
    struct stat  s2;             /* status of to file   */
-   int child_pid, rc, target_rc;
+   pid_t child_pid;
+   int rc, target_rc;
+   FileHelperSignals helper_signals;
    char *msg, *tmpStr;
 
    /* Check if source is readable */
@@ -606,15 +801,13 @@ CopyDir(
    /* the former case is probably more common (e.g. a drag&drop copy)      */
    /*    whereas the second case occurs when, for example, the menu is     */
    /*    to copy directory /u/joe/a to /u/joe/b (not doable with d&d)      */
-   (void) strcpy (target, to);
-   if (isContainer)
+   target = isContainer ? FilePathJoin(to, DName(from)) : FilePathCopy(to);
+   if (target == NULL || (target_dir = FileParentPath(target)) == NULL)
    {
-      DtLastChar(to, &cptr, &len);
-      if ((len != 1) || (*cptr != '/'))
-          (void) strcat (target, "/");
-      (void) strcat (target, DName (from));
+      if (errorHandler) (*errorHandler)(w, GETMESSAGE(11, 14, "Cannot find the folders location."), NULL);
+      FilePathsFree(target, target_dir, NULL, NULL);
+      return False;
    }
-   split_path(target, target_dir, target_file);
 
    /* Check if target directory exists */
    if ((target_rc = stat (target, &s2)) < 0)
@@ -622,6 +815,12 @@ CopyDir(
 
    if (target_rc >= 0)
    {
+      if (mode != MERGE_DIR)
+      {
+         if (errorHandler) (*errorHandler)(w, GetSharedMessage(CANT_OVERWRITE_ERROR), target);
+         FilePathsFree(target, target_dir, NULL, NULL);
+         return False;
+      }
       /* target exists:
        * make sure it's a directory */
 
@@ -634,6 +833,7 @@ CopyDir(
             (*errorHandler) (w, msg, target);
             XtFree(msg);
          }
+         FilePathsFree(target, target_dir, NULL, NULL);
          return (False);
       }
    }
@@ -653,6 +853,7 @@ CopyDir(
            (*errorHandler) (w, msg, NULL);
            XtFree(msg);
         }
+        FilePathsFree(target, target_dir, NULL, NULL);
         return (False);
      }
 
@@ -665,23 +866,16 @@ CopyDir(
            (*errorHandler) (w, msg, to);
            XtFree(msg);
         }
+        FilePathsFree(target, target_dir, NULL, NULL);
         return (False);
      }
    }
 
-   /* Determine if we are attempting a copy into self */
-   if (s1->st_dev == s2.st_dev)
+   /* Walk actual directory identities; root inode numbers are filesystem-specific. */
+   if (Check(w, target_rc >= 0 ? target : target_dir, s1, COPY_FILE, errorHandler))
    {
-     if (target_rc >= 0)
-     {
-        if (Check (w, to, s1->st_ino, COPY_FILE, errorHandler))
-           return False;
-     }
-     else  /* destination dir does not exist, look at its proposed parent */
-     {
-        if (Check (w, target_dir, s1->st_ino, COPY_FILE, errorHandler))
-           return False;
-     }
+      FilePathsFree(target, target_dir, NULL, NULL);
+      return False;
    }
 
    /* Determine correct Geometry Placement fo Copy Dialog */
@@ -689,9 +883,18 @@ CopyDir(
 
    /* If all the above checks have passed, then fork off the copy dialog */
 
+   if (FileHelperBegin(&helper_signals) != 0)
+   {
+      if (errorHandler) (*errorHandler)(w, GETMESSAGE(42, 30, "Cannot prepare the folder operation for %s."), from);
+      FilePathsFree(target, target_dir, NULL, NULL);
+      return False;
+   }
    child_pid = fork();
    if (child_pid == -1)
    {
+      int saved = errno;
+      (void)FileHelperRestore(&helper_signals);
+      errno = saved;
       if (errorHandler)
       {
          tmpStr = GETMESSAGE(11, 39, "Cannot create child process.\nThe maximum number of processes for this system has been reached.\nStop some of the processes or programs that are currently\nrunning and then retry this function.");
@@ -699,11 +902,13 @@ CopyDir(
          (*errorHandler) (w, msg, NULL);
          XtFree(msg);
       }
+      FilePathsFree(target, target_dir, NULL, NULL);
       return False;
    }
 
    if (child_pid == 0)
    {
+      FileHelperChildSignals();
       DBGFORK(("%s:  child forked\n", pname));
 
       /* pass in geometry, and other command lines params when available */
@@ -717,7 +922,7 @@ CopyDir(
          /* replace target dir */
          rc = execlp(DTCOPY, "dtfile_copy",
                      "-forceCopies", "-copyTop",
-                     "-confirmErrors", "-popDown",
+                     "-confirmReplace", "-confirmErrors", "-popDown",
                      from, target, (char *)NULL);
 
       /* call errorhandler */
@@ -725,13 +930,17 @@ CopyDir(
 
       DBGFORK(("%s:  child exiting\n", pname));
 
-      exit (1);
+      _exit (127);
    }
 
    DBGFORK(("%s:  forked child<%d>\n", pname, child_pid));
 
 
-   return TRUE;
+   rc = FileHelperWait(child_pid, &helper_signals);
+   if (rc != 0 && errno != ECANCELED && errorHandler)
+      (*errorHandler)(w, GETMESSAGE(42, 31, "The folder operation did not complete for %s."), from);
+   FilePathsFree(target, target_dir, NULL, NULL);
+   return rc == 0;
 }
 
 
@@ -761,10 +970,7 @@ FileManip(
    void (*oldQuit)(int);
    void (*oldPipe)(int);
    void (*oldTerm)(int);
-   char * cptr;
-   int len;
    Boolean restricted = False;
-   Boolean fileExists = False;
 
    struct stat s1;      /* status of from file e.g. lstat info */
    struct stat s4;      /* status of from file e.g. stat info  */
@@ -772,10 +978,9 @@ FileManip(
    struct stat s3;      /* status of to file e.g.   lstat info */
 
    char buf [BLOCK_SIZE];		/* generic buffer */
-   char filename [MAX_PATH];		/* buffer to hold the full file name */
+   char *filename = NULL;
    char * msg;
    int link_result;
-   char * realTarget;
    char * tmpStr;
 
 
@@ -849,7 +1054,7 @@ FileManip(
          oldPipe = signal (SIGPIPE, SIG_IGN);
          oldTerm = signal (SIGTERM, SIG_IGN);
 
-         move_dir_return = MoveDir (w, from, to, &s1, errorHandler, &realTarget,type);
+         move_dir_return = MoveDir(w, from, to, isContainer, &s1, errorHandler, type);
 
          (void) signal (SIGINT, oldInt);
          (void) signal (SIGQUIT, oldQuit);
@@ -861,43 +1066,53 @@ FileManip(
 
       if (mode == LINK_FILE)
       {
-         /* Need to append the directory name on */
-         (void) strcpy(filename, to);
          if(type == DESKTOP)
          {
              char *tmp, *ptr;
 
-             tmp = (char *)XtMalloc(strlen(filename) + 1);
-             strcpy(tmp, filename);
+             tmp = XtNewString(to);
              /* get the workspace number first */
              ptr = strrchr(tmp, '/');
-             *ptr = '\0';
-             /* now get the Desktop */
-             ptr = strrchr(tmp, '/');
-
-             /* if we don't get "/Desktop" then there is another filename
-                attached to the end of the to name passed in */
-             if(strcmp(ptr, "/Desktop") != 0)
+             if (ptr == NULL)
                 restricted = True;
+             else
+             {
+                *ptr = '\0';
+                /* now get the Desktop */
+                ptr = strrchr(tmp, '/');
+                /* A destination already below Desktop is an exact target. */
+                if (ptr == NULL || strcmp(ptr, "/Desktop") != 0)
+                   restricted = True;
+             }
              XtFree(tmp);
          }
 
-         if( (!restricted && type != TRASH_DIRECTORY) && isContainer)
+         if ((strcmp(from, "/.") == 0 || strcmp(from, "/") == 0) &&
+             !restricted && type != TRASH_DIRECTORY && isContainer)
          {
-            DtLastChar(to, &cptr, &len);
-            if ((len != 1) || (*cptr != '/'))
-               (void) strcat(filename, "/");
-         }
-
-         if(strcmp(from, "/.") == 0 || strcmp(from, "/") == 0)
-         {
-            (void) strcat(filename, home_host_name);
-            (void) strcat(filename, ":");
-            (void) strcat(filename, root_title);
+            size_t host_len = strlen(home_host_name), title_len = strlen(root_title);
+            char *leaf;
+            if (host_len > (size_t)-1 - title_len - 2)
+               filename = NULL;
+            else if ((leaf = malloc(host_len + title_len + 2)) != NULL)
+            {
+               memcpy(leaf, home_host_name, host_len);
+               leaf[host_len] = ':';
+               memcpy(leaf + host_len + 1, root_title, title_len + 1);
+               filename = FilePathJoin(to, leaf);
+               free(leaf);
+            }
          }
          else if ( (!restricted && type != TRASH_DIRECTORY) && isContainer)
-           (void) strcat(filename, DName(from));
+            filename = FilePathJoin(to, DName(from));
+         else
+            filename = FilePathCopy(to);
 
+         if (filename == NULL)
+         {
+            if (errorHandler) (*errorHandler)(w, GetSharedMessage(CANT_CREATE_ERROR), to);
+            return False;
+         }
 	 to = filename;
 
          if (((link_result = symlink(from, to)) != 0) && errorHandler)
@@ -913,6 +1128,7 @@ FileManip(
             }
          }
 
+         free(filename);
          return(link_result == 0 ? True : False);
       }
    }
@@ -948,7 +1164,7 @@ FileManip(
 
    if (lstat (to, &s2) >= 0) 			   /* <to> exists */
    {
-      if ((stat (to, &s3) >= 0) &&
+      if (isContainer && (stat (to, &s3) >= 0) &&
 #if defined(__linux__) || defined(CSRG_BASED)
            (((s3.st_mode & S_IFMT) == S_IFDIR)          /* if is a directory */
            || ((s3.st_mode & S_IFMT) == S_IFSOCK)) )    /* or a net special */
@@ -961,14 +1177,12 @@ FileManip(
 #endif
 #endif
       {						   /* then get file name */
-	    (void) strcpy (filename, to);
-
-            DtLastChar(to, &cptr, &len);
-            if ((len != 1) || (*cptr != '/'))
-		(void) strcat (filename, "/");
-
-	    (void) strcat (filename, DName (from));
-
+            filename = FilePathJoin(to, DName(from));
+            if (filename == NULL)
+            {
+               if (errorHandler) (*errorHandler)(w, GetSharedMessage(CANT_CREATE_ERROR), to);
+               return False;
+            }
 	    to = filename;
       }
 
@@ -986,54 +1200,16 @@ FileManip(
                (*errorHandler) (w, msg, to);
                XtFree(msg);
             }
+            free(filename);
             return (False);
          }
 
 
-         /*  <from> = <to> NOOP.  */
-
-         if (s1.st_dev == s2.st_dev && s1.st_ino == s2.st_ino)
-            return (True);
-
-
-         /*  no write permission  */
-         if (CheckAccess(to, W_OK) == -1)
-         {
-            char *link_path;
-
-            link_path = _DtFollowLink(to);
-	    if(strcmp(to,link_path) == 0)
-	    {
-               if (errorHandler)
-               {
-                  char * tmpStr;
-
-                  tmpStr = GetSharedMessage(CANT_OVERWRITE_ERROR);
-                  msg = XtNewString(tmpStr);
-                  (*errorHandler) (w, msg, to);
-                  XtFree(msg);
-               }
-               return (False);
-	    }
-         }
-
-
-         /*  unlink failed  */
-
-         if (unlink (to) < 0)
-         {
-            if (errorHandler)
-            {
-               char * tmpStr;
-
-               tmpStr = GetSharedMessage(CANT_OVERWRITE_ERROR);
-               msg = XtNewString(tmpStr);
-               (*errorHandler) (w, msg, to);
-               XtFree(msg);
-            }
-            return (False);
-         }
-         fileExists = True;
+         /* Explicit replacement belongs to the operation worker. An object
+          * appearing at an exact target must never be silently unlinked here. */
+         if (errorHandler) (*errorHandler)(w, GetSharedMessage(CANT_OVERWRITE_ERROR), to);
+         free(filename);
+         return False;
       }
    }
 
@@ -1051,23 +1227,32 @@ FileManip(
       /* Try to maintain symbolic links, except when we're doing a link! */
       if (((s1.st_mode & S_IFMT) == S_IFLNK) && (mode != LINK_FILE))
       {
-         char link_path[MAX_PATH + 1];
-         int link_len;
+         char *link_path = FileReadLink(from);
 
-         if ((link_len = readlink(from, link_path, MAX_PATH)) > 0)
+         if (link_path != NULL)
          {
-            link_path[link_len] = '\0';
             link_result = symlink(link_path, to);
+            free(link_path);
          }
          else
          {
             /* Fail-safe; do it the hard way */
             if (mode == MOVE_FILE)
+            {
                if (RunFileCommand(MOVE_CMD, from, to, NULL) == 0)
+               {
+                  free(filename);
                   return(True);
+               }
+            }
             else
+            {
                if (RunFileCommand(LINK_CMD, "-s", from, to) == 0)
+               {
+                  free(filename);
                   return(True);
+               }
+            }
 
             link_result = (-1);
          }
@@ -1082,7 +1267,9 @@ FileManip(
 
             link_path = _DtFollowLink(from);
 
-            if(strcmp(link_path, from) != 0)
+            if (link_path == NULL)
+                 link_result = -1;
+            else if(strcmp(link_path, from) != 0)
                  link_result = symlink(link_path, to);
             else
                  link_result = link (from, to);
@@ -1102,6 +1289,7 @@ FileManip(
             XtFree(msg);
          }
 
+         free(filename);
          return(link_result == 0 ? True : False);
       }
 
@@ -1120,9 +1308,11 @@ FileManip(
                XtFree(msg);
             }
             (void) unlink (to);
+            free(filename);
             return (False);
          }
 
+         free(filename);
          return (True);
       }
    }
@@ -1140,6 +1330,7 @@ FileManip(
          (*errorHandler) (w, msg, from);
          XtFree(msg);
       }
+      free(filename);
       return (False);
    }
 
@@ -1158,11 +1349,12 @@ FileManip(
          XtFree(msg);
       }
       (void) close(fold);
+      free(filename);
       return (False);
    }
 
-   /* An approved old destination was removed above. Never truncate a new
-    * occupant (including a link) which appeared after the conflict check.
+   /* The operation worker must resolve any replacement before this call.
+    * Never truncate an occupant (including a link) which appears here.
     */
    if ((fnew = open(to, O_WRONLY | O_CREAT | O_EXCL, s4.st_mode)) < 0)
    {
@@ -1176,6 +1368,7 @@ FileManip(
          XtFree(msg);
       }
       (void) close (fold);
+      free(filename);
       return (False);
    }
 
@@ -1326,6 +1519,7 @@ FileManip(
          XtFree(samsg);
       }
       (void) unlink(to);
+      free(filename);
       return (False);
    }
 
@@ -1335,52 +1529,31 @@ FileManip(
    {
       if (unlink (from) < 0)
       {
+         int source_error = errno;
          if (errorHandler)
          {
-            char *tmpStr, *ptr;
+            char *tmpStr, *ptr, *slash;
 
-
-            ptr = strrchr(from, '/') + 1;
+            slash = strrchr(from, '/');
+            ptr = slash == NULL ? from : slash + 1;
             tmpStr = (GETMESSAGE(11,38, "You do not have permission to move %s\nHowever, you can copy the object.\nTo copy an object:\n  - press and hold the <Ctrl> key, and\n  - drag the object with your mouse.\nOr\n  - use 'Copy To' in the 'Selected' menu popup of the menu bar."));
             msg = XtNewString(tmpStr);
             (*errorHandler) (w, msg, ptr);
             XtFree(msg);
-            unlink(to);
          }
+         if (unlink(to) != 0 && errorHandler)
+            (*errorHandler)(w, GetSharedMessage(CANT_DELETE_ERROR), to);
+         errno = source_error;
+         free(filename);
          return (False);
       }
    }
 
 
-   /*
-    * WARNING: this is different from how the shell behaves.  If you use
-    *          a shell to copy over an existing file, the file keeps its
-    *          original owner and group; for some historical reason,
-    *          dtfile does it differently.
-    *   UPDATE:  This is no longer the case as of 10/31/94, we change the
-    *            file to the original owner and group now. This is to fix
-    *            a bug.
-    *          Also, this call originally occurred after we opened/created
-    *          the file, but before we closed it.  This caused problems
-    *          if the user was running as root, and was copying across
-    *          an nfs link, since root access is not typically carried
-    *          across an nfs mount.  The result was that we were able to
-    *          create the file, copy to it, but when we tried to close it,
-    *          because the file was now owned by root on the other system,
-    *          we could not close the file; thus, the file ended up empty!
-    */
+   /* Replacement, including the old target's ownership policy, belongs to
+    * the worker. This function only creates an unoccupied destination. */
+   (void) chown(to, getuid(), getgid());
 
-   if (mode == COPY_FILE && fileExists)
-   {
-      /*  set for user  */
-      (void) chmod (to, s3.st_mode);
-      (void) chown (to, s3.st_uid, s3.st_gid);
-   }
-   else
-   {
-      /*  set for user  */
-      (void) chown (to, getuid(), getgid());
-   }
-
+   free(filename);
    return (True);
 }

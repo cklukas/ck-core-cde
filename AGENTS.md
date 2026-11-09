@@ -84,7 +84,7 @@ files may add rules for their subtree, but must not weaken these requirements.
 
 ## Build and validation expectations
 
-- At the start of each ten-round repair batch, fetch the latest published
+- At the start of each repair batch, fetch the latest published
   CK Core Motif primary branch into its own checkout and record the selected
   full revision in `.ckgit/motif-revision` and the rpi4 sister pin. Build one
   isolated prefix for that revision. Keep its source, headers, libraries and
@@ -111,13 +111,15 @@ files may add rules for their subtree, but must not weaken these requirements.
   compiler or configuration change invalidates a broad set of objects, establish
   and record that dependency reason before rebuilding that set. A new Motif
   commit alone is not a reason to clean CDE or rebuild every component.
-- Work in validation batches of ten repair rounds. In each round, inspect the
-  complete affected path, implement related fixes, and add focused regression
-  coverage and documentation. Record the scope and outstanding questions, but
-  defer compilation, test execution and documentation validation until the ten
-  rounds are complete. Do not run a full build or suite after each small fix.
-- After round ten, compile and relink all affected components, run the focused
-  regressions together, and run the relevant checkpoint suite. For cross-cutting
+- Bundle about five to ten related fixes before broad validation. For each fix,
+  inspect the complete affected path, implement the fix, and add focused
+  regression coverage and documentation. Use small targeted tests or affected
+  object builds when needed to resolve a concrete question; do not run a full
+  build or broad suite after each small fix. Record the batch's fixes and any
+  outstanding questions.
+- After the batch, incrementally compile and relink all affected components,
+  run the focused regressions together, and run the relevant checkpoint suite.
+  For cross-cutting
   changes, run the full `make check` suite and the desktop smoke test where the
   target supports it. Investigate failures and repeat only the affected checks
   unless another broad checkpoint is warranted. Never report untested work as
@@ -125,6 +127,8 @@ files may add rules for their subtree, but must not weaken these requirements.
 - After successful batch validation, commit related changes in cohesive topic
   commits and integrate/push them as described above. Then immediately begin
   the next batch of repair rounds while the overall audit goal remains active.
+- Commit the qualified related fixes together; do not create one commit per
+  individual fix merely because it received a focused test during development.
 - A successful compile alone is not sufficient for UI work. Inspect the actual
   user-facing window from the freshly built process before reporting a visual
   change as complete.

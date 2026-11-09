@@ -1,0 +1,78 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile folder helper completion, target safety and dynamic paths",
+  "source_base": "3381e28bda76ad068089fa7bc501b72c047c8b4f",
+  "motif_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "motif_runtime_sha256": "b132508069cfaf329b8504dac3fe9238d7aed33918895108e91400de46f92c8b",
+  "next_batch_motif_fetched": "825977e4b521d006213bec172d6c071111639599",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "source_sha256": {
+    "AGENTS.md": "48ac3430ec6988e00202ebb3a562e6f321aef9801db1662a5f6c9ac6c267e582",
+    "cde/CHANGES": "6a76a533e212c5543c796821068e5276577a6c1ddd54f3a688732b55d306e1bc",
+    "cde/programs/dtfile/FileManip.c": "e681443c8b545ebfcea510982553f9c686cfbed996f4e01dc814ba7b054a3ca7",
+    "cde/programs/dtfile/Makefile.am": "aea30d6ce0564e688f0161450f33cba61a0d0f57abde2d9aed334d8f2d234c4d",
+    "cde/programs/dtfile/dtfile.msg": "cd86065207163505c52dd3654f915f2de4af8ee67713a5c36f61e390807fc24b",
+    "cde/programs/dtfile/tests/check-filemanip-safety.py": "7c70941eefc36391dbc51467b5b98050152074e9df0a56fa8702c6e04dfaf040",
+    "cde/programs/dtfile/tests/filemanip-safety.c": "c9e6747e60f2f3c1d4a536a2c9bc13ac399958878c096bee5154ea021bfcb1c8"
+  },
+  "focused_regressions": {
+    "helpers": {
+      "passed": 11,
+      "sanitizers": "address,undefined",
+      "seconds": 0.7716371477581561,
+      "receipt_sha256": "6ac4b5c7e9e7548ea746bc2153821f94efb374667a8c36a2713e5d34dffb0d93"
+    },
+    "paths": {
+      "passed": 17,
+      "sanitizers": "address,undefined",
+      "seconds": 1.1411263216286898,
+      "receipt_sha256": "5410418e75d716926fca792c5b0d5793d3e61b20cb4333c4c2397107b9bdb520"
+    },
+    "directory_callers": {
+      "passed": 8,
+      "sanitizers": "address,undefined",
+      "seconds": 1.7791083147749305,
+      "receipt_sha256": "2b1a1fd0a4edf6bbd6db2ebf36e01c42d734ac7a422d9cd1126026a99944eabe",
+      "limits": "The actual CopyDir and MoveDir callers exec and wait for a private helper that controls completion status and records argv. The helper does not emulate or qualify the dtfile_copy transfer engine. Cross-device selection changes only target-parent st_dev metadata; it is not a native EXDEV claim."
+    },
+    "transfer_and_worker": {
+      "passed": 55,
+      "sanitizers": "address,undefined",
+      "receipt_sha256": "e0493731813fd60288ea2685974345900170a71f03279850714eac0d39fc6915"
+    }
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "changed_objects": 1,
+    "object_seconds": 0.359047371,
+    "object_sha256": "eb1d71b8cf78ec2f53b118c690ee0f58b2fca8b9feed727d72300d004519fd7e",
+    "relink_seconds": 0.569724452,
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile",
+    "output_sha256": "aa242140858c16258a43cde2f1a4b632728600f7187fa7dc19ad967edfdfed90",
+    "full_stack_rebuilt": false,
+    "dependency_note": "The current Main.h differs from the retained build header only by CheckAccess const qualification, so it was staged for the changed object without recompiling ABI-identical consumers. XdgTrashInfo.o was retained in the current link closure."
+  },
+  "component_checkpoint": {
+    "command": "make -j1 check-local in programs/dtfile with current source/test overrides",
+    "test_drivers": 11,
+    "seconds": 10.634168372,
+    "passed": true,
+    "failure_markers": 0,
+    "log_sha256": "a194e1d89fd39a44aac98ed457f0e3362c780b27fb0e114aeaca6daf0f74a51d"
+  },
+  "catalog": {
+    "command": "gencat dtfile.cat dtfile.msg",
+    "passed": true,
+    "output_sha256": "df467bdf9c6ad9dd00ca717eba7faa662145c4170093f202e62231388065c4c8"
+  },
+  "setup_diagnostics": [
+    "A standalone object attempt omitted dtcopy/sharedFuncs.h; the exact header dependency was added before the passing compile.",
+    "The retained partial build initially regenerated a Makefile from its old configured source and omitted the already-qualified XdgTrashInfo object. The current Makefile template and existing object were restored before the passing relink."
+  ],
+  "limitations": [
+    "This non-visual safety topic did not launch or inspect a CDE window.",
+    "The bundle was qualified against the frozen Motif 20a prefix used while the fixes were established. The fetched 825 revision is intentionally deferred to the next batch checkpoint."
+  ]
+}

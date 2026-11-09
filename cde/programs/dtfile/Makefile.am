@@ -15,6 +15,7 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/check-copy-transfer.py tests/copy-transfer.c \
              tests/copy-paths.c tests/check-transfer-completion.py \
              tests/transfer-completion.c tests/check-operation-outcome.py \
+             tests/check-filemanip-safety.py tests/filemanip-safety.c \
              tests/check-sync-controller.py tests/sync-controller.c \
              tests/check-sync-retry-ui.py SyncFeature.h.in
 
@@ -26,6 +27,18 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-permissions.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-copy-transfer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-transfer-completion.py
+	$(RM) -r "$(abs_builddir)/filemanip-helper-check"
+	CC="$(CC)" python3 $(srcdir)/tests/check-filemanip-safety.py \
+		--module-source "$(abs_srcdir)" --helper-only \
+		--work-dir "$(abs_builddir)/filemanip-helper-check"
+	$(RM) -r "$(abs_builddir)/filemanip-path-check"
+	CC="$(CC)" python3 $(srcdir)/tests/check-filemanip-safety.py \
+		--module-source "$(abs_srcdir)" --paths-only \
+		--work-dir "$(abs_builddir)/filemanip-path-check"
+	$(RM) -r "$(abs_builddir)/filemanip-directory-check"
+	CC="$(CC)" python3 $(srcdir)/tests/check-filemanip-safety.py \
+		--module-source "$(abs_srcdir)" --directories-only \
+		--work-dir "$(abs_builddir)/filemanip-directory-check"
 	CC="$(CC)" python3 $(srcdir)/tests/check-operation-outcome.py
 if HAVE_CK_CORE_FS
 	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-sync-controller.py
