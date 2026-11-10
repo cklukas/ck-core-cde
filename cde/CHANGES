@@ -69,6 +69,10 @@
   themselves and searches the rest of a line after a multibyte character. New
   documentation page `docs/improvements/data-types.md`; covered by
   `make -C lib/DtSvc check`.
+- dtlogin: a string resource that did not change is left alone when the
+  configuration is reread (its size from the resource database counted the NUL
+  and never matched the string). Covered by
+  `programs/dtlogin/tests/check-config.py`.
 - dtlogin: opening the display, the pseudo reset of the server, the server ping
   and the locale scan no longer use SIGALRM and a jump out of the interrupted
   code. The first two run in a thread with a time limit, the ping looks at the

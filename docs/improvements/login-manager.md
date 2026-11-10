@@ -69,6 +69,11 @@ privileges only when that really worked.
   The resource database the login screen loads for a display replaces the one
   loaded before and releases it, and a missing configuration file name no
   longer reaches the X library as a null pointer.
+- A configuration resource whose value has not changed is recognised as
+  such when the configuration is read again: the size that the X resource
+  database reports counts the terminating NUL and was compared with the length
+  of the string, so every string resource was freed and copied on every
+  rescan.
 - A failed allocation of the program name ends the login manager with its
   message instead of crashing, and a failed allocation of the argument list
   keeps the resources that are loaded.

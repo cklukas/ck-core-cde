@@ -11,6 +11,7 @@ from scenarios import block, finish, read, run_all, until
 
 session = read("session.c")
 dm = read("dm.c")
+resource = read("resource.c")
 util = read("util.c")
 
 expand_lang = block(session, "char *\n_ExpandLang(")
@@ -19,6 +20,7 @@ alt_start = "/* the most alternate desktops the resource files can add to the lo
 alt_resources = until(session, alt_start, "/******************\n *\n * Function Name:  _ExpandLang")
 file_compare = block(session, "#if defined(__STDC__)\nstatic int\nFileNameCompare", "\n}\n")
 
+get_resource = block(resource, "int \nGetResource(")
 scan_servers = block(dm, "static int \nScanServers( void )")
 
 harness = r'''
@@ -42,6 +44,8 @@ int test_hosts_for(unsigned char *client, int length);
 ARRAY8Ptr test_local_address(void);
 int test_parse(char *line);
 int test_scan_servers(void);
+int test_get_resource(char *name, char *class, char **valuep, char *default_value);
+void test_resource_db(const char *text);
 extern char *servers;
 char *test_qualify(char *file, char *path);
 char *test_expand(char *string, char *lang);
@@ -88,6 +92,23 @@ int test_parse(char *line)
     static DisplayType acceptable[] = { { Local, Permanent, FromFile }, { Foreign, Permanent, FromFile } };
     return ParseDisplay(line, acceptable, 2, &puser);
 }
+'''
+
+resource_unit = r'''
+#include "harness.h"
+#include "vgmsg.h"
+#include <X11/Xlib.h>
+#include <X11/Xresource.h>
+#include <X11/Xmu/CharSet.h>
+#define DM_STRING 0
+#define DM_INT 1
+#define DM_BOOL 2
+#define DM_ARGV 3
+XrmDatabase DmResourceDB;
+''' + get_resource + r'''
+void test_resource_db(const char *text) { DmResourceDB = XrmGetStringDatabase(text); }
+int test_get_resource(char *name, char *class, char **valuep, char *default_value)
+{ return GetResource(name, class, DM_STRING, valuep, default_value); }
 '''
 
 servers_unit = r'''
@@ -146,6 +167,7 @@ extern XrmDatabase XresourceDB;
 #define CHECK(condition) do { if (!(condition)) { \
     fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #condition); exit(1); } } while (0)
 
+int parseArgs(char ***argv, const char *string) { (void)argv; (void)string; return 1; }
 void Debug(char *fmt, ...) { (void)fmt; }
 void LogError(unsigned char *fmt, ...) { (void)fmt; ++errors; }
 void LogOutOfMem(unsigned char *fmt, ...) { (void)fmt; }
@@ -347,6 +369,27 @@ static void ServersFile(void)
     CHECK(FindDisplayByName("xxxxxxxxxxxxxxxxxxxx") == NULL);
 }
 
+static void ResourceUnchanged(void)
+{
+    char *value = NULL, *kept;
+
+    test_resource_db("Dtlogin.session: /usr/dt/bin/Xsession\n");
+    CHECK(test_get_resource("Dtlogin.session", "Dtlogin.Session", &value, "default") == 1);
+    CHECK(value && strcmp(value, "/usr/dt/bin/Xsession") == 0);
+    kept = value;
+    /* a resource that did not change is left as it is (the size of a value counts its NUL) */
+    CHECK(test_get_resource("Dtlogin.session", "Dtlogin.Session", &value, "default") == 0);
+    CHECK(value == kept);
+    /* a new value replaces it, a missing one gives the default, and the default alone gives nothing when it is empty */
+    test_resource_db("Dtlogin.session: other\n");
+    CHECK(test_get_resource("Dtlogin.session", "Dtlogin.Session", &value, "default") == 1 && strcmp(value, "other") == 0);
+    test_resource_db("");
+    CHECK(test_get_resource("Dtlogin.session", "Dtlogin.Session", &value, "default") == 1 && strcmp(value, "default") == 0);
+    CHECK(test_get_resource("Dtlogin.setup", "Dtlogin.Setup", &value, "another") == 1 && strcmp(value, "another") == 0);
+    value = NULL;
+    CHECK(test_get_resource("Dtlogin.setup", "Dtlogin.Setup", &value, "") == 1 && value == NULL);
+}
+
 static void ServersMissing(void)
 {
     /* a name that leads to no file leaves no servers file to read */
@@ -465,6 +508,7 @@ static const struct { const char *name; void (*run)(void); } scenarios[] = {
     {"xservers-host-name", ServersHostName},
     {"xservers-file", ServersFile},
     {"xservers-missing", ServersMissing},
+    {"resource-unchanged", ResourceUnchanged},
     {"search-path", SearchPath},
     {"search-path-no-memory", SearchPathNoMemory},
     {"expand-lang", ExpandLang},
@@ -484,15 +528,15 @@ int main(int argc, char **argv)
 '''
 
 names = ["xaccess-long-word", "xaccess-unknown-display", "xaccess-pattern-time", "xaccess-pattern-meaning",
-         "local-address", "xservers-local-uid", "xservers-class-added", "xservers-host-name", "xservers-file", "xservers-missing", "search-path",
+         "local-address", "xservers-local-uid", "xservers-class-added", "xservers-host-name", "xservers-file", "xservers-missing", "resource-unchanged", "search-path",
          "search-path-no-memory", "expand-lang", "expand-lang-no-memory", "alt-desktops", "alt-desktops-no-memory"]
 failed = run_all("login-config-",
                  {"harness.h": harness, "access_unit.c": access_unit, "file_unit.c": file_unit,
-                  "dpylist_unit.c": dpylist_unit, "servers_unit.c": servers_unit, "qualify_unit.c": qualify_unit,
+                  "dpylist_unit.c": dpylist_unit, "servers_unit.c": servers_unit, "resource_unit.c": resource_unit, "qualify_unit.c": qualify_unit,
                   "session_unit.c": session_unit, "stubs.c": stubs},
-                 [("access_unit", ["-w"]), ("file_unit", ["-w"]), ("dpylist_unit", ["-w"]), ("servers_unit", ["-w"]),
+                 [("access_unit", ["-w"]), ("file_unit", ["-w"]), ("dpylist_unit", ["-w"]), ("servers_unit", ["-w"]), ("resource_unit", ["-w"]),
                   ("qualify_unit", ["-w"]), ("session_unit", ["-w"]),
                   ("stubs", ["-Wall", "-Wextra", "-Wno-unused-parameter"])],
-                 ["-lXdmcp", "-lXau", "-lXt", "-lX11"], names,
+                 ["-lXdmcp", "-lXau", "-lXmu", "-lXt", "-lX11"], names,
                  defines=['-DCDE_INSTALLATION_TOP="dtinst"', '-DCDE_CONFIGURATION_TOP="dtconf"'])
 finish(failed, "Configuration readers", "Xaccess, Xservers, search paths and resource directories")

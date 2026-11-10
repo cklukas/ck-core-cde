@@ -395,7 +395,8 @@ GetResource( char *name, char *class, int valueType, char **valuep,
 	&type, &value))
     {
 	string = value.addr;
-	len = value.size;
+	/* the size of a resource value counts its NUL: the string is what is compared and copied */
+	len = strlen (string);
     }
     else
     {
