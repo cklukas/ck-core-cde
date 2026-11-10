@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <locale.h>
 #include "dmx.hh"
+#include <DtMail/MailGroup.hh>
 #include <locale.h>
 #include <sys/param.h>
 // #include <Dt/DtNlUtils.h>
@@ -43,23 +44,18 @@ extern "C" {
  * globals
  */
 
-gid_t       _originalEgid;    // startup effective gid
-gid_t       _originalRgid;    // startup real gid
+static MailGroup mailGroup;	// the group of a set-group-id installation
 
-void   
+void
 enableGroupPrivileges(void *)
 {
-    if(-1 == setgid(_originalEgid)) {
-        fprintf(stderr, "Failed to enable group privileges\n");
-    }
+    mailGroup.enable();
 }
 
-void   
+void
 disableGroupPrivileges(void *)
 {
-    if(-1 == setgid(_originalRgid)) {
-        fprintf(stderr, "Failed to disable group privileges\n");
-    }
+    mailGroup.disableOrStop();
 }
 
 int
@@ -77,12 +73,10 @@ main (int argc, char **argv)
         // folders.  But we don't want to do everything as group mail.
         // here we record our original gid, and set the effective gid
         // back the the real gid.  We'll set it back when we're dealing
-        // with folders...
+        // with folders...  The program stops when the group cannot be given
+        // up.
         //
-        _originalEgid = getegid();      // remember effective group ID
-        _originalRgid = getgid();       // remember real group ID
-        disableGroupPrivileges((void *)0); // disable group privileges from
-					   // here on
+        mailGroup.dropOrStop();
 
 	/*
 	 * To make DtDts*() function correctly, we have to call

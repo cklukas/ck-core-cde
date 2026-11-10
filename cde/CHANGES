@@ -238,6 +238,17 @@
   `make -C lib/tt/lib check` (sanitizer cases with a
   simulated and, started as the superuser, a real privileged process) and
   `make -C lib/tt/bin check`.
+- dtmail, dtmailpr: give up the mail group of a set-group-id installation
+  before the environment is read, and verify every change of the effective
+  group. The group is dropped first in `RoamApp::initialize()` (it was dropped
+  after the locale and the CDE environment were set up) and the drop and the
+  switch back for spool operations are done in one place,
+  `include/DtMail/MailGroup.hh`, which checks `getegid()` after `setegid()` and
+  stops the program when the group cannot be given up (the results of
+  `setgid()` were ignored). Covered by
+  `programs/dtmail/tests/check-group-privileges.py` (fake-kernel scenarios under
+  AddressSanitizer and a source guard); described in
+  `docs/improvements/mail.md`.
 - dtfile: remove the last raw, pointer-bearing `FileData` directory-worker
   packet. Removed-entry tombstones are now packed into bounded `FileData2`
   records and sent with complete writes; oversized or incomplete records fail

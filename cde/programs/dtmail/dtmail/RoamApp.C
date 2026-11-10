@@ -954,6 +954,10 @@ void RoamApp::initialize(int *argcp, char **argv)
     struct sigaction	action_buf;
     Tt_status		status;
 
+    // Give up the group of a set-group-id installation before anything reads
+    // the environment, sets the locale or opens a file.
+    initializeGroupPrivileges();
+
     _busy_count = 0;
     _firstSaveYourselfArrived = FALSE;
     _options = NULL;

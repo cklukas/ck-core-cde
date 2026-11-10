@@ -123,8 +123,6 @@ Application::Application ( char *appClassName ) :
     _applicationClass = strdup ( appClassName );
     _appWorkspaceList = NULL;
     _lastInteractiveEventTime = 0;
-    _originalEgid = 0;
-    _originalRgid = 0;
 }
 
 void Application::initialize ( int *argcp, char **argv )
@@ -147,11 +145,11 @@ void Application::initialize ( int *argcp, char **argv )
     // folders.  But we don't want to do everything as group mail.
     // here we record our original gid, and set the effective gid
     // back the the real gid.  We'll set it back when we're dealing
-    // with folders...
+    // with folders...  A derived application that reads its environment
+    // before it calls this function has done this already, and the program
+    // stops when the group cannot be given up.
     //
-    _originalEgid = getegid();	// remember effective group ID
-    _originalRgid = getgid();	// remember real group ID
-    disableGroupPrivileges();	// disable group privileges from here on
+    initializeGroupPrivileges();
 
     DebugPrintf(3, "Application::initialize - Initializing Xt.\n");
 

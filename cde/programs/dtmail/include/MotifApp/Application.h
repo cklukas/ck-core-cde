@@ -77,6 +77,7 @@
 #include "UIComponent.h"
 #include <sys/types.h>
 #include <unistd.h>
+#include <DtMail/MailGroup.hh>
 #include "MainWindow.h"
 
 class Application : public UIComponent {
@@ -110,8 +111,7 @@ class Application : public UIComponent {
     Display     *_display;
 
     long	_lastInteractiveEventTime;
-    gid_t	_originalEgid;	  // startup effective gid
-    gid_t	_originalRgid;	  // startup real gid
+    MailGroup	_group;		  // the group of a set-group-id installation
     int		_shutdownEnabled;
     MainWindow  **_windows;       // top-level windows in the program
     int         _numWindows;
@@ -132,16 +132,13 @@ class Application : public UIComponent {
     int		isEnabledShutdown()	{ return _shutdownEnabled; }
     virtual void shutdown() = 0;
     
-    // Functions to manipulate group execution privileges
-#if defined(CSRG_BASED)
-    void	disableGroupPrivileges(void) { (void) setegid(_originalRgid); }
-    void	enableGroupPrivileges(void)  { (void) setegid(_originalEgid); }
-#else
-    void	disableGroupPrivileges(void) { (void) setgid(_originalRgid); }
-    void	enableGroupPrivileges(void)  { (void) setgid(_originalEgid); }
-#endif
-    gid_t	originalEgid(void)	{ return _originalEgid; }
-    gid_t	originalRgid(void)	{ return _originalRgid; }
+    // Functions to manipulate group execution privileges.  The first call
+    // of initializeGroupPrivileges() gives the installed group up or stops
+    // the program; disableGroupPrivileges() stops it as well when the group
+    // cannot be given up again.
+    void	initializeGroupPrivileges(void) { _group.dropOrStop(); }
+    void	disableGroupPrivileges(void) { _group.disableOrStop(); }
+    bool	enableGroupPrivileges(void)  { return _group.enable(); }
 
     // Functions to manipulate application's top-level windows
     void	iconify();
