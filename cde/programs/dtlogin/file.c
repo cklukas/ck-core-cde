@@ -97,6 +97,8 @@ freeArgs( char **args )
 {
     char    **a;
 
+    if (!args)
+	return;
     for (a = args; *a; a++)
 	free (*a);
     free ((char *) args);
@@ -205,6 +207,11 @@ ParseDisplay( char *source,
 	return 0;
     }
     name = strdup(args[0]);
+    if (!name)
+    {
+	freeArgs (args);
+	return 0;
+    }
     if (!args[1])
     {
 	LogError(ReadCatalog(MC_LOG_SET,MC_LOG_MISS_TYPE,MC_DEF_LOG_MISS_TYPE),
@@ -236,6 +243,7 @@ ParseDisplay( char *source,
     if ( strcmp(name, "*") == 0) {
 	char 		tname[128];
 	struct hostent	*hostent;
+	size_t		length;
 
         memset(tname, 0, 128);
 	gethostname(tname, 128 - 1);
@@ -246,10 +254,17 @@ ParseDisplay( char *source,
 	    tname[0] = 0;
 	}
 
-	strncat(tname, ":0", 128 - 1);
-	
+	/* the name and the display number must both fit */
+	length = strlen(tname);
+	snprintf(tname + length, sizeof(tname) - length, ":0");
+
         free(name);
 	name = strdup(tname);
+	if (!name)
+	{
+	    freeArgs (args);
+	    return 0;
+	}
     }
 
     /*
@@ -286,16 +301,22 @@ ParseDisplay( char *source,
     if (parse_uid) {
 	struct passwd *p;
 
-        Debug("Xservers 'local_uid' pseudo user = %s\n", *argv);
-
-        if ( (p = getpwnam (*argv)) != NULL) {
-	    *puser = *p;
-	} else {
-	    Debug("Could not get password entry for user name '%s'\n", *argv);
+        if (*argv == NULL) {
+	    /* the line ends where the user name should be */
+	    Debug("Xservers 'local_uid' has no user name\n");
 	    Debug("Using default pseudo user = %s\n", puser->pw_name);
-	}
+	} else {
+	    Debug("Xservers 'local_uid' pseudo user = %s\n", *argv);
 
-	argv = argv + 1;
+	    if ( (p = getpwnam (*argv)) != NULL) {
+		*puser = *p;
+	    } else {
+		Debug("Could not get password entry for user name '%s'\n", *argv);
+		Debug("Using default pseudo user = %s\n", puser->pw_name);
+	    }
+
+	    argv = argv + 1;
+	}
     } else {
         Debug("Default pseudo user = %s\n", puser->pw_name);
     }
@@ -323,7 +344,7 @@ ParseDisplay( char *source,
     if (d)
     {
 	d->state = OldEntry;
-	if (class && strcmp (d->class, class))
+	if (class && (!d->class || strcmp (d->class, class)))
 	{
 	    char    *newclass;
 
@@ -341,10 +362,23 @@ ParseDisplay( char *source,
     else
     {
 	d = NewDisplay (name, class);
+	if (!d)
+	{
+	    freeArgs (args);
+	    free (name);
+	    return 0;
+	}
 	Debug ("Found new display:  %s %s %s", d->name, d->class ? d->class : "", type);
     }
     d->displayType = displayType;
     d->argv = copyArgs (argv);
+    if (!d->argv)
+    {
+	/* the words of the command line have no owner then */
+	freeArgs (args);
+	free (name);
+	return 0;
+    }
     for (a = d->argv; a && *a; a++)
 	Debug (" %s", *a);
     Debug ("\n");

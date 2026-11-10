@@ -30,6 +30,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 /*********************************************************************
  * qualifyWithFirst
@@ -53,7 +56,7 @@ char * paths = NULL;
 char * savepaths = NULL;
 char * path;
 char * chance;
-FILE * f;
+struct stat st;
 
   /* assert that the arguments cannot be NULL */
 
@@ -61,6 +64,8 @@ FILE * f;
     return NULL;
 
   paths = strdup(searchPath);
+  if (paths == NULL)
+    return NULL;
   savepaths = paths;
 
   while (1) {
@@ -73,15 +78,15 @@ FILE * f;
     /* allocate space and create the qualified filename */
 
     chance = (char *)malloc(strlen(paths) + strlen(filename) + 2);
+    if (chance == NULL) {
+      free(savepaths);
+      return NULL;
+    }
     sprintf(chance,"%s/%s",paths,filename);
 
-    /* see if it is there by opening it for reading */
+    /* see if it is there: a file that can be read (it is not opened, so a pipe cannot block) */
 
-    if (f = fopen(chance,"r")) {
-
-      /* it's there so close it, .... */
-
-      fclose(f);
+    if (stat(chance, &st) == 0 && S_ISREG(st.st_mode) && access(chance, R_OK) == 0) {
 
       /* ... restore the colon, .... */
 

@@ -247,6 +247,28 @@ FreeAccessDatabase( void )
 static char	wordBuffer[WORD_LEN];
 static int	nextIsEOF;
 
+/*
+ * The next character of the word being read.  A word that does not fit in the
+ * buffer is cut off and reported; the characters that do not fit are dropped.
+ */
+static char *
+AddWordCharacter(
+        char *wordp,
+        int c )
+{
+    static int	reported;
+
+    if (wordp < wordBuffer + WORD_LEN - 1)
+	*wordp++ = c;
+    else if (!reported)
+    {
+	reported = TRUE;
+	LogError ((unsigned char *) "Access file \"%s\": a word is longer than %d characters\n",
+		  accessFile, WORD_LEN - 1);
+    }
+    return wordp;
+}
+
 static char * 
 ReadWord(
         FILE *file,
@@ -269,7 +291,7 @@ ReadWord(
 	case '#':
 	    if (quoted)
 	    {
-		*wordp++ = c;
+		wordp = AddWordCharacter (wordp, c);
 		break;
 	    }
 	    while ((c = getc (file)) != EOF && c != '\n')
@@ -301,7 +323,7 @@ ReadWord(
 		continue;
 	    }
 	default:
-	    *wordp++ = c;
+	    wordp = AddWordCharacter (wordp, c);
 	    break;
 	}
 	quoted = FALSE;
@@ -320,7 +342,9 @@ tryagain:
     hostOrAlias = ReadWord (file, TRUE);
     if (!hostOrAlias)
 	return NULL;
-    h = (HostEntry *) malloc (sizeof (DisplayEntry));
+    h = (HostEntry *) malloc (sizeof (HostEntry));
+    if (!h)
+	return NULL;
     if (*hostOrAlias == ALIAS_CHARACTER)
     {
 	h->type = HOST_ALIAS;
@@ -417,10 +441,13 @@ ReadDisplayEntry(
     HostEntry	    *h, **prev;
     struct hostent  *hostent;
     
+next:
     displayOrAlias = ReadWord (file, FALSE);
     if (!displayOrAlias)
     	return NULL;
     d = (DisplayEntry *) malloc (sizeof (DisplayEntry));
+    if (!d)
+	return NULL;
     d->notAllowed = 0;
     d->chooser = 0;
 #ifdef BYPASSLOGIN
@@ -463,7 +490,10 @@ ReadDisplayEntry(
 		  ReadCatalog(MC_LOG_SET,MC_LOG_ACC_DPY,MC_DEF_LOG_ACC_DPY),
 		  accessFile,displayOrAlias);
 		free ((char *) d);
-		return NULL;
+		/* the hosts of the entry go with it; the entries after it still count */
+		while ((h = ReadHostEntry (file)))
+		    FreeHostEntry (h);
+		goto next;
 	    }
 	    d->type = DISPLAY_ADDRESS;
 	    display = &d->entry.displayAddress;
@@ -504,15 +534,15 @@ ReadDisplayEntry(
 	    FreeHostEntry (h);
 	    d->chooser = 1;
 	} else {
+#ifdef BYPASSLOGIN
+	    if (h->type == HOST_BYPASS)
+	    {
+		d->bypass = 1;
+	    }
+#endif /* BYPASSLOGIN */
 	    *prev = h;
 	    prev = &h->next;
 	}
-#ifdef BYPASSLOGIN
-	if (h->type == HOST_BYPASS)
-	{
-	    d->bypass = 1;
-	}
-#endif /* BYPASSLOGIN */
     }
     *prev = NULL;
     return d;
@@ -524,6 +554,7 @@ ReadAccessDatabase(
 {
     DisplayEntry    *d, **prev;
 
+    nextIsEOF = FALSE;
     prev = &database;
     while (d = ReadDisplayEntry (file))
     {
@@ -560,38 +591,70 @@ patternMatch(
         char *string,
         char *pattern )
 {
-    int	    p, s;
+    char    *star = NULL, *mark = NULL;
 
     if (!string)
         string = "";
 
+    /*
+     * '?' matches one character, '*' any number of them, '\\' quotes the next
+     * character.  After a mismatch the last '*' takes one more character, so
+     * the time is bounded by the lengths of the two strings.
+     */
     for (;;)
     {
-	s = *string++;
-	switch (p = *pattern++) {
-	case '*':
+	if (*pattern == '*')
+	{
+	    while (*pattern == '*')
+		++pattern;
 	    if (!*pattern)
 		return TRUE;
-	    for (string--; *string; string++)
-		if (patternMatch (string, pattern))
-		    return 1;
-	    return 0;
-	case '?':
-	    if (s == 0)
-		return 0;
-	    break;
-	case '\0':
-	    return s == 0;
-	case '\\':
-	    p = *pattern++;
-	default:
-	    if (p != s)
-		return 0;
+	    star = pattern;
+	    mark = string;
 	}
+	if (!*string)
+	    return *pattern == '\0';
+	if (*pattern == '?')
+	{
+	    ++pattern;
+	    ++string;
+	}
+	else if (*pattern == '\\')
+	{
+	    if (pattern[1] && pattern[1] == *string)
+	    {
+		pattern += 2;
+		++string;
+	    }
+	    else if (star)
+	    {
+		pattern = star;
+		string = ++mark;
+	    }
+	    else
+		return FALSE;
+	}
+	else if (*pattern == *string)
+	{
+	    ++pattern;
+	    ++string;
+	}
+	else if (star)
+	{
+	    pattern = star;
+	    string = ++mark;
+	}
+	else
+	    return FALSE;
     }
 }
 
 
+/*
+ * The address of this host.  When the name of the host does not resolve there
+ * is none: the array stays empty, which is equal to no address, and the lookup
+ * is tried again the next time.
+ */
 ARRAY8Ptr
 getLocalAddress( void )
 {
@@ -602,8 +665,12 @@ getLocalAddress( void )
 	struct hostent	*hostent;
 
 	hostent = gethostbyname (localHostname());
-	XdmcpAllocARRAY8 (&localAddress, hostent->h_length);
-	bcopy (hostent->h_addr, (char *) localAddress.data, hostent->h_length);
+	if (hostent && hostent->h_length > 0 &&
+	    XdmcpAllocARRAY8 (&localAddress, hostent->h_length))
+	{
+	    bcopy (hostent->h_addr, (char *) localAddress.data, hostent->h_length);
+	    haveLocalAddress = 1;
+	}
     }
     return &localAddress;
 }
@@ -1026,7 +1093,7 @@ NameToNetworkAddress(char        *name,
     colon = index (name, ':');
     if (!colon) return FALSE;
     if (colon != name) {
- 	if (colon - name > sizeof (hostname)) return FALSE;
+ 	if (colon - name >= sizeof (hostname)) return FALSE;
  	strncpy (hostname, name, colon - name);
  	hostname[colon - name] = '\0';
     } else {

@@ -25,6 +25,37 @@ privileges only when that really worked.
 - A chooser connection that sends nothing is closed after a timeout instead of
   blocking the display manager.
 
+## Configuration files
+
+- The `Xaccess` file: a word longer than the 255 characters the reader has room
+  for is cut off and reported, where it used to be written over the neighbouring
+  data. A display that does not resolve costs its own entry only; before, the
+  rest of the file was not read. The wildcard matcher of display patterns takes
+  time in proportion to the lengths of the pattern and the name (a pattern of
+  `*a*a*a…` used to take exponential time), and a pattern that ends in a
+  backslash no longer reads beyond its end. An allocation failure stops the
+  reader instead of dereferencing a null pointer, and an entry that offers a
+  chooser is no longer read after it was freed.
+- The address of the local host is looked up once and kept. It used to be looked
+  up and leaked on every use, and a host name that does not resolve ended the
+  login manager with a null pointer dereference; now it matches no address.
+- The `Xservers` file: `local_uid` at the end of a line, a display that is
+  listed again with a class after it was listed without, a very long host
+  name for the `*` display and a failed allocation are handled instead of
+  dereferencing a null pointer or writing past a buffer.
+- The search for a configuration file looks for a regular file that can be
+  read instead of opening it, so a pipe in the search path cannot block the
+  manager, and an allocation failure ends the search.
+- The language in a resource file name is expanded without reading past the end
+  of a name that ends in `%`, and a failed allocation is passed on. The
+  directories of the alternate desktops are read with a list that is checked
+  while it grows, the number of alternate desktops the resource files can add
+  is limited to 100, and the resource value that says whether a file adds one
+  is no longer modified in the database while it is read.
+- A failed allocation of the program name ends the login manager with its
+  message instead of crashing, and a failed allocation of the argument list
+  keeps the resources that are loaded.
+
 ## Displays
 
 - A `Manage` request replaces the session of a display of the same name only
@@ -113,6 +144,10 @@ under AddressSanitizer and UndefinedBehaviorSanitizer:
 ```sh
 make -C programs/dtlogin check
 ```
+
+`tests/check-config.py` runs the production readers of the `Xaccess` and
+`Xservers` files, the search path, the language expansion and the alternate
+desktop loader with lines and allocation failures they must handle.
 
 `tests/check-displays.py` runs the display list and the `Manage` handler with
 failing allocations and rival peers (an XDMCP display of the same host, of

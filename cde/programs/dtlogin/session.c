@@ -695,12 +695,16 @@ LoadXloginResources( struct display *d )
 
     if (d->resources && d->resources[0]) { 
         resources = _ExpandLang(d->resources, d->language);
+        if (resources == NULL)
+            return(-1);
         if (access (resources, R_OK) != 0) {
             /** fallback to the C locale for resources **/
 	    Debug("LoadXloginResources - cant access %s\n", resources);
             Debug("\t %s.  Falling back to C.\n", strerror(errno));
             free(resources);
             resources = _ExpandLang(d->resources, "C");
+            if (resources == NULL)
+                return(-1);
             if (access (resources, R_OK) != 0) {
                 /** can't find a resource file, so bail **/
 	        Debug("LoadXloginResources - cant access %s.\n", resources);
@@ -759,6 +763,9 @@ LoadXloginResources( struct display *d )
  *
  ***************************************************************************/
  
+/* the most alternate desktops the resource files can add to the login screen */
+#define MAX_ALT_DESKTOPS 100
+
 static void
 LoadAltDtsResources(struct display *d)
 {
@@ -786,7 +793,11 @@ LoadAltDtsResources(struct display *d)
                    "Dtlogin*altDts",  "Dtlogin*AltDts",
                    &rmtype, &rmvalue ) ) {
 		snprintf(tempbuf, sizeof(tempbuf), "%s", rmvalue.addr);
-		i = atoi(tempbuf);
+		{
+		    long wanted = strtol(tempbuf, NULL, 10);
+
+		    i = wanted < 0 ? 0 : wanted > MAX_ALT_DESKTOPS ? MAX_ALT_DESKTOPS : (int) wanted;
+		}
     }
 
     strcpy(dirname[0],CDE_INSTALLATION_TOP "/config/%L/Xresources.d/");
@@ -795,6 +806,8 @@ LoadAltDtsResources(struct display *d)
     for(j = 0; j < 2 ; ++j)
     {
         resources = _ExpandLang(dirname[j], d->language);
+        if (resources == NULL)
+            continue;
         if (access (resources, R_OK) != 0)
 	{
             Debug("LoadAltDtsResources- cant access %s.\n", resources);
@@ -804,6 +817,8 @@ LoadAltDtsResources(struct display *d)
 	    resources = NULL;
 
             resources = _ExpandLang(dirname[j], "C");
+            if (resources == NULL)
+                continue;
             if (access (resources, R_OK) != 0)
 	    {
                 Debug("LoadAltDtsResources- cant access %s.\n", resources);
@@ -844,21 +859,21 @@ LoadAltDtsResources(struct display *d)
                     if ((access (res_file, R_OK)) != 0)
 		    {
                         Debug("LoadAltDtsResources- cant access %s.\n",
-			      resources);
+			      res_file);
                         Debug("\t %s.\n", strerror(errno));
                         continue;
 		    }
 
-                    if (file_count == 0) {
-                        file_list = malloc (list_incr * sizeof(char *));
-                        num_allocated += list_incr;
-                    }
                     if (file_count + 1 > num_allocated) {
+                        char **grown = realloc (file_list,
+                                         (num_allocated + list_incr) * sizeof(char *));
+                        if (grown == NULL)
+                            break;
+                        file_list = grown;
                         num_allocated += list_incr;
-                        file_list = realloc (file_list,
-                                             num_allocated * sizeof(char *));
                     }
-                    file_list[file_count] = strdup (res_file);
+                    if ((file_list[file_count] = strdup (res_file)) == NULL)
+                        break;
                     file_count++;
                 }
             }
@@ -880,15 +895,13 @@ LoadAltDtsResources(struct display *d)
 	    /* 
 	     * remove the trailing spaces 
 	     */
-	    if(strchr(rmvalue.addr,' '))
-	        snprintf(tempbuf, sizeof(tempbuf), "%s", strtok(rmvalue.addr," "));
-	    else
-	        snprintf(tempbuf, sizeof(tempbuf), "%s", rmvalue.addr);
+	    snprintf(tempbuf, sizeof(tempbuf), "%s", rmvalue.addr);
+	    tempbuf[strcspn(tempbuf, " ")] = '\0';
 
 	    if ((strcmp(tempbuf, "True") == 0) || 
                 (strcmp(tempbuf, "TRUE") == 0))  {
  
-	        if ( XrmGetResource(XresourceDB,
+	        if (i < MAX_ALT_DESKTOPS && XrmGetResource(XresourceDB,
 				"Dtlogin*altDtKey",  "Dtlogin*AltDtKey",
 		       		&rmtype, &rmvalue ) ) {
 		     ++i;
@@ -1014,49 +1027,52 @@ _ExpandLang(
     */
    tmp_len = strlen (string) + (n * lang_len) + n + 1;
    tmp = (char *) malloc (tmp_len);
+   if (tmp == NULL)
+      return (NULL);
    for (i = 0; i < tmp_len; tmp[i] = '\0', i++);
 
    pch = string;
 
-   while (pch != NULL) {
+   while (*pch != '\0') {
       trail = pch;
 
-      if ((pch = strchr (pch, '%')) != NULL) {
-
-         pch++;
-
-         if (pch == NULL) {
-            (void) strncat (tmp, trail, ((pch - 1) - trail) + 1);
-         }
-         else if ((pch != NULL) && *pch == 'L') {
-            if (lang_len == 0) {
-               if (((pch - trail) >=2) && (*(pch-2) == '/'))
-                  /*
-                   * Remove the "/" as well as the "%L".
-                   */
-                  (void) strncat (tmp, trail, (pch - trail) - 2);
-               else
-                  (void) strncat (tmp, trail, (pch - trail) - 1);
-            }
-            else {
-               /*
-                * Remove the "%L" and then append the LANG.
-                */
-               (void) strncat (tmp, trail, (pch - trail) - 1);
-               (void) strcat (tmp, lang);
-            }
-         }
-         else {
-            (void) strncat (tmp, trail, (pch - trail) + 1);
-         }
-         if (pch != NULL)
-            pch++;
-      }
-      else {
+      if ((pch = strchr (trail, '%')) == NULL) {
          /*
           * A '%' was not found.
           */
          (void) strcat (tmp, trail);
+         break;
+      }
+
+      /* pch is at the '%'; the character after it decides what it stands for */
+      if (pch[1] == 'L') {
+         if (lang_len == 0) {
+            if (pch > trail && pch[-1] == '/')
+               /*
+                * Remove the "/" as well as the "%L".
+                */
+               (void) strncat (tmp, trail, (pch - trail) - 1);
+            else
+               (void) strncat (tmp, trail, pch - trail);
+         }
+         else {
+            /*
+             * Remove the "%L" and then append the LANG.
+             */
+            (void) strncat (tmp, trail, pch - trail);
+            (void) strcat (tmp, lang);
+         }
+         pch += 2;
+      }
+      else if (pch[1] == '\0') {
+         /* a '%' that ends the string stands for itself */
+         (void) strcat (tmp, trail);
+         break;
+      }
+      else {
+         /* any other escape is kept as it is */
+         (void) strncat (tmp, trail, (pch - trail) + 2);
+         pch += 2;
       }
    }
 

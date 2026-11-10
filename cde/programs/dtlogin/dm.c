@@ -141,6 +141,16 @@ void RunChooser(struct display  *d); // RunChooser.c
 
 /***************************************************************************/
 
+/* the program cannot even keep its own name: report it and stop */
+static void
+NoMemoryExit( char *program )
+{
+    fprintf(stderr, (char *)
+	ReadCatalog(MC_ERROR_SET, MC_NO_MEMORY, MC_DEF_NO_MEMORY),
+	program);
+    exit (1);
+}
+
 int 
 main( int argc, char **argv )
 {
@@ -166,16 +176,13 @@ main( int argc, char **argv )
      */
 
     progPath = strdup(argv[0]);
+    if (progPath == NULL)
+	NoMemoryExit (argv[0]);
 
     if (str = strrchr(progPath, '/'))
     {
 	if (strlen(str) < 2)
-	{
-	    fprintf(stderr, (char *)
-		ReadCatalog(MC_ERROR_SET, MC_NO_MEMORY, MC_DEF_NO_MEMORY),
-		argv[0]);
-	    exit (1);
-	}
+	    NoMemoryExit (argv[0]);
 
 	progName = strdup(++str);
 	*str = '\0';
@@ -185,6 +192,8 @@ main( int argc, char **argv )
 	progName = progPath;
 	progPath = strdup("./");
     }
+    if (progName == NULL || progPath == NULL)
+	NoMemoryExit (argv[0]);
 
 
     /*

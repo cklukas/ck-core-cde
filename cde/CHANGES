@@ -69,6 +69,17 @@
   crash the daemon or make it allocate without bound. The routines of versions
   2 to 4 are maintained in `rtable{2,3,4}_xdr.c` instead of being generated.
   Covered by `make -C lib/csa check` (17 cases under the sanitizers).
+- dtlogin: harden the readers of the configuration files. The `Xaccess` reader
+  no longer overruns its word buffer, keeps the entries after one whose display
+  does not resolve, matches display patterns in time proportional to their
+  length and without reading past a trailing backslash, and looks up the local
+  host address once (a host name that does not resolve no longer crashes the
+  manager). The `Xservers` reader handles `local_uid` without a user, a display
+  listed again with a class and a very long host name. The search for
+  configuration files no longer opens what it finds; the language expansion
+  of resource file names stops at a trailing `%`; the alternate desktop loader
+  checks its allocations, limits the number of desktops and no longer edits the
+  resource database it reads. Covered by `programs/dtlogin/tests/check-config.py`.
 - dtlogin: an XDMCP `Manage` request no longer ends the session of a display
   that the configuration file lists or another host manages, merely by naming
   it; only the same host replaces its own session. A request that runs out of

@@ -520,8 +520,12 @@ ReinitResources( void )
 
     argv = (char **) malloc ((originalArgc + 1) * sizeof (char *));
     if (!argv)
+    {
+	/* the resources that are loaded stay as they are */
 	LogOutOfMem(
 		ReadCatalog(MC_LOG_SET,MC_LOG_NO_SPACE,MC_DEF_LOG_NO_SPACE));
+	return;
+    }
     for (argc = 0; argc < originalArgc; argc++)
 	argv[argc] = originalArgv[argc];
     argv[argc] = 0;
