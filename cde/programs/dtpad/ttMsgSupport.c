@@ -600,10 +600,11 @@ TTstartDesktopMediaExchange(
 	 *
 	 *    type	requests		handled				notes
 	 *    ----	--------------------	----------------------------	-----
-	 * 	  (1)	Get|Set_Environment,	transparently
-	 *		Get|Set_Locale,
+	 * 	  (1)	Get_Sysinfo		transparently			(a)
+	 *		Get|Set_Environment,	not registered for, so the
+	 *		Get|Set_Locale,		sender is told they fail
 	 *		Get|Set_Situation,
-	 *		Signal, Get_Sysinfo
+	 *		Signal, Do_Command
 	 *	  (2)	Get|Set_Geometry,	fail with TT_DESKTOP_ENOTSUP	(b)	
 	 *		Get|Set_Iconified,
 	 *		Get|Set_Mapped,
@@ -611,9 +612,11 @@ TTstartDesktopMediaExchange(
 	 *		Set_Xinfo,
 	 *		Get_Xinfo		transparently
 	 *	  (3)	Pause, Resume, Quit	passed to Ttdt_contract_cb	(c)
-	 *	  (4)	Get_Status, Do_Command	passed to Ttdt_contract_cb
+	 *	  (4)	Get_Status		passed to Ttdt_contract_cb
 	 *
 	 *	NOTES:
+	 *	  (a)	a second server asks the one that serves the display for its
+	 *		host name with Get_Sysinfo (see main())
 	 *	  (b)	type (2) requests (except Get_Xinfo) fail because the shell
 	 *		arg is not a "realized mappedWhenManaged applicationShellWidget"
 	 *	  (c)	type (3) requests are not handled transparently because
@@ -624,7 +627,8 @@ TTstartDesktopMediaExchange(
 		    TTdt_session_joinCB,	/* Ttdt_contract_cb */
 		    topLevelWithWmCommand,	/* shell widget */
 		    (void *) 0,			/* client data */
-		    1);				/* really join the session */
+		    1,				/* really join the session */
+		    TTDT_SESSION_GET_SYSINFO);	/* requests of the process */
 	if ((status = tt_ptr_error(tt_pat)) != TT_OK) {
 	    fprintf(stderr,
                     "Could not join default ToolTalk session: %s\n",

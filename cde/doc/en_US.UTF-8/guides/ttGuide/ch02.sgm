@@ -452,7 +452,8 @@ many standard desktop message interfaces.
             Ttdt_contract_cb  cb,
             Widget            shell,
             void              *client_data,
-            int               join)
+            int               join,
+            Ttdt_session_requests requests)
 </programlisting>
 <para>Note that if an application has ptypes installed, it will normally call
 the function <function>ttmedia_ptype_declare</function> before calling <function>ttdt_session_join</function>.

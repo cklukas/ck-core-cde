@@ -2236,7 +2236,7 @@ embedded spaces, it must be enclosed within double quotes, as shown:</para>
 <!--.LE-->
 <cmdsynopsis>
 <command>ttdt_session_join</command><arg><replaceable>variable status sessId
-shellWidgetHandle join</replaceable></arg>
+shellWidgetHandle join</replaceable></arg><arg rep="repeat"><replaceable>request</replaceable></arg>
 <!-- -->
 </cmdsynopsis>
 <para><!--.VL 6-->This command joins the session indicated by the <emphasis>sessId</emphasis> argument. If the <emphasis>sessId</emphasis> argument does
@@ -2244,7 +2244,14 @@ not specify a value (that is, it is an empty string), then the default session
 is joined. If the <emphasis>shellWidgetHandle</emphasis> argument specifies
 a widget handle (that is, it is not an empty string), then it should refer
 to a mappedWhenManaged applicationShellWidget. The <emphasis>join</emphasis>
-argument is True or False. This command returns an opaque pattern handle in
+argument is True or False. Each <emphasis>request</emphasis> argument names a
+request of the whole process that the shell answers; it is one of
+<literal>TTDT_GET_LOCALE</literal>, <literal>TTDT_SET_LOCALE</literal>,
+<literal>TTDT_GET_ENVIRONMENT</literal>, <literal>TTDT_SET_ENVIRONMENT</literal>,
+<literal>TTDT_GET_SITUATION</literal>, <literal>TTDT_SET_SITUATION</literal>,
+<literal>TTDT_SIGNAL</literal> and <literal>TTDT_GET_SYSINFO</literal>. Without
+a <emphasis>request</emphasis> argument the shell answers none of them. This
+command returns an opaque pattern handle in
 the <symbol role="Variable">variable</symbol> argument; this handle can be
 destroyed using the <command>ttdt_session_quit</command> command when it is
 no longer needed. <!--.LE--></para>

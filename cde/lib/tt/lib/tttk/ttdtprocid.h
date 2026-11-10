@@ -54,7 +54,8 @@ class _TtDtProcid: public _Tt_allocated {
 					Tt_message		contract,
 					Ttdt_contract_cb	cb,
 					Widget			shell,
-					void		       *clientData
+					void		       *clientData,
+					Ttdt_session_requests	requests
 				) const;
     private:
 	char		       *_toolname;

@@ -148,12 +148,34 @@ typedef Tt_message	(*Ttdt_contract_cb)(
 				void	       *clientdata,
 				Tt_message	contract
 			);
+/*
+ * The Desktop requests that report or change the state of the whole
+ * process, not of a window.  The library answers one only if the process
+ * asks for it here: ttdt_session_join() registers for none of them
+ * otherwise, and a request nobody registered for is failed.
+ *
+ * Each value stands for one request.  Combine them with |.
+ */
+typedef unsigned int	Ttdt_session_requests;
+enum {
+	TTDT_SESSION_NO_REQUESTS	= 0,
+	TTDT_SESSION_GET_LOCALE		= 1 << 0,
+	TTDT_SESSION_SET_LOCALE		= 1 << 1,
+	TTDT_SESSION_GET_ENVIRONMENT	= 1 << 2,
+	TTDT_SESSION_SET_ENVIRONMENT	= 1 << 3,
+	TTDT_SESSION_GET_SITUATION	= 1 << 4,
+	TTDT_SESSION_SET_SITUATION	= 1 << 5,
+	TTDT_SESSION_SIGNAL		= 1 << 6,
+	TTDT_SESSION_GET_SYSINFO	= 1 << 7,
+	TTDT_SESSION_DO_COMMAND		= 1 << 8
+};
 Tt_pattern	       *ttdt_session_join(
 				const char	       *sessid,
 				Ttdt_contract_cb	cb,
 				Widget			shell,
 				void		       *clientdata,
-                                int			join
+                                int			join,
+				Ttdt_session_requests	requests
 			);
 Tt_status		ttdt_session_quit(
 				const char     *sessid,

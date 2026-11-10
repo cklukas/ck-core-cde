@@ -27,11 +27,22 @@ endif
 ttsession_SOURCES = mp_server.C
 
 # The notice test starts a session of its own and runs two clients against it:
-# the observer of a notice with a disposition must not get it twice.
-EXTRA_DIST = tests/check-notice.py tests/notice-test.c
+# the observer of a notice with a disposition must not get it twice.  The
+# session requests test does the same for the Desktop requests that act on a
+# whole process: a process answers only those it asked ttdt_session_join() for.
+EXTRA_DIST = tests/check-notice.py tests/notice-test.c \
+	     tests/check-session-requests.py tests/session-requests-test.c
+
+tt_check_compile = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS)
+tt_check_link = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS)
+tt_check_libs = $(LIBTT) $(TIRPCLIB) $(XTOOLLIB) $(X_LIBS) $(LIBS)
 
 check-local: ttsession
-	TT_NOTICE_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS)' \
-	TT_NOTICE_LINK='$(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
-	TT_NOTICE_LIBS='$(LIBTT) $(TIRPCLIB) $(XTOOLLIB) $(X_LIBS) $(LIBS)' \
+	TT_NOTICE_COMPILE='$(tt_check_compile)' \
+	TT_NOTICE_LINK='$(tt_check_link)' \
+	TT_NOTICE_LIBS='$(tt_check_libs)' \
 	python3 $(srcdir)/tests/check-notice.py $(srcdir) ./ttsession
+	TT_REQUESTS_COMPILE='$(tt_check_compile)' \
+	TT_REQUESTS_LINK='$(tt_check_link)' \
+	TT_REQUESTS_LIBS='$(tt_check_libs)' \
+	python3 $(srcdir)/tests/check-session-requests.py $(srcdir) ./ttsession

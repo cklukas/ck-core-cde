@@ -2049,7 +2049,8 @@ Tt_pattern * ttdt_session_join( const char *        sessid,
                                 Ttdt_session_cb     cb,
                                 Widget              shell,
                                 void *              clientdata,
-                                int                 join );
+                                int                 join,
+                                Ttdt_session_requests requests );
 </ProgramListing>
 </Example>
 <Para>The <Filename>ttdt_session_join</Filename> function joins a ToolTalk session as a &ldquo;good
@@ -2076,7 +2077,7 @@ registers.</Para>
 <Primary>Set_Environment request</Primary>
 </IndexTerm>
 Set_Environment</Para></Entry>
-<Entry><Para>These messages are handled transparently.</Para></Entry>
+<Entry><Para>These messages are handled transparently if the <Symbol Role="Variable">requests</Symbol> parameter asks for them; otherwise they fail.</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><IndexTerm>
@@ -2085,7 +2086,7 @@ Set_Environment</Para></Entry>
 <Primary>Set_Locale request</Primary>
 </IndexTerm>
 Set_Locale</Para></Entry>
-<Entry><Para>These messages are handled transparently.</Para></Entry>
+<Entry><Para>These messages are handled transparently if the <Symbol Role="Variable">requests</Symbol> parameter asks for them; otherwise they fail.</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><IndexTerm>
@@ -2094,19 +2095,19 @@ Set_Locale</Para></Entry>
 <Primary>Set_Situation request</Primary>
 </IndexTerm>
 Set_Situation</Para></Entry>
-<Entry><Para>These messages are handled transparently.</Para></Entry>
+<Entry><Para>These messages are handled transparently if the <Symbol Role="Variable">requests</Symbol> parameter asks for them; otherwise they fail.</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><IndexTerm>
 <Primary>Signal request</Primary>
 </IndexTerm>Signal</Para></Entry>
-<Entry><Para>This message is handled transparently.</Para></Entry>
+<Entry><Para>This message is handled transparently if the <Symbol Role="Variable">requests</Symbol> parameter asks for it; otherwise it fails.</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><IndexTerm>
 <Primary>Get_Sysinfo request</Primary>
 </IndexTerm>Get_Sysinfo</Para></Entry>
-<Entry><Para>This message is handled transparently.</Para></Entry>
+<Entry><Para>This message is handled transparently if the <Symbol Role="Variable">requests</Symbol> parameter asks for it; otherwise it fails.</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><IndexTerm>
@@ -2267,8 +2268,8 @@ message fails with the error <Filename><IndexTerm>
 <Entry><Para><Filename><IndexTerm>
 <Primary>Do_Command request</Primary>
 </IndexTerm>Do_Command</Filename></Para></Entry>
-<Entry><Para>If the <Emphasis>cb</Emphasis> parameter is not null, this message is passed to the callback; the <Emphasis>cb</Emphasis> parameter is null, this
-message fails with the error <SystemItem Class="Constant"><IndexTerm>
+<Entry><Para>If the <Symbol Role="Variable">requests</Symbol> parameter asks for it (<Literal>TTDT_SESSION_DO_COMMAND</Literal>, which needs a <Emphasis>cb</Emphasis> that is not null), this message is passed to the callback; otherwise
+the message fails with the error <SystemItem Class="Constant"><IndexTerm>
 <Primary>TT_DESKTOP_ENOTSUP</Primary>
 </IndexTerm><IndexTerm>
 <Primary>error messages</Primary>
@@ -2280,6 +2281,7 @@ message fails with the error <SystemItem Class="Constant"><IndexTerm>
 </Table>
 <Para>If the <Emphasis>sessid</Emphasis> parameter is null, the default session is joined.</Para>
 <Para>If the <Emphasis>join</Emphasis> parameter is set, the specified session is joined.</Para>
+<Para>The <Symbol Role="Variable">requests</Symbol> parameter is zero or the bitwise OR of the requests the process answers on behalf of the whole process: <Literal>TTDT_SESSION_GET_LOCALE</Literal>, <Literal>TTDT_SESSION_SET_LOCALE</Literal>, <Literal>TTDT_SESSION_GET_ENVIRONMENT</Literal>, <Literal>TTDT_SESSION_SET_ENVIRONMENT</Literal>, <Literal>TTDT_SESSION_GET_SITUATION</Literal>, <Literal>TTDT_SESSION_SET_SITUATION</Literal>, <Literal>TTDT_SESSION_SIGNAL</Literal>, <Literal>TTDT_SESSION_GET_SYSINFO</Literal> and <Literal>TTDT_SESSION_DO_COMMAND</Literal>. A request that is not asked for is not registered for and fails. Any process in the session can send these requests, so ask only for those the process needs.</Para>
 <Para>A<IndexTerm>
 <Primary>ttdt_contract_cb</Primary>
 </IndexTerm><IndexTerm>

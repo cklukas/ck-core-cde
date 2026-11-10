@@ -241,7 +241,8 @@ main(int argc, char **argv)
 	XtFree(errmsg);
     }
 
-    ttpat = ttdt_session_join(NULL, NULL, NULL, NULL, True);
+    ttpat = ttdt_session_join(NULL, NULL, NULL, NULL, True,
+			      TTDT_SESSION_NO_REQUESTS);
     if ((ttrc = tt_ptr_error(ttpat)) != TT_OK) {
 	errfmt = CATGETS(msgCatalog, 1, 9, "ttdt_session_join failed:\n%s");
         statmsg = tt_status_message(status);

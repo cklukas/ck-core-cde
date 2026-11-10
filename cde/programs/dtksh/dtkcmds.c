@@ -6145,11 +6145,13 @@ do_ttdt_session_join(
    Widget widget;
    wtab_t *w;
    Tt_pattern * patterns;
+   Ttdt_session_requests requests = TTDT_SESSION_NO_REQUESTS;
+   int i;
 
-   if (argc != 6) 
+   if (argc < 6) 
    {
       errmsg = strdup(GETMESSAGE(
-       "Usage: ttdt_session_join variable status sessId shellWidgetHandle join"
+       "Usage: ttdt_session_join variable status sessId shellWidgetHandle join [request ...]"
         ));
       printerr(str_nill, errmsg, NULL);
       free(errmsg);
@@ -6162,6 +6164,52 @@ do_ttdt_session_join(
       join = *((Boolean *)(tval.addr));
    else
       return(1);
+
+   /* The requests of the process that this shell answers, if any */
+   for (i = 6; i < argc; i++)
+   {
+      Ttdt_session_requests request;
+
+      DtkshCvtStringToTtOp(argv[i], &tval);
+      if (tval.size == 0)
+         return(1);
+
+      switch (*((Tttk_op *)(tval.addr)))
+      {
+         case TTDT_GET_LOCALE:
+            request = TTDT_SESSION_GET_LOCALE;
+            break;
+         case TTDT_SET_LOCALE:
+            request = TTDT_SESSION_SET_LOCALE;
+            break;
+         case TTDT_GET_ENVIRONMENT:
+            request = TTDT_SESSION_GET_ENVIRONMENT;
+            break;
+         case TTDT_SET_ENVIRONMENT:
+            request = TTDT_SESSION_SET_ENVIRONMENT;
+            break;
+         case TTDT_GET_SITUATION:
+            request = TTDT_SESSION_GET_SITUATION;
+            break;
+         case TTDT_SET_SITUATION:
+            request = TTDT_SESSION_SET_SITUATION;
+            break;
+         case TTDT_SIGNAL:
+            request = TTDT_SESSION_SIGNAL;
+            break;
+         case TTDT_GET_SYSINFO:
+            request = TTDT_SESSION_GET_SYSINFO;
+            break;
+         default:
+            errmsg = strdup(GETMESSAGE(
+             "ttdt_session_join does not answer the request %s"));
+            printerrf(argv[0], errmsg, argv[i], NULL, NULL, NULL, NULL,
+                      NULL, NULL, NULL);
+            free(errmsg);
+            return(1);
+      }
+      requests |= request;
+   }
 
    /* Need to treat "" equal to a NULL pointer here */
    if (strlen(argv[3]) == 0)
@@ -6180,7 +6228,8 @@ do_ttdt_session_join(
       widget = w->w;
    }
 
-   patterns = ttdt_session_join(sessId, NULL, widget, NULL, (int)join);
+   patterns = ttdt_session_join(sessId, NULL, widget, NULL, (int)join,
+                                requests);
 
    ttStatus = tt_ptr_error(patterns);
 

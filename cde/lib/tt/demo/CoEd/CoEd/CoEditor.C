@@ -1092,7 +1092,8 @@ CoEditor::_acceptContract(
 			session_shell = XtParent(shell );
 		}
 		sessPats = ttdt_session_join( 0, CoEditor::contractCB_,
-					      session_shell, this, 1 );
+					      session_shell, this, 1,
+					      TTDT_SESSION_NO_REQUESTS );
 	}
 	_contractPats = ttdt_message_accept( msg, CoEditor::contractCB_,
 					     shell, this, 1, 1 );

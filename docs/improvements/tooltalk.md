@@ -1,6 +1,6 @@
 ---
 title: ToolTalk
-description: How ttsession and rpc.ttdbserverd validate requests, how sessions are authenticated and how the programs ttsession starts get their environment.
+description: How ttsession and rpc.ttdbserverd validate requests, how sessions are authenticated, how the programs ttsession starts get their environment and which Desktop requests a joined program answers.
 ---
 
 # ToolTalk
@@ -184,6 +184,96 @@ are never interpreted; a name that contains `*` is that name and not a pattern
 (the shell that starts the tool still expands what the user types). The options
 that `tt_type_comp` passes to the preprocessor are no longer limited by the
 length of a fixed command line.
+
+## Desktop requests that act on a process
+
+`ttdt_session_join()` joins a session as a "good desktop citizen": the library
+registers patterns for the standard Desktop requests and answers them for the
+program. The requests about windows (geometry, iconified and mapped state,
+raise and lower, X information, and with a shell widget and no callback also
+`Quit`, `Pause` and `Resume`) act on the `shell` widget that the caller passes;
+a program that passes none gets them passed to its callback, or failed if it has
+none. Until now the same call also
+registered, for every program that joined, a handler for the requests that report
+or change the state of the whole process:
+
+| Request | What the library did to the program |
+|---|---|
+| `Set_Environment` | `putenv()` of any name and value: `HOME`, `PATH`, `TMPDIR` and `LD_*` reached every program it started afterwards and every `getenv()` caller in its address space |
+| `Set_Situation` | `chdir()` to any directory |
+| `Signal` | sent the program any signal number |
+| `Set_Locale` | `setlocale()` for any category |
+| `Get_Environment`, `Get_Situation`, `Get_Locale`, `Get_Sysinfo` | answered with the value of any environment variable, the working directory, the locale and the `uname()` fields |
+| `Do_Command` | passed to the callback of the program, whether or not the program had a use for it |
+
+Any process of the session could send these, and the session's authentication
+level does not tell programs of one user apart (see above), so a program that had
+only joined the session to receive its own messages could have its environment,
+its directory and its signals set by any other program of the session.
+
+The library now registers for none of them unless the program asks. The last
+argument of `ttdt_session_join()` is a `Ttdt_session_requests`, an `unsigned int`
+that is zero or the bitwise OR of the requests the program answers, one value for
+each request:
+
+| Value | Request | What the library does when asked for it |
+|---|---|---|
+| `TTDT_SESSION_GET_LOCALE` | `Get_Locale` | replies with the locale of the program for each category asked |
+| `TTDT_SESSION_SET_LOCALE` | `Set_Locale` | calls `setlocale()` for each category and locale in the request |
+| `TTDT_SESSION_GET_ENVIRONMENT` | `Get_Environment` | replies with the value of each variable named |
+| `TTDT_SESSION_SET_ENVIRONMENT` | `Set_Environment` | sets or removes each variable named |
+| `TTDT_SESSION_GET_SITUATION` | `Get_Situation` | replies with the working directory |
+| `TTDT_SESSION_SET_SITUATION` | `Set_Situation` | changes the working directory to the path in the request, or to the file of the message |
+| `TTDT_SESSION_SIGNAL` | `Signal` | replies, then sends the program the signal |
+| `TTDT_SESSION_GET_SYSINFO` | `Get_Sysinfo` | replies with the `uname()` fields |
+| `TTDT_SESSION_DO_COMMAND` | `Do_Command` | passes the request to the callback of the program, which must then be given |
+
+The values stand for one request each, so a program that only answers questions
+does not take on the requests that change it: `ttdt_sender_imprint_on()`, for
+example, asks the sender of a message for `Get_Locale` and `Get_Situation`, and a
+program that wants to be imprinted on asks for those two values only.
+
+What is not asked for is not registered. A `Set_Environment` that no program of
+the session registered for is failed by `ttsession` with `TT_ERR_NO_MATCH`, and
+one that is addressed to a program that did not ask is failed by the library with
+`TT_DESKTOP_ENOTSUP` (`tttk_Xt_input_handler()` fails what no callback took, as it
+did before). Nothing in the program changes. `ttdt_session_join()` itself returns
+`TT_ERR_NUM` for a value that is none of the above and `TT_ERR_POINTER` when
+`TTDT_SESSION_DO_COMMAND` is asked for without a callback. `ttdt_message_accept()`
+never registered for these requests and takes no argument for them.
+
+There is no value that stands for all of them. A program that asks for
+`TTDT_SESSION_SET_ENVIRONMENT`, `TTDT_SESSION_SET_SITUATION` or
+`TTDT_SESSION_SIGNAL` lets every program of the session change its environment,
+its working directory and its signals; the environment it sets is not limited
+the way the start environment of a ptype is. In `dtksh`, `ttdt_session_join`
+takes the requests as further arguments (`TTDT_GET_SYSINFO` and so on, no argument
+for none), and the code that Application Builder generates asks for
+`TTDT_SESSION_DO_COMMAND` only when the project connects an action to a
+`Do_Command` message.
+
+### What the clients of the desktop ask for
+
+Every program of the desktop that calls `ttdt_session_join()` was looked at for
+the requests it handles in its own code and for the programs that send these
+requests. Apart from `ttsnoop`, which sends what its user composes, `dtpad` is
+the only program of the desktop that sends one of them (`Get_Sysinfo`), and
+`ttdt_sender_imprint_on()` is used by the `CoEd` demo only. Only these ask for
+something:
+
+| Program | Asks for | Why |
+|---|---|---|
+| `dtpad` (server mode) | `TTDT_SESSION_GET_SYSINFO` | a second server that finds the display already served asks the one that serves it for its host name with `Get_Sysinfo`, to say on which host the editor is |
+| `ttsnoop` | `TTDT_SESSION_DO_COMMAND` | the callback of the session it joins shows every request to the person who runs the tool and lets that person fill in the answer; it never runs anything |
+| programs made with Application Builder | `TTDT_SESSION_DO_COMMAND`, when the project connects an action to it | the generated callback runs that action; nothing is asked for otherwise |
+
+All the others ask for nothing, because none of them sends or handles any of
+these requests: `dtfile`, `dtterm` (including the terminal server), `dtcm`
+(including the appointment editor), `dtmail`, `dtinfo`, `dtcreate`, `dticon`, the
+template in `examples` and the `CoEd` demo. They keep the window requests that
+their shell widget and callbacks decide, `Get_Status`, and the media requests
+that their ptypes declare. A program that does not ask answers none of these
+requests, and a request for one is failed as described above.
 
 ## Database server
 
@@ -531,6 +621,22 @@ starts when the portmapper is available.
 operation and another send a notice with `TT_QUEUE`, and checks that the observer
 receives it once, as sent, and that a session that is told to end exits and is no
 longer registered with the portmapper.
+
+The same check runs the session requests test. One process joins a session of its
+own asking for none of the requests of the process, for each of them alone and for
+all of them (`session-requests-test.c`, built with the sanitizers when the build
+does not carry them, with `ttdt_session_join()` and `tttk_Xt_input_handler()` as a
+client uses them), and a second process sends every one of the nine requests, first
+to nobody in particular and then addressed to the first. A request that was asked
+for must be handled and do what it is for: the answers carry the locale, the value
+of the variable, the working directory and the host name, and afterwards the
+variable, the directory, the locale and the signal count of the process are the
+ones the requests set and the callback has seen the `Do_Command`. Every other
+request must fail (`TT_ERR_NO_MATCH` when sent to nobody in particular,
+`TT_DESKTOP_ENOTSUP` when addressed) and leave the process as it was. The values
+`ttdt_session_join()` refuses are checked too. Built against the library from
+before the change (`TT_REQUESTS_OLD_JOIN=1`), the cases that ask for less than all
+of the requests fail: the library answers every one of them.
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
 with the sanitizers next to a test program and runs each case in its own

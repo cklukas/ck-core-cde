@@ -101,7 +101,7 @@ $set 5
 101 The source parameter must be an integer: %s
 102 The id parameter must be a hex number: %s
 103 Usage: ttdt_close status procId newProcId sendStopped
-104 Usage: ttdt_session_join variable status sessId shellWidgetHandle join
+104 Usage: ttdt_session_join variable status sessId shellWidgetHandle join [request ...]
 105 Usage: ttdt_session_quit status sessId sessPatterns quit
 106 The sessPatterns parameter is invalid: %s
 107 Usage: ttdt_file_event status op patterns send
@@ -119,6 +119,7 @@ $set 5
 120 Usage: XtIsSubclass widget class
 121 %s is not a valid widget class name
 122 Usage: XtClass variable widget
+123 ttdt_session_join does not answer the request %s
 
 $set 6
 1 DtkshCvtWindowToString: The 'from' value is an invalid size

@@ -34,6 +34,7 @@
 <ParamDef>Widget <Parameter>shell</Parameter></ParamDef>
 <ParamDef>void *<Parameter>clientdata</Parameter></ParamDef>
 <ParamDef>int <Parameter>join</Parameter></ParamDef>
+<ParamDef>Ttdt_session_requests <Parameter>requests</Parameter></ParamDef>
 </FuncSynopsis>
 </RefSynopsisDiv>
 <RefSect1>
@@ -50,7 +51,9 @@ If
 <Para>The
 <Function>ttdt_session_join</Function> function
 registers for the following
-<SystemItem Class="Constant">TT_HANDLER</SystemItem>-addressed requests:
+<SystemItem Class="Constant">TT_HANDLER</SystemItem>-addressed requests; the
+requests in (1) and <Symbol Role="Message">Do_Command</Symbol> in (4) only if
+the caller asks for them in <Emphasis>requests</Emphasis>:
 </Para>
 <OrderedList>
 <ListItem>
@@ -70,8 +73,32 @@ registers for the following
 <Emphasis>join</Emphasis> is True,
 <Function>ttdt_session_join</Function> actually joins the indicated session.
 </Para>
-<Para>The ToolTalk service
-handles messages in (1) transparently.
+<Para>The requests in (1) report or change the state of the whole process:
+its locale, its environment variables, its working directory, its signals.
+Any process in the session can send them, so the ToolTalk service answers one
+only if the caller names it in <Emphasis>requests</Emphasis>, and then handles
+it transparently.
+<Emphasis>requests</Emphasis> is zero, or the bitwise OR of any of
+<SystemItem Class="Constant">TTDT_SESSION_GET_LOCALE</SystemItem>,
+<SystemItem Class="Constant">TTDT_SESSION_SET_LOCALE</SystemItem>,
+<SystemItem Class="Constant">TTDT_SESSION_GET_ENVIRONMENT</SystemItem>,
+<SystemItem Class="Constant">TTDT_SESSION_SET_ENVIRONMENT</SystemItem>,
+<SystemItem Class="Constant">TTDT_SESSION_GET_SITUATION</SystemItem>,
+<SystemItem Class="Constant">TTDT_SESSION_SET_SITUATION</SystemItem>,
+<SystemItem Class="Constant">TTDT_SESSION_SIGNAL</SystemItem>,
+<SystemItem Class="Constant">TTDT_SESSION_GET_SYSINFO</SystemItem> and
+<SystemItem Class="Constant">TTDT_SESSION_DO_COMMAND</SystemItem>; each stands
+for the request of the same name. A request that was not asked for is not
+registered for: a request nobody registered for fails with
+<SystemItem Class="Constant">TT_ERR_NO_MATCH</SystemItem>, and one addressed to
+this process fails with
+<SystemItem Class="Constant">TT_DESKTOP_ENOTSUP</SystemItem>.
+Ask for
+<SystemItem Class="Constant">TTDT_SESSION_SET_ENVIRONMENT</SystemItem>,
+<SystemItem Class="Constant">TTDT_SESSION_SET_SITUATION</SystemItem> and
+<SystemItem Class="Constant">TTDT_SESSION_SIGNAL</SystemItem> only if every
+process of the session may change the environment variables, the working
+directory and the signals of this one.
 </Para>
 <Para>If
 <Symbol Role="Variable">shell</Symbol> is non-
@@ -120,10 +147,14 @@ passing
 <Para>If
 <Emphasis>cb</Emphasis> is not
 <SystemItem Class="Constant">NULL</SystemItem>, the ToolTalk service passes
-messages in (4) to
-<Emphasis>cb</Emphasis>; otherwise,
-<Function>ttdt_session_join</Function> fails with
-<SystemItem Class="Constant">TT_DESKTOP_ENOTSUP</SystemItem>.</Para>
+<Symbol Role="Message">Get_Status</Symbol> to
+<Emphasis>cb</Emphasis>, and <Symbol Role="Message">Do_Command</Symbol> if
+<SystemItem Class="Constant">TTDT_SESSION_DO_COMMAND</SystemItem> was asked
+for; otherwise, the request fails with
+<SystemItem Class="Constant">TT_DESKTOP_ENOTSUP</SystemItem>. Asking for
+<SystemItem Class="Constant">TTDT_SESSION_DO_COMMAND</SystemItem> with a
+<Emphasis>cb</Emphasis> of
+<SystemItem Class="Constant">NULL</SystemItem> is an error.</Para>
 <Para>The
 <StructName Role="typedef">Ttdt_contract_cb</StructName> argument is a callback defined as:
 </Para>
@@ -165,6 +196,14 @@ The application can use
 </Para>
 <VariableList>
 <VarListEntry>
+<Term>TT_ERR_NUM</Term>
+<ListItem>
+<Para><Emphasis>requests</Emphasis> holds a value that is none of the
+<SystemItem Class="Constant">TTDT_SESSION_</SystemItem> requests.
+</Para>
+</ListItem>
+</VarListEntry>
+<VarListEntry>
 <Term>TT_ERR_NOMEM</Term>
 <ListItem>
 <Para>There is insufficient memory available to perform the function.
@@ -183,7 +222,9 @@ The application can use
 <Term>TT_ERR_POINTER</Term>
 <ListItem>
 <Para>The pointer passed does not point to an object
-of the correct type for this operation.
+of the correct type for this operation, or <Emphasis>requests</Emphasis> asks
+for <SystemItem Class="Constant">TTDT_SESSION_DO_COMMAND</SystemItem> and
+<Emphasis>cb</Emphasis> is <SystemItem Class="Constant">NULL</SystemItem>.
 </Para>
 </ListItem>
 </VarListEntry>

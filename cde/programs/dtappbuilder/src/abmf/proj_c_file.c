@@ -1053,6 +1053,7 @@ write_main_tooltalk_init(
     ABObj		action;
     File        	codeFile; 
     int         	ret_val = 0; 
+    BOOL        	handles_do_command = FALSE;
  
     if (!genCodeInfo || !project ||
         (tt_level = obj_get_tooltalk_level(project)) == AB_TOOLTALK_NONE)
@@ -1079,6 +1080,7 @@ write_main_tooltalk_init(
 		case AB_WHEN_TOOLTALK_DO_COMMAND:
                     abio_printf(codeFile, "dtb_set_tt_msg_do_commandCB((DtbTTMsgHandlerCB)%s);\n", 
                         obj_get_func_name(action)); 
+                    handles_do_command = TRUE;
                     break; 
                 case AB_WHEN_TOOLTALK_GET_STATUS: 
                     abio_printf(codeFile, "dtb_set_tt_msg_get_statusCB((DtbTTMsgHandlerCB)%s);\n",  
@@ -1143,7 +1145,8 @@ write_main_tooltalk_init(
     abio_printf(codeFile, "tt_session_pattern = ttdt_session_join(NULL, %s,\n",
 	tt_level == AB_TOOLTALK_DESKTOP_ADVANCED? "dtb_tt_contractCB" : "NULL");
     abio_indent(codeFile);
-    abio_puts(codeFile, "toplevel, NULL, True);\n\n");
+    abio_printf(codeFile, "toplevel, NULL, True, %s);\n\n",
+	handles_do_command? "TTDT_SESSION_DO_COMMAND" : "TTDT_SESSION_NO_REQUESTS");
     abio_outdent(codeFile);
     abio_puts(codeFile, "atexit(dtb_tt_close);\n");
 /*

@@ -166,7 +166,8 @@ main(
 			session_shell = myTopWidget;
 		}
 		sessPats = ttdt_session_join( 0, CoEditor::contractCB_,
-				session_shell, CoEditor::editors[0], 1 );
+				session_shell, CoEditor::editors[0], 1,
+				TTDT_SESSION_NO_REQUESTS );
 	}
 
 	while (daemon || (CoEditor::numEditors > 0)) {

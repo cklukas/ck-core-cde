@@ -202,7 +202,7 @@ cmtt_init(
 	}
 #endif
 
-	ttdt_session_join(0, NULL, shell, c, 1);
+	ttdt_session_join(0, NULL, shell, c, 1, TTDT_SESSION_NO_REQUESTS);
 
 	XtAppAddInput(context, ttfd, (XtPointer)XtInputReadMask,
 			tttk_Xt_input_handler, c->tt_procid);

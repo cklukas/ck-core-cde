@@ -307,7 +307,8 @@ TtIpcMgr::ipc_init_wp1( XtPointer theIpcObj )
       // registered patterns to take effect there-in
       // Tt_pattern *sess_patterns =
              ttdt_session_join( NULL, NULL,
-                         window_system().toplevel(), theIpcObj, True ) ;
+                         window_system().toplevel(), theIpcObj, True,
+                         TTDT_SESSION_NO_REQUESTS ) ;
       // invoke msg handler explicitly in case a message already queued
       XtAppAddWorkProc( window_system().app_context(),
                         receive_tt_msg_wp, theIpcObj ) ;

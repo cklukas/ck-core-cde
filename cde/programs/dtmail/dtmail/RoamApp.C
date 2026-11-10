@@ -1314,7 +1314,8 @@ void RoamApp::initialize(int *argcp, char **argv)
     roam_tt_pattern = ttdt_session_join(
 				(const char *)0,
 			        (Ttdt_contract_cb)quit_message_cb,
-			        baseWidget(), this, 1);
+			        baseWidget(), this, 1,
+				TTDT_SESSION_NO_REQUESTS);
     dieFromTtError(tt_ptr_error(roam_tt_pattern),
 		"initialize.ttdt_session_join", NULL, NULL);
 

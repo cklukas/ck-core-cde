@@ -326,7 +326,8 @@ main(
 
     ttRc = tt_ptr_error(ttdt_session_join( tt_default_session( ),
                                           ProcessToolTalkMessage,
-                                          (Widget) 0, NULL, 1));
+                                          (Widget) 0, NULL, 1,
+                                          TTDT_SESSION_NO_REQUESTS));
     DieFromToolTalkError( dticonShell, "ttdt_session_join: %s", ttRc );
 
     XtAppAddInput( AppContext, ttFd, (XtPointer)XtInputReadMask,

@@ -1502,7 +1502,8 @@ main(int argc, char *argv[])
         DieFromToolTalkError( UxTopLevel, "tt_default_session", ttRc );
 
 	ttPatt = ttdt_session_join( sessionString, ProcessToolTalkMessage,
-				    (Widget) 0, (void *) 0, 1 );
+				    (Widget) 0, (void *) 0, 1,
+				    TTDT_SESSION_NO_REQUESTS );
         ttRc = tt_ptr_error(ttPatt);
         DieFromToolTalkError( UxTopLevel, "ttdt_session_join", ttRc );
 

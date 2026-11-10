@@ -1671,7 +1671,7 @@ _ttdt_posix_cb(
 				continue;
 			}
 			category = _ttDtCategory( categoryName );
-			if (category > 0) {
+			if (category != -1) {
 				tt_message_arg_val_set( msg, 2 * i + 1,
 						setlocale( category, 0 ));
 			}

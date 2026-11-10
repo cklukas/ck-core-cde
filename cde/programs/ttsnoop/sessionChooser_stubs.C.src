@@ -223,7 +223,8 @@ sessionOK(
 	    break;
 	case _DtSessionChooseDtJoin:
 	    pats = ttdt_session_join( session, snoopSessionMsg,
-				dtb_ttsnoop_ttsnoop_win.ttsnoopWin, 0, 1 );
+				dtb_ttsnoop_ttsnoop_win.ttsnoopWin, 0, 1,
+				TTDT_SESSION_DO_COMMAND );
 	    status = DtTtSetLabel( label, "ttdt_session_join()", pats );
 	    if ((status == TT_OK) && (pats != 0)) {
 		    DtTtCreated( DTTT_DTSESSION, pats, session );

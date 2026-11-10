@@ -1011,7 +1011,7 @@ contains embedded spaces, it is necessary to enclose any references to the
 procID environment variable within double quotation marks:</para>
 <programlisting>ttdt_close STATUS &ldquo;$PROC_ID&rdquo; &ldquo;$NEW_PROC_ID&rdquo; False
 </programlisting>
-<para><filename>ttdt_session_join</filename> <symbol role="Variable">variable</symbol> <symbol role="Variable">status</symbol> s <symbol role="Variable">essId shellWidgetHandle join</symbol></para>
+<para><filename>ttdt_session_join</filename> <symbol role="Variable">variable</symbol> <symbol role="Variable">status</symbol> s <symbol role="Variable">essId shellWidgetHandle join</symbol> [<symbol role="Variable">request ...</symbol>]</para>
 <para>Joins the session indicated by the <emphasis>sessId</emphasis> argument
 as a good desktop citizen, by registering patterns and default callbacks
 for many standard desktop message interfaces. If the <emphasis>sessId</emphasis>
@@ -1021,7 +1021,13 @@ argument specifies a widget handle (that is, it is not an empty string),
 then it should refer to a <command>mappedWhenManaged</command> <command>applicationShellWidget</command>. The <emphasis>join</emphasis> argument
 is a Boolean and should be set to true or false. This command returns an
 opaque <symbol role="Variable">pattern</symbol> handle in the <symbol role="Variable">variable</symbol> argument; when no longer needed, this handle can be destroyed
-using the <filename>ttdt_session_quit</filename> command.</para>
+using the <filename>ttdt_session_quit</filename> command. Each
+<emphasis>request</emphasis> argument names a request of the whole process that
+the shell answers (<filename>TTDT_GET_LOCALE</filename>, <filename>TTDT_SET_LOCALE</filename>,
+<filename>TTDT_GET_ENVIRONMENT</filename>, <filename>TTDT_SET_ENVIRONMENT</filename>,
+<filename>TTDT_GET_SITUATION</filename>, <filename>TTDT_SET_SITUATION</filename>,
+<filename>TTDT_SIGNAL</filename> or <filename>TTDT_GET_SYSINFO</filename>); without
+one the shell answers none of them.</para>
 <para><filename>ttdt_session_quit</filename> <symbol role="Variable">status</symbol> <symbol role="Variable">sessId sessPatterns quit</symbol></para>
 <para>Destroys the message patterns specified by the <emphasis>sessPatterns</emphasis> argument and, if the <symbol role="Variable">quit</symbol> argument
 is set to <emphasis>true</emphasis>, quits the session indicated by the <emphasis>sessId</emphasis> argument or quits the default session if <emphasis>sessId</emphasis> is empty.</para>

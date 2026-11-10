@@ -187,7 +187,8 @@ FinishToolTalkInit(Widget topLevel)
                                               SessionCallback,
                                               topLevel,
                                               NULL,
-                                              1);
+                                              1,
+                                              TTDT_SESSION_NO_REQUESTS);
     if (tt_is_err(tt_ptr_error(DtTermToolTalkPattern))) {
         ttdt_close(NULL, NULL, sendStopped);
         return(0);

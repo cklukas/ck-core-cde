@@ -311,7 +311,8 @@ myAcmeSheetLoadCB(
                  * Join session before accepting start message,
                  * to prevent unnecessary starts of our ptype
                  */
-                ttdt_session_join(0, myContractCB, myShell, 0, 1);
+                ttdt_session_join(0, myContractCB, myShell, 0, 1,
+                                 TTDT_SESSION_NO_REQUESTS);
         }
         ttdt_message_accept(msg, myContractCB, myShell, 0, 1, 1);
         tt_free(contents); tt_free(file); tt_free(docname);

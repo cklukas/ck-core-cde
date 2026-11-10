@@ -259,7 +259,8 @@ ttdt_session_join(
 	Ttdt_contract_cb	cb,
 	Widget			shell,
 	void		       *clientdata,
-	int			join
+	int			join,
+	Ttdt_session_requests	requests
 )
 {
 	Tt_status	status;
@@ -272,11 +273,16 @@ ttdt_session_join(
 		}
 		item2free = (char *)sessid;
 	}
-	Tt_pattern *pats = _ttdtme->pats_create( 0, cb, shell, clientdata );
+	Tt_pattern *pats = _ttdtme->pats_create( 0, cb, shell, clientdata,
+						 requests );
+	status = tt_ptr_error( pats );
+	if (status != TT_OK) {
+		return pats;
+	}
 	if (join) {
 		status = tt_session_join( sessid );
 		if (status != TT_OK) {
-			free(pats);
+			_tttk_patterns_destroy( pats );
 			return (Tt_pattern *)tt_error_pointer( status );
 		}
 	}
@@ -331,7 +337,7 @@ ttdt_message_accept(
 		}
 	}
 	Tt_pattern *pats = _ttdtme->pats_create( contract, cb, shell,
-						 clientData );
+						 clientData, 0 );
 	status = tt_ptr_error( pats );
 	if (status == TT_OK) {
 		tt_message_user_set( contract, _TttkContractKey, pats );

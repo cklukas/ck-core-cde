@@ -360,7 +360,8 @@ InitializeToolTalkSession( Widget topLevel, int ttFd )
                                                     SessionCallback,
                                                     topLevel,
                                                     NULL,
-                                                    1 );
+                                                    1,
+                                                    TTDT_SESSION_NO_REQUESTS );
     if( tt_is_err( tt_ptr_error( FileManagerToolTalkPattern )))
     {
       ttdt_close( NULL, NULL, sendStopped );

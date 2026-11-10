@@ -820,7 +820,7 @@ cmtt_init(
 			tt_status_message(status));
 	}
 
-	ttdt_session_join(0, NULL, shell, de->c, 1);
+	ttdt_session_join(0, NULL, shell, de->c, 1, TTDT_SESSION_NO_REQUESTS);
 
 	XtAppAddInput(context, ttfd, (XtPointer)XtInputReadMask,
 			tttk_Xt_input_handler, de->c->tt_procid);
