@@ -147,6 +147,7 @@ int IsIndirectClient(ARRAY8Ptr clientAddress, CARD16 connectionType);
 int AwaitIndirectChoice(ARRAY8Ptr clientAddress, CARD16 connectionType);
 int ProcessChooserSocket(int fd);
 void DestroyChooserSocket(void);	/* socket.c */
+int NetaddrFamily(XdmcpNetaddr netaddrp);	/* netaddr.c */
 void RunChooser(struct display *d);
 
 void LoadDMResources(void); // resource.c
@@ -214,24 +215,30 @@ sendForward (CARD16 connectionType, ARRAY8Ptr address, char *closure)
     return;
 }
 
-static void
+static int
 ClientAddress (struct sockaddr *from, ARRAY8Ptr addr, ARRAY8Ptr port, CARD16 *type)
 {
     int length, family;
     char *data;
 
     data = NetaddrPort((XdmcpNetaddr)from, &length);
-    XdmcpAllocARRAY8 (port, length);
+    if (!XdmcpAllocARRAY8 (port, length))
+	return 0;
     memmove( port->data, data, length);
     port->length = length;
 
     family = ConvertAddr((char *)from, &length, &data);
 
-    XdmcpAllocARRAY8 (addr, length);
+    if (!XdmcpAllocARRAY8 (addr, length))
+    {
+	XdmcpDisposeARRAY8 (port);
+	return 0;
+    }
     memmove( addr->data, data, length);
     addr->length = length;
 
     *type = family;
+    return 1;
 }
 
 static void
@@ -287,7 +294,11 @@ indirect_respond (struct sockaddr *from, int fromlen, int length)
 	expectedLen += 2 + queryAuthenticationNames.data[i].length;
     if (length == expectedLen)
     {
-	ClientAddress (from, &clientAddress, &clientPort, &connectionType);
+	if (!ClientAddress (from, &clientAddress, &clientPort, &connectionType))
+	{
+	    XdmcpDisposeARRAYofARRAY8 (&queryAuthenticationNames);
+	    return;
+	}
 	/*
 	 * set up the forward query packet
 	 */
@@ -921,6 +932,21 @@ send_decline (struct sockaddr *to, int tolen, ARRAY8Ptr authenticationName, ARRA
     XdmcpFlush (xdmcpFd, &buffer, (XdmcpNetaddr)to, tolen);
 }
 
+/* are the two network addresses those of one host, whatever their ports? */
+static int
+SameHost (struct sockaddr *a1, int len1, struct sockaddr *a2, int len2)
+{
+    int		partlen1, partlen2;
+    char	*part1, *part2;
+
+    if (!a1 || len1 != len2 ||
+	NetaddrFamily ((XdmcpNetaddr) a1) != NetaddrFamily ((XdmcpNetaddr) a2))
+	return FALSE;
+    part1 = NetaddrAddress ((XdmcpNetaddr) a1, &partlen1);
+    part2 = NetaddrAddress ((XdmcpNetaddr) a2, &partlen2);
+    return partlen1 == partlen2 && memcmp (part1, part2, partlen1) == 0;
+}
+
 void
 manage (struct sockaddr *from, int fromlen, int length)
 {
@@ -988,6 +1014,19 @@ manage (struct sockaddr *from, int fromlen, int length)
 	    d = FindDisplayByName (name);
 	    if (d)
 	    {
+		/*
+		 * A display that restarts takes the place of its old session.
+		 * The name comes from the request, so a display of the
+		 * configuration file or of another host is not replaced by it.
+		 */
+		if (d->displayType.origin != FromXDMCP ||
+		    !SameHost (d->from, d->fromlen, from, fromlen))
+		{
+		    Debug ("Display %s is in use by another client\n", d->name);
+		    send_failed (from, fromlen, name, sessionID, "display in use");
+		    DisposeProtoDisplay (pdpy);
+		    goto abort;
+		}
 		Debug ("Terminating active session for %s\n", d->name);
 		StopDisplay (d);
 	    }
@@ -1031,7 +1070,12 @@ manage (struct sockaddr *from, int fromlen, int length)
 #ifdef BYPASSLOGIN
 	    d->bypassLogin = 0;
 #endif /* BYPASSLOGIN */
-	    ClientAddress (from, &clientAddress, &clientPort, &connectionType);
+	    if (!ClientAddress (from, &clientAddress, &clientPort, &connectionType))
+	    {
+		RemoveDisplay (d);
+		send_failed (from, fromlen, name, sessionID, "out of memory");
+		goto abort;
+	    }
 	    d->useChooser = 0;
 	    if (IsIndirectClient (&clientAddress, connectionType))
 	    {
@@ -1052,8 +1096,8 @@ manage (struct sockaddr *from, int fromlen, int length)
 		d->authorizations = (Xauth **) malloc (sizeof (Xauth *));
 		if (!d->authorizations)
 		{
-		    free ((char *) from_save);
-		    free ((char *) d);
+		    /* the display is in the list: it goes out of it with its fields */
+		    RemoveDisplay (d);
 		    send_failed (from, fromlen, name, sessionID, "out of memory");
 		    goto abort;
 		}

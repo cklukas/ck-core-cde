@@ -25,6 +25,18 @@ privileges only when that really worked.
 - A chooser connection that sends nothing is closed after a timeout instead of
   blocking the display manager.
 
+## Displays
+
+- A `Manage` request replaces the session of a display of the same name only
+  when it comes from the same host. A display of the configuration file, or one
+  that another host manages, is not ended by a request that names it; the
+  request is answered with a failure.
+- A `Manage` request that runs out of memory takes its display out of the
+  display list before it is freed; the list kept a pointer to freed memory.
+  Display records that failed to be created no longer keep the shared page
+  they mapped, and a removed display releases the authorization names, search
+  paths and name lengths it held.
+
 ## Chooser
 
 The chooser lets a display that sent an indirect query pick the host that
@@ -101,6 +113,10 @@ under AddressSanitizer and UndefinedBehaviorSanitizer:
 ```sh
 make -C programs/dtlogin check
 ```
+
+`tests/check-displays.py` runs the display list and the `Manage` handler with
+failing allocations and rival peers (an XDMCP display of the same host, of
+another host and of the configuration file).
 
 `tests/check-chooser.py` runs the chooser socket, the choices and the client list
 with a real Unix socket: the file and its mode, the argument that names it, a

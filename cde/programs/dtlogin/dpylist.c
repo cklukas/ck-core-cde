@@ -187,7 +187,10 @@ RemoveDisplay( struct display *old )
 		(void) unlink (d->authFile);
 	    IfFree (d->authFile);
 	    IfFree (d->userAuthDir);
-	    IfFree (d->authNames);
+	    freeEnv (d->authNames);
+	    IfFree (d->authNameLens);
+	    IfFree (d->pmSearchPath);
+	    IfFree (d->bmSearchPath);
 	    IfFree (d->peer);
 	    IfFree (d->from);
             XdmcpDisposeARRAY8(&d->clientAddr);
@@ -231,12 +234,14 @@ NewDisplay( char *name, char *class )
     d = (struct display *) malloc (sizeof (struct display));
     if (!d) {
 	LogOutOfMem (ReadCatalog(MC_LOG_SET,MC_LOG_NEW_DPY,MC_DEF_LOG_NEW_DPY));
+	munmap (language, LANGUAGESIZE + 1);
 	return 0;
     }
     d->next = displays;
     d->name = malloc ((unsigned) (strlen (name) + 1));
     if (!d->name) {
 	LogOutOfMem (ReadCatalog(MC_LOG_SET,MC_LOG_NEW_DPY,MC_DEF_LOG_NEW_DPY));
+	munmap (language, LANGUAGESIZE + 1);
 	free ((char *) d);
 	return 0;
     }
@@ -248,6 +253,7 @@ NewDisplay( char *name, char *class )
 	    LogOutOfMem(
 		ReadCatalog(MC_LOG_SET,MC_LOG_NEW_DPY,MC_DEF_LOG_NEW_DPY));
 	    free (d->name);
+	    munmap (language, LANGUAGESIZE + 1);
 	    free ((char *) d);
 	    return 0;
 	}

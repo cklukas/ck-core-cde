@@ -69,6 +69,14 @@
   crash the daemon or make it allocate without bound. The routines of versions
   2 to 4 are maintained in `rtable{2,3,4}_xdr.c` instead of being generated.
   Covered by `make -C lib/csa check` (17 cases under the sanitizers).
+- dtlogin: an XDMCP `Manage` request no longer ends the session of a display
+  that the configuration file lists or another host manages, merely by naming
+  it; only the same host replaces its own session. A request that runs out of
+  memory removes its half-built display from the list instead of freeing a
+  record the list still pointed at. A display that cannot be created gives back
+  its shared page, and removing a display releases its authorization names,
+  name lengths and icon search paths. Covered by
+  `programs/dtlogin/tests/check-displays.py`.
 - dtlogin: the chooser reports its choice to the login manager through a Unix
   socket in the authorization directory (mode 0600, removed at shutdown,
   not inherited by sessions) instead of a TCP port open on every interface. A
