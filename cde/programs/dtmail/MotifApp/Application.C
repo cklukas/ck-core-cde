@@ -129,28 +129,6 @@ void Application::initialize ( int *argcp, char **argv )
 {
     DebugPrintf(2, "Application::initialize(%p %d, %p)\n", argcp, *argcp, argv);
 
-    DebugPrintf(3, "Application::initialize - Initializing privileges.\n");
-
-    // The Solaris sendmail operates differently than the HP/IBM sendmail. 
-    // sendmail on Solaris runs as 'root' and so has access permissions 
-    // to any file on the system. sendmail on HP/IBM runs as set-group-id 
-    // 'mail' and so requires that all mailboxes that it may deliver e-mail 
-    // to be writable either by being group mail group writable, or by being 
-    // writable by the world. On those platforms, then, dtmail is required 
-    // to always run with set-group-id mail otherwise, when mailboxes are 
-    // saved, they will loose their group ownership and sendmail will no 
-    // onger be able to deliver to those mailboxes.
-
-    // we have to be set-gid to group "mail" when opening and storing
-    // folders.  But we don't want to do everything as group mail.
-    // here we record our original gid, and set the effective gid
-    // back the the real gid.  We'll set it back when we're dealing
-    // with folders...  A derived application that reads its environment
-    // before it calls this function has done this already, and the program
-    // stops when the group cannot be given up.
-    //
-    initializeGroupPrivileges();
-
     DebugPrintf(3, "Application::initialize - Initializing Xt.\n");
 
     _w = XtOpenApplication (

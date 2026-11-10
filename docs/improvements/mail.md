@@ -1,6 +1,6 @@
 ---
 title: Mailer
-description: How dtmail and dtmailpr handle the mail group of a set-group-id installation and the data they take from messages, mail servers, mailboxes, other users and ToolTalk peers.
+description: How dtmail and dtmailpr run without the mail group, how the small set-group-id helper dtmailspool serves the user's own mailbox in the mail spool, and what the mailer does with the data it takes from messages, mail servers, mailboxes, other users and ToolTalk peers.
 ---
 
 # Mailer
@@ -8,53 +8,144 @@ description: How dtmail and dtmailpr handle the mail group of a set-group-id ins
 `dtmail` is the graphical mailer; `dtmailpr` prints a mailbox without a
 display. Both are built on `libDtMail`, which reads and writes mailboxes in the
 mail spool, parses messages and hands them to the transport. A mailer reads
-data that anyone can send, and the program that is installed set-group-id for
-the `mail` group can change every user's mailbox, so this page records what the
-programs do with the group and with the data they are given.
+data that anyone can send, and a program that holds the `mail` group can change
+every user's mailbox, so the mailers run with no group of their own and the one
+small program that holds the group does nothing but serve the user's own
+mailbox. This page records what the programs do with the group and with the
+data they are given.
 
-## Installed group
+## The mail spool and its helper
 
-Where the group exists, `make install` gives `dtmail` the `mail` group and
-mode 2755, because the spool directory of many systems is writable only for
-that group. The program needs
-the group for one reason: to create, lock and rewrite files in the spool.
+The spool directory of many systems is writable only for the `mail` group, so
+making the mailbox of a user, its lock files and the file that replaces it in a
+save needs that group. `dtmail` used to be installed set-group-id for it. It
+gave the group up when it started and took it back around single system calls
+with `setegid()`, which works only while the saved group id keeps the mail
+group, so a defect anywhere in the graphical program, the ToolTalk handlers or
+the parsers of mail could have taken the group back and written to every user's
+mailbox.
 
-- `include/DtMail/MailGroup.hh` is the only code that changes a group id. The
-  group is given up as the first thing `RoamApp::initialize()` (and `main()` of
-  `dtmailpr`) does, before the signal handlers are installed, the locale is
-  set, the environment is read or a file is opened. Earlier, that happened
-  after `XtSetLanguageProc()` and `_DtEnvControl()` had already run with the
-  mail group.
-- Each change of the effective group id is verified with `getegid()`. A kernel
-  or security module that refuses `setegid()`, or reports success without
-  changing anything, makes the program stop with a message instead of going on
-  with the mail group in a process that believes it has given it up; the
-  results of `setgid()` were ignored before. Taking the group for a spool
-  operation can fail without harm: the operation is then done with the user's
-  own group, as it is when the installation is not set-group-id.
-- The effective group is the mail group only between `enableGroupPrivileges()`
-  and `disableGroupPrivileges()` around a single system call on a spool or lock
-  file (the `PRIV_ENABLED` macros of `RFCMailBox.C`). The saved group id keeps
-  the mail group so that the next such call can take it again; nothing else in
-  the program changes a group id, and a test fails when something does.
+Now `dtmail` and `dtmailpr` are installed without any special mode and never
+hold the group. `dtmailspool`, a program of three plain C files that uses
+nothing but the C library, does the work that needs the group, for the user who
+started it and for nobody else. `make install` gives it the `mail` group and
+mode 2755 (the install rule does not fail where the group does not exist; the
+helper then works with the group of the user, which is right for a spool
+directory that every user can write to).
 
-To check an installation, copy `dtmailpr` somewhere, give the copy the `mail`
-group and mode 2755, and run it as an ordinary user under
-`sudo strace -f -u <user> -e trace=openat,setresgid`: the first `setresgid`
-(the drop of the effective group) comes before the first open of a locale file.
-`make -C programs/dtmail check` runs the fake-kernel scenarios and the source
-guard for the order.
+- **Started by the mailer, with nothing of the mailer's.** The first spool
+  operation starts the helper with `posix_spawn()` and a connected socket as
+  descriptor 3, an empty environment and the default signal handling. The
+  helper reads no environment variable, option or argument, closes every other
+  descriptor, makes sure that descriptors 0 to 2 are open, does not write
+  core files and cannot be examined or traced by its user, and refuses to run
+  when it is set-user-id or descriptor 3 is not a socket. It ends when the
+  mailer closes the connection or ends, or on a `SIGTERM` between two
+  requests, and removes the replacement file of a save that was not finished.
+  The signals of a terminal (interrupt, quit, hangup) reach the whole process
+  group of the mailer, which has locks to release through the helper when it
+  ends on one of them, so the helper ignores them; it also ignores `SIGXFSZ`
+  and `SIGXCPU` and lifts the limits on file size and time the mailer set for
+  itself, so that it finishes what it has begun.
+- **Only the user's own mailbox, and no path.** The spool directory is a
+  constant of the build (`--with-mail-spool-dir`, default `/var/mail`, or
+  `/var/spool/mail` where only that exists). The helper makes every name from
+  the login name of its real user: `<name>`, `<name>.lock`, `<name>.dtmail`, a
+  short-lived `<name>.lk.XXXXXX` for a lock and `<name>.tmp.XXXXXX` for the
+  replacement of a save, all with random suffixes and created exclusively.
+  A request names none of them. Every file is reached relative to the spool
+  directory with `O_NOFOLLOW`, and a mailbox must be a regular file owned by
+  the user: a link, a directory, a FIFO or a file of another user is refused,
+  and a link under the name of the mailbox is not made through. A user called
+  `<name>.lock` or `<name>.dtmail` owns the file that would be the lock file
+  of `<name>`: the helper looks the two names up when it starts and serves no
+  lock of that kind when a user of that name exists or the lookup fails.
+- **The group is held for one operation.** The helper reads and checks a
+  request with the group of the user as its effective group, takes the mail
+  group with `setegid()` for the one operation, and gives it up again before it
+  answers. Every change is verified with `getegid()`; a helper that cannot
+  change the group or finds it changed stops. Nothing else in the mailer
+  changes a user or group id, and a test fails when something does. The saved
+  group id of the helper keeps the mail group, so the helper is the only
+  program that could regain it.
+- **A protocol that is checked at every byte.** A request is a frame of a magic
+  number, an operation, a length of at most 256 bytes and the payload. Frames
+  are read exactly, so a descriptor arrives with the first byte of the frame it
+  belongs to; a frame that stops anywhere, is longer than the limit, has
+  another magic number, a wrong length for its operation, an unknown operation
+  or a descriptor ends the helper (a whole frame that is wrong is answered
+  `BAD_REQUEST` first). The client checks replies the same way: any reply that
+  is cut, oversize, of the wrong shape, or carries descriptors where none belong
+  fails the call, closes what arrived and drops that helper; the next call
+  starts another.
+- **The mailer keeps its descriptors.** The helper opens the mailbox, or makes
+  it with mode 0660 and the mail group, and hands the descriptor over; the
+  mailer maps it, locks it with `lockf()` and writes through it as before, and
+  none of the `mmap()` and parser code changed. The helper makes the file that
+  replaces the mailbox in a save with the mode and group of the old mailbox,
+  hands over that descriptor, and renames it over the mailbox when asked, if
+  the name still holds a regular file of the user. The dot-locks (`.lock`, the
+  text of the lock file is compared whole when it is checked or released) and
+  the `.dtmail` lock are made, verified, released and broken by the helper; the
+  age of a held lock is told by the file system's own clock, so the rule that
+  breaks a lock older than five minutes still works on a remote spool.
+- **A mailbox anywhere else needs no helper.** `MailboxFiles` is the one place
+  that decides: the mailbox of the user in the spool directory, recognised by
+  the directory's identity and the user's name, goes through the helper; any
+  other mailbox is opened, locked and replaced with plain system calls and no
+  second try with a group. The mailbox descriptor of both is close-on-exec.
+
+A helper that is not installed, does not start or answers against the protocol
+makes the call fail (the inbox cannot be opened: "could not be accessed"); the
+mailer does not try the spool directory itself.
+
+The spool directory has to be searchable by every user, as the usual modes 2775
+and 1777 are: the mailer looks at the path of the mailbox (to resolve links and
+to find out where it is) before it asks the helper, and the helper is not asked
+to tell it anything but the descriptor.
+
+What was removed with the group: `include/DtMail/MailGroup.hh`, the
+`PRIV_ENABLED` macros and their retry without the group, the enable and disable
+callbacks of `Session`, `Application` and `RoamApp`, `isSetMailGidNeeded()`,
+`GetGroupName()` and `GetIdForGroupName()`, and the check at the start of
+`dtmail` that stopped it when it was not running as the group `mail` (together
+with the `__ignore_group_permissions` setting that switched the check off).
+
+To check an installation, `ls -l $(bindir)/dtmailspool` shows owner `root`,
+group `mail` and `-rwxr-sr-x`, and `dtmail` and `dtmailpr` have no `s` in their
+mode. While `dtmail` has opened its inbox, `grep Gid /proc/<pid>/status` shows
+the group of the user four times for `dtmail`, and the group of the user, the
+group of the user, `mail` and the group of the user (real, effective, saved,
+file system) for `dtmailspool`.
+
+`make -C programs/dtmail check` compiles the production sources of the helper
+with the sanitizers and drives them over a socket the way the mailer does:
+every truncation of every request, lengths and magic numbers that are wrong,
+requests with descriptors, frames sent a byte at a time or together; links,
+directories, FIFOs and (with `DTMAIL_TEST_SUDO=1`, through `sudo -n`) files of
+other users in the place of the mailbox; the locks (held, aged, broken,
+foreign), the replacement of a save, a killed helper; a helper started with
+descriptors, signals and standard streams of the mailer's; and a fake kernel
+for the group ids that refuses or ignores a change and records every change.
+Source checks keep the group calls in `main.c` of the helper, the helper free of
+environment, arguments and path-based calls, and the group install rule with the
+helper alone. `make -C programs/dtmail/libDtMail check` runs the client against
+helpers that answer wrongly in every way listed above, the same scenarios of
+mailbox, locks and replacement against both ways of handling files, and the
+production `RFCMailBox` on the user's inbox in a spool directory of the test.
 
 ## Mailbox files and paths
 
 A save writes the new mailbox to a temporary file next to the mailbox and
-renames it over the old one. The mail group is held while that file is made,
-and the directory is often one that other users can write to.
+renames it over the old one. The directory is often one that other users can
+write to. (For the user's own mailbox in the mail spool the helper makes the
+file and does the rename; see above.)
 
 - The temporary file is made with `mkstemp()` under `<mailbox>.tmp.XXXXXX`. It
   was `<mailbox>.tmp.<time in hex>`, a name that can be worked out, opened with
   `O_CREAT|O_TRUNC` through whatever link was found under that name; the name
-  is now random and `mkstemp()` never opens a file or link that exists.
+  is now random and `mkstemp()` never opens a file or link that exists. (The
+  helper makes its file the same way: random name, `O_EXCL`, `O_NOFOLLOW`.)
 - A mailbox that is a link is opened through `realpath()`, so that a save
   replaces the file the link names and leaves the link alone. The loop that
   followed links used a buffer size that was the size of a pointer and copied
@@ -68,10 +159,9 @@ and the directory is often one that other users can write to.
   bytes of the buffers is refused with an error instead of being copied past
   them, and every name made from a mailbox path (lock files, the temporary
   file) fits into `MAXPATHLEN`.
-- The callbacks that a `Session` calls to take and give up the mail group, to
-  report that it is busy and to ask for the time of the last interaction were
-  never initialised, so a program that did not register them called through
-  garbage. They start as null.
+- The callbacks that a `Session` calls to report that it is busy and to ask for
+  the time of the last interaction were never initialised, so a program that
+  did not register them called through garbage. They start as null.
 
 `make -C programs/dtmail/libDtMail check` compiles `Session.C` and
 `RFCMailBox.C` with AddressSanitizer and UndefinedBehaviorSanitizer next to
@@ -125,10 +215,9 @@ guards the places that need a display.
 ## Input of the user who starts the mailer
 
 The command line, the resources, the session file and the files named for
-attachments belong to whoever starts the program. Where `dtmail` is installed
-set-group-id, a caller who can overflow a buffer from them runs code in a
-process whose saved group id is the mail group, so these buffers are bounded
-as well.
+attachments belong to whoever starts the program. A caller who can overflow a
+buffer from them runs code as the user, in the process that holds the user's
+mail and mail server passwords, so these buffers are bounded.
 
 - The font list that joins the user font and the glyph font (`-xrm
   'Dtmail*userFont: ...'`) is built in a `TextBuffer`; it was a 1024-byte
@@ -200,9 +289,7 @@ functions in `IO.C`) therefore treat the answers as data to check.
   of the socket functions that cast descriptors to pointers.
 - `SafeCtime()` ends its text inside the buffer it is given (the copy was not
   terminated when the text was longer than the buffer), `SafeLocaltime()`
-  copes with a time that cannot be converted, and `GetGroupName()` is given the
-  size of the caller's buffer (the caller has 100 bytes and a group name can
-  be longer).
+  copes with a time that cannot be converted.
 
 `make -C programs/dtmail/libDtMail check` starts a server of its own on the
 loopback address (a forked process that answers what the case scripts) and runs
@@ -252,18 +339,21 @@ size it from the data.
   The log file that receives a copy of a sent message gets a complete first
   line (its time was cut to 8 bytes and left without a terminator).
 - The temporary file of a lock is named with six random characters read from
-  `/dev/urandom` instead of `mktemp()`, and the names of lock files that do not
-  fit `MAXPATHLEN` are refused. The `.dtmail` lock is released only when the file
-  holds the number of this process: the content is read into a terminated buffer
-  (it was scanned unterminated, with the number uninitialized when it was not
+  `/dev/urandom` instead of `mktemp()` (`MailboxFiles`; the helper takes the
+  names of its own files from the same source), and the names of lock files that
+  do not fit `MAXPATHLEN` are refused. A lock file, `.lock` or `.dtmail`, is
+  released only when it holds exactly the text this process wrote: at most 129
+  bytes are read into a buffer and compared whole, so a file with no number,
+  no line end or more bytes than any buffer is not ours and stays (the `.dtmail`
+  lock was scanned unterminated, with the number uninitialized when it was not
   one). Strings that `strdup()` made are released with `free()`, and an array
   with `delete[]`.
 
 `make -C programs/dtmail/libDtMail check` opens mailboxes with parts of one
 message in every shape described above and a `text/enriched` message with a very
 long command, and `make -C programs/dtmail check` runs the parameter reader, the
-growing text, the enriched converter, the `From ` line, the lock name, the lock
-release and the address reader on input of every length. Both
+growing text, the enriched converter, the `From ` line, the lock name and the
+address reader on input of every length. Both
 fail on the sources before this change.
 
 ## Requests from other applications

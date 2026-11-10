@@ -754,31 +754,6 @@ void SockClose(void *sockfp)
 }
 
 void
-GetGroupName(char * grp_name, size_t size)
-{
-    struct group *grp;
-    _Xgetgrparams grp_buf;
-
-    memset((void*) &grp_buf, 0, sizeof(_Xgetgrparams));
-    grp = _XGetgrgid(getegid(), grp_buf);
-
-    snprintf(grp_name, size, "%s", grp ? grp->gr_name : "UNKNOWN_GROUP");
-}
-
-gid_t
-GetIdForGroupName(char * grp_name)
-{
-  assert(grp_name != NULL);
-  struct group *grp;
-  _Xgetgrparams grp_buf;
-  
-  memset((void*) &grp_buf, 0, sizeof(_Xgetgrparams));
-  grp = _XGetgrnam(grp_name, grp_buf);
-    
-  return(grp ? grp->gr_gid : (gid_t)-1);
-}
-
-void
 GetPasswordEntry(passwd & result)
 {
   static struct passwd passwordEntry;
@@ -814,62 +789,6 @@ GetPasswordEntry(passwd & result)
   memcpy(&result, &passwordEntry, sizeof(struct passwd));
   return;
 }
-#if defined(MAILGROUP_REQUIRED)
-int isSetMailGidNeeded(const char * mailboxPath)
-{
-
-  assert(mailboxPath);
-
-    char inbox_path[1024];
-    char mbox_path[1024];
-    struct passwd *pw;
-    struct stat buf;
-    struct stat buf1;
-    _Xgetpwparams pw_buf;
-
-    memset((void*) &pw_buf, 0, sizeof(_Xgetpwparams));
-    pw = _XGetpwuid(getuid(), pw_buf);
-
-    // construct the lockfile name for the user.
-    char *lock_file = (char *)calloc(1,strlen(pw->pw_name) + 6);
-    strcpy(lock_file,pw->pw_name);
-    strcat(lock_file,".lock");
-
-    // parse the mailfolder name from the path
-    char *p = strrchr(mailboxPath,'/');
-    int len = (NULL!=0) ? strlen(mailboxPath)-strlen(p) : strlen(mailboxPath);
-    char *str = (char *) calloc(1, len+1);
-    strncpy(str, mailboxPath, len);
-    str[len] = '\0';
-    
-    stat(str,&buf);
-
-    // Default or system mailbox dir name.
-    strcpy(inbox_path, "/var/spool/mail");
-    stat(inbox_path,&buf1);
-    free(str);
-
-    if( ( (buf.st_dev == buf1.st_dev) && (buf.st_ino == buf1.st_ino) ) )
-    {
-        if( !strcmp((p+1),pw->pw_name) || !strcmp((p+1),lock_file) )
-        {  
-           if( access(mailboxPath,R_OK) == -1 )
-           {
-             free(lock_file);
-             return (1);
-           }
-        }
-        free(lock_file);
-  	return ( 0 ); 
-    }
-    else
-    {
-        free(lock_file);
-  	return ( 1 ); 
-    }
-}
-#endif
-
 #ifdef _AIX
 /*
  * NAME: get_stat

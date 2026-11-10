@@ -42,6 +42,40 @@
   above zero, and `LC_CTYPE` is 0 on glibc, so that category was left out of
   every reply. Covered by the session requests test of
   `make -C lib/tt/bin/ttsession check`.
+- dtmail, dtmailpr: run without the mail group. `dtmail` is no longer installed
+  set-group-id; a new program, `dtmailspool` (plain C, nothing but the C
+  library, installed with the `mail` group and mode 2755 by `make install`),
+  does what needs the group in the mail spool directory
+  (`--with-mail-spool-dir`, default `/var/mail`) for the user who started it
+  and for nobody else: it opens or creates the user's own mailbox and hands the
+  descriptor to the mailer, makes the file that replaces the mailbox in a save
+  and renames it over the mailbox, and makes, checks, releases and breaks the
+  `.lock` and `.dtmail` lock files. A request names no path; every file is
+  reached relative to the spool directory without following links and must be a
+  regular file of the user; the group is held for one operation at a time and
+  every change is verified; the helper reads no environment, closes inherited
+  descriptors, is not dumpable, ignores the signals of a terminal and the size
+  limits of the mailer, and ends on any frame that is cut, too long,
+  wrong or carries a descriptor. `libDtMail` talks to it through `SpoolHelper`
+  and `MailboxFiles`, which also handle every other mailbox with plain system
+  calls (no second attempt with a group). The mailbox descriptor is now
+  close-on-exec, a read-write open of a mailbox that cannot be written falls
+  back to read-only without an `access()` call, and the link count of a mailbox
+  opened read-write is taken from the open descriptor (it was read from an
+  uninitialised buffer). A helper that is not installed or does not start makes
+  the inbox fail to open with an access error; there is no second attempt
+  without it. Removed: `include/DtMail/MailGroup.hh` and its in-process group
+  toggling (the `PRIV_ENABLED` macros and the enable/disable callbacks of
+  `Session`, `Application` and `RoamApp`), `isSetMailGidNeeded()`,
+  `GetGroupName()`, `GetIdForGroupName()` and the start-up check that `dtmail`
+  runs as group `mail`. Covered by
+  `programs/dtmail/tests/check-spool-helper.py` (the helper under the
+  sanitizers: every truncated or oversize frame, descriptors, links,
+  directories, FIFOs and files of other users, locks, the save, a killed
+  helper, a fake kernel for the group ids, source checks) and
+  `libDtMail/tests/check-spool-client.py` (replies that are cut or wrong, both
+  ways of handling files, recognising the user's mailbox), plus new spool cases
+  of `check-mailbox-files.py`; described in `docs/improvements/mail.md`.
 - dtfile: complete background file-operation protocol writes and fail safely
   when their control channel is lost. Conflict replies, modification notices,
   errors, completion records, rename results and create results now use the

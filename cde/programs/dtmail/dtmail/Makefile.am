@@ -49,8 +49,3 @@ dtmail_SOURCES = AliasListUiItem.C               AlternatesListUiItem.C \
 		 XmTextEditor.C                  XtArgCollector.C \
 		 dtb_utils.C                     options_stubs.C \
 		 options_ui.C                    options_util.C
-
-# Don't fail if we can't set the mail group which might not exist on
-# some systems
-install-exec-hook:
-	-(chgrp mail $(DESTDIR)$(bindir)/dtmail && chmod 2755 $(DESTDIR)$(bindir)/dtmail)

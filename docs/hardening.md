@@ -74,7 +74,7 @@ have not had such a review. Fuzz targets exist for none of the components yet.
 | Component | Exposure | Prior hardening | Unique warnings | Defect-class | cppcheck errors | Fuzz targets |
 |---|---|---|---:|---:|---:|---|
 | `programs/dtappbuilder` | developer tool; mostly generated stubs | none recorded | 1,594 | 59 | 28 | none |
-| `programs/dtmail` | setgid mail; mail and MIME parsing | group privileges, mailbox save and path handling, text made from a message, command-line and session input, ToolTalk request data, mail server clients, message/partial assembly, MIME and lock file text (2026-11-10) | 1,369 | 44 | 0 | none |
+| `programs/dtmail` | unprivileged mailer; set-group-id spool helper (`dtmailspool`); mail and MIME parsing | mail spool helper split from the mailer (2026-11-10), mailbox save and path handling, text made from a message, command-line and session input, ToolTalk request data, mail server clients, message/partial assembly, MIME and lock file text (2026-11-10) | 1,369 | 44 | 0 | none |
 | `programs/dtcm` | includes rpc.cmsd (RPC server run as root); calendar | rpc.cmsd request path (2026-11-04); signal handling, access checks, recurrence rules (2026-11-10) | 879 | 59 | 5 | none |
 | `programs/dtfile` | file operations; drag and drop | Trash, copy and transfer (2026-11-02, 2026-11-03) | 813 | 203 | 10 | none |
 | `programs/dthelp` | help compiler; SGML parser | none recorded | 644 | 64 | 4 | none |

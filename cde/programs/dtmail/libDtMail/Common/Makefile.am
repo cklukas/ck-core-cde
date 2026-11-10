@@ -5,7 +5,9 @@ noinst_LIBRARIES = libCommon.a
 libCommon_a_CXXFLAGS = -I../../include -I../../include/utils -I$(srcdir)/lib \
 		       -I$(top_srcdir)/programs/dtmail/include \
 		       -I$(top_srcdir)/programs/dtmail/include/utils \
-		       -DDL_NOT_DYNAMIC
+		       -DDL_NOT_DYNAMIC \
+		       -DDTMAIL_SPOOL_HELPER=\"$(bindir)/dtmailspool\" \
+		       -DDTMAIL_SPOOL_DIR=\"$(MAIL_SPOOL_DIR)\"
 
 if SOLARIS
 libCommon_a_CXXFLAGS += -DMMAP_NORESERVE
@@ -38,6 +40,7 @@ libCommon_a_SOURCES = APOPServer.C \
 		      POP3Server.C \
 		      Process.C \
 		      Session.C \
+		      SpoolHelper.C \
 		      Threads.C \
 		      md5.C \
 		      str_utils.C

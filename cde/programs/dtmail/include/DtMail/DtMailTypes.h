@@ -48,16 +48,12 @@
 
 //
 // Default file open mode when creating a new mail file (i.e. folder),
-// or opening an existing one.
-// NOTE: there are two create modes, one for use if mail groups are not
-// required, and the other for use if mail groups are required. This
-// decision is made in the creating code
+// or opening an existing one.  The mailbox of the user in the mail spool
+// directory is created by dtmailspool, with the mode and the group the
+// delivery agents need.
 
 #define DTMAIL_DEFAULT_CREATE_MODE      0600
-#define DTMAIL_DEFAULT_CREATE_MODE_MAILGROUP	0660
 #define DTMAIL_DEFAULT_CREATE_UMASK	0177
-#define DTMAIL_DEFAULT_CREATE_UMASK_MAILGROUP	0117
-#define DTMAIL_DEFAULT_CREATE_MAILGROUP	"mail"
 #define DTMAIL_DEFAULT_OPEN_MODE        O_RDWR
 
 

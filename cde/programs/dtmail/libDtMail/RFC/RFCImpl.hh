@@ -91,6 +91,7 @@ typedef enum {
 
 class RFCMailBox;
 class RFCBodyPart;
+class MailboxFiles;
 
 
 class RFCMessage : public DtMail::Message {
@@ -699,6 +700,7 @@ class RFCMailBox : public DtMail::MailBox
     FileShare			*_lock_obj;
     DtMailBoolean		 _lockf_active;	// lockf() is being held
     char *			 _lockFileName;	// lock file name for mailbox
+    MailboxFiles		*_files;	// the files around the mailbox
     DtMailBoolean		 _long_lock_active;
     Thread			 _mbox_daemon;
     void *			 _map_lock;
@@ -742,8 +744,9 @@ class RFCMailBox : public DtMail::MailBox
 			MapRegion	*map,
 			int		advice = MADV_SEQUENTIAL);
 #endif
-    int		createTemporaryMailboxFile(DtMailEnv &, char *tmp_name);
+    int		createTemporaryMailboxFile(DtMailEnv &);
     void	checkLockFileOwnership(DtMailEnv &);
+    size_t	dotLockText(char *text, size_t size);
     bool	dotDtmailLockFile(char *, size_t);
     void	dotDtmailLock(DtMailEnv &);
     void	dotDtmailUnlock(DtMailEnv &);
@@ -753,7 +756,6 @@ class RFCMailBox : public DtMail::MailBox
     void	incorporate(
 			DtMailEnv &,
 			const DtMailBoolean already_locked = DTM_FALSE);
-    time_t	linkLockFile(DtMailEnv &, char *tempLockFileName);
     void	lockFile(DtMailEnv &);
     void	lockNewMailboxFile(int new_fd);
     DTMBX_LONGLOCK

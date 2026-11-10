@@ -113,10 +113,6 @@ DtMail::Session::Session(DtMailEnv & error, const char * app_name)
     _cur_key = 0;
     _busy_cb = NULL;
     _busy_cb_data = NULL;
-    _disableGroupPrivileges_cb = NULL;
-    _disableGroupPrivileges_cb_data = NULL;
-    _enableGroupPrivileges_cb = NULL;
-    _enableGroupPrivileges_cb_data = NULL;
     _interactive_time_cb = NULL;
     _interactive_time_cb_data = NULL;
 
@@ -905,40 +901,6 @@ DtMail::Session::removeObjectKey(DtMailObjectKey key)
     int slot = _valid_keys.indexof(key);
     if (slot >= 0) {
 	_valid_keys.remove(slot);
-    }
-}
-
-void
-DtMail::Session::registerDisableGroupPrivilegesCallback(
-				DisableGroupPrivilegesCallback cb,
-				void * cb_data)
-{
-    _disableGroupPrivileges_cb = cb;
-    _disableGroupPrivileges_cb_data = cb_data;
-}
-
-void
-DtMail::Session::disableGroupPrivileges(void)
-{
-    if (_disableGroupPrivileges_cb) {
-	_disableGroupPrivileges_cb(_disableGroupPrivileges_cb_data);
-    }
-}
-
-void
-DtMail::Session::registerEnableGroupPrivilegesCallback(
-					EnableGroupPrivilegesCallback cb,
-					void * cb_data)
-{
-    _enableGroupPrivileges_cb = cb;
-    _enableGroupPrivileges_cb_data = cb_data;
-}
-
-void
-DtMail::Session::enableGroupPrivileges(void)
-{
-    if (_enableGroupPrivileges_cb) {
-	_enableGroupPrivileges_cb(_enableGroupPrivileges_cb_data);
     }
 }
 

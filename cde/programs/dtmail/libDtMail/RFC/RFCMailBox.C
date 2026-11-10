@@ -87,12 +87,10 @@ extern "C" {
 #include <DtMail/ImplDriver.hh>
 #include <DtMail/Threads.hh>
 #include <DtMail/IO.hh>
+#include <DtMail/SpoolHelper.hh>
+#include "MailboxFiles.hh"
 #include "RFCImpl.hh"
 #include "str_utils.h"
-
-#ifndef MAIL_SPOOL_PATH
-#define MAIL_SPOOL_PATH "/var/mail/%s"
-#endif
 
 // The longest path of a mailbox.  The names made from it (the lock files, the
 // temporary file of a save) are a few characters longer and have to fit into
@@ -115,45 +113,6 @@ extern "C" {
 #endif
 
 
-// These macros define a method for executing statements
-// with set group id privileges enabled
-//
-#if defined(MAILGROUP_REQUIRED)
-
-  #define PRIV_ENABLED_OPTIONAL(STATUSVARIABLE, STATEMENT) \
-      STATUSVARIABLE = STATEMENT;
-
-  #define PRIV_ENABLED(STATUSVARIABLE, STATEMENT)   \
-      { \
-          _session->enableGroupPrivileges(); \
-          STATUSVARIABLE = STATEMENT;       \
-          _session->disableGroupPrivileges(); \
-      }
-
-  #define PRIV_ENABLED_OPEN(FILENAME, STATUSVARIABLE, STATEMENT) \
-      if (isSetMailGidNeeded(FILENAME)) { \
-	  PRIV_ENABLED(STATUSVARIABLE, STATEMENT) \
-      } else { \
-          STATUSVARIABLE = STATEMENT; \
-      }
-
-#else
-
-  #define PRIV_ENABLED_OPTIONAL(STATUSVARIABLE, STATEMENT)   \
-      _session->enableGroupPrivileges(); \
-      STATUSVARIABLE = STATEMENT; 	\
-      _session->disableGroupPrivileges(); \
-      if (STATUSVARIABLE == -1) {	\
-          STATUSVARIABLE = STATEMENT; \
-      }
-
-  #define PRIV_ENABLED PRIV_ENABLED_OPTIONAL
-
-  #define PRIV_ENABLED_OPEN(FILENAME, STATUSVARIABLE, STATEMENT) \
-      STATUSVARIABLE = STATEMENT;
-
-#endif
-
 #define GET_DUMPFILE_NAME(dfn) \
     snprintf(dfn, sizeof(dfn), "%s/%s/dtmail.dump", getenv("HOME"), DtPERSONAL_TMP_DIRECTORY)
 
@@ -172,7 +131,6 @@ static jmp_buf sigbus_env;
  * Local Function Declarations
  */
 static void	SigBusHandler(LCL_SIG_HANDLER_SIGNATURE);
-static int	isMailGroupSystemMailbox(const char *mailboxPath);
 static int	isInboxMailbox(const char *mailboxPath);
 static char	*getInboxPath(DtMail::Session *session);
 
@@ -301,6 +259,7 @@ _msg_list(128), _mappings(4)
     assert(_uniqueLockId != NULL);
     _uniqueLockIdLength = strlen(_uniqueLockId);
     _lockFileName = (char *)0;
+    _files = NULL;
     _dirty = 0;
 
     _mr_allowed = DTM_TRUE;
@@ -428,6 +387,8 @@ RFCMailBox::~RFCMailBox(void)
 	    longUnlock(error);
 	    SafeClose(_fd);
 	}
+	delete _files;
+	_files = NULL;
 
 	if (_buffer) { // Option 2
 	    delete [] _buffer;
@@ -457,48 +418,10 @@ RFCMailBox::~RFCMailBox(void)
     if (NULL != _mra_serverpw) free(_mra_serverpw);
 }
 
-static int isMailGroupSystemMailbox(const char * mailboxPath)
+static char *getMailspoolPath(DtMail::Session *)
 {
-    int retval = 0;
-#ifdef MAILGROUP_REQUIRED
-    static int		oneTimeFlag = 0;
-    static char		*cached_inbox_path = 0;
-
-    if (NULL == mailboxPath) return retval;
-
-    if (! oneTimeFlag)
-    {
-        char *inbox_path = new char[MAXPATHLEN];
-        passwd pw;
-
-        GetPasswordEntry(pw);
-        snprintf(inbox_path, MAXPATHLEN, MAIL_SPOOL_PATH, pw.pw_name);
-        cached_inbox_path = strdup(inbox_path);
-        oneTimeFlag++;
-	delete [] inbox_path;
-    }
-
-    assert(cached_inbox_path);
-    retval = (!strcmp(mailboxPath, cached_inbox_path));
-#endif
-    return retval;
-}
-
-static char *getMailspoolPath(DtMail::Session *session)
-{
-    DtMailEnv		 error;
-    DtMail::MailRc	*mailrc = session->mailRc(error);
-    char		*mailspoolpath = 0;
-    char		*syspath = new char[MAXPATHLEN];
-    passwd		 pw;
-    
-    GetPasswordEntry(pw);
-    snprintf(syspath, MAXPATHLEN, MAIL_SPOOL_PATH, pw.pw_name);
-    mailspoolpath = strdup(syspath);
-
-    assert(NULL!=mailspoolpath);
-    delete [] syspath;
-    return mailspoolpath;
+    // The mailbox of the user in the mail spool directory.
+    return SpoolHelper::shared().mailboxPath();
 }
 
 static char *getInboxPath(DtMail::Session *session)
@@ -793,25 +716,15 @@ RFCMailBox::open(DtMailEnv & error,
 	    
 	  case DtMailFileObject:
           {
-	    int mode = O_RDONLY;
-	    int return_result;
-	    
-	    _mail_box_writable = DTM_FALSE;
-	    char * path = _session->expandPath(error, (char *)_arg);
-	    PRIV_ENABLED_OPTIONAL(return_result, SafeAccess(path, W_OK));
-	    if (return_result == 0) {
-		mode = O_RDWR;
-	    }
-	    free(path);
-
 	    // We need to use the most restrictive mode that is possible
 	    // on the file. If the caller has requested the file be open
 	    // read-only, then we should do that, even if read-write is
-	    // allowed. We don't want to try to open the file read-write
-	    // if we don't have adequate permission however.
+	    // allowed. Read-write is only asked for here: a file that does
+	    // not allow it is opened read-only (MailboxFiles::open()).
 	    //
-	    mode = open_mode == O_RDONLY ? open_mode : mode;
+	    int mode = open_mode == O_RDONLY ? O_RDONLY : O_RDWR;
 	    
+	    _mail_box_writable = DTM_FALSE;
 	    openRealFile(error, mode, create_mode);
 	    if (error.isSet()) {
 		if (auto_create == DTM_TRUE) {
@@ -852,25 +765,10 @@ RFCMailBox::open(DtMailEnv & error,
 	
 	// Open file.
 	
-	int mode = O_RDONLY;
-	int return_status;
+	// The most restrictive mode that is possible on the file, as above.
+	int mode = open_mode == O_RDONLY ? O_RDONLY : O_RDWR;
 	
 	_mail_box_writable = DTM_FALSE;
-	char * path = _session->expandPath(error, (char *)_arg);
-	PRIV_ENABLED_OPTIONAL(return_status, SafeAccess(path, W_OK));
-	if (return_status == 0) {
-	    mode = O_RDWR;
-	}
-	free(path);
-	
-	// We need to use the most restrictive mode that is possible
-	// on the file. If the caller has requested the file be open
-	// read-only, then we should do that, even if read-write is
-	// allowed. We don't want to try to open the file read-write
-	// if we don't have adequate permission however.
-	//
-	mode = open_mode == O_RDONLY ? open_mode : mode;
-	
 	openRealFile(error, mode, create_mode);
 	if (error.isSet()) {
 	    if (auto_create == DTM_TRUE) {
@@ -1292,7 +1190,6 @@ RFCMailBox::openRealFile(DtMailEnv & error, int open_mode, mode_t create_mode)
     // root out the real path just to make sure we don't munge
     // a link someplace.
     //
-    struct stat buf;
     char * path = _session->expandPath(error, (char *)_arg);
     if (error.isSet()) {
       return;		// could not expand path
@@ -1302,7 +1199,6 @@ RFCMailBox::openRealFile(DtMailEnv & error, int open_mode, mode_t create_mode)
 
     if ((open_mode & O_RDWR) == O_RDONLY) {
 	_real_path = strdup(path);
-	SafeStat(_real_path, &buf);
     }
     else {
 	// Resolve the links of the path, so that a save replaces the file
@@ -1329,31 +1225,18 @@ RFCMailBox::openRealFile(DtMailEnv & error, int open_mode, mode_t create_mode)
 
     free(path);
 
-    // We should now have a path we can open or create.
-    // We must now make sure that if the file is being created that
-    // it is created with the correct permissions and group owner.
+    // We should now have a path we can open or create.  The files around the
+    // mailbox are handled with plain system calls for a mailbox in a directory
+    // of the user, and by dtmailspool for the user's own mailbox in the mail
+    // spool directory, which only the mail group can write to.  The mailbox
+    // that is created is private to the user, and in the spool it has the
+    // mode and the group that the delivery agents need.
     //
-    // If the mailbox to be created is NOT the system mailbox for this
-    // user (e.g. the one that official delivery agents use), then the
-    // permissions for the file should only let the current user have access.
-    //
-    // If the mailbox to be created IS the system mailbox for this user,
-    // and MAILGROUP_REQUIRED is defined, we must allow group read/write
-    // and make sure the mailbox is owned by the correct group
-    //
-    int requiresMailGroupCreation = 0;
-    mode_t oldUmask;
-    int saveErrno = 0;
+    delete _files;
+    _files = MailboxFiles::forMailbox(_real_path);
 
-    // delivery agent runs as specific non-root/wheel group
-    requiresMailGroupCreation = isMailGroupSystemMailbox(_real_path);
-    if ( (open_mode & O_CREAT) && requiresMailGroupCreation) {
-      oldUmask = umask(DTMAIL_DEFAULT_CREATE_UMASK_MAILGROUP);
-      create_mode = DTMAIL_DEFAULT_CREATE_MODE_MAILGROUP;
-    }
-    else {
-      oldUmask = umask(DTMAIL_DEFAULT_CREATE_UMASK);
-    }
+    int saveErrno = 0;
+    int granted = open_mode & O_ACCMODE;
     
     // We have 2 choices for locking an RFC file. The first is
     // to use the ToolTalk file scoping paradigm, and the second
@@ -1383,17 +1266,12 @@ RFCMailBox::openRealFile(DtMailEnv & error, int open_mode, mode_t create_mode)
       }
 
       // we have obtained the lock, go ahead and open the mailbox
-      // Do not open the mailbox with privileges enabled, even if
-      // creating the file
-      //
-      PRIV_ENABLED_OPEN(_real_path, _fd,
-			SafeOpen(_real_path, open_mode, create_mode));
+      _fd = _files->open(open_mode, create_mode, &granted);
       saveErrno = errno;
     }
     else
     {
-      PRIV_ENABLED_OPEN(_real_path, _fd,
-			SafeOpen(_real_path, open_mode, create_mode));
+      _fd = _files->open(open_mode, create_mode, &granted);
       saveErrno = errno;
 
 #if !defined(SENDMAIL_LOCKS)
@@ -1402,7 +1280,7 @@ RFCMailBox::openRealFile(DtMailEnv & error, int open_mode, mode_t create_mode)
       // if the user has turned off ToolTalk locking, they are playing
       // without a net...
       //
-      if ( (_fd >= 0) && ( (open_mode & O_RDWR) == O_RDWR) )
+      if ( (_fd >= 0) && (granted == O_RDWR) )
       {
 	enum DtmFileLocality	location;
 
@@ -1430,7 +1308,7 @@ RFCMailBox::openRealFile(DtMailEnv & error, int open_mode, mode_t create_mode)
 	    //
 	    assert(_lockf_active == DTM_FALSE);
 	    lseek(_fd, 0, SEEK_SET);
-	    PRIV_ENABLED_OPTIONAL(return_status,SafeLockf(_fd, F_TLOCK, 0));
+	    return_status = SafeLockf(_fd, F_TLOCK, 0);
 	    if (return_status == -1) {
 	      error.setError(DTME_OtherOwnsWrite);
 	      SafeClose(_fd);
@@ -1450,8 +1328,6 @@ RFCMailBox::openRealFile(DtMailEnv & error, int open_mode, mode_t create_mode)
 
     }
 
-    (void) umask(oldUmask);
-    
     if (_fd < 0) {
 	longUnlock(error);
 
@@ -1478,16 +1354,7 @@ RFCMailBox::openRealFile(DtMailEnv & error, int open_mode, mode_t create_mode)
 	return;
     }
 
-    if ((open_mode & O_CREAT) && requiresMailGroupCreation) {
-      //
-      // Make sure a newly created file has the correct group owner i.d.
-      //
-      gid_t groupId = GetIdForGroupName(DTMAIL_DEFAULT_CREATE_MAILGROUP);
-      if (groupId >= 0)
-        (void) SafeFchown(_fd, (unsigned int) -1, groupId);
-    }
-
-    if ((open_mode & 0x3) == O_RDWR) {
+    if (granted == O_RDWR) {
       if (answer == DTMBX_LONGLOCK_SUCCESSFUL ||
 	  answer == DTMBX_LONGLOCK_FAILED_READWRITE)
 	_mail_box_writable = DTM_TRUE;
@@ -1501,7 +1368,10 @@ RFCMailBox::openRealFile(DtMailEnv & error, int open_mode, mode_t create_mode)
 
     _file_size = lseek(_fd, 0, SEEK_END);
     lseek(_fd, 0, SEEK_SET);
-    _links = buf.st_nlink;
+
+    struct stat opened;
+    if (SafeFStat(_fd, &opened) == 0)
+      _links = opened.st_nlink;
 
     _lockFileName = generateLockFileName();
     assert(_lockFileName != NULL);
@@ -1535,10 +1405,8 @@ RFCMailBox::realFileSize(DtMailEnv & error, struct stat * stat_buf)
     	    DEBUG_PRINTF( ("realFileSize:  (buf.st_nlink!=_links\n") );
 	    old_mode = fcntl(_fd, F_GETFL) & O_ACCMODE;
 
-	    int fd;
-	    PRIV_ENABLED_OPEN(_real_path,
-			      fd,
-			      SafeOpen(_real_path, old_mode, 0666));
+	    int fd, granted;
+	    fd = _files->open((int) old_mode, 0666, &granted);
 	    if (fd < 0) {
 		error.setError(DTME_ObjectAccessFailed);
                 return(0);
@@ -2895,17 +2763,14 @@ RFCMailBox::ExpungeEvent(DtMailBoolean closing)
 
 // Function: RFCMailBox::createTemporaryMailboxFile
 // Description:
-//  Given the name for a temporary mailbox file, create a proper
-//  temporary mailbox file and return a file descriptor opened on
-//  the newly created file
+//  Create the temporary mailbox file that will replace the mailbox and
+//  return a file descriptor opened on the newly created file
 // Method:
-//   . obtain information on current mailbox file
-//   . create the new temporary file
-//   . set the permissions, owner and group of the newly created file
-//     to match those of the current mailbox
+//   . the files around the mailbox (MailboxFiles) make the new file beside the
+//     mailbox, exclusively, under a name that is not known beforehand
+//   . its permissions, owner and group match those of the current mailbox
 // Arguments:
 //  DtMailEnv & error - standard error structure used by caller
-//  tmp_name	-- -> name for temporary file
 // Outputs:
 //  error.isset() will indicate if there were any errors encountered, in which
 //  case the temporary file has not been created.
@@ -2914,88 +2779,68 @@ RFCMailBox::ExpungeEvent(DtMailBoolean closing)
 //  if no error encountered.
 // 
 int
-RFCMailBox::createTemporaryMailboxFile(DtMailEnv & error, char *tmp_name)
+RFCMailBox::createTemporaryMailboxFile(DtMailEnv & error)
 {
-  int fd;
-  int return_status;
-  struct stat info;
-  if (SafeFStat(_fd, &info) < 0) {
-    int errno2 = errno;
+  MailboxFiles::TemporaryStep step = MailboxFiles::TEMP_CREATE;
+  int fd = _files->createTemporary(_fd, &step);
+
+  if (fd >= 0)
+    return(fd);
+
+  int errno2 = errno;
+  const char *tmp_name = _files->temporaryName();
+
+  switch (step) {
+  case MailboxFiles::TEMP_INFORMATION:
     if (_errorLogging)
       error.logError(DTM_FALSE,
 		   "createTemporaryMailboxFile(): fstat(%d) failed errno=%d\n",
-		   _fd, errno);
+		   _fd, errno2);
     error.vSetError(DTME_CannotObtainInformationOnOpenMailboxFile,
 		    DTM_FALSE, NULL, _real_path, error.errnoMessage(errno2));
     return(-1);
-  }
 
-  // The file is created with the group held, in a directory that others may be
-  // able to write to: mkstemp() makes it exclusively under a name that is not
-  // known beforehand, and never opens a file or link that exists.
-  PRIV_ENABLED(fd,mkstemp(tmp_name));
-  if (fd < 0) {
-    int errno2 = errno;
-    switch (errno2) {
-    case EACCES:
-      error.setError(DTME_CannotCreateTemporaryMailboxFile_NoPermission);
-      break;
-      
-    case EISDIR:
-      error.setError(DTME_CannotCreateTemporaryMailboxFile_IsDirectory);
-      break;
-      
-    case ENOENT:
-      error.setError(DTME_CannotCreateTemporaryMailboxFile_NoSuchFile);
-      break;
+  case MailboxFiles::TEMP_MODE: {
+    struct stat info;
 
-#if defined(CSRG_BASED)
-    case ENOTDIR:
-#else
-    case ENOLINK:
-#endif
-      error.setError(DTME_CannotCreateTemporaryMailboxFile_RemoteAccessLost);
-      break;
-      
-    default:
-      error.vSetError(DTME_CannotCreateTemporaryMailboxFile,
-		      DTM_FALSE, NULL, tmp_name, error.errnoMessage(errno2));
-    }
-    return(-1);
-  }
-
-  PRIV_ENABLED_OPTIONAL(return_status,SafeFChmod(fd, info.st_mode & 07777));
-  if (return_status == -1) {
-    int errno2 = errno;
-    (void) SafeClose(fd);
-    PRIV_ENABLED(return_status,SafeUnlink(tmp_name));
+    if (SafeFStat(_fd, &info) < 0)
+      info.st_mode = 0;
     error.vSetError(DTME_CannotSetPermissionsOfTemporaryMailboxFile,
 		    DTM_FALSE, NULL, tmp_name, info.st_mode & 07777,
 		    error.errnoMessage(errno2));
     return(-1);
   }
 
-  PRIV_ENABLED(return_status, SafeFchown(fd, info.st_uid, (unsigned int) -1));
-#if 0
-  // bug 1216914 - dtmail should be able to auto-save a mailbox which is not
-  // opened [Read Only] if the user has write access to the original mailbox,
-  // then the user should be able to overwrite the mailbox even if the owner
-  // gets changes. A mailbox is only opened read-write if the "access()"
-  // system call indicates the user has write permissions.
-  //
-  if (return_status == -1) {
-    int errno2 = errno;
-    (void) SafeClose(fd);
-    PRIV_ENABLED(return_status,SafeUnlink(tmp_name));
-    error.vSetError(DTME_CannotSetOwnerOfTemporaryMailboxFile,
-		    DTM_FALSE, NULL, tmp_name, info.st_uid,
-		    error.errnoMessage(errno2));
-    return(-1);
+  case MailboxFiles::TEMP_CREATE:
+    break;
   }
-#endif
 
-  PRIV_ENABLED(return_status, SafeFchown(fd, (unsigned int) -1, info.st_gid));
-  return(fd);
+  switch (errno2) {
+  case EACCES:
+    error.setError(DTME_CannotCreateTemporaryMailboxFile_NoPermission);
+    break;
+
+  case EISDIR:
+    error.setError(DTME_CannotCreateTemporaryMailboxFile_IsDirectory);
+    break;
+
+  case ENOENT:
+    error.setError(DTME_CannotCreateTemporaryMailboxFile_NoSuchFile);
+    break;
+
+#if defined(CSRG_BASED)
+  case ENOTDIR:
+#else
+  case ENOLINK:
+#endif
+    error.setError(DTME_CannotCreateTemporaryMailboxFile_RemoteAccessLost);
+    break;
+
+  default:
+    error.vSetError(DTME_CannotCreateTemporaryMailboxFile,
+		    DTM_FALSE, NULL, tmp_name, error.errnoMessage(errno2));
+  }
+  return(-1);
 }
 
 // Function: RFCMailBox::writeMailBox - create new copy of complete mailbox
@@ -3078,17 +2923,7 @@ RFCMailBox::writeMailBox(DtMailEnv &error, DtMailBoolean hide_access)
 
   // Create the new temporary file to hold the mailbox contents
   //
-  static char tmp_name[MAXPATHLEN+1];
-  if (snprintf(tmp_name, sizeof(tmp_name), "%s.tmp.XXXXXX", _real_path)
-      >= (int)sizeof(tmp_name)) {
-    error.vSetError(DTME_CannotCreateTemporaryMailboxFile,
-		    DTM_FALSE, NULL, _real_path,
-		    error.errnoMessage(ENAMETOOLONG));
-    unlockFile(error2, _fd);
-    return;
-  }
-
-  int fd = createTemporaryMailboxFile(error, tmp_name);
+  int fd = createTemporaryMailboxFile(error);
   if (error.isSet()) {
     DEBUG_PRINTF( ("%s:  locking mailbox\n", pname) );
     unlockFile(error2, _fd);
@@ -3267,11 +3102,11 @@ RFCMailBox::writeMailBox(DtMailEnv &error, DtMailBoolean hide_access)
       assert(mc != NULL);
       mc->message->unfixMessageLocation(tml->tmlHeaderStart, tml->tmlTemporary);
     }
-    FileSystemSpace(tmp_name, 0,&fsname);
+    FileSystemSpace(_real_path, 0,&fsname);
     (void) SafeClose(fd);
     DEBUG_PRINTF( ("%s:  locking mailbox\n", pname) );
     unlockFile(error2, _fd);
-    PRIV_ENABLED(return_status,SafeUnlink(tmp_name));
+    _files->discardTemporary();
     free (tmlFirst);
     free (iovFirst);
     switch (errno2) {
@@ -3295,7 +3130,7 @@ RFCMailBox::writeMailBox(DtMailEnv &error, DtMailBoolean hide_access)
 
     default:
       error.vSetError(DTME_CannotWriteToTemporaryMailboxFile,
-		      DTM_FALSE, NULL, tmp_name, error.errnoMessage(errno2));
+		      DTM_FALSE, NULL, _files->temporaryName(), error.errnoMessage(errno2));
     }
     return;
   }
@@ -3314,7 +3149,7 @@ RFCMailBox::writeMailBox(DtMailEnv &error, DtMailBoolean hide_access)
     (void) SafeClose(fd);
     DEBUG_PRINTF( ("%s:  locking mailbox\n", pname) );
     unlockFile(error2, _fd);
-    PRIV_ENABLED(return_status,SafeUnlink(tmp_name));
+    _files->discardTemporary();
     free (tmlFirst);
     free (iovFirst);
     return;
@@ -3374,7 +3209,7 @@ RFCMailBox::writeMailBox(DtMailEnv &error, DtMailBoolean hide_access)
   // remove the old lock if applicable.
   //
   lockNewMailboxFile(fd);
-  PRIV_ENABLED(return_status,SafeRename(tmp_name, _real_path));
+  return_status = _files->commitTemporary();
   if (return_status == -1) {
     // the rename failed -- we are in a world of hurt now.
     // We have successfully written the new mailbox out, unmapped the
@@ -3384,7 +3219,7 @@ RFCMailBox::writeMailBox(DtMailEnv &error, DtMailBoolean hide_access)
     // this as a fatal error so that the caller can exit properly.
     //
     error.vSetError(DTME_CannotRenameNewMailboxFileOverOld,
-		    DTM_TRUE, NULL, _real_path, tmp_name,
+		    DTM_TRUE, NULL, _real_path, _files->temporaryName(),
 		    error.errnoMessage());
     (void) SafeClose(fd);
     (void) SafeClose(_fd);
@@ -3407,7 +3242,7 @@ RFCMailBox::writeMailBox(DtMailEnv &error, DtMailBoolean hide_access)
       if (_errorLogging)
           error.logError(DTM_TRUE,
 		"%s: fstat(%d/%s) failed errno=%d\n",
-		pname, _fd, tmp_name, errno);
+		pname, _fd, _files->temporaryName(), errno);
       error.setError(DTME_ObjectCreationFailed, DTM_TRUE, (Tt_message) 0);
   }
   else
@@ -3615,49 +3450,6 @@ RFCMailBox::generateLockFileName(void)
   return s;
 }
 
-//
-// The name of a short-lived lock file beside a mailbox: the given base followed
-// by six random letters and digits, taken from the system's random source so
-// that another user cannot predict the name.  False, with errno set, when the
-// name does not fit or no random bytes are available.
-//
-static bool
-makeLockTemporaryName(char *name, size_t size, const char *base)
-{
-  static const char alphabet[] =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  unsigned char random_bytes[6];
-  size_t length = strlen(base);
-  size_t have = 0;
-  int fd;
-
-  if (length + sizeof(random_bytes) + 1 > size) {
-    errno = ENAMETOOLONG;
-    return false;
-  }
-  fd = open("/dev/urandom", O_RDONLY);
-  if (fd < 0)
-    return false;
-  while (have < sizeof(random_bytes)) {
-    ssize_t got = read(fd, random_bytes + have, sizeof(random_bytes) - have);
-    if (got < 0 && errno == EINTR)
-      continue;
-    if (got <= 0) {
-      close(fd);
-      if (got == 0)
-	errno = EIO;
-      return false;
-    }
-    have += (size_t) got;
-  }
-  close(fd);
-  memcpy(name, base, length);
-  for (size_t i = 0; i < sizeof(random_bytes); i++)
-    name[length + i] = alphabet[random_bytes[i] % (sizeof(alphabet) - 1)];
-  name[length + sizeof(random_bytes)] = '\0';
-  return true;
-}
-
 // Function: RFCMailBox::generateUniqueLockId - create unique ID for this mailbox lock files
 // Description:
 //   generateUniqueLockId creates a unique ID which is written into .lock files and
@@ -3687,228 +3479,81 @@ RFCMailBox::generateUniqueLockId(void)
   return(strdup(theId));
 }
 
+//
+// The text of the lock file <mailbox>.lock: "0", a null byte and the unique
+// id of this mailbox.  The "0" gives some interoperability with SVR4 mailers,
+// which expect a process ID in the lock file and use kill() to see if the
+// process is alive or not: they always think our lock file is valid.  The id
+// lets us verify that the lock file was not stolen out from under us.
+//
+size_t
+RFCMailBox::dotLockText(char *text, size_t size)
+{
+  assert(size >= (size_t) _uniqueLockIdLength + 2);
+  text[0] = '0';
+  text[1] = '\0';
+  memcpy(text + 2, _uniqueLockId, _uniqueLockIdLength);
+  return (size_t) _uniqueLockIdLength + 2;
+}
+
+//
+// The error for a lock file that cannot be made, from the errno value of the
+// failed call.
+//
+static void
+setLockCreateError(DtMailEnv & error, int error_number, const char *name)
+{
+  switch (error_number) {
+  case EACCES:
+    error.setError(DTME_CannotCreateMailboxLockFile_NoPermission);
+    break;
+
+  case EISDIR:
+    error.setError(DTME_CannotCreateMailboxLockFile_IsDirectory);
+    break;
+
+  case ENOENT:
+    error.setError(DTME_CannotCreateMailboxLockFile_NoSuchFile);
+    break;
+
+#if defined(CSRG_BASED)
+  case ENOTDIR:
+#else
+  case ENOLINK:
+#endif
+    error.setError(DTME_CannotCreateMailboxLockFile_RemoteAccessLost);
+    break;
+
+  default:
+    error.vSetError(DTME_CannotCreateMailboxLockFile,
+		    DTM_FALSE, NULL, name, error.errnoMessage(error_number));
+    break;
+  }
+}
+
 void
 RFCMailBox::checkLockFileOwnership(DtMailEnv & error)
 {
   char *pname = "checkLockFileOwnership";
+  char text[DTSP_MAX_CONTENT];
 
   assert(_lockFileName != NULL);
-  struct stat info;
-  if (SafeStat(_lockFileName, &info) < 0) {
-    if (_errorLogging)
-      error.logError(DTM_FALSE,
-	 "%s: lock cannot be stat()ed: %s, errno = %d\n",
-	 pname, _lockFileName, errno);
-    error.setError(DTME_ObjectInvalid);
+  size_t length = dotLockText(text, sizeof(text));
+  int status = _files->lockVerify(DTSP_LOCK_MAIL, text, length);
+
+  if (status == DTSP_OK)
     return;
-  }
-
-  int lock_fd;
-  int flags;
-
-#ifndef O_RSYNC
-  flags =  O_RDONLY | O_SYNC;
-#else
-  flags =  O_RDONLY | O_RSYNC | O_SYNC;
-#endif /* O_RSYNC */
-
-#ifdef MAILGROUP_REQUIRED
-  PRIV_ENABLED_OPEN(_lockFileName, lock_fd, SafeOpen(_lockFileName, flags, 0));
-#else
-  PRIV_ENABLED_OPTIONAL(lock_fd, SafeOpen(_lockFileName, flags, 0));
-#endif
-
-  if (lock_fd == -1) {
-    if (_errorLogging)
-      error.logError(
-	  DTM_FALSE,
-	 "%s: lock cannot be open()ed: %s, errno = %d\n",
-	 pname, _lockFileName, errno);
-    error.setError(DTME_ObjectInvalid);
-    return;
-  }
-
-  char lockBuf[MAXPATHLEN];
-  int status = SafeRead(lock_fd, lockBuf, sizeof(lockBuf)-1);
-  if (status <= 0) {
-    if (_errorLogging)
-      error.logError(
-	  DTM_FALSE,
-	  "%s: lock cannot be read: %s, errno = %d\n",
-	  pname, _lockFileName, errno);
-    (void) SafeClose(lock_fd);
-    error.setError(DTME_ObjectInvalid);
-    return;
-  }
-
-  if ( (status < _uniqueLockIdLength+2)
-       || (strncmp(lockBuf+2, _uniqueLockId, _uniqueLockIdLength) != 0) ) {
+  if (status == DTSP_NOT_OURS) {
     error.logError(
         DTM_FALSE,
         "%s: dtmail lock file stolen by another process\n", pname);
-    if (_errorLogging)
-      HexDump(
-		(FILE*) NULL,
-		"lock file stolen - lock file contents",
-		(unsigned char *)lockBuf, status, 0);
-    (void) SafeClose(lock_fd);
-    error.setError(DTME_ObjectInvalid);
-    return;
+  } else if (_errorLogging) {
+    error.logError(
+        DTM_FALSE,
+        "%s: lock cannot be read: %s, errno = %d\n",
+        pname, _lockFileName, MailboxFiles::statusErrno(status));
   }
-  (void) SafeClose(lock_fd);
-  return;  
-}
-
-// Function: RFCMailBox::linkLockFile - create and link temporary lock file to real lock file
-// Description:
-//  Create a lock file for the current mailbox. Return success of failure.
-// Method:
-//  . create a temporary lock file with a unique signature id of this process
-//  . link the temporary lock file to the real lock file
-//  . if the link is not successful, remove the temporary lock file and return the
-//    time() in seconds on the remote system of when the temporary lock file was created
-//  . if the link is successful, remove the temporary lock file (link) and return 0.
-// Arguments:
-//   error	-- standard error structure used by caller
-// Outputs:
-//   If error.isSet() it is a fatal error from which the caller should return to its caller,
-//		return value will always be time(0)
-//   If !error.isSet() then check results of return value
-// Returns:
-//   time_t == 0 : indicates that the real lock file has been created and we own it
-//          != 0 : could not create real lock file, return value is the time *on the remote system*
-//		   that the temporary lock file was created with (from comparison with existing
-//		   lock file to see how old it is)
-//
-time_t
-RFCMailBox::linkLockFile(DtMailEnv & error, char *tempLockFileName)
-{
-  int lock_fd;
-  int return_status;
-  struct stat sbuf;
-
-  // Create the temporary lock file. Failure to do so indicates lack of write permission
-  // in the directory or some other fatal error
-  //
-
-#ifndef O_RSYNC
-  int flags = O_RDWR | O_CREAT | O_EXCL | O_SYNC;
-#else
-  int flags = O_RDWR | O_CREAT | O_EXCL | O_SYNC | O_RSYNC;
-#endif
-  PRIV_ENABLED(lock_fd,SafeOpen(tempLockFileName, flags, 0666));
-  if (lock_fd < 0) {
-    // We are not able to create the temporary lock file.
-    // We will have to punt on trying to lock here from now on.
-    //
-    switch (errno) {
-    case EACCES:
-      error.setError(DTME_CannotCreateMailboxLockFile_NoPermission);
-      break;
-      
-    case EISDIR:
-      error.setError(DTME_CannotCreateMailboxLockFile_IsDirectory);
-      break;
-      
-    case ENOENT:
-      error.setError(DTME_CannotCreateMailboxLockFile_NoSuchFile);
-      break;
-      
-#if defined(CSRG_BASED)
-    case ENOTDIR:
-#else
-    case ENOLINK:
-#endif
-      error.setError(DTME_CannotCreateMailboxLockFile_RemoteAccessLost);
-      break;
-      
-    default:
-      error.vSetError(DTME_CannotCreateMailboxLockFile,
-		      DTM_FALSE, NULL, tempLockFileName, error.errnoMessage());
-      break;
-    }
-    return(time(NULL));
-  }
-
-  // Get creation time of temporary file *on remote system*
-  //
-  if (SafeFStat(lock_fd, &sbuf) == -1) {
-    if (_errorLogging)
-      error.logError(DTM_FALSE,
-		   "linkLockFile(): temporary lock file cannot be stat()ed: %s, errno = %d\n",
-		   tempLockFileName, errno);
-    error.vSetError(DTME_CannotCreateMailboxLockFile,
-		    DTM_FALSE, NULL, tempLockFileName, error.errnoMessage());
-    (void) SafeClose(lock_fd);
-    return(time(NULL));
-  }
-
-  // Write proper contents to lock file:
-  // Write the string "0" into the lock file to give us some
-  // interoperability with SVR4 mailers.  SVR4 mailers expect
-  // a process ID to be written into the lock file and then
-  // use kill() to see if the process is alive or not.  We write
-  // 0 into it so that SVR4 mailers will always think our lock file
-  // is valid. In addition we include a unique ID so we can verify
-  // if the lock file is stolen out from under us.
-  //
-  ssize_t writeResults;
-  writeResults = SafeWrite(lock_fd, "0\0", 2);
-  if (writeResults == 2)
-    writeResults += SafeWrite(lock_fd, _uniqueLockId, _uniqueLockIdLength);
-  if ( (writeResults != _uniqueLockIdLength+2) ){
-    if (_errorLogging)
-      error.logError(DTM_FALSE,
-		   "linkLockFile(): write to temporary lock file failed: %s, errno = %d\n",
-		   tempLockFileName, errno);
-    error.vSetError(DTME_CannotCreateMailboxLockFile,
-		    DTM_FALSE, NULL, tempLockFileName, error.errnoMessage());
-    (void) SafeClose(lock_fd);
-    return(time(NULL));
-  }
-
-  // sync up the lock file with the ultimate storage device
-  //
-  if (fsync(lock_fd) == -1) {
-    if (_errorLogging)
-      error.logError(DTM_FALSE,
-		   "linkLockFile(): fsync to temporary lock file failed: %s, errno = %d\n",
-		   tempLockFileName, errno);
-    error.vSetError(DTME_CannotCreateMailboxLockFile,
-		    DTM_FALSE, NULL, tempLockFileName, error.errnoMessage());
-    (void) SafeClose(lock_fd);
-    return(time(NULL));
-  }
-
-  // close the file
-  //
-  if (SafeClose(lock_fd) == -1) {
-    if (_errorLogging)
-      error.logError(
-	DTM_FALSE,
-	"linkLockFile(): close of temporary lock file failed: %s, errno = %d\n",
-	tempLockFileName, errno);
-    error.vSetError(DTME_CannotCreateMailboxLockFile,
-		    DTM_FALSE, NULL, tempLockFileName, error.errnoMessage());
-    return(time(NULL));
-  }
-         
-  // The temporary lock file has been created - now try and link it to the
-  // real lock file.  Failure here is not fatal as we will retry and possible
-  // try and remove the real lock file later on.
-  //
-  PRIV_ENABLED(return_status,SafeLink(tempLockFileName, _lockFileName));
-  if (return_status == -1) {
-      PRIV_ENABLED(return_status,SafeRemove(tempLockFileName));
-      return(sbuf.st_ctime);
-  }
-
-  // We successfully linked the temp lock file to the real lock file name
-  // This means we have the dot lock for our process - remove the temporary lock
-  // file name (link) and return
-  //
-  PRIV_ENABLED(return_status,SafeRemove(tempLockFileName));
-  return(0);
+  error.setError(DTME_ObjectInvalid);
 }
 
 void
@@ -3930,7 +3575,7 @@ RFCMailBox::lockFile(DtMailEnv & error)
 #if defined(SENDMAIL_LOCKS)
   assert(_lockf_active == DTM_FALSE);
   lseek(_fd, 0, SEEK_SET);
-  PRIV_ENABLED_OPTIONAL(return_status,SafeLockf(_fd, F_LOCK, 0));
+  return_status = SafeLockf(_fd, F_LOCK, 0);
   if (return_status != -1)
   {
       _lockf_active = DTM_TRUE;
@@ -3948,100 +3593,86 @@ RFCMailBox::lockFile(DtMailEnv & error)
   // usr/src/cmd/mail/maillock.c.
   //
   assert(_dot_lock_active == DTM_FALSE);
-  
-  // Create the temporary mail lock file name
-  // It has the form <mailbox path><six random characters>; the file itself
-  // is created exclusively in linkLockFile.
-  //
   assert(_lockFileName != NULL);
-  char *tempLockFileName = new char[MAXPATHLEN];
-  if (!makeLockTemporaryName(tempLockFileName, MAXPATHLEN, _real_path)) {
-    _use_dot_lock = DTM_FALSE;
-    _mail_box_writable = DTM_FALSE;
-    error.vSetError(DTME_CannotCreateMailboxLockFile,
-		    DTM_FALSE, NULL, _real_path, error.errnoMessage());
-    delete [] tempLockFileName;
-    return;
-  }
 
-  // loop through attempting to create the temporary lock file,
-  // and if successful attempt to link the temporary lock file
-  // to the real lock file. If not successful, retry for up to 5
-  // minutes, and remove the current lock file if it is more than
-  // 5 minutes old.
+  char text[DTSP_MAX_CONTENT];
+  size_t length = dotLockText(text, sizeof(text));
+
+  // loop through attempting to create the lock file (a temporary file with
+  // the text of the lock, linked to the real lock file, which MailboxFiles
+  // does in one step). If not successful, retry for up to 5 minutes, and
+  // remove the current lock file if it is more than 5 minutes older than
+  // the one we made.
   //
-  int statFailed = 0;
-  struct stat sbuf;
+  int vanished = 0;
   
   for (;;) {
-    // Attempt to create a temporary file and link it to the intended lock file
     // If it is successful, we have the lock and can return.
-    // If it is not successful and error.isSet then it is a non-recoverable
-    // error,
-    // in which case the mailbox is deemed not-writable any more.
-    // If it is not successful and !error.isSet then it is a recoverable error,
-    // in which case we spin and try again according to the retry rules.
+    // If the lock is held, or was gone when it was looked at, it is a
+    // recoverable error, in which case we spin and try again according
+    // to the retry rules.
+    // Any other error is non-recoverable, in which case the mailbox is
+    // deemed not-writable any more.
     //
-    time_t t = linkLockFile(error, tempLockFileName);
-    if (error.isSet()) {
-      // hard error? -- something is wrong, assume read/only
-      _use_dot_lock = DTM_FALSE;
-      _mail_box_writable = DTM_FALSE;
-      (void) SafeRemove(tempLockFileName);
-      DEBUG_PRINTF(
-	("%s:  failed to link dot_lock file %s\n", pname, tempLockFileName) );
-      delete [] tempLockFileName;
-      return;
-    }
-    if (t == 0) {
+    uint32_t age = 0;
+    int status = _files->lockTry(DTSP_LOCK_MAIL, text, length, &age);
+
+    if (status == DTSP_OK) {
       checkLockFileOwnership(error);
       if (!error.isSet()) 
       {
           _dot_lock_active = DTM_TRUE;
           DEBUG_PRINTF( ("%s:  succeeded acquiring dot_lock file\n", pname) );
       }
-      delete [] tempLockFileName;
       return;
     }
 
-    // Could not link the temporary lock file to the intended real lock file
-    // See if the lock file exists and if so if we can remove it because it
-    // is > 5 mins old.  If the stat fails it means the lock file disappeared
-    // between our attempt to link to it and now - only allow this to go on
-    // so many times before punting
-    //
-    if (SafeStat(_lockFileName, &sbuf) == -1) {
-      if (statFailed++ > 5) {
+    if (status == DTSP_VANISHED) {
+      // The lock file disappeared between our attempt to link to it and now
+      // - only allow this to go on so many times before punting
+      //
+      if (vanished++ > 5) {
 	error.vSetError(DTME_CannotCreateMailboxLockFile,
-			DTM_FALSE, NULL, _lockFileName, error.errnoMessage());
-        delete [] tempLockFileName;
+			DTM_FALSE, NULL, _lockFileName,
+			error.errnoMessage(ENOENT));
 	return;
       }
       sleep(5);
       continue;
     }
 
-    // The lock file already exists - compare the time of the temp
-    // file with the time of the lock file, rather than with the
-    // current time of day, since the files may reside on another
-    // machine whose time of day differs from the one this program
-    // is running on. If the lock file is less than 5 minutes old,
-    // keep trying, otherwise, remove the lock file and try again.
+    if (status != DTSP_BUSY) {
+      // hard error? -- something is wrong, assume read/only
+      _use_dot_lock = DTM_FALSE;
+      _mail_box_writable = DTM_FALSE;
+      DEBUG_PRINTF(
+	("%s:  failed to make dot_lock file %s\n", pname, _lockFileName) );
+      setLockCreateError(error, MailboxFiles::statusErrno(status),
+			 _lockFileName);
+      return;
+    }
+
+    // The lock file already exists.  Compare the age of the lock file with
+    // the one we made, rather than with the current time of day, since the
+    // files may reside on another machine whose time of day differs from
+    // the one this program is running on. If the lock file is less than 5
+    // minutes old, keep trying, otherwise, remove the lock file and try
+    // again.
     //
-    statFailed = 0;
-    if (t < (sbuf.st_ctime + 300)) {
+    vanished = 0;
+    if (age < DTSP_STALE_AGE) {
       sleep(5);
       continue;
     }
 
     error.logError(DTM_FALSE,
-        "lockFile(): removing stale lock file %s ctime %08ld temp lock %s ctime %08ld diff %08ld\n",
-	_lockFileName, sbuf.st_ctime, tempLockFileName, t, t-sbuf.st_ctime);
+        "lockFile(): removing stale lock file %s, %u seconds older than the new lock\n",
+	_lockFileName, (unsigned int) age);
     DEBUG_PRINTF(
 	("%s:  giving up; removing dot_lock file %s\n", pname, _lockFileName));
 
-    PRIV_ENABLED(return_status,SafeRemove(_lockFileName));
-    if (return_status == -1) {
+    status = _files->lockBreak(DTSP_LOCK_MAIL);
+    if (status != DTSP_OK) {
       // We were not able to unlink the file. This means that
       // we do not have write access to the directory. We will
       // have to pass on taking long locks.
@@ -4049,12 +3680,11 @@ RFCMailBox::lockFile(DtMailEnv & error)
       _use_dot_lock = DTM_FALSE;
       _mail_box_writable = DTM_FALSE;
       error.vSetError(DTME_CannotRemoveStaleMailboxLockFile,
-		     DTM_FALSE, NULL, _lockFileName, error.errnoMessage());
-      delete [] tempLockFileName;
+		     DTM_FALSE, NULL, _lockFileName,
+		     error.errnoMessage(MailboxFiles::statusErrno(status)));
       return;
     }
   }
-  delete [] tempLockFileName;
 }
 
 // lockNewMailboxFile -- before renaming a new mailbox file over an old
@@ -4067,10 +3697,9 @@ RFCMailBox::lockFile(DtMailEnv & error)
 void
 RFCMailBox::lockNewMailboxFile(int new_fd)
 {
-  int return_status = 0;
   if (_lockf_active == DTM_TRUE) {
     lseek(new_fd, 0, SEEK_SET);
-    PRIV_ENABLED_OPTIONAL(return_status,SafeLockf(new_fd, F_LOCK, 0));
+    (void) SafeLockf(new_fd, F_LOCK, 0);
   }
 }
 
@@ -4081,23 +3710,21 @@ RFCMailBox::lockNewMailboxFile(int new_fd)
 void
 RFCMailBox::unlockOldMailboxFile(int old_fd)
 {
-  int return_status = 0;
   if (_lockf_active == DTM_TRUE) {
     lseek(old_fd, 0, SEEK_SET);
-    PRIV_ENABLED_OPTIONAL(return_status,SafeLockf(old_fd, F_ULOCK, 0));
+    (void) SafeLockf(old_fd, F_ULOCK, 0);
   }
 }
 
 void
 RFCMailBox::transferLock(int old_fd, int new_fd)
 {
-  int return_status = 0;
   if (_lockf_active == DTM_TRUE) {
     lseek(new_fd, 0, SEEK_SET);
-    PRIV_ENABLED_OPTIONAL(return_status,SafeLockf(new_fd, F_LOCK, 0));
+    (void) SafeLockf(new_fd, F_LOCK, 0);
 
     lseek(old_fd, F_ULOCK, 0);
-    PRIV_ENABLED_OPTIONAL(return_status,SafeLockf(old_fd, F_ULOCK, 0));
+    (void) SafeLockf(old_fd, F_ULOCK, 0);
   }
 }
 
@@ -4117,15 +3744,23 @@ RFCMailBox::unlockFile(DtMailEnv & error, int fd)
     assert(_dot_lock_active == DTM_TRUE);
     assert(_lockFileName != NULL);
     _dot_lock_active = DTM_FALSE;
-    checkLockFileOwnership(error);
-    if (!error.isSet()) {
-        DEBUG_PRINTF(("%s:  unlinking dot_lock file\n", pname, _lockFileName));
 
-        PRIV_ENABLED(return_status,SafeUnlink(_lockFileName));
-	if (return_status == -1) {
-          error.vSetError(DTME_CannotRemoveMailboxLockFile,
-		     DTM_FALSE, NULL, _lockFileName, error.errnoMessage());
-        }
+    // Only a lock file that has the text we wrote is removed.
+    char text[DTSP_MAX_CONTENT];
+    size_t length = dotLockText(text, sizeof(text));
+
+    DEBUG_PRINTF(("%s:  unlinking dot_lock file %s\n", pname, _lockFileName));
+    return_status = _files->lockRelease(DTSP_LOCK_MAIL, text, length);
+    if (return_status == DTSP_NOT_OURS || return_status == ENOENT) {
+      error.logError(
+	  DTM_FALSE,
+	  "unlockFile: dtmail lock file stolen by another process\n");
+      error.setError(DTME_ObjectInvalid);
+    }
+    else if (return_status != DTSP_OK) {
+      error.vSetError(DTME_CannotRemoveMailboxLockFile,
+		      DTM_FALSE, NULL, _lockFileName,
+		      error.errnoMessage(MailboxFiles::statusErrno(return_status)));
     }
   }
   
@@ -4134,7 +3769,7 @@ RFCMailBox::unlockFile(DtMailEnv & error, int fd)
       DEBUG_PRINTF(("%s:  removing lockf\n", pname));
 
       lseek(fd, 0, SEEK_SET);
-      PRIV_ENABLED_OPTIONAL(return_status,SafeLockf(fd, F_ULOCK, 0));
+      return_status = SafeLockf(fd, F_ULOCK, 0);
       _lockf_active = DTM_FALSE;
     }
 #endif
@@ -4145,7 +3780,7 @@ bool
 RFCMailBox::dotDtmailLockFile(char *filename, size_t size)
 {
 
-  // Attempt to link the temporary lock file to the real lock file.
+  // The name of the lock file, for the messages.
   assert(_real_path != NULL);
   int length = snprintf(filename, size, "%s.%s", _real_path, DOT_DTMAIL_SUFFIX);
   if (length < 0 || (size_t) length >= size) {
@@ -4155,122 +3790,57 @@ RFCMailBox::dotDtmailLockFile(char *filename, size_t size)
   return true;
 }
 
+//
+// The text of the lock file <mailbox>.dtmail: the process id.
+//
+static size_t
+dotDtmailText(char *text, size_t size)
+{
+  int length = snprintf(text, size, "%d\n", (int) getpid());
+
+  return length > 0 && (size_t) length < size ? (size_t) length : 0;
+}
+
 void
 RFCMailBox::dotDtmailLock(DtMailEnv & error)
 {
-  char lockBuf[MAXPATHLEN];
   char dotDtmailPath[MAXPATHLEN+1];
-  char *tempLockFileName = new char[MAXPATHLEN];
-  int len;
-  int return_status = 0;
-  int lock_fd = 0;
-#ifndef O_RSYNC
-  int flags = O_RDWR | O_CREAT | O_EXCL | O_SYNC;
-#else
-  int flags = O_RDWR | O_CREAT | O_EXCL | O_SYNC | O_RSYNC;
-#endif
-    
+  char text[32];
+  uint32_t age = 0;
+
   // We will create a .dtmail file to prevent conflicts between dtmail's
   // operating on the same mailbox.
-  
-  // Create the temporary mail lock file name.
-  if (!makeLockTemporaryName(tempLockFileName, MAXPATHLEN, _real_path)) {
-    error.vSetError(DTME_CannotCreateMailboxLockFile,
-		    DTM_FALSE, NULL, _real_path, error.errnoMessage());
-    delete [] tempLockFileName;
-    return;
-  }
-
-  // Attempt to create the temporary file.
-  PRIV_ENABLED(lock_fd,SafeOpen(tempLockFileName, flags, 0666));
-  if (lock_fd < 0) {
-    switch (errno) {
-    case EACCES:
-      error.setError(DTME_CannotCreateMailboxLockFile_NoPermission);
-      break;
-    case EISDIR:
-      error.setError(DTME_CannotCreateMailboxLockFile_IsDirectory);
-      break;
-    case ENOENT:
-      error.setError(DTME_CannotCreateMailboxLockFile_NoSuchFile);
-      break;
-#if defined(CSRG_BASED)
-    case ENOTDIR:
-#else
-    case ENOLINK:
-#endif
-      error.setError(DTME_CannotCreateMailboxLockFile_RemoteAccessLost);
-      break;
-    default:
-      error.vSetError(DTME_CannotCreateMailboxLockFile,
-		      DTM_FALSE, NULL, tempLockFileName,
-		      error.errnoMessage());
-      break;
-    }
-    delete [] tempLockFileName;
-    return;
-  }
-
-  snprintf(lockBuf, sizeof(lockBuf), "%d\n", (int) getpid());
-  len = strlen(lockBuf);
-  len = SafeWrite(lock_fd, lockBuf, len);
-  SafeClose(lock_fd);
 
   if (!dotDtmailLockFile(dotDtmailPath, sizeof(dotDtmailPath))) {
     errno = ENAMETOOLONG;
     error.vSetError(DTME_CannotCreateMailboxDotDtmailLockFile,
 		    DTM_FALSE, NULL, _real_path, error.errnoMessage());
-    PRIV_ENABLED(return_status,SafeRemove(tempLockFileName));
-    delete [] tempLockFileName;
     return;
   }
 
-  PRIV_ENABLED(return_status,SafeLink(tempLockFileName, dotDtmailPath));
-  if (return_status == -1)
-    error.vSetError(DTME_CannotCreateMailboxDotDtmailLockFile,
-		      DTM_FALSE, NULL, dotDtmailPath,
-		      error.errnoMessage());
+  size_t length = dotDtmailText(text, sizeof(text));
+  int status = _files->lockTry(DTSP_LOCK_DTMAIL, text, length, &age);
 
-  PRIV_ENABLED(return_status,SafeRemove(tempLockFileName));
-  delete [] tempLockFileName;
+  if (status == DTSP_OK)
+    return;
+  if (status == DTSP_BUSY || status == DTSP_VANISHED) {
+    // somebody else holds it
+    error.vSetError(DTME_CannotCreateMailboxDotDtmailLockFile,
+		    DTM_FALSE, NULL, dotDtmailPath,
+		    error.errnoMessage(EEXIST));
+    return;
+  }
+  setLockCreateError(error, MailboxFiles::statusErrno(status), dotDtmailPath);
 }
 
 void
 RFCMailBox::dotDtmailUnlock(DtMailEnv &)
 {
-  char dotDtmailPath[MAXPATHLEN+1];
-  char lockBuf[MAXPATHLEN];
-  int pid = 0;
-  int return_status = 0;
-  int lock_fd = 0;
-#ifndef O_RSYNC
-  int flags = O_RDONLY | O_EXCL | O_SYNC;
-#else
-  int flags = O_RDONLY | O_EXCL | O_SYNC | O_RSYNC;
-#endif
+  char text[32];
+  size_t length = dotDtmailText(text, sizeof(text));
 
-  if (!dotDtmailLockFile(dotDtmailPath, sizeof(dotDtmailPath)))
-    return;
-  PRIV_ENABLED(lock_fd,SafeOpen(dotDtmailPath, flags, 0666));
-  if (lock_fd < 0)
-    return;
-
-  return_status = SafeRead(lock_fd, lockBuf, sizeof(lockBuf)-1);
-  if (return_status <= 0) 
-  {
-      (void) SafeClose(lock_fd);
-      return;
-  }
-
-  lockBuf[return_status] = '\0';
-  if (sscanf(lockBuf, "%d", &pid) != 1 || pid != (int) getpid())
-  {
-      (void) SafeClose(lock_fd);
-      return;
-  }
-
-  (void) SafeClose(lock_fd);
-  PRIV_ENABLED(return_status,SafeRemove(dotDtmailPath));
+  // Only a lock file that holds our process id is removed.
+  (void) _files->lockRelease(DTSP_LOCK_DTMAIL, text, length);
 }
 
 //
@@ -4391,9 +3961,8 @@ RFCMailBox::longUnlock(DtMailEnv & error)
 #if !defined(SENDMAIL_LOCKS)
   if (_lockf_active == DTM_TRUE)
   {
-    int return_status = 0;
     lseek(_fd, 0, SEEK_SET);
-    PRIV_ENABLED_OPTIONAL(return_status,SafeLockf(_fd, F_ULOCK, 0));
+    (void) SafeLockf(_fd, F_ULOCK, 0);
     _lockf_active = DTM_FALSE;
   }
 #endif

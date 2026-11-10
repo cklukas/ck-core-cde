@@ -230,21 +230,6 @@ class DtMail {
 	    void setAutoSaveFlag(DtMailBoolean flag);
 	    DtMailBoolean getAutoSaveFlag();
 
-	    // These methods allow disabling and enabling of group privileges
-	    //
-            typedef void (*DisableGroupPrivilegesCallback)(void * client_data);
-            typedef void (*EnableGroupPrivilegesCallback)(void * client_data);
-      
-            void registerDisableGroupPrivilegesCallback(
-					DisableGroupPrivilegesCallback,
-					void * client_data);
-            void registerEnableGroupPrivilegesCallback(
-					EnableGroupPrivilegesCallback,
-					void * client_data);
-      
-            void disableGroupPrivileges(void);
-            void enableGroupPrivileges(void);
-	
 	    // This method allows the client to register a callback that
 	    // can be called to return the last time() an interactive X
 	    // event was processed.
@@ -321,12 +306,6 @@ class DtMail {
 
 	    BusyApplicationCallback	_busy_cb;
 	    void *			_busy_cb_data;
-
-	    DisableGroupPrivilegesCallback	_disableGroupPrivileges_cb;
-	    void *				_disableGroupPrivileges_cb_data;
-
-	    EnableGroupPrivilegesCallback	_enableGroupPrivileges_cb;
-	    void *				_enableGroupPrivileges_cb_data;
 
 	    LastInteractiveEventTimeCallback	_interactive_time_cb;
 	    void *				_interactive_time_cb_data;

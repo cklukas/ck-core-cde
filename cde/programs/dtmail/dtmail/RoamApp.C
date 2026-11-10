@@ -1013,10 +1013,6 @@ void RoamApp::initialize(int *argcp, char **argv)
     struct sigaction	action_buf;
     Tt_status		status;
 
-    // Give up the group of a set-group-id installation before anything reads
-    // the environment, sets the locale or opens a file.
-    initializeGroupPrivileges();
-
     _busy_count = 0;
     _firstSaveYourselfArrived = FALSE;
     _options = NULL;
@@ -1357,55 +1353,6 @@ void RoamApp::initialize(int *argcp, char **argv)
     }
 
 
-    //
-    // Check if mailer is installed properly if we are not in debugging mode.
-    //
-    const char *value = NULL;
-    mail_error.clear();
-    d_session->mailRc(mail_error)->getValue(mail_error, 
-					    "__ignore_group_permissions", 
-					    &value);
-    if (mail_error.isSet()) {
-        char grp_name[100];
-
-	mail_error.clear();
-        theApplication->enableGroupPrivileges();
-        GetGroupName(grp_name, sizeof(grp_name));
-        theApplication->disableGroupPrivileges();
-        if (strcmp(grp_name, DTMAIL_DEFAULT_CREATE_MAILGROUP))
-          mail_error.setError(DTME_BadRunGroup);
-    
-
-        if ((DTMailError_t)mail_error == DTME_BadRunGroup) {
-            char	buf[512];
-    	    int answer = 0;
-
-    	    DtMailGenDialog *install_errDialog =
-		new DtMailGenDialog("Dialog", theApplication->baseWidget());
-            sprintf(buf, "%s", CATGETS(DT_catd, 2, 4,
-                "Mailer has not been properly installed,\n\
-and cannot run because the execution group\n\
-is incorrectly set."));
-
-            install_errDialog->setToErrorDialog(
-                                CATGETS(DT_catd, 1, 6, "Mailer"),
-                                buf);
-
-            // No choice at this state other than to OK.
-            helpId = DTMAILHELPBADGROUPID;
-            answer = install_errDialog->post_and_return(
-                                CATGETS(DT_catd, 3, 9, "OK"),
-                                helpId);
-	    XtRemoveAllCallbacks(
-		theApplication->baseWidget(),
-		XmNdestroyCallback);
-
-            exit(1);
-        }
-    }
-    if (NULL != value)
-      free((void*) value);
-
     _options = new OptCmd("Mail Options...",
                           CATGETS(DT_catd, 1, 2,"Mail Options..."),
                           TRUE,
@@ -1508,11 +1455,6 @@ is incorrectly set."));
     //
     d_session->registerLastInteractiveEventTimeCallback(lastInteractiveEventTime, this);
 
-    // These callbacks are only needed on systems where sendmail is run as 
-    // 'root', and so has access permissions to any file on the system. 
-    d_session->registerDisableGroupPrivilegesCallback(disableGroupPrivileges, this);
-    d_session->registerEnableGroupPrivilegesCallback(enableGroupPrivileges, this);
-    
     if (d_session->pollRequired(mail_error) == DTM_TRUE) {
 	d_session->registerBusyCallback(mail_error, setBusyState, this);
 	_appTimeoutId = XtAppAddTimeOut(
@@ -1702,23 +1644,6 @@ RoamApp::lastInteractiveEventTime(void * client_data)
     RoamApp * self = (RoamApp *)client_data;
     return (theApplication->lastInteractiveEventTime());
 }
-
-void
-RoamApp::disableGroupPrivileges(void * client_data)
-{
-    RoamApp * self = (RoamApp *)client_data;
-    theApplication->disableGroupPrivileges();
-    return;
-}
-
-void
-RoamApp::enableGroupPrivileges(void * client_data)
-{
-    RoamApp * self = (RoamApp *)client_data;
-    theApplication->enableGroupPrivileges();
-    return;
-}
-
 
 void
 RoamApp::setBusyState(

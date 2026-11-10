@@ -55,6 +55,7 @@ programs/dtlogin/dtlogin
 programs/dtlogin/config/dtlogin
 programs/dtmail/dtmail/dtmail
 programs/dtmail/dtmailpr/dtmailpr
+programs/dtmail/dtmailspool/dtmailspool
 programs/dtpad/dtpad
 programs/dtpdm/dtpdm
 programs/dtpdmd/dtpdmd

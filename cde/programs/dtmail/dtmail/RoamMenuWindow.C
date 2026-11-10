@@ -1602,28 +1602,6 @@ RoamMenuWindow::open(
             delete [] buf;
 	    return;
 	}
-	else if ((DTMailError_t)error == DTME_BadRunGroup)
-	{
-
-	    sprintf(buf, "%s", CATGETS(DT_catd, 2, 4,
-		   "Mailer has not been properly installed,\n\
-and cannot run because the execution group\n\
-is incorrectly set."));
-
-	    _genDialog->setToQuestionDialog(
-				CATGETS(DT_catd, 1, 6, "Mailer"),
-				buf);
-	    
-	    // No choice at this state other than to OK.
-
-	    helpId = DTMAILHELPBADGROUPID;
-	    answer = _genDialog->post_and_return(
-				CATGETS(DT_catd, 3, 9, "OK"),
-				helpId);
-            delete [] buf;
-	    return;
-
-	}
 	else if ((DTMailError_t)error == DTME_NoPermission)
 	{
 	    /* NL_COMMENT

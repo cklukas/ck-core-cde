@@ -1,7 +1,8 @@
 // Regression tests for the files libDtMail creates, the paths it follows and
-// the messages it puts together when it opens and saves a mailbox.  The
-// production Session.C, RFCMailBox.C, MIMEPartial.C, MIMEBodyPart.C and
-// RFCMIME.C are compiled next to this program with the sanitizers and linked
+// the messages it puts together when it opens and saves a mailbox, and for the
+// user's mailbox in the mail spool, which dtmailspool handles.  The
+// production Session.C, RFCMailBox.C, MailboxFiles.C, SpoolHelper.C, MIMEPartial.C,
+// MIMEBodyPart.C and RFCMIME.C are compiled next to this program with the sanitizers and linked
 // with the rest of the built libDtMail, which also holds the POP and IMAP
 // clients that a case runs against a server of its own (a forked process on
 // a port of the loopback address that plays what a hostile server would send);
@@ -42,7 +43,7 @@ int tt_fd(void) { return -1; }
 
 #define CHECK(condition) do { if (!(condition)) { fprintf(stderr, "failed: %s (line %d)\n", #condition, __LINE__); return 1; } } while (0)
 
-static std::string dir;
+static std::string dir, spool_dir, helper_log;
 
 static const char two_messages[] =
     "From alice@example.org Mon Nov  9 10:00:00 2026\n"
@@ -105,6 +106,30 @@ static DtMail::MailBox *open_box(DtMail::Session *session, DtMailEnv &env, const
     return env.isSet() ? NULL : box;
 }
 
+// How often the helper of the spool was started in this case.
+static int helper_starts(void)
+{
+    std::string log = read_file(helper_log);
+    int starts = 0;
+    for (size_t i = 0; log != "<missing>" && i < log.size(); i++)
+        if (log[i] == '\n') starts++;
+    return starts;
+}
+
+static std::vector<std::string> listing_of(const std::string &directory)
+{
+    std::vector<std::string> names;
+    FILE *p = popen(("ls -A '" + directory + "'").c_str(), "r");
+    char line[512];
+    while (p && fgets(line, sizeof(line), p)) {
+        std::string name = line;
+        while (!name.empty() && name.back() == '\n') name.pop_back();
+        names.push_back(name);
+    }
+    if (p) pclose(p);
+    return names;
+}
+
 static int delete_first_and_save(DtMail::MailBox *box, DtMailEnv &env)
 {
     DtMail::Message *first = box->getFirstMessage(env);
@@ -113,6 +138,112 @@ static int delete_first_and_save(DtMail::MailBox *box, DtMailEnv &env)
     if (env.isSet()) return 1;
     box->expunge(env);
     return env.isSet() ? 1 : 0;
+}
+
+/* the user's mailbox in the mail spool is made, locked, saved and unlocked through the helper,
+   and the mailer holds no group for it */
+static int the_users_mailbox_in_the_spool_is_handled_through_the_helper(void)
+{
+    struct passwd *pw = getpwuid(getuid());
+    CHECK(pw != NULL);
+    std::string name = pw->pw_name;
+    std::string inbox = spool_dir + "/" + name;
+    CHECK(helper_starts() == 0);
+
+    // a mailbox that does not exist is made by the helper, with the modes of a spool file
+    DtMailEnv env;
+    DtMail::Session *session = new_session(env);
+    CHECK(session != NULL);
+    DtMail::MailBox *created = open_box(session, env, inbox, DTM_TRUE);
+    CHECK(created != NULL);
+    struct stat st;
+    CHECK(stat(inbox.c_str(), &st) == 0);
+    CHECK((st.st_mode & 07777) == 0660);
+    CHECK(st.st_uid == getuid());
+    CHECK(helper_starts() == 1);
+    delete created;
+
+    // delivered mail is there when it is opened again; a save replaces it and keeps its mode
+    write_file(inbox, two_messages, 0640);
+    DtMail::MailBox *mbox = open_box(session, env, inbox);
+    CHECK(mbox != NULL);
+    std::vector<std::string> during = listing_of(spool_dir);
+    for (size_t i = 0; i < during.size(); i++)
+        CHECK(during[i] == name || during[i] == name + ".dtmail" || during[i] == name + ".lock");
+    CHECK(delete_first_and_save(mbox, env) == 0);
+    CHECK(stat(inbox.c_str(), &st) == 0);
+    CHECK((st.st_mode & 07777) == 0640);
+    std::string saved = read_file(inbox);
+    CHECK(saved.find("Subject: second") != std::string::npos);
+    CHECK(saved.find("Subject: first") == std::string::npos);
+    delete mbox;
+
+    // nothing is left in the spool but the mailbox: no lock file, no temporary file
+    std::vector<std::string> after = listing_of(spool_dir);
+    CHECK(after.size() == 1 && after[0] == name);
+    CHECK(helper_starts() == 1);            // one helper served the whole session
+    return 0;
+}
+
+/* a mailbox that is not in the spool is handled without the helper, even under the name of the user */
+static int a_mailbox_outside_the_spool_does_not_start_the_helper(void)
+{
+    struct passwd *pw = getpwuid(getuid());
+    CHECK(pw != NULL);
+    std::string box = path(pw->pw_name);
+    write_file(box, two_messages, 0640);
+
+    DtMailEnv env;
+    DtMail::Session *session = new_session(env);
+    CHECK(session != NULL);
+    DtMail::MailBox *mbox = open_box(session, env, box);
+    CHECK(mbox != NULL);
+    CHECK(delete_first_and_save(mbox, env) == 0);
+    delete mbox;
+    CHECK(read_file(box).find("Subject: first") == std::string::npos);
+
+    DtMail::MailBox *created = open_box(session, env, path("new-folder"), DTM_TRUE);
+    CHECK(created != NULL);
+    delete created;
+    CHECK(helper_starts() == 0);
+    return 0;
+}
+
+/* a link in the spool is not a way to make or replace anything else: the helper refuses a link under
+   the name of the mailbox, and a link to a file of the user is followed by the user, not by the helper */
+static int a_link_in_the_spool_is_not_a_mailbox(void)
+{
+    struct passwd *pw = getpwuid(getuid());
+    CHECK(pw != NULL);
+    std::string inbox = spool_dir + "/" + pw->pw_name;
+    std::string target = path("somebody-elses-file");
+
+    // a link to a file that does not exist: the mailbox is not made through the link
+    CHECK(symlink(target.c_str(), inbox.c_str()) == 0);
+    DtMailEnv env;
+    DtMail::Session *session = new_session(env);
+    CHECK(session != NULL);
+    DtMail::MailBox *mbox = open_box(session, env, inbox, DTM_TRUE);
+    CHECK(mbox == NULL);
+    struct stat st;
+    CHECK(lstat(target.c_str(), &st) != 0);
+    CHECK(lstat(inbox.c_str(), &st) == 0 && S_ISLNK(st.st_mode));
+    CHECK(helper_starts() == 1);
+
+    // a link to a file of the user is resolved like any link and handled as the user
+    write_file(target, two_messages, 0640);
+    DtMailEnv env2;
+    mbox = open_box(session, env2, inbox);
+    CHECK(mbox != NULL);
+    CHECK(delete_first_and_save(mbox, env2) == 0);
+    delete mbox;
+    CHECK(lstat(inbox.c_str(), &st) == 0 && S_ISLNK(st.st_mode));
+    std::string saved = read_file(target);
+    CHECK(saved.find("Subject: second") != std::string::npos);
+    CHECK(saved.find("Subject: first") == std::string::npos);
+    CHECK(listing_of(spool_dir).size() == 1);
+    CHECK(helper_starts() == 1);
+    return 0;
 }
 
 /* a save never opens a name another user could have planted */
@@ -846,6 +977,9 @@ static int imap_credentials_with_a_line_break_are_not_sent(void)
 }
 
 static struct { const char *name; int (*run)(void); } cases[] = {
+    {"the_users_mailbox_in_the_spool_is_handled_through_the_helper", the_users_mailbox_in_the_spool_is_handled_through_the_helper},
+    {"a_mailbox_outside_the_spool_does_not_start_the_helper", a_mailbox_outside_the_spool_does_not_start_the_helper},
+    {"a_link_in_the_spool_is_not_a_mailbox", a_link_in_the_spool_is_not_a_mailbox},
     {"save_ignores_planted_names", save_ignores_planted_names},
     {"save_keeps_mode_and_leaves_nothing", save_keeps_mode_and_leaves_nothing},
     {"linked_mailbox_is_saved_through_the_link", linked_mailbox_is_saved_through_the_link},
@@ -884,6 +1018,10 @@ int main(int argc, char **argv)
     const char *work = getenv("DTMAIL_TEST_DIR");
     if (!work) { fprintf(stderr, "DTMAIL_TEST_DIR is not set\n"); return 2; }
     dir = work;
+    const char *spool_env = getenv("DTMAIL_TEST_SPOOL"), *log_env = getenv("DTMAIL_TEST_HELPER_LOG");
+    if (!spool_env || !log_env) { fprintf(stderr, "DTMAIL_TEST_SPOOL or DTMAIL_TEST_HELPER_LOG is not set\n"); return 2; }
+    spool_dir = spool_env;
+    helper_log = log_env;
     setenv("HOME", work, 1);
     unsetenv("MAILRC");
     for (int i = 0; cases[i].name; i++)

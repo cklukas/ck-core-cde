@@ -26,7 +26,6 @@
 #include <unistd.h>
 #include <locale.h>
 #include "dmx.hh"
-#include <DtMail/MailGroup.hh>
 #include <locale.h>
 #include <sys/param.h>
 // #include <Dt/DtNlUtils.h>
@@ -40,24 +39,6 @@ extern "C" {
 #include <Dt/EnvControlP.h>
 #include <Dt/DtPStrings.h>
 
-/*
- * globals
- */
-
-static MailGroup mailGroup;	// the group of a set-group-id installation
-
-void
-enableGroupPrivileges(void *)
-{
-    mailGroup.enable();
-}
-
-void
-disableGroupPrivileges(void *)
-{
-    mailGroup.disableOrStop();
-}
-
 int
 main (int argc, char **argv)
 {
@@ -68,15 +49,6 @@ main (int argc, char **argv)
 	char	*ffile = NULL;
 	int	aflag = 0, pgflag = 0;
 	int	errflag = 0;
-
-        // we have to be set-gid to group "mail" when opening and storing
-        // folders.  But we don't want to do everything as group mail.
-        // here we record our original gid, and set the effective gid
-        // back the the real gid.  We'll set it back when we're dealing
-        // with folders...  The program stops when the group cannot be given
-        // up.
-        //
-        mailGroup.dropOrStop();
 
 	/*
 	 * To make DtDts*() function correctly, we have to call
@@ -138,12 +110,6 @@ main (int argc, char **argv)
 		fprintf (stderr, "Error opening session...exiting.\n");
 		exit (1);
 	}
-
-        // Register all callbacks the backend may have to deal with
-        session->registerDisableGroupPrivilegesCallback(disableGroupPrivileges,
-							(void *)0);
-        session->registerEnableGroupPrivilegesCallback(enableGroupPrivileges,
-							(void *)0);
 
 	// initialize typing system (will go away eventually)
 	DtDtsLoadDataTypes ();

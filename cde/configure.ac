@@ -368,6 +368,32 @@ fi
 AM_CONDITIONAL(SET_WTMP_FILE, test x$WTMP_FILE != x)
 AC_SUBST(WTMP_FILE)
 
+dnl The directory of the mail spool.  dtmailspool, the set-group-id helper
+dnl of dtmail, and libDtMail agree on it at build time.
+AC_ARG_WITH([mail-spool-dir],
+  AS_HELP_STRING([--with-mail-spool-dir=<directory>],
+    [directory that holds the mailbox files of the users (default: /var/mail,
+     or /var/spool/mail where only that exists)]),
+  [MAIL_SPOOL_DIR="$withval"],
+  [MAIL_SPOOL_DIR=""])
+if test "x$MAIL_SPOOL_DIR" = "xyes" || test "x$MAIL_SPOOL_DIR" = "xno" ; then
+  AC_MSG_ERROR([--with-mail-spool-dir needs a directory name])
+fi
+if test "x$MAIL_SPOOL_DIR" = "x" ; then
+  if test -d /var/mail || test ! -d /var/spool/mail ; then
+    MAIL_SPOOL_DIR=/var/mail
+  else
+    MAIL_SPOOL_DIR=/var/spool/mail
+  fi
+fi
+case "$MAIL_SPOOL_DIR" in
+  /*) ;;
+  *) AC_MSG_ERROR([the mail spool directory must be an absolute path]) ;;
+esac
+AC_MSG_CHECKING([for the mail spool directory])
+AC_MSG_RESULT([$MAIL_SPOOL_DIR])
+AC_SUBST(MAIL_SPOOL_DIR)
+
 dnl hmmm...
 RM="rm -f"
 AC_SUBST(RM)
@@ -834,6 +860,7 @@ programs/dtmail/Makefile
 programs/dtmail/dtmail/Makefile
 programs/dtmail/MotifApp/Makefile
 programs/dtmail/dtmailpr/Makefile
+programs/dtmail/dtmailspool/Makefile
 programs/dtmail/libDtMail/Makefile
 programs/dtmail/libDtMail/RFC/Makefile
 programs/dtmail/libDtMail/Common/Makefile

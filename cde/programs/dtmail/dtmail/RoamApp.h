@@ -100,8 +100,6 @@ class RoamApp : public Application
     XmFontList		_user_fontlist;
     
     static void		applicationTimeout ( XtPointer, XtIntervalId * );
-    static void		disableGroupPrivileges(void *);
-    static void		enableGroupPrivileges(void *);
     static long		lastInteractiveEventTime(void *);
     static void		setBusyState(DtMailEnv &, DtMailBusyState, void *);
     static void		showBusyState(DtMailEnv &, DtMailBusyState, void *);

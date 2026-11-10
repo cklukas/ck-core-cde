@@ -9,8 +9,7 @@ that end a line early) under AddressSanitizer and UndefinedBehaviorSanitizer:
 
   * the parameter reader and the growing text of message/partial assembly;
   * the enriched text converter;
-  * the Unix "From " line, the temporary name of a lock file and the release of the
-    .dtmail lock;
+  * the Unix "From " line and the temporary name of a lock file;
   * the address list reader.
 
 The assembly of message/partial parts is run on real mailboxes by
@@ -412,8 +411,9 @@ int main(int argc, char **argv) { return dispatch(argc, argv, scenarios); }
 # From line and lock file name
 fmt = read("libDtMail/RFC/RFCFormat.C")
 mailbox = read("libDtMail/RFC/RFCMailBox.C")
+files = read("libDtMail/RFC/MailboxFiles.C")
 from_fn = block(fmt, r"^static char \*\nmakeUnixFromLine\(")
-lock_fn = block(mailbox, r"^static bool\nmakeLockTemporaryName\(")
+lock_fn = block(files, r"^bool\nrandomName\(")
 if not (from_fn and lock_fn):
     problems.append("the From line or lock name functions were not found")
 else:
@@ -453,7 +453,7 @@ static std::string lock_name(size_t size, const char *base, bool *ok)
 {
     char *name = (char *)malloc(size ? size : 1);
     errno = 0;
-    *ok = makeLockTemporaryName(name, size, base);
+    *ok = randomName(name, size, base, ".lk.");
     lock_errno = errno;
     std::string result = *ok ? name : "";
     free(name);
@@ -462,16 +462,17 @@ static std::string lock_name(size_t size, const char *base, bool *ok)
 static int lock_names_are_random_and_fit_their_buffer()
 {
     bool ok;
-    const std::string base = "/var/mail/user.lock";
+    const std::string base = "/var/mail/user", middle = ".lk.";
     std::string a = lock_name(1024, base.c_str(), &ok);
-    CHECK(ok && a.size() == base.size() + 6 && a.compare(0, base.size(), base) == 0);
-    for (size_t i = base.size(); i < a.size(); i++) CHECK(isalnum((unsigned char)a[i]));
+    CHECK(ok && a.size() == base.size() + middle.size() + 6 && a.compare(0, base.size(), base) == 0);
+    CHECK(a.compare(base.size(), middle.size(), middle) == 0);
+    for (size_t i = base.size() + middle.size(); i < a.size(); i++) CHECK(isalnum((unsigned char)a[i]));
     std::string b = lock_name(1024, base.c_str(), &ok);
     CHECK(ok && a != b);
     // the name and its NUL fit, or the name is refused with ENAMETOOLONG
-    for (size_t size = 0; size < base.size() + 12; size++) {
+    for (size_t size = 0; size < base.size() + middle.size() + 12; size++) {
         std::string name = lock_name(size, base.c_str(), &ok);
-        CHECK(ok == (size >= base.size() + 7));
+        CHECK(ok == (size >= base.size() + middle.size() + 7));
         if (!ok) CHECK(lock_errno == ENAMETOOLONG);
     }
     return 0;
@@ -581,97 +582,6 @@ int main(int argc, char **argv) { return dispatch(argc, argv, scenarios); }
     print("address list: %d scenarios passed" % run_harness("addresses", harness))
 
 # ---------------------------------------------------------------------------------------------------
-# Release of the .dtmail lock
-unlock_fn = block(mailbox, r"^void\nRFCMailBox::dotDtmailUnlock\(")
-if unlock_fn is None:
-    problems.append("the .dtmail unlock function was not found")
-else:
-    harness = COMMON + r'''
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/param.h>
-#include <sys/stat.h>
-struct DtMailEnv { };
-#define PRIV_ENABLED(status, call) status = (call)
-#define SafeOpen open
-#define SafeRead read
-#define SafeClose close
-#define SafeRemove remove
-static std::string lock_path;
-struct RFCMailBox { bool dotDtmailLockFile(char *name, size_t size); void dotDtmailUnlock(DtMailEnv &); };
-bool RFCMailBox::dotDtmailLockFile(char *name, size_t size) { snprintf(name, size, "%s", lock_path.c_str()); return true; }
-/* sscanf stops at the first character that is not a digit, so a read past the buffer goes unseen;
-   strlen() of the text walks to its end, which the sanitizer sees */
-static int checked_sscanf(const char *text, const char *format, int *value) { (void)strlen(text); return sscanf(text, format, value); }
-#define sscanf(text, format, value) checked_sscanf((text), (format), (value))
-''' + unlock_fn + r'''
-static __attribute__((noinline)) void dirty_stack()
-{
-    volatile char junk[16384];
-    for (size_t i = 0; i < sizeof(junk); i++) junk[i] = 'Z';
-}
-static bool unlocked(const std::string &content)
-{
-    char dir[] = "/tmp/dtmail-unlock-XXXXXX";
-    const char *base = getenv("TMPDIR");
-    std::string pattern = std::string(base ? base : "/tmp") + "/dtmail-unlock-XXXXXX";
-    std::vector<char> name(pattern.begin(), pattern.end());
-    name.push_back('\0');
-    if (!mkdtemp(name.data())) { perror("mkdtemp"); exit(3); }
-    lock_path = std::string(name.data()) + "/box.dtmail";
-    FILE *f = fopen(lock_path.c_str(), "w");
-    fwrite(content.data(), 1, content.size(), f);
-    fclose(f);
-    RFCMailBox box;
-    DtMailEnv env;
-    dirty_stack();                    // what an earlier call leaves in the stack is not a NUL byte
-    box.dotDtmailUnlock(env);
-    bool gone = access(lock_path.c_str(), F_OK) != 0;
-    remove(lock_path.c_str());
-    rmdir(name.data());
-    return gone;
-}
-static int own_lock_is_removed()
-{
-    CHECK(unlocked(std::to_string((int)getpid()) + "\n"));
-    CHECK(unlocked(std::to_string((int)getpid())));
-    return 0;
-}
-static int lock_of_another_process_stays()
-{
-    CHECK(!unlocked(std::to_string((int)getpid() + 1) + "\n"));
-    CHECK(!unlocked("1\n"));
-    return 0;
-}
-static int lock_without_a_number_stays()
-{
-    CHECK(!unlocked(""));
-    CHECK(!unlocked("\n"));
-    CHECK(!unlocked("owner unknown\n"));
-    return 0;
-}
-static int lock_that_fills_the_buffer_is_not_read_past_it()
-{
-    // no line feed and no end for a read of more than a buffer
-    CHECK(!unlocked(std::string(3000, '7')));
-    CHECK(!unlocked(std::string(1023, '9')));
-    CHECK(!unlocked(std::string(1024, '9')));
-    CHECK(!unlocked(std::string(5000, ' ')));
-    return 0;
-}
-static Scenario scenarios[] = {
-    {"own_lock_is_removed", own_lock_is_removed},
-    {"lock_of_another_process_stays", lock_of_another_process_stays},
-    {"lock_without_a_number_stays", lock_without_a_number_stays},
-    {"lock_that_fills_the_buffer_is_not_read_past_it", lock_that_fills_the_buffer_is_not_read_past_it},
-    {NULL, NULL}
-};
-int main(int argc, char **argv) { return dispatch(argc, argv, scenarios); }
-'''
-    harness = harness.replace("    char dir[] = \"/tmp/dtmail-unlock-XXXXXX\";\n", "")
-    print("lock release: %d scenarios passed" % run_harness("unlock", harness))
-
-# ---------------------------------------------------------------------------------------------------
 # Places that cannot be run without a mailbox open
 
 
@@ -690,6 +600,8 @@ def guard(relative, patterns, why):
 
 guard("libDtMail/RFC/RFCMailBox.C", [r"\bmktemp\s*\(", r"delete\s+_mra_(?:command|serverpw)\s*;"],
       "a lock file gets a predictable name, or a malloc()ed string is released with delete")
+guard("libDtMail/RFC/MailboxFiles.C", [r"\bmktemp\s*\(", r"\btmpnam\s*\(", r"\btempnam\s*\("],
+      "a lock file or the file of a save gets a predictable name")
 guard("libDtMail/RFC/RFCEnvelope.C", [r"delete\s+str_addr\s*;"], "an array is released with delete")
 guard("libDtMail/RFC/MIMEPartial.C", [r"\bstrcat\s*\(", r"\bstrncat\s*\(", r"\batoi\s*\("],
       "the parts of a message are put together with C string functions or numbers are read with atoi()")
@@ -697,7 +609,7 @@ guard("libDtMail/RFC/RFCMIME.C", [r"\bstrcpy\s*\(\s*mime_type"], "a MIME type is
 guard("libDtMail/RFC/RFCFormat.C", [r"\bstrcpy\s*\(\s*charset", r"new char\s*\[\s*100\s*\]"],
       "a charset or a sender is copied into a buffer of a guessed size")
 for relative, needle in (("libDtMail/RFC/MIMEPartial.C", "MaxPartialParts"),
-                         ("libDtMail/RFC/RFCMailBox.C", "makeLockTemporaryName")):
+                         ("libDtMail/RFC/MailboxFiles.C", "randomName")):
     if needle not in read(relative):
         problems.append("%s no longer has %s" % (relative, needle))
 

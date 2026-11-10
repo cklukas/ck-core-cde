@@ -118,9 +118,6 @@ void	SockClose(void *sockfp);
 // password names in an MT-Safe way.
 //
 int	FileSystemSpace(const char *file_path, size_t bytes, char **fsname);
-void	GetGroupName(char * grp_name, size_t size);
-gid_t	GetIdForGroupName(char * grp_name);
 void	GetPasswordEntry(passwd & result);
-int	isSetMailGidNeeded(const char * mailboxPath);
 
 #endif

@@ -12,8 +12,9 @@ if SOLARIS
 libRFC_a_CXXFLAGS += -DMMAP_NORESERVE
 endif
 
-libRFC_a_SOURCES = AliasExpand.C           MIMEBodyPart.C \
-		    MIMEPartial.C           RFCBodyPart.C \
+libRFC_a_SOURCES = AliasExpand.C           MailboxFiles.C \
+		    MIMEBodyPart.C          MIMEPartial.C \
+		    RFCBodyPart.C \
 		    RFCEnvelope.C           RFCFormat.C \
 		    RFCMIME.C               RFCMailBox.C \
 		    RFCMailValues.C         RFCMessage.C \
