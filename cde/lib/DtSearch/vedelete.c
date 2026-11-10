@@ -165,6 +165,36 @@ static int      compare_dba (const void *dba1, const void *dba2)
 
 /********************************/
 /*				*/
+/*	fill_free_addrs		*/
+/*				*/
+/********************************/
+/* Writes NUM free entries (all ones) at OFFSET of the d99 file, where the
+ * addresses that delete_addrs() removed from a list were. */
+static void     fill_free_addrs (long offset, DtSrINT32 num)
+{
+    DB_ADDR	holes[MAX_REC_READ];
+    size_t	n;
+
+    memset (holes, 0xFF, sizeof (holes));
+    if (fseek (dtbs_addr_fp, offset, SEEK_SET)) {
+	printf (PROGNAME "175 fseek to %ld failed on '%s%s.d99'.\n",
+	    offset, usrblk.dblk->path, usrblk.dblk->name);
+	DtSearchExit (99);
+    }
+    while (num > 0) {
+	n = (num > MAX_REC_READ) ? MAX_REC_READ : (size_t) num;
+	if (fwrite (holes, sizeof (DB_ADDR), n, dtbs_addr_fp) != n) {
+	    printf (PROGNAME "283 fwrite at pos %ld failed on '%s%s.d99'.\n",
+		offset, usrblk.dblk->path, usrblk.dblk->name);
+	    DtSearchExit (99);
+	}
+	num -= (DtSrINT32) n;
+    }
+}	/* fill_free_addrs() */
+
+
+/********************************/
+/*				*/
 /*	delete_addrs		*/
 /*				*/
 /********************************/
@@ -323,9 +353,11 @@ static int      delete_addrs (void)
 	}
 	else {
 	    /*
-	     * @@@ fill out newly freed dba positions with FF's as debugging
-	     * aid? 
+	     * The shorter list ends where the loop above stopped writing; the
+	     * positions of the entries that were removed are free now, and
+	     * free positions hold ones.
 	     */
+	    fill_free_addrs (write_offset, num_found);
 	    updated_words++;
 	    return UPDATE_WORD;
 	}

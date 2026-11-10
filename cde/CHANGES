@@ -120,6 +120,13 @@
   of indirect-query clients is bounded and expires, and the debug log of a
   report with a long client address no longer overflows its buffer. Covered by
   `programs/dtlogin/tests/check-chooser.py`.
+- DtSearch: a statistical query ends with an error ("The index of the database
+  is damaged") when an address list in the `.d99` file is longer than the
+  database has objects, is cut off, or names an object that does not exist,
+  instead of reading and writing outside the arrays of the query. `dtsrdelete`
+  fills the positions it frees at the end of a list with ones. `dtsrhan` and
+  `dtsrdbrec` no longer define a global (`shutdown_now`, `print_dbrec`) that the
+  library defines too. Covered by `make -C programs/dtsr check`.
 - rpc.ttdbserverd: changes of the properties of an object that was changed since
   the caller read them are refused. `TT_SET_OBJ_PROPS`, `TT_SET_OBJ_PROP` and
   `TT_ADD_OBJ_PROP` made the change although the cache level said it was out of

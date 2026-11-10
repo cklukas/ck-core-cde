@@ -814,6 +814,7 @@ $ Msg 437 should not be translated.
 504 "Cannot allocate cur_ditto.\n"
 677 "Query field is empty."
 990 "The system is now sorting. Please wait."
+991 "The index of the database is damaged."
 
 
 $ ****************************************************

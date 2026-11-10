@@ -210,7 +210,7 @@ int             record_lines;
 static int      recs_per_dot =		RECS_PER_DOT;
 static unsigned long
 		seconds_left;
-extern int      shutdown_now;
+extern volatile int shutdown_now;
 static DtSrINT32
 		or_recslots;
 char            *sprintbuffer =		NULL;

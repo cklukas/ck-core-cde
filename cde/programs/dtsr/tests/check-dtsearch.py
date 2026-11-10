@@ -25,7 +25,15 @@ The test
      statistical search; each must return exactly the documents that have the
      words;
   4. validates and compresses the database with dtsrclean and runs the queries
-     on the result.
+     on the result;
+  5. deletes a seventh of the documents with dtsrdelete, checks that the places
+     of the removed addresses in the .d99 file are free (all ones) and runs the
+     queries on the result;
+  6. damages an address list of a copy of the database and runs a statistical
+     query on the word: it has to end with an error and leave the engine able
+     to answer the next query.
+The tools and the library must not both define a global of the same name: the
+program would use one and the library the other.
 """
 import os
 from pathlib import Path
@@ -63,7 +71,7 @@ def fail(message):
 # A tool or the test program that was built with the sanitizers stops at the
 # first error they find; the library leaks what it holds until it exits.
 env = dict(os.environ)
-env["ASAN_OPTIONS"] = "detect_leaks=0:detect_odr_violation=0:abort_on_error=0"
+env["ASAN_OPTIONS"] = "detect_leaks=0:abort_on_error=0"
 env["UBSAN_OPTIONS"] = "halt_on_error=1:print_stacktrace=1"
 
 
@@ -90,6 +98,38 @@ for name in ("dtsrcreate", "dtsrdbrec", "dtsrhan", "dtsrload", "dtsrindex",
              (name, -r.returncode))
     else:
         print("ok    %s without arguments (exit %d)" % (name, r.returncode))
+
+# The tools run with the library's variables and functions; one that defines
+# a global of the library's name makes the program and the library use two
+# (the tool's wins, for the library too).
+def dynamic_symbols(path):
+    r = subprocess.run(["nm", "-D", "--defined-only", str(path)], text=True,
+                       capture_output=True)
+    if r.returncode:
+        return None
+    return {line.split()[-1] for line in r.stdout.splitlines() if line.split()}
+
+
+libraries = sorted((top_builddir / "lib/DtSearch/.libs").glob("libDtSearch.so*"))
+library_symbols = dynamic_symbols(libraries[0]) if libraries else None
+if library_symbols is None:
+    print("skip  tools and library: no shared libDtSearch to compare with")
+else:
+    ignored = {"_init", "_fini", "_edata", "_end", "__bss_start"}
+    for name in ("dtsrcreate", "dtsrdbrec", "dtsrhan", "dtsrload", "dtsrindex",
+                 "dtsrdelete", "huffcode", "dtsrkdump", "dtsrclean"):
+        binary = builddir / ".libs" / name
+        if not binary.exists():
+            binary = builddir / name
+        defined = dynamic_symbols(binary)
+        if defined is None:
+            continue
+        clash = sorted((defined & library_symbols) - ignored)
+        if clash:
+            fail("%s defines %s, which libDtSearch defines too" %
+                 (name, ", ".join(clash)))
+        else:
+            print("ok    %s defines nothing the library defines" % name)
 
 # 2. the corpus
 CONSONANTS = "bdfgklmnprstvz"
@@ -178,11 +218,10 @@ import re
 ADDRESS = 8
 
 
-def check_d99(directory, live, label, holes_are_ones=True):
+def check_d99(directory, live, label):
     """the address lists of the database in `directory` hold the record
     numbers of the documents whose keys are in `live`, and nothing else; the
-    free holes behind them are all ones unless dtsrdelete has left what it
-    removed in them"""
+    free holes behind them are all ones"""
     words_checked = 0
     r = run([tool("dtsrkdump"), "-t1", str(directory / "tdb")])
     d99 = (directory / "tdb.d99").read_bytes()
@@ -203,7 +242,7 @@ def check_d99(directory, live, label, holes_are_ones=True):
         if recnos != expected or len(entries) != len(expected) or any(e >> 32 for e in entries):
             fail("%s: the .d99 entries of %s%s are not the documents with the word "
                  "(%d entries, %d documents)" % (label, stem, word, len(entries), len(expected)))
-        elif holes_are_ones and holes != b"\xff" * len(holes):
+        elif holes != b"\xff" * len(holes):
             fail("%s: the free holes after the entries of %s%s are not all ones" %
                  (label, stem, word))
         else:
@@ -337,12 +376,38 @@ if r.returncode != 0 or ("%d were deleted" % len(gone)) not in r.stdout:
     fail("dtsrdelete ended with %d:\n%s" % (r.returncode, (r.stdout + r.stderr)[-1500:]))
 else:
     print("ok    dtsrdelete removed %d documents" % len(gone))
-    check_d99(deleted, {k for k, w, t in documents} - gone, "after dtsrdelete",
-              holes_are_ones=False)
+    check_d99(deleted, {k for k, w, t in documents} - gone, "after dtsrdelete")
     write_queries("queries-deleted.txt",
                   make_queries([d for d in documents if d[0] not in gone]))
     query_all("queries after dtsrdelete", deleted / "dtsearch.ocf",
               work / "queries-deleted.txt")
+
+# 6. a damaged address list ends a statistical query with an error
+damaged = work / "damaged"
+damaged.mkdir()
+for name in os.listdir(work):
+    if name.startswith("tdb.") or name.startswith("eng."):
+        shutil.copy(work / name, damaged / name)
+(damaged / "dtsearch.ocf").write_text(
+    "KEYTYPE tdb = 'K' Documents\nPATH tdb = %s/\n" % damaged)
+r = run([tool("dtsrkdump"), "-t1", str(damaged / "tdb")])
+word = COMMON[0]
+# (a statistical query reads the lists of the stems, which the dump marks with ~)
+m = re.search(r'"~%s"\s+\*?\s*dba=\S+\s+ofs=(\d+)\s+adr=(\d+)' % word.upper(), r.stdout)
+if m is None:
+    fail("the key dump has no address list for the stem of %s" % word)
+else:
+    offset = int(m.group(1))
+    d99 = bytearray((damaged / "tdb.d99").read_bytes())
+    # an object the database does not have, with a weight of 5
+    d99[offset:offset + ADDRESS] = bytes([0x7f] + [0xff] * 6 + [0x05])
+    (damaged / "tdb.d99").write_bytes(bytes(d99))
+    other = vocabulary[6]
+    (work / "queries-damaged.txt").write_text(
+        "P\t%s\t!damaged\n" % word
+        + "P\t%s\t%s\n" % (other, " ".join(sorted(k for k, w, t in documents if other in w))))
+    query_all("statistical query on a damaged address list", damaged / "dtsearch.ocf",
+              work / "queries-damaged.txt")
 
 print("%d failures" % len(failures))
 done(1 if failures else 0)

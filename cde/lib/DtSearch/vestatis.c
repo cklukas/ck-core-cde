@@ -1174,6 +1174,20 @@ void            load_ditto_str (void)
 /*		stat_search		*/
 /*					*/
 /****************************************/
+/* The address lists of the .d99 file name objects of the database: a list
+ * as long as the database has objects at most, and each entry the slot of an
+ * object the stat array has a node for.  Anything else is a damaged index,
+ * which a query ends with an error instead of reading and writing outside
+ * its arrays.
+ */
+static void     damaged_index (void)
+{
+    DtSearchAddMessage (CATGETS(dtsearch_catd, MS_vestatis, 991,
+	PROGNAME "991 The index of the database is damaged."));
+    usrblk.retncode = OE_ABORT;
+    release_shm_mem ();
+}  /* damaged_index() */
+
 /* Subroutine of ve_statistical() and interruptable workproc.
  */
 static void     stat_search (void)
@@ -1230,11 +1244,17 @@ static void     stat_search (void)
 	    else
 		read_wordstr (&word1, saveusr.vistano);
 	    if (word1.or_hwaddrs > 0) {
-		fseek (usrblk.dblk->iifile, word1.or_hwoffset,
-		    SEEK_SET);
-		/****@@@size = sizeof (DB_ADDR) * word1.or_hwaddrs;***/
-		fread (word_addrs, sizeof(DB_ADDR),
-		    (size_t)word1.or_hwaddrs, usrblk.dblk->iifile);
+		/* the room for the list is that of the objects of the
+		 * database */
+		if (word1.or_hwaddrs > real_num_rec ||
+		    fseek (usrblk.dblk->iifile, word1.or_hwoffset,
+			SEEK_SET) != 0 ||
+		    fread (word_addrs, sizeof(DB_ADDR),
+			(size_t)word1.or_hwaddrs, usrblk.dblk->iifile) !=
+			(size_t)word1.or_hwaddrs) {
+		    damaged_index ();
+		    return;
+		}
 
 		/*
 		 * Calculate IDF (inverse document frequency) for this
@@ -1268,6 +1288,10 @@ static void     stat_search (void)
 		    temp1 = *(word_addrs + j32);	/* d99 dba */
 		    cur_weight = (double) (temp1 & 0xFF);	/* lo byte */
 		    temp = temp1 >> 8;	/* slot# */
+		    if (temp < 0 || temp >= total_num_addrs) {
+			damaged_index ();
+			return;
+		    }
 		    ((stat_array + temp)->num_word_hits)++;
 		    ((stat_array + temp)->dba) = temp;
 		    ((stat_array + temp)->wght) += (float) (cur_weight * idf);

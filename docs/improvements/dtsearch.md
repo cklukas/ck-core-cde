@@ -52,6 +52,23 @@ start-up sets. `dtsrdelete` keeps the entries of the documents it leaves in an
 address list as they are in the file; it used to write them back in host
 order, which left a little-endian machine with lists no query could read.
 
+## Damaged indexes
+
+A statistical query reads the address list of each word from the `.d99` file
+into a buffer with room for the objects of the database and adds each entry to
+a node of a table that has one node per object. A list that is longer than the
+database has objects, a list that is cut off, or an entry that names an object
+the database does not have used to be read and written outside those arrays.
+The query now ends with the error `991 The index of the database is damaged.`
+and the engine answers the next query.
+
+`dtsrdelete` removes the addresses of the deleted documents from the list of
+each word and now marks the positions that come free at the end of the list
+with ones, like every other free position of the file; it left what it had
+removed in them. The tools no longer define globals of the library's names:
+`dtsrhan` had a `shutdown_now` of its own next to the library's, and `dtsrdbrec`
+a second `print_dbrec`, so that a program and the library used two of them.
+
 ## Checks
 
 `make -C lib/DtSearch check` builds a program as C and as C++ that asserts the
@@ -67,3 +84,9 @@ the stemmed search and in the statistical search. The same queries run again
 after `dtsrclean -v` and after `dtsrdelete` has removed a seventh of the
 documents. The query program is built with the sanitizers when the compiler has
 them.
+
+The same test checks that no tool defines a global that `libDtSearch` defines
+(`nm -D` of each tool and of the library), that the free positions of the `.d99`
+file are all ones after `dtsrdelete`, and that a statistical query on a copy of
+the database in which one address was changed to an object that does not exist
+ends with the error above and is followed by a correct query.

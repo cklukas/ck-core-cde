@@ -292,7 +292,7 @@ static long	rec_count =		0L;	/* for err msgs */
 struct rec     *record_head =		NULL;
 struct tm       rectm;
 int             screen_width =		79;
-int             shutdown_now =		FALSE;
+static int      shutdown_now =		FALSE;
 int             started =		FALSE;
 int             textflag =		INCLUDE;
 int             textmode =		INCLUDE;
