@@ -120,6 +120,12 @@
   of indirect-query clients is bounded and expires, and the debug log of a
   report with a long client address no longer overflows its buffer. Covered by
   `programs/dtlogin/tests/check-chooser.py`.
+- ttsession: the observers of a notice sent with the disposition `TT_QUEUE` or
+  `TT_START` no longer get it a second time as a failed message. A notice has no
+  handler to queue the message for or to start, and `ttsession` failed it for
+  that; it now leaves the notice to its observers. Covered by
+  `make -C lib/tt/bin/ttsession check`, which runs two clients against a session
+  of its own.
 - DtSearch: a statistical query ends with an error ("The index of the database
   is damaged") when an address list in the `.d99` file is longer than the
   database has objects, is cut off, or names an object that does not exist,

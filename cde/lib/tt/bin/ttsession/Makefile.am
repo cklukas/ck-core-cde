@@ -25,3 +25,13 @@ ttsession_LDADD += $(XTOOLLIB)
 endif
 
 ttsession_SOURCES = mp_server.C
+
+# The notice test starts a session of its own and runs two clients against it:
+# the observer of a notice with a disposition must not get it twice.
+EXTRA_DIST = tests/check-notice.py tests/notice-test.c
+
+check-local: ttsession
+	TT_NOTICE_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS)' \
+	TT_NOTICE_LINK='$(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
+	TT_NOTICE_LIBS='$(LIBTT) $(TIRPCLIB) $(XTOOLLIB) $(X_LIBS) $(LIBS)' \
+	python3 $(srcdir)/tests/check-notice.py $(srcdir) ./ttsession

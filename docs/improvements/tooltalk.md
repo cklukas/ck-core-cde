@@ -70,6 +70,17 @@ also when it runs with `-s`.
 - The session cookie is drawn from `/dev/urandom` and nothing else. If the random
   source cannot be read, no session starts.
 
+## Notices with a disposition
+
+A notice has no handler. Its disposition (`TT_QUEUE`, `TT_START`) asks for a
+handler to be started or for the message to be kept for one, which needs the
+ptype of a handler, so for a notice `ttsession` has nothing to do after the
+observers have been offered it. It used to try, find that it could not, and
+fail the message: the observers of a notice sent with `TT_QUEUE` got it as
+`TT_SENT` and then a second time as `TT_FAILED`, and anyone who counted the
+notices a process received counted every one twice. The notice is delivered to
+its observers once.
+
 ## Environment of started programs
 
 A context of a message whose name begins with `$` becomes an environment
@@ -472,6 +483,11 @@ must give up its privileges. `make -C lib/tt/bin check` runs the built `ttrm`,
 `ttmv`, `ttcp`, `tttar` and `tt_type_comp` on names and options with blanks and
 shell characters; `tttar` runs against a process-tree `ttsession` that the test
 starts when the portmapper is available.
+
+`make -C lib/tt/bin/ttsession check` starts a process-tree `ttsession` of its own
+(when the portmapper is there to register it with), lets one client observe an
+operation and another send a notice with `TT_QUEUE`, and checks that the observer
+receives it once, as sent.
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
 with the sanitizers next to a test program and runs each case in its own

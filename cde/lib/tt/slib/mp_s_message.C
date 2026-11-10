@@ -1521,6 +1521,15 @@ handle_no_recipients(const _Tt_msg_trace &trace)
 	// We're here if the message is non-file-scoped or if no
 	// remote session would take responsibility for the message
 
+	if (_message_class == TT_NOTICE && (start() || queue())) {
+		// A notice has no handler to start or to queue the message
+		// for (both need the handler ptype), and one that nobody
+		// handles has not failed.  Its observers have been offered
+		// the message; trying a disposition that cannot work used to
+		// fail it, and the observers got it a second time as a
+		// failed message.
+		return;
+	}
 	if (start() || queue()) {
 		int	reliability_attempted = 0;
 
