@@ -97,7 +97,7 @@ const u_int TT_DB_LIMIT_MESSAGE			= 16 * 1024 * 1024 + 64 * 1024;
 const u_int TT_DB_LIMIT_PROPERTIES		= 1 << 16;
 const u_int TT_DB_LIMIT_PROPERTY_VALUES		= 1 << 16;
 const u_int TT_DB_LIMIT_PTYPES			= 1 << 10;
-const u_int TT_DB_LIMIT_OBJECTS			= 1 << 20;
+const u_int TT_DB_LIMIT_OBJECTS			= 1 << 16;
 const u_int TT_DB_LIMIT_MESSAGES		= 1 << 16;
 
 typedef enum _Tt_db_results _tt_db_results;

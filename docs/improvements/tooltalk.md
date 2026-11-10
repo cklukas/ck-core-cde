@@ -357,7 +357,7 @@ by the server and libtt, so the limits hold for a reply as well as for a request
 | Properties of a file or object | 65536 | one record each |
 | Values of a property | 65536 | one per queued message or joined session |
 | Ptypes of a message | 1024 | |
-| Objects of a file | 1048576 | one record each |
+| Objects of a file | 65536 | one record each, and a reply that lists them |
 | Messages in one reply | 65536 | |
 
 The limits are chosen far above what libtt sends or the server answers with. A
@@ -373,6 +373,25 @@ server in the same way. The test has
 the allocator refuse any request for more than 64 MiB, replaces every length,
 count and small integer of a request of each procedure with huge values, and
 decodes each limit and the size above it.
+
+The lists above are limits of what a reply can carry, and the tables could grow
+past them at the request of clients (every client that joins a session adds a
+value, and any client may add properties and objects), which left a file whose
+properties or objects no reply could list any more. The server now refuses what
+would be one too many with `TT_DB_ERR_DISK_FULL` (`TT_ERR_DBFULL` in the API): a
+value of a property that has the limit of values, together with all the values of
+the request that adds them; the first value of a property of a file or object that
+has the limit of properties; and an object made in, or moved to, a file that has
+the limit of objects. The records of the key are counted when a table has as many
+records as the limit, so a table that is not that big costs nothing, and a count is
+a pass over the records of one key. A request that adds only the values a property
+lacks (`unique`) is counted by all its values. The limit of objects of a file is
+65536, no longer 1048576, which no reply of a usable size could list. Listing the
+properties of a key looked each record's property up in the list of the properties
+so far, which took a pass over the list for every record: with the properties a
+file may have now it takes the time of a few thousand requests. The records of a
+key come in the order of the names, so a name that is not the one before it is a
+new property.
 
 A string that a reply has none of used to fail to encode: a missing property has
 no name, an object that does not exist has no type and one without a forward

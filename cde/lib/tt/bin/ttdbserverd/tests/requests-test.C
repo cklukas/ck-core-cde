@@ -3094,6 +3094,227 @@ case_supplementary_groups(void)
 	}
 }
 
+/* ---- the lists a reply has room for ------------------------------------------- */
+
+/* The values of one property of a file, "v0", "v1", ... : FIRST up to FIRST+COUNT-1 */
+struct ManyValues {
+	std::string			name;
+	std::vector<std::string>	text;
+	std::vector<_tt_property_value>	pv;
+	_tt_property			prop;
+
+	ManyValues(const char *n, unsigned first, unsigned count) : name(n)
+	{
+		text.reserve(count);
+		pv.resize(count);
+		for (unsigned i = 0; i < count; i++) {
+			text.push_back("v" + std::to_string(first + i));
+			pv[i].value.value_len = text[i].size();
+			pv[i].value.value_val = &text[i][0];
+		}
+		prop.name = &name[0];
+		prop.values.values_len = count;
+		prop.values.values_val = count ? &pv[0] : NULL;
+	}
+};
+
+static int
+add_file_values(const std::string &file, const char *name, unsigned first,
+		unsigned count)
+{
+	ManyValues		mv(name, first, count);
+	_tt_add_file_prop_args	ap;
+
+	memset(&ap, 0, sizeof(ap));
+	ap.file = (char *)file.c_str();
+	ap.property = mv.prop;
+	ap.unique = 0;
+	ap.access = acting();
+	return results_of(rpc(TT_ADD_FILE_PROP,
+			      encode((xdrproc_t)xdr_tt_add_file_prop_args, &ap)),
+			  xdr_tt_db_cache_results);
+}
+
+/* the number of values of a property of a file, as a reply lists them */
+static long
+file_value_count(const std::string &file, const char *name)
+{
+	std::string		nm = name;
+	_tt_get_file_prop_args	gp = { (char *)file.c_str(), &nm[0], acting(), -1 };
+	Reply			r = rpc(TT_GET_FILE_PROP,
+					encode((xdrproc_t)xdr_tt_get_file_prop_args, &gp));
+	_tt_file_prop_results	res;
+	XDR			xdrs;
+
+	if (!answered(r)) {
+		return -2;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_tt_file_prop_results(&xdrs, &res)) {
+		return -3;
+	}
+	long n = (res.results == TT_DB_OK) ? (long)res.property.values.values_len : -1;
+	xdr_free((xdrproc_t)xdr_tt_file_prop_results, (char *)&res);
+	return n;
+}
+
+/* the number of properties of a file, as a reply lists them */
+static long
+file_property_count(const std::string &file)
+{
+	_tt_get_file_props_args	gp = { (char *)file.c_str(), acting(), -1 };
+	Reply			r = rpc(TT_GET_FILE_PROPS,
+					encode((xdrproc_t)xdr_tt_get_file_props_args, &gp));
+	_tt_file_props_results	res;
+	XDR			xdrs;
+
+	if (!answered(r)) {
+		return -2;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_tt_file_props_results(&xdrs, &res)) {
+		return -3;
+	}
+	long n = (res.results == TT_DB_OK) ? (long)res.properties.properties_len : -1;
+	xdr_free((xdrproc_t)xdr_tt_file_props_results, (char *)&res);
+	return n;
+}
+
+/* A property has as many values as a reply has room for, and no more: the
+   value that would be one too many is refused, so that the property can still
+   be listed.  (The sessions that join a file are values of one of its
+   properties, and every client that joins adds one.) */
+static void
+case_list_limits_values(void)
+{
+	std::string file = start_partition("list-limits-values");
+
+	put(g_dir + "/file", "the file");
+	create_file(file);
+
+	const unsigned limit = TT_DB_LIMIT_PROPERTY_VALUES;
+
+	CHECK(add_file_values(file, "many", 0, limit - 1) == TT_DB_OK);
+	/* two values, of which one fits */
+	CHECK(add_file_values(file, "many", limit - 1, 2) == TT_DB_ERR_DISK_FULL);
+	CHECK(file_value_count(file, "many") == (long)limit - 1);
+	CHECK(add_file_values(file, "many", limit - 1, 1) == TT_DB_OK);
+	CHECK(add_file_values(file, "many", limit, 1) == TT_DB_ERR_DISK_FULL);
+	CHECK(file_value_count(file, "many") == (long)limit);
+	/* the other properties are not affected, and the one with all its values
+	   can be replaced */
+	CHECK(add_file_values(file, "other", 0, 1) == TT_DB_OK);
+	CHECK(set_property(file, "many", "one value") == TT_DB_OK);
+	CHECK(file_value_count(file, "many") == 1);
+	CHECK(add_file_values(file, "many", 1, 1) == TT_DB_OK);
+}
+
+/* A file or an object has as many properties as a reply has room for. */
+static void
+case_list_limits_properties(void)
+{
+	std::string file = start_partition("list-limits-properties");
+
+	put(g_dir + "/file", "the file");
+	create_file(file);
+
+	/* the file has the property of its cache level already */
+	const unsigned limit = TT_DB_LIMIT_PROPERTIES;
+	const unsigned fill = limit - 1;
+	std::vector<std::string>	names(fill);
+	std::vector<std::string>	vals(fill);
+	std::vector<_tt_property_value>	pv(fill);
+	std::vector<_tt_property>	props(fill);
+
+	for (unsigned i = 0; i < fill; i++) {
+		names[i] = "p" + std::to_string(i);
+		vals[i] = "x";
+		pv[i].value.value_len = 1;
+		pv[i].value.value_val = &vals[i][0];
+		props[i].name = &names[i][0];
+		props[i].values.values_len = 1;
+		props[i].values.values_val = &pv[i];
+	}
+	_tt_set_file_props_args sp;
+	memset(&sp, 0, sizeof(sp));
+	sp.file = (char *)file.c_str();
+	sp.properties.properties_len = fill;
+	sp.properties.properties_val = &props[0];
+	sp.access = acting();
+	int level = results_of(rpc(TT_SET_FILE_PROPS,
+				   encode((xdrproc_t)xdr_tt_set_file_props_args, &sp)),
+			       xdr_tt_db_cache_results);
+	CHECK(level == TT_DB_OK);
+	long n = file_property_count(file);
+	CHECK(n >= (long)fill && n <= (long)limit);
+
+	/* properties until there is no room for one more, and then one more value
+	   of one that is there */
+	int result = TT_DB_OK;
+	unsigned added = 0;
+	for (unsigned i = 0; result == TT_DB_OK && i < 4; i++) {
+		result = add_file_values(file, ("extra" + std::to_string(i)).c_str(), 0, 1);
+		if (result == TT_DB_OK) {
+			added++;
+		}
+	}
+	CHECK(result == TT_DB_ERR_DISK_FULL);
+	CHECK(added < 4);
+	CHECK(file_property_count(file) == (long)limit);
+	CHECK(add_file_values(file, "p0", 1, 1) == TT_DB_OK);
+	CHECK(file_value_count(file, "p0") == 2);
+}
+
+/* A file has as many objects as a reply has room for. */
+static void
+case_list_limits_objects(void)
+{
+	std::string file = start_partition("list-limits-objects");
+
+	put(g_dir + "/file", "the file");
+	create_file(file);
+
+	const unsigned limit = TT_DB_LIMIT_OBJECTS;
+	std::string last;
+
+	for (unsigned i = 0; i < limit; i++) {
+		std::string objid = make_objid(g_mount);
+
+		if (create_object(objid, file, 0600) != TT_DB_OK) {
+			CHECK(!"an object was refused before the limit");
+			return;
+		}
+		last = objid;
+	}
+	CHECK(create_object(make_objid(g_mount), file, 0600) == TT_DB_ERR_DISK_FULL);
+
+	/* the objects are listed */
+	_tt_access acc = acting();
+	_tt_get_file_objs_args go = { (char *)file.c_str(), acc, -1 };
+	Reply r = rpc(TT_GET_FILE_OBJS,
+		      encode((xdrproc_t)xdr_tt_get_file_objs_args, &go));
+	_tt_file_objs_results res;
+	XDR xdrs;
+	memset(&res, 0, sizeof(res));
+	CHECK(answered(r));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	CHECK(xdr_tt_file_objs_results(&xdrs, &res));
+	CHECK(res.results == TT_DB_OK && res.objids.values_len == limit);
+	xdr_free((xdrproc_t)xdr_tt_file_objs_results, (char *)&res);
+
+	/* another file takes objects, and the object of this one can be moved there */
+	std::string other = "localhost:" + g_dir + "/other";
+	put(g_dir + "/other", "the other file");
+	create_file(other);
+	std::string moved = make_objid(g_mount);
+	CHECK(create_object(moved, other, 0600) == TT_DB_OK);
+	CHECK(set_obj_file(moved, file) == TT_DB_ERR_DISK_FULL);
+	CHECK(set_obj_file(last, other) == TT_DB_OK);
+	CHECK(set_obj_file(moved, file) == TT_DB_OK);
+}
+
 /* ---- driver ------------------------------------------------------------------ */
 
 static const struct {
@@ -3128,6 +3349,9 @@ static const struct {
 	{ "access-rule", case_access_rule },
 	{ "access-bits", case_access_bits },
 	{ "update-conflicts", case_update_conflicts },
+	{ "list-limits-values", case_list_limits_values },
+	{ "list-limits-properties", case_list_limits_properties },
+	{ "list-limits-objects", case_list_limits_objects },
 	{ "supplementary-groups", case_supplementary_groups },
 };
 

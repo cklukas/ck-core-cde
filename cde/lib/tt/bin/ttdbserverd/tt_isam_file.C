@@ -351,6 +351,17 @@ _Tt_isam_file::getFullRecord (const _Tt_string &record_buffer)
   return record_ptr;
 }
 
+long _Tt_isam_file::getRecordCount ()
+{
+  struct dictinfo file_info;
+
+  if (isindexinfo(fileDescriptor, (keydesc *)&file_info, 0) != 0) {
+    return -1;
+  }
+
+  return file_info.di_nrecords;
+}
+
 void _Tt_isam_file::getISAMFileInfo ()
 {
   iserrno = 0;

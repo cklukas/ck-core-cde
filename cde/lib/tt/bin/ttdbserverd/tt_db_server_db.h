@@ -317,6 +317,9 @@ public:
   _Tt_db_results getAccess (const _Tt_string&, _Tt_db_access_ptr&);
   _Tt_db_results getFile (const _Tt_string&, _Tt_string&);
   
+  _Tt_db_results checkPropertyRoom (const _Tt_string&, const _Tt_string&,
+				    u_long);
+  _Tt_db_results checkObjectRoom (const _Tt_string&);
   _Tt_db_results addPropertyValue (const _Tt_string&,
 				   const _Tt_string&,
 			           const _Tt_string&);

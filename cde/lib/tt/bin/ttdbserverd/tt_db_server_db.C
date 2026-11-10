@@ -48,6 +48,7 @@
 #include "db/tt_db_create_objid.h"
 #include "db/tt_db_property.h"
 #include "db/tt_db_access.h"
+#include "db/db_server.h"
 
 extern FILE *errstr;
 extern int access_checking;	// rpc.ttdbserverd -n turns it off
@@ -368,6 +369,10 @@ _Tt_db_server_db::createObject (const _Tt_string        &file,
   // Verify access to the file
   if (verifyAccess(file_key, object_access, TRUE) != TT_DB_OK) {
     return dbResults;
+  }
+
+  if (dbResults == TT_DB_OK) {
+    dbResults = checkObjectRoom(file_key);
   }
 
   if (dbResults == TT_DB_OK) {
@@ -1038,6 +1043,17 @@ _Tt_db_server_db::setObjectFile (const _Tt_string        &objid,
 	    return dbResults;
 	  }
 
+	  // The file has room for another object (counting its objects
+	  // leaves the current record of the map somewhere else)
+	  dbResults = checkObjectRoom(file_key);
+	  if (dbResults != TT_DB_OK) {
+	    return dbResults;
+	  }
+	  dbResults = getFile(object_key, old_file);
+	  if (dbResults != TT_DB_OK) {
+	    return dbResults;
+	  }
+
 	  // Put the new file key into the record and update the table
 	  record_ptr->setKeyPartValue(1, 0, file_key);
 	  results = fileObjectMap->updateCurrentRecord(record_ptr);
@@ -1304,6 +1320,139 @@ _Tt_string _Tt_db_server_db::getObjectKey (const _Tt_string &objid)
   return object_key_bytes;
 }
 
+// A reply lists the properties of a file or an object with all their values,
+// and has room for TT_DB_LIMIT_PROPERTIES properties of at most
+// TT_DB_LIMIT_PROPERTY_VALUES values each.  NEW_VALUES values are to be added
+// to the property NAME of KEY: they are refused if the property would have more
+// values than that, and so are the values of a property that would be one
+// beyond the properties: a file whose properties could not be listed any more
+// could not be used (or have a property taken away, which needs no listing).
+// The values are refused together, also those of a request that adds only the
+// values the property does not have yet, which may be fewer.
+//
+// One key cannot have so many records unless the table has, so the records
+// of the key are counted only in a table that is that big.
+_Tt_db_results
+_Tt_db_server_db::checkPropertyRoom (const _Tt_string &key,
+				     const _Tt_string &name,
+				     u_long            new_values)
+{
+  long records = propertyTable->getRecordCount();
+
+  if (records >= 0 &&
+      records + (long)new_values < (long)TT_DB_LIMIT_PROPERTY_VALUES &&
+      records + (long)new_values < (long)TT_DB_LIMIT_PROPERTIES) {
+    return TT_DB_OK;
+  }
+
+  _Tt_isam_record_ptr record_ptr = propertyTable->getEmptyRecord();
+  record_ptr->setKeyPartValue(0, 0, key);
+
+  int results = propertyTable->findStartRecord(propertyTablePropertyKey,
+					       TT_DB_KEY_LENGTH,
+					       record_ptr,
+					       ISEQUAL);
+  dbLastFileAccessed = propertyTable->getName();
+
+  if (results == ENOREC) {
+    return TT_DB_OK;
+  }
+  if (results) {
+    return TT_DB_ERR_CORRUPT_DB;
+  }
+
+  // The records of a key are in the order of the names of the properties
+  u_long     values = 0;
+  u_long     properties = 0;
+  _Tt_string last_name;
+
+  for (;;) {
+    record_ptr = propertyTable->readRecord(ISNEXT);
+    results = propertyTable->getErrorStatus();
+
+    if ((results == ENOREC) || (results == EENDFILE)) {
+      break;
+    }
+    if (results) {
+      return TT_DB_ERR_CORRUPT_DB;
+    }
+    if (record_ptr->getKeyPartValue(0, 0) != key) {
+      break;
+    }
+
+    // (the names are stored in a field of fixed length: compare as strings)
+    _Tt_string this_name = record_ptr->getKeyPartValue(0, 1);
+
+    if (properties == 0 || strcmp((char *)this_name, (char *)last_name)) {
+      properties++;
+      last_name = this_name;
+    }
+    if (strcmp((char *)this_name, (char *)name) == 0) {
+      values++;
+    }
+  }
+
+  if (values + new_values > TT_DB_LIMIT_PROPERTY_VALUES) {
+    return TT_DB_ERR_DISK_FULL;
+  }
+  if (values == 0 && new_values > 0 && properties >= TT_DB_LIMIT_PROPERTIES) {
+    return TT_DB_ERR_DISK_FULL;
+  }
+
+  return TT_DB_OK;
+}
+
+// The objects of a file are listed in one reply, which has room for
+// TT_DB_LIMIT_OBJECTS of them: a file does not take another one (an object
+// made in it or moved to it).  See checkPropertyRoom().
+_Tt_db_results
+_Tt_db_server_db::checkObjectRoom (const _Tt_string &file_key)
+{
+  long records = fileObjectMap->getRecordCount();
+
+  if (records >= 0 && records < (long)TT_DB_LIMIT_OBJECTS) {
+    return TT_DB_OK;
+  }
+
+  _Tt_isam_record_ptr record_ptr = fileObjectMap->getEmptyRecord();
+  record_ptr->setKeyPartValue(1, 0, file_key);
+
+  int results = fileObjectMap->findStartRecord(fileObjectMapFileKey,
+					       0,
+					       record_ptr,
+					       ISEQUAL);
+  dbLastFileAccessed = fileObjectMap->getName();
+
+  if (results == ENOREC) {
+    return TT_DB_OK;
+  }
+  if (results) {
+    return TT_DB_ERR_CORRUPT_DB;
+  }
+
+  u_long objects = 0;
+
+  for (;;) {
+    record_ptr = fileObjectMap->readRecord(ISNEXT);
+    results = fileObjectMap->getErrorStatus();
+
+    if ((results == ENOREC) || (results == EENDFILE)) {
+      break;
+    }
+    if (results) {
+      return TT_DB_ERR_CORRUPT_DB;
+    }
+    if (record_ptr->getKeyPartValue(1, 0) != file_key) {
+      break;
+    }
+    if (++objects >= TT_DB_LIMIT_OBJECTS) {
+      return TT_DB_ERR_DISK_FULL;
+    }
+  }
+
+  return TT_DB_OK;
+}
+
 _Tt_db_results _Tt_db_server_db::addPropertyValue(const _Tt_string &key,
 						  const _Tt_string &name,
 						  const _Tt_string &value)
@@ -1363,7 +1512,11 @@ _Tt_db_server_db::addProperty (const _Tt_string          &key,
 			       const _Tt_db_property_ptr &property,
 			       bool_t                     unique)
 {
-  dbResults = TT_DB_OK;
+  dbResults = checkPropertyRoom(key, property->name,
+				(u_long)property->values->count());
+  if (dbResults != TT_DB_OK) {
+    return dbResults;
+  }
 
   _Tt_isam_record_ptr record_ptr;
   _Tt_string          temp_string;
@@ -1724,6 +1877,7 @@ _Tt_db_server_db::getProperties (const _Tt_string         &key,
     _Tt_string name;
     _Tt_string value;
     _Tt_string temp_string;
+    _Tt_db_property_ptr last_property;
     for (;;) {
       // Read the next record
       record_ptr = propertyTable->readRecord(ISNEXT);
@@ -1753,26 +1907,16 @@ _Tt_db_server_db::getProperties (const _Tt_string         &key,
 	  properties = new _Tt_db_property_list;
 	}
 
-	bool_t              found = FALSE;
-	_Tt_db_property_ptr property;
-
-	// See if a property with same name is already in our return list...
-	_Tt_db_property_list_cursor properties_cursor(properties);
-	while (properties_cursor.next()) {
-	  // If the property exists, get the pointer to it...
-	  if (properties_cursor->name == name) {
-	    property = *properties_cursor;
-	    found = TRUE;
-	    break;
-	  }	    
+	// The records of a key are in the order of the names of the
+	// properties: the values of a property follow one another, and a
+	// name that is not the one of the last property is a new property.
+	// (Looking for it in the list cost a pass over the list for each
+	// record.)
+	if (last_property.is_null() || !(last_property->name == name)) {
+	  last_property = new _Tt_db_property;
+	  properties->append(last_property);
 	}
-
-	// If there is no property with the same name in the list,
-	// create a new property and it to the list...
-	if (!found) {
-	  property = new _Tt_db_property;
-	  properties->append(property);
-	}
+	_Tt_db_property_ptr property = last_property;
 
 	// Append the value to the property
 	property->name = name;

@@ -89,6 +89,9 @@ public:
 
   int setFatalErrorHandler (FatalErrorHandlerFunction);
 
+  // The number of records in the file, or -1 if it cannot be told.
+  long getRecordCount ();
+
   long getLastRecordNumber () const
     {
       return currentRecordNumber;
