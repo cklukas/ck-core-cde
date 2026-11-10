@@ -1874,6 +1874,8 @@ $ ****** Reliable file operations ********
 34 The original destination was retained for recovery at %s.
 35 The destination changed while its conflict was being reviewed: %s
 36 The source changed while its conflict was being reviewed: %s
+37 File operation could not start
+38 The file operation could not start: %s
 
 $set 99
 $ ****** Version Information ********

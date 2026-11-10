@@ -132,6 +132,7 @@
 #include "sharedFuncs.h"
 #include "FileConflictDialog.h"
 #include "FileConflictWire.h"
+#include "FileProcess.h"
 #include "dtcopy/fsrtns.h"
 
 
@@ -207,6 +208,7 @@ typedef struct
    int child;
    DtfileConflictReader *conflict_reader;
    DtfileConflictDialog *conflict_dialog;
+   int status;
 } FileOpCBData;
 
 
@@ -239,6 +241,64 @@ typedef struct
 
 static void
 DisplayDuplicateOpError(FileOpCBData *cb_data,int index);
+
+static void
+FileOpStartError(Widget parent, int error)
+{
+   char message[512];
+   snprintf(message, sizeof(message),
+            GETMESSAGE(42, 38, "The file operation could not start: %s"),
+            strerror(error));
+   _DtMessage(parent == NULL ? toplevel : parent,
+              GETMESSAGE(42, 37, "File operation could not start"),
+              message, NULL, HelpRequestCB);
+}
+
+static void
+FileOpAbortStart(FileOpCBData *cb_data)
+{
+   int i;
+   if (cb_data == NULL) return;
+   DirectoryAbortModify(cb_data->host, cb_data->directory);
+   for (i = 0; i < cb_data->file_count; ++i)
+   {
+      DirUpdate *update = &cb_data->updates[i];
+      if (update->first_index == i)
+      {
+         if (cb_data->mode == MOVE_FILE)
+            DirectoryAbortModify(update->host, update->directory);
+         XtFree(update->host);
+         XtFree(update->directory);
+         XtFree(update->app_man_dir);
+      }
+      XtFree(update->file);
+   }
+   XtFree((char *)cb_data->updates);
+   XtFree(cb_data->directory);
+   XtFree(cb_data->host);
+   XtFree((char *)cb_data);
+}
+
+static void
+ChangeIconAbortStart(ChangeIconCBData *cb_data)
+{
+   if (cb_data == NULL) return;
+   XtFree(cb_data->host_name);
+   XtFree(cb_data->directory_name);
+   XtFree(cb_data->old_name);
+   XtFree(cb_data->new_name);
+   XtFree((char *)cb_data);
+}
+
+static void
+MakeFileAbortStart(MakeFileCBData *cb_data)
+{
+   if (cb_data == NULL) return;
+   XtFree(cb_data->to_host);
+   XtFree(cb_data->to_dir);
+   XtFree(cb_data->to_file);
+   XtFree((char *)cb_data);
+}
 
 
 
@@ -1694,7 +1754,6 @@ FileOpPipeCB(
    char *target_file;
    long modify_time;
    Boolean done;
-   static int status = 0;
 
    if (cb_data->conflict_reader != NULL)
    {
@@ -1739,7 +1798,7 @@ FileOpPipeCB(
            ResetFlag( rdd->call_struct->dialog_widget,rdd->w);
            ResetFlag( rdd->call_struct->dialog_widget,rdd->call_struct->Cancel);
 	 }
-         status = PIPEMSG_FILEOP_ERROR;
+         cb_data->status = PIPEMSG_FILEOP_ERROR;
          break;
 
       case PIPEMSG_CONFIRM:
@@ -1782,7 +1841,7 @@ FileOpPipeCB(
          PipeRead(*fd, &i, sizeof(int));
          cb_data->updates[i].operationStatus = True;
          DisplayDuplicateOpError((void *) cb_data,i);
-         status = PIPEMSG_MOVE_TO_SAME_DIR;
+         cb_data->status = PIPEMSG_MOVE_TO_SAME_DIR;
          if(cb_data->callback_data)
 	 {
 	   RenameDoneData *rdd = (RenameDoneData *)cb_data->callback_data;
@@ -1924,11 +1983,11 @@ FileOpPipeCB(
            snprintf( fileName, sizeof(fileName), "%s/%s", tmpDir, cb_data->updates[i].file );
            if( cb_data->updates[i].operationStatus == True )
            {
-             if( status == PIPEMSG_MOVE_TO_SAME_DIR )
+             if( cb_data->status == PIPEMSG_MOVE_TO_SAME_DIR )
              {
                RemoveIconFromWorkspace( fileName, cb_data->directory );
              }
-             else if( status != PIPEMSG_FILEOP_ERROR )
+             else if( cb_data->status != PIPEMSG_FILEOP_ERROR )
              {
                ChangeWorkspaceIconLink(cb_data->file_mgr_data, fileName,
 			     cb_data->directory,tmpDir );
@@ -1949,8 +2008,6 @@ FileOpPipeCB(
 
          XtFree(cb_data->updates[i].file);
       }
-
-      status = 0;
 
       /* call the callback routine */
       if (cb_data->finish_callback)
@@ -1993,8 +2050,8 @@ _FileMoveCopy(
    char *ptr = NULL;
    char *source_dir = NULL;
    char *source_file = NULL;
-   int pipe_m2s[2];
-   int pipe_s2m[2];
+   int pipe_m2s[2] = {-1, -1};
+   int pipe_s2m[2] = {-1, -1};
    int pid;
    fd_set select_fds;
    int fd;
@@ -2002,6 +2059,21 @@ _FileMoveCopy(
    Boolean operation_done;
    int rc;
 
+   if (host == NULL || directory == NULL || file_set == NULL ||
+       file_count <= 0 || (size_t)file_count > SIZE_MAX / sizeof(DirUpdate) ||
+       (buffer_set == NULL && host_set == NULL))
+   {
+      errno = EINVAL;
+      FileOpStartError(toplevel, errno);
+      return False;
+   }
+   for (i = 0; i < file_count; ++i)
+      if (file_set[i] == NULL || (buffer_set == NULL && host_set[i] == NULL))
+      {
+         errno = EINVAL;
+         FileOpStartError(toplevel, errno);
+         return False;
+      }
 
    /*  Determine the type of operation: move, copy, or link */
    /*  or creating buffers                                  */
@@ -2055,6 +2127,7 @@ _FileMoveCopy(
    cb_data->pipe_s2m = -1;
    cb_data->conflict_reader = NULL;
    cb_data->conflict_dialog = NULL;
+   cb_data->status = 0;
 
 
    /* mark the target directory as being modified in the directory cache */
@@ -2152,22 +2225,32 @@ _FileMoveCopy(
     } /* endif */
 
 
-   /* create a pipe */
-   pipe(pipe_m2s);
-   pipe(pipe_s2m);
+   /* Create both channels before forking. A partial setup owns no descriptor. */
+   if (DtfileProcessPipe(pipe_m2s) != 0 || DtfileProcessPipe(pipe_s2m) != 0)
+   {
+      int saved = errno;
+      DtfileProcessClosePipe(pipe_m2s);
+      DtfileProcessClosePipe(pipe_s2m);
+      FileOpStartError(toplevel, saved);
+      FileOpAbortStart(cb_data);
+      errno = saved;
+      return False;
+   }
 
    /* fork the process that does the actual work */
    pid = fork();
    if (pid == -1)
    {
-       DirectoryAbortModify(host, directory);
-       for (i=0; i<file_count; i++)
-         if (mode == MOVE_FILE && updates[i].first_index == i)
-           DirectoryAbortModify(updates[i].host, updates[i].directory);
+       int saved = errno;
+       DtfileProcessClosePipe(pipe_m2s);
+       DtfileProcessClosePipe(pipe_s2m);
+       FileOpStartError(toplevel, saved);
+       FileOpAbortStart(cb_data);
 
        fprintf(stderr,
 		"%s:  fork failed, ppid %d, pid %d: error %d=%s\n",
-		pname, getppid(), getpid(), errno, strerror(errno));
+		pname, getppid(), getpid(), saved, strerror(saved));
+       errno = saved;
        return False;
    }
 
@@ -2176,8 +2259,8 @@ _FileMoveCopy(
       DBGFORK(("%s:  child forked, m2s %d s2m %d\n",
 		pname, pipe_m2s[0], pipe_s2m[1]));
 
-      close(pipe_m2s[1]);  /* won't write to pipe_m2s */
-      close(pipe_s2m[0]);  /* won't read from pipe_s2m */
+      DtfileProcessClose(&pipe_m2s[1]);  /* won't write to pipe_m2s */
+      DtfileProcessClose(&pipe_s2m[0]);  /* won't read from pipe_s2m */
 
       if (desktopWindow != NULL)
          rc = FileMoveCopyProcessDesktop(pipe_s2m[1], pipe_m2s[0],
@@ -2188,7 +2271,7 @@ _FileMoveCopy(
                                   host, updates, file_count, mode, NULL);
 
       DBGFORK(("%s:  child exiting\n", pname));
-      exit(rc);
+      _exit(rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
    }
 
    DBGFORK(("%s:  forked child<%d>, m2s %d, s2m %d\n",
@@ -2196,8 +2279,8 @@ _FileMoveCopy(
 
 
    /* parent: set up callback to get the pipe data */
-   close(pipe_m2s[0]);  /* won't read from pipe_m2s */
-   close(pipe_s2m[1]);  /* won't write to pipe_s2m */
+   DtfileProcessClose(&pipe_m2s[0]);  /* won't read from pipe_m2s */
+   DtfileProcessClose(&pipe_s2m[1]);  /* won't write to pipe_s2m */
 
    cb_data->pipe_m2s = pipe_m2s[1];
    cb_data->pipe_s2m = pipe_s2m[0];
@@ -2245,6 +2328,9 @@ _FileMoveCopy(
       if (rc < 0 && errno != EINTR)
       {
          perror("select failed in FileMoveCopy");
+         XtAppAddInput(XtWidgetToApplicationContext(toplevel),
+                       pipe_s2m[0], (XtPointer)XtInputReadMask,
+                       FileOpPipeCB, (XtPointer)cb_data);
          break;
       }
       else if (rc == 1)
@@ -2665,7 +2751,7 @@ _ChangeIconName (
    char *msg;
    char *tmpStr;
    int i, j;
-   int pipe_fd[2];
+   int pipe_fd[2] = {-1, -1};
    int pid;
    int rc;
    int dirNameLength = strlen (directory_name);
@@ -2799,17 +2885,30 @@ _ChangeIconName (
    /* mark the directory as being modified in the directory cache */
    DirectoryBeginModify(host_name, directory_name);
 
-   /* create a pipe */
-   pipe(pipe_fd);
+   /* Create the completion channel before forking. */
+   if (DtfileProcessPipe(pipe_fd) != 0)
+   {
+       int saved = errno;
+       DirectoryAbortModify(host_name, directory_name);
+       FileOpStartError(w == NULL ? toplevel : XtParent(w), saved);
+       ChangeIconAbortStart(cb_data);
+       errno = saved;
+       return;
+   }
 
    /* fork the process that does the actual work */
    pid = fork();
    if (pid == -1)
    {
+       int saved = errno;
+       DtfileProcessClosePipe(pipe_fd);
        DirectoryAbortModify(host_name, directory_name);
+       FileOpStartError(w == NULL ? toplevel : XtParent(w), saved);
+       ChangeIconAbortStart(cb_data);
        fprintf(stderr,
 		"%s: fork failed, ppid %d, pid %d: error %d=%s\n",
-		pname, getppid(), getpid(), errno, strerror(errno));
+		pname, getppid(), getpid(), saved, strerror(saved));
+       errno = saved;
        return;
    }
 
@@ -2817,22 +2916,22 @@ _ChangeIconName (
    {
       DBGFORK(("%s:  child forked, pipe %d\n", pname, pipe_fd[1]));
 
-      close(pipe_fd[0]);  /* child won't read from the pipe */
+      DtfileProcessClose(&pipe_fd[0]);  /* child won't read from the pipe */
 
       rc = ChangeIconNameProcess(pipe_fd[1], host_name, directory_name,
                                  old_name, new_name);
-      close(pipe_fd[1]);
+      DtfileProcessClose(&pipe_fd[1]);
 
       DBGFORK(("%s:  child exiting\n", pname));
 
-      exit(rc);
+      _exit(rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
    }
 
    DBGFORK(("%s:  forked child<%d>, pipe %d\n", pname, pid, pipe_fd[0]));
 
 
    /* parent: set up callback to get the pipe data */
-   close(pipe_fd[1]);  /* parent won't write the pipe */
+   DtfileProcessClose(&pipe_fd[1]);  /* parent won't write the pipe */
 
    cb_data->child = pid;
 
@@ -3188,7 +3287,7 @@ MakeFile(
    char to_host[MAX_PATH];
    char to_dir[MAX_PATH];
    char to_file[MAX_PATH];
-   int pipe_fd[2];
+   int pipe_fd[2] = {-1, -1};
    int pid;
    int rc;
 
@@ -3206,17 +3305,30 @@ MakeFile(
    cb_data->finish_callback = finish_callback;
    cb_data->callback_data = callback_data;
 
-   /* create a pipe */
-   pipe(pipe_fd);
+   /* Create the completion channel before forking. */
+   if (DtfileProcessPipe(pipe_fd) != 0)
+   {
+       int saved = errno;
+       DirectoryAbortModify(to_host, to_dir);
+       FileOpStartError(w, saved);
+       MakeFileAbortStart(cb_data);
+       errno = saved;
+       return;
+   }
 
    /* fork the process that does the actual work */
    pid = fork();
    if (pid == -1)
    {
+       int saved = errno;
+       DtfileProcessClosePipe(pipe_fd);
        DirectoryAbortModify(to_host, to_dir);
+       FileOpStartError(w, saved);
+       MakeFileAbortStart(cb_data);
        fprintf(stderr,
 		"%s:  fork failed, ppid %d, pid %d: error %d=%s\n",
-		pname, getppid(), getpid(), errno, strerror(errno));
+		pname, getppid(), getpid(), saved, strerror(saved));
+       errno = saved;
        return;
    }
 
@@ -3225,20 +3337,20 @@ MakeFile(
       /* child process */
       DBGFORK(("%s:  child forked, pipe %d\n", pname, pipe_fd[1]));
 
-      close(pipe_fd[0]);  /* child won't read from the pipe */
+      DtfileProcessClose(&pipe_fd[0]);  /* child won't read from the pipe */
 
       rc = MakeFileProcess(pipe_fd[1], to_host, to_dir, to_file, type);
-      close(pipe_fd[1]);
+      DtfileProcessClose(&pipe_fd[1]);
 
       DBGFORK(("%s:  child exiting\n", pname));
 
-      exit(rc);
+      _exit(rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
    }
 
    DBGFORK(("%s:  forked child<%d>, pipe %d\n", pname, pid, pipe_fd[0]));
 
    /* parent: set up callback to get the pipe data */
-   close(pipe_fd[1]);  /* parent won't write the pipe */
+   DtfileProcessClose(&pipe_fd[1]);  /* parent won't write the pipe */
 
    cb_data->child = pid;
 

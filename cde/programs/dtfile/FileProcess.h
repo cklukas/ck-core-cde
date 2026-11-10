@@ -1,0 +1,25 @@
+/*
+ * CDE - Common Desktop Environment
+ *
+ * These libraries and programs are free software; you can redistribute them
+ * and/or modify them under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * These libraries and programs are distributed without any warranty; without
+ * even the implied warranty of merchantability or fitness for a particular
+ * purpose. See the GNU Lesser General Public License for more details.
+ */
+
+#ifndef DTFILE_FILE_PROCESS_H
+#define DTFILE_FILE_PROCESS_H
+
+/* Create a close-on-exec pipe. Both entries are set to -1 before work starts
+ * and on every failure. Close clears an entry before calling close(2), so a
+ * reported EINTR can never lead a caller to retry against a reused descriptor.
+ */
+int DtfileProcessPipe(int descriptors[2]);
+void DtfileProcessClose(int *descriptor);
+void DtfileProcessClosePipe(int descriptors[2]);
+
+#endif

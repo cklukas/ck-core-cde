@@ -17,6 +17,7 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/transfer-completion.c tests/check-operation-outcome.py \
              tests/check-filemanip-safety.py tests/filemanip-safety.c \
              tests/check-collision-workflow.py tests/collision-workflow.c \
+             tests/check-process-lifecycle.py tests/process-lifecycle.c \
              tests/check-sync-controller.py tests/sync-controller.c \
              tests/check-sync-retry-ui.py SyncFeature.h.in
 
@@ -49,6 +50,10 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-collision-workflow.py \
 		--module-source "$(abs_srcdir)" --helpers-only \
 		--work-dir "$(abs_builddir)/collision-helper-check"
+	$(RM) -r "$(abs_builddir)/process-lifecycle-check"
+	CC="$(CC)" python3 $(srcdir)/tests/check-process-lifecycle.py \
+		--module-source "$(abs_srcdir)" \
+		--work-dir "$(abs_builddir)/process-lifecycle-check"
 if HAVE_CK_CORE_FS
 	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-sync-controller.py
 endif
@@ -86,6 +91,7 @@ endif
 dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 Desktop.c       Directory.c     Encaps.c        File.c \
 		 FileDialog.c    FileManip.c     FileMgr.c       FileOp.c \
+		 FileProcess.c FileProcess.h \
 		 FileConflict.c FileConflict.h FileConflictWire.c FileConflictWire.h \
 		 FileConflictDialog.c FileConflictDialog.h \
 		 Filter.c        FilterP.c       Find.c          FindP.c \

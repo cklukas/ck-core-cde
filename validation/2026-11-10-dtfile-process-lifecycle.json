@@ -1,0 +1,75 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile transactional worker startup and process lifecycle",
+  "source_base": "ee3a66c8f161c7d723a0a64fd24b5650a4a61ecc",
+  "motif_source_revision": "55e038d1f2a4d0368d63d51556aafa70b7b904fd",
+  "motif_runtime_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "motif_runtime_sha256": "b132508069cfaf329b8504dac3fe9238d7aed33918895108e91400de46f92c8b",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_integration_state": "SDK 0.3 remains frozen; receipt-authorized Apply remains disabled.",
+  "source_sha256": {
+    ".ckgit/ci.yml": "bc2b7c4b61cf08dfec297eaeb606e368d65208dbb39dc668036814175f4a37d1",
+    ".ckgit/motif-revision": "4b28f090f271e25257f279148436f37a46faa5431be2b28b008d9afd6a1ec948",
+    "cde/CHANGES": "cb65c2ae057874cea08538206a0e959a88c13e313f08e733c3b742806aa8eb48",
+    "cde/programs/dtfile/FileOp.c": "1ea64e6e7f91e519872122b5c121c171610c73d0b9133d0c7dd03965ef2b6bcc",
+    "cde/programs/dtfile/FileProcess.c": "12b231283aabd5295e0d2ebbdd14cfb30beb8091f9da681e91d319b35946c86a",
+    "cde/programs/dtfile/FileProcess.h": "eb8094c9714f5417a14fa1cc1db5db7ab4e196632beb9b3553f00f1fced65bbc",
+    "cde/programs/dtfile/Makefile.am": "62d68d7180bf63608d8d34bcb8892ebb5439158e0c6463f1a5fa600ab9fd7982",
+    "cde/programs/dtfile/dtfile.msg": "59f162e2419c434af4e4d2197803e3b795aeaaa0aba15df7cfef91df0e8e051b",
+    "cde/programs/dtfile/tests/check-process-lifecycle.py": "7f82acf469631fb3efc36ed62382eaf127e71838b331a4d0aafe92105a1aef4c",
+    "cde/programs/dtfile/tests/process-lifecycle.c": "8395e358d637f942b597e8837fa84acd305a79ada9595bcaba1f05e583a7f6ae"
+  },
+  "focused_regression": {
+    "cases": 9,
+    "sanitizers": "address,undefined",
+    "passed": true,
+    "receipt_sha256": "c07f054ee89a9bb33638ba39b4f54f8fb129ed1258b11d9ce7e65bd474904557",
+    "coverage": [
+      "close-on-exec success and idempotent ownership clearing",
+      "null input and pipe exhaustion",
+      "interrupted pipe, F_GETFD and F_SETFD retries",
+      "F_GETFD and F_SETFD cleanup failures",
+      "close EINTR without unsafe descriptor retry",
+      "three checked FileOp launch sites, three child _exit sites, per-operation status and select-failure event-loop handoff"
+    ]
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "cpu_affinity": [1],
+    "changed_objects": ["dtfile-FileOp.o", "dtfile-FileProcess.o"],
+    "seconds": 1.774,
+    "log_sha256": "afa3577f9ba83c6b31d40bf58d0b8e27a19dccb2bd23e0eb2cf33196f2bee325",
+    "object_sha256": {
+      "dtfile-FileOp.o": "cf7197961936339dbddfe16bd30a85b0b03cba34a0e48feac258278396aa54e7",
+      "dtfile-FileProcess.o": "79312707bc1eb412e00561bcff0232234fa6981051351cb2d1f124e554794e37"
+    },
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile",
+    "output_sha256": "d028fcb07acde4be4cc2cbf36cc19172eb4bf4f0e7c093379f5da0972f766822",
+    "full_stack_rebuilt": false,
+    "postcheck": "make -n dtfile requested no compilation or link; no dtfile executable was running."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 1 make -j1 check-local in programs/dtfile with current source/test overrides",
+    "test_drivers": 14,
+    "pass_lines": 223,
+    "seconds": 18.896,
+    "passed": true,
+    "strict_failure_markers": 0,
+    "log_sha256": "7468a39176fd2de3769c072ac7163f7bb805860b844c4d29bebb5e82d628003d"
+  },
+  "catalog": {
+    "command": "gencat dtfile.cat dtfile.msg",
+    "passed": true,
+    "output_sha256": "55b1c0a26ccbfd8df6607d51e23388fba82a95b991f59d7b9ecee5de255ccb4e"
+  },
+  "setup_diagnostics": [
+    "The retained build's config.status initially selected its historical Makefile.in and omitted already-qualified dtfile objects. The current staged Makefile.in was supplied explicitly; the passing dry run retained FileConflict and XdgTrashInfo and compiled only FileOp and FileProcess."
+  ],
+  "limitations": [
+    "The startup fault seams exercise the real descriptor helper and source-contract integration, not native system-wide descriptor exhaustion.",
+    "This non-visual process-lifecycle bundle did not launch or inspect a CDE window.",
+    "Source dependency revision 55e038d1 was fetched and pinned without reviewing Motif changes. Qualification used the established Motif 20a ABI-9 runtime pending a matching qualified prefix."
+  ]
+}

@@ -1,4 +1,14 @@
 2026-11-10
+- dtfile: make file-operation startup transactional. All worker channels are
+  checked, close-on-exec, and cleared before close; interrupted setup syscalls
+  retry safely, a second-channel or fork failure closes every acquired
+  descriptor, reverses directory-cache reservations, releases callback state,
+  and shows the user why the operation did not start. Forked workers use
+  `_exit` and a synchronous `select` failure hands the live operation to the Xt
+  event loop instead of abandoning it. Move/copy status is now per operation,
+  so concurrent callbacks cannot inherit another operation's error state.
+  Invalid or overflowing request arrays are rejected before cache or process
+  state changes. Covered by `programs/dtfile/tests/check-process-lifecycle.py`.
 - dtfile: replace the single/global overwrite response with a bounded per-item
   conflict review. Each exact native source and destination remains separate
   from its escaped display text; malformed, oversized, truncated, duplicated,
