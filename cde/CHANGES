@@ -69,6 +69,12 @@
   themselves and searches the rest of a line after a multibyte character. New
   documentation page `docs/improvements/data-types.md`; covered by
   `make -C lib/DtSvc check`.
+- dtlogin: an XDMCP `Request` can only name the address it comes from (from the
+  host itself, any address of the host); other requests are declined, so a
+  display cannot point the manager at a third host. The reverse lookup of a
+  client's address runs in a child process with a two second limit and its
+  result is cached for a minute, instead of blocking the manager's main loop.
+  Covered by `programs/dtlogin/tests/check-xdmcp.py`.
 - dtlogin: the greeter reads the manager's requests completely and checks them.
   The length in the header is bounded by the 512 byte buffer, all of the
   message is read however the pipe splits it, the last byte is a NUL, and the

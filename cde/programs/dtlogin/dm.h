@@ -745,7 +745,8 @@ extern int SelectAuthorizationTypeIndex(
 			ARRAYofARRAY8Ptr authorizationNames) ;
 extern int SelectConnectionTypeIndex(
 			ARRAY16Ptr connectionTypes,
-			ARRAYofARRAY8Ptr connectionAddresses) ;
+			ARRAYofARRAY8Ptr connectionAddresses,
+			ARRAY8Ptr peerAddress) ;
 
 extern int Willing( 
                         ARRAY8Ptr addr,

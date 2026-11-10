@@ -106,6 +106,9 @@ from the X Consortium.
 extern Time_t time (Time_t *timer);
 #else
 #include <time.h>
+#include <poll.h>
+#include <errno.h>
+#include <signal.h>
 #define Time_t time_t
 #endif
 
@@ -805,8 +808,21 @@ request_respond (struct sockaddr *from, int fromlen, int length)
 		goto decline;
 
 	    /* Check the Display's stream services against Manager's policy */
-	    i = SelectConnectionTypeIndex (&connectionTypes,
-					   &connectionAddresses);
+	    {
+		ARRAY8	    peer;
+		char	    *peerData;
+		int	    peerLength;
+
+		peer.length = 0;
+		peer.data = 0;
+		if (ConvertAddr ((char *)from, &peerLength, &peerData) >= 0)
+		{
+		    peer.length = peerLength;
+		    peer.data = (CARD8Ptr) peerData;
+		}
+		i = SelectConnectionTypeIndex (&connectionTypes,
+					       &connectionAddresses, &peer);
+	    }
 	    if (i < 0) {
 		reason = &noValidAddr;
 		goto decline;
@@ -1198,6 +1214,106 @@ send_alive (struct sockaddr *from, int fromlen, int length)
     }
 }
 
+/*
+ * The name of a host is asked of the resolver, which may take as long as it
+ * likes: the manager must not wait for it.  The lookup is made by a child
+ * process that is given HOSTNAME_LOOKUP_TIMEOUT seconds; what it finds, or
+ * that it found nothing, is kept for HOSTNAME_CACHE_LIFETIME seconds, so a flood
+ * of requests from addresses that do not resolve costs one wait per address and
+ * minute.
+ */
+#define HOSTNAME_LOOKUP_TIMEOUT		2
+#define HOSTNAME_CACHE_LIFETIME		60
+#define HOSTNAME_CACHE_SIZE		32
+
+static struct hostname_entry {
+    unsigned char	address[4];
+    time_t		time;
+    int			used;
+    char		name[256];		/* empty: no name was found */
+} hostnameCache[HOSTNAME_CACHE_SIZE];
+
+/* the name of the host at the IPv4 address ADDRESS in NAME (SIZE bytes), or an empty string */
+static void
+LookupHostname (const unsigned char *address, char *name, size_t size)
+{
+    struct hostname_entry	*entry, *oldest = &hostnameCache[0];
+    int				fds[2], i, waiting, status;
+    size_t			have = 0;
+    pid_t			pid;
+    time_t			now = time (0), deadline;
+
+    for (i = 0; i < HOSTNAME_CACHE_SIZE; i++)
+    {
+	entry = &hostnameCache[i];
+	if (entry->used && now - entry->time <= HOSTNAME_CACHE_LIFETIME &&
+	    memcmp (entry->address, address, 4) == 0)
+	{
+	    snprintf (name, size, "%s", entry->name);
+	    return;
+	}
+	if (!entry->used || entry->time < oldest->time)
+	    oldest = entry;
+    }
+
+    name[0] = '\0';
+    if (pipe (fds) == 0)
+    {
+	pid = fork ();
+	if (pid == 0)
+	{
+	    struct hostent	*hostent;
+	    const char		*found;
+
+	    close (fds[0]);
+	    hostent = gethostbyaddr ((char *) address, 4, AF_INET);
+	    found = hostent ? hostent->h_name : "";
+	    if (write (fds[1], found, strnlen (found, 255)) < 0)
+		_exit (1);
+	    _exit (0);
+	}
+	close (fds[1]);
+	if (pid > 0)
+	{
+	    deadline = now + HOSTNAME_LOOKUP_TIMEOUT;
+	    waiting = 1;
+	    while (waiting && have < size - 1)
+	    {
+		struct pollfd	pfd;
+		ssize_t		count;
+		long		left = (long) (deadline - time (0));
+
+		if (left <= 0)
+		    break;
+		pfd.fd = fds[0];
+		pfd.events = POLLIN;
+		if (poll (&pfd, 1, (int) (left * 1000)) <= 0)
+		{
+		    if (errno == EINTR)
+			continue;
+		    break;
+		}
+		count = read (fds[0], name + have, size - 1 - have);
+		if (count <= 0)
+		    waiting = 0;		/* the child has finished */
+		else
+		    have += count;
+	    }
+	    name[have] = '\0';
+	    if (waiting)
+		kill (pid, SIGKILL);	/* the resolver took too long */
+	    while (waitpid (pid, &status, 0) == -1 && errno == EINTR)
+		;
+	}
+	close (fds[0]);
+    }
+
+    memcpy (oldest->address, address, 4);
+    oldest->time = now;
+    oldest->used = 1;
+    snprintf (oldest->name, sizeof (oldest->name), "%s", name);
+}
+
 #if NeedWidePrototypes
 char *
 NetworkAddressToHostname (int connectionType, ARRAY8Ptr connectionAddress)
@@ -1212,17 +1328,16 @@ NetworkAddressToHostname (CARD16 connectionType, ARRAY8Ptr connectionAddress)
     {
     case FamilyInternet:
 	{
-	    struct hostent	*hostent;
+	    char resolved[256];
 	    char dotted[20];
 	    char *local_name;
 
 	    if (connectionAddress->length != 4)
 		break;
-	    hostent = gethostbyaddr ((char *)connectionAddress->data,
-				     connectionAddress->length, AF_INET);
+	    LookupHostname (connectionAddress->data, resolved, sizeof (resolved));
 
-	    if (hostent)
-		local_name = hostent->h_name;
+	    if (resolved[0])
+		local_name = resolved;
 	    else {
 		/* can't get name, so use emergency fallback */
 		sprintf(dotted, "%d.%d.%d.%d",

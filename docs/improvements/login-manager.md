@@ -16,6 +16,16 @@ privileges only when that really worked.
   malformed, is declined. The selection of the connection type no longer returns
   an index past its arrays.
 - Addresses shorter than the family requires are not read beyond their length.
+- A `Request` names the address of the display, and the manager connects to
+  that address after `Manage`. The manager now selects only the offered address
+  that the request comes from (a request from the host itself may name any
+  address of the host), so a display cannot make the manager open the login
+  screen on another host; a request that does not offer its own address is
+  declined.
+- The reverse lookup of a client's address, which the `Xaccess` patterns and the
+  display name need, is made by a child process with a two second limit and kept
+  for a minute (also when it found nothing). The manager used to wait for the
+  resolver in its main loop.
 - `XDM-AUTHORIZATION-1` is only accepted after its handshake; a request for it
   without one is declined. Authorization data is zeroed when a request is
   repeated, so it is neither used uninitialized nor leaked.
@@ -203,6 +213,9 @@ handle is ended, the setup fails).
 with real signals, pipes and child processes: a handler that does anything but
 leave a note, a request that arrives before a wait, a child that ignores
 `SIGTERM`, a server that is ready early, late or never.
+
+`tests/check-xdmcp.py` also runs the selection of the address a request names and the
+bounded lookup (a resolver that does not answer, and the cache).
 
 `tests/check-greeter-request.py` reads requests through the greeter's reader from
 pipes: whole, delivered a byte at a time, too long, shorter than the header,

@@ -36,6 +36,10 @@ authorization = until(auth, "struct AuthProtocol {", "static Xauth *\nGenerateAu
 authorization += block(auth, "#if NeedWidePrototypes\nvoid\nSetProtoDisplayAuthorization")
 address = re.search(r"^#define getString\(name,len\).*$", xdmcp, re.M).group(0) + "\n"
 address += block(xdmcp, "#if NeedWidePrototypes\nchar *\nNetworkAddressToName")
+lookup_start = "/*\n * The name of a host is asked of the resolver"
+if lookup_start in xdmcp:
+    address += until(xdmcp, lookup_start, "#if NeedWidePrototypes\nchar *\nNetworkAddressToHostname").replace(
+        "#define HOSTNAME_LOOKUP_TIMEOUT\t\t2", "#define HOSTNAME_LOOKUP_TIMEOUT\t\t1")
 address += block(xdmcp, "#if NeedWidePrototypes\nchar *\nNetworkAddressToHostname")
 
 harness = r'''
@@ -55,19 +59,29 @@ struct hostent *StubGethostbyaddr(const void *addr, socklen_t length, int type);
 char *test_WillingMsg(void);
 '''
 
+SELECT_CALL = "SelectConnectionTypeIndex(types, addresses, peer)" if "peerAddress" in policy else "(void)peer, SelectConnectionTypeIndex(types, addresses)"
+
 production = r'''
 #include "harness.h"
+#include <sys/mman.h>
 #define popen StubPopen
 #define pclose StubPclose
 #define system StubSystem
 #define tmpnam StubTmpnam
 #define gethostbyaddr StubGethostbyaddr
+#include <poll.h>
+#include <signal.h>
+#include <sys/wait.h>
 ''' + "\n".join((policy, protodpy, xdmauth, authorization, address)) + r'''
 char *test_WillingMsg(void) { return WillingMsg(); }
 '''
 
 stubs = r'''
+#define _GNU_SOURCE
 #include "harness.h"
+#include <sys/mman.h>
+#include <signal.h>
+#include <time.h>
 
 int mode_popen_fails;
 const char *uptime_output = "";
@@ -132,8 +146,18 @@ int StubSystem(const char *command)
     return 0;
 }
 
+/* 10.0.0.5 is host5.example, 10.0.0.9 takes half a minute to answer, the others have no name */
+static int *lookups;
 struct hostent *StubGethostbyaddr(const void *addr, socklen_t length, int type)
-{ (void)addr; (void)length; (void)type; return NULL; }
+{
+    static struct hostent h;
+    const unsigned char *a = addr;
+    (void)length; (void)type;
+    if (lookups) ++*lookups;
+    if (a[3] == 9) sleep(30);
+    if (a[3] == 5) { h.h_name = "host5.example"; return &h; }
+    return NULL;
+}
 
 static ARRAY8 Make(const void *bytes, int length)
 {
@@ -141,9 +165,16 @@ static ARRAY8 Make(const void *bytes, int length)
     return a;
 }
 
+/* the selection of the connection address, with the sender's address when the policy asks for it */
+static int Select(ARRAY16Ptr types, ARRAYofARRAY8Ptr addresses, ARRAY8Ptr peer)
+{
+    return @SELECT@;
+}
+
 static void SelectIndex(void)
 {
     static const unsigned char loopback[4] = {127, 0, 0, 1}, routable[4] = {10, 1, 2, 3};
+    ARRAY8 peer = { 4, (CARD8Ptr)routable };
     CARD16 types[2] = {FamilyInternet, FamilyInternet};
     ARRAY16 typeList = {2, types};
     ARRAY8 addresses[2];
@@ -152,31 +183,107 @@ static void SelectIndex(void)
     /* a lone loopback address leaves nothing to select; the old index was the array length */
     typeList.length = 1; addressList.length = 1;
     addresses[0] = Make(loopback, 4);
-    CHECK(SelectConnectionTypeIndex(&typeList, &addressList) == -1);
+    CHECK(Select(&typeList, &addressList, &peer) == -1);
     free(addresses[0].data);
 
     /* the first routable IPv4 address is chosen */
     typeList.length = 2; addressList.length = 2;
     addresses[0] = Make(loopback, 4);
     addresses[1] = Make(routable, 4);
-    CHECK(SelectConnectionTypeIndex(&typeList, &addressList) == 1);
+    CHECK(Select(&typeList, &addressList, &peer) == 1);
     free(addresses[0].data); free(addresses[1].data);
 
     /* an address of the wrong size for its family is no address */
     typeList.length = 1; addressList.length = 1;
     addresses[0] = Make(routable, 2);
-    CHECK(SelectConnectionTypeIndex(&typeList, &addressList) == -1);
+    CHECK(Select(&typeList, &addressList, &peer) == -1);
     free(addresses[0].data);
     addresses[0] = Make(routable, 0);
-    CHECK(SelectConnectionTypeIndex(&typeList, &addressList) == -1);
+    CHECK(Select(&typeList, &addressList, &peer) == -1);
 
     /* only the Internet family can be named */
     types[0] = FamilyChaos; types[1] = FamilyInternet;
     typeList.length = 2; addressList.length = 2;
     addresses[0] = Make(routable, 4);
     addresses[1] = Make(routable, 4);
-    CHECK(SelectConnectionTypeIndex(&typeList, &addressList) == 1);
+    CHECK(Select(&typeList, &addressList, &peer) == 1);
     free(addresses[0].data); free(addresses[1].data);
+}
+
+static void RequestNamesTheSender(void)
+{
+    static const unsigned char loopback[4] = {127, 0, 0, 1}, sender[4] = {10, 1, 2, 3}, other[4] = {10, 9, 9, 9};
+    CARD16 types[2] = {FamilyInternet, FamilyInternet};
+    ARRAY16 typeList = {2, types};
+    ARRAY8 addresses[2];
+    ARRAYofARRAY8 addressList = {2, addresses};
+    ARRAY8 peer = { 4, (CARD8Ptr)sender }, local = { 4, (CARD8Ptr)loopback }, odd = { 2, (CARD8Ptr)sender };
+
+    /* a display is reached at the address it names: the request names the one it comes from */
+    addresses[0] = Make(other, 4);
+    addresses[1] = Make(sender, 4);
+    CHECK(Select(&typeList, &addressList, &peer) == 1);
+    free(addresses[1].data);
+    addressList.length = 1; typeList.length = 1;
+    CHECK(Select(&typeList, &addressList, &peer) == -1);   /* only another host's address */
+    CHECK(Select(&typeList, &addressList, &odd) == -1);
+    CHECK(Select(&typeList, &addressList, NULL) == -1);
+    /* a request from this host may name any address of it */
+    CHECK(Select(&typeList, &addressList, &local) == 0);
+    free(addresses[0].data);
+}
+
+static void Watchdog(int sig)
+{
+    static const char m[] = "FAIL blocked for more than the time allowed\n";
+    (void)sig;
+    if (write(2, m, sizeof m - 1)) { }
+    _exit(1);
+}
+
+static double Now(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec + t.tv_nsec / 1e9; }
+
+static void HostnameLookup(void)
+{
+    static const unsigned char named[4] = {10, 0, 0, 5}, slow[4] = {10, 0, 0, 9}, nameless[4] = {10, 0, 0, 7};
+    ARRAY8 address;
+    char *name;
+    double start;
+
+    lookups = mmap(NULL, sizeof *lookups, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    CHECK(lookups != MAP_FAILED);
+    signal(SIGALRM, Watchdog);
+    alarm(10);
+
+    address = Make(named, 4);
+    name = NetworkAddressToHostname(FamilyInternet, &address);
+    CHECK(name && strcmp(name, "host5.example") == 0);
+    free(name);
+    CHECK(*lookups == 1);
+    name = NetworkAddressToHostname(FamilyInternet, &address);        /* kept: the resolver is not asked again */
+    CHECK(name && strcmp(name, "host5.example") == 0 && *lookups == 1);
+    free(name);
+    free(address.data);
+
+    /* a resolver that does not answer does not hold the manager up: the address stands for the name */
+    address = Make(slow, 4);
+    start = Now();
+    name = NetworkAddressToHostname(FamilyInternet, &address);
+    CHECK(name && strcmp(name, "10.0.0.9") == 0);
+    CHECK(Now() - start < 4.0);
+    free(name);
+    start = Now();
+    name = NetworkAddressToHostname(FamilyInternet, &address);        /* and it is not asked again for a while */
+    CHECK(name && strcmp(name, "10.0.0.9") == 0 && Now() - start < 0.5);
+    free(name);
+    free(address.data);
+
+    address = Make(nameless, 4);
+    name = NetworkAddressToHostname(FamilyInternet, &address);
+    CHECK(name && strcmp(name, "10.0.0.7") == 0);
+    free(name);
+    free(address.data);
+    alarm(0);
 }
 
 static void DisplayName(void)
@@ -194,10 +301,10 @@ static void DisplayName(void)
     CHECK(NetworkAddressToHostname(FamilyInternet, &address) == NULL);
     address = Make(routable, 4);
     name = NetworkAddressToName(FamilyInternet, &address, 3);
-    CHECK(name && strcmp(name, "10.0.0.5:3") == 0);
+    CHECK(name && strcmp(name, "host5.example:3") == 0);
     free(name);
     name = NetworkAddressToHostname(FamilyInternet, &address);
-    CHECK(name && strcmp(name, "10.0.0.5") == 0);
+    CHECK(name && strcmp(name, "host5.example") == 0);
     free(name);
     free(address.data);
 }
@@ -302,6 +409,8 @@ static void NoTemporaryFile(void)
 
 static const struct { const char *name; void (*run)(void); } scenarios[] = {
     {"select-index", SelectIndex},
+    {"request-names-the-sender", RequestNamesTheSender},
+    {"hostname-lookup", HostnameLookup},
     {"display-name", DisplayName},
     {"authentication-name", AuthenticationName},
     {"fresh-display", FreshDisplay},
@@ -320,6 +429,8 @@ int main(int argc, char **argv)
     return 2;
 }
 '''
+
+stubs = stubs.replace("@SELECT@", SELECT_CALL)
 
 def run_all(prefix, harness_h, production_c, stubs_c, libs, defines, scenarios):
     with tempfile.TemporaryDirectory(prefix=prefix, dir=os.environ.get("TMPDIR")) as work:
@@ -355,7 +466,7 @@ def run_all(prefix, harness_h, production_c, stubs_c, libs, defines, scenarios):
                 print("ok   %s" % name)
         return failed
 
-names = ["select-index", "display-name", "authentication-name", "fresh-display",
+names = ["select-index", "request-names-the-sender", "hostname-lookup", "display-name", "authentication-name", "fresh-display",
          "xdm-authorization-without-authentication", "repeated-request",
          "willing-status", "willing-no-temporary-file"]
 failed = run_all("login-xdmcp-", harness, production, stubs, ["-lXdmcp", "-lXau"], [], names)

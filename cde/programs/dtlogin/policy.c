@@ -195,14 +195,17 @@ Accept( struct sockaddr *from, int fromlen,
 
 int 
 SelectConnectionTypeIndex( ARRAY16Ptr connectionTypes,
-			   ARRAYofARRAY8Ptr connectionAddresses )
+			   ARRAYofARRAY8Ptr connectionAddresses,
+			   ARRAY8Ptr peerAddress )
 {
 
     int i;
     
     /*
-     *  the current selection policy is to use the first connection address
-     *  that is not the loopback address...
+     *  the display is reached at the address it names, and the name comes from
+     *  the request: a request names only the address it comes from.  A request
+     *  from this host itself (the loopback address) may name any address of the
+     *  host; the first one that is not the loopback address is used.
      */
      
     /*
@@ -227,7 +230,10 @@ SelectConnectionTypeIndex( ARRAY16Ptr connectionTypes,
 	if (connectionTypes->data[i] == FamilyInternet &&
 	    connectionAddresses->data[i].length == 4 &&
 	    !XdmcpARRAY8Equal (&connectionAddresses->data[i],
-				&loopbackAddress))
+				&loopbackAddress) &&
+	    peerAddress && peerAddress->length == 4 &&
+	    (XdmcpARRAY8Equal (&connectionAddresses->data[i], peerAddress) ||
+	     XdmcpARRAY8Equal (peerAddress, &loopbackAddress)))
 	    return i;
     }
 
