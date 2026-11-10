@@ -39,8 +39,11 @@ The fields inside a payload are read within the payload's own limit:
   count in decimal and continues in packets of the same type. The count is
   limited, and the daemon stops after as many continuation packets as there are
   strings to place.
-- The encoded termios string of `CHANNEL_TERMIOS` must fit the daemon's buffer.
-  A `SERVER_DEBUG` file name is read from the request without copying.
+- The encoded termios string of `CHANNEL_TERMIOS` must fit the daemon's buffer
+  and must be a whole description of the settings (the protocol version, every
+  field, only flags, speeds and control characters that exist); a refused string
+  is a protocol error and changes nothing. A `SERVER_DEBUG` file name is read
+  from the request without copying.
 - A numeric field that does not parse is an error, not an uninitialized value.
 
 ## Registration
@@ -65,6 +68,16 @@ Before the daemon accepts commands it gives up its own identity:
 If any step does not take effect the client is told the registration failed and
 the daemon exits. A daemon that is not `root` can only serve its own user.
 
+## Termios strings
+
+The settings of a terminal travel between the SPC library and `dtspcd` as a
+string of eight fields. A string is accepted only when it names the protocol
+version, has every field, and names only flags, speeds and control characters
+that exist, with control character values that fit in one; the settings change
+only then, and a refused string is an error of the request. The error texts of
+the SPC library carry what the peer sent, and no longer overrun their buffer or
+act as a format.
+
 ## Tests
 
 `programs/dtspcd/tests` holds request-level regression tests. The test program
@@ -82,11 +95,19 @@ channels, registration refusals, the random file-name suffix and the identity
 change. Run against the code from before these changes, the same test source
 fails 16 of its 18 comparable cases; the other two check ordinary behavior.
 
+`lib/DtSvc/tests/spc-termio-test.c` compiles `spc-termio.c` and `spc-error.c`
+under the same sanitizers and links the built library. Its four cases round-trip
+a description, refuse the strings that are not whole, give error texts for names
+of 300,000 characters and for names that contain format characters; three of
+them fail on the previous sources:
+
+```sh
+make -C lib/DtSvc check
+```
+
 ## Limits
 
 - The tests exercise the handlers directly. They do not run a complete
   authenticated session, which needs a ToolTalk session and file system
   conditions that the check suite does not provide.
-- The termios string decoder in `libDtSvc` and the remainder of `libDtSvc` are
-  outside this change.
 - No fuzzing of the protocol readers has been done yet.

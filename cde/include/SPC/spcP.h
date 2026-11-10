@@ -563,6 +563,6 @@ SPCError *SPC_Lookup_Error (int errornum);
 
 /* spc-termio.c */
 XeString SPC_Decode_Termios( struct termios * );
-void SPC_Encode_Termios(XeString buff, struct termios *tio);
+int SPC_Encode_Termios(XeString buff, struct termios *tio);
 
 #endif /* _spcP_h */

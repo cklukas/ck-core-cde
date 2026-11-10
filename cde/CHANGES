@@ -45,6 +45,15 @@
   position-file initialization falls back to the numeric user ID when account
   lookup is unavailable. Covered by focused path/control and packet sanitizer
   cases.
+- libDtSvc and dtspcd: accept only a whole termios description. The string that
+  carries the settings of a terminal must name the protocol version, have all
+  eight fields and name only flags, speeds and control characters that exist,
+  with control character values that fit in a byte; the settings change only
+  then and a refused string is an error of the request (`dtspcd` answers with a
+  protocol error). The error texts of the SPC library are built within their
+  buffer and are no longer used as a format, so a long or odd name sent by a
+  peer cannot overrun the buffer or act as a format. Covered by
+  `lib/DtSvc/tests/spc-termio-test.c`.
 - libDtSvc: read data types and database files within the data they have. File
   contents are matched within what could be read (a failed or short read no
   longer leaves unwritten memory in the comparison; sizes of zero or less, and

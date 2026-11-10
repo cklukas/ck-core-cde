@@ -2153,7 +2153,11 @@ int SPC_Get_Termios(protocol_request_ptr prot_request)
     
     READ_STRING_NO_COPY(prot_request->dataptr, s);
     
-    SPC_Encode_Termios(s, XeTermioStruct);
+    /* a description that is not complete leaves the settings as they were */
+    if (!SPC_Encode_Termios(s, XeTermioStruct)) {
+	_DtSvcProcessUnlock();
+	return(SPC_ERROR);
+    }
 
     _DtSvcProcessUnlock();
     return(XeSetpgrp(FALSE));

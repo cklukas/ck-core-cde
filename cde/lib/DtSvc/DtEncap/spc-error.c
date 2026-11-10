@@ -200,7 +200,7 @@ void SPC_Error (int error, ...)
   buffer = (XeChar*) malloc(sizeof(XeChar) * SPC_BUFSIZ);
   if (buffer)
   {
-      sprintf(buffer, err->format, arg1, arg2);
+      snprintf(buffer, SPC_BUFSIZ, err->format, arg1, arg2);
       err->text=SPC_copy_string(buffer);
       free(buffer);
   }
@@ -232,7 +232,7 @@ void SPC_Error (int error, ...)
      }
   }
   else
-     _DtSimpleError(XeProgName, XeError, XeString_NULL, err->text);
+     _DtSimpleError(XeProgName, XeError, XeString_NULL, (XeString)"%s", err->text);
 
   _DtSvcProcessUnlock();
   return;

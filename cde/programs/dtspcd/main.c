@@ -1250,7 +1250,10 @@ int Client_Channel_Termios(protocol_request_ptr prot)
     return(SPC_ERROR);
   }
   memset(&t, 0, sizeof(t));
-  SPC_Encode_Termios(buffer, &t);
+  if(!SPC_Encode_Termios(buffer, &t)) {
+    SPC_Error(SPC_Protocol);
+    return(SPC_ERROR);
+  }
 
   return(XeSPCSetTermio(channel, connection, side, &t));
 }

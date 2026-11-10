@@ -278,7 +278,8 @@ static void
 /*----------------------------------------------------------------------+*/
 static tcflag_t 
     SPC_Encode_TCflag(XeString       buff,  
-		      struct modes_s modes[])
+		      struct modes_s modes[],
+		      Boolean       *ok)
 /*----------------------------------------------------------------------+*/
 {
     /* Given a comma separated list of flag names, convert the list */
@@ -308,7 +309,10 @@ static tcflag_t
 	}
 
 	if (!found)
+	{
 	    SPC_Error(SPC_Bad_Termios_Mode, item);
+	    *ok = FALSE;
+	}
     }
 
     return flag;
@@ -343,7 +347,8 @@ static void
 /*----------------------------------------------------------------------+*/
 static speed_t 
     SPC_Encode_Speed(XeString      buff,  
-		     struct baud_s bauds[])
+		     struct baud_s bauds[],
+		     Boolean       *ok)
 /*----------------------------------------------------------------------+*/
 {
 #define DEFAULT_SPEED B9600
@@ -362,6 +367,7 @@ static speed_t
     }
     
     SPC_Error(SPC_Bad_Termios_Speed, buff);
+    *ok = FALSE;
     return DEFAULT_SPEED;
 }
 
@@ -409,7 +415,8 @@ static void
 static void 
     SPC_Encode_CC(XeString    buff,  
 		  cc_t        ccs[], 
-		  struct cc_s cc_array[])
+		  struct cc_s cc_array[],
+		  Boolean    *ok)
 /*----------------------------------------------------------------------+*/
 {
     /* we should have gotten a string that looks like this:		  */
@@ -441,6 +448,7 @@ static void
 	if (!cc_value)
 	{
 	    SPC_Error(SPC_Bad_Termios_CC, cc_name);
+	    *ok = FALSE;
 	    continue;
 	}
 	*cc_value++ = XeChar_NULL;			/* Replace "=" with null */
@@ -453,10 +461,13 @@ static void
 	{
 	    if (strcmp(cc_array->name, cc_name) == 0)
 	    {
-		if (sscanf(cc_value, SPC_CC_FORMAT, &a_cc) != 1)
+		/* the value is a number that a control character can be */
+		if (sscanf(cc_value, SPC_CC_FORMAT, &a_cc) != 1 ||
+		    a_cc > (unsigned int)((cc_t)~(cc_t)0))
 		{
 		    *(cc_value-1) = SPC_CC_SEP[0];
 		    SPC_Error(SPC_Bad_Termios_CC, cc_name);
+		    *ok = FALSE;
 		}
 		else
 		    ccs[cc_array->value] = a_cc;
@@ -471,6 +482,7 @@ static void
 	{
 	    *(cc_value-1) = SPC_CC_SEP[0];
 	    SPC_Error(SPC_Bad_Termios_CC, cc_name);
+	    *ok = FALSE;
 	}
     }
 }
@@ -522,17 +534,24 @@ XeString SPC_Decode_Termios(struct termios *tio)
 }
 
 /*----------------------------------------------------------------------+*/
-void SPC_Encode_Termios(XeString buff, struct termios *tio)
+int SPC_Encode_Termios(XeString buff, struct termios *tio)
 /*----------------------------------------------------------------------+*/
 {
     /* Decodes the ascii representation of the termios struct.  The format */
-    /* of the string is defined at the front of this file.                 */
+    /* of the string is defined at the front of this file.  The structure  */
+    /* is changed only when the whole string is a description: of the      */
+    /* protocol version, with all of its fields, and with names and values */
+    /* that exist.  Returns whether it is.				   */
 
     XeString	item;
-    XeString	protocol_version;
     int		item_cnt = 0;
     speed_t     speed;    
+    Boolean	ok = TRUE;
+    struct termios work = *tio;
     
+    if (!buff)
+	return FALSE;
+
     while ((item = (XeString)STRTOKX(buff, SPC_TERMIO_SEP)))
     {
 	/* We can possibly have an all blank field.  Walk past them  */
@@ -543,38 +562,41 @@ void SPC_Encode_Termios(XeString buff, struct termios *tio)
 	switch(++item_cnt) 
         {
 	case SPC_TERMIO_VER_FIELD : 
-	    protocol_version = item; 
-	    /* Check this some day ??? */
+	    if (strcmp(item, SPC_TERMIO_VERSION) != 0)
+	    {
+		SPC_Error(SPC_Bad_Termios_Proto, item);
+		ok = FALSE;
+	    }
 	    break;
 
 	case SPC_TERMIO_IMODE_FIELD : 
-	    tio->c_iflag = SPC_Encode_TCflag(item, Input_modes); 
+	    work.c_iflag = SPC_Encode_TCflag(item, Input_modes, &ok); 
 	    break;
 	    
 	case SPC_TERMIO_OMODE_FIELD : 
-	    tio->c_oflag = SPC_Encode_TCflag(item, Output_modes); 
+	    work.c_oflag = SPC_Encode_TCflag(item, Output_modes, &ok); 
 	    break;
 	    
 	case SPC_TERMIO_CMODE_FIELD : 
-	    tio->c_cflag = SPC_Encode_TCflag(item, Control_modes); 
+	    work.c_cflag = SPC_Encode_TCflag(item, Control_modes, &ok); 
 	    break;
 	    
 	case SPC_TERMIO_LMODE_FIELD : 
-	    tio->c_lflag = SPC_Encode_TCflag(item, Local_modes); 
+	    work.c_lflag = SPC_Encode_TCflag(item, Local_modes, &ok); 
 	    break;
 	    
 	case SPC_TERMIO_ISPEED_FIELD : 
-	    speed = SPC_Encode_Speed(item, Baud_rates);
-	    cfsetispeed(tio, speed);
+	    speed = SPC_Encode_Speed(item, Baud_rates, &ok);
+	    cfsetispeed(&work, speed);
 	    break;
 	    
 	case SPC_TERMIO_OSPEED_FIELD : 
-	    speed = SPC_Encode_Speed(item, Baud_rates);
-	    cfsetospeed(tio, speed);
+	    speed = SPC_Encode_Speed(item, Baud_rates, &ok);
+	    cfsetospeed(&work, speed);
 	    break;
 	    
 	case SPC_TERMIO_CC_FIELD : 
-	    SPC_Encode_CC(item, tio->c_cc, CC_Array); 
+	    SPC_Encode_CC(item, work.c_cc, CC_Array, &ok); 
 	    break;
 
 	default : 
@@ -585,9 +607,15 @@ void SPC_Encode_Termios(XeString buff, struct termios *tio)
     } /* while */
 
     if (item_cnt != SPC_TERMIO_LAST_FIELD)
+    {
     	SPC_Error(SPC_Bad_Termios_Proto, 
 		  (XeString) ((item_cnt < SPC_TERMIO_LAST_FIELD) ? "Too Few" : "Too Many"));
+	ok = FALSE;
+    }
 
+    if (ok)
+	*tio = work;
+    return ok;
 }    
 
 #ifdef TESTING
