@@ -1,0 +1,63 @@
+{
+ "date": "2026-11-10",
+ "topic": "batch 5 hardening: daemon leftovers (rpc.cmsd, libcsa, dtlogin, libtt, DtSvc, dtspcd, ttdbserverd, DtSearch) and dtmail (servers, messages, lock files)",
+ "source_base": "13e4f1ade90ddc275108fa3e801ba3d00967b2b7",
+ "commits": {
+  "daemon_leftovers": 27,
+  "dtmail": 8,
+  "motif_adoption": 1
+ },
+ "motif_revision": "44020a7810312bbb42b8833ab7d82ac6968b1e38",
+ "motif_prefix": "hard-44020a781 (Lima ckdev guest, --enable-hardening, -O2; clients/mwm skipped)",
+ "motif_libXm_sha256": "a53bb9355c1b1312ce48fe2f41e917f43578526979a33f5557e715b3b1629ca3",
+ "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+ "host": "Lima ckdev, Debian 13 arm64, gcc 14.2, 8 CPUs (6 used)",
+ "native_build": {
+  "configuration": "--enable-hardening -O2",
+  "full_rebuild": true,
+  "exit": 0,
+  "seconds": 349
+ },
+ "make_check": {
+  "command": "make -k -j 6 check",
+  "exit": 2,
+  "failing_components": [
+   "programs/dtfile"
+  ],
+  "finding": "check-directory-control-packets.py compiles a generated C file with -Werror; GCC 14 rejects `if(!failed)printf(...);return failed;` (-Wmisleading-indentation). The same test passes with Clang 19. The failure ends that check-local recipe, so the dtfile checks after it were run by hand from the make -n list and pass (8 scripts).",
+  "owner": "dtfile directory control packet test, not touched by this batch"
+ },
+ "warning_ratchet": {
+  "baseline": "batch 4",
+  "regressions": [
+   "programs/dtfile -Wformat-nonliteral 105 -> 106",
+   "programs/dtfile -Wmisleading-indentation 3 -> 5"
+  ],
+  "note": "both in dtfile, from commits that are not part of this batch"
+ },
+ "desktop_smoke": {
+  "attempts": 2,
+  "result": "pass",
+  "first_attempt": "xdotool X_GetWindowAttributes BadWindow race during window search",
+  "processes_mapping_recorded_libXm": [
+   "dtsession",
+   "dtwm",
+   "dtstyle",
+   "dtterm",
+   "dtfile"
+  ],
+  "against_previous_revision": "fail three times: dtwm aborted with a double free in ColorObj.c (Motif df2257a16)"
+ },
+ "motif_validation": {
+  "new_sanitizer_tests_against_matching_sanitized_prefix": "8 of 8 pass",
+  "installed_prefix_scripts": "126 pass; every failure also fails on 90d98fb73",
+  "source_guards": "4223 scripts, the same 53 failures on 90d98fb73 and 44020a781",
+  "not_run": "96 run scripts need a build tree, binary or further inputs"
+ },
+ "limitations": [
+  "the full CDE check was not green because of the dtfile test above",
+  "only the Linux ARM64 guest was used; no x86_64 run",
+  "the smoke test uses the staged install under a bubblewrap sandbox with Xvfb and no login manager",
+  "Motif clients/mwm does not build standalone at this revision (it includes Dt/SessionM.h from CDE)"
+ ]
+}

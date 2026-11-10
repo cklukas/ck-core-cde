@@ -1,4 +1,12 @@
 2026-11-10
+- Build and CI: adopt CK Core Motif 44020a781 as the toolkit revision of this
+  batch (`.ckgit/motif-revision` and the rpi4 sister pin). It releases the
+  color server's property buffer once; the earlier revision aborted `dtwm` and
+  every other client of a desktop session with a double free when it read that
+  property. The revision also carries the toolkit's Editres, X reply, Xft
+  colour cache, D-Bus and UID file hardening. The desktop smoke test and the
+  matched native stack were validated against it, see
+  `validation/2026-11-10-batch5-hardening.json`.
 - dtfile: complete background file-operation protocol writes and fail safely
   when their control channel is lost. Conflict replies, modification notices,
   errors, completion records, rename results and create results now use the
