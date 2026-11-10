@@ -62,6 +62,12 @@ the database does not have used to be read and written outside those arrays.
 The query now ends with the error `991 The index of the database is damaged.`
 and the engine answers the next query.
 
+The exact search sets a bit and adds a weight for the record number of each
+entry of the list of its word. It refused numbers beyond the bit vector, which
+has room for up to seven more than the database can have, while the weight vector
+has room for none of them; it refuses every number the database cannot have
+now, with `invalid d99 record number`.
+
 `dtsrdelete` removes the addresses of the deleted documents from the list of
 each word and now marks the positions that come free at the end of the list
 with ones, like every other free position of the file; it left what it had

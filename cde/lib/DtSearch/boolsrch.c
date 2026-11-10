@@ -1340,8 +1340,12 @@ static void	read_stem_bitvec_WK (void)
 	/* Set correct bit in bitvec.
 	 * The byte number is the recno divided by 8.
 	 * The bit number is the remainder after division by 8.
+	 * A record number the database cannot have is a damaged index: the
+	 * bit vector has room for a few more than there are, the weight
+	 * vector for none.
 	 */
-	if ((byteno = d99recno >> 3) >= bitveclen) {
+	if ((byteno = d99recno >> 3) >= bitveclen ||
+	    d99recno >= tot_addr_count) {
 	    sprintf (msgbuf, CATGETS(dtsearch_catd, MS_boolsrch, 32,
 		"%s Database Error: %s '%s'\n"
 		"in database '%s' has invalid d99 record number %ld.") ,

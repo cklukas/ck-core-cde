@@ -98,6 +98,11 @@
   message is read however the pipe splits it, the last byte is a NUL, and the
   offsets of message and challenge strings must lie inside the message; other
   requests are ignored. Covered by `programs/dtlogin/tests/check-greeter-request.py`.
+- DtSearch: the exact search refuses a record number in the `.d99` file that the
+  database cannot have, also the few between the last record and the end of its
+  bit vector, which indexed the weight vector outside its storage. The unbuilt
+  `lib/DtSearch/mrclean.c`, the predecessor of `dtsrclean`, is removed. Covered
+  by `make -C programs/dtsr check`.
 - libtt: the lock file of the authority file is created with a create that
   fails when the name exists and does not follow a link, and the file the new
   entries are written to is made the same way, so a link planted in the

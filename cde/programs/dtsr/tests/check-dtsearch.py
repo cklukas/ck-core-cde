@@ -409,5 +409,28 @@ else:
     query_all("statistical query on a damaged address list", damaged / "dtsearch.ocf",
               work / "queries-damaged.txt")
 
+# The exact search sets a bit and a weight for every record number in the list
+# of its word: a number past the last record the database can have, but still
+# inside the last byte of the bit vector, damaged the weight vector.
+r = run([tool("dtsrdbrec"), str(work / "tdb")])
+slots = re.search(r"\(recslots\) is (\d+)", r.stdout)
+last = re.search(r"\(maxdba\) is (\d+)", r.stdout)
+r = run([tool("dtsrkdump"), "-t1", str(damaged / "tdb")])
+m = re.search(r'"%s"\s+\*?\s*dba=\S+\s+ofs=(\d+)\s+adr=(\d+)' % COMMON[1].upper(), r.stdout)
+if not (slots and last and m):
+    fail("cannot find the numbers of the database to damage a list of the exact search")
+else:
+    possible = (int(last.group(1)) + 1) // int(slots.group(1)) + 1
+    d99 = bytearray((damaged / "tdb.d99").read_bytes())
+    offset = int(m.group(1))
+    d99[offset:offset + ADDRESS] = ((possible << 8) | 5).to_bytes(ADDRESS, "big")
+    (damaged / "tdb.d99").write_bytes(bytes(d99))
+    other = vocabulary[20]
+    (work / "queries-damaged2.txt").write_text(
+        "WS\t%s\t!invalid d99 record number\n" % COMMON[1]
+        + "WS\t%s\t%s\n" % (other, " ".join(sorted(k for k, w, t in documents if other in w))))
+    query_all("exact query on a list with an impossible record number",
+              damaged / "dtsearch.ocf", work / "queries-damaged2.txt")
+
 print("%d failures" % len(failures))
 done(1 if failures else 0)

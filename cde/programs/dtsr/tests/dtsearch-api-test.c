@@ -6,8 +6,8 @@
  *
  * Each line of QUERY-FILE is "TYPE<TAB>QUERY<TAB>KEY KEY ...": the search type
  * (P, S or W), the query, and the record keys of the documents the query must
- * return, in any order, or "!damaged" for a query on a damaged index, which
- * must end with an error and a message that says so.  The databases are those
+ * return, in any order, or "!WORDS" for a query on a damaged index, which
+ * must end with an error and a message that contains WORDS.  The databases are those
  * the ocf file names.  The
  * program exits 0 if every query returned exactly the documents it should,
  * 1 if one did not, and 2 if the engine could not be started.
@@ -49,10 +49,18 @@ check_query(char *dbname, char type, char *query, char *expected_list)
     DtSrResult *results = NULL, *result;
     long resultscount = 0;
     int stemcount = 0;
-    int expected_count = split_keys(expected_list, expected, MAX_KEYS);
+    int must_fail = (expected_list[0] == '!');
+    char reason[160] = "";
+    int expected_count;
     int found_count = 0;
     int rc, i;
-    int must_fail = (expected_list[0] == '!');
+
+    if (must_fail) {
+	/* the words the message has to contain */
+	snprintf(reason, sizeof(reason), "%s", expected_list + 1);
+	reason[strcspn(reason, "\n")] = '\0';
+    }
+    expected_count = split_keys(expected_list, expected, MAX_KEYS);
 
     rc = DtSearchQuery(query, dbname, type, NULL, NULL, &results,
 		       &resultscount, stems, &stemcount);
@@ -61,7 +69,7 @@ check_query(char *dbname, char type, char *query, char *expected_list)
 	const char *messages = DtSearchGetMessages();
 
 	if ((rc == DtSrOK || rc == DtSrNOTAVAIL) ||
-	    messages == NULL || strstr(messages, "damaged") == NULL) {
+	    messages == NULL || strstr(messages, reason) == NULL) {
 	    fprintf(stderr, "FAIL %c '%s': the search returned %d: %s\n", type,
 		    query, rc, messages ? messages : "(no message)");
 	    DtSearchFreeMessages();
