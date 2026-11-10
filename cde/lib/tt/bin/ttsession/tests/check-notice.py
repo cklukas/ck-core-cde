@@ -98,9 +98,28 @@ def run_case(label, op):
 
 
 run_case("queue", "dleft_queue_notice")
-session.terminate()
-session.wait()
+
+# A session that is told to end leaves the portmapper: the main loop does it,
+# the signal handler only notes the signal.
 prog = sid.split()[2]
+
+
+def registered():
+    r = subprocess.run(["rpcinfo", "-p"], text=True, capture_output=True)
+    return [l for l in r.stdout.splitlines() if l.split()[:1] == [prog]]
+
+
+check("the session is registered", len(registered()) > 0)
+session.terminate()
+try:
+    code = session.wait(timeout=30)
+except subprocess.TimeoutExpired:
+    session.kill()
+    session.wait()
+    code = None
+left = registered()
+check("a session that is told to end exits", code == 1, "exit status %r" % code)
+check("... and takes itself out of the portmapper", not left, "\n".join(left))
 for vers in ("1", "4"):
     subprocess.run(["rpcinfo", "-d", prog, vers], stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL)

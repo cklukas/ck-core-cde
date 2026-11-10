@@ -69,6 +69,15 @@ static int Patch_ID100626_03;
 int			signal_types_changed = 0;
 int			signal_toggle_trace  = 0;
 
+// flags set by the signal handler for the end of the session, acted on by
+// the main loop: it unregisters the session from the portmapper and
+// releases what it holds, which a handler cannot do.
+// signal_terminate is the signal (SIGTERM, SIGINT) that asks the session to
+// end, signal_exit_status the exit status of the root process of a
+// process-tree session that has ended (-1 as long as it has not).
+volatile int		signal_terminate = 0;
+volatile int		signal_exit_status = -1;
+
 // option_classing_engine determines whether we use the Classing Engine
 // to read the ptype/otype database. It's starting value determines the
 // default. 
@@ -139,6 +148,7 @@ pid_t			failed_procs[MAXPIDS];
 
 // Forward declarations
 void install_signal_handler();
+static void end_session();
 void notify_start_failure();
 int init_types();
 void print_usage_and_exit();
@@ -660,12 +670,64 @@ int main(int argc, char **argv)
 				    "tt_trace_control( %d )", !was_on );
 			signal_toggle_trace = 0;
 		}
+		if (signal_exit_status >= 0 || signal_terminate) {
+			end_session();
+		}
 		if (_tt_s_mp->fout != _tt_s_mp->fin) {
 			notify_start_failure();
 		}
 	}
 	delete _tt_mp;
 	exit(0);
+}
+
+// The session ends: the root process of a process-tree session has exited
+// (exit with its status), or ttsession was told to end (exit with 1).  The
+// session is deleted, which takes it out of the portmapper.
+static void end_session()
+{
+	if (signal_exit_status >= 0) {
+		int status = signal_exit_status;
+
+		delete _tt_mp;
+		exit(status);
+	}
+
+	_tt_syslog( errstr, LOG_ERR, catgets( _ttcatd, 3, 20, "exiting" ));
+
+	// if this is a process tree system, let our kid know
+	// it's time to depart. It's important to allow the
+	// process tree root process to exit beforehand so
+	// that the controlling terminal will get properly
+	// reassigned. Otherwise, the SIGINT will cause the
+	// entire process hierarchy that has the same
+	// controlling terminal to exit (so for example your
+	// shelltool window would die because ttsession was
+	// killed in process-tree mode).
+
+	if (forked_pid > 0
+	    && 0 == kill(forked_pid, SIGINT)) {
+
+		// Wait for a decent interval to give him a chance
+		// to clean up
+
+		int i;
+		for (i=0; i<10; i++) {
+			sleep(1);
+			if (forked_pid ==
+			    waitpid(forked_pid, 0, WNOHANG)) {
+				break;
+			}
+		}
+		if (i==10) {
+			// Won't go away, eh?  Time to get tough.
+			if (0 == kill(forked_pid, SIGKILL)) {
+				waitpid(forked_pid, 0, 0);
+			}
+		}
+	}
+	delete _tt_mp;
+	exit(1);
 }
 
 #ifdef OPT_XTHREADS
@@ -902,10 +964,8 @@ sig_handler(int sig)
 			int isdead = status2exit >= 0;
 			if (isdead) {
 				if (child_pid == forked_pid) {
-					// calling free in a sig handler is a no-no
-					// delete _tt_mp;
-					exit(status2exit);
-
+					// the main loop ends the session
+					signal_exit_status = status2exit;
 				}
 				else
 #ifdef OPT_XTHREADS
@@ -944,43 +1004,14 @@ sig_handler(int sig)
 		}
 		// The child ttsession falls through to clean itself up
 	      case SIGINT:
-		_tt_syslog( errstr, LOG_ERR,
-			    catgets( _ttcatd, 3, 20, "exiting" ));
-
-		// if this is a process tree system, let our kid know
-		// it's time to depart. It's important to allow the
-		// process tree root process to exit beforehand so
-		// that the controlling terminal will get properly
-		// reassigned. Otherwise, the SIGINT will cause the
-		// entire process hierarchy that has the same
-		// controlling terminal to exit (so for example your
-		// shelltool window would die because ttsession was
-		// killed in process-tree mode).
-		
-		if (forked_pid > 0
-		    && 0 == kill(forked_pid, SIGINT)) {
-
-			// Wait for a decent interval to give him a chance
-			// to clean up
-
-			int i;
-			for (i=0; i<10; i++) {
-				sleep(1);
-				if (forked_pid ==
-				    waitpid(forked_pid, 0, WNOHANG)) {
-					break;
-				}
-			}
-			if (i==10) {
-				// Won't go away, eh?  Time to get tough.
-				if (0 == kill(forked_pid, SIGKILL)) {
-					waitpid(forked_pid, 0, 0);
-				}
-			}
+		// the main loop does it (see end_session): a handler cannot
+		// release what the session holds or take it out of the
+		// portmapper
+		if (_tt_s_mp == 0) {
+			_exit(1);
 		}
-		// calling free in a sig handler is a no-no
-		// delete _tt_mp;
-		exit(1);
+		signal_terminate = sig;
+		_tt_s_mp->exit_main_loop = 1;
 		break;
 	      case SIGUSR1:
 		// signal to toggle message tracing

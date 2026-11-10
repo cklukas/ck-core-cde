@@ -98,6 +98,11 @@
   message is read however the pipe splits it, the last byte is a NUL, and the
   offsets of message and challenge strings must lie inside the message; other
   requests are ignored. Covered by `programs/dtlogin/tests/check-greeter-request.py`.
+- ttsession: a session that is told to end with `SIGTERM` or `SIGINT`, or whose
+  process-tree root process exits, is taken out of the portmapper. The signal
+  handler used to call `exit()` and left the registration behind; it now notes the
+  signal and the main loop deletes the session and exits. Covered by
+  `make -C lib/tt/bin/ttsession check`.
 - rpc.ttdbserverd: a property no longer takes more values, a file or object more
   properties, and a file more objects than a reply can list: the request that
   would be one too many is refused with `TT_DB_ERR_DISK_FULL` (`TT_ERR_DBFULL`).

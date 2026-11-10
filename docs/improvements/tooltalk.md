@@ -81,6 +81,17 @@ fail the message: the observers of a notice sent with `TT_QUEUE` got it as
 notices a process received counted every one twice. The notice is delivered to
 its observers once.
 
+## Ending a session
+
+`ttsession` registers its session with the portmapper. When it was told to end
+(`SIGTERM`, `SIGINT`) or the root process of a process-tree session exited, the
+signal handler called `exit()` and the registration stayed: the portmapper listed
+a program that nothing served, and a client that looked for the session got a
+connection refused. The handler now only notes the signal and the main loop ends
+the session: it stops the root process of a process-tree session, deletes the
+session, which takes it out of the portmapper, and exits (with status 1 when it
+was told to end, with the status of the root process otherwise).
+
 ## Environment of started programs
 
 A context of a message whose name begins with `$` becomes an environment
@@ -518,7 +529,8 @@ starts when the portmapper is available.
 `make -C lib/tt/bin/ttsession check` starts a process-tree `ttsession` of its own
 (when the portmapper is there to register it with), lets one client observe an
 operation and another send a notice with `TT_QUEUE`, and checks that the observer
-receives it once, as sent.
+receives it once, as sent, and that a session that is told to end exits and is no
+longer registered with the portmapper.
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
 with the sanitizers next to a test program and runs each case in its own
