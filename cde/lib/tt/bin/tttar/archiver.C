@@ -45,6 +45,7 @@
 #include "Tt/tt_c.h"
 #include "util/copyright.h"
 #include "util/tt_gettext.h"
+#include "util/tt_spawn.h"
 #include "tttar_utils.h"
 #include "tttar_file_utils.h"
 #include "tttar_api.h"
@@ -94,7 +95,7 @@ archiver::
 }
 
 /*
- * archiver::do_tar() - Invoke tar(1) using system()
+ * archiver::do_tar() - Run tar(1), directly and not through a shell
  *	If _mode is CREATE,  do_tttarfile means "also archive tttarfile".
  *	If _mode is EXTRACT, do_tttarfile means "only extract tttarfile".
  */
@@ -104,7 +105,9 @@ do_tar( _Tt_string tttardir, bool_t do_tttarfile )
 	char		_curdir[ MAXPATHLEN+1 ];
 	_Tt_string	curdir;
 	int		status2return;
-	_Tt_string	cmd( "tar " );
+	_Tt_argv	argv;
+	_Tt_string	options;
+	bool_t		built = argv.add( "tar" );
 	_Tt_string	exclude_file;
 
 	/*
@@ -137,29 +140,29 @@ do_tar( _Tt_string tttardir, bool_t do_tttarfile )
 	}
 	switch (_mode) {
 	    case CREATE:
-		cmd = cmd.cat( "c" );
+		options = options.cat( "c" );
 		break;
 	    case EXTRACT:
-		cmd = cmd.cat( "x" );
+		options = options.cat( "x" );
 		break;
 	    case LIST:
-		cmd = cmd.cat( "t" );
+		options = options.cat( "t" );
 		break;
 	    case NO_MODE:
 	    default:
 		return 1;
 	}
 	for (int n = 0; n < _verbosity; n++) {
-		cmd = cmd.cat( "v" );
+		options = options.cat( "v" );
 	}
 	if (_follow_symlinks) {
-		cmd = cmd.cat( "h" );
+		options = options.cat( "h" );
 	}
 	if (_preserve_modes) {
-		cmd = cmd.cat( "p" );
+		options = options.cat( "p" );
 	}
 	if (_tarfile_arg.len() != 0) {
-		cmd = cmd.cat( "f" );
+		options = options.cat( "f" );
 	}
 	/*
 	 * If we're extracting and we don't want the tttarfile, we
@@ -171,10 +174,10 @@ do_tar( _Tt_string tttardir, bool_t do_tttarfile )
 
 	if ((_mode == EXTRACT) && (! do_tttarfile) && (!_only_1_look_at_tarfile))
 	{
-		cmd = cmd.cat( "X" );
+		options = options.cat( "X" );
 	}
+	built = built && argv.add( options );
 	if (_tarfile_arg.len() != 0) {
-		cmd = cmd.cat( " " );
 		/*
 		 * If we've chdir()'d to our temp dir to extract the
 		 * tttarfile, then be sure to prepend the old cwd
@@ -184,23 +187,26 @@ do_tar( _Tt_string tttardir, bool_t do_tttarfile )
 		     && (_mode == EXTRACT)
 		     && (_tarfile_arg[0] != '/'))
 		{
-			cmd = cmd.cat( curdir ).cat( "/" );
+			built = built && argv.add( curdir.cat( "/" )
+						   .cat( _tarfile_arg ));
+		} else {
+			built = built && argv.add( _tarfile_arg );
 		}
-		cmd = cmd.cat( _tarfile_arg );
 	}
 	_Tt_string_list_cursor pathc( _paths2tar );
 	switch (_mode) {
 	    case CREATE:
-		while (pathc.next()) {
-			cmd = cmd.cat( " " ).cat( *pathc );
+		while (built && pathc.next()) {
+			built = argv.add( *pathc );
 		}
 		/*
 		 * Have tar dip into our temporary directory and
 		 * pick up the tttarfile.
 		 */
 		if (do_tttarfile) {
-			cmd = cmd.cat( " -C " ).cat( tttardir ).
-				cat( " tttarfile" );
+			built = built && argv.add( "-C" )
+				&& argv.add( tttardir )
+				&& argv.add( "tttarfile" );
 		}
 		break;
 	    case EXTRACT:
@@ -208,7 +214,7 @@ do_tar( _Tt_string tttardir, bool_t do_tttarfile )
 			/*
 			 * Only extract the tttarfile.
 			 */
-			cmd = cmd.cat( " tttarfile" );
+			built = built && argv.add( "tttarfile" );
 		} else {
 			if (_only_1_look_at_tarfile) {
 				/*
@@ -221,7 +227,7 @@ do_tar( _Tt_string tttardir, bool_t do_tttarfile )
 				 * if we are being picky in what we extract.
 				 */
 				if (_paths2tar->count() > 0) {
-					cmd = cmd.cat( " tttarfile" );
+					built = built && argv.add( "tttarfile" );
 				}
 			} else {
 				/*
@@ -230,15 +236,15 @@ do_tar( _Tt_string tttardir, bool_t do_tttarfile )
 				exclude_file = tttardir.cat( "/tar.exclude" );
 				FILE *fp = fopen( (char *)exclude_file, "w" );
 				if (fp == NULL) {
-					cmd = cmd.cat( " /dev/null" );
+					built = built && argv.add( "/dev/null" );
 				} else {
 					fprintf( fp, "tttarfile\n" );
 					fclose( fp );
-					cmd = cmd.cat( " " ).cat( exclude_file );
+					built = built && argv.add( exclude_file );
 				}
 			}
-			while (pathc.next()) {
-				cmd = cmd.cat( " " ).cat( *pathc );
+			while (built && pathc.next()) {
+				built = argv.add( *pathc );
 			}
 		}
 		break;
@@ -248,14 +254,20 @@ do_tar( _Tt_string tttardir, bool_t do_tttarfile )
 	    default:
 		return 1;
 	}
-	//printf( "Invoking: %s\n", (char *)cmd );
-	int sys_status = system( (char *)cmd );
-	if (WIFEXITED(sys_status)) {
+	int sys_status = -1;
+	if (built) {
+		sys_status = _tt_run( argv );
+	} else {
+		fprintf( stderr, "%s: %s\n", (char *)_process_name,
+			 strerror(ENOMEM) );
+	}
+	if (sys_status != -1 && WIFEXITED(sys_status)) {
 		status2return = WEXITSTATUS(sys_status);
 	} else {
 		fprintf( stderr,
-			 "%s: system(\"%s\"): %d\n",
-			 (char *)_process_name, (char *)cmd, sys_status );
+			 "%s: \"%s\": %d\n",
+			 (char *)_process_name, (char *)argv.text(),
+			 sys_status );
 		status2return = 1;
 	}
 	if (_mode == EXTRACT) {

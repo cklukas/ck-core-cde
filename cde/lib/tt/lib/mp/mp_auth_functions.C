@@ -56,6 +56,7 @@ Author: Ralph Mor, X Consortium
 #include <stdlib.h>
 #include <X11/Xos.h>
 #include "mp/mp_auth_functions.h"
+#include "util/tt_secure_env.h"
 
 #ifndef O_CLOEXEC
 #define O_CLOEXEC 0
@@ -98,15 +99,22 @@ _tt_AuthFileName ()
 
 {
     static char slashDotTTauthority[] = "/.TTauthority";
-    char    	*name;
+    char    	*file;
+    const char 	*name;
     static char	*buf;
     static int	bsize;
     int	    	size;
 
-    if (name = getenv ("TTAUTHORITY"))
-	return (name);
+    /*
+     * A process that runs with other privileges than the user who started
+     * it does not take the file from the environment: the user's home
+     * directory is the one the password database names.
+     */
+    file = _tt_secure_getenv ("TTAUTHORITY");
+    if (file)
+	return (file);
 
-    name = getenv ("HOME");
+    name = _tt_secure_home ();
 
     if (!name)
     {

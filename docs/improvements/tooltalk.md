@@ -118,6 +118,42 @@ A program that used to receive one of the dropped variables from a message stops
 getting it. Approve the name in `TOOLTALK_START_ENV`, or set the variable in the
 start string of the ptype, which the person who installs the ptype controls.
 
+## Environment of libtt in a privileged process
+
+A program that runs with other privileges than the user who started it (a
+set-user-ID or set-group-ID program, or one that has raised its effective ids)
+acts for its owner, but its environment is the user's. libtt treats the
+following settings as not set when the effective user or group id of the process
+differs from the real one:
+
+| Setting | What it would name |
+|---|---|
+| `TTSESSION_CMD`, `SUN_TTSESSION_CMD` | the command that starts `ttsession` |
+| `TT_TRACE_SCRIPT` | a trace script, which can name a file to write |
+| `LD_LIBRARY_PATH` | the directories libtt searches for the X libraries it loads |
+| `TTAUTHORITY` | the authority file |
+| `TTPATH`, `OPENWINHOME`, `DTMOUNTPOINT`, `DTAUTOMOUNTPOINT`, the variables that name a map file | the places libtt reads its type, host and partition files from |
+| `HOME` | the home directory, which is then the one the password database gives the real user |
+
+A client that finds no `ttsession` starts one. A process with other privileges
+starts it with the real user and group ids of the process, given up for good
+before anything is run, so the session never runs with the privileges of the
+program that started it.
+
+`TTSESSION_CMD` is a command, not a line for a shell: a program and its
+arguments separated by white space, to which `-d` and the display name are
+added. Quotes, redirections, variables and `;` in it are passed to the program as
+they stand. A command that needs a shell goes into a script. The display name is
+one argument of the command whatever it contains.
+
+The tools `ttcp`, `ttmv`, `ttrm`, `tttar` and `tt_type_comp` run `cp`, `mv`, `rm`,
+`tar` and the C preprocessor directly, with each name and option as one
+argument. File names with blanks or characters a shell treats specially work and
+are never interpreted; a name that contains `*` is that name and not a pattern
+(the shell that starts the tool still expands what the user types). The options
+that `tt_type_comp` passes to the preprocessor are no longer limited by the
+length of a fixed command line.
+
 ## Database server
 
 `rpc.ttdbserverd` keeps the files and objects ToolTalk knows about, with their
@@ -411,6 +447,19 @@ tables, and the names of the files below it follow (the name of the file itself
 had a `/` put after it, and those below it two).
 
 ## Checks
+
+`make -C lib/tt/lib check` compiles the production sources that read the
+environment and start programs next to a test program, with the sanitizers, and
+simulates a process with other effective than real ids. It covers the settings
+above in a plain and a privileged process, the arguments `ttsession` is started
+with (a display name or a command that holds shell characters, a command of
+several words), the running of programs and pipelines without a shell, and, when
+the superuser starts the test with `TT_ENV_TEST_REAL_UID` and
+`TT_ENV_TEST_REAL_GID`, a real set-user-ID process that starts `ttsession` and
+must give up its privileges. `make -C lib/tt/bin check` runs the built `ttrm`,
+`ttmv`, `ttcp`, `tttar` and `tt_type_comp` on names and options with blanks and
+shell characters; `tttar` runs against a process-tree `ttsession` that the test
+starts when the portmapper is available.
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
 with the sanitizers next to a test program and runs each case in its own

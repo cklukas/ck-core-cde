@@ -49,6 +49,7 @@
 #include "Tt/tt_c.h"
 #include "util/tt_path.h"
 #include "util/tt_gettext.h"
+#include "util/tt_spawn.h"
 #include "util/copyright.h"
 #include "remover.h"
 
@@ -87,32 +88,35 @@ remover::
 }
 
 /*
- * remover::do_rm() - Invoke rm[dir](1), and return its exit status.
+ * remover::do_rm() - Run rm[dir](1), and return its exit status.
+ *	The program is run directly, not through a shell, so the arguments
+ *	reach it exactly as they were given to us.
  *	We can just use _args, since we never get here when our one
  *	incompatible option (-L) has been given.
  */
 int remover::
 do_rm()
 {
-	_Tt_string		cmd;
+	_Tt_argv		argv;
 	_Tt_string_list_cursor	arg_cursor( _args );
+	bool_t			built = argv.add( _am_rmdir ? "rmdir" : "rm" );
 
-	if (_am_rmdir) {
-		cmd = "rmdir";
-	} else {
-		cmd = "rm";
+	while (built && arg_cursor.next()) {
+		built = argv.add( *arg_cursor );
 	}
-	while (arg_cursor.next()) {
-		cmd = cmd.cat( " " ).cat( *arg_cursor );
+	if (! built) {
+		fprintf( stderr, "%s: %s\n", (char *)_process_name,
+			 strerror(ENOMEM) );
+		return 1;
 	}
-	//printf( "Invoking: %s\n", (char *)cmd );
-	int sys_status = system( (char *)cmd );
-	if (WIFEXITED(sys_status)) {
+	int sys_status = _tt_run( argv );
+	if (sys_status != -1 && WIFEXITED(sys_status)) {
 		return WEXITSTATUS(sys_status);
 	} else {
 		fprintf( stderr,
-			 "%s: system(\"%s\"): %d\n",
-			 (char *)_process_name, (char *)cmd, sys_status );
+			 "%s: \"%s\": %d\n",
+			 (char *)_process_name, (char *)argv.text(),
+			 sys_status );
 		return 1;
 	}
 }

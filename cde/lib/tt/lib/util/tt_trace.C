@@ -36,6 +36,7 @@
 #include "util/tt_global_env.h"
 #include "util/tt_trace.h"
 #include "util/tt_port.h"
+#include "util/tt_secure_env.h"
 #include "util/tt_gettext.h"
 #include "util/tt_trace_stream.h"
 #include "util/tt_enumname.h"
@@ -88,8 +89,11 @@ _Tt_trace::init(
 		toggle();
 		return any_tracing();
 	}
-	// (re-)initialize tracing
-	_Tt_string script = getenv( TRACE_SCRIPT );
+	// (re-)initialize tracing.  The script, or the file that holds it,
+	// and the file it names for the output belong to the user who
+	// started the process: a process with other privileges than that
+	// user does not read the variable.
+	_Tt_string script = _tt_secure_getenv( TRACE_SCRIPT );
 	if (script.len() <= 0) {
 		if (! even_if_no_envariable) {
 			return any_tracing();
@@ -110,13 +114,13 @@ _Tt_trace::init(
 	{
 		// script holds a filename
 		int script_fd = open( (char *)script, O_RDONLY );
-		fcntl(script_fd, F_SETFD, 1);	/* Close on exec */
 		if (script_fd < 0) {
 			_tt_syslog( 0, LOG_ERR, "$%s=%s: %m",
 				    TRACE_SCRIPT,
 				    script.operator const char *() );
 			return any_tracing();
 		}
+		fcntl(script_fd, F_SETFD, FD_CLOEXEC);
 		*_pstream = new _Tt_trace_stream( script_fd );
 		init_status = (*_pstream)->init();
 		close( script_fd );

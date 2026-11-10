@@ -44,6 +44,7 @@
 #include "Tt/tt_c.h"
 #include "util/tt_path.h"
 #include "util/tt_gettext.h"
+#include "util/tt_spawn.h"
 #include "util/copyright.h"
 #include "copier.h"
 
@@ -84,33 +85,42 @@ copier::
 }
 
 /*
- * copier::do_cp() - Use system() to invoke cp(1), and return its exit status.
+ * copier::do_cp() - Run cp(1), and return its exit status.
+ *	The program is run directly, not through a shell, so the arguments
+ *	reach it exactly as they were given to us.
  *	We can just use _args, since we never get here when our one
  *	cp-incompatible option (-L) has been given.
  */
 int copier::
 do_cp()
 {
-	_Tt_string		cmd( "cp" );
+	_Tt_argv		argv;
 	_Tt_string_list_cursor	arg_cursor( _args );
+	bool_t			built = argv.add( "cp" );
 
-	while (arg_cursor.next()) {
-		cmd = cmd.cat( " " ).cat( *arg_cursor );
+	while (built && arg_cursor.next()) {
+		built = argv.add( *arg_cursor );
 	}
-	//printf( "Invoking: %s\n", (char *)cmd );
-	int sys_status = system( (char *)cmd );
-	if (WIFEXITED(sys_status)) {
+	if (! built) {
+		fprintf( stderr, "%s: %s\n", (char *)_process_name,
+			 strerror(ENOMEM) );
+		return 1;
+	}
+	int sys_status = _tt_run( argv );
+	if (sys_status != -1 && WIFEXITED(sys_status)) {
 		return WEXITSTATUS(sys_status);
 	} else {
 		fprintf( stderr,
-			 "%s: system(\"%s\"): %d\n",
-			 (char *)_process_name, (char *)cmd, sys_status );
+			 "%s: \"%s\": %d\n",
+			 (char *)_process_name, (char *)argv.text(),
+			 sys_status );
 		return 1;
 	}
 }
 
 /*
  * copier::do_ttcp() - Use tttar(1) to copy the objects of the _from_paths.
+ * The programs are run directly, not through a shell.
  *
  * Algorithm:
  *
@@ -127,9 +137,14 @@ do_cp()
 Tt_status copier::
 do_ttcp()
 {
-	_Tt_string		cmd;
+	_Tt_argv		producer, consumer;
+	const char	       *producer_dir = NULL;
+	const char	       *consumer_dir = NULL;
+	_Tt_string		from_dir;
 	_Tt_string_list_cursor	from_path_cursor( _from_paths );
 	Tt_status		err;
+	bool_t			built;
+	char			realpath_buf[ MAXPATHLEN ];
 
 	if (_clonedir_mode) {
 #ifdef DO_TTTAR_AFTER_CP
@@ -137,9 +152,11 @@ do_ttcp()
 			return TT_ERR_PATH;
 		}
 #endif
-		cmd = cmd.cat( "cd " ).cat( _from_paths->top()).cat( " ; ");
+		from_dir = _from_paths->top();
+		producer_dir = (char *)from_dir;
 	}
-	cmd = cmd.cat( "tttar cfhL -" );
+	built = producer.add( "tttar" ) && producer.add( "cfhL" )
+		&& producer.add( "-" );
 	while (from_path_cursor.next()) {
 		_Tt_string from_path = *from_path_cursor;
 		if (! this->can_cp( from_path )) {
@@ -184,19 +201,16 @@ do_ttcp()
 		 * In clonedir mode, we just tttar up everything in
 		 * the directory we're cloning.
 		 */
-		cmd = cmd.cat( " ." );
+		built = built && producer.add( "." );
 	} else {
 		from_path_cursor.reset();
-		while (from_path_cursor.next()) {
-			cmd = cmd.cat( " " ).cat( *from_path_cursor );
+		while (built && from_path_cursor.next()) {
+			built = producer.add( *from_path_cursor );
 		}
 	}
-	cmd = cmd.cat( " |" );
+	_Tt_string to_dir;
 	if (_to_path_is_dir) {
-		cmd = cmd.cat( " ( cd " );
 		if (_clonedir_mode) {
-			char		realpath_buf[ MAXPATHLEN ];
-
 			/*
 			 * If we're in _clonedir_mode, then we'll be
 			 * cd'ing down into _from_path, and so we want
@@ -212,26 +226,23 @@ do_ttcp()
 					 (char *)_to_path, strerror(errno) );
 				return TT_ERR_PATH;
 			}
-			cmd = cmd.cat( real_to_path );
+			to_dir = real_to_path;
 		} else {
-			cmd = cmd.cat( _to_path );
+			to_dir = _to_path;
 		}
-		cmd = cmd.cat( " ;" );
+		consumer_dir = (char *)to_dir;
 	}
-	cmd = cmd.cat( " tttar xfL" );
-	if (_preserve) {
-		cmd = cmd.cat( "p" );
-	}
-	cmd = cmd.cat( " -" );
+	built = built && consumer.add( "tttar" )
+		&& consumer.add( _preserve ? "xfLp" : "xfL" )
+		&& consumer.add( "-" );
 	/*
 	 * Use the hack we built into tttar(1) to rename paths
 	 * as they're extracted.  Rename each _from_path to _to_path.
 	 */
 	from_path_cursor.reset();
-	while (from_path_cursor.next()) {
+	while (built && from_path_cursor.next()) {
 		_Tt_string from_path = *from_path_cursor;
-		cmd = cmd.cat( " -rename " ).cat( from_path )
-			 .cat( " " ).cat( _to_path );
+		_Tt_string renamed = _to_path;
 		/*
 		 * If the copy is to be made in a subdirectory of _to_path,
 		 * make tttar maps _from_path to the appropriate
@@ -239,15 +250,19 @@ do_ttcp()
 		 */
 		if ((_to_path_is_dir) && (! _clonedir_mode)) {
 			_Tt_string dir_name;
-			cmd = cmd.cat( "/" )
+			renamed = renamed.cat( "/" )
 				 .cat( from_path.rsplit( '/', dir_name ));
 		}
+		built = consumer.add( "-rename" ) && consumer.add( from_path )
+			&& consumer.add( renamed );
 	}
-	if (_to_path_is_dir) {
-		cmd = cmd.cat( " )" );
+	if (! built) {
+		fprintf( stderr, "%s: %s\n", (char *)_process_name,
+			 strerror(ENOMEM) );
+		return TT_ERR_INTERNAL;
 	}
-	//printf( "Invoking: %s\n", (char *)cmd );
-	int sys_status = system( (char *)cmd );
+	int sys_status = _tt_run_pipeline( producer_dir, producer,
+					   consumer_dir, consumer );
 #ifdef DO_TTTAR_AFTER_CP
 	if (_clonedir_mode) {
 		/*
@@ -262,7 +277,7 @@ do_ttcp()
 		}
 	}
 #endif
-	if (WIFEXITED(sys_status)) {
+	if (sys_status != -1 && WIFEXITED(sys_status)) {
 		if (WEXITSTATUS(sys_status) == 0) {
 			return TT_OK;
 		} else {
@@ -270,8 +285,9 @@ do_ttcp()
 		}
 	} else {
 		fprintf( stderr,
-			 "%s: system(\"%s\"): %d\n",
-			 (char *)_process_name, (char *)cmd, sys_status );
+			 "%s: \"%s\" | \"%s\": %d\n",
+			 (char *)_process_name, (char *)producer.text(),
+			 (char *)consumer.text(), sys_status );
 		return TT_ERR_INTERNAL;
 	}
 

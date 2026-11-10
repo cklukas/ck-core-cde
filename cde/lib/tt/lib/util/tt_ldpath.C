@@ -38,6 +38,7 @@
 #include <errno.h>
 #include "util/tt_string.h"
 #include "util/tt_port.h"
+#include "util/tt_secure_env.h"
 #include <stdio.h>
 #include <string.h>     
 
@@ -120,8 +121,12 @@ tt_ldpath(_Tt_string libname, _Tt_string &path)
 	_Tt_string	ldpath;
 	_Tt_string	tried;
 
-	if (getenv("LD_LIBRARY_PATH") != (char *)0) {
-		ldpath = getenv("LD_LIBRARY_PATH");
+	// the libraries are loaded into this process, so a process that runs
+	// with other privileges than the user who started it takes them
+	// from the standard directories only
+	const char *envpath = _tt_secure_getenv("LD_LIBRARY_PATH");
+	if (envpath != (char *)0) {
+		ldpath = envpath;
 		ldpath = ldpath.cat(":/lib:/usr/lib:/usr/local/lib");
 	} else {
 		ldpath = "/lib:/usr/lib:/usr/local/lib";

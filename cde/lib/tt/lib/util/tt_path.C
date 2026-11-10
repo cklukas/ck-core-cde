@@ -44,6 +44,7 @@
 #include "util/tt_file_system.h"
 #include "util/tt_host.h"
 #include "util/tt_global_env.h"
+#include "util/tt_secure_env.h"
 #include "util/tt_host_equiv.h"
 
 /* Included after "util/tt_string.h" to avoid index/strchr conflicts. */
@@ -360,7 +361,7 @@ _tt_network_path_to_local_path(const _Tt_string &network_path)
 			entry = file_system.findMountEntry(network_path);
 			if (entry.is_null()) {
 
-				char * tmp_path = getenv("DTMOUNTPOINT");
+				char * tmp_path = _tt_secure_getenv("DTMOUNTPOINT");
 
 				// Can\'t find a usable mount. In desperation,
 				// try to invoke the automounter.  If the
@@ -411,7 +412,7 @@ _tt_network_path_to_local_path(const _Tt_string &network_path)
 	//
 
 	// Fetch automount prefix
-	_Tt_string automnt_prefix = getenv("DTAUTOMOUNTPOINT");
+	_Tt_string automnt_prefix = _tt_secure_getenv("DTAUTOMOUNTPOINT");
 	if (!automnt_prefix.len()) {
 	    // use default
 	    automnt_prefix = "/tmp_mnt/";
@@ -470,7 +471,7 @@ _Tt_string _tt_user_path (_Tt_string file,
  
 	// If the user evnironment variable is set, that takes priority
 	if (user_env.len()) {
-		path = getenv(user_env);
+		path = _tt_secure_getenv(user_env);
 		if (path.len()) {
 			if (!stat((char *)path, &stat_buf)) {
 				return path;
@@ -482,7 +483,7 @@ _Tt_string _tt_user_path (_Tt_string file,
 
 	// Only do more of a file was specified...
 	if (file.len()) {
-        	_Tt_string tt_path = getenv("TTPATH");
+        	_Tt_string tt_path = _tt_secure_getenv("TTPATH");
        		_Tt_string user_path = (char *)0;
         	_Tt_string system_path = (char *)0;
         	_Tt_string network_path = (char *)0;
@@ -541,7 +542,7 @@ _Tt_string _tt_user_path (_Tt_string file,
                         	}
 			}
 
-        		path = getenv("HOME");
+        		path = _tt_secure_home();
         		path = path.cat("/.tt/").cat(file);
 			if (!stat((char *)path, &stat_buf)) {
 				return path;
@@ -571,7 +572,7 @@ _Tt_string _tt_user_path (_Tt_string file,
                         	}     
 			}
 
-        		path = getenv("OPENWINHOME");
+        		path = _tt_secure_getenv("OPENWINHOME");
         		if (path.len()) {
                 		path = path.cat("/etc/tt/").cat(file);
 				if (!stat((char *)path, &stat_buf)) {

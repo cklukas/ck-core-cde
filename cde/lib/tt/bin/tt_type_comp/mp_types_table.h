@@ -47,6 +47,7 @@
 #include "mp_signature_utils.h"
 #include "mp/mp_context.h"
 #include "util/tt_list.h"
+#include "util/tt_spawn.h"
 #include "util/tt_string.h"
 #include "util/tt_table.h"
 #include <stdio.h>
@@ -72,7 +73,7 @@ enum _Tt_parse_status {
 	_TT_PARSE_ERROR
 };
 
-extern _Tt_string cpp_options;
+extern _Tt_argv cpp_options;
 
 class _Tt_types_table : public _Tt_object {
       public:
@@ -124,6 +125,7 @@ class _Tt_types_table : public _Tt_object {
 	_Tt_otype_table_ptr		otable;
 	_Tt_otype_table_cursor		otc;
 	FILE			*yyin;
+	int			_cpp_pid;
 	_Tt_string		_file_name;
 	int			_yylineno;
 	_Tt_otype_ptr		tmp_otype;

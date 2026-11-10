@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include "util/tt_string.h"
 #include "tt_options.h"
+#include "util/tt_secure_env.h"
 
 #if defined(OPT_DGETTEXT)
 # if defined(OPT_BUG_SUNOS_4)
@@ -86,10 +87,10 @@ _tt_gettext(
 		// Otherwise try /usr/openwin/lib/locale, the standard
 		// location, as a last resort.
 
-		if(envvar = getenv("TOOLTALKHOME")) {
+		if(envvar = _tt_secure_getenv("TOOLTALKHOME")) {
 			path = envvar;
 			path = path.cat("/locale");
-		} else if (envvar = getenv("OPENWINHOME")) {
+		} else if (envvar = _tt_secure_getenv("OPENWINHOME")) {
 			path = envvar;
 			path = path.cat("/lib/locale");
 		} else {

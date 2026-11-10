@@ -120,6 +120,22 @@
   of indirect-query clients is bounded and expires, and the debug log of a
   report with a long client address no longer overflows its buffer. Covered by
   `programs/dtlogin/tests/check-chooser.py`.
+- libtt: a process that runs with other privileges than the user who started
+  it (set-user-ID or set-group-ID programs) no longer reads `TTSESSION_CMD`,
+  `TT_TRACE_SCRIPT`, `LD_LIBRARY_PATH`, `TTAUTHORITY`, `TTPATH`,
+  `OPENWINHOME`, `DTMOUNTPOINT` and `DTAUTOMOUNTPOINT` from its environment, and
+  takes the home directory from the password database. The `ttsession` that
+  such a client starts runs with the real user and group ids, given up for good.
+  `TTSESSION_CMD` is now a program with its arguments, not a line for a shell,
+  and the display name reaches `ttsession` as one argument. The tools `ttcp`,
+  `ttmv`, `ttrm`, `tttar` and `tt_type_comp` run `cp`, `mv`, `rm`, `tar` and the
+  preprocessor directly, so file names with blanks and shell characters work and
+  `tt_type_comp` no longer has a fixed limit on the length of its preprocessor
+  options. The `ttrcp` source, which no build ever compiled and which built
+  `rsh` command lines from file names, is removed. Covered by
+  `make -C lib/tt/lib check` (sanitizer cases with a
+  simulated and, started as the superuser, a real privileged process) and
+  `make -C lib/tt/bin check`.
 - dtfile: remove the last raw, pointer-bearing `FileData` directory-worker
   packet. Removed-entry tombstones are now packed into bounded `FileData2`
   records and sent with complete writes; oversized or incomplete records fail

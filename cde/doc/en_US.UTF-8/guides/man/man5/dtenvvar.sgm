@@ -511,9 +511,12 @@ Refer to
 <VarListEntry>
 <Term><Emphasis>TTSESSION_CMD</Emphasis></Term>
 <ListItem>
-<Para>This specifies the shell command to be used by all ToolTalk clients
+<Para>This specifies the command to be used by all ToolTalk clients
 for auto-starting
-<Command>ttsession</Command>. Refer to &cdeman.ttsession; for more information.
+<Command>ttsession</Command>: a program and its arguments, separated by white
+space. The command is not run by a shell, and clients that run with other
+privileges than the user who started them ignore the variable.
+Refer to &cdeman.ttsession; for more information.
 </Para>
 </ListItem>
 </VarListEntry>

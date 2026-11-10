@@ -20,53 +20,45 @@
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
-//%%  (c) Copyright 1993, 1994 Hewlett-Packard Company			
-//%%  (c) Copyright 1993, 1994 International Business Machines Corp.	
-//%%  (c) Copyright 1993, 1994 Sun Microsystems, Inc.			
-//%%  (c) Copyright 1993, 1994 Novell, Inc. 				
-//%%  $XConsortium: ttrcp.C /main/3 1995/10/20 16:37:27 rswiston $ 			 				
 /*
- * ttrcp.cc - Link Service/ToolTalk wrapper for rcp(1).
+ * tt_secure_env.C
  *
- * Copyright (c) 1990 by Sun Microsystems, Inc.
- *
+ * See tt_secure_env.h.
  */
 
 #include <stdlib.h>
-#include <locale.h>
-#include <util/copyright.h>
-#include "rcopier.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <string.h>
+#include "util/tt_secure_env.h"
 
-TT_INSERT_COPYRIGHT
-
-/*
- * main()
- */
-void
-main(int argc, char **argv)
+int
+_tt_privileged_process(void)
 {
-	Tt_status	tterr = TT_OK;
-	rcopier	       *ttrcp = new rcopier( argv[0] );
+	return (geteuid() != getuid()) || (getegid() != getgid());
+}
 
-	setlocale( LC_ALL, "" );
-	ttrcp->parse_args( argc, argv );
-
-	if (ttrcp->should_rcp()) {
-		int err = ttrcp->do_rcp();
-		if (err != 0) {
-			exit( err );
-		}
+char *
+_tt_secure_getenv(const char *name)
+{
+	if (name == 0 || _tt_privileged_process()) {
+		return 0;
 	}
+	return getenv(name);
+}
 
-	tterr = ttrcp->open_tt();
-	if (ttrcp->tt_opened()) {
-		tterr = ttrcp->do_ttrcp();
+const char *
+_tt_secure_home(void)
+{
+	if (! _tt_privileged_process()) {
+		return getenv("HOME");
 	}
-	(void)ttrcp->close_tt();
-
-	if (tterr > TT_WRN_LAST) {
-		exit(1);
-	} else {
-		exit(0);
+	// the home directory of the user who started the program, not the
+	// one the environment names; the entry lives in static storage
+	struct passwd *pw = getpwuid(getuid());
+	if (pw == 0 || pw->pw_dir == 0 || pw->pw_dir[0] != '/') {
+		return 0;
 	}
+	return pw->pw_dir;
 }

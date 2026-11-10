@@ -75,7 +75,7 @@ _Tt_string 		ofile;
 _Tt_string_list_ptr	cargs;
 int			option_xdr = 1;
 int			option_remap_ptypes = 1;
-_Tt_string		cpp_options("");
+_Tt_argv		cpp_options;
 
 void
 print_usage_and_exit()
@@ -602,7 +602,10 @@ process_args(int argc, char **argv)
 			    strcmp(argv[i], "-undef") != 0) {
 				print_usage_and_exit();
 			}
-			cpp_options = cpp_options.cat(argv[i]).cat(" ");
+			if (! cpp_options.add(argv[i])) {
+				_tt_syslog(stderr, LOG_ERR, "%s: %m", argv[i]);
+				exit(1);
+			}
 			// getopt stops processing on an empty string, so
 			// need a fake option for below
 			argv[i] = "-Y";

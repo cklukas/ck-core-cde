@@ -48,6 +48,7 @@
 #include <sys/wait.h>
 #include "Tt/tt_c.h"
 #include "util/tt_gettext.h"
+#include "util/tt_spawn.h"
 #include "util/copyright.h"
 #include "mover.h"
 
@@ -85,27 +86,35 @@ mover::
 }
 
 /*
- * mover::do_mv() - Use system() to invoke mv(1), and return its exit status.
+ * mover::do_mv() - Run mv(1), and return its exit status.
+ *	The program is run directly, not through a shell, so the arguments
+ *	reach it exactly as they were given to us.
  *	We can just use _args, since we never get here when our one
  *	mv-incompatible option (-L) has been given.
  */
 int mover::
 do_mv()
 {
-	_Tt_string		cmd( "mv" );
+	_Tt_argv		argv;
 	_Tt_string_list_cursor	arg_cursor( _args );
+	bool_t			built = argv.add( "mv" );
 
-	while (arg_cursor.next()) {
-		cmd = cmd.cat( " " ).cat( *arg_cursor );
+	while (built && arg_cursor.next()) {
+		built = argv.add( *arg_cursor );
 	}
-	//printf( "Invoking: %s\n", (char *)cmd );
-	int sys_status = system( (char *)cmd );
-	if (WIFEXITED(sys_status)) {
+	if (! built) {
+		fprintf( stderr, "%s: %s\n", (char *)_process_name,
+			 strerror(ENOMEM) );
+		return 1;
+	}
+	int sys_status = _tt_run( argv );
+	if (sys_status != -1 && WIFEXITED(sys_status)) {
 		return WEXITSTATUS(sys_status);
 	} else {
 		if (! _force) {
-			fprintf(stderr, "%s: system(\"%s\"): %d\n",
-				(char *)_process_name, (char *)cmd, sys_status);
+			fprintf(stderr, "%s: \"%s\": %d\n",
+				(char *)_process_name, (char *)argv.text(),
+				sys_status);
 		}
 		return 1;
 	}

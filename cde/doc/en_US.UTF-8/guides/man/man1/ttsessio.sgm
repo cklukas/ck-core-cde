@@ -357,9 +357,14 @@ The format of this variable is:
 <VarListEntry>
 <Term><Emphasis>TTSESSION_CMD</Emphasis></Term>
 <ListItem>
-<Para>Specify the shell command to be used by all ToolTalk clients
+<Para>Specify the command to be used by all ToolTalk clients
 for auto-starting
-<Command>ttsession</Command>.</Para>
+<Command>ttsession</Command>: a program and its arguments, separated by white
+space. The command is not run by a shell, so quotes, redirections and
+variables in it have no meaning; use a script for such a command. The option
+<Literal>-d</Literal> and the display name are added to the arguments. Clients
+that run with other privileges than the user who started them, such as
+set-user-ID programs, ignore the variable.</Para>
 </ListItem>
 </VarListEntry>
 </VariableList>

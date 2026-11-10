@@ -42,6 +42,7 @@
 #include "util/tt_iostream.h"
 #include "util/tt_port.h"
 #include "util/tt_gettext.h"
+#include "util/tt_spawn.h"
 #include <string.h>
 #include <stdlib.h>
 #include <sys/param.h>
@@ -75,6 +76,7 @@ _Tt_types_table(FILE *infs, _Tt_parse_status& result)
 	tmp_sig = new _Tt_signature();
 	tmp_arg = new _Tt_arg();
 	tmp_propname = tmp_propvalue = 0;
+	_cpp_pid = -1;
 	yyin = infs;
 	result = parse_yyin();
 }
@@ -97,6 +99,7 @@ _Tt_types_table(_Tt_string path, _Tt_parse_status& result)
 	tmp_sig = new _Tt_signature();
 	tmp_arg = new _Tt_arg();
 	tmp_propname = tmp_propvalue = 0;
+	_cpp_pid = -1;
 	has_contexts = 0;
 	result = parse_path(path);
 }
@@ -136,17 +139,24 @@ parse_path(_Tt_string path)
 	if (use_cpp) {
 		_Tt_string deps =_file_name.cat(".deps");
 		unlink((char *)deps);
-		deps = _Tt_string("SUNPRO_DEPENDENCIES=").cat(deps).cat(" ");
-		putenv((char *)deps);
-		char command[MAXPATHLEN+32];
-		sprintf(command,
-			OPT_CPP_PATH " " OPT_CPP_OPTIONS " %s %s",
-			(char *)cpp_options,
-			(char *)_file_name);
-		yyin = popen(command, "r");/* open cpp stream for reading */
+		if (_tt_putenv("SUNPRO_DEPENDENCIES", (char *)deps) == 0) {
+			_tt_syslog(stderr, LOG_ERR, "putenv(\"%s\"): %m",
+				   "SUNPRO_DEPENDENCIES");
+			return _TT_PARSE_ERROR;
+		}
+		// cpp is run directly: the options and the name of the file
+		// are arguments, not text for a shell
+		_Tt_argv command;
+		bool_t built = command.add(OPT_CPP_PATH)
+			&& command.add_words(OPT_CPP_OPTIONS);
+		for (int i = 0; built && i < cpp_options.count(); i++) {
+			built = command.add(cpp_options.vector()[i]);
+		}
+		built = built && command.add((char *)_file_name);
+		yyin = built ? _tt_popen_read(command, &_cpp_pid) : 0;
 		if (!yyin) {
-			_tt_syslog(stderr, LOG_ERR, "popen(\"%s\"): %m",
-				   command );
+			_tt_syslog(stderr, LOG_ERR, "%s: %m",
+				   (char *)command.text());
 			return _TT_PARSE_ERROR;
 		}
 	} else {
@@ -169,7 +179,7 @@ parse_yyin()
 {
 	_yylineno = -1;
 	int errorp = yyparse();
-	if ((use_cpp && pclose(yyin) != 0) ||
+	if ((use_cpp && _tt_pclose_read(yyin, _cpp_pid) != 0) ||
 	    (!use_cpp && fclose(yyin) != 0))
 	{
 		return _TT_PARSE_ERROR;

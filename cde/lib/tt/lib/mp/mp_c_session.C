@@ -45,6 +45,8 @@
 #include "mp/mp_desktop.h"
 #include "mp/mp_xdr_functions.h"
 #include "util/tt_port.h"
+#include "util/tt_secure_env.h"
+#include "util/tt_spawn.h"
 #include <unistd.h>
 #include <signal.h>
 
@@ -178,13 +180,13 @@ c_init()
 				exitStat = WEXITSTATUS(sysStat);
 			} else if (WIFSIGNALED(sysStat)) {
 				_tt_syslog( 0, LOG_ERR,
-					    "libtt: system(\"%s\"): signal %d",
+					    "libtt: \"%s\": signal %d",
 					    (char *)start_ttcmd,
 					    WTERMSIG(sysStat) );
 				exitStat = 11;
 			} else {
 				_tt_syslog( 0, LOG_ERR,
-					    "libtt: system(\"%s\"): %d",
+					    "libtt: \"%s\": %d",
 					    (char *)start_ttcmd, sysStat );
 				exitStat = 11;
 			}
@@ -235,64 +237,37 @@ c_init()
 // TTSESSION_CMD or SUN_TTSESSION_CMD to "ttsession -X".
 // The string used is returned in a parameter so c_init can use it in
 // error messages.
+//
+// The command is a program and its arguments separated by white space.  It
+// is executed directly, not through a shell, so that neither it nor the
+// display name can run anything else; use a wrapper script for a command
+// that needs a shell.  A process that runs with other privileges than the
+// user who started it (see _tt_privileged_process()) does not read the
+// variables, and the ttsession it starts runs without those privileges.
 
 
 int _Tt_c_session::
 startup_ttsession(_Tt_string &start_ttcmd)
 {
-	// If TTSESSION_CMD or SUN_TTSESSION_CMD is specified, we use system() to run the
-	// command since it might have shell metacharacters (a common
-	// thing to do is TTSESSION_CMD or SUN_TTSESSION_CMD=truss ttsession >/tmp/trace
-	// in order to truss ttsession startup)
-
-    char* pc_env_value = _tt_get_first_set_env_var(2, "TTSESSION_CMD", "SUN_TTSESSION_CMD");
-
-	if (pc_env_value) {
-		start_ttcmd = pc_env_value;
-		start_ttcmd = start_ttcmd.cat(" -d ");
-		start_ttcmd = start_ttcmd.cat(_displayname);
-		return system((char *)start_ttcmd);
+	const char *command = _tt_secure_getenv("TTSESSION_CMD");
+	if (command == 0) {
+		command = _tt_secure_getenv("SUN_TTSESSION_CMD");
 	}
-	// start_ttcmd is not really used but we set it so it can be used
-	// in messages
-	start_ttcmd = "ttsession -s -d ";
-	start_ttcmd = start_ttcmd.cat(_displayname);
-	
-	// This is basically a stripped down and specialized system() call...
-
-	int	status;
-	pid_t	pid, w;
-
-#if defined(__GNUG__)
-	typedef void (*SIG_PF)(int);
-#endif
-	SIG_PF istat, qstat, cstat;
-
-#if defined(_AIX)
-#define vfork fork
-#endif
-	if((pid = vfork()) == 0) {
-		fflush(stdout);
-		(void) execlp("ttsession", "ttsession",
-			      "-s",
-			      "-d",
-			      (char *)_displayname,
-			      (char *)0);
-		_exit(127);
+	_Tt_argv argv;
+	bool_t	 built = TRUE;
+	if (command != 0) {
+		built = argv.add_words(command);
 	}
-
-	istat = signal(SIGINT, SIG_IGN);
-	qstat = signal(SIGQUIT, SIG_IGN);
-	cstat = signal(SIGCHLD, SIG_DFL);
-
-	w = waitpid(pid, &status, 0);
-
-	(void) signal(SIGINT, istat);
-	(void) signal(SIGQUIT, qstat);
-	(void) signal(SIGCHLD, cstat);
-
-	return((w == -1)? w: status);
-	
+	if (built && argv.count() == 0) {
+		built = argv.add("ttsession") && argv.add("-s");
+	}
+	built = built && argv.add("-d") && argv.add((char *)_displayname);
+	if (! built) {
+		return -1;
+	}
+	// start_ttcmd is only used in messages
+	start_ttcmd = argv.text();
+	return _tt_run(argv);
 }
 
 //
