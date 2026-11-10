@@ -912,6 +912,7 @@ extern int parseArgs(char ***argv, const char *string);
 /* Append one argument verbatim, including whitespace; same failure contract. */
 extern int appendArg(char ***argv, const char *word);
 extern void freeEnv(char **env);
+extern int BoundedCall(unsigned seconds, void *(*job)(void *), void *argument, void **result);
 extern char ** parseEnv(
 			char **e,
 			char *string) ;

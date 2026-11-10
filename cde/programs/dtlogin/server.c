@@ -50,6 +50,8 @@
 # include	<sys/socket.h>
 # include	<sys/signal.h>
 # include	<setjmp.h>
+# include	<poll.h>
+# include	<sys/socket.h>
 # include       <errno.h>
 # include	<pwd.h>
 # include	"dm.h"
@@ -66,12 +68,9 @@ static volatile sig_atomic_t pauseTimedOut;	/* SIGALRM: the pause is over */
  *
  ***************************************************************************/
 
-static const char * _SysErrorMsg( int n) ;
 static SIGVAL CatchUsr1( int arg ) ;
 static void   GetRemoteAddress( struct display *d, int fd) ;
-static SIGVAL PingBlocked( int arg ) ;
 static int    PingLost( Display *display ) ;
-static SIGVAL abortOpen( int arg ) ;
 static int    serverPause( unsigned t, int serverPid) ;
 
 
@@ -122,15 +121,6 @@ CatchSignal( int sig, void (*handler)(int), struct sigaction *previous )
     action.sa_handler = handler;
     sigemptyset (&action.sa_mask);
     sigaction (sig, &action, previous);
-}
-
-static const char * 
-_SysErrorMsg( int n )
-{
-
-  const char *s = strerror(n);
-
-    return (s ? s : "no such error");
 }
 
 int 
@@ -310,17 +300,18 @@ serverPause( unsigned t, int serverPid )
 /*
  * this code is complicated by some TCP failings.  On
  * many systems, the connect will occasionally hang forever,
- * this trouble is avoided by setting up a timeout to siglongjmp
- * out of the connect (possibly leaving piles of garbage around
- * inside Xlib) and give up, terminating the server.
+ * this trouble is avoided by making the connection in a thread
+ * that is given openTimeout seconds (see BoundedCall) and giving up,
+ * terminating the server, when it does not return.
  */
 
-static sigjmp_buf	openAbort;
-
-static SIGVAL
-abortOpen( int arg )
+static void *
+OpenDisplayJob( void *name )
 {
-	siglongjmp (openAbort, 1);
+    Display *display = XOpenDisplay ((char *) name);
+
+    free (name);
+    return display;
 }
 
 static void
@@ -378,14 +369,17 @@ WaitForServer( struct display *d )
     int	    i;
 
     for (i = 0; i < (d->openRepeat > 0 ? d->openRepeat : 1); i++) {
-    	(void) signal (SIGALRM, abortOpen);
-    	(void) alarm ((unsigned) d->openTimeout);
-	if (!sigsetjmp (openAbort, 1)) {
-	    Debug ("Before XOpenDisplay(%s)\n", d->name);
-	    errno = 0;
-	    dpy = XOpenDisplay (d->name);
-	    (void) alarm ((unsigned) 0);
-	    (void) signal (SIGALRM, SIG_DFL);
+	void	*opened = NULL;
+	char	*name = strdup (d->name);
+	int	completed;
+
+	Debug ("Before XOpenDisplay(%s)\n", d->name);
+	completed = name ? BoundedCall ((unsigned) d->openTimeout,
+					OpenDisplayJob, name, &opened) : -1;
+	if (completed != 0) {
+	    if (completed < 0)
+		free (name);
+	    dpy = (Display *) opened;
 	    Debug ("After XOpenDisplay()\n");
 	    if (dpy) {
 	    	if (d->displayType.location == Foreign)
@@ -394,8 +388,7 @@ WaitForServer( struct display *d )
                 (void) fcntl (ConnectionNumber (dpy), F_SETFD, 0);
 	    	return 1;
 	    } else {
-	    	Debug ("OpenDisplay failed %d (%s)\n",
-		       errno, _SysErrorMsg (errno));
+	    	Debug ("OpenDisplay failed\n");
 	    }
 	    Debug ("Waiting for server to start %d\n", i);
 	    sleep ((unsigned) d->openDelay);
@@ -405,7 +398,6 @@ WaitForServer( struct display *d )
 		LogError(ReadCatalog(
 			MC_LOG_SET,MC_LOG_HUNG_DPY,MC_DEF_LOG_HUNG_DPY),
 			   d->name, d->startTries);
-	    (void) signal (SIGALRM, SIG_DFL);
 	    break;
     	}
     }
@@ -448,6 +440,48 @@ ResetServer( struct display *d )
 static sigjmp_buf	pingTime;
 static int	serverDead = FALSE;
 
+/*
+ * Has the server closed the connection?  The descriptor is looked at without
+ * waiting: a hang-up or error, or end of file where there should be nothing
+ * or an answer, means the server has gone.
+ */
+static int
+ConnectionLost( int fd )
+{
+    struct pollfd	pfd;
+    char		byte;
+    ssize_t		count;
+
+    pfd.fd = fd;
+    pfd.events = POLLIN;
+    pfd.revents = 0;
+    if (poll (&pfd, 1, 0) <= 0)
+	return FALSE;
+    if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL))
+	return TRUE;
+    if (pfd.revents & POLLIN)
+    {
+	count = recv (fd, &byte, 1, MSG_PEEK | MSG_DONTWAIT);
+	if (count == 0)
+	    return TRUE;
+	if (count < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+	    return TRUE;
+    }
+    return FALSE;
+}
+
+/* can something be written without waiting for the server? */
+static int
+CanWrite( int fd )
+{
+    struct pollfd	pfd;
+
+    pfd.fd = fd;
+    pfd.events = POLLOUT;
+    pfd.revents = 0;
+    return poll (&pfd, 1, 0) > 0 && (pfd.revents & POLLOUT);
+}
+
 static int
 PingLost( Display *display )
 {
@@ -456,54 +490,52 @@ PingLost( Display *display )
 }
 
 
-static SIGVAL
-PingBlocked( int arg )
-{
-    serverDead = FALSE;
-    siglongjmp (pingTime, 1);
-}
-
-
 int 
 PingServer( struct display *d, Display *alternateDpy )
 {
     XIOErrorHandler oldError;
-    SIGVAL  (*oldSig)(int);
-    int	    oldAlarm;
+    int	    fd;
+    int	    blocked = FALSE;
 
+    (void) d;
     if (!alternateDpy)
 	alternateDpy = dpy;
+    fd = ConnectionNumber (alternateDpy);
+    serverDead = FALSE;
     oldError = XSetIOErrorHandler (PingLost);
-    oldAlarm = alarm (0);
-    oldSig = signal (SIGALRM, PingBlocked);
-    alarm (d->pingTimeout * 60);
     if (!sigsetjmp (pingTime, 1))
     {
 	Debug ("Ping server\n");
-	XNoOp (alternateDpy);
-	XSync (alternateDpy, 0);
-	Debug ("Server alive\n");
+	/*
+	 * Nothing here waits for the server: a request is only written when the
+	 * connection can take it, and the answer is not waited for.  A server that
+	 * has gone shows as a connection that was closed or that cannot be written.
+	 */
+	if (ConnectionLost (fd))
+	    serverDead = TRUE;
+	else if (!CanWrite (fd))
+	{
+	    Debug ("Server blocked, continuing...\n");
+	    blocked = TRUE;
+	}
+	else
+	{
+	    XNoOp (alternateDpy);
+	    XFlush (alternateDpy);
+	    if (ConnectionLost (fd))
+		serverDead = TRUE;
+	    else
+		Debug ("Server alive\n");
+	}
 
-	while (XPending(alternateDpy)) {
+	/* what the server has sent is read and dropped (the connection has nothing to flush here) */
+	while (!serverDead && !blocked && XPending (alternateDpy)) {
 	    XEvent event;
 	    XNextEvent(alternateDpy, &event);
 	}
     }
-    else
-    {
-	if ( serverDead ) {
-	    Debug ("Server dead\n");
-	    alarm (0);
-	    signal (SIGALRM, SIG_DFL);
-	    XSetIOErrorHandler (oldError);
-	    return 0;
-	}
-	else
-	    Debug ("Server blocked, continuing...\n");
-    }
-    alarm (0);
-    signal (SIGALRM, oldSig);
-    alarm (oldAlarm);
     XSetIOErrorHandler (oldError);
-    return 1;
+    if (serverDead)
+	Debug ("Server dead\n");
+    return !serverDead;
 }

@@ -65,7 +65,6 @@
  *
  ***************************************************************************/
 
-static SIGVAL abortReset( int arg ) ;
 static int ignoreErrors( Display *dpy, XErrorEvent *event) ;
 static void killWindows( Display *dpy, Window window) ;
 
@@ -110,41 +109,46 @@ killWindows( Display *dpy, Window window )
 	}
 }
 
-static sigjmp_buf	resetJmp;
+/* seconds the server gets to answer the requests of the reset */
+#ifndef RESET_TIMEOUT
+#define RESET_TIMEOUT	30
+#endif
 
-static SIGVAL
-abortReset( int arg )
+static void *
+resetJob( void *display )
 {
-	siglongjmp (resetJmp, 1);
+	Display	*dpy = display;
+	Window	root;
+	int	screen;
+
+	XSetErrorHandler (ignoreErrors);
+	for (screen = 0; screen < ScreenCount (dpy); screen++) {
+		Debug ("Pseudo reset screen %d\n", screen);
+		root = RootWindow (dpy, screen);
+		killWindows (dpy, root);
+	}
+	Debug ("Before XSync\n");
+	XSync (dpy, False);
+	return NULL;
 }
 
 /*
  * this display connection better not have any windows...
+ *
+ * The requests go to a server that may not answer; they are made by a thread
+ * that is given RESET_TIMEOUT seconds (see BoundedCall).  When it does not
+ * finish the connection is not used again.
  */
  
 void 
 pseudoReset( Display *dpy )
 {
-	Window	root;
-	int	screen;
+	void	*unused;
 
-	if (sigsetjmp (resetJmp, 1)) {
+	if (BoundedCall (RESET_TIMEOUT, resetJob, dpy, &unused) != 1) {
 		LogError(
 		  ReadCatalog(MC_LOG_SET,MC_LOG_PSEUDO,MC_DEF_LOG_PSEUDO));
-	} else {
-		signal (SIGALRM, abortReset);
-		alarm (30);
-		XSetErrorHandler (ignoreErrors);
-		for (screen = 0; screen < ScreenCount (dpy); screen++) {
-			Debug ("Pseudo reset screen %d\n", screen);
-			root = RootWindow (dpy, screen);
-			killWindows (dpy, root);
-		}
-		Debug ("Before XSync\n");
-		XSync (dpy, False);
-		(void) alarm (0);
 	}
-	signal (SIGALRM, SIG_DFL);
 	XSetErrorHandler (NULL);
 	Debug ("pseudoReset() done\n");
 }

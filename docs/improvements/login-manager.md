@@ -158,6 +158,17 @@ greeter, `wait`, the PAM conversation, `malloc`).
   group, when the display is asked to stop; they used to be waited for to their
   end. The reset script, which cleans up after a session, is always run to its
   end.
+- The calls that wait for the X server no longer use a timer signal and a
+  jump. Opening the display and the reset of the server (which kills the
+  clients of a display) run in a thread with a time limit (`openTimeout`, 30
+  seconds); when the server does not answer the display is given up and the
+  thread is left behind. The ping of an XDMCP display looks at the connection
+  without waiting (closed or hung up, not writable) instead of waiting for an
+  answer under a timer. The scan of the locale directory checks a deadline
+  between entries (`langListTimeout`) and the sort array of the language list
+  can no longer be overrun by a directory with more than 500 locales. The
+  processes of the manager keep their own `SIGALRM` handler and timer while these
+  calls run.
 - A wait for a child that has no such child ended in an endless loop of failed
   `wait` calls; it now ends. A process group that was asked to stop is waited
   for even when the request to stop is already pending.
@@ -220,6 +231,10 @@ leave a note, a request that arrives before a wait, a child that ignores
 
 `tests/check-xdmcp.py` also runs the selection of the address a request names and the
 bounded lookup (a resolver that does not answer, and the cache).
+
+`tests/check-x-timeouts.py` runs the bounded call, opening the display and the reset
+with an X library that does not answer, the ping's look at the connection and the
+locale scan against a fast clock.
 
 `tests/check-greeter-request.py` reads requests through the greeter's reader from
 pipes: whole, delivered a byte at a time, too long, shorter than the header,

@@ -42,11 +42,12 @@ else:
     script_code = block(session, "int \nsource( struct verify_info *verify, char *file )")
 ask_greeter = ask_greeter.replace("RequestHeader *preqhdr", "RequestHeader *preqhdr")
 
+server_end = "static const char * \n_SysErrorMsg" if "static const char * \n_SysErrorMsg" in server else "int \nStartServerOnce"
 if "receivedUsr1;\t/* SIGUSR1" in server:
-    server_head = until(server, "static volatile sig_atomic_t receivedUsr1", "static const char * \n_SysErrorMsg")
+    server_head = until(server, "static volatile sig_atomic_t receivedUsr1", server_end)
 else:
     server_head = ("static int receivedUsr1;\n"
-                   + until(server, "static SIGVAL\nCatchUsr1( int arg )", "static const char * \n_SysErrorMsg"))
+                   + until(server, "static SIGVAL\nCatchUsr1( int arg )", server_end))
 pause_start = "/*\n * sleep for t seconds, return 1 if the server is dead when"
 server_pause = (until(server, pause_start, "/*\n * this code is complicated by some TCP failings"))
 if not new:

@@ -69,6 +69,12 @@
   themselves and searches the rest of a line after a multibyte character. New
   documentation page `docs/improvements/data-types.md`; covered by
   `make -C lib/DtSvc check`.
+- dtlogin: opening the display, the pseudo reset of the server, the server ping
+  and the locale scan no longer use SIGALRM and a jump out of the interrupted
+  code. The first two run in a thread with a time limit, the ping looks at the
+  connection without waiting, and the locale scan checks a deadline between
+  directory entries; the sort array of the language list is bounded. Covered
+  by `programs/dtlogin/tests/check-x-timeouts.py`.
 - dtlogin: the startup and setup scripts of a display end with the display when
   it is asked to stop (SIGTERM) instead of being waited for to their end; the
   reset script still runs to completion. Covered by
