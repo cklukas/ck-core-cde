@@ -61,6 +61,9 @@ Author: Ralph Mor, X Consortium
 #ifndef O_CLOEXEC
 #define O_CLOEXEC 0
 #endif
+#ifndef O_NOFOLLOW
+#define O_NOFOLLOW 0
+#endif
 
 /* how often a zero byte of the cookie is drawn again before giving up */
 #define _TT_COOKIE_ZERO_DRAWS	64
@@ -177,11 +180,20 @@ _tt_LockAuthFile(char *file_name, int retries, int timeout, long dead)
     {
 	if (creat_fd == -1)
 	{
-	    creat_fd = creat (creat_name, 0666);
+	    /*
+	     * The lock file is made here or it is somebody else's: it is
+	     * never opened if it exists, so that a link in its place (in a
+	     * directory the user who started the process controls) does not
+	     * send the creation to another file.  Somebody else's lock file
+	     * is a lock that is held.
+	     */
+	    creat_fd = open (creat_name,
+			     O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
+			     0600);
 
 	    if (creat_fd == -1)
 	    {
-		if (errno != EACCES)
+		if (errno != EACCES && errno != EEXIST)
 		    return (_tt_AuthLockError);
 	    }
 	    else

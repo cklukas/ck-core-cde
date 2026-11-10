@@ -76,6 +76,7 @@ sources = [
     lib_src / "util" / "tt_path.C",
     lib_src / "util" / "tt_ldpath.C",
     lib_src / "mp" / "mp_auth_functions.C",
+    lib_src / "mp" / "mp_auth.C",
     lib_src / "mp" / "mp_c_session.C",
 ]
 if override:
@@ -99,7 +100,7 @@ for source in [tests / "environment-test.C"] + sources:
 
 binary = work / "environment-test"
 # a process with other effective than real ids is simulated by the test
-r = run(link_cmd + sanitize + ["-Wl,--wrap=geteuid", "-Wl,--wrap=getegid",
+r = run(link_cmd + sanitize + ["-Wl,--wrap=geteuid", "-Wl,--wrap=getegid", "-Wl,--wrap=unlink",
                                "-o", str(binary)] + built + libs)
 if r.returncode:
     fail("link failed:\n" + r.stderr)

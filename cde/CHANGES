@@ -98,6 +98,11 @@
   message is read however the pipe splits it, the last byte is a NUL, and the
   offsets of message and challenge strings must lie inside the message; other
   requests are ignored. Covered by `programs/dtlogin/tests/check-greeter-request.py`.
+- libtt: the lock file of the authority file is created with a create that
+  fails when the name exists and does not follow a link, and the file the new
+  entries are written to is made the same way, so a link planted in the
+  directory of the authority file cannot send the truncation or the write to
+  another file. Covered by `make -C lib/tt/lib check`.
 - rpc.cmsd: look at the request path again. The size and the check of a calendar
   and the registration of a callback (versions 4 and 5) now need rights to the
   calendar, the debug-only procedure that discarded a calendar's appointments

@@ -31,6 +31,11 @@
 #include <string>
 #include <vector>
 
+/* the one place that needs the members of a session and of the authority the
+   tests drive */
+#define private public
+#define protected public
+
 #include "tt_options.h"
 #include "util/tt_global_env.h"
 #include "util/tt_string.h"
@@ -40,10 +45,8 @@
 #include "util/tt_path.h"
 #include "util/tt_ldpath.h"
 #include "mp/mp_auth_functions.h"
+#include "mp/mp_auth.h"
 
-/* the one place that needs the members of a session the tests drive */
-#define private public
-#define protected public
 #include "mp/mp_c_session.h"
 #undef private
 #undef protected
@@ -91,6 +94,28 @@ become_privileged(void)
 {
   fake_ids = EUID_DIFFERS;
   fake_pid = getpid();
+}
+
+/*
+ * The call that removes a file may be followed by one that makes a link of that
+ * name, as another process could between two calls of the code under test.
+ */
+extern "C" int __real_unlink(const char *path);
+
+static std::string plant_after_unlink;		/* the name that gets the link */
+static std::string plant_target;		/* ... and the file it points to */
+
+extern "C" int
+__wrap_unlink(const char *path)
+{
+  int rc = __real_unlink(path);
+
+  if(!plant_after_unlink.empty() && plant_after_unlink == path) {
+    plant_after_unlink.clear();
+    if(symlink(plant_target.c_str(), path) != 0)
+      perror("symlink");
+  }
+  return rc;
 }
 
 /* ---- fixtures ---------------------------------------------------------- */
@@ -751,6 +776,71 @@ test_user_path_ignored_when_privileged(void)
   CHECK(!in_casedir((const char *)found));
 }
 
+/* ---- the authority file ------------------------------------------------- */
+
+/*
+ * The lock file of the authority file and the file the new entries are written
+ * to are made in the directory of the user who started the process.  Neither
+ * is opened if it exists, so a link in its place cannot send the write to
+ * another file.
+ */
+static void
+test_auth_lock_does_not_follow_links(void)
+{
+  setup();
+  std::string victim = path_of("victim");
+  std::string authority = path_of("authority");
+
+  write_file(victim, "do not touch\n");
+  CHECK(symlink(victim.c_str(), (authority + "-c").c_str()) == 0);
+  /* the lock is held (the file is recent): wait, and give up */
+  int result = _tt_LockAuthFile((char *)authority.c_str(), 1, 0, 3600);
+  CHECK(result != _tt_AuthLockSuccess);
+  CHECK(read_file(victim) == "do not touch\n");
+  CHECK(!exists(authority + "-l"));
+}
+
+static void
+test_auth_lock_and_unlock(void)
+{
+  setup();
+  std::string authority = path_of("authority");
+
+  CHECK(_tt_LockAuthFile((char *)authority.c_str(), 1, 0, 3600) == _tt_AuthLockSuccess);
+  CHECK(exists(authority + "-c") && exists(authority + "-l"));
+  /* the lock is held now */
+  CHECK(_tt_LockAuthFile((char *)authority.c_str(), 1, 0, 3600) != _tt_AuthLockSuccess);
+  _tt_UnlockAuthFile((char *)authority.c_str());
+  CHECK(!exists(authority + "-c") && !exists(authority + "-l"));
+  CHECK(_tt_LockAuthFile((char *)authority.c_str(), 1, 0, 3600) == _tt_AuthLockSuccess);
+  _tt_UnlockAuthFile((char *)authority.c_str());
+}
+
+static void
+test_auth_write_does_not_follow_links(void)
+{
+  setup();
+  std::string victim = path_of("victim");
+  std::string authority = path_of("authority");
+
+  write_file(victim, "do not touch\n");
+  /* a link appears where the new file is to be made, right after the
+     old one has been removed */
+  plant_after_unlink = authority + "-n";
+  plant_target = victim;
+
+  _Tt_auth auth;
+  Tt_status status = auth.write_auth_file((char *)authority.c_str());
+  CHECK(status != TT_OK);
+  CHECK(read_file(victim) == "do not touch\n");
+  CHECK(!exists(authority));
+
+  /* nothing in the way: the file is written and the new file is gone */
+  plant_after_unlink.clear();
+  CHECK(auth.write_auth_file((char *)authority.c_str()) == TT_OK);
+  CHECK(exists(authority));
+}
+
 /* ---- the table of cases ---------------------------------------------------- */
 
 struct Case {
@@ -791,6 +881,9 @@ main(int argc, char **argv)
   add("auth_file_name_when_privileged", test_auth_file_name_when_privileged);
   add("user_path_from_environment", test_user_path_from_environment);
   add("user_path_ignored_when_privileged", test_user_path_ignored_when_privileged);
+  add("auth_lock_does_not_follow_links", test_auth_lock_does_not_follow_links);
+  add("auth_lock_and_unlock", test_auth_lock_and_unlock);
+  add("auth_write_does_not_follow_links", test_auth_write_does_not_follow_links);
 
   if(argc == 2 && !strcmp(argv[1], "--list")) {
     for(const Case &c : cases)

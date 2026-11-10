@@ -151,6 +151,15 @@ starts it with the real user and group ids of the process, given up for good
 before anything is run, so the session never runs with the privileges of the
 program that started it.
 
+The authority file and the files next to it are made in the directory of the user
+who started the process. The lock of the authority file (`file-c`, `file-l`) is
+made with a create that fails if the name exists and does not follow a link, and
+a lock file that is already there is a lock that is held; it used to be opened
+and truncated, so a link in its place sent the truncation to the file it pointed
+to. The file that receives the new entries (`file-n`) is made the same way after
+the old one has been removed, so a link planted in between does not redirect
+the write.
+
 `TTSESSION_CMD` is a command, not a line for a shell: a program and its
 arguments separated by white space, to which `-d` and the display name are
 added. Quotes, redirections, variables and `;` in it are passed to the program as

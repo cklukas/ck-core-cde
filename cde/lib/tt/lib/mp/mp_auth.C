@@ -35,11 +35,20 @@
  * Implementation of the _Tt_auth class.
  */
 #include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include "mp/mp_auth.h"
 #include "mp/mp_auth_functions.h"
 #include "mp/mp_global.h"
 #include "util/tt_port.h"
+
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
+#ifndef O_NOFOLLOW
+#define O_NOFOLLOW 0
+#endif
 
 _Tt_auth::
 _Tt_auth(_Tt_auth_level auth_level)
@@ -284,7 +293,13 @@ write_auth_file(char *filename)
     strcpy(tmpnam, filename);
     strcat(tmpnam, "-n");             /* for new */
     (void) unlink(tmpnam);
-    fp = fopen (tmpnam, "wb");         /* umask is still set to 0077 */
+    /* a file of our own: not one that appeared since the unlink, and not the
+       target of a link that did */
+    int fd = open (tmpnam, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
+		   0600);
+    fp = (fd < 0) ? NULL : fdopen (fd, "wb");
+    if (fd >= 0 && !fp)
+      close (fd);
     if (!fp) {
         _tt_syslog(0, LOG_ERR,
 		 "%s:  unable to open tmp file \"%s\"\n",
