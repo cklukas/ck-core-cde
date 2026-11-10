@@ -9,6 +9,7 @@
 static const char *case_name;
 static int pipe_fault, pipe_eintr, get_fault, get_eintr, set_fault, set_eintr;
 static int close_fault, close_calls;
+static int write_eintr, write_short, write_zero;
 
 #define VERIFY(value) do { if (!(value)) { \
     fprintf(stderr, "FAIL %s:%d: %s\n", case_name, __LINE__, #value); return 1; \
@@ -52,13 +53,24 @@ TestClose(int fd)
     return result;
 }
 
+static ssize_t
+TestWrite(int fd, const void *bytes, size_t length)
+{
+    if (write_eintr) { write_eintr = 0; errno = EINTR; return -1; }
+    if (write_zero) return 0;
+    if (write_short && length > 2) length = 2;
+    return write(fd, bytes, length);
+}
+
 #define pipe TestPipe
 #define fcntl TestFcntl
 #define close TestClose
+#define write TestWrite
 #include "FileProcess.c"
 #undef pipe
 #undef fcntl
 #undef close
+#undef write
 
 int
 main(int argc, char **argv)
@@ -66,7 +78,46 @@ main(int argc, char **argv)
     int descriptors[2] = {91, 92}, saved;
     VERIFY(argc == 2);
     case_name = argv[1];
-    if (strcmp(case_name, "null") == 0)
+    if (strncmp(case_name, "write-", 6) == 0)
+    {
+        char data[6] = {0};
+        if (strcmp(case_name, "write-null") == 0)
+        {
+            errno = 0;
+            VERIFY(DtfileProcessWriteAll(-1, data, sizeof(data)) == -1 && errno == EINVAL);
+            errno = 0;
+            VERIFY(DtfileProcessWriteAll(1, NULL, 1) == -1 && errno == EINVAL);
+        }
+        else
+        {
+            VERIFY(pipe(descriptors) == 0);
+            if (strcmp(case_name, "write-epipe") == 0)
+            {
+                VERIFY(close(descriptors[0]) == 0);
+                descriptors[0] = -1;
+                errno = 0;
+                VERIFY(DtfileProcessWriteAll(descriptors[1], "abcdef", 6) == -1 && errno == EPIPE);
+            }
+            else
+            {
+                write_eintr = strcmp(case_name, "write-eintr") == 0;
+                write_short = strcmp(case_name, "write-short") == 0;
+                write_zero = strcmp(case_name, "write-zero") == 0;
+                errno = 0;
+                if (write_zero)
+                    VERIFY(DtfileProcessWriteAll(descriptors[1], "abcdef", 6) == -1 && errno == EIO);
+                else
+                {
+                    VERIFY(DtfileProcessWriteAll(descriptors[1], "abcdef", 6) == 0);
+                    VERIFY(read(descriptors[0], data, sizeof(data)) == sizeof(data));
+                    VERIFY(memcmp(data, "abcdef", sizeof(data)) == 0);
+                }
+            }
+            if (descriptors[0] >= 0) VERIFY(close(descriptors[0]) == 0);
+            VERIFY(close(descriptors[1]) == 0);
+        }
+    }
+    else if (strcmp(case_name, "null") == 0)
     {
         errno = 0; VERIFY(DtfileProcessPipe(NULL) == -1 && errno == EINVAL);
     }

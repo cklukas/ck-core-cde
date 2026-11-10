@@ -1,0 +1,103 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile worker-response protocol validation and exact writes",
+  "source_base": "d729644c9bd237b6a954596b20bf493322da4a5b",
+  "motif_source_revision": "fd5f4a74b6c771b7948f38b7eca3f800d0f3b5cd",
+  "motif_runtime_revision": "20a1461b155009c271ad7f9876c5ec4b8bbf9573",
+  "motif_runtime_sha256": "b132508069cfaf329b8504dac3fe9238d7aed33918895108e91400de46f92c8b",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_integration_state": "SDK 0.3 remains frozen; receipt-authorized Apply remains disabled.",
+  "source_sha256": {
+    ".ckgit/ci.yml": "71cfedda4b31ed711bbe5e24786802d5a1d5c702b400a8d079dae17049f30c43",
+    ".ckgit/motif-revision": "6795b6f9858b620f82051c79517419a11600a1031a977344a3ee51ce4df98f38",
+    "cde/CHANGES": "e42270cd09d186d20789d55298ffb765178bb241c3a1eba6ed74f81c4ed3793c",
+    "cde/programs/dtfile/FileOp.c": "311238f7e3f8b525d0c14ab4aa119d686fc8001f280164eda8a9a40f6bc2715a",
+    "cde/programs/dtfile/FileProcess.c": "93b87d5e7edc2d532026bf26df0e8c2031cf0f6237206415ca6185e43e71b544",
+    "cde/programs/dtfile/FileProcess.h": "32cdbea56d06ed96eeaca2430bacf9d1b539c9ae803d762bcb8042a5b78786c1",
+    "cde/programs/dtfile/dtfile.msg": "22bdfcd961df9c79123013f40ce52d9ca20841728eac8b5136fa03f877832d9f",
+    "cde/programs/dtfile/tests/check-process-lifecycle.py": "e820b5b7982114678bcbe773ce51a6e85e173211004fa456cfdeedccc50d880c",
+    "cde/programs/dtfile/tests/check-restore-workflow.py": "3d62e15ade2d44584dad581bfce3adebd7f6d80342644663f4da72136f7300ee",
+    "cde/programs/dtfile/tests/check-transfer-completion.py": "06eb742752322abd3b45792313cd9af391f0fa04afb294ad9b8494f385b40fe5",
+    "cde/programs/dtfile/tests/process-lifecycle.c": "033c9e15add8dd24b1db2feafe9726419822a01bc8809a685369494fc5b89eb9",
+    "cde/programs/dtfile/tests/transfer-completion.c": "0389e8a40c08af5eb3570cba723da6081261f2428e24a2c840a79e021a7150c6"
+  },
+  "focused_regressions": {
+    "process_writer": {
+      "cases": 15,
+      "sanitizers": "address,undefined",
+      "passed": true,
+      "initial_focused_receipt_sha256": "ad46fa55d9bf213229109688a2c599d9ac655c884213173a3233e63e4a808e87",
+      "final_checkpoint_receipt_sha256": "f61c1346a546a46b0d212bebe3c8ee38cde074b447c2ab419686db73549f4b47"
+    },
+    "pipe_codec_and_indices": {
+      "cases": 9,
+      "sanitizers": "address,undefined",
+      "passed": true,
+      "receipt_sha256": [
+        "4cf72529101557b8e792381b8cf938a8f48a17b83f151f565518d6edfabb3fad",
+        "8b88c8591c2daf0a16739982ea22601acf97145505568eebb1b0fbaa74bc7dd7",
+        "49b186c7b6439bedff03ffe4e746b76c3f06a4079ef22625c6580cde53bb9458",
+        "7e8bba78dee7788927029e67c7ed7f67eaf2f52845751fecd0e26acdd0e05926",
+        "3d3f1efd6dfb6ef6e1503a2f9f5ee7dac019cd5c5c458e349d2a43a6f0395220",
+        "61b73e8157c89e5f51a88c4e6d98a96c0f089c48185cda1a3ce7143e55e94760",
+        "df2a2396457bb7c7c7dd9c5caa7420b71debe13c5ab486215f9c5f308ec196b9",
+        "76ed48aeb648a734b10f13ad99a3a703b7c208c82a0a587c310b34a7a6e83386",
+        "708181551116e00ed5d9da524a71360271b87a70dbd6af25ce1eee0067e84046"
+      ],
+      "coverage": [
+        "invalid descriptors and negative or truncated string lengths",
+        "oversized writes and exact field reads",
+        "negative, equal-to-count and valid update indices",
+        "complete tag, scalar and required-string checks in all three worker callbacks",
+        "optional zero-length error arguments remain valid"
+      ]
+    },
+    "restore_dependency": {
+      "cases": 77,
+      "sanitizers": "address,undefined",
+      "passed": true,
+      "receipt_sha256": "db15aa6c361cc218a1fcf21dcc76172e6fb1e198bd13694a821ad83e32cea850"
+    }
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "cpu_affinity": [1],
+    "changed_objects": ["dtfile-FileOp.o", "dtfile-FileProcess.o"],
+    "seconds": 1.255,
+    "final_requalification_seconds": 1.194,
+    "object_sha256": {
+      "dtfile-FileOp.o": "a558ad68439b852700b36983c25e9a8a0daaf7d338c74b3f84e1585fbf762f57",
+      "dtfile-FileProcess.o": "6cf05ddd7ee51163cd417a62126070676d14b3438f905b3caeb5e3ea464b1008"
+    },
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile",
+    "output_sha256": "941f2da0d019ca61982ca883c498a2e5f0f36e09faf244a5a9b905a7f8deac23",
+    "full_stack_rebuilt": false,
+    "postcheck": "make -n dtfile requested no compilation or link; ldd selected the established Motif ABI-9 runtime; no dtfile, make or compiler process remained."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 1 make -j1 check-local in programs/dtfile against the staged candidate source",
+    "test_drivers": 14,
+    "pass_lines": 238,
+    "seconds": 14.167,
+    "passed": true,
+    "strict_failure_markers": 0
+  },
+  "catalog": {
+    "command": "gencat dtfile.cat dtfile.msg",
+    "passed": true,
+    "output_sha256": "9f97ef2fd84e6beee12f85e61dbe1ec1d3c95ed91b993d84c046523b4b13405f"
+  },
+  "setup_diagnostics": [
+    "The retained generated Makefile initially referenced its historical source tree, so the first checkpoint stopped at a missing current driver. Its source prefix was mechanically redirected to the retained staged candidate before the qualifying run.",
+    "The corrected checkpoint then found that the restore extractor did not link FileProcess.c after PipeWriteString acquired the exact-write helper. The driver dependency was fixed and its 77 cases passed before the final full checkpoint.",
+    "Final review preserved the established zero-length encoding for optional error arguments; the callback contract, changed FileOp object and complete checkpoint were requalified afterward.",
+    "Neither setup failure nor the pre-review checkpoint was treated as final qualification; the final staged-source checkpoint passed all 14 drivers."
+  ],
+  "limitations": [
+    "The syscall seams exercise partial writes, interruption, zero writes and EPIPE deterministically; they are not native system-wide resource exhaustion tests.",
+    "This non-visual protocol bundle did not launch or inspect a CDE window.",
+    "Motif source fd5f4a74 was fetched and pinned without reviewing Motif changes. Qualification used the established Motif 20a ABI-9 runtime pending a matching qualified prefix."
+  ]
+}

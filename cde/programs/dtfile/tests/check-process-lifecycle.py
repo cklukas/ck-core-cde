@@ -12,7 +12,9 @@ import time
 from datetime import datetime, timezone
 
 CASES = ("success", "null", "pipe-fault", "pipe-eintr", "getfd-fault",
-         "getfd-eintr", "setfd-fault", "setfd-eintr", "close-eintr")
+         "getfd-eintr", "setfd-fault", "setfd-eintr", "close-eintr",
+         "write-success", "write-null", "write-eintr", "write-short",
+         "write-zero", "write-epipe")
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -59,7 +61,7 @@ def main():
                            "per_operation_status": True, "select_failure_handoff": True}:
         raise SystemExit(f"FileOp startup contract mismatch: {source_contract}")
     command = [*shlex.split(env.get("CC", "cc")), "-std=c11", "-Wall", "-Wextra", "-Werror",
-               "-O1", "-g", "-I", str(work), str(frozen), "-o", str(binary)]
+               "-O1", "-g", "-I", str(work), str(frozen), "-pthread", "-o", str(binary)]
     if args.sanitizers != "none": command += ["-fsanitize=" + args.sanitizers, "-fno-omit-frame-pointer"]
     record = {"started_utc": now(), "cases": [], "command": command, "passed": False,
               "jobs": 1, "sanitizers": args.sanitizers,

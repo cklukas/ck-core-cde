@@ -1,4 +1,15 @@
 2026-11-10
+- dtfile: reject malformed legacy worker responses before they reach file,
+  directory-cache, or widget state. Exact reads now reject negative sizes and
+  truncated fields; string writes reject lengths that cannot fit the protocol
+  and complete under a thread-local SIGPIPE scope. Move/copy update indexes are
+  checked against the operation before indexing, and move/copy, rename, and
+  create callbacks treat an incomplete tag, scalar, string, or unknown message
+  as a failed response with user feedback and normal ownership cleanup. Create
+  completion also frees destination strings when no view callback receives
+  them. Covered by the pipe and process cases in
+  `programs/dtfile/tests/check-transfer-completion.py` and
+  `check-process-lifecycle.py`.
 - dtfile: make file-operation startup transactional. All worker channels are
   checked, close-on-exec, and cleared before close; interrupted setup syscalls
   retry safely, a second-channel or fork failure closes every acquired

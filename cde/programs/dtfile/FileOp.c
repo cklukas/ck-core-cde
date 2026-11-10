@@ -255,6 +255,30 @@ FileOpStartError(Widget parent, int error)
 }
 
 static void
+FileOpProtocolError(Widget parent)
+{
+   _DtMessage(parent == NULL ? toplevel : parent,
+              GETMESSAGE(42, 39, "File operation response error"),
+              GETMESSAGE(42, 40,
+                 "The background file operation returned an incomplete or invalid response."),
+              NULL, HelpRequestCB);
+}
+
+static int
+FileOpReadField(int fd, void *value, size_t size)
+{
+   if (size > INT_MAX) { errno = EOVERFLOW; return -1; }
+   return PipeRead(fd, value, (int)size) == (int)size ? 0 : -1;
+}
+
+static int
+FileOpReadIndex(int fd, const FileOpCBData *cb_data, int *index)
+{
+   return FileOpReadField(fd, index, sizeof(*index)) == 0 &&
+          *index >= 0 && *index < cb_data->file_count ? 0 : -1;
+}
+
+static void
 FileOpAbortStart(FileOpCBData *cb_data)
 {
    int i;
@@ -319,9 +343,14 @@ PipeRead(
 	void *buf,
 	int len)
 {
-   static int whined_fd = -1;
    int n = 0;
-   int rc;
+   ssize_t rc;
+
+   if (fd < 0 || len < 0 || (buf == NULL && len != 0))
+   {
+      errno = EINVAL;
+      return -1;
+   }
 
    while (n < len)
    {
@@ -333,15 +362,8 @@ PipeRead(
       else
       {
          if (rc == 0)
-	 {
-	    if (whined_fd != fd)
-	    {
-		whined_fd = fd;
-                fprintf(stderr,
-		  "PipeRead: broken pipe, ppid=%d pid=%d fd=%d\n",
-		  getppid(), getpid(), fd);
-	    }
-	 }
+            fprintf(stderr, "PipeRead: broken pipe, ppid=%d pid=%d fd=%d\n",
+                    getppid(), getpid(), fd);
          else
 	 {
             perror("dtfile: read failed in PipeRead");
@@ -365,26 +387,14 @@ PipeWriteString(
 	int fd,
 	char *s)
 {
-   short len, sent = 0;
-   void (*oldPipe)(int);
-
-   oldPipe = signal(SIGPIPE, SIG_IGN);
-
-   if (s == NULL)
-      len = 0;
-   else
-      len = strlen(s);
-
-   if (write(fd, &len, sizeof(short)) < 0) {
+   size_t length = s == NULL ? 0 : strlen(s);
+   short encoded_length;
+   if (length > SHRT_MAX) { errno = EOVERFLOW; return -1; }
+   encoded_length = (short)length;
+   if (DtfileProcessWriteAll(fd, &encoded_length, sizeof(encoded_length)) != 0 ||
+       (length != 0 && DtfileProcessWriteAll(fd, s, length) != 0))
       return -1;
-   }
-
-   if (len > 0)
-      sent = write(fd, s, len);
-
-   signal(SIGPIPE, oldPipe);
-
-   return sent;
+   return (int)length;
 }
 
 
@@ -407,6 +417,7 @@ PipeReadString(
 
    if (len == 0)
       return NULL;
+   if (len < 0) { errno = EPROTO; return NULL; }
 
    /* get the string */
    s = (char *)XtMalloc(len + 1);
@@ -1750,8 +1761,8 @@ FileOpPipeCB(
    FileOpCBData *cb_data = (FileOpCBData *)client_data;
    short pipe_msg;
    int i, n, rc;
-   char *title, *err_msg, *err_arg;
-   char *target_file;
+   char *title, *err_msg = NULL, *err_arg = NULL;
+   char *target_file = NULL;
    long modify_time;
    Boolean done;
 
@@ -1770,12 +1781,14 @@ FileOpPipeCB(
    DPRINTF(("FileOpPipeCB: n %d, pipe_msg %d\n", n, pipe_msg));
 
    done = False;
+   if (n != sizeof(pipe_msg)) goto malformed;
    switch (pipe_msg)
    {
       case PIPEMSG_FILEOP_ERROR:
-         PipeRead(*fd, &rc, sizeof(int));
+         if (FileOpReadField(*fd, &rc, sizeof(rc)) != 0) goto malformed;
          err_msg = PipeReadString(*fd);
          err_arg = PipeReadString(*fd);
+         if (err_msg == NULL) goto malformed;
          if (cb_data->desktop)
             FileOperationError(cb_data->file_view_data->widget,
                                err_msg, err_arg);
@@ -1803,6 +1816,7 @@ FileOpPipeCB(
 
       case PIPEMSG_CONFIRM:
          err_msg = PipeReadString(*fd);
+         if (err_msg == NULL) goto malformed;
          title = XtNewString(GETMESSAGE(9,11, "File Manager - Move/Copy/Link Warning"));
          filop_confirm_fd = cb_data->pipe_m2s;
          _DtMessageDialog(toplevel, title, err_msg, NULL, TRUE,
@@ -1832,13 +1846,14 @@ FileOpPipeCB(
 
       case PIPEMSG_TARGET_TIME:
          /* get the modify time and update the directory cache */
-         PipeRead(*fd, &modify_time, sizeof(long));
+         if (FileOpReadField(*fd, &modify_time, sizeof(modify_time)) != 0)
+            goto malformed;
          DirectoryModifyTime(cb_data->host, cb_data->directory, modify_time);
          break;
 
       case PIPEMSG_MOVE_TO_SAME_DIR:
          /* get the update index */
-         PipeRead(*fd, &i, sizeof(int));
+         if (FileOpReadIndex(*fd, cb_data, &i) != 0) goto malformed;
          cb_data->updates[i].operationStatus = True;
          DisplayDuplicateOpError((void *) cb_data,i);
          cb_data->status = PIPEMSG_MOVE_TO_SAME_DIR;
@@ -1852,9 +1867,11 @@ FileOpPipeCB(
 
       case PIPEMSG_FILE_MODIFIED:
          /* get the update index and modify time */
-         PipeRead(*fd, &i, sizeof(int));
-         PipeRead(*fd, &modify_time, sizeof(long));
+         if (FileOpReadIndex(*fd, cb_data, &i) != 0 ||
+             FileOpReadField(*fd, &modify_time, sizeof(modify_time)) != 0)
+            goto malformed;
          target_file = PipeReadString(*fd);
+         if (target_file == NULL) goto malformed;
          DPRINTF (("PIPEMSG_FILE_MODIFIED %s\n", target_file));
 
          /* mark the file updated in the cached target directory */
@@ -1877,16 +1894,28 @@ FileOpPipeCB(
          break;
 
       case PIPEMSG_DONE:
-         PipeRead(*fd, &rc, sizeof(int));
+         if (FileOpReadField(*fd, &rc, sizeof(rc)) != 0) goto malformed;
          done = True;
          break;
 
       default:
         fprintf(stderr, "Internal error in FileOpPipeCB: bad pipe_msg %d\n",
                 pipe_msg);
-        rc = -1;
-        done = True;
+        goto malformed;
    }
+   goto decoded;
+
+malformed:
+   XtFree(err_msg);
+   XtFree(err_arg);
+   XtFree(target_file);
+   err_msg = err_arg = target_file = NULL;
+   FileOpProtocolError(cb_data->file_mgr_rec == NULL ? toplevel :
+                       cb_data->file_mgr_rec->shell);
+   rc = -1;
+   done = True;
+
+decoded:
 
    if (done)
    {
@@ -2528,10 +2557,10 @@ ChangeIconPipeCB(
    FileMgrRec *file_mgr_rec = NULL;
    short pipe_msg;
    int i, j, n;
-   int rc;
-   char *title, *err_msg, *err_arg;
+   int rc = -1;
+   char *title, *err_msg = NULL, *err_arg = NULL;
    long modify_time;
-   char *full_name;
+   char *full_name = NULL;
    char *tmpStr;
    XmString label;
    Arg args[3];
@@ -2554,11 +2583,13 @@ ChangeIconPipeCB(
    pipe_msg = -1;
    n = PipeRead(*fd, &pipe_msg, sizeof(short));
    DPRINTF(("ChangeIconPipeCB: n %d, pipe_msg %d\n", n, pipe_msg));
+   if (n != sizeof(pipe_msg)) goto malformed;
 
    if (pipe_msg == PIPEMSG_FILE_MODIFIED)
    {
       /* get modify time */
-      PipeRead(*fd, &modify_time, sizeof(long));
+      if (FileOpReadField(*fd, &modify_time, sizeof(modify_time)) != 0)
+         goto malformed;
 
       /* mark the old & new files as modified in the directory cache */
       if (modify_time != 0)
@@ -2591,9 +2622,10 @@ ChangeIconPipeCB(
    else if (pipe_msg == PIPEMSG_FILEOP_ERROR)
    {
       /* the rename failed */
-      PipeRead(*fd, &rc, sizeof(int));
+      if (FileOpReadField(*fd, &rc, sizeof(rc)) != 0) goto malformed;
       err_msg = PipeReadString(*fd);
       err_arg = PipeReadString(*fd);
+      if (err_msg == NULL) goto malformed;
       FileOperationError(msg_widget, err_msg, err_arg);
       XtFree(err_msg);
       XtFree(err_arg);
@@ -2602,11 +2634,12 @@ ChangeIconPipeCB(
    else if (pipe_msg == PIPEMSG_DONE)
    {
       /* get the return code */
-      PipeRead(*fd, &rc, sizeof(int));
+      if (FileOpReadField(*fd, &rc, sizeof(rc)) != 0) goto malformed;
       if (rc == 0)
       {
          /* the rename was successful */
          full_name = PipeReadString(*fd);
+         if (full_name == NULL) goto malformed;
 
          /* All went well, destroy the text field */
          XtUnmanageChild(cb_data->w);
@@ -2705,11 +2738,24 @@ ChangeIconPipeCB(
          }
 
          XtFree(full_name);
+         full_name = NULL;
       }
    }
    else
+   {
       fprintf(stderr, "Internal error in ChangeIconPipeCB: bad pipe_msg %d\n",
               pipe_msg);
+      goto malformed;
+   }
+   goto finish;
+
+malformed:
+   XtFree(err_msg);
+   XtFree(err_arg);
+   XtFree(full_name);
+   FileOpProtocolError(msg_widget);
+
+finish:
 
    /* arrange for the modified directory to be updated */
    DirectoryEndModify(cb_data->host_name, cb_data->directory_name);
@@ -3195,17 +3241,19 @@ MakeFilePipeCB(
    short pipe_msg;
    int n;
    long modify_time;
-   char *full_name;
-   int rc;
+   char *full_name = NULL;
+   int rc = -1, paths_transferred = 0;
 
    /* read the msg from the pipe */
    pipe_msg = -1;
    n = PipeRead(*fd, &pipe_msg, sizeof(short));
+   if (n != sizeof(pipe_msg)) goto malformed;
 
    if (pipe_msg == PIPEMSG_FILE_MODIFIED)
    {
       /* get modify time */
-      PipeRead(*fd, &modify_time, sizeof(long));
+      if (FileOpReadField(*fd, &modify_time, sizeof(modify_time)) != 0)
+         goto malformed;
 
       /* mark the file updated in the directory cache */
       if (modify_time != 0)
@@ -3217,16 +3265,25 @@ MakeFilePipeCB(
 
    if (pipe_msg == PIPEMSG_DONE)
    {
-      PipeRead(*fd, &rc, sizeof(int));
+      if (FileOpReadField(*fd, &rc, sizeof(rc)) != 0) goto malformed;
       full_name = PipeReadString(*fd);
+      if (rc == 0 && full_name == NULL) goto malformed;
    }
    else
    {
       fprintf(stderr, "Internal error in MakeFilePipeCB: bad pipe_msg %d\n",
               pipe_msg);
-      rc = -1;
-      full_name = NULL;
+      goto malformed;
    }
+   goto finish;
+
+malformed:
+   XtFree(full_name);
+   full_name = NULL;
+   rc = -1;
+   FileOpProtocolError(toplevel);
+
+finish:
 
    DPRINTF(("MakeFilePipeCB: n %d, pipe_msg %d, rc %d\n", n, pipe_msg, rc));
 
@@ -3240,6 +3297,7 @@ MakeFilePipeCB(
    /* Store away the newly created file so we later on we can
       scroll to it.
    */
+   if (cb_data->callback_data != NULL)
    {
      MakeFileDoneData * data = (MakeFileDoneData *)cb_data->callback_data;
      DialogCallbackStruct * call_struct = data->call_struct;
@@ -3247,6 +3305,7 @@ MakeFilePipeCB(
 
      file_mgr_data->scrollToThisDirectory = cb_data->to_dir;
      file_mgr_data->scrollToThisFile = cb_data->to_file;
+     paths_transferred = 1;
    }
 
    /* call the callback routine */
@@ -3256,12 +3315,13 @@ MakeFilePipeCB(
    /* free callback data */
    XtFree(full_name);
    XtFree(cb_data->to_host);
+   if (!paths_transferred)
+   {
+      XtFree(cb_data->to_dir);
+      XtFree(cb_data->to_file);
+   }
 
-   /* Don't free to_dir and to_file. We used this to remember
-      which file so later on we can scroll to it.
-   XtFree(cb_data->to_dir);
-   XtFree(cb_data->to_file);
-   */
+   /* The selected view owns the paths only when they were transferred above. */
 
    XtFree((char *)cb_data);
 }

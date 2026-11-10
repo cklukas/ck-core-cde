@@ -149,7 +149,8 @@ def main(argv=None):
                    "-Wno-unused-parameter", "-Wno-unused-variable", "-Wno-unused-function",
                    "-Wno-unused-but-set-variable",
                    "-Wno-parentheses", "-Wno-dangling-else", "-I", str(work), "-I", str(source),
-                   str(work / harness.name), "-o", str(binary)]
+                   str(work / harness.name), str(source / "FileProcess.c"),
+                   "-pthread", "-o", str(binary)]
         if args.baseline_control:
             command += ["-DRESTORE_BASELINE=1"]
         if args.sanitizers != "none":

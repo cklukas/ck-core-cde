@@ -37,6 +37,9 @@ CASES = (
     "worker-normal-resolve", "worker-desktop-resolve",
     "worker-normal-target-resolve", "worker-desktop-target-resolve",
     "worker-normal-collision-keep-both", "worker-normal-collision-clean-cancel",
+    "pipe-read-invalid", "pipe-string-negative", "pipe-string-truncated",
+    "pipe-string-valid", "pipe-write-oversize", "pipe-field-truncated",
+    "pipe-index-negative", "pipe-index-equal", "pipe-index-valid",
 )
 
 
@@ -143,7 +146,8 @@ def constant(text, name):
 
 def extract(source, work, include_workers=True):
     """Copy complete production definitions verbatim, preserving source lines."""
-    filenames = ("FileManip.c", "FileOp.c", "FileConflict.c", "FileConflict.h",
+    filenames = ("FileManip.c", "FileOp.c", "FileProcess.c", "FileProcess.h",
+                 "FileConflict.c", "FileConflict.h",
                  "FileConflictWire.c", "FileConflictWire.h",
                  "Main.h", "FileMgr.h", "Common.h", "SharedMsgs.h")
     raw = {name: (source / name).read_bytes() for name in filenames}
@@ -168,6 +172,7 @@ def extract(source, work, include_workers=True):
                   "FilePathsFree", "FileReadLink", "FileManip")] + [
         ("FileOp.c", name) for name in (
             "PipeRead", "PipeWriteString", "PipeReadString", "PipeWriteErrmsg",
+            "FileOpReadField", "FileOpReadIndex",
             "FileOpError", "CreateFileFromBuffer", "SendModifyMsg",
             "appendErrorMessage", "DisplayErrorMessage")
     ]
@@ -190,6 +195,27 @@ def extract(source, work, include_workers=True):
               "functions": manifest,
               "generated_sha256": {name: sha((work / name).read_bytes()) for name in
                                    ("transfer-definitions.inc", "transfer-production.inc")}}
+    callback_bodies = {name: function(text["FileOp.c"], name)[0] for name in
+                       ("FileOpPipeCB", "ChangeIconPipeCB", "MakeFilePipeCB")}
+    protocol_contract = {
+        "fileop_index_reads": callback_bodies["FileOpPipeCB"].count("FileOpReadIndex("),
+        "fileop_checked_fields": callback_bodies["FileOpPipeCB"].count("FileOpReadField("),
+        "rename_checked_fields": callback_bodies["ChangeIconPipeCB"].count("FileOpReadField("),
+        "create_checked_fields": callback_bodies["MakeFilePipeCB"].count("FileOpReadField("),
+        "callbacks_check_tag_size": sum("n != sizeof(pipe_msg)" in body
+                                        for body in callback_bodies.values()),
+        "optional_error_arguments": sum(
+            "err_msg == NULL || err_arg == NULL" not in body and
+            "if (err_msg == NULL) goto malformed;" in body
+            for body in (callback_bodies["FileOpPipeCB"],
+                         callback_bodies["ChangeIconPipeCB"])),
+    }
+    if protocol_contract != {"fileop_index_reads": 2, "fileop_checked_fields": 4,
+                             "rename_checked_fields": 3, "create_checked_fields": 2,
+                             "callbacks_check_tag_size": 3,
+                             "optional_error_arguments": 2}:
+        raise ValueError(f"callback protocol contract mismatch: {protocol_contract}")
+    result["protocol_contract"] = protocol_contract
     (work / "extraction-manifest.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 
@@ -239,7 +265,8 @@ def main(argv=None):
     work.mkdir(parents=True, mode=0o700)
     (work / "tmp").mkdir(mode=0o700)
     env = dict(os.environ, TMPDIR=str(work / "tmp"), LANG="C", LC_ALL="C")
-    env.setdefault("ASAN_OPTIONS", "detect_leaks=1:abort_on_error=1")
+    leak_check = "0" if os.uname().sysname == "Darwin" else "1"
+    env.setdefault("ASAN_OPTIONS", f"detect_leaks={leak_check}:abort_on_error=1")
     env.setdefault("UBSAN_OPTIONS", "halt_on_error=1:print_stacktrace=1")
     harness = Path(__file__).resolve().with_name("transfer-completion.c")
     frozen_harness = work / harness.name
@@ -273,6 +300,7 @@ def main(argv=None):
         if workers:
             command += ["-DTRANSFER_INCLUDE_WORKERS=1", str(source / "FileConflict.c"),
                         str(source / "FileConflictWire.c")]
+        command += [str(source / "FileProcess.c")]
         command += ["-pthread", "-o", str(binary)]
         if args.sanitizers != "none":
             command += ["-fsanitize=" + args.sanitizers,

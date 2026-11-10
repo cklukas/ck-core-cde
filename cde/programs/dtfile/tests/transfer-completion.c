@@ -22,6 +22,7 @@ typedef void *Widget;
 typedef char *String;
 typedef int Tt_status;
 typedef struct DesktopRec DesktopRec;
+typedef struct { int file_count; } FileOpCBData;
 typedef void (*FileOperationErrorProc)(Widget, char *, char *);
 #define True 1
 #define False 0
@@ -37,8 +38,12 @@ typedef void (*FileOperationErrorProc)(Widget, char *, char *);
 #define XtRealloc(p,n) realloc(p,n)
 #define XtNewString(s) strdup(s)
 #define XtFree(p) free(p)
+#ifndef S_IFNWK
+#define S_IFNWK 0
+#endif
 #include "transfer-definitions.inc"
 #include "SharedMsgs.h"
+#include "FileProcess.h"
 #ifdef TRANSFER_INCLUDE_WORKERS
 #include "FileConflict.h"
 #include "FileConflictWire.h"
@@ -348,6 +353,46 @@ static void buffer_case(void)
         } else CHECK(0);
     }
 }
+static void pipe_case(void)
+{
+    int channel[2];
+    if (!strcmp(case_name,"pipe-read-invalid")) {
+        char byte;
+        errno=0;CHECK(PipeRead(-1,&byte,-1)==-1 && errno==EINVAL);
+        errno=0;CHECK(PipeRead(-1,NULL,1)==-1 && errno==EINVAL);
+        return;
+    }
+    fixture(pipe(channel)==0);
+    if (!strcmp(case_name,"pipe-field-truncated")) {
+        int value=0;fixture(write(channel[1],"xy",2)==2);fixture(close(channel[1])==0);
+        CHECK(FileOpReadField(channel[0],&value,sizeof(value))==-1);
+    } else if (!strncmp(case_name,"pipe-index-",11)) {
+        FileOpCBData data={.file_count=2};int value=!strcmp(case_name,"pipe-index-negative")?-1:
+            !strcmp(case_name,"pipe-index-equal")?2:1,decoded=99;
+        fixture(write(channel[1],&value,sizeof(value))==sizeof(value));fixture(close(channel[1])==0);
+        int result=FileOpReadIndex(channel[0],&data,&decoded);
+        CHECK(result==(!strcmp(case_name,"pipe-index-valid")?0:-1));CHECK(decoded==value);
+    } else if (!strcmp(case_name,"pipe-string-negative")) {
+        short length=-1;fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
+        fixture(close(channel[1])==0);errno=0;
+        CHECK(PipeReadString(channel[0])==NULL && errno==EPROTO);
+    } else if (!strcmp(case_name,"pipe-string-truncated")) {
+        short length=5;fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
+        fixture(write(channel[1],"xy",2)==2);fixture(close(channel[1])==0);
+        CHECK(PipeReadString(channel[0])==NULL);
+    } else if (!strcmp(case_name,"pipe-string-valid")) {
+        short length=3;fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
+        fixture(write(channel[1],"abc",3)==3);fixture(close(channel[1])==0);
+        char *value=PipeReadString(channel[0]);CHECK(value && !strcmp(value,"abc"));XtFree(value);
+    } else {
+        size_t length=(size_t)SHRT_MAX+1;char *value=malloc(length+1);fixture(value!=NULL);
+        memset(value,'x',length);value[length]=0;errno=0;
+        CHECK(PipeWriteString(channel[1],value)==-1 && errno==EOVERFLOW);
+        free(value);fixture(close(channel[1])==0);
+        char byte;CHECK(read(channel[0],&byte,1)==0);
+    }
+    fixture(close(channel[0])==0);
+}
 #ifdef TRANSFER_INCLUDE_WORKERS
 static void worker_case(void)
 {
@@ -449,7 +494,8 @@ int main(int argc,char **argv)
     if (!strncmp(case_name,"worker-",7)) worker_case();
     else
 #endif
-    if (!strncmp(case_name,"buffer-",7)) buffer_case();
+    if (!strncmp(case_name,"pipe-",5)) pipe_case();
+    else if (!strncmp(case_name,"buffer-",7)) buffer_case();
     else copy_case();
     if (!failed) printf("PASS %s\n",case_name);
     return failed?1:0;
