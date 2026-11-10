@@ -3124,34 +3124,86 @@ ChangeIconNameDT (
  *    destination of a create, copy or move operation.
  *------------------------------------------------------------------*/
 
-void
+Boolean
 GetTarget(
-        char *from_host,
-        char *from_dir,
-        char *new_name,
+        const char *from_host,
+        const char *from_dir,
+        const char *new_name,
         char *to_host,
+        size_t to_host_size,
         char *to_dir,
-        char *to_file)
+        size_t to_dir_size,
+        char *to_file,
+        size_t to_file_size)
 {
-   char *ptr;
+   char path[MAX_PATH];
+   const char *file;
+   char *separator;
+   size_t host_length;
+   size_t directory_length;
+   size_t file_length;
+   size_t from_length;
+   size_t name_length;
+   size_t join_length;
 
-   strcpy(to_host, from_host);
-
-   if (strncmp (new_name, "/", 1) == 0)
+   if (from_host == NULL || from_dir == NULL || new_name == NULL ||
+       to_host == NULL || to_host_size == 0 ||
+       to_dir == NULL || to_dir_size == 0 ||
+       to_file == NULL || to_file_size == 0)
    {
-     strcpy(to_dir, new_name);
+      errno = EINVAL;
+      return False;
+   }
+
+   name_length = strlen(new_name);
+   if (new_name[0] == '/')
+   {
+      if (name_length >= sizeof(path))
+      {
+         errno = ENAMETOOLONG;
+         return False;
+      }
+      memcpy(path, new_name, name_length + 1);
    }
    else
    {
-     if (strcmp(to_dir, "/") == 0)
-       sprintf(to_dir, "%s%s", from_dir, new_name);
-     else
-       sprintf(to_dir, "%s/%s", from_dir, new_name);
+      from_length = strlen(from_dir);
+      join_length = strcmp(from_dir, "/") == 0 ? 0 : 1;
+      if (from_length >= sizeof(path) ||
+          join_length > sizeof(path) - from_length - 1 ||
+          name_length > sizeof(path) - from_length - join_length - 1)
+      {
+         errno = ENAMETOOLONG;
+         return False;
+      }
+      memcpy(path, from_dir, from_length);
+      if (join_length != 0) path[from_length] = '/';
+      memcpy(path + from_length + join_length, new_name, name_length);
+      path[from_length + join_length + name_length] = '\0';
    }
 
-   ptr = strrchr(to_dir, '/');
-   *ptr = '\0';
-   strcpy(to_file, ptr + 1);
+   separator = strrchr(path, '/');
+   if (separator == NULL || separator[1] == '\0')
+   {
+      errno = EINVAL;
+      return False;
+   }
+   file = separator + 1;
+   host_length = strlen(from_host);
+   directory_length = separator == path ? 1 : (size_t)(separator - path);
+   file_length = strlen(file);
+   if (host_length >= to_host_size || directory_length >= to_dir_size ||
+       file_length >= to_file_size)
+   {
+      errno = ENAMETOOLONG;
+      return False;
+   }
+
+   memcpy(to_host, from_host, host_length + 1);
+   memcpy(to_dir, path, directory_length);
+   to_dir[directory_length] = '\0';
+   memcpy(to_file, file, file_length + 1);
+   return True;
 }
 
 
@@ -3365,7 +3417,13 @@ MakeFile(
    int rc;
 
    /* get host & path of the target file */
-   GetTarget(host_name, directory_name, new_name, to_host, to_dir, to_file);
+   if (!GetTarget(host_name, directory_name, new_name,
+                  to_host, sizeof(to_host), to_dir, sizeof(to_dir),
+                  to_file, sizeof(to_file)))
+   {
+      FileOpStartError(w, errno);
+      return;
+   }
 
    /* mark the target directory as being modified in the directory cache */
    DirectoryBeginModify(to_host, to_dir);

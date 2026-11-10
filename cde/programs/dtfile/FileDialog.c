@@ -1613,6 +1613,13 @@ RenameOk(
       }
    }
 
+   if (msg == NULL &&
+       !GetTarget(call_struct->host_name, call_struct->directory_name, new,
+                  to_host, sizeof(to_host), to_dir, sizeof(to_dir),
+                  to_file, sizeof(to_file)))
+      msg = XtNewString(GETMESSAGE(10, 13,
+                                   "Invalid file or folder name."));
+
    if (msg != NULL)
    {
       _DtMessage(XtParent (w), title, msg, NULL, HelpRequestCB);
@@ -1644,9 +1651,6 @@ RenameOk(
     * called with a return code indicating success or failure.
     */
 
-   /* get host & path of the target file */
-   GetTarget(call_struct->host_name, call_struct->directory_name, new,
-             to_host, to_dir, to_file);
    /* get host & path of source file */
    host_set[0] = call_struct->host_name;
    file_set[0] = build_path(call_struct->directory_name, call_struct->file_name);

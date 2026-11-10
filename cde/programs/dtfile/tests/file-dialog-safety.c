@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +8,7 @@ typedef int Tt_status;
 
 #define True 1
 #define False 0
+#define MAX_PATH 32
 #define XtFree free
 
 static const char *resolved_value;
@@ -39,6 +41,9 @@ static int
 run_case(const char *name)
 {
    char path[16] = "unchanged";
+   char host[16] = "host-old";
+   char directory[16] = "directory-old";
+   char file[16] = "file-old";
 
    resolver_calls = 0;
    resolved_value = "/resolved/path";
@@ -93,6 +98,66 @@ run_case(const char *name)
       resolved_value = NULL;
       CHECK(!GetToPath(path, sizeof(path), "item", "host", "/dir"));
       CHECK(resolver_calls == 1);
+   }
+   else if (strcmp(name, "split-absolute-root") == 0)
+   {
+      CHECK(GetTarget("host", "/ignored", "/item", host, sizeof(host),
+                      directory, sizeof(directory), file, sizeof(file)));
+      CHECK(strcmp(host, "host") == 0 && strcmp(directory, "/") == 0 &&
+            strcmp(file, "item") == 0);
+   }
+   else if (strcmp(name, "split-relative-root") == 0)
+   {
+      CHECK(GetTarget("host", "/", "item", host, sizeof(host),
+                      directory, sizeof(directory), file, sizeof(file)));
+      CHECK(strcmp(directory, "/") == 0 && strcmp(file, "item") == 0);
+   }
+   else if (strcmp(name, "split-relative-directory") == 0)
+   {
+      CHECK(GetTarget("host", "/dir", "item", host, sizeof(host),
+                      directory, sizeof(directory), file, sizeof(file)));
+      CHECK(strcmp(directory, "/dir") == 0 && strcmp(file, "item") == 0);
+   }
+   else if (strcmp(name, "split-nested-absolute") == 0)
+   {
+      CHECK(GetTarget("host", "/ignored", "/one/two", host, sizeof(host),
+                      directory, sizeof(directory), file, sizeof(file)));
+      CHECK(strcmp(directory, "/one") == 0 && strcmp(file, "two") == 0);
+   }
+   else if (strcmp(name, "split-host-long") == 0)
+   {
+      errno = 0;
+      CHECK(!GetTarget("host-too-long", "/", "item", host, 8,
+                       directory, sizeof(directory), file, sizeof(file)));
+      CHECK(errno == ENAMETOOLONG && strcmp(host, "host-old") == 0 &&
+            strcmp(directory, "directory-old") == 0 &&
+            strcmp(file, "file-old") == 0);
+   }
+   else if (strcmp(name, "split-path-long") == 0)
+   {
+      errno = 0;
+      CHECK(!GetTarget("host", "/012345678901234567890123456789", "item",
+                       host, sizeof(host), directory, sizeof(directory),
+                       file, sizeof(file)));
+      CHECK(errno == ENAMETOOLONG && strcmp(directory, "directory-old") == 0);
+   }
+   else if (strcmp(name, "split-trailing-slash") == 0)
+   {
+      errno = 0;
+      CHECK(!GetTarget("host", "/ignored", "/dir/", host, sizeof(host),
+                       directory, sizeof(directory), file, sizeof(file)));
+      CHECK(errno == EINVAL && strcmp(directory, "directory-old") == 0);
+   }
+   else if (strcmp(name, "split-file-capacity") == 0)
+   {
+      CHECK(GetTarget("host", "/", "123456789012345", host, sizeof(host),
+                      directory, sizeof(directory), file, sizeof(file)));
+      CHECK(strcmp(file, "123456789012345") == 0);
+      strcpy(file, "file-old");
+      errno = 0;
+      CHECK(!GetTarget("host", "/", "1234567890123456", host, sizeof(host),
+                       directory, sizeof(directory), file, sizeof(file)));
+      CHECK(errno == ENAMETOOLONG && strcmp(file, "file-old") == 0);
    }
    else
       return 2;

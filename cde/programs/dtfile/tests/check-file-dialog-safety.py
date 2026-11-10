@@ -16,6 +16,9 @@ CASES = (
     "join-root", "join-directory", "join-exact", "join-long", "join-null",
     "target-relative", "target-absolute", "target-join-long",
     "target-resolved-long", "target-resolve-error",
+    "split-absolute-root", "split-relative-root", "split-relative-directory",
+    "split-nested-absolute", "split-host-long", "split-path-long",
+    "split-trailing-slash", "split-file-capacity",
 )
 
 
@@ -50,10 +53,14 @@ def main():
     env.setdefault("ASAN_OPTIONS", f"detect_leaks={leak_check}:abort_on_error=1")
     env.setdefault("UBSAN_OPTIONS", "halt_on_error=1:print_stacktrace=1")
     source_file = source / "FileDialog.c"
+    file_op_source = source / "FileOp.c"
+    main_header = source / "Main.h"
     fixture = Path(__file__).with_name("file-dialog-safety.c")
     lexical_file = Path(__file__).with_name("check-transfer-completion.py")
     lexical = runpy.run_path(str(lexical_file))
     text = source_file.read_text()
+    file_op_text = file_op_source.read_text()
+    main_text = main_header.read_text()
     functions = []
     records = []
     for name in ("FileDialogBuildPath", "GetToPath"):
@@ -61,6 +68,10 @@ def main():
         functions.append(f'#line {line} {json.dumps(str(source_file))}\n{body}\n')
         records.append({"function": name, "line": line,
                         "sha256": hashlib.sha256(body.encode()).hexdigest()})
+    body, line = lexical["function"](file_op_text, "GetTarget")
+    functions.append(f'#line {line} {json.dumps(str(file_op_source))}\n{body}\n')
+    records.append({"function": "GetTarget", "line": line,
+                    "sha256": hashlib.sha256(body.encode()).hexdigest()})
     production = work / "file-dialog-production.inc"
     production.write_text("\n".join(functions))
     (work / fixture.name).write_bytes(fixture.read_bytes())
@@ -73,13 +84,22 @@ def main():
         "preview_target_bounded": "GetToPath (whole_name, sizeof(whole_name)" in text,
         "resolved_target_bounded": "path_length >= to_size" in text
             and "memcpy(to, path, path_length + 1)" in text,
+        "target_split_bounded": "Boolean\nGetTarget(" in file_op_text
+            and "strcmp(to_dir" not in body and "char path[MAX_PATH]" in body,
+        "target_callers_check_failure": "if (!GetTarget(host_name, directory_name, new_name" in file_op_text
+            and "if (msg == NULL &&\n       !GetTarget(" in text,
+        "target_interface_sized": "extern Boolean GetTarget(" in main_text
+            and main_text.count("size_t to_") == 3,
     }
     report = {
         "start_utc": utc(), "passed": False, "cases": [],
         "sanitizers": args.sanitizers, "compiler_jobs": 1,
         "runtime": dict(zip(("sysname", "nodename", "release", "version", "machine"),
                             os.uname())),
-        "source_sha256": digest(source_file), "fixture_sha256": digest(fixture),
+        "source_sha256": {"FileDialog.c": digest(source_file),
+                          "FileOp.c": digest(file_op_source),
+                          "Main.h": digest(main_header)},
+        "fixture_sha256": digest(fixture),
         "driver_sha256": digest(Path(__file__)), "functions": records,
         "production_sha256": digest(production), "contract": contracts,
     }

@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile transactional destination target splitting",
+  "source_base": "4a81123c21fc707fbc2dfdde88196f3b9ecca312",
+  "motif_revision": "90d98fb7395306ab1f54df3e0d8d247893799a49",
+  "motif_prefix": "/home/klukas/tmp/motif-cde-90d98fb-20261110/prefix",
+  "motif_libXm_sha256": "e049702713e63eb5fbd7759f230e2afb5cb965794d9f901d3fb05734d0f24df3",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    "cde/CHANGES": "2ff72848a153144aa3374637d469746dece65b9d98c34b3ab8659e25c872f784",
+    "cde/programs/dtfile/FileDialog.c": "b39fe796ae573fde91d75846cddeaeed5d83ee7238d13faaa0ed443b2d3bc032",
+    "cde/programs/dtfile/FileOp.c": "6fafba6a49fa1b345aed1ef2ab7a20e50becbbe235c16e206f58d9cce18a2d01",
+    "cde/programs/dtfile/Main.h": "ec3b43f1bc03bf60ea56d6a798fb5b95f7ca5c8cb7be8820815ff547f6bf5e7d",
+    "cde/programs/dtfile/tests/check-file-dialog-safety.py": "98da6334b663e1dcb5354e85c7c6557016e1da639369c7a2ab7c7ed315cc8bf1",
+    "cde/programs/dtfile/tests/file-dialog-safety.c": "ca070c654131f89d384216d47719925c50b45e258b0e00d6720add51cbcc6b9f",
+    "docs/improvements/file-manager.md": "a0550da9ff53c07f67bd721f322d9fea2d7354326cc1d29382d09c22fc300edc"
+  },
+  "focused_regressions": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, Linux ARM64",
+    "cases": 18,
+    "seconds": 0.450772,
+    "sanitizers": "address,undefined",
+    "leak_detection": true,
+    "receipt_sha256": "6012faa837c113662fc79727fbce912bba53d8def5779032fc2d72e1e999d5c3",
+    "checkpoint_receipt_sha256": "51b19b43c67f20b13abb8ff854927a24e4c9b140980c07b28e9fee9f77dbf11a",
+    "coverage": [
+      "absolute targets directly below root",
+      "relative targets from root and nested directories",
+      "nested absolute targets",
+      "oversized hosts, joined paths and leaf outputs",
+      "malformed trailing slashes",
+      "transactional output preservation on failure",
+      "checked file-creation and rename callers"
+    ]
+  },
+  "preflight_failures": [
+    {
+      "stage": "focused sanitizer runtime",
+      "finding": "The first expanded fixture used an unterminated sentinel and ASan stopped after 15 cases.",
+      "resolution": "Enlarged the fixture buffer while retaining the deliberately smaller capacity argument; all 18 production-path cases then passed."
+    },
+    {
+      "stage": "focused receipt",
+      "finding": "The first passing receipt did not record the fixture hash.",
+      "resolution": "Added the fixture digest to the report and reran the same 18 sanitizer cases; the third receipt is authoritative."
+    },
+    {
+      "stage": "incremental production build",
+      "finding": "The relocated build directory contained a local Main.h that shadowed the updated source header, so the first build attempt rejected the sized GetTarget calls.",
+      "resolution": "Installed and byte-verified the frozen Main.h in both source and build locations, preserved the failed attempt, and resumed the same dependency closure successfully."
+    }
+  ],
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "cpu": 2,
+    "full_rebuild": false,
+    "closure_objects": 32,
+    "closure_note": "The 32 objects are the genuine dependency closure recorded by automake because they include Main.h; the other dtfile objects and every CDE library were reused.",
+    "successful_retry_seconds": 12.365963264,
+    "launcher_sha256": "d9a56d5b7f62ca6fd8d4f898227c495838039d9f4af26016e950c79725ae47f3",
+    "output_sha256": "fda33ad4cdc5600aa4050afd9b8ecdd70986e6224dc9b8b69cd7e5593b12ea48",
+    "runtime_libXm_exact_prefix": true,
+    "warnings": "Only pre-existing assignment-condition warnings in unchanged dtfile sources."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "runs": 1,
+    "seconds": 16.438705152,
+    "legacy_pass_lines": 311,
+    "file_dialog_cases": 18,
+    "failed_case_lines": 0,
+    "hard_failure_markers": 0,
+    "log_sha256": "de63ff72113813e78685110e890f9e3aaa2b3f6b75176890d7cf7d5e0e1b3b5a"
+  },
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round13-20261110/",
+  "evidence_manifest_sha256": "7072bbc0e75337b3afc350822f57243a8f9b78d97a9cc28429e7ac67859e9ef6",
+  "postconditions": [
+    "destination host, parent and leaf outputs are published only after all validation succeeds",
+    "root entries retain slash as their parent",
+    "relative names are joined using the initialized source directory",
+    "oversized and malformed targets fail before cache or operation setup",
+    "dtfile resolves libXm.so.9 from the exact frozen Motif prefix",
+    "no owned compiler, make or test process remained before returning the serial lane"
+  ],
+  "limitations": [
+    "This target-splitting bundle did not launch or inspect a CDE window.",
+    "The qualified ck-core-fs-lib revision was not changed."
+  ]
+}

@@ -1,4 +1,10 @@
 2026-11-10
+- dtfile: make destination path splitting transactional and capacity-aware.
+  File creation and copy/move/link dialogs now pass explicit output sizes,
+  correctly recognize a root source directory without reading an uninitialized
+  destination buffer, preserve `/` as the parent of absolute root entries, and
+  reject oversized hosts, directories, leaves and malformed trailing slashes
+  before publishing partial outputs or starting an operation.
 - dtfile: make copy, move and link dialog labels and destination paths
   independent of fixed localized-text assumptions. Selected-object labels now
   compose Motif strings directly, while rename, preview and resolved target

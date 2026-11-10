@@ -52,6 +52,8 @@
 #ifndef _Main_h
 #define _Main_h
 
+#include <stddef.h>
+
 /* ANSI C definitions */
 #ifdef __STDC__
 #define Const const
@@ -826,13 +828,16 @@ extern void SetToNormalColors(
                         Widget bg_fg_colors,
                         Widget top_shadow_colors,
                         int type) ;
-extern void GetTarget(
-                        char *from_host,
-                        char *from_dir,
-                        char *new_name,
+extern Boolean GetTarget(
+                        const char *from_host,
+                        const char *from_dir,
+                        const char *new_name,
                         char *to_host,
+                        size_t to_host_size,
                         char *to_dir,
-                        char *to_file);
+                        size_t to_dir_size,
+                        char *to_file,
+                        size_t to_file_size);
 extern Boolean FileMoveCopy(
                         FileMgrData *file_mgr_data,
                         char *to_file,

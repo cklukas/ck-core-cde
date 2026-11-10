@@ -72,6 +72,10 @@ strings, so a translated caption or long object name is not copied through a
 fixed text buffer. Their destination and preview paths are joined with explicit
 capacity checks; an oversized resolved path is rejected before an operation is
 started instead of being truncated or copied past the target buffer.
+The final host, parent directory and leaf split is also transactional. It uses
+the source directory—not uninitialized destination storage—to decide how to
+join a relative name, preserves the root parent for `/name`, and reports an
+invalid or oversized target before file creation or transfer setup begins.
 
 CK Core CDE develops File Manager as a visual workspace rather than only a
 directory browser.
