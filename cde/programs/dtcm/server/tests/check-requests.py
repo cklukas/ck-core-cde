@@ -10,7 +10,7 @@ Environment, as `make check` supplies it (see programs/dtcm/server/Makefile.am):
   CMSD_LIBS     the libraries rpc.cmsd links
 The test program includes the production log.c and cmsfunc.c; the other sources
 the tests exercise (rtable4.c, cmsconvert.c, cmscalendar.c, lexit.c, lookup.c,
-reminder.c of rpc.cmsd; cmxdr.c, lutil.c, attr.c, match.c, iso8601.c, rescan.c,
+reminder.c, garbage.c, reutil.c, rerule.c, access.c of rpc.cmsd; cmxdr.c, lutil.c, attr.c, match.c, iso8601.c, rescan.c,
 updateattrs.c and the generated reparser.c of libcsa) are compiled next to it, and it is linked with
 the rest of the built rpc.cmsd and libcsa.  Each case runs in
 its own process; any case that fails or crashes fails the run.  The sources
@@ -61,7 +61,7 @@ def fail(message):
 
 # The test replaces these objects with its own compilation of the same code.
 instrumented = ("rtable4", "cmsconvert", "cmscalendar", "lexit", "lookup",
-                "reminder")
+                "reminder", "garbage", "reutil", "rerule", "access")
 replaced = {"log", "cmsfunc", "svcmain", *instrumented}
 kept = [o for o in objects if o.rsplit("-", 1)[-1].split(".")[0] not in replaced]
 if len(kept) != len(objects) - len(replaced):

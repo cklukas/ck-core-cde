@@ -28,6 +28,13 @@
  *  (c) Copyright 1993, 1994 Sun Microsystems, Inc.
  */
 
+/*
+ * Text form of a parsed recurrence rule.  The text is built in a buffer
+ * that grows with the rule, so a rule with any number of times, days or
+ * weeks has a complete text of its own.
+ */
+
+#include <stdarg.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
@@ -41,82 +48,139 @@ typedef enum {
         NUM_WEEK
 } NumType;
 
-static void NumsToBuf(unsigned int *, unsigned int, NumType, char *,
-                        unsigned int);
-static void WeekNumberToString(WeekNumber, char *);
-static void WeekDayToString(WeekDay, char *);
-static void ConvertDaily(RepeatEvent *, char *, unsigned int);
-static void ConvertWeekly(RepeatEvent *, char *, unsigned int);
-static void ConvertMonthly(RepeatEvent *, char *, unsigned int);
-static void ConvertYearly(RepeatEvent *, char *, unsigned int);
+/* The text of a rule so far; failed is set once memory has run out. */
+typedef struct {
+	char	*data;
+	size_t	 length;
+	size_t	 size;
+	int	 failed;
+} ReText;
+
+static void NumsToBuf(unsigned int *, unsigned int, NumType, ReText *);
+static void WeekNumberToText(WeekNumber, ReText *);
+static void WeekDayToText(WeekDay, ReText *);
+static void ConvertDaily(RepeatEvent *, ReText *);
+static void ConvertWeekly(RepeatEvent *, ReText *);
+static void ConvertMonthly(RepeatEvent *, ReText *);
+static void ConvertYearly(RepeatEvent *, ReText *);
 
 #define RE_DAILY(re) (re->re_data.re_daily)
 #define RE_WEEKLY(re) (re->re_data.re_weekly)
 #define RE_MONTHLY(re) (re->re_data.re_monthly)
 #define RE_YEARLY(re) (re->re_data.re_yearly)
 
+/*
+ * Append formatted text, growing the buffer to the length of the result.
+ */
+static void
+ReTextAppend(
+	ReText		*text,
+	const char	*format,
+	...)
+{
+	va_list	 args;
+	va_list	 again;
+	int	 needed;
+	char	*grown;
+
+	if (text->failed)
+		return;
+
+	va_start(args, format);
+	va_copy(again, args);
+	needed = vsnprintf(NULL, 0, format, args);
+	va_end(args);
+
+	if (needed < 0) {
+		text->failed = 1;
+		va_end(again);
+		return;
+	}
+
+	if (text->length + (size_t)needed + 1 > text->size) {
+		size_t size = text->size ? text->size : 64;
+
+		while (size < text->length + (size_t)needed + 1)
+			size *= 2;
+		if ((grown = realloc(text->data, size)) == NULL) {
+			text->failed = 1;
+			va_end(again);
+			return;
+		}
+		text->data = grown;
+		text->size = size;
+	}
+
+	vsnprintf(text->data + text->length, text->size - text->length,
+		  format, again);
+	va_end(again);
+	text->length += (size_t)needed;
+}
+
+/*
+ * Returns the text of the rules of the list, one after the other and
+ * separated by a blank, in memory the caller frees; NULL for no rule or
+ * when memory runs out.
+ */
 char *
 ReToString(
 	RepeatEvent *re)
 {
-	char	*cmd_buf = NULL;
-	char	*cmd_buf_tmp = NULL;
-	int	 cmd_buf_size = 0;
-	int	 subcommand_size = 0;
-	char     subcommand[1024];  /* XXX: fixed size */
+	ReText	 text = { NULL, 0, 0, 0 };
 
 	if (!re) return (char *)NULL;
 
 	while (re) {
+		size_t	start = text.length;
+
+		if (start > 0)
+			ReTextAppend(&text, " ");
+
 		switch (re->re_type) {
 
 		case RT_MINUTE:
-			sprintf(subcommand, "M%d #%d",
+			ReTextAppend(&text, "M%d #%d",
 					re->re_interval, re->re_duration);
 			break;
 		case RT_DAILY:
-			ConvertDaily(re, subcommand, 1024);
+			ConvertDaily(re, &text);
 			break;
 		case RT_WEEKLY:
-			ConvertWeekly(re, subcommand, 1024);
+			ConvertWeekly(re, &text);
 			break;
 		case RT_MONTHLY_POSITION:
 		case RT_MONTHLY_DAY:
-			ConvertMonthly(re, subcommand, 1024);
+			ConvertMonthly(re, &text);
 			break;
 		case RT_YEARLY_MONTH:
 		case RT_YEARLY_DAY:
-			ConvertYearly(re, subcommand, 1024);
+			ConvertYearly(re, &text);
+			break;
+		default:
+			/* nothing to say about a rule of an unknown type */
+			if (text.data != NULL)
+				text.data[text.length = start] = '\0';
 			break;
 		}
-
-		cmd_buf_tmp = cmd_buf;
-
-		if (cmd_buf) cmd_buf_size = strlen(cmd_buf);
-		subcommand_size = strlen(subcommand);
-
-		cmd_buf = (char *)calloc(1, cmd_buf_size + subcommand_size + 2);
-
-		if (cmd_buf_tmp)
-			strcat (cmd_buf, cmd_buf_tmp);
-			
-
-		if (cmd_buf_tmp)
-			strcat (cmd_buf, " ");
-		strcat (cmd_buf, subcommand);
-
-
-		memset (subcommand, 0, 1024);
 
 		re = re->re_next;
 	}
 
-	return cmd_buf;
+	if (text.failed) {
+		free(text.data);
+		return (char *)NULL;
+	}
+
+	/* rules of unknown types have no text; that is the empty text */
+	if (text.data == NULL)
+		return strdup("");
+
+	return text.data;
 }
 
 /*
  * Takes an array of numbers, converts them back into their string
- * type (e.g. SU 1W etc) and puts them into a string buffer with end
+ * type (e.g. SU 1W etc) and appends them to the text with end
  * marks as necessary, separated by spaces.
  */
 static void
@@ -124,213 +188,148 @@ NumsToBuf(
 	unsigned int	*array,
 	unsigned int	 array_size,
 	NumType		 type,
-	char		*buffer,
-	unsigned int	 buf_size)
+	ReText		*text)
 {
-	int 	 i,
-		 size = 0; 
-	char	 tmp_buf[34],
-		 tmp_buf2[32];
+	unsigned int	i;
 
-	for (i = 0; i < array_size; i++) {
+	for (i = 0; i < array_size && !text->failed; i++) {
 		if (type == NUM_NUM)
-			sprintf(tmp_buf2, " %d", RE_MASK_STOP(array[i]));
+			ReTextAppend(text, " %d", RE_MASK_STOP(array[i]));
 		else if (type == NUM_DAY)
-			WeekDayToString(RE_MASK_STOP(array[i]), tmp_buf2);
+			WeekDayToText(RE_MASK_STOP(array[i]), text);
 		else if (type == NUM_WEEK)
-			WeekNumberToString(RE_MASK_STOP(array[i]), tmp_buf2);
-			
-			/* Add end mark if needed */
-		if (RE_STOP_IS_SET(array[i])) {
-			sprintf(tmp_buf, "%s$", tmp_buf2);
-			strcat (buffer, tmp_buf);
-			size += strlen(tmp_buf);
-		} else {
-			strcat (buffer, tmp_buf2);
-			size += strlen(tmp_buf2);
-		}
+			WeekNumberToText(RE_MASK_STOP(array[i]), text);
 
-			/* Make sure the size of our buffer does not overflow */
-		if (size > buf_size) {
-			printf ("Error: Internal buffer size exceeded\n");
-			return;
-		}
+			/* Add end mark if needed */
+		if (RE_STOP_IS_SET(array[i]))
+			ReTextAppend(text, "$");
 	}
 }
 
 static void
-WeekDayToString(
+WeekDayToText(
 	WeekDay		 day,
-	char		*buffer)
+	ReText		*text)
 {
 	switch (RE_MASK_STOP(day)) {
 	case WD_SUN:
-		sprintf (buffer, " SU");
+		ReTextAppend(text, " SU");
 		break;
 	case WD_MON:
-		sprintf (buffer, " MO");
+		ReTextAppend(text, " MO");
 		break;
 	case WD_TUE:
-		sprintf (buffer, " TU");
+		ReTextAppend(text, " TU");
 		break;
 	case WD_WED:
-		sprintf (buffer, " WE");
+		ReTextAppend(text, " WE");
 		break;
 	case WD_THU:
-		sprintf (buffer, " TH");
+		ReTextAppend(text, " TH");
 		break;
 	case WD_FRI:
-		sprintf (buffer, " FR");
+		ReTextAppend(text, " FR");
 		break;
 	case WD_SAT:
-		sprintf (buffer, " SA");
+		ReTextAppend(text, " SA");
 		break;
 	}
 
 	if (RE_STOP_IS_SET(day))
-		strcat (buffer, "$");
+		ReTextAppend(text, "$");
 }
 
 static void
-WeekNumberToString(
+WeekNumberToText(
 	WeekNumber	 week,
-	char		*buffer)
+	ReText		*text)
 {
 	switch (RE_MASK_STOP(week)) {
 	case WK_F1:
-		sprintf (buffer, " 1+");
+		ReTextAppend(text, " 1+");
 		break;
 	case WK_F2:
-		sprintf (buffer, " 2+");
+		ReTextAppend(text, " 2+");
 		break;
 	case WK_F3:
-		sprintf (buffer, " 3+");
+		ReTextAppend(text, " 3+");
 		break;
 	case WK_F4:
-		sprintf (buffer, " 4+");
+		ReTextAppend(text, " 4+");
 		break;
 	case WK_F5:
-		sprintf (buffer, " 5+");
+		ReTextAppend(text, " 5+");
 		break;
 	case WK_L1:
-		sprintf (buffer, " 1-");
+		ReTextAppend(text, " 1-");
 		break;
 	case WK_L2:
-		sprintf (buffer, " 2-");
+		ReTextAppend(text, " 2-");
 		break;
 	case WK_L3:
-		sprintf (buffer, " 3-");
+		ReTextAppend(text, " 3-");
 		break;
 	case WK_L4:
-		sprintf (buffer, " 4-");
+		ReTextAppend(text, " 4-");
 		break;
 	case WK_L5:
-		sprintf (buffer, " 5-");
+		ReTextAppend(text, " 5-");
 		break;
 	}
 
 	if (RE_STOP_IS_SET(week))
-		strcat (buffer, "$");
+		ReTextAppend(text, "$");
 }
 
 static void
 ConvertDaily(
 	RepeatEvent	*re,
-	char		*subcommand,
-	unsigned int	 buf_size)
+	ReText		*text)
 {
-	char	 	tmp_buf[32];
-	unsigned int	size = 0,
-		 	num_time,
-		 	i;
+	ReTextAppend(text, "D%d", re->re_interval);
 
-	num_time = RE_DAILY(re)->dd_ntime;
-
-	sprintf(subcommand, "D%d", re->re_interval);
-	size += strlen(subcommand);
-
-	NumsToBuf((unsigned int *)RE_DAILY(re)->dd_time, num_time, NUM_NUM,
-		  subcommand, buf_size - size);
+	NumsToBuf((unsigned int *)RE_DAILY(re)->dd_time,
+		  RE_DAILY(re)->dd_ntime, NUM_NUM, text);
 
 		/* Tack on the duration information */
-	sprintf(tmp_buf, " #%d", re->re_duration);
-
-	size += strlen(tmp_buf);
-	if (size > buf_size) {
-		printf ("Error: Internal buffer size exceeded\n");
-		return;
-	}
-	strcat (subcommand, tmp_buf);
+	ReTextAppend(text, " #%d", re->re_duration);
 }
 
 static void
 ConvertWeekly(
 	RepeatEvent	*re,
-	char		*subcommand,
-	unsigned int	 subcommand_size)
+	ReText		*text)
 {
-	char	 tmp_buf[32];
-	int	 size = 0,
-		 num_items,
-		 i;
+	unsigned int	i;
 
-	num_items = RE_WEEKLY(re)->wd_ndaytime;
-
-	sprintf(subcommand, "W%d", re->re_interval);
-	size += strlen(subcommand);
+	ReTextAppend(text, "W%d", re->re_interval);
 
 		/* walk through Day/time data (e.g. TU 1200 Th 2000)	*/
-	for (i = 0; i < num_items; i++) {
+	for (i = 0; i < RE_WEEKLY(re)->wd_ndaytime; i++) {
 
 			/* The day: MO TU TH etc. */
-		WeekDayToString(RE_WEEKLY(re)->wd_daytime[i].dt_day, tmp_buf);
-		size += strlen(tmp_buf);
-
-			/* Make sure the size of our buffer does not overflow */
-		if (size > subcommand_size) {
-			printf ("Error: Internal buffer size exceeded\n");
-			return;
-		}
-
-		strcat (subcommand, tmp_buf);
+		WeekDayToText(RE_WEEKLY(re)->wd_daytime[i].dt_day, text);
 
 			/* The hours: 1000 1400 etc. */
 		NumsToBuf((unsigned int *)RE_WEEKLY(re)->wd_daytime[i].dt_time,
-			  RE_WEEKLY(re)->wd_daytime[i].dt_ntime, NUM_NUM,
-			  subcommand, subcommand_size - size);
-
-		size = strlen(subcommand);
+			  RE_WEEKLY(re)->wd_daytime[i].dt_ntime, NUM_NUM, text);
 	}
 		/* Tack on the duration information */
-	sprintf(tmp_buf, " #%d", re->re_duration);
-
-	size += strlen(tmp_buf);
-	if (size > subcommand_size) {
-		printf ("Error: Internal buffer size exceeded\n");
-		return;
-	}
-	strcat (subcommand, tmp_buf);
+	ReTextAppend(text, " #%d", re->re_duration);
 }
 
 static void
 ConvertMonthly(
 	RepeatEvent	*re,
-	char		*subcommand,
-	unsigned int	 subcommand_size)
+	ReText		*text)
 {
-	char	 tmp_buf[32];
-	int	 size = 0,
-		 num_items,
-		 i;
-
-	num_items = RE_MONTHLY(re)->md_nitems;
+	unsigned int	i;
+	unsigned int	num_items = RE_MONTHLY(re)->md_nitems;
 
 	if (re->re_type == RT_MONTHLY_POSITION)
-		sprintf(subcommand, "MP%d", re->re_interval);
+		ReTextAppend(text, "MP%d", re->re_interval);
 	else
-		sprintf(subcommand, "MD%d", re->re_interval);
-
-	size += strlen(subcommand);
+		ReTextAppend(text, "MD%d", re->re_interval);
 
 	if (re->re_type == RT_MONTHLY_POSITION) {
 
@@ -341,88 +340,44 @@ ConvertMonthly(
 		NumsToBuf(
 			 (unsigned int*)RE_MONTHLY(re)->md_weektime[i].wdt_week,
 			  RE_MONTHLY(re)->md_weektime[i].wdt_nweek, NUM_WEEK,
-			  subcommand, subcommand_size - size);
-
-		size = strlen(subcommand);
-
-			/* Make sure the size of our buffer does not overflow */
-		if (size > subcommand_size) {
-			printf ("Error: Internal buffer size exceeded\n");
-			return;
-		}
+			  text);
 
 			/* The day: SU MO TU etc. */
 		NumsToBuf(
 			 (unsigned int *)RE_MONTHLY(re)->md_weektime[i].wdt_day,
 			  RE_MONTHLY(re)->md_weektime[i].wdt_nday, NUM_DAY,
-			  subcommand, subcommand_size - size);
-
-		size = strlen(subcommand);
-
-			/* Make sure the size of our buffer does not overflow */
-		if (size > subcommand_size) {
-			printf ("Error: Internal buffer size exceeded\n");
-			return;
-		}
+			  text);
 
 			/* The hours: 1000 1400 etc. */
 		NumsToBuf(
 			 (unsigned int *)
 				RE_MONTHLY(re)->md_weektime[i].wdt_time,
 			  RE_MONTHLY(re)->md_weektime[i].wdt_ntime, NUM_NUM,
-			  subcommand, subcommand_size - size);
-
-		size = strlen(subcommand);
+			  text);
 	    }
 	} else {  /* RT_MONTHLY_DAY */
 			/* The days: 1 15 31 etc. */
 		NumsToBuf((unsigned int *)RE_MONTHLY(re)->md_days,
-			  num_items, NUM_NUM, subcommand,
-			  subcommand_size - size);
+			  num_items, NUM_NUM, text);
 	}
 		/* Tack on the duration information */
-	sprintf(tmp_buf, " #%d", re->re_duration);
-
-	size += strlen(tmp_buf);
-	if (size > subcommand_size) {
-		printf ("Error: Internal buffer size exceeded\n");
-		return;
-	}
-	strcat (subcommand, tmp_buf);
+	ReTextAppend(text, " #%d", re->re_duration);
 }
 
 static void
 ConvertYearly(
 	RepeatEvent	*re,
-	char		*subcommand,
-	unsigned int	 subcommand_size)
+	ReText		*text)
 {
-	char	 tmp_buf[32];
-	int	 size = 0,
-		 num_items,
-		 i;
-
-	num_items = RE_YEARLY(re)->yd_nitems;
-
 	if (re->re_type == RT_YEARLY_MONTH)
-		sprintf(subcommand, "YM%d", re->re_interval);
+		ReTextAppend(text, "YM%d", re->re_interval);
 	else
-		sprintf(subcommand, "YD%d", re->re_interval);
-
-	size += strlen(subcommand);
+		ReTextAppend(text, "YD%d", re->re_interval);
 
 		/* An array of days or months */
 	NumsToBuf(RE_YEARLY(re)->yd_items,
-		  RE_YEARLY(re)->yd_nitems, NUM_NUM,
-		  subcommand, subcommand_size - size);
+		  RE_YEARLY(re)->yd_nitems, NUM_NUM, text);
 
 		/* Tack on the duration information */
-	sprintf(tmp_buf, " #%d", re->re_duration);
-
-	size += strlen(tmp_buf);
-	if (size > subcommand_size) {
-		printf ("Error: Internal buffer size exceeded\n");
-		return;
-	}
-	strcat (subcommand, tmp_buf);
+	ReTextAppend(text, " #%d", re->re_duration);
 }

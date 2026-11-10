@@ -1004,14 +1004,22 @@ _DtCm_rtable_check_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	CSA_return_code	stat;
 	Rb_Status rbstat;
 	_DtCmsCalendar	*cal;
+	char		*user;
+	uint		access;
 
 	if (debug)
 		fprintf(stderr, "_DtCm_rtable_check_4_svc called\n");
 
-	if ((stat = _DtCmsGetCalendarByName(args->target, B_TRUE, &cal))
-	    != CSA_SUCCESS)
+	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, args->target, &user,
+	    &access, &cal)) != CSA_SUCCESS)
 	{
 		s = csastat2tablestat(stat);
+		return (&s);
+	}
+
+	/* the state of a calendar is for those who may look into it */
+	if (!_DtCmsHasViewRights(cal, access)) {
+		s = denied_4;
 		return (&s);
 	}
 
@@ -1032,84 +1040,17 @@ _DtCm_rtable_check_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	return (&s);
 }
 
+/*
+ * The procedure discarded the appointments of the calendar in memory when the
+ * server ran in debug mode, whoever asked and without a record in the
+ * calendar file.  Nothing is flushed any more.
+ */
 extern Table_Status_4 *
 _DtCm_rtable_flush_table_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 {
 	static Table_Status_4 s;
-	Id_4		key;
-	CSA_return_code		stat;
-	_DtCmsCalendar	*cal;
-	int		n = 0;
-	Tree_node	*p_node;
-	List_node	*p_lnode;
-	List_node	*p_next;
-	Appt_4	*p_appt;
 
-	if (!debug) {
-		s = ok_4;
-		return (&s);
-	}
-
-	if (debug)
-		fprintf (stderr, "rtable_flush_table\n");
-
-	if ((stat = _DtCmsGetCalendarByName(args->target, B_TRUE, &cal))
-	    != CSA_SUCCESS) {
-		s = csastat2tablestat(stat);
-		return (&s);
-	}
-
-	if (cal->fversion >= _DtCM_FIRST_EXTENSIBLE_DATA_VERSION) {
-		s = tbl_notsupported_4;
-		return (&s);
-	}
-
-	if (debug)
-	{
-		fprintf(stderr, "%s: before flush.. rbsize= %d\n", pgname,
-			rb_size(APPT_TREE(cal))+hc_size(REPT_LIST(cal)));
-	}
-	
-	/* Flushing the single appointment tree. */
-	key.key = 0;
-	key.tick = args->args.Args_4_u.tick;
-	while (p_appt = (Appt_4 *) rb_lookup_next_larger(APPT_TREE(cal),
-	    (caddr_t)&key)) {
-		p_node = rb_delete (APPT_TREE(cal),
-				(caddr_t)&(p_appt->appt_id));
-		if (p_node != NULL)
-		{
-			n++;
-			_DtCm_free_appt4 ((Appt_4 *) p_node->data);
-			free(p_node);
-		}
-	}
-
-	/* Flushing the repeating appointment list */
-	key.key = 0;
-	key.tick = args->args.Args_4_u.tick;
-	p_lnode = cal->list->root;
-	while (p_lnode != NULL)
-	{
-		p_next = hc_lookup_next (p_lnode);
-		p_appt = (Appt_4*)p_lnode->data;
-		if (APPT_TICK(p_appt) > key.tick)
-		{
-			n++;
-			_DtCm_free_appt4 (p_appt);
-			(void) hc_delete_node (REPT_LIST(cal), p_lnode);
-			free (p_lnode);
-		}
-		p_lnode = p_next;
-	}
 	s = ok_4;
-	if (debug)
-	{
-		fprintf (stderr, "%s: entries deleted= %d\n", pgname, n);
-		fprintf (stderr, "%s: after flush.. rbsize= %d\n", pgname,
-			rb_size(APPT_TREE(cal))+hc_size(REPT_LIST(cal)));
-	}
-
 	return (&s);
 }
 
@@ -1120,13 +1061,19 @@ _DtCm_rtable_size_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	static int size;
 	CSA_return_code stat;
 	_DtCmsCalendar	*cal;
+	char		*user;
+	uint		access;
 
 	if (debug)
 		fprintf(stderr, "_DtCm_rtable_size_4_svc called\n");
 
 	size = 0;
-	if ((stat = _DtCmsGetCalendarByName(args->target, B_TRUE, &cal))
-	    != CSA_SUCCESS)
+	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, args->target, &user,
+	    &access, &cal)) != CSA_SUCCESS)
+		return(&size);
+
+	/* the number of entries is for those who may look at them */
+	if (!_DtCmsHasViewRights(cal, access))
 		return(&size);
 
 	size = rb_size (APPT_TREE(cal)) + hc_size (REPT_LIST(cal));
@@ -1140,6 +1087,7 @@ _DtCm_register_callback_4_svc(Registration_4 *r, struct svc_req *svcrq)
 	static Registration_Status_4 regstat;
 	CSA_return_code stat;
 	char *source;
+	uint access;
 	_DtCmsCalendar *cal = NULL;
         _DtCmsRegistrationInfo *copy=NULL;
 
@@ -1152,15 +1100,16 @@ _DtCm_register_callback_4_svc(Registration_4 *r, struct svc_req *svcrq)
                 return(&regstat);
 	}
 
-	if ((stat = _DtCmsGetClientInfo(svcrq, &source)) != CSA_SUCCESS) {
+	/* check if the target exists */
+	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, r->target, &source,
+	    &access, &cal)) != CSA_SUCCESS) {
 		regstat = csastat2regstat(stat);
 		return (&regstat);
 	}
 
-	/* check if the target exists */
-	if ((stat = _DtCmsGetCalendarByName(r->target, B_TRUE, &cal))
-	    != CSA_SUCCESS) {
-		regstat = csastat2regstat(stat);
+	/* the updates of a calendar are not for those with no rights to it */
+	if (access == 0) {
+		regstat = failed_4;
 		return (&regstat);
 	}
 

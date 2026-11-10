@@ -45,6 +45,14 @@
   position-file initialization falls back to the numeric user ID when account
   lookup is unavailable. Covered by focused path/control and packet sanitizer
   cases.
+- rpc.cmsd: look at the request path again. The size and the check of a calendar
+  and the registration of a callback (versions 4 and 5) now need rights to the
+  calendar, the debug-only procedure that discarded a calendar's appointments
+  in memory is gone, the text of a long recurrence rule is built in a buffer that
+  grows with it instead of overrunning a fixed one, a calendar that cannot be set
+  up because memory ran out is no longer freed twice, and a failed dump of a
+  calendar closes its temporary log. Four new cases in
+  `programs/dtcm/server/tests` (33 in all) fail on the previous sources.
 - rpc.cmsd: the signal handlers no longer do the work. `SIGALRM`, `SIGUSR1`,
   `SIGUSR2` and `SIGHUP` only set flags; the daemon keeps them blocked and
   runs garbage collection (which pings the registered clients and rewrites

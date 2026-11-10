@@ -83,6 +83,8 @@ extern CSA_return_code _DtCmsV5LoadAndCheckAccess(
 			uint		*access,
 			_DtCmsCalendar	**cal);
 
+extern boolean_t _DtCmsHasViewRights(_DtCmsCalendar *cal, uint access);
+
 extern CSA_return_code _DtCmsGetClientInfo(
 			struct svc_req *svcrq,
 			char **source);

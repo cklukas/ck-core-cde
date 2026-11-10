@@ -293,10 +293,10 @@ _DtCmsSetFileVersion(_DtCmsCalendar *cal, int version)
 		if (init_cal_attrs(cal) != CSA_SUCCESS)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 	
+		/* the caller frees the calendar when this fails */
 		if ((cal->types = (int *)calloc(1, sizeof(int) *
 		    (_DtCm_entry_name_tbl->size + 1))) == NULL) {
-			_DtCmsFreeCalendar(cal);
-			return (0);
+			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else
 			_DtCm_get_attribute_types(_DtCm_entry_name_tbl->size,
 				cal->types);
@@ -1076,6 +1076,7 @@ init_cal_attrs(_DtCmsCalendar *cal)
 		    strdup(_DtCm_cal_name_tbl->names[i])) == NULL) {
 			_DtCm_free_cms_attributes(i, cal->attrs);
 			free(cal->attrs);
+			cal->attrs = NULL;
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		}
 

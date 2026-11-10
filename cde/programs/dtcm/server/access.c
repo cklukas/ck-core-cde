@@ -43,6 +43,7 @@
 #include "log.h"
 #include "lutil.h"
 #include "laccess.h"
+#include "misc.h"
 
 #define NUM_CACHE               50      /* cache for unix user name */
 
@@ -135,6 +136,20 @@ _DtCmsV5LoadAndCheckAccess(
 		return (_GetV4AccessRights(*cal, target, *sender, access));
 	else
 		return (_GetV5AccessRights(*cal, target, *sender, access));
+}
+
+/*
+ * Whether the rights allow looking at the entries of the calendar: the
+ * browse right for the first data format and a viewing right for the
+ * extensible one.
+ */
+extern boolean_t
+_DtCmsHasViewRights(_DtCmsCalendar *cal, uint access)
+{
+	if (cal->fversion < _DtCM_FIRST_EXTENSIBLE_DATA_VERSION)
+		return (_DTCMS_HAS_V4_BROWSE_ACCESS(access) ? B_TRUE : B_FALSE);
+
+	return (_DTCMS_HAS_VIEW_ACCESS(access) ? B_TRUE : B_FALSE);
 }
 
 extern CSA_return_code

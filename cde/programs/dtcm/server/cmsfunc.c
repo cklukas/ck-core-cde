@@ -297,6 +297,7 @@ cms_register_5_svc(cms_register_args *args, struct svc_req *svcrq)
 {
 	static CSA_return_code	res;
 	char			*user;
+	uint			access;
 	_DtCmsCalendar		*cal;
 	_DtCmsRegistrationInfo	*rinfo;
 
@@ -309,12 +310,15 @@ cms_register_5_svc(cms_register_args *args, struct svc_req *svcrq)
 		return (&res);
 	}
 
-	if ((res = _DtCmsGetClientInfo(svcrq, &user)) != CSA_SUCCESS)
+	if ((res = _DtCmsV5LoadAndCheckAccess(svcrq, args->cal, &user,
+	    &access, &cal)) != CSA_SUCCESS)
 		return (&res);
 
-	if ((res = _DtCmsGetCalendarByName(args->cal, B_TRUE, &cal))
-	    != CSA_SUCCESS)
+	/* the updates of a calendar are not for those with no rights to it */
+	if (access == 0) {
+		res = CSA_E_NO_AUTHORITY;
 		return (&res);
+	}
 
 	if ((rinfo = _DtCmsGetRegistration(&(cal->rlist), user, args->prognum,
 	    args->versnum, args->procnum, args->pid)) == NULL) {

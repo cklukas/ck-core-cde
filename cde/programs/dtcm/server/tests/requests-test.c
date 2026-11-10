@@ -63,6 +63,10 @@ static void test_exit(int status);
 #include "iso8601.h"
 #include "lutil.h"
 #include "reparser.h"
+#include "garbage.h"
+#include "access.h"
+
+extern boolean_t RulesMatch(char *rule1, char *rule2);
 
 /* what the production code expects the program to define (svcmain.c) */
 int debug;
@@ -1416,6 +1420,203 @@ static void case_entry_attributes_by_name(void)
   free(name);
 }
 
+
+/* ---- recurrence rules ----------------------------------------------------------- */
+
+/* A recurrence rule of days of the year with N entries and the duration. */
+static char *long_rule(unsigned n, unsigned duration)
+{
+  size_t size = (size_t)n * 5 + 64;
+  char *rule = malloc(size), *p = rule;
+  unsigned i;
+
+  p += sprintf(p, "YD1");
+  for(i = 0; i < n; i++)
+    p += sprintf(p, " %u", 1 + i % 365);
+  sprintf(p, " #%u", duration);
+  return(rule);
+}
+
+/* The text built for a rule is as long as the rule needs; rules that differ
+   in their duration only are the same rule. */
+static void case_rule_text_long(void)
+{
+  char *a = long_rule(2000, 1), *b = long_rule(2000, 2);
+  char *c = long_rule(1999, 2);
+
+  CHECK(RulesMatch(a, b));
+  CHECK(!RulesMatch(a, c));
+  free(a);
+  free(b);
+  free(c);
+}
+
+/* ---- the state of a calendar is for those who may look at it ---------------------- */
+
+/* An old format calendar the test user owns, without rights for others. */
+static void make_private_v1_calendar(const char *name, int num)
+{
+  char *path = _DtCmsGetLogFN((char *)name);
+  Appt_4 appt;
+  char author[300];
+  int fd, i;
+
+  fd = open(path, O_CREAT | O_WRONLY, 0600);
+  close(fd);
+  CHECK(_DtCmsWriteVersionString(path, _DtCMS_VERSION1) == CSA_SUCCESS);
+  snprintf(author, sizeof(author), "%s@testhost", user);
+  for(i = 1; i <= num; i++) {
+    memset(&appt, 0, sizeof(appt));
+    appt.appt_id.tick = 1893456000 + 3600 * i;
+    appt.appt_id.key = i;
+    appt.tag = &appointment_tag;
+    appt.what = "appointment";
+    appt.author = author;
+    appt.duration = 1800;
+    appt.period.period = single_4;
+    CHECK(_DtCmsAppendAppt4ByFN(path, &appt, _DtCmsLogAdd) == CSA_SUCCESS);
+  }
+  free(path);
+}
+
+/* A request of another user of the host. */
+static struct svc_req stranger_request(void)
+{
+  struct svc_req rq = request();
+  struct passwd *pw;
+
+  setpwent();
+  while((pw = getpwent()) != NULL)
+    if(pw->pw_uid != getuid() && pw->pw_uid != 0)
+      break;
+  if(pw == NULL) {
+    fprintf(stderr, "no second user in the passwd database\n");
+    exit(2);
+  }
+  credentials.aup_uid = pw->pw_uid;
+  endpwent();
+  return(rq);
+}
+
+static void case_stranger_calendar_state(void)
+{
+  struct svc_req owner, other;
+  Table_Args_4 args;
+  Table_Status_4 *status;
+  int *size;
+  uid_t owner_uid;
+
+  setup();
+  owner = request();
+  owner_uid = credentials.aup_uid;
+  make_private_v1_calendar("secret", 3);
+  memset(&args, 0, sizeof(args));
+  args.target = strdup("secret@testhost");
+  args.args.tag = TICK_4;
+
+  size = _DtCm_rtable_size_4_svc(&args, &owner);
+  CHECK(*size == 3);
+  status = _DtCm_rtable_check_4_svc(&args, &owner);
+  CHECK(*status != denied_4 && *status != notable_4);
+
+  other = stranger_request();
+  CHECK(credentials.aup_uid != owner_uid);
+  size = _DtCm_rtable_size_4_svc(&args, &other);
+  CHECK(*size == 0);
+  status = _DtCm_rtable_check_4_svc(&args, &other);
+  CHECK(*status == denied_4);
+
+  /* and the debug mode of the server does not let anybody discard the
+     appointments of another user */
+  debug = 1;
+  args.args.Args_4_u.tick = 0;
+  status = _DtCm_rtable_flush_table_4_svc(&args, &other);
+  CHECK(*status == ok_4);
+  status = _DtCm_rtable_flush_table_4_svc(&args, &owner);
+  debug = 0;
+  credentials.aup_uid = owner_uid;
+  size = _DtCm_rtable_size_4_svc(&args, &owner);
+  CHECK(*size == 3);
+  free(args.target);
+}
+
+static void case_stranger_registration(void)
+{
+  struct svc_req owner, other;
+  Registration_4 reg;
+  Registration_Status_4 *status;
+  cms_register_args rargs;
+  CSA_return_code *res;
+  uid_t owner_uid;
+
+  setup();
+  owner = request();
+  owner_uid = credentials.aup_uid;
+  make_private_v1_calendar("quiet", 1);
+
+  memset(&reg, 0, sizeof(reg));
+  reg.target = strdup("quiet@testhost");
+  reg.prognum = 0x40000001;
+  reg.versnum = 2;
+  reg.procnum = 1;
+  reg.pid = 4242;
+  memset(&rargs, 0, sizeof(rargs));
+  rargs.cal = reg.target;
+  rargs.update_type = CSA_CB_ENTRY_ADDED;
+  rargs.prognum = reg.prognum;
+  rargs.versnum = reg.versnum;
+  rargs.procnum = reg.procnum;
+  rargs.pid = reg.pid;
+
+  other = stranger_request();
+  status = _DtCm_register_callback_4_svc(&reg, &other);
+  CHECK(*status == failed_4);
+  res = cms_register_5_svc(&rargs, &other);
+  CHECK_CODE(*res, CSA_E_NO_AUTHORITY);
+
+  credentials.aup_uid = owner_uid;
+  status = _DtCm_register_callback_4_svc(&reg, &owner);
+  CHECK(*status == registered_4);
+  res = cms_register_5_svc(&rargs, &owner);
+  CHECK_CODE(*res, CSA_SUCCESS);
+  free(reg.target);
+}
+
+/* ---- garbage collection ------------------------------------------------------------ */
+
+static int count_descriptors(void)
+{
+  int n = 0, fd;
+
+  for(fd = 0; fd < 256; fd++)
+    if(fcntl(fd, F_GETFD) != -1)
+      n++;
+  return(n);
+}
+
+/* A dump that fails gives the temporary log back. */
+static void case_dump_closes_descriptor(void)
+{
+  _DtCmsCalendar *cal;
+  char *dump_name;
+  int before, i;
+
+  setup();
+  dump_name = strdup("dump@testhost");
+  cal = _DtCmsMakeCalendar(user, dump_name);
+  CHECK(cal != NULL);
+  if(cal == NULL)
+    return;
+  before = count_descriptors();
+  for(i = 0; i < 4; i++) {
+    CHECK(_DtCmsDumpDataV1("/dev/full", cal) != CSA_SUCCESS);
+    CHECK(_DtCmsDumpDataV2("/dev/full", cal) != CSA_SUCCESS);
+  }
+  CHECK(count_descriptors() == before);
+  _DtCmsFreeCalendar(cal);
+  free(dump_name);
+}
+
 /* ---- the cases ------------------------------------------------------------ */
 
 static const struct {
@@ -1451,6 +1652,10 @@ static const struct {
   { "reminder-identifier", case_reminder_identifier },
   { "calendar-attribute-numbers", case_calendar_attribute_numbers },
   { "entry-attributes-by-name", case_entry_attributes_by_name },
+  { "rule-text-long", case_rule_text_long },
+  { "stranger-calendar-state", case_stranger_calendar_state },
+  { "stranger-registration", case_stranger_registration },
+  { "dump-closes-descriptor", case_dump_closes_descriptor },
 };
 
 int main(int argc, char **argv)

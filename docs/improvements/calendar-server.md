@@ -26,6 +26,18 @@ before data is used.
   removes it, and creating one that fails does not remove a file it did not
   create. Deleting several appointments in one request walks its list of keys
   within the list.
+- The size and the check of a calendar, and the registration of a callback in
+  either protocol version, are for those who may look at the calendar: a user
+  without rights to it gets neither the number of its entries nor its
+  updates. The procedure that discarded the appointments of a calendar in memory
+  when the daemon ran in debug mode does nothing now.
+- The text of a recurrence rule that is rebuilt to compare two rules is built in
+  a buffer that grows with the rule, so a rule with hundreds of days no longer
+  overruns a fixed buffer, and rules whose text cannot be built are not taken
+  for the same rule.
+- A calendar whose file cannot be set up for the extensible format because
+  memory ran out is reported as a failure instead of being freed twice, and the
+  temporary log of a garbage collection that fails is closed.
 - A date criterion that is not a date, a Classification or Type attribute
   without a value, an unterminated reference identifier and an offset beyond the
   range of a calendar date are handled instead of dereferenced.
@@ -108,8 +120,11 @@ make -C programs/dtcm/server check
 The cases cover the request decoders, calendar names and attribute handling, the
 log writers and reader with strings of all sizes, creating, updating and
 deleting entries and calendars, and the privilege changes. Run against the code
-from before these changes, the same test source fails 27 of its 29 cases; the
-other two check results that did not change.
+from before the first of these changes, the same test source fails 27 of its 29
+cases; the other two check results that did not change. Four more cases check the
+rebuilt text of a long recurrence rule, the size, check, flush and registration
+requests of a user who has no rights to a calendar, and the closing of the
+temporary log of a failed dump; all four fail on the previous sources.
 
 `tests/loop-test.c` runs the service loop with a UDP service on the loopback
 interface while another process sends it the four signals: the work they ask
@@ -141,5 +156,3 @@ now.
 
 - The request-level tests call the handlers directly; the live checks of the
   daemon are kept outside the tree.
-- The parts of `rpc.cmsd` and `libcsa` outside the request path, such as garbage
-  collection and the recurrence-rule code, have not been audited.

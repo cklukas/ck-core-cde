@@ -49,7 +49,7 @@
 extern char *pgname;
 
 static CSA_return_code dump_error;
-static int fd;
+static int fd = -1;
 
 /*
  * forward declaration of functions used within this file
@@ -145,6 +145,19 @@ cleanup:
 	}
 }
 
+/*
+ * The temporary log stays open while the calendar is dumped into it; the
+ * descriptor is given back whatever the result.
+ */
+static CSA_return_code
+finish_dump(CSA_return_code stat)
+{
+	if (fd >= 0 && close(fd) == EOF && stat == CSA_SUCCESS)
+		stat = CSA_X_DT_E_BACKING_STORE_PROBLEM;
+	fd = -1;
+	return (stat);
+}
+
 extern CSA_return_code
 _DtCmsDumpDataV1(char *file, _DtCmsCalendar *cal)
 {
@@ -155,31 +168,29 @@ _DtCmsDumpDataV1(char *file, _DtCmsCalendar *cal)
 	/* Keep the temp log file open during garbage collection. */
 	if ((fd = open(file, O_WRONLY | O_APPEND | O_SYNC)) < 0)
 	{
+		fd = -1;
 		return (CSA_X_DT_E_BACKING_STORE_PROBLEM);
 	}
 
 	if ((stat = _DtCmsAppendAccessByFD(fd, access_read_4,
 	    GET_R_ACCESS(cal))) != CSA_SUCCESS)
-		return (stat);
+		return (finish_dump(stat));
 
 	if ((stat = _DtCmsAppendAccessByFD(fd, access_write_4,
 	    GET_W_ACCESS(cal))) != CSA_SUCCESS)
-		return (stat);
+		return (finish_dump(stat));
 
 	if ((stat = _DtCmsAppendAccessByFD (fd, access_delete_4,
 	    GET_D_ACCESS(cal))) != CSA_SUCCESS)
-		return (stat);
+		return (finish_dump(stat));
 
 	if ((stat = _DtCmsAppendAccessByFD (fd, access_exec_4,
 	    GET_X_ACCESS(cal))) != CSA_SUCCESS)
-		return (stat);
+		return (finish_dump(stat));
 
 	_DtCmsEnumerateUp(cal, visit1);	/* dump the tree */
 
-	if (close(fd) == EOF)
-		return (CSA_X_DT_E_BACKING_STORE_PROBLEM);
-
-	return (dump_error);
+	return (finish_dump(dump_error));
 }
 
 extern CSA_return_code
@@ -192,6 +203,7 @@ _DtCmsDumpDataV2(char *file, _DtCmsCalendar *cal)
 	/* Keep the temp log file open during garbage collection. */
 	if ((fd = open(file, O_WRONLY | O_APPEND | O_SYNC)) < 0)
 	{
+		fd = -1;
 		return (CSA_X_DT_E_BACKING_STORE_PROBLEM);
 	}
 
@@ -199,19 +211,16 @@ _DtCmsDumpDataV2(char *file, _DtCmsCalendar *cal)
 	if (cal->num_attrs > 0) {
 		if ((stat = _DtCmsAppendCalAttrsByFD(fd, cal->num_attrs,
 		    cal->attrs)) != CSA_SUCCESS)
-			return (stat);
+			return (finish_dump(stat));
 	}
 
 	if ((stat = _DtCmsAppendHTableByFD(fd, cal->entry_tbl->size,
 	    cal->entry_tbl->names, cal->types)) != CSA_SUCCESS)
-		return (stat);
+		return (finish_dump(stat));
 
 	_DtCmsEnumerateUp(cal, visit2);	/* dump the tree */
 
-	if (close(fd) == EOF)
-		return (CSA_X_DT_E_BACKING_STORE_PROBLEM);
-
-	return (dump_error);
+	return (finish_dump(dump_error));
 }
 
 static boolean_t

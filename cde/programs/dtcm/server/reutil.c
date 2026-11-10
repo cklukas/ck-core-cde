@@ -382,6 +382,15 @@ RulesMatch(
 	re2->re_duration = old_duration;
 	re2->re_end_date = old_end_date;
 
+	/* rules whose text cannot be built are not known to be the same */
+	if (new_rule1 == NULL || new_rule2 == NULL) {
+		free(new_rule1);
+		free(new_rule2);
+		_DtCm_free_re(re1);
+		_DtCm_free_re(re2);
+		return FALSE;
+	}
+
 	if (!strcmp(new_rule1, new_rule2)) {
 		_DtCm_free_re(re1);
 		_DtCm_free_re(re2);
