@@ -154,6 +154,10 @@ greeter, `wait`, the PAM conversation, `malloc`).
   group that is being stopped and for the X server's `SIGUSR1` are such waits.
   A request to stop or restart the display ends the greeter and the process
   from the code that was waiting; it no longer runs from the handler.
+- The startup and setup scripts of a display are stopped, with their process
+  group, when the display is asked to stop; they used to be waited for to their
+  end. The reset script, which cleans up after a session, is always run to its
+  end.
 - A wait for a child that has no such child ended in an endless loop of failed
   `wait` calls; it now ends. A process group that was asked to stop is waited
   for even when the request to stop is already pending.

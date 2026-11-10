@@ -69,6 +69,10 @@
   themselves and searches the rest of a line after a multibyte character. New
   documentation page `docs/improvements/data-types.md`; covered by
   `make -C lib/DtSvc check`.
+- dtlogin: the startup and setup scripts of a display end with the display when
+  it is asked to stop (SIGTERM) instead of being waited for to their end; the
+  reset script still runs to completion. Covered by
+  `programs/dtlogin/tests/check-session-signals.py`.
 - dtlogin: an XDMCP `Request` can only name the address it comes from (from the
   host itself, any address of the host); other requests are declined, so a
   display cannot point the manager at a third host. The reverse lookup of a

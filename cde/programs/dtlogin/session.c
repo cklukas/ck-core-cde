@@ -177,6 +177,7 @@ extern char *progName;	/* dtlogin name */
  ***************************************************************************/
 
 static int  AbortClient( int pid) ;
+static int  RunScript( struct verify_info *verify, char *file, int interruptible) ;
 static void DeleteXloginResources( struct display *d, Display *dpy) ;
        int  LoadXloginResources( struct display *d) ;
 static int  ErrorHandler( Display *dpy, XErrorEvent *event) ;
@@ -638,7 +639,7 @@ ManageSession( struct display *d )
     /*
      * Run system-wide initialization file
      */
-    if (source (&verify, d->startup) != 0)
+    if (RunScript (&verify, d->startup, TRUE) != 0)
     {
 	Debug ("Startup program %s exited with non-zero status\n",
 		d->startup);
@@ -1210,7 +1211,7 @@ SetupDisplay (struct display *d)
         else
             env = setEnv (env, LOCATION, "remote");
         verify.systemEnviron = env;
-        source (&verify, d->setup);
+        RunScript (&verify, d->setup, TRUE);
         verify.systemEnviron = crt_systemEnviron;
         freeEnv (env);
     }
@@ -1790,8 +1791,15 @@ AbortClient( int pid )
     return 1;
 }
 
-int 
-source( struct verify_info *verify, char *file )
+/*
+ * Run a script of the display and wait for it.  A script that must not be cut
+ * short (the reset script, which cleans up after a session) is waited for to
+ * its end; the others end, with their process group, when the display is
+ * asked to stop.  The status of the script is returned, 1 when it could not be
+ * run or was stopped.
+ */
+static int
+RunScript( struct verify_info *verify, char *file, int interruptible )
 {
     char	*args[2];
     int		pid;
@@ -1815,14 +1823,26 @@ source( struct verify_info *verify, char *file )
 	    return 1;
 	    break;
 	default:
-	    /* the script is waited for to its end; there is no other way out */
-	    if (AwaitChild (pid, 0, FALSE, &result) != 1)
+	    switch (AwaitChild (pid, 0, interruptible, &result)) {
+	    case 1:
+		break;
+	    case -1:
+		AbortClient (pid);
 		return 1;
+	    default:
+		return 1;
+	    }
 	    break;
 	}
 	return waitVal (result);
     }
     return 0;
+}
+
+int 
+source( struct verify_info *verify, char *file )
+{
+    return RunScript (verify, file, FALSE);
 }
 
 /* returns 0 on failure, -1 on out of mem, and 1 on success */

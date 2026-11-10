@@ -36,6 +36,10 @@ if new:
 else:
     abort_client = abort_client.replace("(unsigned) 10", "(unsigned) 1")
 ask_greeter = block(session, "static int\nAskGreeter(")
+if "RunScript" in session:
+    script_code = until(session, "/*\n * Run a script of the display and wait for it.", "/* returns 0 on failure, -1 on out of mem")
+else:
+    script_code = block(session, "int \nsource( struct verify_info *verify, char *file )")
 ask_greeter = ask_greeter.replace("RequestHeader *preqhdr", "RequestHeader *preqhdr")
 
 if "receivedUsr1;\t/* SIGUSR1" in server:
@@ -57,6 +61,7 @@ harness = r'''
 #include <sys/select.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 
 extern int violations, session_exits, exit_status_seen, response[2], request[2];
 int in_handler(void);
@@ -68,6 +73,7 @@ int test_await(int pid, unsigned seconds, int notice, int *status);
 int test_pause(unsigned seconds, int server_pid, int *jumped);
 void test_server_handlers(void);
 int test_usr1(void);
+int test_script(char *file, int interruptible);
 '''
 
 session_unit = r'''
@@ -112,7 +118,27 @@ int test_ask(int *jumped)
 int test_await(int pid, unsigned seconds, int notice, int *status) { (void)pid; (void)seconds; (void)notice; (void)status; return -99; }
 ''') + r'''
 int test_abort(int pid) { return AbortClient(pid); }
-'''
+
+void CleanUpChild(void) { setpgid(0, 0); }
+int execute(char **argv, char **environ) { execve(argv[0], argv, environ); return -1; }
+''' + script_code + (r'''
+int test_script(char *file, int interruptible)
+{
+    static struct verify_info verify;
+    char *environment[1] = { NULL };
+    verify.systemEnviron = environment;
+    return RunScript(&verify, file, interruptible);
+}
+''' if "RunScript" in session else r'''
+int test_script(char *file, int interruptible)
+{
+    static struct verify_info verify;
+    char *environment[1] = { NULL };
+    verify.systemEnviron = environment;
+    (void)interruptible;
+    return source(&verify, file);
+}
+''')
 
 server_unit = r'''
 #include "harness.h"
@@ -352,6 +378,53 @@ static void AwaitNoChild(void)
     CHECK(test_await(99999, 0, 0, &status) == -2);      /* no process to wait for: no endless wait */
 }
 
+static char *Script(const char *name, const char *body)
+{
+    static char path[256];
+    FILE *f = fopen(name, "w");
+    CHECK(f && fprintf(f, "#!/bin/sh\n%s\n", body) > 0 && fclose(f) == 0 && chmod(name, 0700) == 0);
+    CHECK(getcwd(path, sizeof path - 20));
+    strcat(path, "/");
+    strcat(path, name);
+    return path;
+}
+
+static void ScriptStopped(void)
+{
+    char *path;
+
+    Reset();
+    Arm(15);
+    path = Script("startup", "sleep 30");
+    Later(SIGTERM, 200);
+    /* the display is asked to stop while its startup script runs: the script ends with it */
+    time_t before = time(NULL);
+    CHECK(test_script(path, 1) != 0);
+    CHECK(time(NULL) - before < 5);
+}
+
+static void ScriptStatus(void)
+{
+    Reset();
+    Arm(15);
+    CHECK(test_script(Script("ok", "exit 0"), 1) == 0);
+    CHECK(test_script(Script("bad", "exit 5"), 1) == 5);
+    CHECK(test_script(Script("bad2", "exit 6"), 0) == 6);
+}
+
+static void ResetScriptCompletes(void)
+{
+    char *path;
+
+    Reset();
+    Arm(15);
+    path = Script("reset", "sleep 1; echo done > reset.marker; exit 3");
+    /* the reset script cleans up after the session: a pending request to stop does not cut it short */
+    raise(SIGTERM);
+    CHECK(test_script(path, 0) == 3);
+    CHECK(access("reset.marker", F_OK) == 0);
+}
+
 static void ServerReady(void)
 {
     int jumped;
@@ -423,6 +496,9 @@ static const struct { const char *name; void (*run)(void); } scenarios[] = {
     {"await-request", AwaitRequest},
     {"await-request-pending", AwaitRequestPending},
     {"await-no-child", AwaitNoChild},
+    {"script-stopped", ScriptStopped},
+    {"script-status", ScriptStatus},
+    {"reset-script-completes", ResetScriptCompletes},
     {"server-ready", ServerReady},
     {"server-ready-before", ServerReadyBefore},
     {"server-dies", ServerDies},
@@ -441,7 +517,8 @@ int main(int argc, char **argv)
 
 names = ["term-while-waiting", "hup-while-waiting", "request-before-wait", "greeter-answers",
          "abort-ends-the-group", "abort-stubborn-client", "await-timeout", "await-status", "await-request",
-         "await-request-pending", "await-no-child", "server-ready", "server-ready-before", "server-dies",
+         "await-request-pending", "await-no-child", "script-stopped", "script-status",
+         "reset-script-completes", "server-ready", "server-ready-before", "server-dies",
          "server-slow"]
 failed = run_all("login-session-signals-",
                  {"harness.h": harness, "session_unit.c": session_unit, "server_unit.c": server_unit, "stubs.c": stubs},
