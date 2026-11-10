@@ -325,11 +325,8 @@ lib/csa/cm_clnt.c
 lib/csa/reparser.c
 lib/csa/reparser.h
 lib/csa/rtable2_clnt.c
-lib/csa/rtable2_xdr.c
 lib/csa/rtable3_clnt.c
-lib/csa/rtable3_xdr.c
 lib/csa/rtable4_clnt.c
-lib/csa/rtable4_xdr.c
 
 # lib/DtWidget
 lib/DtWidget/UNIXbindings

@@ -24,8 +24,7 @@ endif
 AM_YFLAGS = -d
 
 GENERATED_SRCS = agent_xdr.c cm_clnt.c reparser.c reparser.h \
-        rtable2_clnt.c rtable2_xdr.c rtable3_clnt.c rtable3_xdr.c \
-        rtable4_clnt.c rtable4_xdr.c agent.h
+        rtable2_clnt.c rtable3_clnt.c rtable4_clnt.c agent.h
 
 BUILT_SOURCES = $(GENERATED_SRCS)
 CLEANFILES = $(GENERATED_SRCS) y.tab.c y.tab.h
@@ -33,7 +32,8 @@ CLEANFILES = $(GENERATED_SRCS) y.tab.c y.tab.h
 libcsa_la_SOURCES = agent.c         agent_xdr.c     api.c \
 		    appt4.c         attr.c          calendar.c \
 		    cm_clnt.c       cmcbxdr.c       cmsdata.c \
-		    cmxdr.c         connection.c    convert2-4.c \
+		    cmxdr.c         cmxdrlist.c     connection.c \
+		    convert2-4.c \
 		    convert3-4.c    convert4-2.c    convert4-3.c \
 		    convert4-5.c    convert5-4.c    debug.c \
 		    entry.c         free.c          hash.c \
@@ -57,16 +57,16 @@ rtable2_clnt.c rtable3_clnt.c rtable4_clnt.c cm_clnt.c:
 		$(SED) -f $(srcdir)/namechange1.sed | \
 		$(SED) -f $(srcdir)/namechange2.sed >> $@
 
-rtable2_xdr.c rtable3_xdr.c rtable4_xdr.c agent_xdr.c:
+agent_xdr.c:
 	$(RM) $@
 	cat $(srcdir)/EUSinclude > $@
 	(cd $(srcdir) && rpcgen -c $(@:_xdr.c=.x)) | \
 		$(SED) -f $(srcdir)/namechange1.sed | \
 		$(SED) -f $(srcdir)/namechange2.sed >> $@
 
-rtable4_clnt.c rtable4_xdr.c: rtable4.h namechange1.sed namechange2.sed
-rtable3_clnt.c rtable3_xdr.c: rtable3.h namechange1.sed namechange2.sed
-rtable2_clnt.c rtable2_xdr.c: rtable2.h namechange1.sed namechange2.sed
+rtable4_clnt.c: rtable4.h namechange1.sed namechange2.sed
+rtable3_clnt.c: rtable3.h namechange1.sed namechange2.sed
+rtable2_clnt.c: rtable2.h namechange1.sed namechange2.sed
 cm_clnt.c: cm.x namechange1.sed namechange2.sed
 agent_xdr.c agent.c: agent.h
 
@@ -78,3 +78,14 @@ agent.h:
 		$(SED) -f $(srcdir)/namechange2.sed >> $@
 	cat $(srcdir)/agent.wrapend >> $@
 
+
+# The XDR routines of the protocols are tested with hand-made messages under
+# AddressSanitizer and UndefinedBehaviorSanitizer; the test compiles the
+# routines it checks, so it runs the code that is shipped.
+EXTRA_DIST = tests/check-xdr.py tests/xdr-test.c cmlimits.h cmxdrlist.h
+
+check-local:
+	CSA_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcsa_la_CFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
+	CSA_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
+	CSA_LIBS='$(TIRPCLIB)' \
+	python3 $(srcdir)/tests/check-xdr.py $(srcdir)

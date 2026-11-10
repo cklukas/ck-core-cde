@@ -9,6 +9,12 @@
  * (c) Copyright 1996 Hitachi.
  */
 
+/*
+ * This file describes the protocol: rpcgen produces the client stubs from it.
+ * The XDR routines are not generated; rtable4_xdr.c holds them, with the
+ * limits of cmlimits.h and the lists of nodes coded in loops.
+ */
+
 #ifdef RPC_HDR
 %#include "connection.h"
 %

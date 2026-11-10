@@ -45,6 +45,15 @@
   position-file initialization falls back to the numeric user ID when account
   lookup is unavailable. Covered by focused path/control and packet sanitizer
   cases.
+- rpc.cmsd and libcsa: bound every string, array and list of the calendar
+  protocols. The XDR routines of versions 2 to 5 and of the callback protocol
+  now apply named limits (`lib/csa/cmlimits.h`) to requests and replies, check
+  the values of enumerations and the types of attribute values, send a missing
+  string as the empty string, and code linked lists in a loop with the same
+  bytes on the wire, so that a request with a very long list can no longer
+  crash the daemon or make it allocate without bound. The routines of versions
+  2 to 4 are maintained in `rtable{2,3,4}_xdr.c` instead of being generated.
+  Covered by `make -C lib/csa check` (17 cases under the sanitizers).
 - dtfile: remove the last raw, pointer-bearing `FileData` directory-worker
   packet. Removed-entry tombstones are now packed into bounded `FileData2`
   records and sent with complete writes; oversized or incomplete records fail

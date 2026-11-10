@@ -39,6 +39,7 @@
 #include "cm.h"
 #include "csa.h" 
 #include "cmxdr.h"
+#include "cmxdrlist.h"
 
 bool_t xdr_cms_attribute_value(XDR *xdrs, cms_attribute_value *objp);
 bool_t xdr_time_t(XDR *xdrs, time_t *objp);
@@ -75,7 +76,7 @@ xdr_time_t(XDR *xdrs, time_t *objp)
 bool_t
 xdr_cms_name(XDR *xdrs, cms_name *objp)
 {
-	if (!xdr_string(xdrs, objp, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, objp, _DtCM_LIMIT_NAME))
 		return (FALSE);
 	return (TRUE);
 }
@@ -84,17 +85,28 @@ xdr_cms_name(XDR *xdrs, cms_name *objp)
  * cms_access_entry - data structure for the access list attribute
  */
 
-bool_t
-xdr_cms_access_entry(XDR *xdrs, cms_access_entry *objp)
+static bool_t
+xdr_cms_access_entry_members(XDR *xdrs, void *node)
 {
-	if (!xdr_string(xdrs, &objp->user, ~0))
+	cms_access_entry *objp = node;
+
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->user, _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_u_int(xdrs, &objp->rights))
 		return (FALSE);
-	if (!xdr_pointer(xdrs, (char **)&objp->next, sizeof (cms_access_entry),
-	    (xdrproc_t) xdr_cms_access_entry))
-		return (FALSE);
 	return (TRUE);
+}
+
+static const _DtCm_xdr_list_type cms_access_entry_list = {
+	sizeof (cms_access_entry), offsetof(cms_access_entry, next),
+	xdr_cms_access_entry_members, NULL, _DtCM_LIMIT_ACCESS_ENTRIES
+};
+
+/* codes the access list that starts with objp */
+bool_t
+xdr_cms_access_entry(XDR *xdrs, cms_access_entry *objp)
+{
+	return (_DtCm_xdr_list(xdrs, objp, &cms_access_entry_list));
 }
 
 /*
@@ -115,17 +127,24 @@ xdr_cms_key(XDR *xdrs, cms_key *objp)
 bool_t
 xdr_CSA_opaque_data(XDR *xdrs, CSA_opaque_data *objp)
 {
-	if (!xdr_bytes(xdrs, (char **)&objp->data, (u_int *) &objp->size, ~0))
+	u_int	size = objp->size;
+
+	if (xdrs->x_op == XDR_ENCODE && size > 0 && objp->data == NULL)
 		return (FALSE);
+	if (!xdr_bytes(xdrs, (char **)&objp->data, &size, _DtCM_LIMIT_TEXT))
+		return (FALSE);
+	objp->size = size;
 	return (TRUE);
 }
 
 bool_t
 xdr_CSA_reminder(XDR *xdrs, CSA_reminder *objp)
 {
-	if (!xdr_string(xdrs, &objp->lead_time, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->lead_time,
+	    _DtCM_LIMIT_DATE_TIME))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->snooze_time, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->snooze_time,
+	    _DtCM_LIMIT_DATE_TIME))
 		return (FALSE);
 	if (!xdr_u_long(xdrs, &objp->repeat_count))
 		return (FALSE);
@@ -134,21 +153,37 @@ xdr_CSA_reminder(XDR *xdrs, CSA_reminder *objp)
 	return (TRUE);
 }
 
+static bool_t
+xdr_CSA_date_time_entry_members(XDR *xdrs, void *node)
+{
+	CSA_date_time_entry *objp = node;
+
+	return (_DtCm_xdr_limited_string(xdrs, &objp->date_time,
+	    _DtCM_LIMIT_DATE_TIME));
+}
+
+static const _DtCm_xdr_list_type CSA_date_time_entry_list = {
+	sizeof (CSA_date_time_entry), offsetof(CSA_date_time_entry, next),
+	xdr_CSA_date_time_entry_members, NULL, _DtCM_LIMIT_ACCESS_ENTRIES
+};
+
+/* codes the list of dates and times that starts with objp */
 bool_t
 xdr_CSA_date_time_entry(XDR *xdrs, CSA_date_time_entry *objp)
 {
-	if (!xdr_string(xdrs, &objp->date_time, ~0))
-		return (FALSE);
-	if (!xdr_pointer(xdrs, (char **)&objp->next,
-	    sizeof (CSA_date_time_entry), (xdrproc_t) xdr_CSA_date_time_entry))
-		return (FALSE);
-	return (TRUE);
+	return (_DtCm_xdr_list(xdrs, objp, &CSA_date_time_entry_list));
 }
 
 bool_t
 xdr_cms_attribute_value(XDR *xdrs, cms_attribute_value *objp)
 {
 	if (!xdr_int(xdrs, &objp->type))
+		return (FALSE);
+
+	/* a type that has no representation on the wire is not a value */
+	if (objp->type < CSA_VALUE_BOOLEAN ||
+	    objp->type > CSA_VALUE_OPAQUE_DATA ||
+	    objp->type == CSA_VALUE_ATTENDEE_LIST)
 		return (FALSE);
 
 	switch (objp->type) {
@@ -164,11 +199,20 @@ xdr_cms_attribute_value(XDR *xdrs, cms_attribute_value *objp)
 			return (FALSE);
 		break;
 	case CSA_VALUE_STRING:
+		if (!_DtCm_xdr_limited_string(xdrs, &objp->item.string_value,
+		    _DtCM_LIMIT_TEXT))
+			return (FALSE);
+		break;
 	case CSA_VALUE_CALENDAR_USER:
+		if (!_DtCm_xdr_limited_string(xdrs,
+		    &objp->item.calendar_user_value, _DtCM_LIMIT_NAME))
+			return (FALSE);
+		break;
 	case CSA_VALUE_DATE_TIME:
 	case CSA_VALUE_DATE_TIME_RANGE:
 	case CSA_VALUE_TIME_DURATION:
-		if (!xdr_string(xdrs, &objp->item.string_value, ~0))
+		if (!_DtCm_xdr_limited_string(xdrs,
+		    &objp->item.date_time_value, _DtCM_LIMIT_DATE_TIME))
 			return (FALSE);
 		break;
 	case CSA_VALUE_ACCESS_LIST:
@@ -210,7 +254,8 @@ xdr_cms_attr_name(XDR *xdrs, cms_attr_name *objp)
 {
 	if (!xdr_short(xdrs, &objp->num))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->name, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->name,
+	    _DtCM_LIMIT_ATTR_NAME))
 		return (FALSE);
 	return (TRUE);
 }
@@ -236,18 +281,30 @@ xdr_cms_attribute(XDR *xdrs, cms_attribute *objp)
  * and has a variable number of attributes associated with it.
  */
 
+static bool_t
+xdr_cms_entry_members(XDR *xdrs, void *node)
+{
+	cms_entry *objp = node;
+
+	if (!xdr_cms_key(xdrs, &objp->key))
+		return (FALSE);
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs,
+	    (u_int *) &objp->num_attrs, _DtCM_LIMIT_ATTRIBUTES,
+	    sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+		return (FALSE);
+	return (TRUE);
+}
+
+static const _DtCm_xdr_list_type cms_entry_list = {
+	sizeof (cms_entry), offsetof(cms_entry, next),
+	xdr_cms_entry_members, NULL, _DtCM_LIMIT_ENTRIES
+};
+
+/* codes the list of entries that starts with objp */
 bool_t
 xdr_cms_entry(XDR *xdrs, cms_entry *objp)
 {
-	if (!xdr_cms_key(xdrs, &objp->key))
-		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
-		return (FALSE);
-	if (!xdr_pointer(xdrs, (char **)&objp->next, sizeof (cms_entry),
-	    (xdrproc_t) xdr_cms_entry))
-		return (FALSE);
-	return (TRUE);
+	return (_DtCm_xdr_list(xdrs, objp, &cms_entry_list));
 }
 
 
@@ -262,8 +319,8 @@ xdr_cms_enumerate_calendar_attr_res(XDR *xdrs, cms_enumerate_calendar_attr_res *
 {
 	if (!xdr_u_long(xdrs, &objp->stat))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
-	    ~0, sizeof (cms_attr_name), (xdrproc_t) xdr_cms_attr_name))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attr_name), (xdrproc_t) xdr_cms_attr_name))
 		return (FALSE);
 	return (TRUE);
 }
@@ -280,8 +337,8 @@ xdr_cms_list_calendars_res(XDR *xdrs, cms_list_calendars_res *objp)
 {
 	if (!xdr_u_long(xdrs, &objp->stat))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
-	    ~0, sizeof (cms_name), (xdrproc_t) xdr_cms_name))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
+	    _DtCM_LIMIT_CALENDARS, sizeof (cms_name), (xdrproc_t) xdr_cms_name))
 		return (FALSE);
 	return (TRUE);
 }
@@ -294,7 +351,8 @@ xdr_cms_list_calendars_res(XDR *xdrs, cms_list_calendars_res *objp)
 bool_t
 xdr_cms_open_args(XDR *xdrs, cms_open_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->pid))
 		return (FALSE);
@@ -324,8 +382,8 @@ xdr_cms_open_res(XDR *xdrs, cms_open_res *objp)
 		return (FALSE);
 	if (!xdr_u_int(xdrs, &objp->user_access))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs, &objp->num_attrs,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
 	return (TRUE);
 }
@@ -338,14 +396,16 @@ xdr_cms_open_res(XDR *xdrs, cms_open_res *objp)
 bool_t
 xdr_cms_create_args(XDR *xdrs, cms_create_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->char_set, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->char_set,
+	    _DtCM_LIMIT_CHARSET))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->pid))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
 	return (TRUE);
 }
@@ -358,7 +418,8 @@ xdr_cms_create_args(XDR *xdrs, cms_create_args *objp)
 bool_t
 xdr_cms_remove_args(XDR *xdrs, cms_remove_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->pid))
 		return (FALSE);
@@ -373,7 +434,8 @@ xdr_cms_remove_args(XDR *xdrs, cms_remove_args *objp)
 bool_t
 xdr_cms_register_args(XDR *xdrs, cms_register_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_u_int(xdrs, &objp->update_type))
 		return (FALSE);
@@ -400,8 +462,8 @@ xdr_cms_get_cal_attr_res(XDR *xdrs, cms_get_cal_attr_res *objp)
 {
 	if (!xdr_u_long(xdrs, &objp->stat))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
 	return (TRUE);
 }
@@ -414,10 +476,11 @@ xdr_cms_get_cal_attr_res(XDR *xdrs, cms_get_cal_attr_res *objp)
 bool_t
 xdr_cms_get_cal_attr_args(XDR *xdrs, cms_get_cal_attr_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
-	    ~0, sizeof (cms_attr_name), (xdrproc_t) xdr_cms_attr_name))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attr_name), (xdrproc_t) xdr_cms_attr_name))
 		return (FALSE);
 	return (TRUE);
 }
@@ -430,12 +493,13 @@ xdr_cms_get_cal_attr_args(XDR *xdrs, cms_get_cal_attr_args *objp)
 bool_t
 xdr_cms_set_cal_attr_args(XDR *xdrs, cms_set_cal_attr_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->pid))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
 	return (TRUE);
 }
@@ -452,7 +516,8 @@ xdr_cms_archive_res(XDR *xdrs, cms_archive_res *objp)
 {
 	if (!xdr_u_long(xdrs, &objp->stat))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->data, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->data,
+	    _DtCM_LIMIT_ARCHIVE))
 		return (FALSE);
 	return (TRUE);
 }
@@ -468,8 +533,8 @@ xdr_cms_operators(XDR *xdrs, CSA_enum **ops, u_int num_attrs)
 {
 	u_int	num_ops = num_attrs;
 
-	if (!xdr_array(xdrs, (char **)ops, &num_ops, ~0, sizeof (CSA_enum),
-	    (xdrproc_t) xdr_long))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)ops, &num_ops,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (CSA_enum), (xdrproc_t) xdr_long))
 		return (FALSE);
 
 	return (xdrs->x_op != XDR_DECODE || num_ops == num_attrs);
@@ -482,14 +547,16 @@ xdr_cms_operators(XDR *xdrs, CSA_enum **ops, u_int num_attrs)
 bool_t
 xdr_cms_archive_args(XDR *xdrs, cms_archive_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_bool(xdrs, &objp->delete))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->char_set, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->char_set,
+	    _DtCM_LIMIT_CHARSET))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
 	if (!xdr_cms_operators(xdrs, &objp->ops, objp->num_attrs))
 		return (FALSE);
@@ -504,14 +571,17 @@ xdr_cms_archive_args(XDR *xdrs, cms_archive_args *objp)
 bool_t
 xdr_cms_restore_args(XDR *xdrs, cms_restore_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->data, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->data,
+	    _DtCM_LIMIT_ARCHIVE))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->char_set, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->char_set,
+	    _DtCM_LIMIT_CHARSET))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
 	if (!xdr_cms_operators(xdrs, &objp->ops, objp->num_attrs))
 		return (FALSE);
@@ -523,21 +593,34 @@ xdr_cms_restore_args(XDR *xdrs, cms_restore_args *objp)
  * cms_reminder
  */
 
-bool_t
-xdr_cms_reminder_ref(XDR *xdrs, cms_reminder_ref *objp)
+static bool_t
+xdr_cms_reminder_ref_members(XDR *xdrs, void *node)
 {
-	if (!xdr_string(xdrs, &objp->reminder_name, ~0))
+	cms_reminder_ref *objp = node;
+
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->reminder_name,
+	    _DtCM_LIMIT_ATTR_NAME))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->entryid, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->entryid,
+	    _DtCM_LIMIT_ENTRY_ID))
 		return (FALSE);
 	if (!xdr_cms_key(xdrs, &objp->key))
 		return (FALSE);
 	if (!xdr_time_t(xdrs, &objp->runtime))
 		return (FALSE);
-	if (!xdr_pointer(xdrs, (char **)&objp->next, sizeof (cms_reminder_ref),
-	    (xdrproc_t) xdr_cms_reminder_ref))
-		return (FALSE);
 	return (TRUE);
+}
+
+static const _DtCm_xdr_list_type cms_reminder_ref_list = {
+	sizeof (cms_reminder_ref), offsetof(cms_reminder_ref, next),
+	xdr_cms_reminder_ref_members, NULL, _DtCM_LIMIT_ENTRIES
+};
+
+/* codes the list of reminders that starts with objp */
+bool_t
+xdr_cms_reminder_ref(XDR *xdrs, cms_reminder_ref *objp)
+{
+	return (_DtCm_xdr_list(xdrs, objp, &cms_reminder_ref_list));
 }
 
 
@@ -566,12 +649,13 @@ xdr_cms_reminder_res(XDR *xdrs, cms_reminder_res *objp)
 bool_t
 xdr_cms_reminder_args(XDR *xdrs, cms_reminder_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_time_t(xdrs, &objp->tick))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
-	    ~0, sizeof (cms_attr_name), (xdrproc_t) xdr_cms_attr_name))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attr_name), (xdrproc_t) xdr_cms_attr_name))
 		return (FALSE);
 	return (TRUE);
 }
@@ -602,12 +686,14 @@ xdr_cms_entries_res(XDR *xdrs, cms_entries_res *objp)
 bool_t
 xdr_cms_lookup_entries_args(XDR *xdrs, cms_lookup_entries_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->char_set, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->char_set,
+	    _DtCM_LIMIT_CHARSET))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
 	if (!xdr_cms_operators(xdrs, &objp->ops, objp->num_attrs))
 		return (FALSE);
@@ -622,7 +708,8 @@ xdr_cms_lookup_entries_args(XDR *xdrs, cms_lookup_entries_args *objp)
 bool_t
 xdr_cms_enumerate_args(XDR *xdrs, cms_enumerate_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_long(xdrs, &objp->id))
 		return (FALSE);
@@ -638,23 +725,35 @@ xdr_cms_enumerate_args(XDR *xdrs, cms_enumerate_args *objp)
  * attributes.
  */
 
+static bool_t
+xdr_cms_get_entry_attr_res_item_members(XDR *xdrs, void *node)
+{
+	cms_get_entry_attr_res_item *objp = node;
+
+	if (!xdr_u_long(xdrs, &objp->stat))
+		return (FALSE);
+	if (!xdr_cms_key(xdrs, &objp->key))
+		return (FALSE);
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs,
+	    (u_int *) &objp->num_attrs, _DtCM_LIMIT_ATTRIBUTES,
+	    sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+		return (FALSE);
+	return (TRUE);
+}
+
+static const _DtCm_xdr_list_type cms_get_entry_attr_res_item_list = {
+	sizeof (cms_get_entry_attr_res_item),
+	offsetof(cms_get_entry_attr_res_item, next),
+	xdr_cms_get_entry_attr_res_item_members, NULL, _DtCM_LIMIT_KEYS
+};
+
+/* codes the list of results that starts with objp */
 bool_t
 xdr_cms_get_entry_attr_res_item(
 	XDR			*xdrs,
 	cms_get_entry_attr_res_item	*objp)
 {
-	if (!xdr_u_long(xdrs, &objp->stat))
-		return (FALSE);
-	if (!xdr_cms_key(xdrs, &objp->key))
-		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
-		return (FALSE);
-	if (!xdr_pointer(xdrs, (char **)&objp->next,
-	    sizeof (cms_get_entry_attr_res_item),
-	    (xdrproc_t) xdr_cms_get_entry_attr_res_item))
-		return (FALSE);
-	return (TRUE);
+	return (_DtCm_xdr_list(xdrs, objp, &cms_get_entry_attr_res_item_list));
 }
 
 
@@ -685,13 +784,14 @@ xdr_cms_get_entry_attr_res(XDR *xdrs, cms_get_entry_attr_res *objp)
 bool_t
 xdr_cms_get_entry_attr_args(XDR *xdrs, cms_get_entry_attr_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->keys, (u_int *) &objp->num_keys,
-	    ~0, sizeof (cms_key), (xdrproc_t) xdr_cms_key))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->keys, (u_int *) &objp->num_keys,
+	    _DtCM_LIMIT_KEYS, sizeof (cms_key), (xdrproc_t) xdr_cms_key))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
-	    ~0, sizeof (cms_attr_name), (xdrproc_t) xdr_cms_attr_name))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attr_name), (xdrproc_t) xdr_cms_attr_name))
 		return (FALSE);
 	return (TRUE);
 }
@@ -722,12 +822,13 @@ xdr_cms_entry_res(XDR *xdrs, cms_entry_res *objp)
 bool_t
 xdr_cms_insert_args(XDR *xdrs, cms_insert_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->pid))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
 	return (TRUE);
 }
@@ -740,7 +841,8 @@ xdr_cms_insert_args(XDR *xdrs, cms_insert_args *objp)
 bool_t
 xdr_cms_update_args(XDR *xdrs, cms_update_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->pid))
 		return (FALSE);
@@ -748,8 +850,8 @@ xdr_cms_update_args(XDR *xdrs, cms_update_args *objp)
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->scope))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
-	    ~0, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->attrs, (u_int *) &objp->num_attrs,
+	    _DtCM_LIMIT_ATTRIBUTES, sizeof (cms_attribute), (xdrproc_t) xdr_cms_attribute))
 		return (FALSE);
 	return (TRUE);
 }
@@ -762,7 +864,8 @@ xdr_cms_update_args(XDR *xdrs, cms_update_args *objp)
 bool_t
 xdr_cms_delete_args(XDR *xdrs, cms_delete_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->cal, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->cal,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->pid))
 		return (FALSE);

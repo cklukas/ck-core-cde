@@ -35,6 +35,7 @@
 #include <EUSCompat.h>
 #include "cmcb.h"
 #include "csa.h"
+#include "cmxdrlist.h"
 
 
 /*
@@ -44,8 +45,9 @@
 bool_t
 xdr_cmcb_cal_attr_data(XDR *xdrs, cmcb_cal_attr_data *objp)
 {
-	if (!xdr_array(xdrs, (char **)&objp->names, (u_int *) &objp->num_names,
-	    ~0, sizeof (cms_name), (xdrproc_t) xdr_cms_name))
+	if (!_DtCm_xdr_limited_array(xdrs, (char **)&objp->names,
+	    (u_int *) &objp->num_names, _DtCM_LIMIT_ATTRIBUTES,
+	    sizeof (cms_name), (xdrproc_t) xdr_cms_name))
 		return (FALSE);
 	return (TRUE);
 }
@@ -57,7 +59,8 @@ xdr_cmcb_cal_attr_data(XDR *xdrs, cmcb_cal_attr_data *objp)
 bool_t
 xdr_cmcb_add_entry_data(XDR *xdrs, cmcb_add_entry_data *objp)
 {
-	if (!xdr_string(xdrs, &objp->id, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->id,
+	    _DtCM_LIMIT_ENTRY_ID))
 		return (FALSE);
 	return (TRUE);
 }
@@ -69,7 +72,8 @@ xdr_cmcb_add_entry_data(XDR *xdrs, cmcb_add_entry_data *objp)
 bool_t
 xdr_cmcb_delete_entry_data(XDR *xdrs, cmcb_delete_entry_data *objp)
 {
-	if (!xdr_string(xdrs, &objp->id, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->id,
+	    _DtCM_LIMIT_ENTRY_ID))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->scope))
 		return (FALSE);
@@ -87,9 +91,11 @@ xdr_cmcb_delete_entry_data(XDR *xdrs, cmcb_delete_entry_data *objp)
 bool_t
 xdr_cmcb_update_entry_data(XDR *xdrs, cmcb_update_entry_data *objp)
 {
-	if (!xdr_string(xdrs, &objp->newid, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->newid,
+	    _DtCM_LIMIT_ENTRY_ID))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->oldid, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->oldid,
+	    _DtCM_LIMIT_ENTRY_ID))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->scope))
 		return (FALSE);
@@ -136,9 +142,11 @@ xdr_cmcb_update_data(XDR *xdrs, cmcb_update_data *objp)
 bool_t
 xdr_cmcb_update_callback_args(XDR *xdrs, cmcb_update_callback_args *objp)
 {
-	if (!xdr_string(xdrs, &objp->calendar, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->calendar,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->user, ~0))
+	if (!_DtCm_xdr_limited_string(xdrs, &objp->user,
+	    _DtCM_LIMIT_NAME))
 		return (FALSE);
 	if (!xdr_cmcb_update_data(xdrs, &objp->data))
 		return (FALSE);
