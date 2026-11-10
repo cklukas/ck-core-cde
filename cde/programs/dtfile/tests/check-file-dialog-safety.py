@@ -19,6 +19,11 @@ CASES = (
     "split-absolute-root", "split-relative-root", "split-relative-directory",
     "split-nested-absolute", "split-host-long", "split-path-long",
     "split-trailing-slash", "split-file-capacity",
+    "workspace-join-root", "workspace-join-directory",
+    "workspace-join-exact", "workspace-join-long", "workspace-join-null",
+    "workspace-parent-exact", "workspace-parent-child",
+    "workspace-parent-prefix", "workspace-parent-empty",
+    "workspace-parent-short", "workspace-parent-null",
 )
 
 
@@ -68,10 +73,13 @@ def main():
         functions.append(f'#line {line} {json.dumps(str(source_file))}\n{body}\n')
         records.append({"function": name, "line": line,
                         "sha256": hashlib.sha256(body.encode()).hexdigest()})
-    body, line = lexical["function"](file_op_text, "GetTarget")
-    functions.append(f'#line {line} {json.dumps(str(file_op_source))}\n{body}\n')
-    records.append({"function": "GetTarget", "line": line,
-                    "sha256": hashlib.sha256(body.encode()).hexdigest()})
+    bodies = {}
+    for name in ("GetTarget", "FileOpBuildPath", "IsInParentDir"):
+        body, line = lexical["function"](file_op_text, name)
+        bodies[name] = body
+        functions.append(f'#line {line} {json.dumps(str(file_op_source))}\n{body}\n')
+        records.append({"function": name, "line": line,
+                        "sha256": hashlib.sha256(body.encode()).hexdigest()})
     production = work / "file-dialog-production.inc"
     production.write_text("\n".join(functions))
     (work / fixture.name).write_bytes(fixture.read_bytes())
@@ -85,11 +93,21 @@ def main():
         "resolved_target_bounded": "path_length >= to_size" in text
             and "memcpy(to, path, path_length + 1)" in text,
         "target_split_bounded": "Boolean\nGetTarget(" in file_op_text
-            and "strcmp(to_dir" not in body and "char path[MAX_PATH]" in body,
+            and "strcmp(to_dir" not in bodies["GetTarget"]
+            and "char path[MAX_PATH]" in bodies["GetTarget"],
         "target_callers_check_failure": "if (!GetTarget(host_name, directory_name, new_name" in file_op_text
             and "if (msg == NULL &&\n       !GetTarget(" in text,
         "target_interface_sized": "extern Boolean GetTarget(" in main_text
             and main_text.count("size_t to_") == 3,
+        "workspace_paths_bounded": file_op_text.count("FileOpBuildPath(") == 6
+            and "sprintf( fileName" not in file_op_text
+            and "snprintf( fileName" not in file_op_text,
+        "workspace_parent_no_copy": "char filename [MAX_PATH]" not in bodies["IsInParentDir"]
+            and "source_path[0] == '\\0'" in bodies["IsInParentDir"],
+        "workspace_strings_replaced": "XtFree(desktopWin->restricted_directory);" in file_op_text
+            and "XtFree(desktopWin->helpVol);" in file_op_text
+            and "XtFree(directory_set->name);" in file_op_text
+            and file_op_text.count("desktopWin->helpVol = new_help_volume;") == 1,
     }
     report = {
         "start_utc": utc(), "passed": False, "cases": [],

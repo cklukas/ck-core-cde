@@ -1,4 +1,10 @@
 2026-11-10
+- dtfile: harden workspace icon refresh after file moves. Source and target
+  paths now use checked joins instead of fixed-buffer formatting, parent tests
+  no longer copy arbitrary paths or underflow on empty input, prefix rewrites
+  check their allocation arithmetic, and oversized paths skip only the visual
+  refresh. Refreshed desktop metadata now replaces its owned strings once,
+  including when optional help or restriction values are absent.
 - dtfile: make destination path splitting transactional and capacity-aware.
   File creation and copy/move/link dialogs now pass explicit output sizes,
   correctly recognize a root source directory without reading an uninitialized

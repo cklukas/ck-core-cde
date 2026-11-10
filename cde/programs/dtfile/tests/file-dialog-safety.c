@@ -159,6 +159,45 @@ run_case(const char *name)
                        directory, sizeof(directory), file, sizeof(file)));
       CHECK(errno == ENAMETOOLONG && strcmp(file, "file-old") == 0);
    }
+   else if (strcmp(name, "workspace-join-root") == 0)
+   {
+      CHECK(FileOpBuildPath(path, sizeof(path), "/", "item"));
+      CHECK(strcmp(path, "/item") == 0);
+   }
+   else if (strcmp(name, "workspace-join-directory") == 0)
+   {
+      CHECK(FileOpBuildPath(path, sizeof(path), "/dir", "item"));
+      CHECK(strcmp(path, "/dir/item") == 0);
+   }
+   else if (strcmp(name, "workspace-join-exact") == 0)
+   {
+      CHECK(FileOpBuildPath(path, 10, "/dir", "item"));
+      CHECK(strcmp(path, "/dir/item") == 0);
+   }
+   else if (strcmp(name, "workspace-join-long") == 0)
+   {
+      CHECK(!FileOpBuildPath(path, 9, "/dir", "item"));
+      CHECK(strcmp(path, "unchanged") == 0);
+   }
+   else if (strcmp(name, "workspace-join-null") == 0)
+   {
+      CHECK(!FileOpBuildPath(path, sizeof(path), NULL, "item"));
+      CHECK(!FileOpBuildPath(NULL, sizeof(path), "/dir", "item"));
+      CHECK(strcmp(path, "unchanged") == 0);
+   }
+   else if (strcmp(name, "workspace-parent-exact") == 0)
+      CHECK(IsInParentDir("/one/two", "/one/two"));
+   else if (strcmp(name, "workspace-parent-child") == 0)
+      CHECK(IsInParentDir("/one/two", "/one/two/three"));
+   else if (strcmp(name, "workspace-parent-prefix") == 0)
+      CHECK(!IsInParentDir("/one/two", "/one/twosome/three"));
+   else if (strcmp(name, "workspace-parent-empty") == 0)
+      CHECK(!IsInParentDir("", "/one/two"));
+   else if (strcmp(name, "workspace-parent-short") == 0)
+      CHECK(!IsInParentDir("/one/two", "/one"));
+   else if (strcmp(name, "workspace-parent-null") == 0)
+      CHECK(!IsInParentDir(NULL, "/one/two") &&
+            !IsInParentDir("/one", NULL));
    else
       return 2;
 

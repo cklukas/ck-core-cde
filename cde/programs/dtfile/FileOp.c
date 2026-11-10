@@ -154,7 +154,9 @@ static void    DisplayErrorMessage(
                  char *errMsg,
                  char *from,
                  char *dir);
-static Boolean    IsInParentDir(char *from,char *to);
+static Boolean FileOpBuildPath(char *path, size_t path_size,
+                               const char *directory, const char *file);
+static Boolean IsInParentDir(const char *from, const char *to);
 
 /* the amount of time we wait for a file move/copy to complete */
 /* @@@ should make this a resource */
@@ -1554,6 +1556,36 @@ FileMoveCopyProcessDesktop(
 }
 
 
+static Boolean
+FileOpBuildPath(
+        char *path,
+        size_t path_size,
+        const char *directory,
+        const char *file)
+{
+  size_t directory_length;
+  size_t file_length;
+  size_t separator_length;
+
+  if (path == NULL || path_size == 0 || directory == NULL || file == NULL)
+    return False;
+
+  directory_length = strlen(directory);
+  file_length = strlen(file);
+  separator_length = strcmp(directory, "/") == 0 ? 0 : 1;
+  if (directory_length >= path_size ||
+      separator_length > path_size - directory_length - 1 ||
+      file_length > path_size - directory_length - separator_length - 1)
+    return False;
+
+  memcpy(path, directory, directory_length);
+  if (separator_length != 0)
+    path[directory_length] = '/';
+  memcpy(path + directory_length + separator_length, file, file_length);
+  path[directory_length + separator_length + file_length] = '\0';
+  return True;
+}
+
 static void
 RemoveIconFromWorkspace( char * iconName,
                          char * targetDir )
@@ -1567,10 +1599,9 @@ RemoveIconFromWorkspace( char * iconName,
   {
     desktopWin = desktop_data->desktopWindows[i];
 
-    if( strcmp( desktopWin->dir_linked_to, "/" ) == 0 )
-      sprintf( fileName, "/%s", desktopWin->file_name );
-    else
-      sprintf( fileName, "%s/%s", desktopWin->dir_linked_to, desktopWin->file_name );
+    if (!FileOpBuildPath(fileName, sizeof(fileName),
+                         desktopWin->dir_linked_to, desktopWin->file_name))
+      continue;
 
     if( strcmp( fileName, iconName ) == 0 )
     {
@@ -1624,21 +1655,32 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
   {
     desktopWin = desktop_data->desktopWindows[i];
 
-    if( strcmp( desktopWin->dir_linked_to, "/" ) == 0 )
-      sprintf( fileName, "/%s", desktopWin->file_name );
-    else
-      sprintf( fileName, "%s/%s", desktopWin->dir_linked_to, desktopWin->file_name );
+    if (!FileOpBuildPath(fileName, sizeof(fileName),
+                         desktopWin->dir_linked_to, desktopWin->file_name))
+      continue;
 
     DtEliminateDots(fileName);
     if( strcmp( fileName, iconName ) == 0 )
       dirp = XtNewString(targetDir);
     else if(IsInParentDir(iconName,desktopWin->dir_linked_to))
     {
-      int index = strlen(iconPdir);
+      size_t index = strlen(iconPdir);
+      size_t target_length = strlen(targetDir);
+      size_t source_length;
+      size_t suffix_length;
       char *tptr = desktopWin->dir_linked_to;
 
-      dirp = XtCalloc( 1, strlen(targetDir)+ strlen(&tptr[index])+1);
-      sprintf(dirp,"%s%s",targetDir,&tptr[index]);
+      source_length = strlen(tptr);
+      if (index > source_length)
+        continue;
+      suffix_length = source_length - index;
+      if (target_length > SIZE_MAX - suffix_length - 1)
+        continue;
+      dirp = XtMalloc(target_length + suffix_length + 1);
+      if (dirp == NULL)
+        continue;
+      memcpy(dirp, targetDir, target_length);
+      memcpy(dirp + target_length, tptr + index, suffix_length + 1);
 
     }
     if(dirp)
@@ -1664,18 +1706,15 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
 
       if(fmd)
       {
-         if (fmd->restricted_directory == NULL)
-            desktopWin->restricted_directory = NULL;
-         else
-            desktopWin->restricted_directory =
-                XtNewString(fmd->restricted_directory);
+        char *new_restricted_directory = fmd->restricted_directory == NULL ?
+          NULL : XtNewString(fmd->restricted_directory);
+        char *new_help_volume = fmd->helpVol == NULL ?
+          NULL : XtNewString(fmd->helpVol);
 
-         if (fmd->helpVol == NULL)
-            desktopWin->helpVol = NULL;
-         else
-            desktopWin->helpVol = XtNewString(fmd->helpVol);
-
-        desktopWin->helpVol         = XtNewString( fmd->helpVol );
+        XtFree(desktopWin->restricted_directory);
+        desktopWin->restricted_directory = new_restricted_directory;
+        XtFree(desktopWin->helpVol);
+        desktopWin->helpVol = new_help_volume;
         desktopWin->view            = fmd->view;
         desktopWin->order           = fmd->order;
         desktopWin->direction       = fmd->direction;
@@ -1713,8 +1752,9 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
         full_dir_name = NULL;
       }
 
-      ((DirectorySet *)file_view_data->directory_set)->name =
-        XtNewString(dirp);
+      directory_set = (DirectorySet *)file_view_data->directory_set;
+      XtFree(directory_set->name);
+      directory_set->name = XtNewString(dirp);
 
       SaveDesktopInfo(NORMAL_RESTORE);
       XtFree(dirp);
@@ -1932,6 +1972,7 @@ decoded:
    if (done)
    {
       char tmpDir[MAX_PATH];
+      Boolean tmpDirValid = False;
 
       DPRINTF(("FileOpPipeCB: done, rc %d\n", rc));
 
@@ -2003,12 +2044,27 @@ decoded:
          {
             if (cb_data->mode == MOVE_FILE)
             {
+              size_t directory_length;
+
               DirectoryEndModify(cb_data->updates[i].host,
                                  cb_data->updates[i].directory);
               if( strcmp( cb_data->updates[i].directory, "/" ) == 0 )
+              {
                 tmpDir[0] = 0x0;
+                tmpDirValid = True;
+              }
               else
-                sprintf( tmpDir, "%s", cb_data->updates[i].directory );
+              {
+                directory_length = strlen(cb_data->updates[i].directory);
+                if (directory_length < sizeof(tmpDir))
+                {
+                  memcpy(tmpDir, cb_data->updates[i].directory,
+                         directory_length + 1);
+                  tmpDirValid = True;
+                }
+                else
+                  tmpDirValid = False;
+              }
             }
 
             if( cb_data->updates[i].host )
@@ -2019,9 +2075,11 @@ decoded:
               XtFree( cb_data->updates[i].app_man_dir );
          }
 
-         if( cb_data->mode == MOVE_FILE )
+         if( cb_data->mode == MOVE_FILE && tmpDirValid &&
+             FileOpBuildPath(fileName, sizeof(fileName),
+                             tmpDir[0] == '\0' ? "/" : tmpDir,
+                             cb_data->updates[i].file))
          {
-           snprintf( fileName, sizeof(fileName), "%s/%s", tmpDir, cb_data->updates[i].file );
            if( cb_data->updates[i].operationStatus == True )
            {
              if( cb_data->status == PIPEMSG_MOVE_TO_SAME_DIR )
@@ -2038,10 +2096,13 @@ decoded:
 
 	       if(initiating_view == NULL && cb_data->callback_data == NULL)
 	       {
-                 snprintf( fileName, sizeof(fileName), "%s/%s", cb_data->directory,
-			      cb_data->updates[i].file );
-                 DtEliminateDots(fileName);
-                 RemoveIconFromWorkspace( fileName, cb_data->directory );
+		 if (FileOpBuildPath(fileName, sizeof(fileName),
+		                         cb_data->directory,
+		                         cb_data->updates[i].file))
+		 {
+                   DtEliminateDots(fileName);
+                   RemoveIconFromWorkspace( fileName, cb_data->directory );
+		 }
 	       }
              }
            }
@@ -3786,18 +3847,20 @@ DisplayErrorMessage(
 }
 static Boolean
 IsInParentDir(
-        char *source_path ,
-        char *dest_path )
+        const char *source_path,
+        const char *dest_path)
 {
-   char filename [MAX_PATH];
-   char *cptr;
-   int slen = strlen(source_path);
+   size_t source_length;
+   size_t dest_length;
 
-   if(slen > strlen(dest_path))
+   if (source_path == NULL || dest_path == NULL || source_path[0] == '\0')
      return False;
-   strcpy (filename, dest_path);
-   cptr = strchr(&filename[slen-1],'/');
-   if(cptr)
-     *cptr = '\0';
-   return ((strcmp(source_path,filename) == 0)?True:False);
+   source_length = strlen(source_path);
+   dest_length = strlen(dest_path);
+   if (source_length > dest_length)
+     return False;
+   if (strncmp(source_path, dest_path, source_length) != 0)
+     return False;
+   return dest_path[source_length] == '\0' ||
+          dest_path[source_length] == '/';
 }

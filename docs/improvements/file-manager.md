@@ -76,6 +76,11 @@ The final host, parent directory and leaf split is also transactional. It uses
 the source directory—not uninitialized destination storage—to decide how to
 join a relative name, preserves the root parent for `/name`, and reports an
 invalid or oversized target before file creation or transfer setup begins.
+Workspace icons affected by a completed move follow the same bounded path
+rules. Overlong or malformed refresh paths are ignored without changing the
+completed file operation, parent-directory matching observes component
+boundaries, and refreshed desktop metadata replaces its owned optional strings
+without duplicate allocation or null-string copies.
 
 CK Core CDE develops File Manager as a visual workspace rather than only a
 directory browser.

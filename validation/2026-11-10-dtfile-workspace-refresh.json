@@ -1,0 +1,75 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile bounded workspace refresh paths and metadata ownership",
+  "source_base": "3f6d3e4ad1265b7855c92e2138b67a58309d1879",
+  "motif_revision": "90d98fb7395306ab1f54df3e0d8d247893799a49",
+  "motif_prefix": "/home/klukas/tmp/motif-cde-90d98fb-20261110/prefix",
+  "motif_libXm_sha256": "e049702713e63eb5fbd7759f230e2afb5cb965794d9f901d3fb05734d0f24df3",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    "cde/CHANGES": "de735be35ee1b3389524ca6739a293e2958700085f0b6ea36e54d71d92713709",
+    "cde/programs/dtfile/FileOp.c": "5d27c856f64eede307e2c32e9fe6a6e10fd9c7ab92b7c337367cadcdca6390ad",
+    "cde/programs/dtfile/tests/check-file-dialog-safety.py": "aa0a8000edd771fd1913e1eddf96a08574d6949340e2e57c768bb2d626da48f3",
+    "cde/programs/dtfile/tests/file-dialog-safety.c": "1a8f4aa42c19592c36386cb51bbc081baf4d71f705320b08b858c4a031f0ca02",
+    "docs/improvements/file-manager.md": "f03cfe1d5b842aef3640c1efa7337bd99cfe738afa8bc8960eb21f0aca7576f6"
+  },
+  "focused_regressions": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, Linux ARM64",
+    "cases": 29,
+    "seconds": 0.568077,
+    "sanitizers": "address,undefined",
+    "leak_detection": true,
+    "receipt_sha256": "a0c3626ae9550d2c390458abba76f50643a3b89e272174fad33e63d3a75eb713",
+    "checkpoint_receipt_sha256": "4e98e78955df4642fa59e2a89e5940c734c5402df07e36dcf3bb0d7e7a4e02ac",
+    "coverage": [
+      "root, nested and exact-capacity workspace path joins",
+      "oversized and null workspace path components",
+      "exact and descendant parent relationships",
+      "component-prefix, empty, short and null parent inputs",
+      "bounded move-completion refresh call sites",
+      "single-owner replacement of optional desktop metadata"
+    ]
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "cpu": 2,
+    "full_rebuild": false,
+    "closure": ["dtfile-FileOp.o", "dtfile relink"],
+    "closure_note": "The build-declared dependency closure contained only the changed FileOp translation unit; all other dtfile objects and every CDE library were reused.",
+    "seconds": 1.160258048,
+    "file_op_object_sha256": "a4438cee34647e329be1349348108fd84db48e871caaff12c2065b6053d1bf32",
+    "launcher_sha256": "d9a56d5b7f62ca6fd8d4f898227c495838039d9f4af26016e950c79725ae47f3",
+    "output_sha256": "61f2698ecbd2600a606780d1e012bd0eb92049901a7f7787bf7c8cf33cbacc44",
+    "runtime_libXm_exact_prefix": true,
+    "warnings": "One pre-existing dangling-else warning in an unchanged FileOp error-reporting region."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "runs": 1,
+    "seconds": 16.517373952,
+    "legacy_pass_lines": 311,
+    "file_dialog_cases": 29,
+    "failed_case_lines": 0,
+    "hard_failure_markers": 0,
+    "log_sha256": "b38c6ca471023456c45e9d897accf7506b5418e04ce1ab696e2f06cdaf5a5a44"
+  },
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round14-20261110/",
+  "evidence_manifest_sha256": "7359536cf40b37b72f71ec8ad98ce6d9249af1a84ff46639f1c4308943925267",
+  "postconditions": [
+    "workspace icon paths are never silently truncated or formatted beyond fixed buffers",
+    "parent checks reject empty, short and component-prefix inputs without copying paths",
+    "oversized refresh paths leave the completed file operation unchanged",
+    "prefix-rewrite allocation arithmetic is checked before allocation",
+    "help, restriction and directory metadata replace their prior owned strings exactly once",
+    "dtfile resolves libXm.so.9 from the exact frozen Motif prefix",
+    "no owned compiler, make or test process remained before returning the serial lane"
+  ],
+  "limitations": [
+    "This workspace-refresh bundle did not launch or inspect a CDE window.",
+    "The qualified ck-core-fs-lib revision was not changed."
+  ]
+}
