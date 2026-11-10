@@ -166,6 +166,10 @@ IMAPServer::ptrans_msgsizes(int count, int *sizes)
     char 		buf[DTMAS_POPBUFSIZE+1];
     DTMailError_t	ok = DTME_NoError;
 
+    // A size nobody reports stays unknown.
+    for (int i = 0; i < count; i++)
+      sizes[i] = -1;
+
     ok = do_send("FETCH 1:%d RFC822.SIZE", count);
     if (DTME_NoError != ok) return ok;
 
@@ -173,20 +177,16 @@ IMAPServer::ptrans_msgsizes(int count, int *sizes)
     {
 	int num, size;
 
-	if (buf[strlen(buf)-1] == '\n')
-	  buf[strlen(buf)-1] = '\0';
-	if (buf[strlen(buf)-1] == '\r')
-	  buf[strlen(buf)-1] = '\r';
+	dtmasChomp(buf);
 
 	if (_protologging)
 	  _logger.logError(DTM_FALSE, "%s< %s", proto_name(), buf);
 
 	if (strstr(buf, "OK"))
 	  break;
-	else if (sscanf(buf, "* %d FETCH (RFC822.SIZE %d)", &num, &size) == 2)
+	else if (sscanf(buf, "* %d FETCH (RFC822.SIZE %d)", &num, &size) == 2 &&
+		 num >= 1 && num <= count)
 	  sizes[num - 1] = size;
-	else
-	  sizes[num - 1] = -1;
     }
 
     return DTME_NoError;
@@ -243,7 +243,7 @@ IMAPServer::ptrans_retrieve_start(int msg, int *lenp)
 
 	if (_protologging)
 	  _logger.logError(DTM_FALSE, "%s< %s", proto_name(), buf);
-    } while (sscanf(buf+2, "%d FETCH (RFC822 {%d}", &num, lenp) != 2);
+    } while (sscanf(dtmasAfterPrefix(buf, 2), "%d FETCH (RFC822 {%d}", &num, lenp) != 2);
 
     if (num != msg)
     {
@@ -273,21 +273,18 @@ IMAPServer::ptrans_parse_response(char *argbuf)
 	    return DTME_MailServerAccess_SocketIOError;
 	}
 
-	if (buf[strlen(buf)-1] == '\n')
-	  buf[strlen(buf)-1] = '\0';
-	if (buf[strlen(buf)-1] == '\r')
-	  buf[strlen(buf)-1] = '\r';
+	dtmasChomp(buf);
 
 	if (_protologging)
 	  _logger.logError(DTM_FALSE, "%s< %s", proto_name(), buf);
 
 	/* interpret untagged status responses */
 	if (strstr(buf, "EXISTS"))
-	  _count = atoi(buf+2);
+	  _count = atoi(dtmasAfterPrefix(buf, 2));
 	if (strstr(buf, "RECENT"))
-	  _recent = atoi(buf+2);
+	  _recent = atoi(dtmasAfterPrefix(buf, 2));
 	if (strstr(buf, "UNSEEN"))
-	  _unseen = atoi(buf+2);
+	  _unseen = atoi(dtmasAfterPrefix(buf, 2));
 	if (strstr(buf, "FLAGS"))
 	  _seen = (strstr(buf, "Seen") != (char *)NULL);
 
@@ -304,10 +301,10 @@ IMAPServer::ptrans_parse_response(char *argbuf)
 	char	*cp;
 
 	/* skip the tag */
-	for (cp = buf; !isspace(*cp); cp++)
+	for (cp = buf; *cp != '\0' && !isspace((unsigned char) *cp); cp++)
 	  continue;
 
-	while (isspace(*cp))
+	while (isspace((unsigned char) *cp))
 	  cp++;
 
 	if (strncmp(cp, "OK", 2) == 0)
@@ -315,7 +312,7 @@ IMAPServer::ptrans_parse_response(char *argbuf)
 	    strcpy(argbuf, cp);
 	    return DTME_NoError;
 	}
-	else if (strncmp(cp, "BAD", 2) == 0)
+	else if (strncmp(cp, "BAD", 3) == 0)
 	{
 	    _logger.logError(DTM_FALSE, "Protocol Error reading response");
 	    return DTME_MailServerAccess_Error;

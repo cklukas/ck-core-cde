@@ -67,10 +67,12 @@
 #endif
 
 #define dtmasTAGCLR()	*_transtag = '\0'; _transnum=0;
-#define dtmasTAGGEN()	(sprintf(_transtag, "a%04u", ++_transnum), _transtag)
+#define dtmasTAGGEN()	(_transnum = _transnum % 9999 + 1, snprintf(_transtag, DTMAS_TAGSIZE, "a%04u", _transnum), _transtag)
 #define dtmasTAGGET()	(_transtag)
 
 static jmp_buf	restart;
+
+#define DTMAS_COMMAND_TERMINATOR	"\r\n"
 
 DtMailServer::DtMailServer(
 		char			*folder,
@@ -83,10 +85,8 @@ DtMailServer::DtMailServer(
 
     GetPasswordEntry(pw);
 
-    if (folder)
-      _folder		= strdup(folder);
-    else
-      _folder		= "INBOX";
+    // The folder name is released with free in the destructor.
+    _folder		= strdup(folder ? folder : "INBOX");
     _session 		= session;
     _mailbox 		= mailbox;
 
@@ -173,7 +173,12 @@ DtMailServer::ptrans_retrieve_readandappend(
     int from_done = FALSE;
     int done = FALSE;
     size_t nread = 0;
+    size_t total;
     char *s, *t;
+    DTMailError_t status = DTME_NoError;
+
+    // A length a server reports below zero is no length at all.
+    total = len > 0 ? (size_t) len : 0;
 
     memset((char*) &action, 0, sizeof(struct sigaction));
     memset((char*) &o_action, 0, sizeof(struct sigaction));
@@ -184,10 +189,10 @@ DtMailServer::ptrans_retrieve_readandappend(
     {
         size_t	nbytes;
 
-	if (nread < len)
+	if (nread < total)
 	{
-	    if (DTMAS_MSGBUFSIZE - 1 > len - nread)
-	      nbytes = (size_t) len - nread;
+	    if (DTMAS_MSGBUFSIZE - 1 > total - nread)
+	      nbytes = total - nread;
 	    else
 	      nbytes = DTMAS_MSGBUFSIZE - 1;
 
@@ -195,9 +200,10 @@ DtMailServer::ptrans_retrieve_readandappend(
 	    {
 	        _logger.logError(
 			DTM_FALSE,
-			"Failed to retrieve %d bytes.",
+			"Failed to retrieve %ld bytes.",
 			len);
-            	return DTME_MailServerAccess_SocketIOError;
+		status = DTME_MailServerAccess_SocketIOError;
+		goto finish;
 	    }
             _msgbuf[nbytes] = '\0';
 	}
@@ -205,8 +211,9 @@ DtMailServer::ptrans_retrieve_readandappend(
 	{
 	    if (NULL == SockGets(_msgbuf, DTMAS_MSGBUFSIZE, _sockfp))
 	    {
-	        _logger.logError(DTM_FALSE, "Failed to retrieve %d bytes", len);
-                return DTME_MailServerAccess_SocketIOError;
+	        _logger.logError(DTM_FALSE, "Failed to retrieve %ld bytes", len);
+		status = DTME_MailServerAccess_SocketIOError;
+		goto finish;
 	    }
 	    nbytes = strlen(_msgbuf);
 	}
@@ -221,8 +228,10 @@ DtMailServer::ptrans_retrieve_readandappend(
         if (_protologgingplus)
 	  _logger.logError(
 			DTM_FALSE,
-			"INFO: read %d of %d octets %d remaining\n%s< %s\n",
-			nbytes, len, len-nread, proto_name(), _msgbuf);
+			"INFO: read %lu of %lu octets %lu remaining\n%s< %s\n",
+			(unsigned long) nbytes, (unsigned long) total,
+			(unsigned long) (total > nread ? total - nread : 0),
+			proto_name(), _msgbuf);
 
 	// Determine if we are done with this message.
         if (proto_is_delimited())
@@ -238,7 +247,7 @@ DtMailServer::ptrans_retrieve_readandappend(
 	        done = TRUE;
 	    }
 	}
-	else if (nread >= len)
+	else if (nread >= total)
 	  done = TRUE;
     
 	if (0 < (nbytes = strlen(_msgbuf)))
@@ -247,10 +256,12 @@ DtMailServer::ptrans_retrieve_readandappend(
 	    {
 		time_t clock;
 	        char buffer[BUFSIZ];
+		const char *stamp;
 
 		clock = time(&clock);
-		sprintf(buffer, "%s %s %s",
-			from, _servername, ctime((const time_t *) &clock));
+		stamp = ctime((const time_t *) &clock);
+		snprintf(buffer, sizeof(buffer), "%s %s %s",
+			from, _servername, stamp != NULL ? stamp : "\n");
                 _append_mailbox_cb(
 				error, buffer, strlen(buffer),
 				_append_mailbox_cb_data);
@@ -266,15 +277,45 @@ DtMailServer::ptrans_retrieve_readandappend(
 			DTM_TRUE,
 			"%s: Failed to append mailbox %s: %s.\n",
 			pname, _folder, error.errnoMessage());
-	    return DTME_AppendMailboxFile_Error;
+	    status = DTME_AppendMailboxFile_Error;
+	    goto finish;
         }
     }
   
     // Message separation.
     _append_mailbox_cb(error, "\n", 1, _append_mailbox_cb_data);
 
+finish:
     // Sink the file pointer.
     sigaction(SIGINT, (const struct sigaction *) &o_action, NULL);
+    return status;
+}
+
+//
+// Assemble a protocol command (with the tag of a tagged protocol in front)
+// and its line terminator in a buffer of the given size.  A command that does
+// not fit is refused instead of truncated, and so is one that carries a line
+// break: the server would take the text after it for a second command.
+//
+static DTMailError_t
+formatServerCommand(char *buf, size_t size, const char *prefix,
+		    const char *fmt, va_list ap)
+{
+    static const char	terminator[] = DTMAS_COMMAND_TERMINATOR;
+    size_t		used = strlen(prefix);
+    size_t		room;
+    int			length;
+
+    if (used + sizeof(terminator) > size)
+      return DTME_MailServerAccess_Error;
+    memcpy(buf, prefix, used);
+    room = size - used - (sizeof(terminator) - 1);
+    length = vsnprintf(buf + used, room, fmt, ap);
+    if (length < 0 || (size_t) length >= room)
+      return DTME_MailServerAccess_Error;
+    if (strpbrk(buf + used, "\r\n") != NULL)
+      return DTME_MailServerAccess_Error;
+    memcpy(buf + used + length, terminator, sizeof(terminator));
     return DTME_NoError;
 }
 
@@ -287,28 +328,35 @@ DtMailServer::do_send(char *fmt, ... )
 {
     static char	*pname = "DtMailServer::do_send";
     char	*buf = new char[DTMAS_POPBUFSIZE+1];
+    char	prefix[DTMAS_TAGSIZE + 2];
     int		nbytes;
     va_list	ap;
     DtMailEnv	error;
+    DTMailError_t	formatted;
 
     if (proto_is_tagged())
     {
 	dtmasTAGGEN();
-	(void) sprintf(buf, "%s ", dtmasTAGGET());
+	snprintf(prefix, sizeof(prefix), "%s ", dtmasTAGGET());
     }
     else
     {
 	dtmasTAGCLR();
-	buf[0] = '\0';
+	prefix[0] = '\0';
     }
 
     va_start(ap, fmt);
-    vsprintf(buf + strlen(buf), fmt, ap);
+    formatted = formatServerCommand(buf, DTMAS_POPBUFSIZE+1, prefix, fmt, ap);
     va_end(ap);
+    if (formatted != DTME_NoError)
+    {
+	_logger.logError(DTM_FALSE, "%s: command refused", pname);
+	delete [] buf;
+	return formatted;
+    }
 
-    strcat(buf, "\r\n");
     nbytes = SockWrite(buf, 1, strlen(buf), _sockfp);
-    if (nbytes != strlen(buf))
+    if (nbytes != (int) strlen(buf))
     {
 	_logger.logError(DTM_FALSE, "Socket Error:  writing '%s'", buf);
 	delete [] buf;
@@ -320,7 +368,7 @@ DtMailServer::do_send(char *fmt, ... )
 	char *cp;
 	if (_shroud && (cp = strstr(buf, _shroud)))
 	  memset(cp, '*', strlen(_shroud));
-	buf[strlen(buf)-1] = '\0';
+	dtmasChomp(buf);
 
 	_logger.logError(DTM_FALSE, "%s> %s", proto_name(), buf);
     }
@@ -331,34 +379,39 @@ DtMailServer::do_send(char *fmt, ... )
 //
 // Assemble command in printf(3) style, send to server, accept a response.
 //
-#define DTMAS_COMMAND_TERMINATOR	"\r\n"
 DTMailError_t
 DtMailServer::do_transaction(char *fmt, ... )
 {
     static char		*pname = "DtMailServer::do_transaction";
     DTMailError_t	ok;
     char		*buf = new char[DTMAS_POPBUFSIZE+1];
+    char		prefix[DTMAS_TAGSIZE + 2];
     int			nbytes;
     va_list		ap;
 
     if (proto_is_tagged())
     {
 	dtmasTAGGEN();
-	(void) sprintf(buf, "%s ", dtmasTAGGET());
+	snprintf(prefix, sizeof(prefix), "%s ", dtmasTAGGET());
     }
     else
     {
 	dtmasTAGCLR();
-	buf[0] = '\0';
+	prefix[0] = '\0';
     }
 
     va_start(ap, fmt);
-    vsprintf(buf + strlen(buf), fmt, ap);
+    ok = formatServerCommand(buf, DTMAS_POPBUFSIZE+1, prefix, fmt, ap);
     va_end(ap);
+    if (ok != DTME_NoError)
+    {
+	_logger.logError(DTM_FALSE, "%s: command refused", pname);
+	delete [] buf;
+	return ok;
+    }
 
-    strcat(buf, DTMAS_COMMAND_TERMINATOR);
     nbytes = SockWrite(buf, 1, strlen(buf), _sockfp);
-    if (nbytes != strlen(buf))
+    if (nbytes != (int) strlen(buf))
     {
 	_logger.logError(DTM_FALSE, "Socket Error:  writing '%s'", buf);
 	delete [] buf;
@@ -370,7 +423,7 @@ DtMailServer::do_transaction(char *fmt, ... )
 	char *cp;
 	if (_shroud && (cp = strstr(buf, _shroud)))
 	  memset(cp, '*', strlen(_shroud));
-	buf[strlen(buf)-1] = '\0';
+	dtmasChomp(buf);
 
 	_logger.logError(DTM_FALSE, "%s> %s", proto_name(), buf);
     }
@@ -424,15 +477,17 @@ DtMailServer::get_mailrc_value(
     static char		idbuf[DTMAS_IDSIZE+1];
     char		*charval = NULL;
 
-    DTMAS_CONCAT_MAILRC_KEY(idbuf, pfx, id);
+    DTMAS_CONCAT_MAILRC_KEY(idbuf, sizeof(idbuf), pfx, id);
     mailrc->getValue(error, idbuf, &value, decrypt);
     if (error.isSet())
     {
         if (NULL != dflt)
           charval = strdup(dflt);
     }
-    else
+    else if (NULL != value)
       charval = strdup(value);
+    else if (NULL != dflt)
+      charval = strdup(dflt);
 
     if (NULL != value) free((void*) value);
     return charval;
@@ -454,7 +509,7 @@ DtMailServer::get_mailrc_value(
     static char		idbuf[DTMAS_IDSIZE+1];
     Boolean		boolval = FALSE;
 
-    DTMAS_CONCAT_MAILRC_KEY(idbuf, pfx, id);
+    DTMAS_CONCAT_MAILRC_KEY(idbuf, sizeof(idbuf), pfx, id);
     mailrc->getValue(error, idbuf, &value);
     if (error.isSet())
       boolval = dflt;
@@ -471,7 +526,7 @@ DtMailServer::get_mailrc_value(
 Boolean
 DtMailServer::is_inbox()
 {
-    if (NULL==_folder || 0==strncmp(_folder, DTMAS_INBOX, strlen(DTMAS_INBOX)))
+    if (NULL==_folder || 0==strcmp(_folder, DTMAS_INBOX))
       return TRUE;
     
     return FALSE;
@@ -590,6 +645,12 @@ DtMailServer::retrieve_messages(DtMailEnv &error)
 	vtalarm_setitimer(_timeout);
 	ok = ptrans_fldstate_read(&count, &numnew);
 	if (ok != DTME_NoError) goto closeServer;
+	if (count < 0 || count > DTMAS_MAXMESSAGES)
+	{
+	    _logger.logError(DTM_FALSE, "Protocol Violation: %d messages", count);
+	    ok = DTME_MailServerAccess_ProtocolViolation;
+	    goto closeServer;
+	}
 
 	/* show user how many messages we downloaded */
 	if (_protologging)
@@ -624,7 +685,12 @@ DtMailServer::retrieve_messages(DtMailEnv &error)
 	    /* we may need to get sizes in order to check message limits */
 	    if (_sizelimit)
 	    {
-	        msgsizes = (int *)malloc(sizeof(int) * count);
+	        msgsizes = (int *)calloc((size_t) count, sizeof(int));
+	        if (msgsizes == NULL)
+	        {
+	            ok = DTME_MailServerAccess_Error;
+	            goto closeServer;
+	        }
 
 	        vtalarm_setitimer(_timeout);
 	        ok = ptrans_msgsizes(count, msgsizes);
@@ -633,7 +699,12 @@ DtMailServer::retrieve_messages(DtMailEnv &error)
 
 	    if (! _retrieveold)
 	    {
-	        msgisold = (int*) malloc(sizeof(int) * count);
+	        msgisold = (int*) calloc((size_t) count, sizeof(int));
+	        if (msgisold == NULL)
+	        {
+	            ok = DTME_MailServerAccess_Error;
+	            goto closeServer;
+	        }
 
 	        for (num = 1; num <= count; num++)
 	        {

@@ -49,6 +49,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include <DtMail/DtMail.hh>
 #include <DtMail/DtMailTypes.h>
@@ -69,6 +70,48 @@
 #define		DTMAS_MSGBUFSIZE	4096   	/* size of msg read buffer */
 #define		DTMAS_POPBUFSIZE	512	/* per RFC 937 */
 #define		DTMAS_TAGSIZE		6	/* len of tagged proto tag */
+
+/*
+ * A line read from a server ends with a line feed and perhaps a carriage
+ * return, and may be empty: take the end of the line off without looking
+ * at the byte before the start of the buffer.
+ */
+/*
+ * The most messages a mailbox on a server may report.  A count above it (or
+ * below zero) is taken for a protocol violation instead of being used to size
+ * arrays.
+ */
+#define		DTMAS_MAXMESSAGES	1048576
+
+/*
+ * The format of an "n identifier" line of the UIDL list; the width is the
+ * identifier buffer size minus one.
+ */
+#define		DTMAS_STRINGIFY_(x)	#x
+#define		DTMAS_STRINGIFY(x)	DTMAS_STRINGIFY_(x)
+#define		DTMAS_UIDL_FORMAT	"%d %" DTMAS_STRINGIFY(DTMAS_IDSIZE) "s"
+
+static inline void
+dtmasChomp(char *line)
+{
+    size_t length = strlen(line);
+
+    if (length > 0 && line[length - 1] == '\n')
+	line[--length] = '\0';
+    if (length > 0 && line[length - 1] == '\r')
+	line[--length] = '\0';
+}
+
+/*
+ * The text of a response line after a prefix of a given length (the "* " of an
+ * untagged IMAP response), or an empty string when the line is shorter than
+ * the prefix.
+ */
+static inline const char *
+dtmasAfterPrefix(const char *line, size_t prefix)
+{
+    return strlen(line) >= prefix ? line + prefix : "";
+}
 
 #define		DTMAS_PROPKEY_GETMAILCOMMAND	"getmailcommand"
 #define		DTMAS_PROPKEY_GETMAILVIACOMMAND	"getmailviacommand"
@@ -114,9 +157,14 @@
   return PS_ERROR; \
 }
 
-#define		DTMAS_CONCAT_MAILRC_KEY(buf, pfx, key) \
-{ if (NULL==(pfx)) (void) sprintf((buf), "%s", (key)); \
-  else (void) sprintf((buf), "%s_%s", (pfx), (key)); }
+/*
+ * Build the name of a mailrc property; a name that does not fit the buffer
+ * becomes the empty name, which no property has, instead of overflowing it.
+ */
+#define		DTMAS_CONCAT_MAILRC_KEY(buf, size, pfx, key) \
+{ int n_ = (NULL==(pfx)) ? snprintf((buf), (size), "%s", (key)) \
+	: snprintf((buf), (size), "%s_%s", (pfx), (key)); \
+  if (n_ < 0 || (size_t) n_ >= (size)) (buf)[0] = '\0'; }
 
 typedef void	(*DtMailAppendCallback)(DtMailEnv&, char*, int, void*);
 

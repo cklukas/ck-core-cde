@@ -8,13 +8,16 @@ Environment, as `make check` supplies it (see libDtMail/Makefile.am):
   DTMAIL_COMPILE  the compile command of libDtMail, flags included
   DTMAIL_LINK     the libtool link command of the build
   DTMAIL_LIBS     the libraries dtmailpr links
-  DTMAIL_STAGED   a directory with Common/Session.C and RFC/RFCMailBox.C of
-                  another revision, compiled instead of the sources in SRCDIR
-                  (a revision with a defect is how the test is checked itself)
+  DTMAIL_STAGED   a directory with Common/Session.C, Common/DtMailServer.C,
+                  Common/POP3Server.C, Common/IMAPServer.C, Common/IO.C and
+                  RFC/RFCMailBox.C of another revision, compiled instead of the
+                  sources in SRCDIR (a revision with a defect is how the test is
+                  checked itself)
   DTMAIL_TEST_CASES  run only these cases, a blank separated list of names
   DTMAIL_TEST_KEEP   keep the work directory
-The production Session.C and RFCMailBox.C are compiled with the sanitizers
-next to tests/mailbox-files.C and linked with the rest of the built libDtMail.
+The production Session.C, RFCMailBox.C, DtMailServer.C, POP3Server.C,
+IMAPServer.C and IO.C are compiled with the sanitizers next to
+tests/mailbox-files.C and linked with the rest of the built libDtMail.
 A mailbox of the test is made in an empty directory per case and each case runs
 in its own process; a case that fails or crashes fails the run.
 """
@@ -49,7 +52,9 @@ def fail(message):
     sys.exit(message)
 
 
-sources = [srcdir / "tests" / "mailbox-files.C", staged / "Common" / "Session.C", staged / "RFC" / "RFCMailBox.C"]
+sources = [srcdir / "tests" / "mailbox-files.C", staged / "Common" / "Session.C", staged / "RFC" / "RFCMailBox.C",
+           staged / "Common" / "DtMailServer.C", staged / "Common" / "POP3Server.C", staged / "Common" / "IMAPServer.C",
+           staged / "Common" / "IO.C"]
 
 
 def compile_one(source):

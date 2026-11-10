@@ -156,7 +156,8 @@ POP2Server::ptrans_fldstate_read(int *countp, int *newp)
 DTMailError_t
 POP2Server::ptrans_msgsizes(int countp, int *sizes)
 {
-    memset((char*) sizes, 0, countp * sizeof(int));
+    if (countp > 0)
+      memset((char*) sizes, 0, (size_t) countp * sizeof(int));
     return DTME_NoError;
 }
 
@@ -181,10 +182,7 @@ POP2Server::ptrans_parse_response (char *argbuf)
     _pound_arg = _equal_arg = -1;
     if (SockGets(buf, sizeof(buf), _sockfp))
     {
-	if (buf[strlen(buf)-1] == '\n')
-	  buf[strlen(buf)-1] = '\0';
-	if (buf[strlen(buf)-1] == '\r')
-	  buf[strlen(buf)-1] = '\r';
+	dtmasChomp(buf);
 
 	if (_protologging)
 	  _logger.logError(DTM_FALSE, "%s< %s", proto_name(), buf);

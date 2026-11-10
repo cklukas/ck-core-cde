@@ -561,9 +561,14 @@ SafeCtime(const time_t *clock, char * buf, int buflen)
   char *result;
 
   memset((void*) &ctime_buf, 0, sizeof(_Xctimeparams));
+  if (buflen <= 0)
+    return;
   result = _XCtime(clock, ctime_buf);
-  if (result)
-    strncpy(buf, result, buflen);
+  if (result) {
+    // The text always ends within the buffer, even if it was cut short.
+    strncpy(buf, result, buflen - 1);
+    buf[buflen - 1] = '\0';
+  }
   else
     *buf = '\0';
 }
@@ -576,7 +581,10 @@ SafeLocaltime(const time_t *clock, tm & result)
 
   memset((void*) &localtime_buf, 0, sizeof(_Xltimeparams));
   time_ptr = _XLocaltime(clock, localtime_buf);
-  result = *time_ptr;
+  if (time_ptr != NULL)
+    result = *time_ptr;
+  else
+    memset((void*) &result, 0, sizeof(result));
 }
 
 time_t
@@ -612,10 +620,23 @@ SafeStrftime(char * buf, size_t buf_size,
 
 #define  SockINTERNAL_BUFSIZE	2048
 
+/*
+ * Replace the text of *errorstring with the message made from the format and
+ * the text it names, cut to the room the buffer has.
+ */
+static void
+sockErrorText(char **errorstring, const char *format, const char *text)
+{
+    free(*errorstring);
+    *errorstring = (char*) malloc(BUFSIZ);
+    if (*errorstring != NULL)
+      snprintf(*errorstring, BUFSIZ, format, text);
+}
+
 void *SockOpen(char *host, int clientPort, char **errorstring)
 {
     int sockfd;
-    unsigned long inaddr;
+    in_addr_t inaddr;
     struct sockaddr_in ad;
     struct hostent *hp;
     DtMailEnv error;
@@ -625,22 +646,22 @@ void *SockOpen(char *host, int clientPort, char **errorstring)
     ad.sin_family = AF_INET;
 
     inaddr = inet_addr(host);
-    if (inaddr != -1)
+    if (inaddr != (in_addr_t) -1)
       memcpy(&ad.sin_addr, &inaddr, sizeof(inaddr));
     else
     {
         hp = gethostbyname(host);
-        if (hp == NULL)
+        if (hp == NULL || hp->h_addrtype != AF_INET
+	    || hp->h_length != (int) sizeof(ad.sin_addr))
 	{
 	    if (NULL != errorstring)
 	    {
 	        errorfmt = DtMailEnv::getMessageText(
 						SockErrorSet, 2,
 						"Unknown host:  %s");
-	        if (NULL == *errorstring) *errorstring = (char*) malloc(BUFSIZ);
-	        sprintf(*errorstring, errorfmt, host);
+	        sockErrorText(errorstring, errorfmt, host);
 	    }
-            return (FILE*) NULL;
+            return NULL;
 	}
         memcpy(&ad.sin_addr, hp->h_addr, hp->h_length);
     }
@@ -654,10 +675,9 @@ void *SockOpen(char *host, int clientPort, char **errorstring)
 	    errorfmt = DtMailEnv::getMessageText(
 						SockErrorSet, 3,
 						"Error creating socket: %s");
-	    if (NULL == *errorstring) *errorstring = (char*) malloc(BUFSIZ);
-	    sprintf(*errorstring, errorfmt, error.errnoMessage());
+	    sockErrorText(errorstring, errorfmt, error.errnoMessage());
 	}
-        return (FILE*) NULL;
+        return NULL;
     }
     if (connect(sockfd, (struct sockaddr *) &ad, sizeof(ad)) < 0)
     {
@@ -666,67 +686,55 @@ void *SockOpen(char *host, int clientPort, char **errorstring)
 	    errorfmt = DtMailEnv::getMessageText(
 					SockErrorSet, 3,
 					"Error connecting to socket:  %s");
-	    if (NULL == *errorstring) *errorstring = (char*) malloc(BUFSIZ);
-	    sprintf(*errorstring, errorfmt, error.errnoMessage());
+	    sockErrorText(errorstring, errorfmt, error.errnoMessage());
 	}
 	close(sockfd);
-        return (FILE*) NULL;
+        return NULL;
     }
 
-#if defined(USE_SOCKSTREAM)
     FILE *sockfp = fdopen(sockfd, "r+");
+    if (sockfp == NULL)
+    {
+	close(sockfd);
+	return NULL;
+    }
     setvbuf(sockfp, NULL, _IONBF, SockINTERNAL_BUFSIZE);
     return (void*) sockfp;
-#else
-    return (void*) sockfd;
-#endif
 }
 
 int SockPrintf(void *sockfp, char* format, ...)
 {
-    va_list ap;
-    char *buf = new char[8192];
-    int i;
+    va_list ap, copy;
+    int length;
+    int written = -1;
 
     va_start(ap, format);
-    vsprintf(buf, format, ap);
+    va_copy(copy, ap);
+    length = vsnprintf(NULL, 0, format, ap);
     va_end(ap);
-    i = SockWrite(buf, 1, strlen(buf), sockfp);
-    delete [] buf;
-    return i;
+    if (length >= 0)
+    {
+	char *buf = new char[length + 1];
+
+	vsnprintf(buf, length + 1, format, copy);
+	written = SockWrite(buf, 1, length, sockfp);
+	delete [] buf;
+    }
+    va_end(copy);
+    return written;
 }
 
 char *SockGets(char *buf, int len, void *sockfp)
 {
-#if defined(USE_SOCKSTREAM)
     char *in = fgets(buf, len, (FILE*) sockfp);
     fseek((FILE*) sockfp, 0L, SEEK_CUR);	/* required by POSIX */
     return in;
-#else
-    size_t n;
-    char *bufp;
-    
-    n = 0;
-    bufp = buf-1;
-    do
-    {
-	bufp++;
-        read((int) sockfp, (void*) bufp, 1);
-	n++;
-    } while (*bufp != '\n');
-    *(bufp+1) = '\0';
-    return buf;
-#endif
 }
 
 int SockRead(char *buf, int size, int len, void *sockfp)
 {
-#if defined(USE_SOCKSTREAM)
     int n = fread(buf, size, len, (FILE*) sockfp);
     fseek((FILE*) sockfp, 0L, SEEK_CUR);	/* required by POSIX */
-#else
-    int n = (int) read((int) sockfp, (void*) buf, (size_t) size * len);
-#endif
     return n;
 }
 
@@ -734,27 +742,19 @@ int SockWrite(char *buf, int size, int len, void *sockfp)
 {
     int n;
 
-#if defined(USE_SOCKSTREAM)
     n = fwrite(buf, size, len, (FILE*) sockfp);
     fseek((FILE*) sockfp, 0L, SEEK_CUR);	/* required by POSIX */
-#else
-    n = write((int) sockfp, buf, size * len);
-#endif
 
     return n;
 }
 
 void SockClose(void *sockfp)
 {
-#if defined(USE_SOCKSTREAM)
     fclose((FILE*) sockfp);
-#else
-    close((int) sockfp);
-#endif
 }
 
 void
-GetGroupName(char * grp_name)
+GetGroupName(char * grp_name, size_t size)
 {
     struct group *grp;
     _Xgetgrparams grp_buf;
@@ -762,13 +762,7 @@ GetGroupName(char * grp_name)
     memset((void*) &grp_buf, 0, sizeof(_Xgetgrparams));
     grp = _XGetgrgid(getegid(), grp_buf);
 
-    if (grp) {
-	strcpy(grp_name, grp->gr_name);
-    }
-    else {
-	strcpy(grp_name, "UNKNOWN_GROUP");
-    }
-
+    snprintf(grp_name, size, "%s", grp ? grp->gr_name : "UNKNOWN_GROUP");
 }
 
 gid_t

@@ -1,6 +1,6 @@
 ---
 title: Mailer
-description: How dtmail and dtmailpr handle the mail group of a set-group-id installation and the data they take from messages, mailboxes, other users and ToolTalk peers.
+description: How dtmail and dtmailpr handle the mail group of a set-group-id installation and the data they take from messages, mail servers, mailboxes, other users and ToolTalk peers.
 ---
 
 # Mailer
@@ -150,6 +150,67 @@ as well.
 `make -C programs/dtmail check` runs `readSessionWord()` and the widget-name
 function under the sanitizers on input of every length, and guards the places
 that need a display.
+
+## Mail servers
+
+A mailer that fetches mail through a POP2, POP3, APOP or IMAP server reads what
+the server answers, and a server, or whoever sits between it and the mailer,
+chooses every byte of that. The clients in `libDtMail` (`DtMailServer.C`,
+`POP2Server.C`, `POP3Server.C`, `APOPServer.C`, `IMAPServer.C` and the socket
+functions in `IO.C`) therefore treat the answers as data to check.
+
+- A command is formatted with `vsnprintf()` into its 512-byte buffer. A command
+  that does not fit, or whose arguments contain a carriage return or a line
+  feed (the user name, the password and the folder come from the mailrc), is
+  not sent: the server would take the text after the line break for a second
+  command, such as `DELE`. The end of a line read from a server, and of a
+  command written to the protocol log, is removed by one helper that takes off
+  a final line feed and a final carriage return from a line of any length,
+  empty ones included. The old code read the byte before the buffer for an
+  empty line, and the POP2 and POP3 clients wrote a carriage return back where
+  they meant to end the line.
+- The number of messages must be between 0 and 1,048,576. A reply to `STAT`
+  without a number, or with a number the server made up, is a protocol
+  violation, so no array is sized by it and no loop runs for it. The numbers
+  in a `LIST` or `FETCH ... RFC822.SIZE` answer must name a message of the
+  mailbox (the size lists were written at `sizes[number - 1]` for any number
+  the server sent, or for an uninitialized one when the line did not parse;
+  nothing sets the size limit that asks for these lists today),
+  and a `UIDL` identifier is cut to the 128 bytes that hold it (it was read
+  with an unbounded `%s`). A message length below zero is no length.
+- The transaction tag of the IMAP client wraps at 9999 instead of running over
+  its 6-byte buffer, a tagged answer without a space no longer sends the
+  search for the end of the tag past the end of the line, and the status line
+  of a POP3 server that has no text after `+OK` is no longer read past its end.
+- Reading a message restores the `SIGINT` setting on every way out; it was left
+  ignored after a failed transfer. The line that starts a stored message is
+  built with `snprintf()` from the name of the server.
+- The APOP client finishes the MD5 digest of the challenge and the password
+  (the digest it sent was an array nothing had written), and it wipes the
+  buffer that held the password.
+- The name of a mailrc property (`<folder>_<key>`) is built in a bounded buffer
+  and is empty, so that no property is found, when the folder name is too long.
+  The default folder name is a copy that the destructor can release; it was a
+  string literal passed to `free()`. A property that exists without a value no
+  longer stops the program.
+- A host name is resolved on 64-bit systems: `inet_addr()` failure was compared
+  with `-1` as an `unsigned long`, so every name was taken for the address
+  255.255.255.255. The text of a socket error is bounded, `SockPrintf()` sizes
+  its buffer from the text, and the build no longer carries the second variant
+  of the socket functions that cast descriptors to pointers.
+- `SafeCtime()` ends its text inside the buffer it is given (the copy was not
+  terminated when the text was longer than the buffer), `SafeLocaltime()`
+  copes with a time that cannot be converted, and `GetGroupName()` is given the
+  size of the caller's buffer (the caller has 100 bytes and a group name can
+  be longer).
+
+`make -C programs/dtmail/libDtMail check` starts a server of its own on the
+loopback address (a forked process that answers what the case scripts) and runs
+the production POP3 and IMAP clients against it under the sanitizers: ordinary
+retrievals with their commands, counts and sizes a server made up, identifiers
+and lines of every length, and passwords with line breaks.
+`make -C programs/dtmail check` runs the line helpers, the command formatter,
+the tag, the identifier format and `SafeCtime()` on input of every length.
 
 ## Requests from other applications
 

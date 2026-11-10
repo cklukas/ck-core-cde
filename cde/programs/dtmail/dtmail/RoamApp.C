@@ -1369,7 +1369,7 @@ void RoamApp::initialize(int *argcp, char **argv)
 
 	mail_error.clear();
         theApplication->enableGroupPrivileges();
-        GetGroupName(grp_name);
+        GetGroupName(grp_name, sizeof(grp_name));
         theApplication->disableGroupPrivileges();
         if (strcmp(grp_name, DTMAIL_DEFAULT_CREATE_MAILGROUP))
           mail_error.setError(DTME_BadRunGroup);

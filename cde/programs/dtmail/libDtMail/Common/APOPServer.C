@@ -140,15 +140,20 @@ APOPServer::ptrans_authorize(char *greeting)
 
         // Copy timestamp and password into digestion buffer.
         msg = (char*) malloc((end-start+1) + strlen(_password) + 1);
+        if (msg == NULL) return DTME_MailServerAccess_AuthorizationFailed;
         strcpy(msg, start);
         strcat(msg, _password);
 
         MD5Init(&context);
         MD5Update(&context, (unsigned char*) msg, strlen(msg));
+        MD5Final(digest, &context);
         
         for (i = 0;  i < 16;  i++) 
           sprintf(ascii_digest+2*i, "%02x", digest[i]);
 
+        // The password was in the digestion buffer: do not leave it behind.
+        for (volatile char *wipe = msg;  *wipe != 0;  wipe++)
+          *wipe = 0;
         free(msg);
     }
 

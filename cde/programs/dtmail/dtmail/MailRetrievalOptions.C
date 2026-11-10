@@ -114,7 +114,8 @@ static MrPropVal serverprotocol_values[] =
     },
 };
 
-#define MrGENPROPKEY(pk, fld, key) DTMAS_CONCAT_MAILRC_KEY(pk, fld, key)
+// Every property key buffer of this file holds MAXPATHLEN bytes.
+#define MrGENPROPKEY(pk, fld, key) DTMAS_CONCAT_MAILRC_KEY(pk, MAXPATHLEN, fld, key)
 
 MailRetrievalOptions::MailRetrievalOptions (
 				Widget		parent,

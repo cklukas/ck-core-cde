@@ -1,9 +1,12 @@
-// Regression tests for the files libDtMail creates and the paths it follows
-// when it opens and saves a mailbox.  The production Session.C and
-// RFCMailBox.C are compiled next to this program with the sanitizers and
-// linked with the rest of the built libDtMail; every case runs in its own
-// process (see check-mailbox-files.py) in an empty directory named by
-// DTMAIL_TEST_DIR, which is also HOME.
+// Regression tests for the files libDtMail creates, the paths it follows and
+// the mail it fetches from a server when it opens and saves a mailbox.  The
+// production Session.C, RFCMailBox.C, DtMailServer.C, POP3Server.C,
+// IMAPServer.C and IO.C are compiled next to this program with the sanitizers
+// and linked with the rest of the built libDtMail; the POP and IMAP clients
+// run against a server of the case's own (a forked process on a port of the
+// loopback address that plays what a hostile server would send).  Every case
+// runs in its own process (see check-mailbox-files.py) in an empty directory
+// named by DTMAIL_TEST_DIR, which is also HOME.
 
 #include <errno.h>
 #include <fcntl.h>
@@ -17,9 +20,16 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <vector>
+#include <functional>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
 
 #include <DtMail/DtMail.hh>
 #include <DtMail/DtMailError.hh>
+#include <DtMail/DtMailServer.hh>
 
 // The session of the mailer opens a ToolTalk connection when it is made; these
 // stand-ins give it one, so that no session server has to run for the test.
@@ -384,6 +394,279 @@ static int relative_paths_are_bounded(void)
     return 0;
 }
 
+
+/* ---- the mail server clients, against a server that answers what the case scripts ---- */
+
+struct Rule { std::string prefix; std::string reply; };   /* %T in a reply is the tag of the command */
+
+static void write_all(int fd, const std::string &text)
+{
+    size_t done = 0;
+    while (done < text.size()) {
+        ssize_t n = write(fd, text.data() + done, text.size() - done);
+        if (n <= 0) return;
+        done += (size_t)n;
+    }
+}
+
+/* answers one connection, line by line, and writes the commands it got to a log */
+static void serve_one(int listen_fd, const std::string &greeting, const std::vector<Rule> &rules,
+                      bool tagged, const std::string &log_path)
+{
+    int fd = accept(listen_fd, NULL, NULL);
+    FILE *log = fopen(log_path.c_str(), "w");
+    if (fd < 0 || !log) _exit(1);
+    write_all(fd, greeting);
+    std::string pending;
+    for (;;) {
+        char chunk[512];
+        ssize_t n = read(fd, chunk, sizeof(chunk));
+        if (n <= 0) break;
+        pending.append(chunk, (size_t)n);
+        size_t newline;
+        while ((newline = pending.find('\n')) != std::string::npos) {
+            std::string line = pending.substr(0, newline);
+            pending.erase(0, newline + 1);
+            while (!line.empty() && line.back() == '\r') line.pop_back();
+            fprintf(log, "%s\n", line.c_str());
+            fflush(log);
+            std::string tag, command = line;
+            if (tagged) {
+                size_t space = line.find(' ');
+                tag = line.substr(0, space);
+                command = space == std::string::npos ? "" : line.substr(space + 1);
+            }
+            std::string reply = tagged ? "%T OK done\r\n" : "+OK\r\n";
+            for (size_t i = 0; i < rules.size(); i++)
+                if (command.compare(0, rules[i].prefix.size(), rules[i].prefix) == 0) { reply = rules[i].reply; break; }
+            for (size_t at; (at = reply.find("%T")) != std::string::npos; ) reply.replace(at, 2, tag);
+            write_all(fd, reply);
+            if (command == "QUIT" || command == "LOGOUT") { fclose(log); close(fd); _exit(0); }
+        }
+    }
+    fclose(log);
+    _exit(0);
+}
+
+static void collect_text(DtMailEnv &, char *text, int length, void *data)
+{
+    ((std::string *)data)->append(text, (size_t)length);
+}
+
+class TestPOP3 : public POP3Server {
+public:
+    TestPOP3(DtMail::Session *session, DtMail::MailBox *box, DtMailAppendCallback callback, void *data,
+             int port, int size_limit)
+        : POP3Server((char *)"INBOX", session, box, callback, data), _port(port) { _sizelimit = size_limit; }
+    virtual int proto_port() { return _port; }
+private:
+    int _port;
+};
+
+class TestIMAP : public IMAPServer {
+public:
+    TestIMAP(DtMail::Session *session, DtMail::MailBox *box, DtMailAppendCallback callback, void *data, int port)
+        : IMAPServer((char *)"INBOX", session, box, callback, data), _port(port) { }
+    virtual int proto_port() { return _port; }
+private:
+    int _port;
+};
+
+struct Exchange {
+    std::string greeting;
+    std::vector<Rule> rules;
+    int size_limit;
+    const char *password;
+    bool imap;
+    Exchange() : size_limit(0), password("secret"), imap(false) { }
+};
+
+/* one retrieval from a server that behaves as scripted; returns the commands the server saw */
+static std::string retrieve(const Exchange &exchange, std::string *appended)
+{
+    signal(SIGPIPE, SIG_IGN);
+    int listener = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in address;
+    memset(&address, 0, sizeof(address));
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    if (bind(listener, (struct sockaddr *)&address, sizeof(address)) || listen(listener, 1)) { perror("listen"); exit(3); }
+    socklen_t length = sizeof(address);
+    getsockname(listener, (struct sockaddr *)&address, &length);
+    int port = ntohs(address.sin_port);
+
+    std::string log_path = path("server.log");
+    pid_t child = fork();
+    if (child == 0) serve_one(listener, exchange.greeting, exchange.rules, exchange.imap, log_path);
+    close(listener);
+
+    write_file(path("mailrc"), "set INBOX_servername=127.0.0.1\nset INBOX_username=tester\nset INBOX_timeout=5\n");
+    setenv("MAILRC", path("mailrc").c_str(), 1);
+    DtMailEnv env;
+    DtMail::Session *session = new_session(env);
+    if (!session) exit(3);
+    DtMail::MailBox *box = open_box(session, env, path("retrieved"), DTM_TRUE);
+    if (!box) exit(3);
+
+    DtMailServer *server;
+    if (exchange.imap) server = new TestIMAP(session, box, collect_text, appended, port);
+    else server = new TestPOP3(session, box, collect_text, appended, port, exchange.size_limit);
+    server->set_password((char *)exchange.password);
+    DtMailEnv failure;
+    server->retrieve_messages(failure);
+    delete server;
+
+    int status = 0;
+    for (int waited = 0; waited < 50 && waitpid(child, &status, WNOHANG) == 0; waited++) usleep(100000);
+    kill(child, SIGKILL);
+    waitpid(child, &status, 0);
+    return read_file(log_path);
+}
+
+/* what a POP3 server answers to RETR for a message of this text */
+static std::string pop_message(const std::string &text)
+{
+    return "+OK " + std::to_string(text.size()) + " octets\r\n" + text + ".\r\n";
+}
+
+static Exchange pop3_server(const std::string &stat_reply)
+{
+    Exchange e;
+    e.greeting = "+OK POP3 ready\r\n";
+    e.rules.push_back(Rule{"STAT", stat_reply});
+    e.rules.push_back(Rule{"LAST", "-ERR no LAST here\r\n"});
+    e.rules.push_back(Rule{"UIDL", "+OK\r\n1 uid-one\r\n2 uid-two\r\n.\r\n"});
+    e.rules.push_back(Rule{"RETR 1", pop_message("From: a@example.org\r\nSubject: one\r\n\r\nbody one\r\n")});
+    e.rules.push_back(Rule{"RETR 2", pop_message("From: b@example.org\r\nSubject: two\r\n\r\nbody two\r\n")});
+    return e;
+}
+
+static bool has(const std::string &text, const char *needle) { return text.find(needle) != std::string::npos; }
+
+/* messages come in with the commands of the protocol, each one deleted after it was stored */
+static int pop3_retrieves_and_deletes_messages(void)
+{
+    std::string appended;
+    std::string log = retrieve(pop3_server("+OK 2 100\r\n"), &appended);
+    CHECK(has(log, "USER tester\n") && has(log, "PASS secret\n") && has(log, "STAT\n"));
+    CHECK(has(log, "RETR 1\n") && has(log, "RETR 2\n"));
+    CHECK(has(log, "DELE 1\n") && has(log, "DELE 2\n") && has(log, "QUIT\n"));
+    CHECK(has(appended, "body one") && has(appended, "body two"));
+    CHECK(!has(appended, "\r"));
+    return 0;
+}
+
+/* a count the server makes up is not a count */
+static int pop3_message_counts_that_are_not_counts_are_refused(void)
+{
+    const char *replies[] = {"+OK -3 10\r\n", "+OK 2147483647 1\r\n", "+OK 1048577 1\r\n", "+OK\r\n", "+OK x y\r\n", "+OK 99999999999999999999 1\r\n"};
+    for (size_t i = 0; i < sizeof(replies) / sizeof(replies[0]); i++) {
+        std::string appended;
+        std::string log = retrieve(pop3_server(replies[i]), &appended);
+        CHECK(has(log, "STAT\n"));
+        CHECK(!has(log, "RETR"));
+        CHECK(appended.empty());
+    }
+    return 0;
+}
+
+/* an identifier longer than the room for it is cut, and the message still comes in */
+static int pop3_message_identifiers_of_any_length_are_read(void)
+{
+    Exchange e = pop3_server("+OK 1 100\r\n");
+    e.rules[2].reply = "+OK\r\n1 " + std::string(400, 'u') + "\r\n.\r\n";
+    std::string appended;
+    std::string log = retrieve(e, &appended);
+    CHECK(has(log, "UIDL\n") && has(log, "RETR 1\n"));
+    CHECK(has(appended, "body one"));
+    return 0;
+}
+
+/* the sizes of the list belong to messages of the mailbox, whatever the server numbers them */
+static int pop3_size_list_with_numbers_outside_the_mailbox_is_read(void)
+{
+    Exchange e = pop3_server("+OK 2 100\r\n");
+    e.size_limit = 1000;
+    e.rules.push_back(Rule{"LIST", "+OK\r\n99999 5\r\nxyz\r\n-5 7\r\n0 9\r\n3 11\r\n1 100\r\n2 200\r\n.\r\n"});
+    std::string appended;
+    std::string log = retrieve(e, &appended);
+    CHECK(has(log, "LIST\n"));
+    CHECK(has(appended, "body one") && has(appended, "body two"));
+    return 0;
+}
+
+/* a name with a line break would run a second command: it is not sent */
+static int pop3_credentials_with_a_line_break_are_not_sent(void)
+{
+    Exchange e = pop3_server("+OK 2 100\r\n");
+    e.password = "secret\r\nDELE 1";
+    std::string appended;
+    std::string log = retrieve(e, &appended);
+    CHECK(has(log, "USER tester\n"));
+    CHECK(!has(log, "DELE") && !has(log, "PASS") && !has(log, "RETR"));
+    CHECK(appended.empty());
+    return 0;
+}
+
+/* the status line of a server without any text */
+static int pop3_status_lines_without_text_are_read(void)
+{
+    Exchange e = pop3_server("+OK 2 100\r\n");
+    e.greeting = "+OK\r\n";
+    e.rules.push_back(Rule{"USER", "+OK\r\n"});
+    std::string appended;
+    std::string log = retrieve(e, &appended);
+    CHECK(has(appended, "body one"));
+    return 0;
+}
+
+/* IMAP: lines that are empty or shorter than their prefix are not read before their start or past their end */
+static int imap_short_and_tag_only_lines_are_read(void)
+{
+    Exchange e;
+    e.imap = true;
+    e.greeting = "\n";
+    e.rules.push_back(Rule{"LOGIN", "%T\r\n"});
+    std::string appended;
+    std::string log = retrieve(e, &appended);
+    CHECK(has(log, " LOGIN tester \"secret\"\n"));
+
+    Exchange f;
+    f.imap = true;
+    f.greeting = "* OK ready\r\n";
+    f.rules.push_back(Rule{"LOGIN", "*\r\n* \r\n\r\n%T NO refused\r\n"});
+    log = retrieve(f, &appended);
+    CHECK(has(log, " LOGIN tester \"secret\"\n"));
+    return 0;
+}
+
+/* IMAP: a session without mail keeps its tags in the right form */
+static int imap_tags_follow_the_protocol(void)
+{
+    Exchange e;
+    e.imap = true;
+    e.greeting = "* OK ready\r\n";
+    std::string appended;
+    std::string log = retrieve(e, &appended);
+    CHECK(has(log, "a0001 LOGIN tester \"secret\"\n"));
+    CHECK(has(log, "a0002 CAPABILITY\n"));
+    CHECK(has(log, "a0003 SELECT INBOX\n"));
+    return 0;
+}
+
+/* IMAP: a command with a line break is not sent */
+static int imap_credentials_with_a_line_break_are_not_sent(void)
+{
+    Exchange e;
+    e.imap = true;
+    e.greeting = "* OK ready\r\n";
+    e.password = "secret\"\r\na0099 DELETE INBOX";
+    std::string appended;
+    std::string log = retrieve(e, &appended);
+    CHECK(!has(log, "DELETE") && !has(log, "LOGIN"));
+    return 0;
+}
+
 static struct { const char *name; int (*run)(void); } cases[] = {
     {"save_ignores_planted_names", save_ignores_planted_names},
     {"save_keeps_mode_and_leaves_nothing", save_keeps_mode_and_leaves_nothing},
@@ -394,6 +677,15 @@ static struct { const char *name; int (*run)(void); } cases[] = {
     {"paths_are_expanded_without_a_shell", paths_are_expanded_without_a_shell},
     {"expansions_that_do_not_fit_are_refused", expansions_that_do_not_fit_are_refused},
     {"relative_paths_are_bounded", relative_paths_are_bounded},
+    {"pop3_retrieves_and_deletes_messages", pop3_retrieves_and_deletes_messages},
+    {"pop3_message_counts_that_are_not_counts_are_refused", pop3_message_counts_that_are_not_counts_are_refused},
+    {"pop3_message_identifiers_of_any_length_are_read", pop3_message_identifiers_of_any_length_are_read},
+    {"pop3_size_list_with_numbers_outside_the_mailbox_is_read", pop3_size_list_with_numbers_outside_the_mailbox_is_read},
+    {"pop3_credentials_with_a_line_break_are_not_sent", pop3_credentials_with_a_line_break_are_not_sent},
+    {"pop3_status_lines_without_text_are_read", pop3_status_lines_without_text_are_read},
+    {"imap_short_and_tag_only_lines_are_read", imap_short_and_tag_only_lines_are_read},
+    {"imap_tags_follow_the_protocol", imap_tags_follow_the_protocol},
+    {"imap_credentials_with_a_line_break_are_not_sent", imap_credentials_with_a_line_break_are_not_sent},
     {NULL, NULL}
 };
 

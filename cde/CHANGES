@@ -24,6 +24,21 @@
   destination buffer, preserve `/` as the parent of absolute root entries, and
   reject oversized hosts, directories, leaves and malformed trailing slashes
   before publishing partial outputs or starting an operation.
+- dtmail: harden the POP2, POP3, APOP and IMAP clients against what a server
+  sends. A command is formatted with `vsnprintf()` and refused when it does not
+  fit or carries a line break (a password or folder name could run a second
+  command); a line from the server is trimmed without reading before its start;
+  a message count outside 0..1,048,576, the numbers of a size or `UIDL` list and
+  an identifier longer than its buffer no longer size arrays, index them or
+  overflow; the IMAP tag wraps instead of overflowing; reading a message
+  restores `SIGINT` on every exit; the APOP client finishes its MD5 digest; host
+  names resolve on 64-bit systems (every name was taken for 255.255.255.255);
+  socket error texts are bounded and the second, 32-bit-only variant of the
+  socket functions is gone; `SafeCtime()` ends its text inside its buffer and
+  `GetGroupName()` takes the size of the caller's buffer. Covered by cases that run the clients against a
+  scripted server on the loopback address and by
+  `programs/dtmail/tests/check-mail-servers.py`; described in
+  `docs/improvements/mail.md`.
 - dtfile: make copy, move and link dialog labels and destination paths
   independent of fixed localized-text assumptions. Selected-object labels now
   compose Motif strings directly, while rename, preview and resolved target

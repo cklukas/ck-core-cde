@@ -148,7 +148,7 @@ POP3Server::ptrans_retrieve_start(int msg, int *lenp)
       *lenp = 0;
     else
     {
-	while (--cp > buf && isdigit(*cp))
+	while (--cp > buf && isdigit((unsigned char) *cp))
 	    continue;
 	*lenp = atoi(cp);
     }
@@ -190,7 +190,13 @@ POP3Server::ptrans_fldstate_read(int *countp, int *newp)
     ok = ptrans_parse_response(buf);
     if (DTME_NoError != ok) return ok;
     
-    sscanf(buf, "%d %*d", countp);
+    *countp = 0;
+    if (sscanf(buf, "%d %*d", countp) != 1 || *countp < 0)
+    {
+	_logger.logError(DTM_FALSE, "Protocol Error reading message count");
+	*countp = 0;
+	return DTME_MailServerAccess_ProtocolViolation;
+    }
 
     /*
      * Newer, RFC-1725-conformant POP servers may not have the LAST command.
@@ -238,17 +244,14 @@ POP3Server::ptrans_fldstate_read(int *countp, int *newp)
 		*newp = 0;
  		while (SockGets(buf, sizeof(buf), _sockfp))
 		{
-		    if (buf[strlen(buf)-1] == '\n')
-			buf[strlen(buf)-1] = '\0';
-		    if (buf[strlen(buf)-1] == '\r')
-			buf[strlen(buf)-1] = '\r';
+		    dtmasChomp(buf);
 
 		    if (_protologging)
 	  	      _logger.logError(DTM_FALSE, "%s< %s", proto_name(), buf);
 
  		    if (buf[0] == '.')
  			break;
- 		    else if (sscanf(buf, "%d %s", &curmsg, curuidstr) == 2)
+ 		    else if (sscanf(buf, DTMAS_UIDL_FORMAT, &curmsg, curuidstr) == 2)
 		    {
 			char	*uidliststr = NULL;
 
@@ -270,11 +273,16 @@ POP3Server::ptrans_fldstate_read(int *countp, int *newp)
 // Capture the sizes of all messages.
 //
 DTMailError_t
-POP3Server::ptrans_msgsizes(int, int *sizes)
+POP3Server::ptrans_msgsizes(int count, int *sizes)
 {
     static char		*pname = "POP3Server::ptrans_msgsizes";
     char		buf[DTMAS_POPBUFSIZE+1];
     DTMailError_t	ok;
+    int			i;
+
+    // A size nobody reports stays unknown.
+    for (i = 0; i < count; i++)
+      sizes[i] = -1;
 
     ok = do_transaction("LIST");
     if (DTME_NoError != ok) return ok;
@@ -283,20 +291,16 @@ POP3Server::ptrans_msgsizes(int, int *sizes)
     {
 	int curmsg, cursize;
 
-	if (buf[strlen(buf)-1] == '\n')
-	  buf[strlen(buf)-1] = '\0';
-	if (buf[strlen(buf)-1] == '\r')
-	  buf[strlen(buf)-1] = '\r';
+	dtmasChomp(buf);
 
 	if (_protologging)
 	  _logger.logError(DTM_FALSE, "%s< %s", proto_name(), buf);
 
 	if (buf[0] == '.')
 	  break;
-	else if (sscanf(buf, "%d %d", &curmsg, &cursize) == 2)
+	else if (sscanf(buf, "%d %d", &curmsg, &cursize) == 2 &&
+		 curmsg >= 1 && curmsg <= count)
 	  sizes[curmsg-1] = cursize;
-	else
-	  sizes[curmsg-1] = -1;
     }
 
     return DTME_NoError;
@@ -317,7 +321,8 @@ POP3Server::ptrans_msgisold(int msg)
 	char	*uidliststr = NULL;
 
 	uidliststr = uidlist_find(_uidlist_current, msg, NULL);
- 	if (sscanf(uidliststr, "%d %s", &curmsg, curuidstr) == 2)
+ 	if (uidliststr != NULL &&
+	    sscanf(uidliststr, DTMAS_UIDL_FORMAT, &curmsg, curuidstr) == 2)
 	  uidliststr = uidlist_find(_uidlist_old, -1, curuidstr);
 	else
 	  uidliststr = NULL;
@@ -341,10 +346,7 @@ POP3Server::ptrans_parse_response (char *argbuf)
 
     if (SockGets(buf, sizeof(buf), _sockfp))
     {
-	if (buf[strlen(buf)-1] == '\n')
-	  buf[strlen(buf)-1] = '\0';
-	if (buf[strlen(buf)-1] == '\r')
-	  buf[strlen(buf)-1] = '\r';
+	dtmasChomp(buf);
 
 	if (_protologging)
 	  _logger.logError(DTM_FALSE, "%s< %s", proto_name(), buf);
@@ -355,8 +357,9 @@ POP3Server::ptrans_parse_response (char *argbuf)
 	else
 	  return DTME_MailServerAccess_ProtocolViolation;
 
-	while (isalpha(*bufp)) bufp++;
-	*(bufp++) = '\0';
+	while (isalpha((unsigned char) *bufp)) bufp++;
+	if (*bufp != '\0')
+	  *(bufp++) = '\0';
 
 	if (strcmp(buf,"+OK") == 0)
 	{
@@ -432,7 +435,7 @@ POP3Server::uidlist_find(
     char	*uidliststr;
     int		i, nuidliststr;
 
-    if (msg < 0 && NULL == uidstr) return NULL;
+    if (NULL == uidlist || (msg < 0 && NULL == uidstr)) return NULL;
 
     for (i=0, nuidliststr=uidlist->length(); i<nuidliststr; i++)
     {
@@ -440,7 +443,8 @@ POP3Server::uidlist_find(
 	char	curuidstr[DTMAS_IDSIZE+1];
 
 	uidliststr = (*uidlist)[i];
- 	if (sscanf(uidliststr, "%d %s", &curmsg, curuidstr) == 2)
+ 	if (uidliststr != NULL &&
+	    sscanf(uidliststr, DTMAS_UIDL_FORMAT, &curmsg, curuidstr) == 2)
 	{
 	    if ((msg < 0 || msg == curmsg) &&
 		(uidstr == NULL || 0 == strcasecmp(uidstr, curuidstr)))
@@ -462,7 +466,7 @@ POP3Server::uidlist_read(DtVirtArray<char*> *uidlist)
     if (NULL == _uidlist_file)
     {
 	char	*path = new char[MAXPATHLEN+1];
-	sprintf(path, "+/.%s@%s.uidlist", _folder, _servername);
+	snprintf(path, MAXPATHLEN+1, "+/.%s@%s.uidlist", _folder, _servername);
 
 	_uidlist_file = _session->expandPath(error, (const char*) path);
 	if (NULL == _uidlist_file && error.isSet())
@@ -484,7 +488,7 @@ POP3Server::uidlist_read(DtVirtArray<char*> *uidlist)
 	int	curmsg;
 
 	while (NULL != fgets(uidliststr, DTMAS_POPBUFSIZE, fp))
- 	  if (sscanf(uidliststr, "%d %s", &curmsg, curuidstr) == 2)
+ 	  if (sscanf(uidliststr, DTMAS_UIDL_FORMAT, &curmsg, curuidstr) == 2)
 	    uidlist->append(strdup(uidliststr));
 
 	fclose(fp);
