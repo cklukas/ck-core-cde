@@ -52,6 +52,13 @@ privileges only when that really worked.
   while it grows, the number of alternate desktops the resource files can add
   is limited to 100, and the resource value that says whether a file adds one
   is no longer modified in the database while it is read.
+- The servers file is read line by line: a line that does not fit the buffer is
+  ignored as a whole instead of being parsed in pieces, a line that starts with
+  a NUL byte is skipped instead of reading before the buffer, and a configured
+  name that leads to no file or command is reported instead of dereferenced.
+  The resource database the login screen loads for a display replaces the one
+  loaded before and releases it, and a missing configuration file name no
+  longer reaches the X library as a null pointer.
 - A failed allocation of the program name ends the login manager with its
   message instead of crashing, and a failed allocation of the argument list
   keeps the resources that are loaded.

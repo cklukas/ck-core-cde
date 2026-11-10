@@ -10,6 +10,7 @@ Set DTLOGIN_SOURCE to test another copy of the sources.
 from scenarios import block, finish, read, run_all, until
 
 session = read("session.c")
+dm = read("dm.c")
 util = read("util.c")
 
 expand_lang = block(session, "char *\n_ExpandLang(")
@@ -17,6 +18,8 @@ alt_start = "/* the most alternate desktops the resource files can add to the lo
     if "MAX_ALT_DESKTOPS" in session else "static void\nLoadAltDtsResources("
 alt_resources = until(session, alt_start, "/******************\n *\n * Function Name:  _ExpandLang")
 file_compare = block(session, "#if defined(__STDC__)\nstatic int\nFileNameCompare", "\n}\n")
+
+scan_servers = block(dm, "static int \nScanServers( void )")
 
 harness = r'''
 #include "dm.h"
@@ -38,6 +41,8 @@ int test_match(char *string, char *pattern);
 int test_hosts_for(unsigned char *client, int length);
 ARRAY8Ptr test_local_address(void);
 int test_parse(char *line);
+int test_scan_servers(void);
+extern char *servers;
 char *test_qualify(char *file, char *path);
 char *test_expand(char *string, char *lang);
 void test_alt_desktops(struct display *d);
@@ -83,6 +88,17 @@ int test_parse(char *line)
     static DisplayType acceptable[] = { { Local, Permanent, FromFile }, { Foreign, Permanent, FromFile } };
     return ParseDisplay(line, acceptable, 2, &puser);
 }
+'''
+
+servers_unit = r'''
+#include "harness.h"
+#include "vgmsg.h"
+#include <sys/stat.h>
+extern struct passwd puser;
+char *servers;
+time_t ServersModTime;
+''' + scan_servers + r'''
+int test_scan_servers(void) { return ScanServers(); }
 '''
 
 dpylist_unit = r'''
@@ -307,6 +323,37 @@ static void ServersHostName(void)
     CHECK(test_parse(Heap("* local /usr/bin/X")) == 1);
 }
 
+static void ServersFile(void)
+{
+    FILE *f;
+
+    /* a line that starts with a NUL byte, a line that does not fit and the lines after them */
+    f = fopen("Xservers", "w");
+    CHECK(f);
+    fputs(":0 local /usr/bin/X :0\n", f);
+    fputc('\0', f); fputs("garbage\n", f);
+    for (int i = 0; i < 12000; ++i) fputc('x', f);
+    fputs("\n:1 local /usr/bin/X :1\n", f);
+    CHECK(fclose(f) == 0);
+    {
+        char cwd[256], path[400];
+        CHECK(getcwd(cwd, sizeof cwd));
+        snprintf(path, sizeof path, "%s/Xservers", cwd);
+        servers = Heap(path);
+    }
+    CHECK(test_scan_servers() == 1);
+    CHECK(FindDisplayByName(":0") != NULL && FindDisplayByName(":1") != NULL);
+    /* the piece of the long line is not a display of its own */
+    CHECK(FindDisplayByName("xxxxxxxxxxxxxxxxxxxx") == NULL);
+}
+
+static void ServersMissing(void)
+{
+    /* a name that leads to no file leaves no servers file to read */
+    servers = NULL;
+    CHECK(test_scan_servers() == 0);
+}
+
 static void SearchPath(void)
 {
     char *found, path[600];
@@ -416,6 +463,8 @@ static const struct { const char *name; void (*run)(void); } scenarios[] = {
     {"xservers-local-uid", ServersLocalUid},
     {"xservers-class-added", ServersClassAdded},
     {"xservers-host-name", ServersHostName},
+    {"xservers-file", ServersFile},
+    {"xservers-missing", ServersMissing},
     {"search-path", SearchPath},
     {"search-path-no-memory", SearchPathNoMemory},
     {"expand-lang", ExpandLang},
@@ -435,13 +484,13 @@ int main(int argc, char **argv)
 '''
 
 names = ["xaccess-long-word", "xaccess-unknown-display", "xaccess-pattern-time", "xaccess-pattern-meaning",
-         "local-address", "xservers-local-uid", "xservers-class-added", "xservers-host-name", "search-path",
+         "local-address", "xservers-local-uid", "xservers-class-added", "xservers-host-name", "xservers-file", "xservers-missing", "search-path",
          "search-path-no-memory", "expand-lang", "expand-lang-no-memory", "alt-desktops", "alt-desktops-no-memory"]
 failed = run_all("login-config-",
                  {"harness.h": harness, "access_unit.c": access_unit, "file_unit.c": file_unit,
-                  "dpylist_unit.c": dpylist_unit, "qualify_unit.c": qualify_unit,
+                  "dpylist_unit.c": dpylist_unit, "servers_unit.c": servers_unit, "qualify_unit.c": qualify_unit,
                   "session_unit.c": session_unit, "stubs.c": stubs},
-                 [("access_unit", ["-w"]), ("file_unit", ["-w"]), ("dpylist_unit", ["-w"]),
+                 [("access_unit", ["-w"]), ("file_unit", ["-w"]), ("dpylist_unit", ["-w"]), ("servers_unit", ["-w"]),
                   ("qualify_unit", ["-w"]), ("session_unit", ["-w"]),
                   ("stubs", ["-Wall", "-Wextra", "-Wno-unused-parameter"])],
                  ["-lXdmcp", "-lXau", "-lXt", "-lX11"], names,

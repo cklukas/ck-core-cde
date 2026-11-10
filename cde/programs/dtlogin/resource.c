@@ -548,7 +548,7 @@ ReinitResources( void )
 
 
     
-    newDB = XrmGetFileDatabase ( config );
+    newDB = config ? XrmGetFileDatabase ( config ) : NULL;
     if (newDB)
     {
 

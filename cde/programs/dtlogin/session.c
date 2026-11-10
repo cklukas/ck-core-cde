@@ -832,6 +832,8 @@ LoadXloginResources( struct display *d )
 	}
 
 	Debug("LoadXloginResources - loading resource db from %s\n", resources);
+	if (XresourceDB)
+	    XrmDestroyDatabase(XresourceDB);
 	if((XresourceDB = XrmGetFileDatabase(resources)) == NULL)
           Debug("LoadXloginResources - Loading resource db from %s failed\n",
 		resources);

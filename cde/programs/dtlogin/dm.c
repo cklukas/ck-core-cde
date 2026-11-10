@@ -352,6 +352,12 @@ ScanServers( void )
 
 #define NumTypes    (sizeof (acceptableTypes) / sizeof (acceptableTypes[0]))
 
+    if (servers == NULL)
+    {
+	/* the name does not lead to a file, and it is no command either */
+	LogError ((unsigned char *)"No servers file or command is configured\n");
+	return 0;
+    }
     if (servers[0] == '/')
     {
 	serversFile = fopen (servers, "r");
@@ -367,11 +373,23 @@ ScanServers( void )
 	    fstat (fileno (serversFile), &statb);
 	    ServersModTime = statb.st_mtime;
 	}
-	while (fgets (lineBuf, sizeof (lineBuf)-1, serversFile))
+	while (fgets (lineBuf, sizeof (lineBuf), serversFile))
 	{
 	    len = strlen (lineBuf);
+	    if (len == 0)
+		continue;		/* a line that starts with a NUL byte has nothing to read */
 	    if (lineBuf[len-1] == '\n')
 		lineBuf[len-1] = '\0';
+	    else if (len == sizeof (lineBuf) - 1)
+	    {
+		/* a line that does not fit is not read in pieces */
+		int c;
+
+		while ((c = getc (serversFile)) != EOF && c != '\n')
+		    ;
+		LogError ((unsigned char *)"Servers file %s: a line is too long and is ignored\n", servers);
+		continue;
+	    }
 	    ParseDisplay (lineBuf, acceptableTypes, NumTypes, &puser);
 	}
 	fclose (serversFile);

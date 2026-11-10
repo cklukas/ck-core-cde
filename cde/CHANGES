@@ -69,6 +69,11 @@
   crash the daemon or make it allocate without bound. The routines of versions
   2 to 4 are maintained in `rtable{2,3,4}_xdr.c` instead of being generated.
   Covered by `make -C lib/csa check` (17 cases under the sanitizers).
+- dtlogin: the servers file is read safely: over-long lines are ignored whole,
+  a line that starts with a NUL byte is skipped, and a `servers` resource that
+  leads to no file is reported instead of crashing the manager. The resource
+  database loaded for a display no longer leaks the previous one. Covered by
+  `programs/dtlogin/tests/check-config.py`.
 - dtlogin: the process that manages a display no longer does its work in signal
   handlers. The handlers for the manager's SIGTERM and SIGHUP, the alarm and the
   X server's SIGUSR1 only leave a note; the waits for the greeter, for its end,
