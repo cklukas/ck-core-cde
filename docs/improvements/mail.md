@@ -44,3 +44,36 @@ group and mode 2755, and run it as an ordinary user under
 (the drop of the effective group) comes before the first open of a locale file.
 `make -C programs/dtmail check` runs the fake-kernel scenarios and the source
 guard for the order.
+
+## Mailbox files and paths
+
+A save writes the new mailbox to a temporary file next to the mailbox and
+renames it over the old one. The mail group is held while that file is made,
+and the directory is often one that other users can write to.
+
+- The temporary file is made with `mkstemp()` under `<mailbox>.tmp.XXXXXX`. It
+  was `<mailbox>.tmp.<time in hex>`, a name that can be worked out, opened with
+  `O_CREAT|O_TRUNC` through whatever link was found under that name; the name
+  is now random and `mkstemp()` never opens a file or link that exists.
+- A mailbox that is a link is opened through `realpath()`, so that a save
+  replaces the file the link names and leaves the link alone. The loop that
+  followed links used a buffer size that was the size of a pointer and copied
+  link targets into buffers of `MAXPATHLEN` with `strcpy()`; a link whose target
+  was longer than seven bytes named the wrong file. A mailbox that does not
+  exist yet is created under the name it was given.
+- `Session::expandPath()` and `getRelativePath()` expand `$NAME` and `${NAME}`
+  themselves instead of starting a shell with `echo <path>` through `popen()`.
+  Command substitution, quotes, globs and other shell syntax in a mailbox or
+  folder name are no longer interpreted. A path that does not fit the 2048
+  bytes of the buffers is refused with an error instead of being copied past
+  them, and every name made from a mailbox path (lock files, the temporary
+  file) fits into `MAXPATHLEN`.
+- The callbacks that a `Session` calls to take and give up the mail group, to
+  report that it is busy and to ask for the time of the last interaction were
+  never initialised, so a program that did not register them called through
+  garbage. They start as null.
+
+`make -C programs/dtmail/libDtMail check` compiles `Session.C` and
+`RFCMailBox.C` with AddressSanitizer and UndefinedBehaviorSanitizer next to
+`tests/mailbox-files.C`, links them with the built `libDtMail.a`, and opens,
+changes and saves real mailbox files in an empty directory for each case.

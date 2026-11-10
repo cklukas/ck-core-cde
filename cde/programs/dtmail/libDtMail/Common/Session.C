@@ -111,6 +111,14 @@ DtMail::Session::Session(DtMailEnv & error, const char * app_name)
 
     _object_signature = 0;
     _cur_key = 0;
+    _busy_cb = NULL;
+    _busy_cb_data = NULL;
+    _disableGroupPrivileges_cb = NULL;
+    _disableGroupPrivileges_cb_data = NULL;
+    _enableGroupPrivileges_cb = NULL;
+    _enableGroupPrivileges_cb_data = NULL;
+    _interactive_time_cb = NULL;
+    _interactive_time_cb_data = NULL;
 
     // Create the ToolTalk session for managing file locking,
     // if one doesn't exist.
@@ -169,8 +177,6 @@ DtMail::Session::Session(DtMailEnv & error, const char * app_name)
 
     DtMailSigChldList = new DtVirtArray<SigChldInfo *>(8);
 
-    _busy_cb = NULL;
-    _busy_cb_data = NULL;
     _canAutoSave = DTM_TRUE;
 
     _object_signature = SessionSignature;
@@ -566,6 +572,87 @@ DtMail::Session::poll(DtMailEnv & error)
 
 }
 
+// Append text to a path of at most size bytes, the terminator included.
+// Returns false, and changes nothing, if the result would not fit.
+static bool
+appendPath(char * dst, size_t size, const char * text)
+{
+    size_t have = strlen(dst);
+    size_t add = strlen(text);
+
+    if (have + add >= size) {
+	return false;
+    }
+    memcpy(dst + have, text, add + 1);
+    return true;
+}
+
+// Replace $NAME and ${NAME} in a path by the value of the environment
+// variable, as the shell does for a word; a variable that is not set is
+// empty.  Nothing else is expanded and no program is started.
+static bool
+expandVariables(const char * path, char * out, size_t size)
+{
+    out[0] = '\0';
+
+    const char * p = path;
+    while (*p) {
+	if (*p == '$') {
+	    const char * name = p + 1;
+	    bool braces = (*name == '{');
+	    if (braces) {
+		name++;
+	    }
+
+	    const char * end = name;
+	    while (isalnum((unsigned char)*end) || *end == '_') {
+		end++;
+	    }
+
+	    if (end != name && !isdigit((unsigned char)*name) &&
+		(!braces || *end == '}')) {
+		char var[256];
+		size_t len = (size_t)(end - name);
+		if (len >= sizeof(var)) {
+		    return false;
+		}
+		memcpy(var, name, len);
+		var[len] = '\0';
+
+		const char * value = getenv(var);
+		if (value != NULL && !appendPath(out, size, value)) {
+		    return false;
+		}
+		p = braces ? end + 1 : end;
+		continue;
+	    }
+	}
+
+	char one[2] = { *p, '\0' };
+	if (!appendPath(out, size, one)) {
+	    return false;
+	}
+	p++;
+    }
+    return true;
+}
+
+// The failures of expandPath() return an empty path next to the error, which
+// is what its callers have always been given.
+static char *
+emptyPath(DtMailEnv & error, DTMailError_t code)
+{
+    char * empty = (char *)malloc(1);
+    if (empty != NULL) {
+	empty[0] = '\0';
+	error.setError(code);
+    }
+    else {
+	error.setError(DTME_NoMemory);
+    }
+    return empty;
+}
+
 char *
 DtMail::Session::expandPath(DtMailEnv & error, const char * path)
 {
@@ -583,27 +670,22 @@ DtMail::Session::expandPath(DtMailEnv & error, const char * path)
 	error.setError(DTME_NoMemory);
 	return(NULL);
     }
-    if (strchr(path, '$') != NULL) {
-    	sprintf (exp_name, "echo %s", path);
-    	FILE *fp;
-    	if ((fp = popen(exp_name, "r")) != NULL) {
-          	exp_name[0] = '\0';
-          	if (fgets(exp_name, MAXIMUM_PATH_LENGTH, fp) != NULL &&
-			exp_name[0] != '\0') 
-    	        	// get rid of \n at end of string
-	  		exp_name[strlen(exp_name)-1] = '\0';
-	  	else
-			strcpy(exp_name, path); 
-	  	pclose(fp);
-    	}
-	else 
-		strcpy(exp_name, path);
+    exp_name[0] = '\0';
+
+    if (!expandVariables(path, exp_name, MAXIMUM_PATH_LENGTH)) {
+	free(exp_name);
+	return emptyPath(error, DTME_BadArg);
     }
-    else 
-	strcpy(exp_name, path);
 
     char * exp_name2 = (char *)malloc(MAXIMUM_PATH_LENGTH);
+    if (exp_name2 == NULL) {
+	free(exp_name);
+	error.setError(DTME_NoMemory);
+	return(NULL);
+    }
     exp_name2[0] = '\0';
+
+    bool fits = true;
 
     switch (exp_name[0]) {
       case '+':
@@ -613,15 +695,18 @@ DtMail::Session::expandPath(DtMailEnv & error, const char * path)
 	  if (error.isNotSet()) {
                if (*fold_path != '/' && *fold_path != '.' && 
 			*fold_path != '~' && *fold_path != '$') 
-		  strcpy(exp_name2, "~/");
+		  fits = appendPath(exp_name2, MAXIMUM_PATH_LENGTH, "~/");
 
-	  	strcat(exp_name2, fold_path);
-	  	strcat(exp_name2, "/");
+	       fits = fits && appendPath(exp_name2, MAXIMUM_PATH_LENGTH, fold_path)
+			   && appendPath(exp_name2, MAXIMUM_PATH_LENGTH, "/");
 	  }
 	  else  // Use the default folder
-	  	strcpy(exp_name2, "~/");
+	  	fits = appendPath(exp_name2, MAXIMUM_PATH_LENGTH, "~/");
 		
-	  strcat(exp_name2, &exp_name[1]);
+	  fits = fits && appendPath(exp_name2, MAXIMUM_PATH_LENGTH, &exp_name[1]);
+	  if (!fits) {
+	      break;
+	  }
       
           // We need to call ourselves again to deal with 
           // relative paths in the folder directory.
@@ -657,6 +742,7 @@ DtMail::Session::expandPath(DtMailEnv & error, const char * path)
 	      strncpy(name, &exp_name[1], len);
 	      name[len] = 0;
 	      pw_p = getpwnam(name);
+	      delete [] name;
 
 	      if (!pw_p) {
 		  error.clear();
@@ -665,13 +751,11 @@ DtMail::Session::expandPath(DtMailEnv & error, const char * path)
 	      }
 	      pw = *pw_p;
 
-	      delete [] name;
-
 	      start = slash;
 	  }
 
-	  strcpy(exp_name2, pw.pw_dir);
-	  strcat(exp_name2, start);
+	  fits = appendPath(exp_name2, MAXIMUM_PATH_LENGTH, pw.pw_dir)
+		 && appendPath(exp_name2, MAXIMUM_PATH_LENGTH, start);
 	  break;
       }
 
@@ -680,11 +764,15 @@ DtMail::Session::expandPath(DtMailEnv & error, const char * path)
       case '.':
       case '/':
       default:
-	strcpy(exp_name2, exp_name);
+	fits = appendPath(exp_name2, MAXIMUM_PATH_LENGTH, exp_name);
 	break;
 
     }
     free(exp_name);
+    if (!fits) {
+	free(exp_name2);
+	return emptyPath(error, DTME_BadArg);
+    }
     return(exp_name2);
 }
 
@@ -710,61 +798,39 @@ DtMail::Session::getRelativePath(DtMailEnv & error, const char * path)
     }
     exp_name[0] = '\0'; // Just for errors.
 
-    switch (path[0]) {
-	case '/':
-	    // This is an absolute path, so there is a chance that
-	    // we can trim it down to a relative path if it goes down
-	    // the same way as the folder path.
-	{
-	    _mail_rc->getValue(error, "folder", &fold_path);
-	    if (error.isNotSet()) {
-		strcpy(exp_name, fold_path);
-	      
-		// We need to call ourselves again to deal with 
-		// relative paths in the folder directory.
-		// 
-		char * old_exp = exp_name;
-		exp_name = expandPath(error, old_exp);
-		free(old_exp);
+    const char * result = path;
 
-		// Check to see if the path starts with the folder path.
-		char * matched_path = const_cast<char *>(strstr(path, exp_name));
-		if (matched_path == path) {
-		    // Yes it does, make it a relative path to the folder dir.
-		    int folder_path_length = strlen(exp_name);
-		    while (path[folder_path_length] == '/')
-		      folder_path_length++;
-		    strcpy(exp_name, &path[folder_path_length]);
-		    break;
-		} else {
-		    strcpy(exp_name, path);
-		    break;
-		}
+    if (path[0] == '/') {
+	// This is an absolute path, so there is a chance that
+	// we can trim it down to a relative path if it goes down
+	// the same way as the folder path.
+	_mail_rc->getValue(error, "folder", &fold_path);
+	if (error.isNotSet()) {
+	    // We need to deal with relative paths in the folder directory.
+	    char * folder = expandPath(error, fold_path);
+	    size_t folder_path_length = (folder != NULL) ? strlen(folder) : 0;
+
+	    // Check to see if the path starts with the folder path.
+	    if (error.isNotSet() && folder_path_length > 0 &&
+		strncmp(path, folder, folder_path_length) == 0) {
+		// Yes it does, make it a relative path to the folder dir.
+		while (path[folder_path_length] == '/')
+		  folder_path_length++;
+		result = &path[folder_path_length];
 	    }
-	    else {
-		// There is no folder variable so just fall through to the
-		// default.
-		error.clear();
-	    }
+	    free(folder);
 	}
-	case '+':
-	    // This is relative to the folder path. Leave it alone.
-	    // The only time we are likely to see a leading '+' is
-	    // when the path was carried over from mailtool in the .mailrc.
-	case '~':
-	    // This is relative to the user's home directory.  Leave it alone.
-	    // The only time we are likely to see a leading '~' is
-	    // when the path was carried over from mailtool in the .mailrc.
-	case '.':
-	    // This is relative to the current directory where dtmail is
-	    // running.  Leave it alone.  The only time we are likely to see
-	    // a leading '.' is when the path was carried over from mailtool
-	    // in the .mailrc.
-	default:
-	{
-	    strcpy(exp_name, path);
-	    break;
-	}
+	// If there is no folder variable the path is left alone.
+	error.clear();
+    }
+    // A leading '+' is relative to the folder path, a leading '~' to the
+    // user's home directory and a leading '.' to the current directory.
+    // They are left alone: the only time we are likely to see them is when
+    // the path was carried over from mailtool in the .mailrc.
+
+    if (!appendPath(exp_name, MAXIMUM_PATH_LENGTH, result)) {
+	free(exp_name);
+	return emptyPath(error, DTME_BadArg);
     }
     return(exp_name);
 

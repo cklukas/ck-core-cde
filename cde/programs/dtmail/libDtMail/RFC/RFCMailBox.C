@@ -93,6 +93,11 @@ extern "C" {
 #define MAIL_SPOOL_PATH "/var/mail/%s"
 #endif
 
+// The longest path of a mailbox.  The names made from it (the lock files, the
+// temporary file of a save) are a few characters longer and have to fit into
+// MAXPATHLEN as well.
+#define MAILBOX_PATH_MAX (MAXPATHLEN - 32)
+
 #if defined(sun)
 #define	LCL_SIG_HANDLER_SIGNATURE	
 #elif defined(__aix) || defined(__linux__) || defined(CSRG_BASED)
@@ -1283,69 +1288,33 @@ RFCMailBox::openRealFile(DtMailEnv & error, int open_mode, mode_t create_mode)
       return;		// could not expand path
     }
 
+    // expandPath() returns a path of less than 2048 bytes.
+
     if ((open_mode & O_RDWR) == O_RDONLY) {
 	_real_path = strdup(path);
 	SafeStat(_real_path, &buf);
     }
     else {
-	_real_path = (char *)malloc(MAXPATHLEN);
-	char *link_path = new char[MAXPATHLEN];
-	strcpy(link_path, path);
-	strcpy(_real_path, path);
-
-	if (SafeLStat(link_path, &buf) == 0 && (open_mode & O_CREAT) == 0) {
-	    while(S_ISLNK(buf.st_mode)) {
-		int size = readlink(link_path, _real_path, sizeof(link_path));
-	    	if (size < 0) {
-		    error.setError(DTME_NoSuchFile);
-		    free(_real_path);
-		    _real_path = (char *)0;
-		    free(path);
-		    path = (char *)0;
-		    delete [] link_path;
-		    return;
-		}
-
-		_real_path[size] = 0;
-		if (_real_path[0] == '/') {
-		    strcpy(link_path, _real_path);
-		}
-		else {
-		    char * last_slash = strrchr(link_path, '/');
-		    if (last_slash) {
-			strcpy(last_slash + 1, _real_path);
-		    }
-		    else {
-			strcpy(link_path, "./");
-			strcat(link_path, _real_path);
-		    }
-		}
-
-		strcpy(_real_path, link_path);
-
-		if (SafeLStat(link_path, &buf)) {
-		    error.setError(DTME_NoSuchFile);
-		    free(_real_path);
-		    _real_path = (char *)0;
-		    free(path);
-		    path = (char *)0;
-		    delete [] link_path;
-		    return;
-		}
-	    }
-	}
-	else {
-	    if ((open_mode & O_CREAT) == 0) {
+	// Resolve the links of the path, so that a save replaces the file
+	// the link names and not the link.  A file that does not exist is
+	// created under the name it was given.
+	char resolved[MAXPATHLEN];
+	if (realpath(path, resolved) != NULL) {
+	    if (strlen(resolved) >= MAILBOX_PATH_MAX) {
 		error.setError(DTME_NoSuchFile);
-		free(_real_path);
-		_real_path = (char *)0;
 		free(path);
-		path = (char *)0;
-		delete [] link_path;
 		return;
 	    }
+	    _real_path = strdup(resolved);
 	}
-	delete [] link_path;
+	else if ((open_mode & O_CREAT) != 0) {
+	    _real_path = strdup(path);
+	}
+	else {
+	    error.setError(DTME_NoSuchFile);
+	    free(path);
+	    return;
+	}
     }
 
     free(path);
@@ -2951,7 +2920,10 @@ RFCMailBox::createTemporaryMailboxFile(DtMailEnv & error, char *tmp_name)
     return(-1);
   }
 
-  PRIV_ENABLED(fd,SafeOpen(tmp_name, O_RDWR | O_CREAT | O_TRUNC, info.st_mode));
+  // The file is created with the group held, in a directory that others may be
+  // able to write to: mkstemp() makes it exclusively under a name that is not
+  // known beforehand, and never opens a file or link that exists.
+  PRIV_ENABLED(fd,mkstemp(tmp_name));
   if (fd < 0) {
     int errno2 = errno;
     switch (errno2) {
@@ -3097,8 +3069,14 @@ RFCMailBox::writeMailBox(DtMailEnv &error, DtMailBoolean hide_access)
   // Create the new temporary file to hold the mailbox contents
   //
   static char tmp_name[MAXPATHLEN+1];
-  sprintf(tmp_name, "%s.tmp.%08lx", _real_path, (long)time(NULL));
-  assert(strlen(tmp_name)<sizeof(tmp_name));
+  if (snprintf(tmp_name, sizeof(tmp_name), "%s.tmp.XXXXXX", _real_path)
+      >= (int)sizeof(tmp_name)) {
+    error.vSetError(DTME_CannotCreateTemporaryMailboxFile,
+		    DTM_FALSE, NULL, _real_path,
+		    error.errnoMessage(ENAMETOOLONG));
+    unlockFile(error2, _fd);
+    return;
+  }
 
   int fd = createTemporaryMailboxFile(error, tmp_name);
   if (error.isSet()) {

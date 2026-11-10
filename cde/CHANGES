@@ -238,6 +238,20 @@
   `make -C lib/tt/lib check` (sanitizer cases with a
   simulated and, started as the superuser, a real privileged process) and
   `make -C lib/tt/bin check`.
+- libDtMail: create the temporary file of a mailbox save exclusively, resolve
+  links safely and stop starting a shell to expand paths. The file next to
+  the mailbox is now made with `mkstemp()` (it was a predictable name opened
+  with `O_CREAT|O_TRUNC` while the mail group was held); a mailbox that is a
+  link is resolved with `realpath()` (the old loop read link targets into a
+  pointer-sized buffer and copied them into fixed ones); `expandPath()` and
+  `getRelativePath()` expand `$NAME` and `${NAME}` themselves instead of running
+  `echo` through `popen()`, and refuse a path of 2048 bytes or more instead of
+  writing past their buffers. The `Session` callbacks for the mail group, the
+  busy state and the interaction time start as null. Shell syntax other than
+  variables is no longer expanded in mailbox and folder names. Covered by
+  `programs/dtmail/libDtMail/tests/check-mailbox-files.py` (real mailboxes
+  opened and saved under the sanitizers); described in
+  `docs/improvements/mail.md`.
 - dtmail, dtmailpr: give up the mail group of a set-group-id installation
   before the environment is read, and verify every change of the effective
   group. The group is dropped first in `RoamApp::initialize()` (it was dropped
