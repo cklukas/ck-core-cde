@@ -123,6 +123,11 @@ static _Tt_db_results
 					      const _Tt_string&,
 					      const _Tt_db_access_ptr&,
 					      int&);
+static _Tt_db_results
+       _tt_object_properties_conflict (const _Tt_db_server_db_ptr&,
+				       const _Tt_string&,
+				       const _Tt_db_access_ptr&,
+				       _Tt_db_property_list_ptr&);
 static void _tt_screen_object_properties (_Tt_db_property_list_ptr&);
 
 static _Tt_string _tt_get_local_path (const _Tt_string &network_path,
@@ -932,16 +937,10 @@ _tt_obj_props_results *_tt_set_obj_props_1 (_tt_set_obj_props_args *args,
   // the callers last read from the DB --> update conflict...
   if ((results.results == TT_DB_OK) &&
       (results.cache_level > args->cache_level)) {
-    results.results = TT_DB_ERR_UPDATE_CONFLICT;
-    
-    _Tt_db_results temp_results = db->getObjectProperties(args->objid,
-							  accessPtr,
-							  properties);
-    
-    if (results.results != TT_DB_OK) {
-      properties = (_Tt_db_property_list *)NULL;
-      results.results = temp_results;
-    }
+    results.results = _tt_object_properties_conflict(db,
+						     args->objid,
+						     accessPtr,
+						     properties);
   }
   _tt_set_rpc_properties(properties, results.properties);
   
@@ -1002,16 +1001,10 @@ _tt_obj_props_results *_tt_set_obj_prop_1 (_tt_set_obj_prop_args *args,
   // the callers last read from the DB --> update conflict...
   if ((results.results == TT_DB_OK) &&
       (results.cache_level > args->cache_level)) {
-    results.results = TT_DB_ERR_UPDATE_CONFLICT;
-    
-    _Tt_db_results temp_results = db->getObjectProperties(args->objid,
-							  accessPtr,
-							  properties);
-    
-    if (results.results != TT_DB_OK) {
-      properties = (_Tt_db_property_list *)NULL;
-      results.results = temp_results;
-    }
+    results.results = _tt_object_properties_conflict(db,
+						     args->objid,
+						     accessPtr,
+						     properties);
   }
   _tt_set_rpc_properties(properties, results.properties);
   
@@ -1069,16 +1062,10 @@ _tt_obj_props_results *_tt_add_obj_prop_1 (_tt_add_obj_prop_args *args,
   // the callers last read from the DB --> update conflict...
   if ((results.results == TT_DB_OK) &&
       (results.cache_level > args->cache_level)) {
-    results.results = TT_DB_ERR_UPDATE_CONFLICT;
-    
-    _Tt_db_results temp_results = db->getObjectProperties(args->objid,
-							  accessPtr,
-							  properties);
-    
-    if (results.results != TT_DB_OK) {
-      properties = (_Tt_db_property_list *)NULL;
-      results.results = temp_results;
-    }
+    results.results = _tt_object_properties_conflict(db,
+						     args->objid,
+						     accessPtr,
+						     properties);
   }
   _tt_set_rpc_properties(properties, results.properties);
   
@@ -1172,7 +1159,7 @@ _tt_obj_props_results *_tt_delete_obj_prop_1 (_tt_del_obj_prop_args *args,
 							  accessPtr,
 							  properties);
     
-    if (results.results != TT_DB_OK) {
+    if (temp_results != TT_DB_OK) {
       properties = (_Tt_db_property_list *)NULL;
       results.results = temp_results;
     }
@@ -2331,11 +2318,16 @@ static _Tt_db_access_ptr _tt_get_real_rpc_access (const _tt_access &rpc_access)
 
   accessPtr->user = _tt_uid;
   accessPtr->group = (gid_t)-1;
+  accessPtr->groups_len = 0;
 
-  // Make sure the group ID is valid before using it
+  // The user is in the groups its credentials list, and acts in the group
+  // they name if that is one of them
   for (int i=0; i < _tt_gidlen; i++) {
     if (_tt_gidlist [i] == _tt_gid) {
       accessPtr->group = _tt_gid;
+    }
+    if (accessPtr->groups_len < TT_DB_ACCESS_MAX_GROUPS) {
+      accessPtr->groups[accessPtr->groups_len++] = _tt_gidlist [i];
     }
   }
 
@@ -2624,6 +2616,28 @@ _tt_get_object_properties_cache_level (const _Tt_db_server_db_ptr &db,
   }
 
   return results;
+}
+
+// Someone else changed the properties of the object since the caller read
+// them: the change is not made.  The caller is told so, and gets the
+// properties as they are now to bring its copy up to date; if they cannot
+// be read, it gets the reason instead.
+static _Tt_db_results
+_tt_object_properties_conflict (const _Tt_db_server_db_ptr &db,
+				const _Tt_string           &objid,
+				const _Tt_db_access_ptr    &accessPtr,
+				_Tt_db_property_list_ptr   &properties)
+{
+  _Tt_db_results results = db->getObjectProperties(objid,
+						   accessPtr,
+						   properties);
+
+  if (results != TT_DB_OK) {
+    properties = (_Tt_db_property_list *)NULL;
+    return results;
+  }
+
+  return TT_DB_ERR_UPDATE_CONFLICT;
 }
 
 static void

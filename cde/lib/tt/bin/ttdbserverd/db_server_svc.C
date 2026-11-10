@@ -552,6 +552,9 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 			_tt_uid = unix_cred->aup_uid;
 			_tt_gid = unix_cred->aup_gid;
 			_tt_gidlen = unix_cred->aup_len;
+			if (_tt_gidlen > NGROUPS) {
+				_tt_gidlen = NGROUPS;
+			}
 			int i;
 			for (i = 0; i < _tt_gidlen; i++) {
 				_tt_gidlist[i] = unix_cred->aup_gids[i];

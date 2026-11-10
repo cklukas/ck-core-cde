@@ -2807,6 +2807,293 @@ case_known_partitions(void)
 		      (mount + "/does/not/exist").c_str()));
 }
 
+/* ---- changes of the properties of an object that others have changed ---------- */
+
+/* what a request on the properties of an object answered */
+struct ObjProps {
+	int					results;
+	int					cache_level;
+	std::vector<std::string>		names;
+};
+
+static ObjProps
+obj_props_of(const Reply &r)
+{
+	ObjProps		out;
+	_tt_obj_props_results	res;
+	XDR			xdrs;
+
+	out.results = INT_MIN;
+	out.cache_level = INT_MIN;
+	if (!answered(r)) {
+		return out;
+	}
+	memset(&res, 0, sizeof(res));
+	xdrmem_create(&xdrs, (char *)r.body.data(), r.body.size(), XDR_DECODE);
+	if (!xdr_tt_obj_props_results(&xdrs, &res)) {
+		return out;
+	}
+	out.results = res.results;
+	out.cache_level = res.cache_level;
+	for (u_int i = 0; i < res.properties.properties_len; i++) {
+		out.names.push_back(res.properties.properties_val[i].name);
+	}
+	xdr_free((xdrproc_t)xdr_tt_obj_props_results, (char *)&res);
+	return out;
+}
+
+static bool
+has_name(const ObjProps &op, const char *name)
+{
+	for (size_t i = 0; i < op.names.size(); i++) {
+		if (op.names[i] == name) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/* a property with one value, for the arguments of a request */
+struct OneProperty {
+	std::string		name, value;
+	_tt_property_value	pv;
+	_tt_property		prop;
+
+	OneProperty(const char *n, const char *v) : name(n), value(v)
+	{
+		pv.value.value_len = value.size();
+		pv.value.value_val = &value[0];
+		prop.name = &name[0];
+		prop.values.values_len = 1;
+		prop.values.values_val = &pv;
+	}
+};
+
+static ObjProps
+get_obj_props(const std::string &objid)
+{
+	_tt_get_obj_props_args gp = { (char *)objid.c_str(), acting(), -1 };
+
+	return obj_props_of(rpc(TT_GET_OBJ_PROPS,
+				encode((xdrproc_t)xdr_tt_get_obj_props_args, &gp)));
+}
+
+static ObjProps
+set_obj_props(const std::string &objid, const char *name, const char *value,
+	      int cache_level)
+{
+	OneProperty		one(name, value);
+	_tt_set_obj_props_args	sp;
+
+	memset(&sp, 0, sizeof(sp));
+	sp.objid = (char *)objid.c_str();
+	sp.properties.properties_len = 1;
+	sp.properties.properties_val = &one.prop;
+	sp.access = acting();
+	sp.cache_level = cache_level;
+	return obj_props_of(rpc(TT_SET_OBJ_PROPS,
+				encode((xdrproc_t)xdr_tt_set_obj_props_args, &sp)));
+}
+
+static ObjProps
+set_obj_prop_at(const std::string &objid, const char *name, const char *value,
+		int cache_level)
+{
+	OneProperty		one(name, value);
+	_tt_set_obj_prop_args	sp;
+
+	memset(&sp, 0, sizeof(sp));
+	sp.objid = (char *)objid.c_str();
+	sp.property = one.prop;
+	sp.access = acting();
+	sp.cache_level = cache_level;
+	return obj_props_of(rpc(TT_SET_OBJ_PROP,
+				encode((xdrproc_t)xdr_tt_set_obj_prop_args, &sp)));
+}
+
+static ObjProps
+add_obj_prop_at(const std::string &objid, const char *name, const char *value,
+		int cache_level)
+{
+	OneProperty		one(name, value);
+	_tt_add_obj_prop_args	ap;
+
+	memset(&ap, 0, sizeof(ap));
+	ap.objid = (char *)objid.c_str();
+	ap.property = one.prop;
+	ap.unique = 0;
+	ap.access = acting();
+	ap.cache_level = cache_level;
+	return obj_props_of(rpc(TT_ADD_OBJ_PROP,
+				encode((xdrproc_t)xdr_tt_add_obj_prop_args, &ap)));
+}
+
+static ObjProps
+delete_obj_prop_at(const std::string &objid, const char *name,
+		   int cache_level)
+{
+	OneProperty		one(name, "");
+	_tt_del_obj_prop_args	dp;
+
+	memset(&dp, 0, sizeof(dp));
+	dp.objid = (char *)objid.c_str();
+	dp.property = one.prop;
+	dp.access = acting();
+	dp.cache_level = cache_level;
+	return obj_props_of(rpc(TT_DELETE_OBJ_PROP,
+				encode((xdrproc_t)xdr_tt_del_obj_prop_args, &dp)));
+}
+
+/* A caller changes the properties of an object with the cache level of the
+   properties as it read them.  If somebody has changed them since, the change
+   is not made, the caller is told that it is out of date, and the reply brings
+   the properties as they are now, with their cache level, so that it can
+   catch up: all four procedures that change properties.  A caller that is up
+   to date changes them. */
+static void
+case_update_conflicts(void)
+{
+	std::string file = start_partition("update-conflicts");
+
+	put(g_dir + "/file", "the file");
+	create_file(file);
+	std::string objid = make_objid(g_mount);
+	CHECK(create_object(objid, file, 0600) == TT_DB_OK);
+
+	/* the caller read the object at this level; another one changes it */
+	ObjProps first = get_obj_props(objid);
+	CHECK(first.results == TT_DB_OK);
+	const int stale = first.cache_level;
+	ObjProps other = set_obj_props(objid, "theirs", "1", stale);
+	CHECK(other.results == TT_DB_OK);
+	ObjProps now = get_obj_props(objid);
+	CHECK(now.results == TT_DB_OK && has_name(now, "theirs"));
+	CHECK(now.cache_level > stale);
+
+	ObjProps r = set_obj_props(objid, "mine1", "x", stale);
+	CHECK(r.results == TT_DB_ERR_UPDATE_CONFLICT);
+	CHECK(r.cache_level == now.cache_level);
+	CHECK(has_name(r, "theirs"));
+	CHECK(!has_name(get_obj_props(objid), "mine1"));
+
+	r = set_obj_prop_at(objid, "mine2", "x", stale);
+	CHECK(r.results == TT_DB_ERR_UPDATE_CONFLICT);
+	CHECK(r.cache_level == now.cache_level);
+	CHECK(has_name(r, "theirs"));
+	CHECK(!has_name(get_obj_props(objid), "mine2"));
+
+	r = add_obj_prop_at(objid, "mine3", "x", stale);
+	CHECK(r.results == TT_DB_ERR_UPDATE_CONFLICT);
+	CHECK(r.cache_level == now.cache_level);
+	CHECK(has_name(r, "theirs"));
+	CHECK(!has_name(get_obj_props(objid), "mine3"));
+
+	r = delete_obj_prop_at(objid, "theirs", stale);
+	CHECK(r.results == TT_DB_ERR_UPDATE_CONFLICT);
+	CHECK(r.cache_level == now.cache_level);
+	CHECK(has_name(r, "theirs"));
+	CHECK(has_name(get_obj_props(objid), "theirs"));
+
+	/* up to date, each of them changes the properties and counts the level up */
+	int level = now.cache_level;
+	r = set_obj_props(objid, "mine1", "x", level);
+	level++;
+	CHECK(r.results == TT_DB_OK && r.cache_level == level);
+	r = set_obj_prop_at(objid, "mine2", "x", level);
+	level++;
+	CHECK(r.results == TT_DB_OK && r.cache_level == level);
+	r = add_obj_prop_at(objid, "mine3", "x", level);
+	level++;
+	CHECK(r.results == TT_DB_OK && r.cache_level == level);
+	now = get_obj_props(objid);
+	CHECK(now.cache_level == level);
+	CHECK(has_name(now, "mine2") && has_name(now, "mine3"));
+	r = delete_obj_prop_at(objid, "mine2", level);
+	CHECK(r.results == TT_DB_OK);
+	CHECK(!has_name(r, "mine2") && has_name(r, "mine3"));
+	CHECK(!has_name(get_obj_props(objid), "mine2"));
+}
+
+/* ---- the groups of a caller ---------------------------------------------------- */
+
+/* A user is in the group of a file or object not only when the group it acts
+   in is that group, but also when its credentials list that group: a Unix
+   user who is a member of a group has the group's access whatever group he
+   happens to act in.  Somebody who acts in another group and lists the group
+   of the object has what the group bits give, somebody who lists neither has
+   what the others bits give. */
+static void
+case_supplementary_groups(void)
+{
+	const std::string netfile = start_partition("supplementary-groups");
+	const uid_t owner = getuid() ? getuid() : 4000;
+	const gid_t group = getuid() ? getgid() : 4000;
+	const std::string file = g_dir + "/file";
+	std::string rw_group, ro_group, rw_others;
+
+	put(file, "the file");
+	if (getuid() == 0) {
+		CHECK(chown(file.c_str(), owner, group) == 0);
+	}
+	{
+		Caller as(owner, group);
+		create_file(netfile);
+		/* the group may read and write, the others may read; the group may
+		   only read, the others nothing; the others may write */
+		rw_group = make_objid(g_mount);
+		ro_group = make_objid(g_mount);
+		rw_others = make_objid(g_mount);
+		CHECK(create_object(rw_group, netfile, 0660) == TT_DB_OK);
+		CHECK(create_object(ro_group, netfile, 0640) == TT_DB_OK);
+		CHECK(create_object(rw_others, netfile, 0606) == TT_DB_OK);
+		CHECK(set_obj_prop(rw_group, "p", "value") == TT_DB_OK);
+		CHECK(set_obj_prop(ro_group, "p", "value") == TT_DB_OK);
+		CHECK(set_obj_prop(rw_others, "p", "value") == TT_DB_OK);
+	}
+	const int cache = TT_DB_ERR_PROPS_CACHE_ERROR;
+	std::vector<gid_t> member, stranger;
+
+	/* acts in another group, and lists the one of the objects (first, last) */
+	member.push_back(group + 1);
+	member.push_back(group);
+	stranger.push_back(group + 1);
+	stranger.push_back(group + 2);
+	{
+		Caller as(owner + 1, member);
+		expect_access("read of the group's object", "a member by a listed group", 0660,
+			      get_obj_prop(rw_group, "p"), true, cache);
+		expect_access("write of the group's object", "a member by a listed group", 0660,
+			      set_obj_prop(rw_group, "p", "by member"), true, cache);
+		expect_access("read of the read-only object", "a member by a listed group", 0640,
+			      get_obj_prop(ro_group, "p"), true, cache);
+		expect_access("write of the read-only object", "a member by a listed group", 0640,
+			      set_obj_prop(ro_group, "p", "by member"), false, cache);
+		/* the group bits decide, not the others bits that give more */
+		expect_access("write of an object only the others may write",
+			      "a member by a listed group", 0606,
+			      set_obj_prop(rw_others, "p", "by member"), false, cache);
+	}
+	{
+		Caller as(owner + 1, std::vector<gid_t>(1, group));
+		expect_access("read of the group's object", "a member by its own group", 0660,
+			      get_obj_prop(rw_group, "p"), true, cache);
+	}
+	{
+		Caller as(owner + 2, stranger);
+		expect_access("read of the group's object", "a stranger", 0660,
+			      get_obj_prop(rw_group, "p"), false, cache);
+		expect_access("write of the group's object", "a stranger", 0660,
+			      set_obj_prop(rw_group, "p", "by stranger"), false, cache);
+		expect_access("write of an object the others may write", "a stranger", 0606,
+			      set_obj_prop(rw_others, "p", "by stranger"), true, cache);
+	}
+	{
+		Caller as(owner + 2, std::vector<gid_t>());
+		expect_access("read of the group's object", "somebody with no group", 0660,
+			      get_obj_prop(rw_group, "p"), false, cache);
+	}
+}
+
 /* ---- driver ------------------------------------------------------------------ */
 
 static const struct {
@@ -2840,6 +3127,8 @@ static const struct {
 	{ "fuzz-dispatch", case_fuzz_dispatch },
 	{ "access-rule", case_access_rule },
 	{ "access-bits", case_access_bits },
+	{ "update-conflicts", case_update_conflicts },
+	{ "supplementary-groups", case_supplementary_groups },
 };
 
 int

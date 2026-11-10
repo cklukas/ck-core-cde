@@ -204,6 +204,15 @@ The numbers, lengths and pointers of a request are checked before they are used:
   that a client can set to any `int`. A change that finds the highest `int` fails
   instead of making the number wrap around, and a client that says it has the
   highest level is told that nothing is newer.
+- A change of the properties of an object (`TT_SET_OBJ_PROPS`, `TT_SET_OBJ_PROP`,
+  `TT_ADD_OBJ_PROP`, `TT_DELETE_OBJ_PROP`) comes with the cache level the caller
+  read the properties at. If somebody changed them since, the server answers
+  `TT_DB_ERR_UPDATE_CONFLICT` (`TT_ERR_DBUPDATE` in the API) with the properties
+  as they are now and their cache level, and the change is not made, so that the
+  caller can update its copy and try again. The three procedures that set and add
+  properties made the change anyway and reported that it had worked, so the
+  changes of two clients to one object were lost without notice; the delete
+  reported success without deleting.
 - A position inside a table is not taken from the wire.
 - The answers of the procedures are kept from one request to the next, and the
   dispatcher frees what an answer holds once it is sent. It left the pointers
@@ -272,9 +281,12 @@ length.
   (owner, group and mode) by one rule, the one of a file in a Unix file system
   and of `rpc.ttdbserverd(1M)`, which says that the protection of the file
   decides: the owner and the superuser may do anything; anybody else is in the
-  class of the group if the group that came with the request is the group of the
-  record, and in the class of the others if not, and only the bits of that class
-  count, a read needing the read bit and a write the write bit. A user or group
+  class of the group if the group of the record is the group the request acts in
+  or one of the groups its credentials list, and in the class of the others if
+  not, and only the bits of that class count, a read needing the read bit and a
+  write the write bit. A user who is a member of the group of a file by a
+  supplementary group has the group's access; only the group the request acts in
+  used to count. A user or group
   of -1 in a record stands for everybody, and a mode of -1 for no protection. The
   check used to let a write through for a user who only had the read bit of his
   class, and gave a member of the group the bits of the others when the group

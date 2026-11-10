@@ -120,6 +120,16 @@
   of indirect-query clients is bounded and expires, and the debug log of a
   report with a long client address no longer overflows its buffer. Covered by
   `programs/dtlogin/tests/check-chooser.py`.
+- rpc.ttdbserverd: changes of the properties of an object that was changed since
+  the caller read them are refused. `TT_SET_OBJ_PROPS`, `TT_SET_OBJ_PROP` and
+  `TT_ADD_OBJ_PROP` made the change although the cache level said it was out of
+  date, and `TT_DELETE_OBJ_PROP` answered success without deleting; they now
+  answer `TT_DB_ERR_UPDATE_CONFLICT` with the current properties, which
+  `tt_spec_write` reports as `TT_ERR_DBUPDATE`. The groups an AUTH_UNIX
+  credential lists besides the one the caller acts in now count for the access of
+  files and objects, as they do for a file in a Unix file system. Covered by the
+  `update-conflicts` and `supplementary-groups` cases of
+  `make -C lib/tt/bin/ttdbserverd check`.
 - libtt: a process that runs with other privileges than the user who started
   it (set-user-ID or set-group-ID programs) no longer reads `TTSESSION_CMD`,
   `TT_TRACE_SCRIPT`, `LD_LIBRARY_PATH`, `TTAUTHORITY`, `TTPATH`,

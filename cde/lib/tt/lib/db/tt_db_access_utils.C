@@ -48,12 +48,29 @@ _Tt_db_access()
       user = (uid_t)-1;
       group = (gid_t)-1;
       mode = (mode_t)-1; // Default: Everyone can read and write it
+      groups_len = 0;
 }
 
 _Tt_db_access::
 ~_Tt_db_access()
 {     
 }     
+
+bool _Tt_db_access::
+is_member (gid_t gid) const
+{
+      if (gid == group) {
+	    return true;
+      }
+
+      for (int i = 0; i < groups_len && i < TT_DB_ACCESS_MAX_GROUPS; i++) {
+	    if (groups[i] == gid) {
+		  return true;
+	    }
+      }
+
+      return false;
+}
 
 bool _Tt_db_access::
 permits (const _Tt_db_access &caller, bool write, bool user_only) const
@@ -76,7 +93,7 @@ permits (const _Tt_db_access &caller, bool write, bool user_only) const
 
       // One class decides: a member of the group has no more than the group
       // bits give, even where the bits for the others give more.
-      bool in_group = (group == (gid_t)-1 || group == caller.group);
+      bool in_group = (group == (gid_t)-1 || caller.is_member(group));
       mode_t needed = in_group ? (write ? S_IWGRP : S_IRGRP)
 			       : (write ? S_IWOTH : S_IROTH);
 

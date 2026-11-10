@@ -40,6 +40,10 @@
 
 #include "util/tt_object.h"
 
+// The groups of a caller that its credentials list besides the one it acts
+// in: an AUTH_UNIX credential carries at most 16.
+#define TT_DB_ACCESS_MAX_GROUPS 16
+
 class _Tt_db_access : public _Tt_object {
 public:
   _Tt_db_access ();
@@ -48,16 +52,27 @@ public:
   gid_t  group;
   mode_t mode;
 
+  // For a caller: the groups the user belongs to, as its credentials list
+  // them.  GROUP is the group it acts in (the one a file it makes gets); the
+  // user is in the group of a file or object when that is GROUP or one of
+  // these.
+  int    groups_len;
+  gid_t  groups[TT_DB_ACCESS_MAX_GROUPS];
+
+  // Does the caller belong to GID?
+  bool is_member (gid_t gid) const;
+
   // Is the user CALLER (the user and the group he comes with) let in by
   // this access, which protects a file or an object?  A request is a read
   // or, with WRITE, a write; with USER_ONLY it is one that only the owner
   // may make.  The rules are those of a file in a Unix file system:
   //
   //  - the superuser, and the owner, may do anything;
-  //  - everybody else is in one class, the group if the group of the
-  //    caller is the group of this access, otherwise the others, and
-  //    only the bits of that class count: a read needs the read bit and
-  //    a write the write bit, whatever the other bits say;
+  //  - everybody else is in one class, the group if the caller belongs
+  //    to the group of this access (its own group, or one of the groups
+  //    its credentials list), otherwise the others, and only the bits of
+  //    that class count: a read needs the read bit and a write the write
+  //    bit, whatever the other bits say;
   //  - a user or a group of -1 stands for everybody, and a mode of -1 for
   //    no protection at all.
   bool permits (const _Tt_db_access &caller,
