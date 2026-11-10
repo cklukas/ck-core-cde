@@ -91,7 +91,6 @@
 # define NOTIFY_NO_WINDOWS	4
 # define NOTIFY_LANG_CHANGE	5
 # define NOTIFY_FAILSAFE	6
-# define NOTIFY_PASSWD_EXPIRED	7
 # define NOTIFY_DTLITE		8
 # define NOTIFY_DT		9
 # define NOTIFY_XDM		10
@@ -218,6 +217,7 @@ typedef struct {
 
 typedef struct {
   ResponseHeader hdr;
+  int change;                   /* non-zero: the user wants to set a new password now */
 } ResponseExpassword;
 
 typedef struct {

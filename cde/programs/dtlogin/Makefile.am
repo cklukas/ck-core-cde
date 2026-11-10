@@ -6,7 +6,7 @@ EXTRA_DIST = tests/check-environment.py tests/check-session-path.py \
 	tests/check-greeter-catalog.py \
 	tests/check-xdmcp.py tests/check-authorization.py tests/check-manager.py \
 	tests/check-chooser.py tests/check-displays.py tests/check-config.py \
-	tests/scenarios.py
+	tests/check-password.py tests/scenarios.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-environment.py
@@ -17,6 +17,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-chooser.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-displays.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-config.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-password.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-greeter-catalog.py
 
 XDMDIR = $(CDE_LOGFILES_TOP)

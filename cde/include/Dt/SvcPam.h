@@ -33,4 +33,12 @@ int _DtSvcPamCloseSession(const char *service_name, const char *user,
 int _DtSvcPamSetcred(const char *service_name, const char *user,
 		     const char *display_name);
 
+struct pam_message;
+struct pam_response;
+int _DtSvcPamChangePassword(const char *service_name, const char *user,
+			    const char *display_name,
+			    int (*conv)(int, const struct pam_message **,
+					struct pam_response **, void *),
+			    void *appdata);
+
 #endif

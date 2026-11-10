@@ -217,6 +217,58 @@ int _DtSvcPamSetcred(const char *service_name, const char *user,
     return pam_setcred(pamh, PAM_ESTABLISH_CRED);
 }
 
+/**
+ * @brief Change a password that the account check found has expired.
+ *
+ * The password is changed through the password section of the PAM stack
+ * (pam_chauthtok with PAM_CHANGE_EXPIRED_AUTHTOK) and the questions the stack
+ * asks are put to the caller's conversation, which can ask the user for them:
+ * the current password if the stack wants it, the new password and its
+ * repetition, and what the modules have to say about the choice.  The handle
+ * of the authentication that returned PAM_NEW_AUTHTOK_REQD is the one that is
+ * used.  The handle is ended whatever the result: the login that follows the
+ * change is a new transaction, started by _DtSvcPamAuthenticate.
+ *
+ * @param service_name
+ * @param user
+ * @param display_name
+ * @param conv      the conversation function that answers the stack
+ * @param appdata   passed to conv
+ *
+ * @return See pam_chauthtok; PAM_SUCCESS when the password was changed.
+ */
+int _DtSvcPamChangePassword(const char *service_name, const char *user,
+			    const char *display_name,
+			    int (*conv)(int, const struct pam_message **,
+					struct pam_response **, void *),
+			    void *appdata)
+{
+    /* the structure stays valid whether PAM keeps a pointer or a copy */
+    static struct pam_conv caller_conv;
+    int status;
+
+    if (!conv) return PAM_CONV_ERR;
+
+    if ((status = PamStart(service_name, user, display_name)) != PAM_SUCCESS)
+	return status;
+
+    caller_conv.conv = conv;
+    caller_conv.appdata_ptr = appdata;
+
+    status = pam_set_item(pamh, PAM_CONV, &caller_conv);
+
+    if (status == PAM_SUCCESS) {
+	status = pam_chauthtok(pamh, PAM_CHANGE_EXPIRED_AUTHTOK);
+
+	/* the answers of the user must not be asked for again by the conversation of the login */
+	(void) pam_set_item(pamh, PAM_CONV, &pam_conv);
+    }
+
+    PamEnd(status);
+
+    return status;
+}
+
 /*****************************************************************************
  * login_conv():
  *

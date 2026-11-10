@@ -121,7 +121,8 @@ On a system with PAM, `dtlogin` checks passwords with the helper of `libDtSvc`
   successful `pam_authenticate`, so an expired or locked account and a refusal
   by `pam_nologin` stop the login; the `account` entries of the `dtlogin`
   service were never consulted before. A password that has to be changed is
-  reported as such (the greeter's expired-password dialog) and the login goes on.
+  reported as such and the greeter changes it (see below); it does not log the
+  user in.
 - Every authentication starts from a new handle. A handle kept the user of an
   earlier attempt, so after a failed attempt for one user the next attempt, for
   another one, checked the password against the first; the helper also read an
@@ -153,6 +154,14 @@ desktop loader with lines and allocation failures they must handle.
 failing allocations and rival peers (an XDMCP display of the same host, of
 another host and of the configuration file).
 
+`tests/check-password.py` runs the greeter dialogue of an expired password: the
+questions the manager sends for a stack that asks for the current password, the
+new password and its repetition, a message of a module, a user who gives up, a
+greeter that ends, damaged answers and questions longer than a message can hold.
+`lib/DtSvc/tests/check-svc-pam.py` has the scenarios of the helper (the questions
+reach the caller's conversation, the conversation of the login is set again, the
+handle is ended, the setup fails).
+
 `tests/check-chooser.py` runs the chooser socket, the choices and the client list
 with a real Unix socket: the file and its mode, the argument that names it, a
 report with and without a chooser, a 255 byte client address, the limit on the
@@ -167,6 +176,41 @@ allocations.
 
 Run against the code from before these changes, the same test files fail 26 of
 their 28 scenarios; the other two check results that did not change.
+
+## Expired passwords
+
+When the account check finds that the password has expired, the greeter shows
+its expired-password message. OK sets the new password in the login screen;
+Cancel returns to the login screen.
+
+- The questions of the PAM stack are put to the user in the greeter. `libDtSvc`
+  runs `pam_chauthtok` (`PAM_CHANGE_EXPIRED_AUTHTOK`) on the handle of the
+  authentication with a conversation of `dtlogin`: a hidden prompt (the
+  current password, the new password and its repetition, as the stack asks
+  for them) becomes a challenge of the login screen, a visible prompt a
+  challenge with an echoing field, and a message of a module (`Changing password
+  for ...`, the reason a new password was refused) a message box. A module
+  that refuses the new password and asks again is answered again; the user
+  can give up with Start Over. What is typed is not kept in the buffers of the
+  conversation after it has been passed on.
+- When the password has been changed the login screen says so and asks for
+  the user name again, so the user logs in with the new password; when it was
+  not, the screen says that too. The PAM handle of the change is ended either
+  way and the login that follows is a new transaction.
+- Before, choosing OK ended the greeter with a status that the greeter itself
+  replaced by the one of a normal login whenever no session had been chosen
+  in the menu: the user with the expired password was logged in without being
+  asked for a new one. The terminal that `dtlogin` was supposed to start for
+  `passwd` also depended on an `xterm` at a fixed path. The terminal and the
+  exit status are gone, and a user whose password has expired is not logged in
+  until it has been changed.
+- The shipped PAM stack (`config/dtlogin.src`) has a password section that
+  uses `pam_unix` (it denied every change with `pam_deny` before). A site that
+  changes passwords with another module, or with a quality check, lists it
+  there. A build that does not use the PAM helper of `libDtSvc` reports that
+  the password was not changed.
+- Two messages were added to the catalog (`Your password has been changed.`
+  and `Your password was not changed.`, set 2, numbers 17 and 18).
 
 ## Greeter exit and the PAM stack
 
@@ -189,6 +233,9 @@ at exit; the code from before the change fails all four scenarios.
   greeter with PAM is not part of the check suite; it was run by hand against
   real PAM (correct and wrong passwords, a second user after a failed attempt,
   expired and locked accounts, an expired password, empty passwords and a
-  `pam_nologin` refusal).
+  `pam_nologin` refusal). The change of an expired password was run by hand
+  against real `pam_unix` as well: the greeter answered the questions, the
+  password was changed, the old one was refused afterwards and the new one was
+  accepted.
 - Session-side signal handling, the chooser socket and allocation-failure paths
   are not yet reviewed.

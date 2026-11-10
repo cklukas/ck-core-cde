@@ -1619,20 +1619,18 @@ RespondDialogCB(
   } 
   else if (w == passwd_message)
   {
-    if (reason->reason == XmCR_OK)
-    {
-      CleanupAndExit(w, NOTIFY_PASSWD_EXPIRED);
-    } 
-    else
-    {
-  ResponseExpassword *r= (ResponseExpassword *)buf;
+   /*
+    * OK: the user sets the new password now, through the questions that
+    * follow. Cancel: back to the login screen.
+    */
+    ResponseExpassword *r= (ResponseExpassword *)buf;
 
-  r->hdr.opcode = REQUEST_OP_EXPASSWORD;
-  r->hdr.reserved = 0;
-  r->hdr.length = sizeof(*r);
+    r->hdr.opcode = REQUEST_OP_EXPASSWORD;
+    r->hdr.reserved = 0;
+    r->hdr.length = sizeof(*r);
+    r->change = (reason->reason == XmCR_OK);
 
-  TellRequester(buf, (size_t) r->hdr.length);
-    }
+    TellRequester(buf, (size_t) r->hdr.length);
   }
   else if (w == hostname_message)
   {

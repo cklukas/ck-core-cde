@@ -146,6 +146,7 @@ static int sia_exit_proc_reg = FALSE;
 #define GREET_STATE_USERNAME          9
 #define GREET_STATE_CHALLENGE        10
 #define GREET_STATE_FORM             11
+#define GREET_STATE_CHPASSWORD       12
 
 #ifndef DEF_SESSION
 #define DEF_SESSION CDE_INSTALLATION_TOP "/bin/Xsession"
@@ -1266,11 +1267,10 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
     char        currentdir[PATH_MAX+1];
     char	*failsafeArgv[20];
     char	*user;			/* users name 			   */
-    char 	*lang, *font;		/* failsafe LANG and font	   */
+    char 	*font;			/* failsafe font		   */
 
     int	pid;
     int		failsafe = FALSE;	/* do we run the failsafe session? */
-    int		password = FALSE;	/* do we run /bin/passwd?	   */
     int		i;
     FILE	*lastsession;
     char 	lastsessfile[MAXPATHLEN];
@@ -1288,7 +1288,6 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 	for (f = verify->argv; *f; f++) {
 		Debug ("%s ", *f);
 		if ( strcmp(*f, "failsafe") == 0) failsafe = TRUE;
-		if ( strcmp(*f, "password") == 0) failsafe = password = TRUE;
 	}
 	Debug ("; ");
     }
@@ -1613,60 +1612,19 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 	 */
 	    
 	font = NULL;
-	lang = getEnv (verify->userEnviron, "LANG");
 
 
 
 	i = 0;
-	if ( password ) {
-#if defined(_AIX)
-	    failsafeArgv[i++] = "/usr/bin/X11/aixterm";
-#elif defined(sun)
-	    failsafeArgv[i++] = "/usr/openwin/bin/xterm";
-#elif defined(__OpenBSD__)
-	    failsafeArgv[i++] = "/usr/X11R6/bin/xterm";
-#elif defined(__NetBSD__)
-	    failsafeArgv[i++] = "/usr/X11R7/bin/xterm";
-#elif defined(__FreeBSD__)
-	    failsafeArgv[i++] = "/usr/local/bin/xterm";
-#else
-	    failsafeArgv[i++] = "/usr/bin/X11/xterm";
-#endif
-	    failsafeArgv[i++] = "-geometry";
-	    failsafeArgv[i++] = "80x10";
-	    failsafeArgv[i++] = "-bg";
-	    failsafeArgv[i++] = "white";
-	    failsafeArgv[i++] = "-fg";
-	    failsafeArgv[i++] = "black";
-#ifdef _AIX
-	    /* aixterm requires -lang option. */
-	    failsafeArgv[i++] = "-lang";
-	    failsafeArgv[i++] = lang;
-#else /* _AIX */
-	    failsafeArgv[i++] = "-fn";
-
-	    if (font == NULL) font = "fixed";
-	    failsafeArgv[i++] = font;
-#endif /* _AIX */
-
-	    failsafeArgv[i++] = "-e";
-	    failsafeArgv[i++] = "/bin/passwd";
-#if defined(__PASSWD_ETC)
-	    failsafeArgv[i++] = "-n";
-#endif
-	    failsafeArgv[i++] = getEnv (verify->userEnviron, "USER");
-	}
-	else {
-	    failsafeArgv[i++] = d->failsafeClient;
+	failsafeArgv[i++] = d->failsafeClient;
 #ifdef sun 
-	    failsafeArgv[i++] = "-C";
+	failsafeArgv[i++] = "-C";
 #endif
-	    failsafeArgv[i++] = "-ls";
+	failsafeArgv[i++] = "-ls";
 
-	    if (font != NULL) {
-		failsafeArgv[i++] = "-fn";
-		failsafeArgv[i++] = font;
-	    }
+	if (font != NULL) {
+	    failsafeArgv[i++] = "-fn";
+	    failsafeArgv[i++] = font;
 	}
 
 	failsafeArgv[i] = 0;
@@ -2283,9 +2241,6 @@ RunGreeter( struct display *d, struct greet_info *greet,
 	    case NOTIFY_FAILSAFE:
 	        greet->string = "failsafe";
 		break;
-	    case NOTIFY_PASSWD_EXPIRED:
-	        greet->string = "password";
-		break;
 	    case NOTIFY_DTLITE:
 	    case NOTIFY_DT:
 	    case NOTIFY_OK:
@@ -2304,7 +2259,6 @@ RunGreeter( struct display *d, struct greet_info *greet,
 
 	    switch (notify_dt) {
 	    case NOTIFY_FAILSAFE:
-	    case NOTIFY_PASSWD_EXPIRED:
 	    case NOTIFY_DTLITE:
 	    case NOTIFY_DT:
 	    case NOTIFY_OK:
@@ -2410,6 +2364,242 @@ RunGreeter( struct display *d, struct greet_info *greet,
 }
 
 /*****************************************************************************
+* Strings of the greeter
+*
+*  A response carries its strings as offsets into the message.  Only a string
+*  that starts inside the message and ends before its end is used.
+*****************************************************************************/
+
+static char *
+ResponseString(
+  ResponseHeader *phdr,
+  unsigned int offset)
+{
+  char *base = (char *)phdr;
+
+  if (offset < sizeof(*phdr) || offset >= phdr->length ||
+      memchr(base + offset, '\0', phdr->length - offset) == NULL)
+    return(NULL);
+
+  return(base + offset);
+}
+
+#ifdef HAS_PAM_LIBRARY
+
+/*****************************************************************************
+* Changing an expired password
+*
+*  The questions of the PAM stack are asked of the user in the greeter: a
+*  prompt becomes a challenge, a message of the modules a message box.  What
+*  the user types is held only for as long as it takes to hand it to PAM.
+*****************************************************************************/
+
+struct password_change {
+  struct greet_state *state;    /* the buffers of the conversation with dtgreet */
+  int gone;                     /* dtgreet ended */
+  int cleared;                  /* the user cleared the screen: the change is given up */
+};
+
+/*
+ * Wait for a response of the kind asked for.  FALSE when dtgreet ended or the
+ * user gave up.
+ */
+static int
+WaitForGreeter(
+  struct password_change *change,
+  int opcode)
+{
+  ResponseHeader *r = change->state->response;
+
+  for (;;)
+  {
+    if (!AskGreeter(NULL, (char *)r, REQUEST_LIM_MAXLEN))
+    {
+      change->gone = TRUE;
+      return(FALSE);
+    }
+    if (r->opcode == opcode)
+      return(TRUE);
+    if (r->opcode == REQUEST_OP_CLEAR)
+    {
+      change->cleared = TRUE;
+      return(FALSE);
+    }
+    Debug("Password change: ignored response opcode %d\n", r->opcode);
+  }
+}
+
+/* Copy as much of TEXT as fits behind the header of a request of the greeter. */
+static unsigned short
+PutRequestText(
+  RequestHeader *r,
+  size_t offset,
+  const char *text)
+{
+  size_t room = REQUEST_LIM_MAXLEN - offset - 1;
+  size_t length = text ? strnlen(text, room) : 0;
+
+  memcpy((char *)r + offset, text, length);
+  ((char *)r)[offset + length] = '\0';
+  return((unsigned short)(offset + length + 1));
+}
+
+/* Ask the user a question; the answer is a copy for PAM, NULL if there is none. */
+static char *
+AskUser(
+  struct password_change *change,
+  const char *prompt,
+  int echo)
+{
+  RequestChallenge *r = (RequestChallenge *)change->state->request;
+  ResponseChallenge *a = (ResponseChallenge *)change->state->response;
+  char *text, *answer = NULL;
+
+  r->hdr.opcode = REQUEST_OP_CHALLENGE;
+  r->hdr.reserved = 0;
+  r->bEcho = echo;
+  r->idMC = 0;
+  r->offUserNameSeed = 0;
+  r->offChallenge = sizeof(*r);
+  r->hdr.length = PutRequestText(&r->hdr, sizeof(*r), prompt);
+
+  TellGreeter(&r->hdr);
+
+  if (WaitForGreeter(change, REQUEST_OP_CHALLENGE))
+  {
+    if ((text = ResponseString(change->state->response, a->offResponse)) != NULL &&
+        (answer = strdup(text)) != NULL)
+      Debug("Password change: answer received\n");
+  }
+
+ /*
+  * Do not leave what was typed in the buffer of the conversation.
+  */
+  memset(a, 0, REQUEST_LIM_MAXLEN);
+  return(answer);
+}
+
+/* Show the user what a module of the stack has to say and wait for the box to be closed. */
+static int
+TellUser(
+  struct password_change *change,
+  const char *message)
+{
+  RequestMessage *r = (RequestMessage *)change->state->request;
+
+  r->hdr.opcode = REQUEST_OP_MESSAGE;
+  r->hdr.reserved = 0;
+  r->idMC = 0;
+  r->offMessage = sizeof(*r);
+  r->hdr.length = PutRequestText(&r->hdr, sizeof(*r), message);
+
+  TellGreeter(&r->hdr);
+
+  return(WaitForGreeter(change, REQUEST_OP_MESSAGE));
+}
+
+static int
+PasswordConversation(
+  int num_msg,
+  const struct pam_message **msg,
+  struct pam_response **response,
+  void *appdata)
+{
+  struct password_change *change = appdata;
+  struct pam_response *answers;
+  int k;
+
+  if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG || msg == NULL ||
+      response == NULL)
+    return(PAM_CONV_ERR);
+
+  answers = calloc(num_msg, sizeof(struct pam_response));
+  if (answers == NULL)
+    return(PAM_BUF_ERR);
+
+  for (k = 0; k < num_msg; k++)
+  {
+    switch (msg[k]->msg_style)
+    {
+      case PAM_PROMPT_ECHO_OFF:
+      case PAM_PROMPT_ECHO_ON:
+        answers[k].resp = AskUser(change, msg[k]->msg,
+                                  msg[k]->msg_style == PAM_PROMPT_ECHO_ON);
+        if (answers[k].resp == NULL)
+          goto failed;
+        break;
+
+      case PAM_ERROR_MSG:
+      case PAM_TEXT_INFO:
+        if (!TellUser(change, msg[k]->msg))
+          goto failed;
+        break;
+
+      default:
+        goto failed;
+    }
+  }
+
+  *response = answers;
+  return(PAM_SUCCESS);
+
+failed:
+  for (k = 0; k < num_msg; k++)
+  {
+    if (answers[k].resp != NULL)
+    {
+      memset(answers[k].resp, 0, strlen(answers[k].resp));
+      free(answers[k].resp);
+    }
+  }
+  free(answers);
+  return(PAM_CONV_ERR);
+}
+
+#endif /* HAS_PAM_LIBRARY */
+
+/*
+ * The user chose to set a new password. Returns the state that follows: the
+ * message that says how it went, or the end of the greeter.
+ */
+static void
+ChangeExpiredPassword(
+  struct display *d,
+  struct greet_info *greet,
+  struct greet_state *state)
+{
+#ifdef HAS_PAM_LIBRARY
+  struct password_change change = { state, FALSE, FALSE };
+  int status;
+
+  status = _DtSvcPamChangePassword(progName, greet->name, d->name,
+                                   PasswordConversation, &change);
+
+  if (change.gone)
+  {
+    state->id = GREET_STATE_EXIT;
+    state->waitForResponse = FALSE;
+    return;
+  }
+
+  state->vf = (status == PAM_SUCCESS) ? VF_PASSWD_CHANGED : VF_PASSWD_NOT_CHANGED;
+#else
+  state->vf = VF_PASSWD_NOT_CHANGED;
+#endif /* HAS_PAM_LIBRARY */
+
+ /*
+  * The user logs in again with the new password, or tries again.
+  */
+  if (greet->password)
+  {
+    memset(greet->password, 0, strlen(greet->password));
+    free(greet->password);
+    greet->password = NULL;
+  }
+  state->id = GREET_STATE_ERRORMESSAGE;
+}
+
+/*****************************************************************************
 * ManageGreeter
  
   State transitions
@@ -2433,7 +2623,14 @@ RunGreeter( struct display *d, struct greet_info *greet,
   AUTHENTICATE -> EXPASSWORD: 
     User passed authentication, but the their password has expired.
     Display old password message. This message allows the user to 
-    change their password by starting a getty and running passwd(1).  
+    change their password.
+
+  EXPASSWORD -> CHPASSWORD:
+    The user answered the old password message. If the answer was OK the
+    PAM stack changes the password and puts its questions to the user
+    through the greeter (a prompt becomes a challenge, a message of a module
+    a message box); the result is shown as an error message. If it was Cancel
+    the greeter shows the login screen again.
 
   AUTHENTICATE -> BAD_HOSTNAME:
     User passed authentication, but the their hostname is empty.
@@ -2548,12 +2745,15 @@ ManageGreeter( struct display *d, struct greet_info *greet,
         */
         Debug("GREET_STATE_ENTER\n");
 
-        state->request = (RequestHeader *)malloc(REQUEST_LIM_MAXLEN);
-        state->response= (ResponseHeader *)malloc(REQUEST_LIM_MAXLEN);
+        state->request = (RequestHeader *)calloc(1, REQUEST_LIM_MAXLEN);
+        state->response= (ResponseHeader *)calloc(1, REQUEST_LIM_MAXLEN);
         state->authenticated = FALSE;
         state->msg = NULL;
 
-        state->id = GREET_STATE_USERNAME;
+        if (state->request == NULL || state->response == NULL)
+          state->id = GREET_STATE_EXIT;
+        else
+          state->id = GREET_STATE_USERNAME;
       }
       break;
 
@@ -2653,18 +2853,34 @@ ManageGreeter( struct display *d, struct greet_info *greet,
 
         r = (ResponseChallenge *)state->response;
 
-        if (greet->name == NULL)
         {
-          greet->name = strdup(((char *)r) + r->offResponse);
-          if (strlen(greet->name) == 0)
+          char *text = ResponseString(state->response, r->offResponse);
+
+          if (text == NULL)
+            text = "";
+
+          if (greet->name == NULL)
           {
-            state->id = GREET_STATE_USERNAME;
-            break;
+            greet->name = strdup(text);
+            if (greet->name == NULL || strlen(greet->name) == 0)
+            {
+              if (greet->name)
+              {
+                free(greet->name); greet->name = NULL;
+              }
+              state->id = GREET_STATE_USERNAME;
+              break;
+            }
           }
-        }
-        else 
-        { 
-          greet->password = strdup(((char *)r) + r->offResponse);
+          else 
+          { 
+            greet->password = strdup(text);
+            if (greet->password == NULL)
+            {
+              state->id = GREET_STATE_USERNAME;
+              break;
+            }
+          }
         }
 
         if (state->msg)
@@ -2680,7 +2896,6 @@ ManageGreeter( struct display *d, struct greet_info *greet,
         state->vf = Authenticate(d, greet->name, greet->password, &state->msg);
 
         if (state->vf == VF_OK || 
-            state->vf == VF_PASSWD_AGED || 
             state->vf == VF_BAD_HOSTNAME)
         {
           state->authenticated = TRUE;
@@ -2751,6 +2966,8 @@ ManageGreeter( struct display *d, struct greet_info *greet,
           case VF_BAD_AID:       SETMC(msg, BAD_AID); break;
           case VF_BAD_AFLAG:     SETMC(msg, BAD_AFLAG); break;
           case VF_NO_LOGIN:      SETMC(msg, NO_LOGIN); break;
+          case VF_PASSWD_CHANGED:     SETMC(msg, PASSWD_CHANGED); break;
+          case VF_PASSWD_NOT_CHANGED: SETMC(msg, PASSWD_NOT_CHANGED); break;
           case VF_MESSAGE: msg.id=0; msg.def=state->msg; break;
           default: msg.id=0; msg.def=""; break;
         }
@@ -2828,7 +3045,24 @@ ManageGreeter( struct display *d, struct greet_info *greet,
         TellGreeter((RequestHeader *)r);
         state->waitForResponse = TRUE;
 
-        state->id = GREET_STATE_USERNAME;
+        state->id = GREET_STATE_CHPASSWORD;
+      }
+      break;
+
+    case GREET_STATE_CHPASSWORD:
+      {
+       /*
+        * The user answered the password expired message: set the new
+        * password now, or go back to the login screen.
+        */
+        ResponseExpassword *r = (ResponseExpassword *)state->response;
+
+        Debug("GREET_STATE_CHPASSWORD\n");
+
+        if (r->hdr.length >= sizeof(*r) && r->change)
+          ChangeExpiredPassword(d, greet, state);
+        else
+          state->id = GREET_STATE_USERNAME;
       }
       break;
 

@@ -125,6 +125,8 @@
 #define MC_LOG_REREADSRV	14
 #define MC_LOG_REREADACC	15
 #define MC_NO_MEMORY		16
+#define MC_PASSWD_CHANGED	17
+#define MC_PASSWD_NOT_CHANGED	18
 
 #define MC_HELP_SET		3
 #define MC_HELP			1
@@ -254,6 +256,14 @@ or your current password has expired.\n\
 After you set your password, you must log in again\n\
 using the new password.\
 "
+
+#define MC_DEF_PASSWD_CHANGED	\
+"Your password has been changed.\n\
+Please log in again using the new password."
+
+#define MC_DEF_PASSWD_NOT_CHANGED	\
+"Your password was not changed.\n\
+Please try again, or contact your system administrator."
 
     
 /*

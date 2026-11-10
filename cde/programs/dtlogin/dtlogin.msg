@@ -146,6 +146,10 @@ using the new password.
 14 Rereading servers file %1$s\n
 15 Rereading access file %1$s\n
 16 dtlogin: out of memory in routine\n
+17 Your password has been changed.\n\
+Please log in again using the new password.
+18 Your password was not changed.\n\
+Please try again, or contact your system administrator.
 
 
 $set 3

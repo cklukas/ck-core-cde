@@ -69,6 +69,16 @@
   crash the daemon or make it allocate without bound. The routines of versions
   2 to 4 are maintained in `rtable{2,3,4}_xdr.c` instead of being generated.
   Covered by `make -C lib/csa check` (17 cases under the sanitizers).
+- dtlogin: an expired password is changed in the login screen. The greeter
+  puts the questions of the PAM password section (current and new password,
+  messages of the modules) to the user, `libDtSvc` runs `pam_chauthtok` with a
+  conversation of `dtlogin` (`_DtSvcPamChangePassword`), and the user logs in
+  with the new password. Before, OK in the expired-password message logged the
+  user in without a new password (the greeter replaced its exit status when no
+  session was chosen), and the terminal for `passwd` it was meant to start
+  needed an `xterm` at a fixed path; both are gone. The shipped PAM service
+  file has a `pam_unix` password section instead of `pam_deny`. Covered by
+  `programs/dtlogin/tests/check-password.py` and `lib/DtSvc/tests/check-svc-pam.py`.
 - dtlogin: harden the readers of the configuration files. The `Xaccess` reader
   no longer overruns its word buffer, keeps the entries after one whose display
   does not resolve, matches display patterns in time proportional to their

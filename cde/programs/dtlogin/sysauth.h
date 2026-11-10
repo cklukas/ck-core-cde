@@ -73,6 +73,8 @@
 #define VF_BAD_HOSTNAME		11
 #define VF_CHALLENGE            12
 #define VF_MESSAGE              13
+#define VF_PASSWD_CHANGED       14
+#define VF_PASSWD_NOT_CHANGED   15
 
 /****************************************************************************
  *

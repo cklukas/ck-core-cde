@@ -35,6 +35,7 @@ struct pam_conv {
 #define PAM_BUF_ERR 5
 #define PAM_PERM_DENIED 6
 #define PAM_AUTH_ERR 7
+#define PAM_AUTHTOK_ERR 20
 #define PAM_NEW_AUTHTOK_REQD 12
 #define PAM_ACCT_EXPIRED 13
 #define PAM_CONV_ERR 19
@@ -42,6 +43,7 @@ struct pam_conv {
 #define PAM_USER 2
 #define PAM_TTY 3
 #define PAM_RHOST 4
+#define PAM_CONV 5
 #define PAM_PROMPT_ECHO_OFF 1
 #define PAM_PROMPT_ECHO_ON 2
 #define PAM_ERROR_MSG 3
@@ -49,6 +51,7 @@ struct pam_conv {
 #define PAM_MAX_NUM_MSG 32
 #define PAM_DISALLOW_NULL_AUTHTOK 0x0001U
 #define PAM_ESTABLISH_CRED 0x0002U
+#define PAM_CHANGE_EXPIRED_AUTHTOK 0x0020U
 int pam_start(const char *, const char *, const struct pam_conv *, pam_handle_t **);
 int pam_end(pam_handle_t *, int);
 int pam_set_item(pam_handle_t *, int, const void *);
@@ -57,6 +60,7 @@ int pam_acct_mgmt(pam_handle_t *, int);
 int pam_setcred(pam_handle_t *, int);
 int pam_open_session(pam_handle_t *, int);
 int pam_close_session(pam_handle_t *, int);
+int pam_chauthtok(pam_handle_t *, int);
 #endif
 """
 
@@ -83,8 +87,9 @@ static char *counted_strdup(const char *s)
 #define calloc(n, size) counted_calloc(n, size)
 #define strdup(s) counted_strdup(s)
 
+static int (*login_conv_ptr)(int, const struct pam_message **, struct pam_response **, void *);
 /* the stand-in for the PAM library: handles that remember their items */
-struct pam_handle { int live; char service[64], user[64], tty[64], rhost[64]; const struct pam_conv *conv; };
+struct pam_handle { int live; char service[64], user[64], tty[64], rhost[64]; const struct pam_conv *conv; struct pam_conv conv_copy; };
 #define MAX_HANDLES 16
 static struct pam_handle handles[MAX_HANDLES];
 static int nhandles, starts, ends, live_handles;
@@ -98,6 +103,11 @@ static struct {
     int auth_calls, acct_calls, end_status;
     char order[32];
     int conv_result;
+    int change_styles[4], nchange_styles;          /* what the password section asks */
+    int change_status, change_flags, change_calls; /* its result, the flags and the number of calls */
+    char change_answer[4][64]; int change_conv_result;
+    void *change_appdata; int conv_is_login;       /* what pam_chauthtok found as the conversation */
+    int conv_sets[4], nconv_sets;                  /* the conversations that were set: 1 the login's, 2 the caller's */
 } pam;
 static void note(char c) { size_t n = strlen(pam.order); if (n + 1 < sizeof pam.order) pam.order[n] = c; }
 static void reset(void)
@@ -134,6 +144,12 @@ int pam_set_item(pam_handle_t *h, int item, const void *value)
     if (!h->live) { fprintf(stderr, "failed: pam_set_item on a handle that was ended\n"); abort(); }
     if (item == pam.set_item_fail_item) return PAM_SYSTEM_ERR;
     switch (item) {
+        case PAM_CONV: {
+            const struct pam_conv *c = value;
+            h->conv_copy = *c; h->conv = &h->conv_copy;      /* Linux-PAM keeps a copy */
+            if (pam.nconv_sets < 4) pam.conv_sets[pam.nconv_sets++] = (c->conv == login_conv_ptr) ? 1 : 2;
+            break;
+        }
         case PAM_SERVICE: snprintf(h->service, sizeof h->service, "%s", (const char *) value); break;
         case PAM_USER: snprintf(h->user, sizeof h->user, "%s", (const char *) value); break;
         case PAM_TTY: snprintf(h->tty, sizeof h->tty, "%s", (const char *) value); break;
@@ -177,12 +193,39 @@ int pam_authenticate(pam_handle_t *h, int flags)
     }
     return pam.auth_status;
 }
+int pam_chauthtok(pam_handle_t *h, int flags)
+{
+    struct pam_message messages[4];
+    const struct pam_message *pointers[4];
+    struct pam_response *responses = NULL;
+    int i;
+    pam.change_calls++; pam.change_flags = flags; note('h');
+    pam.conv_is_login = (h->conv->conv == login_conv_ptr);
+    pam.change_appdata = h->conv->appdata_ptr;
+    for (i = 0; i < pam.nchange_styles; i++) {
+        messages[i].msg_style = pam.change_styles[i]; messages[i].msg = "New password: ";
+        pointers[i] = &messages[i];
+    }
+    if (pam.nchange_styles > 0) {
+        pam.change_conv_result = h->conv->conv(pam.nchange_styles, pointers, &responses, h->conv->appdata_ptr);
+        if (pam.change_conv_result != PAM_SUCCESS) return PAM_AUTHTOK_ERR;
+        for (i = 0; i < pam.nchange_styles; i++) {
+            if (responses[i].resp) {
+                snprintf(pam.change_answer[i], sizeof pam.change_answer[i], "%s", responses[i].resp);
+                free(responses[i].resp);
+            }
+        }
+        free(responses);
+    }
+    return pam.change_status;
+}
 int pam_acct_mgmt(pam_handle_t *h, int flags) { (void) h; (void) flags; pam.acct_calls++; note('m'); return pam.acct_status; }
 int pam_setcred(pam_handle_t *h, int flags) { (void) h; (void) flags; note('c'); return pam.session_status; }
 int pam_open_session(pam_handle_t *h, int flags) { (void) h; (void) flags; note('o'); return pam.session_status; }
 int pam_close_session(pam_handle_t *h, int flags) { (void) h; (void) flags; note('x'); return pam.session_status; }
 
 #include "SvcPam.c"
+__attribute__((constructor)) static void find_login_conv(void) { login_conv_ptr = pam_conv.conv; }
 
 /* a new start: the stand-in and the state of the helper (which a process keeps for its life) */
 static void begin(void) { reset(); pamh = NULL; saved_user_passwd = NULL; }
@@ -356,7 +399,95 @@ static int allocation_failures_leak_nothing(void)
     return 0;
 }
 
+struct caller { int calls, messages; char answer[64]; void *seen; };
+static int caller_conv(int n, const struct pam_message **msg, struct pam_response **resp, void *data)
+{
+    struct caller *c = data;
+    struct pam_response *r = calloc(n, sizeof *r);
+    int i;
+    c->calls++; c->messages = n;
+    for (i = 0; i < n; i++)
+        if (msg[i]->msg_style == PAM_PROMPT_ECHO_OFF || msg[i]->msg_style == PAM_PROMPT_ECHO_ON)
+            r[i].resp = strdup("newsecret");
+    *resp = r;
+    return PAM_SUCCESS;
+}
+static int refusing_conv(int n, const struct pam_message **msg, struct pam_response **resp, void *data)
+{ (void) n; (void) msg; (void) resp; (void) data; return PAM_CONV_ERR; }
+
+static int password_change_puts_the_questions_to_the_caller(void)
+{
+    struct caller c;
+    begin();
+    memset(&c, 0, sizeof c);
+    pam.acct_status = PAM_NEW_AUTHTOK_REQD;
+    CHECK(authenticate("alice", "secret") == PAM_NEW_AUTHTOK_REQD);
+    pam.change_styles[0] = PAM_PROMPT_ECHO_OFF; pam.change_styles[1] = PAM_PROMPT_ECHO_OFF;
+    pam.change_styles[2] = PAM_TEXT_INFO; pam.nchange_styles = 3;
+    CHECK(_DtSvcPamChangePassword("dtlogin", "alice", ":0", caller_conv, &c) == PAM_SUCCESS);
+    CHECK(pam.change_calls == 1 && pam.change_flags == PAM_CHANGE_EXPIRED_AUTHTOK);
+    CHECK(c.calls == 1 && c.messages == 3 && pam.change_appdata == &c && !pam.conv_is_login);
+    CHECK(!strcmp(pam.change_answer[0], "newsecret") && !strcmp(pam.change_answer[1], "newsecret"));
+    /* the handle of the login was used and is over: the login that follows is a new transaction */
+    CHECK(starts == 1 && !strcmp(pam.order, "samhe") && HELD() == NULL && live_handles == 0);
+    CHECK(pam.end_status == PAM_SUCCESS);
+    return 0;
+}
+static int password_change_gives_the_login_conversation_back(void)
+{
+    begin();
+    CHECK(authenticate("alice", "secret") == PAM_SUCCESS);
+    CHECK(_DtSvcPamChangePassword("dtlogin", "alice", ":0", refusing_conv, NULL) == PAM_SUCCESS);
+    /* the caller's conversation was set for the call, the conversation of the login after it */
+    CHECK(pam.nconv_sets == 2 && pam.conv_sets[0] == 2 && pam.conv_sets[1] == 1);
+    return 0;
+}
+static int password_change_that_fails(void)
+{
+    struct caller c;
+    begin();
+    memset(&c, 0, sizeof c);
+    CHECK(authenticate("alice", "secret") == PAM_SUCCESS);
+    pam.change_status = PAM_AUTHTOK_ERR;
+    CHECK(_DtSvcPamChangePassword("dtlogin", "alice", ":0", caller_conv, &c) == PAM_AUTHTOK_ERR);
+    CHECK(HELD() == NULL && live_handles == 0 && pam.end_status == PAM_AUTHTOK_ERR);
+    begin();
+    CHECK(authenticate("alice", "secret") == PAM_SUCCESS);
+    pam.change_styles[0] = PAM_PROMPT_ECHO_OFF; pam.nchange_styles = 1;
+    CHECK(_DtSvcPamChangePassword("dtlogin", "alice", ":0", refusing_conv, NULL) == PAM_AUTHTOK_ERR);
+    CHECK(pam.change_conv_result == PAM_CONV_ERR && HELD() == NULL && live_handles == 0);
+    return 0;
+}
+static int password_change_needs_a_conversation_and_a_handle(void)
+{
+    begin();
+    CHECK(_DtSvcPamChangePassword("dtlogin", "alice", ":0", NULL, NULL) == PAM_CONV_ERR);
+    CHECK(starts == 0 && pam.change_calls == 0);
+    begin();
+    pam.start_status = PAM_SYSTEM_ERR;
+    CHECK(_DtSvcPamChangePassword("dtlogin", "alice", ":0", refusing_conv, NULL) == PAM_SYSTEM_ERR);
+    CHECK(pam.change_calls == 0 && HELD() == NULL);
+    begin();
+    CHECK(authenticate("alice", "secret") == PAM_SUCCESS);
+    pam.set_item_fail_item = PAM_CONV;
+    CHECK(_DtSvcPamChangePassword("dtlogin", "alice", ":0", refusing_conv, NULL) == PAM_SYSTEM_ERR);
+    CHECK(pam.change_calls == 0 && HELD() == NULL && live_handles == 0);
+    return 0;
+}
+static int password_change_without_a_login_starts_a_handle(void)
+{
+    begin();
+    CHECK(_DtSvcPamChangePassword("dtlogin", "alice", ":0", refusing_conv, NULL) == PAM_SUCCESS);
+    CHECK(starts == 1 && !strcmp(handles[0].user, "alice") && pam.change_calls == 1 && live_handles == 0);
+    return 0;
+}
+
 static struct { const char *name; int (*run)(void); } scenarios[] = {
+    {"password_change_puts_the_questions_to_the_caller", password_change_puts_the_questions_to_the_caller},
+    {"password_change_gives_the_login_conversation_back", password_change_gives_the_login_conversation_back},
+    {"password_change_that_fails", password_change_that_fails},
+    {"password_change_needs_a_conversation_and_a_handle", password_change_needs_a_conversation_and_a_handle},
+    {"password_change_without_a_login_starts_a_handle", password_change_without_a_login_starts_a_handle},
     {"success", success},
     {"wrong_password_ends_the_handle", wrong_password_ends_the_handle},
     {"no_password", no_password},

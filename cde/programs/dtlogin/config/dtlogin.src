@@ -6,7 +6,9 @@ auth required pam_unix.so
 account required pam_nologin.so
 account required pam_unix.so
 
-# Not every system ships pam_lastlog: a missing module is not an error.
+XCOMM Not every system ships pam_lastlog: a missing module is not an error.
 -session optional pam_lastlog.so
 
-password required pam_deny.so
+XCOMM The password section is used when the account check reports that the
+XCOMM password has expired and the user sets a new one in the login screen.
+password required pam_unix.so obscure
