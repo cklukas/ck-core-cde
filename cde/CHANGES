@@ -45,6 +45,10 @@
   position-file initialization falls back to the numeric user ID when account
   lookup is unavailable. Covered by focused path/control and packet sanitizer
   cases.
+- rpc.cmsd: an update request that carries an attribute with no value and a name
+  the calendar has not seen no longer crashes the daemon (the type of the missing
+  value was read); the attribute is skipped. One more case in
+  `programs/dtcm/server/tests` (34 in all).
 - libDtSvc and dtspcd: accept only a whole termios description. The string that
   carries the settings of a terminal must name the protocol version, have all
   eight fields and name only flags, speeds and control characters that exist,

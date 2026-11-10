@@ -38,6 +38,9 @@ before data is used.
 - A calendar whose file cannot be set up for the extensible format because
   memory ran out is reported as a failure instead of being freed twice, and the
   temporary log of a garbage collection that fails is closed.
+- An attribute of an update request that has no value and a name the calendar
+  does not know is skipped instead of being read for its type; an attribute that
+  exists loses its value, as before.
 - A date criterion that is not a date, a Classification or Type attribute
   without a value, an unterminated reference identifier and an offset beyond the
   range of a calendar date are handled instead of dereferenced.
@@ -121,10 +124,11 @@ The cases cover the request decoders, calendar names and attribute handling, the
 log writers and reader with strings of all sizes, creating, updating and
 deleting entries and calendars, and the privilege changes. Run against the code
 from before the first of these changes, the same test source fails 27 of its 29
-cases; the other two check results that did not change. Four more cases check the
+cases; the other two check results that did not change. Five more cases check the
 rebuilt text of a long recurrence rule, the size, check, flush and registration
-requests of a user who has no rights to a calendar, and the closing of the
-temporary log of a failed dump; all four fail on the previous sources.
+requests of a user who has no rights to a calendar, the closing of the
+temporary log of a failed dump and attributes without a value; all five fail on
+the previous sources.
 
 `tests/loop-test.c` runs the service loop with a UDP service on the loopback
 interface while another process sends it the four signals: the work they ask

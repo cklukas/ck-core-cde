@@ -1617,6 +1617,74 @@ static void case_dump_closes_descriptor(void)
   free(dump_name);
 }
 
+
+/* ---- attributes without a value ---------------------------------------------------- */
+
+/* An attribute of a request may have no value, also when its name is new. */
+static void case_null_attribute_values(void)
+{
+  struct svc_req rq;
+  cms_create_args cargs;
+  cms_set_cal_attr_args sargs;
+  cms_insert_args iargs;
+  cms_update_args uargs;
+  cms_attribute attrs[3];
+  cms_entry_res *ires;
+  CSA_return_code *res;
+  cms_key key;
+  char *name = strdup("empty@testhost");
+
+  setup();
+  rq = request();
+  cargs = create_args(name, 0, NULL);
+  res = cms_create_calendar_5_svc(&cargs, &rq);
+  CHECK_CODE(*res, CSA_SUCCESS);
+  key = insert_entry(&rq, name, "an entry", NULL);
+
+  memset(attrs, 0, sizeof(attrs));
+  set_attribute(&attrs[0], "no-value-one", 0, NULL);
+  set_attribute(&attrs[1], "no-value-two", 40000, NULL);
+  set_attribute(&attrs[2], CSA_CAL_ATTR_CALENDAR_NAME, 0, NULL);
+  memset(&sargs, 0, sizeof(sargs));
+  sargs.cal = name;
+  sargs.num_attrs = 3;
+  sargs.attrs = attrs;
+  res = cms_set_calendar_attr_5_svc(&sargs, &rq);
+  CHECK(*res != CSA_SUCCESS);
+
+  /* in a new calendar */
+  {
+    char *other = strdup("empty2@testhost");
+
+    cargs = create_args(other, 3, attrs);
+    res = cms_create_calendar_5_svc(&cargs, &rq);
+    CHECK(*res != CSA_SUCCESS);
+    free(other);
+  }
+
+  memset(attrs, 0, sizeof(attrs));
+  set_attribute(&attrs[0], "entry-no-value", 0, NULL);
+  set_attribute(&attrs[1], CSA_ENTRY_ATTR_SUMMARY, 0, NULL);
+  memset(&iargs, 0, sizeof(iargs));
+  iargs.cal = name;
+  iargs.num_attrs = 2;
+  iargs.attrs = attrs;
+  ires = cms_insert_entry_5_svc(&iargs, &rq);
+  CHECK(ires->stat != CSA_SUCCESS);
+
+  memset(&uargs, 0, sizeof(uargs));
+  uargs.cal = name;
+  uargs.entry = key;
+  uargs.scope = CSA_SCOPE_ALL;
+  uargs.num_attrs = 2;
+  uargs.attrs = attrs;
+  /* a value that is not there removes the attribute; one that does not
+     exist has nothing to remove */
+  ires = cms_update_entry_5_svc(&uargs, &rq);
+  CHECK_CODE(ires->stat, CSA_SUCCESS);
+  free(name);
+}
+
 /* ---- the cases ------------------------------------------------------------ */
 
 static const struct {
@@ -1656,6 +1724,7 @@ static const struct {
   { "stranger-calendar-state", case_stranger_calendar_state },
   { "stranger-registration", case_stranger_registration },
   { "dump-closes-descriptor", case_dump_closes_descriptor },
+  { "null-attribute-values", case_null_attribute_values },
 };
 
 int main(int argc, char **argv)

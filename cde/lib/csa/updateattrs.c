@@ -79,6 +79,11 @@ _DtCmUpdateAttributes(
 			if (index < 0)
 				srcattrs[i].name.num = 0;
 
+			/* an attribute that is not there has no value to
+			 * remove, and a new one needs a value to get its type */
+			if (srcattrs[i].value == NULL)
+				continue;
+
 			if ((stat = _DtCmExtendNameTable(srcattrs[i].name.name,
 			    index > 0 ? index : 0, srcattrs[i].value->type,
 			    (caltbl == B_TRUE ? _DtCm_cal_name_tbl :
