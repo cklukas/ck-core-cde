@@ -97,7 +97,7 @@ if r.returncode:
 env = dict(os.environ)
 # No request may make the server allocate more than a message of the limits of
 # the protocol takes (16 MiB): the allocator ends the case at a larger one.
-env["ASAN_OPTIONS"] = "detect_leaks=0:abort_on_error=0:max_allocation_size_mb=64"
+env["ASAN_OPTIONS"] = "detect_leaks=1:abort_on_error=0:max_allocation_size_mb=64"
 env["UBSAN_OPTIONS"] = "halt_on_error=1:print_stacktrace=1"
 env["TTDB_TEST_DIR"] = str(work)
 cases = run([str(binary), "--list"], env=env).stdout.split()

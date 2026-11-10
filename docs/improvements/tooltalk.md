@@ -231,7 +231,10 @@ The numbers, lengths and pointers of a request are checked before they are used:
   on the way that reaches a table: after any successful request, a request with
   an object id of no partition answered with the freed string and freed it a
   second time, which ends a daemon that runs as root. The dispatcher clears
-  every pointer it has freed, and those two procedures start from none.
+  every pointer it has freed, and those two procedures start from none. It did not
+  free the properties that the four procedures that change the properties of an
+  object answer with (the delete answers with them every time, the others when
+  the caller is out of date), so the daemon lost the memory of every such reply.
 - An object id that has no key (no `|` in it, or characters above 127) decoded
   with a null pointer in `_tt_base64_decode`, and a character above 127 was a
   negative index of its table; both are digits that are not there now, and the
@@ -498,7 +501,8 @@ environment policy and the start environment of a message.
 
 `make -C lib/tt/bin/ttdbserverd check` does the same for the database server: it
 runs the real request dispatcher on requests it makes up, and a mutation of
-those requests, under the sanitizers. Every case runs on every build, including
+those requests, under the sanitizers, with the leak detector on: what a request
+allocates must be freed by the time the case ends. Every case runs on every build, including
 the two that need the database of a partition: a build in which NetISAM and the
 server disagree on the width of a long cannot make that database, and those
 cases fail.

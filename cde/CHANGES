@@ -120,6 +120,10 @@
   of indirect-query clients is bounded and expires, and the debug log of a
   report with a long client address no longer overflows its buffer. Covered by
   `programs/dtlogin/tests/check-chooser.py`.
+- rpc.ttdbserverd: the properties that `TT_SET_OBJ_PROPS`, `TT_SET_OBJ_PROP`,
+  `TT_ADD_OBJ_PROP` and `TT_DELETE_OBJ_PROP` answer with are freed after the
+  reply is sent; the daemon kept them, and the delete answers with them on every
+  call. The request tests of the daemon now run with the leak detector on.
 - ttsession: the observers of a notice sent with the disposition `TT_QUEUE` or
   `TT_START` no longer get it a second time as a failed message. A notice has no
   handler to queue the message for or to start, and `ttsession` failed it for

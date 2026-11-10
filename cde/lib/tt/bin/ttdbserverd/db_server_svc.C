@@ -990,15 +990,43 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 			break;
 			
 		    case TT_SET_OBJ_PROPS:
+			if (result) {
+				_tt_obj_props_results *res =
+					(_tt_obj_props_results *)result;
+
+				_tt_free_rpc_properties(res->properties);
+				memset(&res->properties, 0, sizeof(res->properties));
+			}
 			break;
 			
 		    case TT_SET_OBJ_PROP:
+			if (result) {
+				_tt_obj_props_results *res =
+					(_tt_obj_props_results *)result;
+
+				_tt_free_rpc_properties(res->properties);
+				memset(&res->properties, 0, sizeof(res->properties));
+			}
 			break;
 			
 		    case TT_ADD_OBJ_PROP:
+			if (result) {
+				_tt_obj_props_results *res =
+					(_tt_obj_props_results *)result;
+
+				_tt_free_rpc_properties(res->properties);
+				memset(&res->properties, 0, sizeof(res->properties));
+			}
 			break;
 			
 		    case TT_DELETE_OBJ_PROP:
+			if (result) {
+				_tt_obj_props_results *res =
+					(_tt_obj_props_results *)result;
+
+				_tt_free_rpc_properties(res->properties);
+				memset(&res->properties, 0, sizeof(res->properties));
+			}
 			break;
 			
 		    case TT_GET_OBJ_PROP:
