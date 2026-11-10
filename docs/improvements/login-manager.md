@@ -25,6 +25,28 @@ privileges only when that really worked.
 - A chooser connection that sends nothing is closed after a timeout instead of
   blocking the display manager.
 
+## Chooser
+
+The chooser lets a display that sent an indirect query pick the host that
+manages it. The chooser program runs on the manager's host and reports the
+choice back to the manager.
+
+- The manager listens for the report on a Unix domain socket in the
+  authorization directory (`dtlogin-chooser-<pid>`, mode `0600`) and passes its
+  path to the chooser in `-xdmaddress`. It used to listen on a TCP port that was
+  open on every interface, so any process and any host could answer for a
+  chooser. The socket is not inherited by the sessions the manager starts and
+  is removed when the manager stops.
+- A report is accepted only for a client whose display was started with a
+  chooser. Reports for other clients are dropped, and the host a client chose
+  is kept for the 15 seconds in which its display sends the next query. Before,
+  a report was dropped in every case, so the chosen host was never used.
+- The list of clients that sent an indirect query is limited to 256 entries and
+  an entry that is not followed up is dropped after ten minutes, so datagrams
+  with forged source addresses cannot make the manager grow without limit.
+- A chooser report that names a client address of any length no longer
+  overflows the buffer of the debug log.
+
 ## Authorization data
 
 - Authorization cookies come from `/dev/urandom` and nothing else. If the random
@@ -79,6 +101,11 @@ under AddressSanitizer and UndefinedBehaviorSanitizer:
 ```sh
 make -C programs/dtlogin check
 ```
+
+`tests/check-chooser.py` runs the chooser socket, the choices and the client list
+with a real Unix socket: the file and its mode, the argument that names it, a
+report with and without a chooser, a 255 byte client address, the limit on the
+list and the expiry.
 
 `lib/DtSvc/tests/check-svc-pam.py` compiles the PAM helper against a stand-in for
 the PAM library: a right and a wrong password, an account that may not log in, a

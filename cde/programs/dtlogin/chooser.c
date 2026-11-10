@@ -105,6 +105,7 @@ in this Software without prior written authorization from the X Consortium.
 #include    <sys/sockio.h>
 #endif
 #include    <sys/socket.h>
+#include    <sys/un.h>
 #include    <netinet/in.h>
 #include    <sys/ioctl.h>
 #include    <arpa/inet.h>
@@ -734,27 +735,37 @@ Choose (HostName *h)
 {
     if (app_resources.xdmAddress)
     {
-	struct sockaddr_in  in_addr;
+	struct sockaddr_un  un_addr;
 	struct sockaddr	*addr;
 	int		family;
 	int		len;
 	int		fd;
+	int		pathlen;
 	char		buf[1024];
 	XdmcpBuffer	buffer;
 	char		*xdm;
 
+	/* the manager's socket: the family, then the path of the socket file */
 	xdm = (char *) app_resources.xdmAddress->data;
-	family = (xdm[0] << 8) + xdm[1];
+	if (app_resources.xdmAddress->length < 2)
+	{
+	    fprintf (stderr, "Invalid address of xdm\n");
+	    exit (REMANAGE_DISPLAY);
+	}
+	family = ((unsigned char) xdm[0] << 8) + (unsigned char) xdm[1];
 	switch (family) {
-	case AF_INET:
-#ifdef BSD44SOCKETS
-	    in_addr.sin_len = sizeof(in_addr);
-#endif
-	    in_addr.sin_family = family;
-	    memmove( &in_addr.sin_port, xdm + 2, 2);
-	    memmove( &in_addr.sin_addr, xdm + 4, 4);
-	    addr = (struct sockaddr *) &in_addr;
-	    len = sizeof (in_addr);
+	case AF_UNIX:
+	    pathlen = app_resources.xdmAddress->length - 2;
+	    if (pathlen <= 0 || pathlen >= (int) sizeof (un_addr.sun_path))
+	    {
+		fprintf (stderr, "Invalid address of xdm\n");
+		exit (REMANAGE_DISPLAY);
+	    }
+	    memset (&un_addr, 0, sizeof (un_addr));
+	    un_addr.sun_family = family;
+	    memmove (un_addr.sun_path, xdm + 2, pathlen);
+	    addr = (struct sockaddr *) &un_addr;
+	    len = sizeof (un_addr);
 	    break;
         default:
 	    fprintf (stderr, "Unhandled protocol family %d\n", family);

@@ -69,6 +69,14 @@
   crash the daemon or make it allocate without bound. The routines of versions
   2 to 4 are maintained in `rtable{2,3,4}_xdr.c` instead of being generated.
   Covered by `make -C lib/csa check` (17 cases under the sanitizers).
+- dtlogin: the chooser reports its choice to the login manager through a Unix
+  socket in the authorization directory (mode 0600, removed at shutdown,
+  not inherited by sessions) instead of a TCP port open on every interface. A
+  report is accepted for a client whose display runs a chooser, and the chosen
+  host is used for the next query (before, every report was dropped). The list
+  of indirect-query clients is bounded and expires, and the debug log of a
+  report with a long client address no longer overflows its buffer. Covered by
+  `programs/dtlogin/tests/check-chooser.py`.
 - dtfile: remove the last raw, pointer-bearing `FileData` directory-worker
   packet. Removed-entry tombstones are now packed into bounded `FileData2`
   records and sent with complete writes; oversized or incomplete records fail

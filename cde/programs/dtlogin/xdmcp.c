@@ -144,7 +144,9 @@ int	WellKnownSocketsMax;
 int RememberIndirectClient(ARRAY8Ptr clientAddress, CARD16 connectionType);
 void ForgetIndirectClient(ARRAY8Ptr clientAddress, CARD16 connectionType);
 int IsIndirectClient(ARRAY8Ptr clientAddress, CARD16 connectionType);
+int AwaitIndirectChoice(ARRAY8Ptr clientAddress, CARD16 connectionType);
 int ProcessChooserSocket(int fd);
+void DestroyChooserSocket(void);	/* socket.c */
 void RunChooser(struct display *d);
 
 void LoadDMResources(void); // resource.c
@@ -162,6 +164,7 @@ DestroyWellKnownSockets (void)
 	close (chooserFd);
 	chooserFd = -1;
     }
+    DestroyChooserSocket ();
 }
 
 int
@@ -1034,7 +1037,8 @@ manage (struct sockaddr *from, int fromlen, int length)
 	    {
 		Debug ("IsIndirectClient\n");
 		ForgetIndirectClient (&clientAddress, connectionType);
-		if (UseChooser (&clientAddress, connectionType))
+		if (UseChooser (&clientAddress, connectionType) &&
+		    AwaitIndirectChoice (&clientAddress, connectionType))
 		{
 		    d->useChooser = 1;
 		    Debug ("Use chooser for %s\n", d->name);

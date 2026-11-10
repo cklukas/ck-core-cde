@@ -89,6 +89,8 @@ from the X Consortium.
 #include "vgmsg.h"
 
 #include <errno.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/un.h>
@@ -107,6 +109,8 @@ extern int	WellKnownSocketsMax;
 
 void registerHostname (char *name, int namelen); // xdmcp.c
 
+
+static int CreateChooserSocket (void);
 
 int
 CreateWellKnownSockets (void)
@@ -145,31 +149,97 @@ CreateWellKnownSockets (void)
     WellKnownSocketsMax = xdmcpFd;
     FD_SET (xdmcpFd, &WellKnownSocketsMask);
 
-    chooserFd = socket (AF_INET, SOCK_STREAM, 0);
-    Debug ("Created chooser socket %d\n", chooserFd);
-    if (chooserFd == -1)
-    {
-	LogError ((unsigned char *)"chooser socket creation failed, errno %d\n", errno);
+    /*
+     * The chooser is started by this manager and reports its answer to it from
+     * the same host.  Its socket is a file that only the manager's user can
+     * use, so that no other process can answer for a chooser.
+     */
+    if (!CreateChooserSocket ())
 	return 0;
-    }
-    listen (chooserFd, 5);
     if (chooserFd > WellKnownSocketsMax)
 	WellKnownSocketsMax = chooserFd;
     FD_SET (chooserFd, &WellKnownSocketsMask);
     return 1;
 }
 
+/*
+ * The socket of the chooser: a file in the authorization directory.  Whatever
+ * a previous manager left there is replaced; the file is removed when the
+ * manager stops (DestroyChooserSocket).
+ */
+static char	chooserPath[sizeof (((struct sockaddr_un *) 0)->sun_path)];
+
+static int
+CreateChooserSocket (void)
+{
+    struct sockaddr_un	sock_addr;
+    mode_t		oldmask;
+    int			length, status;
+
+    if (!authDir || !authDir[0])
+    {
+	LogError ((unsigned char *)"chooser socket needs an authorization directory\n");
+	return 0;
+    }
+    length = snprintf (chooserPath, sizeof (chooserPath), "%s/dtlogin-chooser-%ld",
+		       authDir, (long) getpid ());
+    if (length < 0 || (size_t) length >= sizeof (chooserPath))
+    {
+	LogError ((unsigned char *)"chooser socket name is too long\n");
+	chooserPath[0] = '\0';
+	return 0;
+    }
+    chooserFd = socket (AF_UNIX, SOCK_STREAM, 0);
+    Debug ("Created chooser socket %d\n", chooserFd);
+    if (chooserFd == -1)
+    {
+	LogError ((unsigned char *)"chooser socket creation failed, errno %d\n", errno);
+	chooserPath[0] = '\0';
+	return 0;
+    }
+    bzero ((char *) &sock_addr, sizeof (sock_addr));
+    sock_addr.sun_family = AF_UNIX;
+    strcpy (sock_addr.sun_path, chooserPath);
+    (void) unlink (chooserPath);
+    oldmask = umask (077);
+    status = bind (chooserFd, (struct sockaddr *) &sock_addr, sizeof (sock_addr));
+    umask (oldmask);
+    if (status == -1 || chmod (chooserPath, S_IRUSR | S_IWUSR) == -1 ||
+	listen (chooserFd, 5) == -1)
+    {
+	LogError ((unsigned char *)"chooser socket setup failed, errno %d\n", errno);
+	close (chooserFd);
+	chooserFd = -1;
+	(void) unlink (chooserPath);
+	chooserPath[0] = '\0';
+	return 0;
+    }
+    /* the sessions and the clients they start must not inherit the socket */
+    RegisterCloseOnFork (chooserFd);
+    return 1;
+}
+
+void
+DestroyChooserSocket (void)
+{
+    if (chooserPath[0])
+    {
+	(void) unlink (chooserPath);
+	chooserPath[0] = '\0';
+    }
+}
+
 int
 GetChooserAddr (char *addr, int *lenp)
 {
-    struct sockaddr_in	in_addr;
-    int			len;
+    struct sockaddr_un	un_addr;
+    socklen_t		len;
 
-    len = sizeof in_addr;
-    if (getsockname (chooserFd, (struct sockaddr *)&in_addr, &len) < 0)
+    len = sizeof un_addr;
+    if (getsockname (chooserFd, (struct sockaddr *)&un_addr, &len) < 0)
 	return -1;
-    Debug ("Chooser socket port: %d\n", ntohs(in_addr.sin_port));
-    memmove( addr, (char *) &in_addr, len);
+    Debug ("Chooser socket: %s\n", un_addr.sun_path);
+    memmove( addr, (char *) &un_addr, len);
     *lenp = len;
     return 0;
 }
