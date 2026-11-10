@@ -466,8 +466,10 @@ ConflictPosition(Widget shell, XtPointer data, XtPointer call)
     }
     if (x > screen_width - width) x = screen_width - width;
     if (y > screen_height - height) y = screen_height - height;
-    if (x < 0) x = 0; if (y < 0) y = 0;
-    if (x > SHRT_MAX) x = SHRT_MAX; if (y > SHRT_MAX) y = SHRT_MAX;
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+    if (x > SHRT_MAX) x = SHRT_MAX;
+    if (y > SHRT_MAX) y = SHRT_MAX;
     XtVaSetValues(shell, XmNx, (Position)x, XmNy, (Position)y, NULL);
 }
 

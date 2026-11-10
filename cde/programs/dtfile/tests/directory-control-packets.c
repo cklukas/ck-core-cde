@@ -187,5 +187,6 @@ int main(int argc,char **argv)
     else if(!strncmp(name,"write-",6))writer_case(name);
     else if(!strncmp(name,"timer-",6)||!strcmp(name,"status-write"))timer_case(name);
     else return 2;
-    if(!failed)printf("PASS %s\n",name);return failed;
+    if(!failed)printf("PASS %s\n",name);
+    return failed;
 }

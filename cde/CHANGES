@@ -1,4 +1,10 @@
 2026-11-10
+- dtfile: build the directory control-packet test and the file conflict
+  dialog placement code cleanly with GCC 14. The test program ended an `if`
+  and a `return` on one line, which GCC's `-Werror=misleading-indentation`
+  rejects, so `make check` stopped in `programs/dtfile` under GCC and skipped
+  the checks after it; the conflict dialog's position clamping now has one
+  statement per line. The full dtfile `check-local` passes under GCC 14.
 - Build and CI: adopt CK Core Motif 44020a781 as the toolkit revision of this
   batch (`.ckgit/motif-revision` and the rpi4 sister pin). It releases the
   color server's property buffer once; the earlier revision aborted `dtwm` and
