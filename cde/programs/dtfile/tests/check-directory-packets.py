@@ -7,7 +7,11 @@ CASES=("pack-valid","pack-overflow","stat-failed","stat-link",
        "decode-valid","decode-negative",
        "decode-short-header","decode-short-text","packet-valid",
        "packet-zero-count","packet-large-count","packet-extra-byte",
-       "packet-short-second")
+       "packet-short-second","desktop-write-changed",
+       "desktop-write-removed","desktop-truncated-host",
+       "desktop-truncated-data","desktop-invalid-data",
+       "desktop-invalid-message","desktop-null-name",
+       "desktop-wire-pointer","desktop-mismatched-data")
 
 def balanced(text,start,opening,closing):
     depth=0;i=start
@@ -29,7 +33,7 @@ def balanced(text,start,opening,closing):
     raise ValueError("unbalanced definition")
 
 def extract_function(text,name):
-    pattern=re.compile(r"(?m)^static[ \t\r\n]+(?:int|Boolean)[ \t\r\n]+"+
+    pattern=re.compile(r"(?m)^(?:static[ \t\r\n]+)?(?:int|void|Boolean|FileData[ \t]*\*)[ \t\r\n]+"+
                        re.escape(name)+r"[ \t\r\n]*\(")
     matches=[]
     for match in pattern.finditer(text):
@@ -83,6 +87,8 @@ def main():
         print(f"Receipt: {work/'result.json'}")
         return
     desktop=(source/"Desktop.c").read_text();fileop=(source/"FileOp.c").read_text()
+    desktop_callback=extract_function(directory,"CheckDesktopPipeCallback")
+    desktop_process=extract_function(directory,"CheckDesktopProcess")
     contract={
         "packet_capacity_includes_header":"PIPEMSG_HDR_LEN + FILEDATABUF * sizeof(FileData2)" in directory,
         "packet_producer_exact":directory.count("DtfileProcessWriteAll(pipe_fd, file_data_buffer") == 1,
@@ -93,12 +99,23 @@ def main():
         "failed_lstat_not_inspected":directory.count("FileDataStatIsLink(stat_result, &stat_buf)") == 2,
         "malformed_discards_pending":"while (directory->new_data != NULL)" in directory and
                                      "FileOpProtocolError(toplevel)" in directory,
+        "desktop_packet_transactional":"DirectoryReadDesktopRecord(*fd, msg" in desktop_callback and
+                                       "PipeReadExact(*fd, &msg" in desktop_callback and
+                                       "PipeReadFileData(*fd)" not in desktop_callback,
+        "desktop_producer_exact":desktop_process.count("DirectoryWriteDesktopRecord(pipe_fd") == 2 and
+                                 "tt_status != TT_OK || full_path == NULL" in desktop_process and
+                                 "DtfileProcessWriteAll(pipe_fd, &pipe_msg" in desktop_process,
+        "desktop_malformed_retires":"FileOpProtocolError(toplevel)" in desktop_callback and
+                                    "kill(pipe_data->child, SIGKILL)" in desktop_callback and
+                                    "directory->busy[activity] = False" in desktop_callback,
         "desktop_fallback":"ReadFileData(full_dir_name, entry)" in desktop,
         "fileop_fallback":"ReadFileData(full_dir_name, entry)" in fileop,
     }
     if not all(contract.values()):raise ValueError(f"directory packet contract mismatch: {contract}")
     functions="\n\n".join(extract_function(directory,n) for n in
-                            ("FileData2Decode","FileData2DecodePacket","FileData2PackText",
+                            ("FileData2Decode","FileData2toFileData",
+                             "DirectoryWriteDesktopRecord","DirectoryReadDesktopRecord",
+                             "FileData2DecodePacket","FileData2PackText",
                              "FileDataStatIsLink"))
     fixture=(tests/"directory-packets.c").read_text().replace("/* PRODUCTION_FUNCTIONS */",functions)
     generated=work/"directory-packets.c";generated.write_text(fixture)

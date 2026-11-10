@@ -818,6 +818,85 @@ FileData2toFileData(
    return file_data;
 }
 
+static int
+DirectoryWriteDesktopRecord(int fd, short message, char *host,
+                            char *directory_name, char *file_name,
+                            const FileData2 *file_data)
+{
+   FileData2 packed;
+
+   if ((message != PIPEMSG_DESKTOP_REMOVED &&
+        message != PIPEMSG_DESKTOP_CHANGED) ||
+       host == NULL || directory_name == NULL || file_name == NULL ||
+       (message == PIPEMSG_DESKTOP_CHANGED && file_data == NULL))
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   if (file_data != NULL)
+   {
+      packed = *file_data;
+      packed.next = NULL;
+   }
+   if (DtfileProcessWriteAll(fd, &message, sizeof(message)) != 0 ||
+       PipeWriteString(fd, host) < 0 ||
+       PipeWriteString(fd, directory_name) < 0 ||
+       PipeWriteString(fd, file_name) < 0 ||
+       (message == PIPEMSG_DESKTOP_CHANGED &&
+        DtfileProcessWriteAll(fd, &packed, sizeof(packed)) != 0))
+      return -1;
+   return 0;
+}
+
+static int
+DirectoryReadDesktopRecord(int fd, short message, char **host,
+                           char **directory_name, char **file_name,
+                           FileData **file_data)
+{
+   FileData2 packed;
+   int used;
+
+   if (host == NULL || directory_name == NULL || file_name == NULL ||
+       file_data == NULL)
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   *host = NULL;
+   *directory_name = NULL;
+   *file_name = NULL;
+   *file_data = NULL;
+   if ((message != PIPEMSG_DESKTOP_REMOVED &&
+        message != PIPEMSG_DESKTOP_CHANGED) ||
+       PipeReadStringField(fd, host) != 0 || *host == NULL ||
+       PipeReadStringField(fd, directory_name) != 0 ||
+       *directory_name == NULL ||
+       PipeReadStringField(fd, file_name) != 0 || *file_name == NULL)
+      goto malformed;
+   if (message == PIPEMSG_DESKTOP_CHANGED)
+   {
+      if (PipeReadExact(fd, &packed, sizeof(packed)) != 0)
+         goto malformed;
+      *file_data = FileData2toFileData(&packed, &used);
+      if (*file_data == NULL ||
+          strcmp((*file_data)->file_name, *file_name) != 0)
+         goto malformed;
+   }
+   return 0;
+
+malformed:
+   XtFree(*host);
+   XtFree(*directory_name);
+   XtFree(*file_name);
+   if (*file_data != NULL) FreeFileData(*file_data, True);
+   *host = NULL;
+   *directory_name = NULL;
+   *file_name = NULL;
+   *file_data = NULL;
+   errno = EPROTO;
+   return -1;
+}
+
 static Boolean
 FileDataStatIsLink(int stat_result, const struct stat *stat_data)
 {
@@ -4856,6 +4935,11 @@ CheckDesktopProcess(
                                         desktopWindow->dir_linked_to,
                                         desktopWindow->file_name,
                                         home_host_name, &tt_status);
+      if (tt_status != TT_OK || full_path == NULL)
+      {
+         XtFree(full_path);
+         return 1;
+      }
 
       /* Check if the file still exists */
       errno = 0;
@@ -4865,11 +4949,15 @@ CheckDesktopProcess(
          DPRINTF2((
            "CheckDesktopProcess: sending PIPEMSG_DESKTOP_REMOVED for %s\n",
            full_path));
-         pipe_msg = PIPEMSG_DESKTOP_REMOVED;
-         write(pipe_fd, &pipe_msg, sizeof(short));
-         PipeWriteString(pipe_fd, desktopWindow->host);
-         PipeWriteString(pipe_fd, desktopWindow->dir_linked_to);
-         PipeWriteString(pipe_fd, desktopWindow->file_name);
+         if (DirectoryWriteDesktopRecord(pipe_fd, PIPEMSG_DESKTOP_REMOVED,
+                                         desktopWindow->host,
+                                         desktopWindow->dir_linked_to,
+                                         desktopWindow->file_name,
+                                         NULL) != 0)
+         {
+            XtFree(full_path);
+            return 1;
+         }
       }
       else
       {
@@ -4903,13 +4991,17 @@ CheckDesktopProcess(
               old_data->physical_type, old_data->logical_type,
               new_data->physical_type, new_data->logical_type));
 
-            pipe_msg = PIPEMSG_DESKTOP_CHANGED;
-            write(pipe_fd, &pipe_msg, sizeof(short));
-            PipeWriteString(pipe_fd, desktopWindow->host);
-            PipeWriteString(pipe_fd, desktopWindow->dir_linked_to);
-            PipeWriteString(pipe_fd, desktopWindow->file_name);
-
-            PipeWriteFileData(pipe_fd, new_data);
+            if (DirectoryWriteDesktopRecord(pipe_fd,
+                                            PIPEMSG_DESKTOP_CHANGED,
+                                            desktopWindow->host,
+                                            desktopWindow->dir_linked_to,
+                                            desktopWindow->file_name,
+                                            &file_data2) != 0)
+            {
+               FreeFileData(new_data, True);
+               XtFree(full_path);
+               return 1;
+            }
          }
 
          FreeFileData(new_data, True);
@@ -4921,8 +5013,8 @@ CheckDesktopProcess(
    /* send a 'done' msg through the pipe */
    DPRINTF2(("CheckDesktopProcess: sending DONE\n"));
    pipe_msg = PIPEMSG_DONE;
-   write(pipe_fd, &pipe_msg, sizeof(short));
-   return 0;
+   return DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) == 0
+             ? 0 : 1;
 }
 
 
@@ -4945,23 +5037,36 @@ CheckDesktopPipeCallback(
    FileData *new_data, *old_data;
    Boolean found;
    DesktopRec *desktopWindow;
-   int i, n;
+   ActivityStatus activity = pipe_data->activity;
+   int i;
+
+   host = NULL;
+   dir_linked_to = NULL;
+   file_name = NULL;
+   new_data = NULL;
+
+   if (DirectoryGone(directory))
+   {
+      close(*fd);
+      XtRemoveInput(*id);
+      kill(pipe_data->child, SIGKILL);
+      XtFree(client_data);
+      ScheduleActivity(NULL);
+      return;
+   }
 
    /* read the next msg from the pipe */
    msg = -1;
-   n = PipeRead(*fd, &msg, sizeof(short));
+   if (PipeReadExact(*fd, &msg, sizeof(msg)) != 0)
+      goto malformed_response;
 
    if (msg == PIPEMSG_DESKTOP_REMOVED ||
        msg == PIPEMSG_DESKTOP_CHANGED)
    {
       /* get information from pipe */
-      host = PipeReadString(*fd);
-      dir_linked_to = PipeReadString(*fd);
-      file_name = PipeReadString(*fd);
-      if (msg == PIPEMSG_DESKTOP_CHANGED)
-         new_data = PipeReadFileData(*fd);
-      else
-         new_data = NULL;
+      if (DirectoryReadDesktopRecord(*fd, msg, &host, &dir_linked_to,
+                                     &file_name, &new_data) != 0)
+         goto malformed_response;
 
       DPRINTF2((
         "CheckDesktopPipeCallback: msg %d: host %s, dir %s, name %s\n",
@@ -5022,10 +5127,32 @@ CheckDesktopPipeCallback(
       XtRemoveInput(*id);
 
       /* reset the busy flag and schedule new work, if any */
-      directory->busy[directory->activity] = False;
+      directory->busy[activity] = False;
       directory->activity = activity_idle;
       ScheduleActivity(directory);
    }
+   else
+      goto malformed_response;
+   return;
+
+malformed_response:
+   XtFree(host);
+   XtFree(dir_linked_to);
+   XtFree(file_name);
+   if (new_data != NULL) FreeFileData(new_data, True);
+   FileOpProtocolError(toplevel);
+   close(*fd);
+   XtRemoveInput(*id);
+   kill(pipe_data->child, SIGKILL);
+   if (!DirectoryGone(directory))
+   {
+      directory->busy[activity] = False;
+      directory->activity = activity_idle;
+      ScheduleActivity(directory);
+   }
+   else
+      ScheduleActivity(NULL);
+   XtFree(client_data);
 }
 
 

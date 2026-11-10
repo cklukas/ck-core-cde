@@ -1,0 +1,84 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile desktop-refresh worker packets",
+  "source_base": "4a508a642d56797e897722591f3f5c6cf3290afd",
+  "motif_revision": "c46b1a572bb584f7a7c97fd093dcfd0bf8f8443b",
+  "motif_prefix": "/home/klukas/tmp/motif-abi9-c46b1a572-20261110/prefix",
+  "motif_libXm_sha256": "96ae77b8d8a8a3a64a926175ee0c11fb9bf9ece928a2b304ca8b8a03663ac7e2",
+  "motif_Xm_h_sha256": "26e5d9afeb7cdec2cb73904bfca8bc00e964d87d130c7eeb200f3b25c88d57dc",
+  "motif_qualification_receipt": "/home/klukas/tmp/motif-abi9-c46b1a572-20261110/results/receipt.json",
+  "motif_transfer_evidence": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-motif-c46-transfer-20261110/",
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round8-20261110/",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    ".ckgit/ci.yml": "ef1318fa20cf556ac14d4ab525783426c6b7b6cd108cbc4980c0dbe5d0a2c125",
+    ".ckgit/motif-revision": "cc6741b7c7d84fcc7b79b051a1b6ceb64384d70e51895c9130f7439dc64bfa6a",
+    "cde/CHANGES": "8c3a79628e82d28cde2f763e57b36ff39927df8baed9b56820c2effbf6e3fad7",
+    "cde/programs/dtfile/Directory.c": "2e055ac1a44acfc2682b570fbd1f2ced150569632495552eb273fcb0a46bfb6f",
+    "cde/programs/dtfile/tests/check-directory-packets.py": "abcff2024d42827749cd84a3710098eac0b8f091f5e952b58d332df08c7d5726",
+    "cde/programs/dtfile/tests/directory-packets.c": "3d1aab93e873bf8666af20a81777946aa4c004d1d2651da1726b541121aca589"
+  },
+  "focused_regressions": {
+    "cases": 22,
+    "sanitizers": "address,undefined",
+    "remote_seconds": 0.16130272997543216,
+    "local_seconds": 0.4847981670172885,
+    "remote_log_sha256": "f22bbb02ed2ae254996bdf3a9047a2173650c1e5161b4e4800dcbda6e26cd333",
+    "coverage": [
+      "desktop removed and changed packet round trips",
+      "invalid message and null-name admission",
+      "truncated string and FileData2 payloads",
+      "invalid and identity-mismatched FileData2 records",
+      "cleared pointer field in the serialized FileData2 record",
+      "source contracts for exact I/O, checked ToolTalk paths and malformed-worker retirement"
+    ]
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "full_rebuild": false,
+    "closure": ["dtfile-Directory.o", "dtfile relink"],
+    "seconds": 1.472847388,
+    "object_sha256": "cd28807df064de02f4066af0384360e86eac11f0ecf266d1b53259cb0633a791",
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile",
+    "output_sha256": "327b6848a6856222da28ca1a5a059c60711d05fc661befe2be4169b717f14530",
+    "build_log_sha256": "776fd8e11d0b7d0d7a705d1612ee02df26eff13776725cd69811a9553533efb3",
+    "warnings": "Only the pre-existing assignment-condition warning in UpdateAllProcess."
+  },
+  "motif_boundary": {
+    "dependency_files": 58,
+    "unique_consumed_headers": 77,
+    "prefix_headers_compared": 71,
+    "identical_source_fallbacks": 1,
+    "identical_system_X11_bitmap_fallbacks": 5,
+    "changed_or_missing_effective_headers_between_b4c0_and_c46": 0,
+    "comparison_receipt_sha256": "1b346b7808a634046a687e012ed9f1152ebfc67290b0a43e532eb300a9c1ca0d",
+    "needed": "libXm.so.9",
+    "ldd_resolves_exact_prefix": true,
+    "ldd_mapping_sha256": "a3ae0bafc2e40937f1ff9706280f29b3917a19f1ddf3c276b9c011b6c9442857"
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "runs": 1,
+    "seconds": 18.139311116,
+    "passed_case_lines": 301,
+    "failure_markers": 0,
+    "log_sha256": "28e25195179aa04bb469df88254f1cf709d9f942a48579353514608b32dd6cdd"
+  },
+  "postconditions": [
+    "make -n reports dtfile is up to date",
+    "no owned compiler, make or test process remained before returning CPU2",
+    "desktop worker records no longer serialize FileData pointer values",
+    "malformed desktop responses cannot partially update desktop objects"
+  ],
+  "rejected_or_corrected_attempts": [
+    "The first remote focused fixture compile failed because the new uintptr_t assertion lacked the portable stdint.h include. The failure is preserved; only the test include changed before the passing packet-check-02 run.",
+    "config.status regenerated its historical source root during the dry-run phase. The generated Makefile was corrected to the retained staged source before compilation."
+  ],
+  "limitations": [
+    "This worker-protocol bundle did not launch or inspect a CDE window.",
+    "The qualified ck-core-fs-lib revision exposes no accepted atomic-replacement writer API and was not changed."
+  ]
+}

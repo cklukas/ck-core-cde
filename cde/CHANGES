@@ -1,4 +1,11 @@
 2026-11-10
+- dtfile: replace the desktop-refresh worker's raw `FileData` pointer-bearing
+  records with validated `FileData2` packets. Desktop refresh now rejects
+  truncated strings, records and tags transactionally, checks ToolTalk path
+  resolution before filesystem access, uses complete writes for every packet,
+  retires malformed workers, and resets the activity originally scheduled
+  rather than mutable directory state. Covered by focused production-helper
+  sanitizer cases.
 - dtfile: harden the remaining directory status channels. Position-save and
   periodic timer results now use complete writes and exact, transactional
   reads; incomplete or invalid timer replies retire desynchronized sticky

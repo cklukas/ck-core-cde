@@ -1,16 +1,21 @@
 #include <errno.h>
 #include <limits.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 typedef int Boolean;
 #define True 1
 #define False 0
 #define NILL '\0'
 #define FILEDATABUF 50
+#define PIPEMSG_DONE 3
+#define PIPEMSG_DESKTOP_REMOVED 8
+#define PIPEMSG_DESKTOP_CHANGED 9
 
 typedef struct _FileData {
     struct _FileData *next;
@@ -46,6 +51,7 @@ static void *test_malloc(size_t size) { void *p=malloc(size); if(!p) abort(); re
 static void *test_calloc(size_t n,size_t size) { void *p=calloc(n,size); if(!p) abort(); return p; }
 #define XtMalloc test_malloc
 #define XtCalloc test_calloc
+#define XtFree free
 
 static void FreeFileData(FileData *data, Boolean all)
 {
@@ -53,6 +59,24 @@ static void FreeFileData(FileData *data, Boolean all)
     free(data->file_name);free(data->action_name);free(data->logical_type);
     free(data->link);free(data->final_link);
     if(all){freed_records++;free(data);}
+}
+
+static int exact_write(int fd,const void *data,size_t size)
+{
+    const char *next=data;while(size){ssize_t n=write(fd,next,size);if(n<0&&errno==EINTR)continue;if(n<=0)return -1;next+=n;size-=(size_t)n;}return 0;
+}
+static int DtfileProcessWriteAll(int fd,const void *data,size_t size){return exact_write(fd,data,size);}
+static int PipeReadExact(int fd,void *data,size_t size)
+{
+    char *next=data;while(size){ssize_t n=read(fd,next,size);if(n<0&&errno==EINTR)continue;if(n<=0)return -1;next+=n;size-=(size_t)n;}return 0;
+}
+static int PipeWriteString(int fd,char *value)
+{
+    size_t length=value?strlen(value):0;short encoded;if(length>SHRT_MAX)return -1;encoded=(short)length;return exact_write(fd,&encoded,sizeof(encoded))!=0||(length&&exact_write(fd,value,length)!=0)?-1:(int)length;
+}
+static int PipeReadStringField(int fd,char **value)
+{
+    short length;char *text;*value=NULL;if(PipeReadExact(fd,&length,sizeof(length))!=0||length<0)return -1;if(!length)return 0;text=malloc((size_t)length+1);if(PipeReadExact(fd,text,(size_t)length)!=0){free(text);return -1;}text[length]=0;*value=text;return 0;
 }
 
 /* PRODUCTION_FUNCTIONS */
@@ -65,6 +89,35 @@ static int make_record(FileData2 *record,const char *name,const char *type)
     memset(record,0,sizeof(*record));record->physical_type=7;record->errnum=11;
     record->is_subdir=True;
     return FileData2PackText(record,name,"action",type,"link","final");
+}
+
+static void desktop_case(const char *name,FileData2 *record)
+{
+    int p[2],rc;short message;char *host=(char *)1,*directory=(char *)1,*file=(char *)1;FileData *decoded=(FileData *)1;
+    CHECK(pipe(p)==0);
+    if(!strcmp(name,"desktop-invalid-message")) {
+        errno=0;CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DONE,"host","/dir","file",record)==-1&&errno==EINVAL);close(p[0]);close(p[1]);return;
+    } else if(!strcmp(name,"desktop-null-name")) {
+        errno=0;CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DESKTOP_REMOVED,"host","/dir",NULL,NULL)==-1&&errno==EINVAL);close(p[0]);close(p[1]);return;
+    } else if(!strcmp(name,"desktop-wire-pointer")) {
+        FileData2 packed;record->next=(FileData2 *)(uintptr_t)1;
+        CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DESKTOP_CHANGED,"host","/dir","file",record)==0);close(p[1]);
+        CHECK(PipeReadExact(p[0],&message,sizeof(message))==0);CHECK(PipeReadStringField(p[0],&host)==0);CHECK(PipeReadStringField(p[0],&directory)==0);CHECK(PipeReadStringField(p[0],&file)==0);CHECK(PipeReadExact(p[0],&packed,sizeof(packed))==0&&packed.next==NULL);free(host);free(directory);free(file);close(p[0]);return;
+    } else if(!strcmp(name,"desktop-write-changed")) {
+        CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DESKTOP_CHANGED,"host","/dir","alpha",record)==0);close(p[1]);
+        CHECK(PipeReadExact(p[0],&message,sizeof(message))==0&&message==PIPEMSG_DESKTOP_CHANGED);
+    } else if(!strcmp(name,"desktop-write-removed")) {
+        CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DESKTOP_REMOVED,"host","/dir","file",NULL)==0);close(p[1]);
+        CHECK(PipeReadExact(p[0],&message,sizeof(message))==0&&message==PIPEMSG_DESKTOP_REMOVED);
+    } else {
+        message=PIPEMSG_DESKTOP_CHANGED;exact_write(p[1],&(short){4},sizeof(short));
+        if(strcmp(name,"desktop-truncated-host")){exact_write(p[1],"host",4);PipeWriteString(p[1],"/dir");PipeWriteString(p[1],!strcmp(name,"desktop-mismatched-data")?"other":"alpha");if(strcmp(name,"desktop-truncated-data")){FileData2 malformed=*record;if(!strcmp(name,"desktop-invalid-data"))malformed.file_name=-1;exact_write(p[1],&malformed,sizeof(malformed));}}
+        close(p[1]);
+    }
+    rc=DirectoryReadDesktopRecord(p[0],message,&host,&directory,&file,&decoded);close(p[0]);
+    if(!strcmp(name,"desktop-write-changed")) {CHECK(rc==0&&!strcmp(host,"host")&&!strcmp(file,"alpha")&&!strcmp(decoded->file_name,"alpha"));FreeFileData(decoded,True);free(host);free(directory);free(file);}
+    else if(!strcmp(name,"desktop-write-removed")) {CHECK(rc==0&&decoded==NULL&&!strcmp(file,"file"));free(host);free(directory);free(file);}
+    else CHECK(rc==-1&&host==NULL&&directory==NULL&&file==NULL&&decoded==NULL&&errno==EPROTO);
 }
 
 static void free_list(FileData *head)
@@ -85,7 +138,9 @@ int main(int argc,char **argv)
     one_len=make_record(&one,"alpha","TYPE");
     two_len=make_record(&two,"beta","TYPE2");
     CHECK(one_len>0&&two_len>0);
-    if(!strcmp(name,"pack-valid")) {
+    if(!strncmp(name,"desktop-",8)) {
+        desktop_case(name,&one);
+    } else if(!strcmp(name,"pack-valid")) {
         CHECK(one.file_name==5&&one.action_name==6&&one.logical_type==4);
     } else if(!strcmp(name,"pack-overflow")) {
         FileData2 before=one;
