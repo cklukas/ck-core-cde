@@ -103,6 +103,7 @@ class RFCMIME : public RFCFormat {
     void getMIMEType(
 			DtMail::BodyPart * bp,
 			char * mime_type,
+			size_t mime_type_size,
 			DtMailBoolean & is_text);
     Encoding getHdrEncodingType(
 			const char *,

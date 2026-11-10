@@ -95,8 +95,8 @@ class RFCFormat : public DtCPlusPlusAllocator {
 		      Buffer & buf);
 
     virtual void rfc1522cpy(Buffer & buf, const char * value);
-    void getCharSet(char * charset);
-    void getCharSet(char * charset, char *special);
+    void getCharSet(char * charset, size_t size);
+    void getCharSet(char * charset, size_t size, const char *special);
 	int OpenLcxDb(void);
 	void DtXlateStdToOpLocale(char *op, char *std, char *dflt, char **ret);
 	void DtXlateOpToStdLocale(char *op, char *opLoc, char **retLoc, char **ret_retLang, char **retSet);

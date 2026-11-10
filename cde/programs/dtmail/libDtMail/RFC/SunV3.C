@@ -203,7 +203,7 @@ SunV3::formatBodies(DtMailEnv & error,
 				  free( to_cs );
 			}
 	
-			getCharSet(charset_name, "V3");
+			getCharSet(charset_name, sizeof(charset_name), "V3");
 		
 			hdr_buf.appendData("X-Sun-Charset: ", 15);
 			hdr_buf.appendData(charset_name, strlen(charset_name));
@@ -289,7 +289,7 @@ SunV3::formatBodies(DtMailEnv & error,
 		to_cs = NULL;
 		to_cs = _session->targetConvName();
 		if (_session->csConvert((char **)&bp_contents, bp_len, 1, from_cs, to_cs)) {
-			getCharSet(charset_name, "V3");
+			getCharSet(charset_name, sizeof(charset_name), "V3");
 			buf.appendData("X-Sun-Charset: ", 15);
 			appendString(buf, charset_name);
 			crlf(buf);

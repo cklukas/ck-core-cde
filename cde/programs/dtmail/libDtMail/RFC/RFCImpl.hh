@@ -744,7 +744,7 @@ class RFCMailBox : public DtMail::MailBox
 #endif
     int		createTemporaryMailboxFile(DtMailEnv &, char *tmp_name);
     void	checkLockFileOwnership(DtMailEnv &);
-    void	dotDtmailLockFile(char *, int);
+    bool	dotDtmailLockFile(char *, size_t);
     void	dotDtmailLock(DtMailEnv &);
     void	dotDtmailUnlock(DtMailEnv &);
     void	dumpMaps(const char *);

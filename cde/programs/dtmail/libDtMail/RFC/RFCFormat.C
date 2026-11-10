@@ -42,12 +42,53 @@
  */
 
 #include <ctype.h>
+#include <string.h>
 #include <EUSCompat.h>
 #include <DtMail/IO.hh>
 #include "RFCFormat.hh"
 #include "str_utils.h"
 
 #include <time.h>
+
+//
+// The Unix "From " line that is made up for a message that has none: the
+// sender and the date.  A mailbox is read back by the first word after
+// "From ", so only the first word of the sender is kept, without the
+// characters that would end the line; a sender that is missing or empty
+// is nobody@nowhere.  The sender comes from the message, so the line is
+// sized from what it holds.  The date is the text of ctime(), with its
+// newline.
+//
+static char *
+makeUnixFromLine(const char * sender, const char * date)
+{
+    static const char	nobody[] = "nobody@nowhere";
+    size_t		length = 0;
+
+    if (sender != NULL) {
+	while (sender[length] != '\0' &&
+	       (unsigned char) sender[length] > ' ' &&
+	       (unsigned char) sender[length] != 0x7f) {
+	    length++;
+	}
+    }
+    if (length == 0) {
+	sender = nobody;
+	length = sizeof(nobody) - 1;
+    }
+
+    size_t	date_length = date != NULL ? strlen(date) : 0;
+    char *	line = new char[5 + length + 1 + date_length + 1];
+
+    memcpy(line, "From ", 5);
+    memcpy(line + 5, sender, length);
+    line[5 + length] = ' ';
+    if (date_length > 0) {
+	memcpy(line + 5 + length + 1, date, date_length);
+    }
+    line[5 + length + 1 + date_length] = '\0';
+    return line;
+}
 
 RFCFormat::RFCFormat(DtMail::Session * session)
 {
@@ -128,21 +169,19 @@ RFCFormat::writeHeaders(DtMailEnv & error,
 	// we will make one up using the sender, and the current
 	// date.
 	//
-	char *unix_from = new char[100];
-	strcpy(unix_from, "From ");
-	
 	DtMailValueSeq sender;
+	DtMailAddressSeq * addrSeq = NULL;
+	const char * from_address = NULL;
+
 	env->getHeader(error, DtMailMessageSender, DTM_TRUE, sender);
-	if (error.isSet()) {
-	    // We no longer know who this is really from.
+	if (!error.isSet() && sender.length() > 0) {
+	    // If we no longer know who this is really from, or the sender
+	    // has no address, the line names nobody.
 	    //
-	    strcat(unix_from, "nobody@nowhere");
-	}
-	else {
-	    DtMailAddressSeq * addrSeq = sender[0]->toAddress();
-	    
-	    strcat(unix_from, (*addrSeq)[0]->dtm_address);
-	    delete addrSeq;
+	    addrSeq = sender[0]->toAddress();
+	    if (addrSeq != NULL && addrSeq->length() > 0) {
+		from_address = (*addrSeq)[0]->dtm_address;
+	    }
 	}
 	error.clear();
 
@@ -151,8 +190,8 @@ RFCFormat::writeHeaders(DtMailEnv & error,
 	
 	SafeCtime(&now, time_format, sizeof(time_format));
 	
-	strcat(unix_from, " ");
-	strcat(unix_from, time_format);
+	char *unix_from = makeUnixFromLine(from_address, time_format);
+	delete addrSeq;
 	buf.appendData(unix_from, strlen(unix_from));
 	delete [] unix_from;
     }
@@ -219,31 +258,23 @@ RFCFormat::rfc1522cpy(Buffer & buf, const char * value)
 }
 
 void
-RFCFormat::getCharSet(char * charset)
+RFCFormat::getCharSet(char * charset, size_t size)
 {
 	char *mimeCS = NULL;
 
         mimeCS = _session->targetTagName();
 
-    if (mimeCS) {
-        strcpy(charset, mimeCS);
-        free(mimeCS);
-    } else {
-	strcpy(charset, "us-ascii");   /* default MIME codeset */
-    }
+    snprintf(charset, size, "%s", mimeCS ? mimeCS : "us-ascii");   /* default MIME codeset */
+    free(mimeCS);
 }
 
 void
-RFCFormat::getCharSet(char * charset, char *special)
+RFCFormat::getCharSet(char * charset, size_t size, const char *special)
 {
 	char *mimeCS = NULL;
 
-        mimeCS = _session->targetTagName(special);
+        mimeCS = _session->targetTagName(const_cast<char *>(special));
 
-    if (mimeCS) {
-       strcpy(charset, mimeCS);
-       free(mimeCS);
-    } else {
-	strcpy(charset, "us-ascii");   /* default MIME codeset */
-    }
+    snprintf(charset, size, "%s", mimeCS ? mimeCS : "us-ascii");   /* default MIME codeset */
+    free(mimeCS);
 }

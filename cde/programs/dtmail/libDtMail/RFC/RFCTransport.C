@@ -505,7 +505,13 @@ RFCTransport::deliver(DtMailEnv & error,
 static void
 skin_comma(char * buf)
 {
-    char * last_c = &buf[strlen(buf) - 1];
+    size_t length = strlen(buf);
+
+    if (length == 0) {
+	return;
+    }
+
+    char * last_c = &buf[length - 1];
 
     while(last_c > buf && isspace((unsigned char)*last_c)) {
 	*last_c = 0;
@@ -534,20 +540,17 @@ RFCTransport::arpaPhrase(const char * name, DtMailAddressSeq & tokens)
     if (name == (char *) 0) {
 	return;
     }
-    /* count comma's; we may need up to one extra space per comma... */
-    extra = 1;
-    cp = name;
-    for (;;) {
-	cp = strchr(cp, ',');
-	
-	if (!cp) break;
-	
-	for(cp += 1; *cp && isspace((unsigned char)*cp); cp++) {
-	    extra++;
-	}
-    }
-    
+    /*
+      The text is never longer than the name, except that a quoted
+      string which the name leaves open gets its closing quote: that is
+      one byte, and the NUL is another.
+      */
+    extra = 2;
+
     nbufp = (char *)malloc(strlen(name) + extra);
+    if (nbufp == NULL) {
+	return;
+    }
 
     char * tok_start = nbufp;
     int tok_len;
@@ -1100,7 +1103,8 @@ RFCTransport::concatValue(DtMailValueSeq & value)
 	tot_size += 5; // Fudge for null, commas, and space.
     }
 
-    char * str = new char[tot_size];
+    // An empty sequence still gets the terminating NUL byte.
+    char * str = new char[tot_size + 1];
 
     *str = 0;
     for (int cp = 0; cp < valueLength; cp++) {
@@ -1194,16 +1198,13 @@ RFCTransport::openLogFile(const char * path)
     passwd pw;
     GetPasswordEntry(pw);
 
-    char *from_buf = new char[256];
-    char *time_buf = new char[256];
+    char from_buf[256];
+    char time_buf[64];
     time_t now = time(NULL);
     SafeCtime(&now, time_buf, sizeof(time_buf));
 
-    sprintf(from_buf, "From %s %s", pw.pw_name, time_buf);
+    snprintf(from_buf, sizeof(from_buf), "From %s %s", pw.pw_name, time_buf);
     SafeWrite(fd, from_buf, strlen(from_buf));
-
-    delete [] from_buf;
-    delete [] time_buf;
 
     return(fd);
 }

@@ -94,7 +94,8 @@ base64size(const unsigned long len)
 }
 
 void
-RFCMIME::getMIMEType(DtMail::BodyPart * bp, char * mime_type, DtMailBoolean & is_text)
+RFCMIME::getMIMEType(DtMail::BodyPart * bp, char * mime_type,
+		     size_t mime_type_size, DtMailBoolean & is_text)
 {
     // Get the Dt type name from the body part.
     //
@@ -113,7 +114,7 @@ RFCMIME::getMIMEType(DtMail::BodyPart * bp, char * mime_type, DtMailBoolean & is
     // body part - in that case, fake text/plain
     //
     if (error.isSet()) {
-      strcpy(mime_type, "text/plain");
+      snprintf(mime_type, mime_type_size, "%s", "text/plain");
       return;
     }
     assert(type != NULL);
@@ -133,14 +134,14 @@ RFCMIME::getMIMEType(DtMail::BodyPart * bp, char * mime_type, DtMailBoolean & is
 						     NULL);
 
     if (db_type) {
-	strcpy(mime_type, db_type);
+	snprintf(mime_type, mime_type_size, "%s", db_type);
     }
     else {
 	if (text_type && strcasecmp(text_type, "true") == 0) {
-	    strcpy(mime_type, "text/plain");
+	    snprintf(mime_type, mime_type_size, "%s", "text/plain");
 	}
 	else {
-	    strcpy(mime_type, "application/octet-stream");
+	    snprintf(mime_type, mime_type_size, "%s", "application/octet-stream");
 	}
     }
 
@@ -421,7 +422,7 @@ RFCMIME::writeContentHeaders(Buffer & hdr_buf,
 	if (!is2022ASCII && !converted) {
 	  strcpy(default_charset, "us-ascii");
 	} else {
-	  getCharSet(default_charset);
+	  getCharSet(default_charset, sizeof(default_charset));
 	}
 
 	int len = strlen(default_charset);
@@ -829,27 +830,34 @@ RFCMIME::writeBase64(Buffer & buf, const char * bp, const unsigned long len)
 void
 RFCMIME::readTextEnriched(char * buf, int & off, const char * bp, const unsigned long bp_len)
 {
-  char c, i, paramct=0, newlinect=0, nofill=0;
-  char token[256], *p;
+  // The output never has more characters than the input plus the final line
+  // feed, so the caller provides bp_len + 1 bytes of room.
+  int paramct = 0, newlinect = 0, nofill = 0;
+  char token[256];
   
   const char *ebp = bp+bp_len;
   for (const char * cur = bp; cur < ebp; cur++) {
-    c = *cur;
+    char c = *cur;
     if (c == '<') {
       if (newlinect == 1)
 	buf[off++] = ' ';
       newlinect = 0;
-      c = *(++cur);
+      if (++cur >= ebp)
+	break;
+      c = *cur;
       if (c == '<') {
 	if (paramct <= 0)
 	  buf[off++] = c;
       }
       else {
-	for (i=0, p=token; (c = *cur) && (cur < ebp) && (c != '>'); i++, cur++) {
-	  if (i < sizeof(token)-1)
-	    *p++ = isupper(c) ? tolower(c) : c;
+	size_t length = 0;
+	for (; cur < ebp && *cur != '>'; cur++) {
+	  if (length < sizeof(token)-1) {
+	    unsigned char t = (unsigned char) *cur;
+	    token[length++] = (char) (isupper(t) ? tolower(t) : t);
+	  }
 	}
-	*p = '\0';
+	token[length] = '\0';
 	if (cur >= ebp)
 	  break;
 	if (strcmp(token, "param") == 0)
@@ -1264,13 +1272,13 @@ RFCMIME::formatBodies(DtMailEnv & error,
     error.clear();
 
     char default_charset[64];
-    getCharSet(default_charset);
+    getCharSet(default_charset, sizeof(default_charset));
 
     if (body_count <= 1) {
 	DtMail::BodyPart * bp = msg.getFirstBodyPart(error);
 	char mime_type[64];
 	DtMailBoolean is_text;
-	getMIMEType(bp, mime_type, is_text);
+	getMIMEType(bp, mime_type, sizeof(mime_type), is_text);
 
 	unsigned long bp_len;
 	char * bp_contents=NULL, * name=NULL;
@@ -1401,7 +1409,7 @@ RFCMIME::formatBodies(DtMailEnv & error,
 
 	    char mime_type[64];
 	    DtMailBoolean is_text;
-	    getMIMEType(bp, mime_type, is_text);
+	    getMIMEType(bp, mime_type, sizeof(mime_type), is_text);
 	    
 	    unsigned long bp_len;
 	    char* bp_contents=NULL, *name=NULL;
@@ -1681,7 +1689,7 @@ RFCMIME::rfc1522cpy(Buffer & buf, const char * value)
 	unsigned long tmpcount = 0;
 
 
-	getCharSet(charset);
+	getCharSet(charset, sizeof(charset));
 	cs_len = strlen(charset);
 
     error.clear();

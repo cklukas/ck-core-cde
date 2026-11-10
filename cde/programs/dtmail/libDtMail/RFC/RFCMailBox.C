@@ -53,6 +53,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <pwd.h>
@@ -440,11 +441,20 @@ RFCMailBox::~RFCMailBox(void)
 	free((void*) _lockFileName);
     }
 
+    // The records of message/partial parts own their identifiers.
+    for (unsigned int part = 0; part < _partialListCount; part++) {
+	free((void*) _partialList[part]->id);
+	delete _partialList[part];
+    }
+    free(_partialList);
+    _partialList = NULL;
+    _partialListCount = 0;
+
     _object_signature = 0;
 
-    if (NULL != _mra_command) delete _mra_command;
+    if (NULL != _mra_command) free(_mra_command);
     if (NULL != _mra_server) delete _mra_server;
-    if (NULL != _mra_serverpw) delete _mra_serverpw;
+    if (NULL != _mra_serverpw) free(_mra_serverpw);
 }
 
 static int isMailGroupSystemMailbox(const char * mailboxPath)
@@ -462,7 +472,7 @@ static int isMailGroupSystemMailbox(const char * mailboxPath)
         passwd pw;
 
         GetPasswordEntry(pw);
-        sprintf(inbox_path, MAIL_SPOOL_PATH, pw.pw_name);
+        snprintf(inbox_path, MAXPATHLEN, MAIL_SPOOL_PATH, pw.pw_name);
         cached_inbox_path = strdup(inbox_path);
         oneTimeFlag++;
 	delete [] inbox_path;
@@ -483,7 +493,7 @@ static char *getMailspoolPath(DtMail::Session *session)
     passwd		 pw;
     
     GetPasswordEntry(pw);
-    sprintf(syspath, MAIL_SPOOL_PATH, pw.pw_name);
+    snprintf(syspath, MAXPATHLEN, MAIL_SPOOL_PATH, pw.pw_name);
     mailspoolpath = strdup(syspath);
 
     assert(NULL!=mailspoolpath);
@@ -2740,7 +2750,7 @@ RFCMailBox::NewMailEvent(
 
 	// Debug
 	char *strbuf = new char[128];
-        sprintf(strbuf,
+        snprintf(strbuf, 128,
 		"NewMailEvent: File shrank %ld<%ld: already_locked is %s\n",
 		(unsigned long)size, (unsigned long)_file_size,
 		already_locked ? "TRUE" : "FALSE");
@@ -3575,11 +3585,11 @@ RFCMailBox::incorporate(DtMailEnv & error, const DtMailBoolean already_locked)
 	    char *strbuf = new char[256];
 	    if (already_locked) {
 	    
-		sprintf(strbuf, 
+		snprintf(strbuf, 256,
 		    "Attempt #%d: RFCMailBox::incorporate(): No From: buf=<%.10s>, already_locked is TRUE\n", num_tries + 1, buf);
 	    }
 	    else {
-		sprintf(strbuf, 
+		snprintf(strbuf, 256,
 		    "Attempt #%d: RFCMailBox::incorporate(): No From: buf=<%.10s>, already_locked is FALSE\n", num_tries + 1, buf);
 	    }
 	    dumpMaps(strbuf);
@@ -3599,10 +3609,53 @@ RFCMailBox::generateLockFileName(void)
   char *lock_path = new char[MAXPATHLEN+20];
 
   assert(_real_path != NULL);
-  (void) sprintf(lock_path, "%s.lock", _real_path);
+  (void) snprintf(lock_path, MAXPATHLEN+20, "%s.lock", _real_path);
   s = strdup(lock_path);
   delete [] lock_path;
   return s;
+}
+
+//
+// The name of a short-lived lock file beside a mailbox: the given base followed
+// by six random letters and digits, taken from the system's random source so
+// that another user cannot predict the name.  False, with errno set, when the
+// name does not fit or no random bytes are available.
+//
+static bool
+makeLockTemporaryName(char *name, size_t size, const char *base)
+{
+  static const char alphabet[] =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  unsigned char random_bytes[6];
+  size_t length = strlen(base);
+  size_t have = 0;
+  int fd;
+
+  if (length + sizeof(random_bytes) + 1 > size) {
+    errno = ENAMETOOLONG;
+    return false;
+  }
+  fd = open("/dev/urandom", O_RDONLY);
+  if (fd < 0)
+    return false;
+  while (have < sizeof(random_bytes)) {
+    ssize_t got = read(fd, random_bytes + have, sizeof(random_bytes) - have);
+    if (got < 0 && errno == EINTR)
+      continue;
+    if (got <= 0) {
+      close(fd);
+      if (got == 0)
+	errno = EIO;
+      return false;
+    }
+    have += (size_t) got;
+  }
+  close(fd);
+  memcpy(name, base, length);
+  for (size_t i = 0; i < sizeof(random_bytes); i++)
+    name[length + i] = alphabet[random_bytes[i] % (sizeof(alphabet) - 1)];
+  name[length + sizeof(random_bytes)] = '\0';
+  return true;
 }
 
 // Function: RFCMailBox::generateUniqueLockId - create unique ID for this mailbox lock files
@@ -3897,14 +3950,19 @@ RFCMailBox::lockFile(DtMailEnv & error)
   assert(_dot_lock_active == DTM_FALSE);
   
   // Create the temporary mail lock file name
-  // It has the form <_lockfilename><XXXXXX> or mailbox.lockXXXXXX
-  // mktemp then creates a unique temporary file for the template
+  // It has the form <mailbox path><six random characters>; the file itself
+  // is created exclusively in linkLockFile.
   //
   assert(_lockFileName != NULL);
   char *tempLockFileName = new char[MAXPATHLEN];
-  sprintf(tempLockFileName, "%sXXXXXX", _real_path);
-  mktemp(tempLockFileName);
-  PRIV_ENABLED(return_status,SafeRemove(tempLockFileName));
+  if (!makeLockTemporaryName(tempLockFileName, MAXPATHLEN, _real_path)) {
+    _use_dot_lock = DTM_FALSE;
+    _mail_box_writable = DTM_FALSE;
+    error.vSetError(DTME_CannotCreateMailboxLockFile,
+		    DTM_FALSE, NULL, _real_path, error.errnoMessage());
+    delete [] tempLockFileName;
+    return;
+  }
 
   // loop through attempting to create the temporary lock file,
   // and if successful attempt to link the temporary lock file
@@ -4083,14 +4141,18 @@ RFCMailBox::unlockFile(DtMailEnv & error, int fd)
 }
 
 #define DOT_DTMAIL_SUFFIX "dtmail"
-void
-RFCMailBox::dotDtmailLockFile(char *filename, int)
+bool
+RFCMailBox::dotDtmailLockFile(char *filename, size_t size)
 {
 
   // Attempt to link the temporary lock file to the real lock file.
   assert(_real_path != NULL);
-  (void) sprintf(filename, "%s.%s", _real_path, DOT_DTMAIL_SUFFIX);
-
+  int length = snprintf(filename, size, "%s.%s", _real_path, DOT_DTMAIL_SUFFIX);
+  if (length < 0 || (size_t) length >= size) {
+    filename[0] = '\0';
+    return false;
+  }
+  return true;
 }
 
 void
@@ -4112,9 +4174,12 @@ RFCMailBox::dotDtmailLock(DtMailEnv & error)
   // operating on the same mailbox.
   
   // Create the temporary mail lock file name.
-  sprintf(tempLockFileName, "%sXXXXXX", _real_path);
-  mktemp(tempLockFileName);
-  PRIV_ENABLED(return_status,SafeRemove(tempLockFileName));
+  if (!makeLockTemporaryName(tempLockFileName, MAXPATHLEN, _real_path)) {
+    error.vSetError(DTME_CannotCreateMailboxLockFile,
+		    DTM_FALSE, NULL, _real_path, error.errnoMessage());
+    delete [] tempLockFileName;
+    return;
+  }
 
   // Attempt to create the temporary file.
   PRIV_ENABLED(lock_fd,SafeOpen(tempLockFileName, flags, 0666));
@@ -4146,12 +4211,19 @@ RFCMailBox::dotDtmailLock(DtMailEnv & error)
     return;
   }
 
-  sprintf(lockBuf, "%d\n", getpid());
+  snprintf(lockBuf, sizeof(lockBuf), "%d\n", (int) getpid());
   len = strlen(lockBuf);
   len = SafeWrite(lock_fd, lockBuf, len);
   SafeClose(lock_fd);
 
-  dotDtmailLockFile(dotDtmailPath, MAXPATHLEN);
+  if (!dotDtmailLockFile(dotDtmailPath, sizeof(dotDtmailPath))) {
+    errno = ENAMETOOLONG;
+    error.vSetError(DTME_CannotCreateMailboxDotDtmailLockFile,
+		    DTM_FALSE, NULL, _real_path, error.errnoMessage());
+    PRIV_ENABLED(return_status,SafeRemove(tempLockFileName));
+    delete [] tempLockFileName;
+    return;
+  }
 
   PRIV_ENABLED(return_status,SafeLink(tempLockFileName, dotDtmailPath));
   if (return_status == -1)
@@ -4168,7 +4240,7 @@ RFCMailBox::dotDtmailUnlock(DtMailEnv &)
 {
   char dotDtmailPath[MAXPATHLEN+1];
   char lockBuf[MAXPATHLEN];
-  pid_t pid;
+  int pid = 0;
   int return_status = 0;
   int lock_fd = 0;
 #ifndef O_RSYNC
@@ -4177,7 +4249,8 @@ RFCMailBox::dotDtmailUnlock(DtMailEnv &)
   int flags = O_RDONLY | O_EXCL | O_SYNC | O_RSYNC;
 #endif
 
-  dotDtmailLockFile(dotDtmailPath, MAXPATHLEN);
+  if (!dotDtmailLockFile(dotDtmailPath, sizeof(dotDtmailPath)))
+    return;
   PRIV_ENABLED(lock_fd,SafeOpen(dotDtmailPath, flags, 0666));
   if (lock_fd < 0)
     return;
@@ -4189,8 +4262,8 @@ RFCMailBox::dotDtmailUnlock(DtMailEnv &)
       return;
   }
 
-  sscanf(lockBuf, "%d", &pid);
-  if (pid != getpid())
+  lockBuf[return_status] = '\0';
+  if (sscanf(lockBuf, "%d", &pid) != 1 || pid != (int) getpid())
   {
       (void) SafeClose(lock_fd);
       return;
@@ -4241,7 +4314,7 @@ RFCMailBox::longLock(DtMailEnv & error)
 	      DtMailBoolean	ans;
   	      char		dotDtmailPath[MAXPATHLEN+1];
 
-  	      dotDtmailLockFile(dotDtmailPath, MAXPATHLEN);
+  	      dotDtmailLockFile(dotDtmailPath, sizeof(dotDtmailPath));
 	      ans = _callback(
 			DTMC_DOTDTMAILLOCKFAILED, _real_path, NULL, _cb_data,
 			(char*) dotDtmailPath, (const char*) error);
@@ -4907,7 +4980,7 @@ RFCMailBox::updateMailRetrievalPassword(char *password)
 {
     if (NULL == password || NULL == _mra_server) return;
 
-    if (NULL != _mra_serverpw) delete _mra_serverpw;
+    if (NULL != _mra_serverpw) free(_mra_serverpw);
     _mra_serverpw = strdup(password);
     _mra_server->set_password(_mra_serverpw);
 }

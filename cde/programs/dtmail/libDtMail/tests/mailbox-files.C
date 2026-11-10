@@ -1,12 +1,13 @@
 // Regression tests for the files libDtMail creates, the paths it follows and
-// the mail it fetches from a server when it opens and saves a mailbox.  The
-// production Session.C, RFCMailBox.C, DtMailServer.C, POP3Server.C,
-// IMAPServer.C and IO.C are compiled next to this program with the sanitizers
-// and linked with the rest of the built libDtMail; the POP and IMAP clients
-// run against a server of the case's own (a forked process on a port of the
-// loopback address that plays what a hostile server would send).  Every case
-// runs in its own process (see check-mailbox-files.py) in an empty directory
-// named by DTMAIL_TEST_DIR, which is also HOME.
+// the messages it puts together when it opens and saves a mailbox.  The
+// production Session.C, RFCMailBox.C, MIMEPartial.C, MIMEBodyPart.C and
+// RFCMIME.C are compiled next to this program with the sanitizers and linked
+// with the rest of the built libDtMail, which also holds the POP and IMAP
+// clients that a case runs against a server of its own (a forked process on
+// a port of the loopback address that plays what a hostile server would send);
+// every case runs in its own process
+// (see check-mailbox-files.py) in an empty directory named by DTMAIL_TEST_DIR,
+// which is also HOME.
 
 #include <errno.h>
 #include <fcntl.h>
@@ -395,6 +396,183 @@ static int relative_paths_are_bounded(void)
 }
 
 
+/* the text of the first body part of every message of the mailbox, in order */
+static std::vector<std::string> body_texts(DtMail::MailBox *box)
+{
+    std::vector<std::string> texts;
+    DtMailEnv env;
+    DtMail::Message *message = box->getFirstMessage(env);
+    while (message != NULL && !env.isSet()) {
+        DtMailEnv part_env;
+        std::string text = "<no body>";
+        DtMail::BodyPart *part = message->getFirstBodyPart(part_env);
+        if (part != NULL && !part_env.isSet()) {
+            const void *contents = NULL;
+            unsigned long length = 0;
+            part->getContents(part_env, &contents, &length, NULL, NULL, NULL, NULL);
+            if (!part_env.isSet() && contents != NULL) text.assign((const char *)contents, length);
+        }
+        texts.push_back(text);
+        message = box->getNextMessage(env, message);
+    }
+    return texts;
+}
+
+/* one part of a message/partial message, as it stands in a mailbox */
+static std::string partial_part(const char *id, int number, int total, const std::string &body,
+                                const std::string &outer_headers = "")
+{
+    std::string parameters = std::string("id=\"") + id + "\"; number=" + std::to_string(number);
+    if (total > 0) parameters += "; total=" + std::to_string(total);
+    return "From sender@example.org Mon Nov  9 10:00:00 2026\n"
+           "From: sender@example.org\n"
+           "To: bob@example.org\n"
+           "Subject: part " + std::to_string(number) + "\n"
+           "Date: Mon, 9 Nov 2026 10:00:00 +0000\n"
+           "MIME-Version: 1.0\n" + outer_headers +
+           "Content-Type: message/partial; " + parameters + "\n"
+           "\n" + body + "\n\n";
+}
+
+/* the first part carries the headers of the message that was split */
+static std::string first_part_body(const std::string &data)
+{
+    return "Content-Type: text/plain\nMessage-ID: <inner@example.org>\n\n" + data;
+}
+
+static DtMail::MailBox *open_text(const std::string &content)
+{
+    std::string box = path("box");
+    write_file(box, content, 0600);
+    DtMailEnv env;
+    DtMail::Session *session = new_session(env);
+    if (session == NULL) return NULL;
+    return open_box(session, env, box);
+}
+
+/* the parts of a message/partial message are put together into one message */
+static int partial_parts_are_assembled(void)
+{
+    DtMail::MailBox *box = open_text(partial_part("a1", 1, 0, first_part_body("FIRST-PART-DATA\n")) +
+                                     partial_part("a1", 2, 2, "SECOND-PART-DATA\n"));
+    CHECK(box != NULL);
+    std::vector<std::string> bodies = body_texts(box);
+    CHECK(!bodies.empty());
+    const std::string &whole = bodies.back();
+    size_t first = whole.find("FIRST-PART-DATA"), second = whole.find("SECOND-PART-DATA");
+    CHECK(first != std::string::npos && second != std::string::npos && first < second);
+    CHECK(whole.find("Message-ID") == std::string::npos);
+    return 0;
+}
+
+/* parts numbered outside the total, or far outside anything a message has, do not belong to it */
+static int partial_numbers_beyond_the_total_are_ignored(void)
+{
+    DtMail::MailBox *box = open_text(partial_part("b1", 1, 0, first_part_body("ONE\n")) +
+                                     partial_part("b1", 2, 2, "TWO\n") +
+                                     partial_part("b1", 500, 0, "STRAY-500\n") +
+                                     partial_part("b1", 1000000, 0, "STRAY-MILLION\n") +
+                                     partial_part("b1", 2147483647, 0, "STRAY-MAX\n"));
+    CHECK(box != NULL);
+    std::vector<std::string> bodies = body_texts(box);
+    bool assembled = false;
+    for (size_t i = 0; i < bodies.size(); i++) {
+        if (bodies[i].find("ONE") != std::string::npos && bodies[i].find("TWO") != std::string::npos) assembled = true;
+        CHECK(bodies[i].find("STRAY-500") == std::string::npos || bodies[i].find("ONE") == std::string::npos);
+        CHECK(bodies[i].find("STRAY-MILLION") == std::string::npos || bodies[i].find("ONE") == std::string::npos);
+    }
+    CHECK(assembled);
+    return 0;
+}
+
+/* numbers that are not numbers make a message that is not a part */
+static int partial_parameters_that_are_not_numbers_are_refused(void)
+{
+    std::string text;
+    const char *numbers[] = {"-5", "0", "99999999999999999999", "x", "", "4294967297"};
+    for (size_t i = 0; i < sizeof(numbers) / sizeof(numbers[0]); i++) {
+        std::string part = partial_part("c1", 1, 2, first_part_body("DATA\n"));
+        size_t at = part.find("number=1");
+        part.replace(at, strlen("number=1"), std::string("number=") + numbers[i]);
+        text += part;
+    }
+    text += partial_part("c1", 3, 2, "number beyond its own total\n");        // 3 of 2
+    text += partial_part("c1", 1, 2000000000, first_part_body("HUGE\n"));      // far more parts than allowed
+    DtMail::MailBox *box = open_text(text);
+    CHECK(box != NULL);
+    body_texts(box);
+    return 0;
+}
+
+/* headers that need more room than the size the parts claim are not written past the buffer */
+static int partial_headers_larger_than_the_old_buffer_are_assembled(void)
+{
+    std::string padding;
+    for (int i = 0; i < 40; i++) padding += "X-Pad-" + std::to_string(i) + ": " + std::string(1000, 'h') + "\n";
+    DtMail::MailBox *box = open_text(partial_part("d1", 1, 0, first_part_body("HEAD-DATA\n"), padding) +
+                                     partial_part("d1", 2, 2, "TAIL-DATA\n"));
+    CHECK(box != NULL);
+    std::vector<std::string> bodies = body_texts(box);
+    CHECK(!bodies.empty());
+    CHECK(bodies.back().find("HEAD-DATA") != std::string::npos && bodies.back().find("TAIL-DATA") != std::string::npos);
+    return 0;
+}
+
+/* data of the parts larger than any size the headers announce */
+static int partial_data_larger_than_the_old_buffer_is_assembled(void)
+{
+    std::string big1(60000, 'a'), big2(60000, 'b');
+    DtMail::MailBox *box = open_text(partial_part("e1", 1, 0, first_part_body(big1 + "\n")) +
+                                     partial_part("e1", 2, 2, big2 + "\n"));
+    CHECK(box != NULL);
+    std::vector<std::string> bodies = body_texts(box);
+    CHECK(!bodies.empty());
+    CHECK(bodies.back().find(big1) != std::string::npos && bodies.back().find(big2) != std::string::npos);
+    return 0;
+}
+
+/* a first part without the headers of the carried message is not put together */
+static int partial_first_part_without_a_blank_line_is_left_alone(void)
+{
+    DtMail::MailBox *box = open_text(partial_part("f1", 1, 0, "Content-Type: text/plain\nno blank line, only header lines") +
+                                     partial_part("f1", 2, 2, "SECOND\n"));
+    CHECK(box != NULL);
+    body_texts(box);
+    return 0;
+}
+
+/* a part that does not fit the memory a message has is not put together either */
+static int partial_parts_are_not_cut_at_a_zero_byte(void)
+{
+    std::string second = std::string("SECOND-") + std::string(1, '\0') + "AFTER-NUL-DATA\n";
+    DtMail::MailBox *box = open_text(partial_part("g1", 1, 0, first_part_body("FIRST\n")) +
+                                     partial_part("g1", 2, 2, second));
+    CHECK(box != NULL);
+    body_texts(box);
+    return 0;
+}
+
+/* enriched text with a command of any length becomes plain text */
+static int enriched_text_with_a_long_command_is_converted(void)
+{
+    std::string message = "From sender@example.org Mon Nov  9 10:00:00 2026\n"
+                          "From: sender@example.org\n"
+                          "To: bob@example.org\n"
+                          "Subject: enriched\n"
+                          "MIME-Version: 1.0\n"
+                          "Content-Type: text/enriched\n"
+                          "\n"
+                          "<" + std::string(3000, 'a') + ">visible <bold>text</bold> <" + std::string(300, 'b') + "\n\n";
+    DtMail::MailBox *box = open_text(message);
+    CHECK(box != NULL);
+    std::vector<std::string> bodies = body_texts(box);
+    CHECK(bodies.size() == 1);
+    CHECK(bodies[0].find("visible text") != std::string::npos);
+    CHECK(bodies[0].find("aaaa") == std::string::npos && bodies[0].find("bbbb") == std::string::npos);
+    return 0;
+}
+
+
 /* ---- the mail server clients, against a server that answers what the case scripts ---- */
 
 struct Rule { std::string prefix; std::string reply; };   /* %T in a reply is the tag of the command */
@@ -677,6 +855,14 @@ static struct { const char *name; int (*run)(void); } cases[] = {
     {"paths_are_expanded_without_a_shell", paths_are_expanded_without_a_shell},
     {"expansions_that_do_not_fit_are_refused", expansions_that_do_not_fit_are_refused},
     {"relative_paths_are_bounded", relative_paths_are_bounded},
+    {"partial_parts_are_assembled", partial_parts_are_assembled},
+    {"partial_numbers_beyond_the_total_are_ignored", partial_numbers_beyond_the_total_are_ignored},
+    {"partial_parameters_that_are_not_numbers_are_refused", partial_parameters_that_are_not_numbers_are_refused},
+    {"partial_headers_larger_than_the_old_buffer_are_assembled", partial_headers_larger_than_the_old_buffer_are_assembled},
+    {"partial_data_larger_than_the_old_buffer_is_assembled", partial_data_larger_than_the_old_buffer_is_assembled},
+    {"partial_first_part_without_a_blank_line_is_left_alone", partial_first_part_without_a_blank_line_is_left_alone},
+    {"partial_parts_are_not_cut_at_a_zero_byte", partial_parts_are_not_cut_at_a_zero_byte},
+    {"enriched_text_with_a_long_command_is_converted", enriched_text_with_a_long_command_is_converted},
     {"pop3_retrieves_and_deletes_messages", pop3_retrieves_and_deletes_messages},
     {"pop3_message_counts_that_are_not_counts_are_refused", pop3_message_counts_that_are_not_counts_are_refused},
     {"pop3_message_identifiers_of_any_length_are_read", pop3_message_identifiers_of_any_length_are_read},

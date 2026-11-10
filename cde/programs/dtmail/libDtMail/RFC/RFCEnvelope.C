@@ -998,7 +998,7 @@ RFCEnvelope::makeReply(DtMailEnv & error,
 
 	RFCValue * new_val = new RFCValue(str_addr, strlen(str_addr), _parent->session());
 	value.append(new_val);
-	delete str_addr;
+	delete [] str_addr;
     }
 }
 

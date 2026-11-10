@@ -39,6 +39,19 @@
   scripted server on the loopback address and by
   `programs/dtmail/tests/check-mail-servers.py`; described in
   `docs/improvements/mail.md`.
+- dtmail: put `message/partial` messages together safely, convert enriched text
+  and build MIME and address text without buffers sized by a guess. Opening a
+  mailbox that held the parts of one partial message stopped the mailer (a null
+  parent in the header reader); part numbers and totals are read as plain
+  numbers and limited to 1,000 parts and 256 MiB, and the text of the message
+  grows as needed instead of being sized from `Content-Length` and appended with
+  `strcat()`. A long command in enriched text no longer overflows the stack; MIME
+  types, character sets, the `From ` line and address lists are bounded; lock
+  files get random temporary names, the `.dtmail` lock is read into a
+  terminated buffer, and `free()` and `delete[]` match their allocations.
+  Covered by real-mailbox cases in `libDtMail/tests/mailbox-files.C` and by
+  `programs/dtmail/tests/check-mail-messages.py`; described in
+  `docs/improvements/mail.md`.
 - dtfile: make copy, move and link dialog labels and destination paths
   independent of fixed localized-text assumptions. Selected-object labels now
   compose Motif strings directly, while rename, preview and resolved target

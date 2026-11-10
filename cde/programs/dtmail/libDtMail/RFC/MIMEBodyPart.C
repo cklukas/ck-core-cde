@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include <Dt/Dts.h>
 
@@ -474,18 +475,23 @@ MIMEBodyPart::loadBody(DtMailEnv & error)
   if (_body_env && !error.isSet() &&
       ((strncasecmp(*(value[0]), "text/enriched", 13) == 0)
        || (strncasecmp(*(value[0]), "text/richtext", 13) == 0))) {
-    char *new_body = (char *)malloc((unsigned)(_body_len*2));
+    // The plain text is never longer than the enriched text plus the final
+    // line feed; the buffer also holds the terminating NUL byte.
+    char *new_body = NULL;
     int size = 0;
-    RFCMIME::readTextEnriched(new_body, size, _body, _body_decoded_len);
-    new_body = (char *)realloc(new_body, size+2);
-    if (_must_free_body == DTM_TRUE)
-      free(_body);
-    _must_free_body = DTM_TRUE;
-    _body_decoded_len = size;
-    _body = new_body;
-    // Changed this temporarily until after release. We really should not
-    // be null terminating these buffers.
-    (_body)[_body_decoded_len] = 0;
+    if (_body_decoded_len >= 0 && _body_decoded_len < INT_MAX - 2)
+      new_body = (char *)malloc((size_t) _body_decoded_len + 2);
+    if (new_body != NULL) {
+      RFCMIME::readTextEnriched(new_body, size, _body, _body_decoded_len);
+      if (_must_free_body == DTM_TRUE)
+        free(_body);
+      _must_free_body = DTM_TRUE;
+      _body_decoded_len = size;
+      _body = new_body;
+      // Changed this temporarily until after release. We really should not
+      // be null terminating these buffers.
+      (_body)[_body_decoded_len] = 0;
+    }
   }
   error.clear();
   return;

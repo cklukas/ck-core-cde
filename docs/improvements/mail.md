@@ -212,6 +212,60 @@ and lines of every length, and passwords with line breaks.
 `make -C programs/dtmail check` runs the line helpers, the command formatter,
 the tag, the identifier format and `SafeCtime()` on input of every length.
 
+## Message data and lock files
+
+The structure of a message (the parameters of its `Content-Type`, the enriched
+text of its body, the addresses in its headers) and the environment (the
+character set of the locale, the length of a path) decide how much text the
+library builds, so the places that built it in a buffer of a guessed size now
+size it from the data.
+
+- A message of the type `message/partial` is put together from its parts when
+  the mailbox is read. Reading a mailbox that held two parts of one message
+  stopped the mailer, because the headers of the carried message were read
+  through an envelope that had no parent message and so no session. The parts are now
+  matched by the parameters `id`, `number` and `total`, which are read as
+  parameters (a name inside the quoted `id` is not a parameter) and as plain
+  numbers (`atoi()` returned anything for text that was no number). A part
+  needs a number between 1 and 1,000 that is not above its own total; a message
+  has at most 1,000 parts and 256 MiB. The old code wrote the part at
+  `parts[number - 1]` for any number, sized the text of the whole message from the
+  `Content-Length` headers of the parts, and appended headers and data to it with
+  `strcat()`, which stops at a zero byte and does not look at the size. The new
+  text grows as needed, keeps every byte, and a first part without a blank line
+  after the headers of the carried message is left alone. The list of parts is
+  released with the mailbox.
+- The converter for `text/enriched` and `text/richtext` keeps the name of a
+  command in a 256-byte buffer: a longer one is cut. The counter that guarded
+  the buffer was a `char` that wrapped after 127 characters, so a command name of
+  a few hundred characters wrote past the buffer on the stack. The converter no
+  longer reads the byte after a text that ends with `<`, and the buffer for the
+  plain text is sized from the length of the text and checked.
+- The MIME type from the data type database and the character set of the locale
+  are copied into their 64-byte buffers with `snprintf()`; `strcpy()` was used.
+- The `From ` line that is made up for a message without one is built from the
+  first word of the sender, with the characters that would end the line left
+  out, in a buffer sized for it (it was 100 bytes). A list of addresses is
+  copied into a buffer with room for the closing quote of an unterminated
+  quoted string, which the old size missed; an empty list gets its terminating
+  byte; an empty address no longer forms a pointer before its string.
+  The log file that receives a copy of a sent message gets a complete first
+  line (its time was cut to 8 bytes and left without a terminator).
+- The temporary file of a lock is named with six random characters read from
+  `/dev/urandom` instead of `mktemp()`, and the names of lock files that do not
+  fit `MAXPATHLEN` are refused. The `.dtmail` lock is released only when the file
+  holds the number of this process: the content is read into a terminated buffer
+  (it was scanned unterminated, with the number uninitialized when it was not
+  one). Strings that `strdup()` made are released with `free()`, and an array
+  with `delete[]`.
+
+`make -C programs/dtmail/libDtMail check` opens mailboxes with parts of one
+message in every shape described above and a `text/enriched` message with a very
+long command, and `make -C programs/dtmail check` runs the parameter reader, the
+growing text, the enriched converter, the `From ` line, the lock name, the lock
+release and the address reader on input of every length. Both
+fail on the sources before this change.
+
 ## Requests from other applications
 
 Another application in the user's ToolTalk session can ask `dtmail` to send a
