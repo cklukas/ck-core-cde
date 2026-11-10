@@ -486,23 +486,21 @@ AttachArea::addAttachment(
 
     mail_error.clear();
 
-    char *errormsg = new char[512];
-    char *buf = new char[2048];
+    // The messages name the file, whose path can be as long as the system
+    // allows; a translated message is far shorter than the room left for it.
+    size_t room = strlen(filename) + 512;
+    char *errormsg = new char[room];
+    char *buf = new char[room];
     char *buffer = NULL, *lbl;
     char *fname_start;
 
-    for (fname_start = filename + strlen(filename) - 1;
-	 fname_start >= filename && *fname_start != '/'; fname_start--) {
-	continue;
-    }
-    if (*fname_start == '/') {
-	fname_start += 1;
-    }
+    fname_start = strrchr(filename, '/');
+    fname_start = (fname_start != NULL) ? fname_start + 1 : filename;
 
     bp = msg->newBodyPart(mail_error, lastAttBP);	
 
     if (SafeAccess(filename, F_OK) != 0) {
-	sprintf(buf, CATGETS(DT_catd, 3, 34, "%s does not exist."),
+	snprintf(buf, room, CATGETS(DT_catd, 3, 34, "%s does not exist."),
 		filename);
 	answer = this->handleErrorDialog(CATGETS(DT_catd, 1, 81, "Mailer"),
 					 buf);
@@ -514,28 +512,28 @@ AttachArea::addAttachment(
     SafeStat(filename, &s);
 
     if(S_ISFIFO(s.st_mode)) {
-	sprintf(errormsg,
+	snprintf(errormsg, room,
 		CATGETS(DT_catd, 12, 4, "Cannot attach FIFO files: %s"), filename);
 	validtype = FALSE;
     } else if(S_ISCHR(s.st_mode)) {
-	sprintf(
-	    errormsg,
+	snprintf(
+	    errormsg, room,
 	    CATGETS(DT_catd, 12, 5, "Cannot attach character special files: %s"), filename
 	);
 	validtype = FALSE;
     } else if(S_ISDIR(s.st_mode)) {
-	sprintf(
-	    errormsg,
+	snprintf(
+	    errormsg, room,
 	    CATGETS(DT_catd, 12, 6, "Cannot attach directories: %s"), filename
 	);
 	validtype = FALSE;
     } else if(S_ISBLK(s.st_mode)) {
-	sprintf(errormsg,
+	snprintf(errormsg, room,
 		CATGETS(DT_catd, 12, 7, "Cannot attach block special files: %s"), filename
 	);
 	validtype = FALSE;
     } else if(S_ISSOCK(s.st_mode)) {
-	sprintf(errormsg,
+	snprintf(errormsg, room,
 		CATGETS(DT_catd, 12, 8, "Cannot attach socket files: %s"), filename
 	);
 	validtype = FALSE;
@@ -552,7 +550,7 @@ AttachArea::addAttachment(
     fd = SafeOpen(filename, O_RDONLY);
 	
     if (fd < 0) {
-	sprintf(buf, CATGETS(DT_catd, 3, 35, "Unable to open %s."), filename);
+	snprintf(buf, room, CATGETS(DT_catd, 3, 35, "Unable to open %s."), filename);
         helpId = DTMAILHELPNOOPEN;
 	answer = this->handleErrorDialog(CATGETS(DT_catd, 1, 82, "Mailer"),
 					 buf,
@@ -577,7 +575,7 @@ AttachArea::addAttachment(
 	buffer = new char[s.st_size + 1];
 
 	if (!buffer) {
-            sprintf(buf, "%s",
+            snprintf(buf, room, "%s",
 		    CATGETS(DT_catd, 3, 36, "Unable to allocate memory."));
             helpId = DTMAILHELPNOALLOCMEM;
 	    answer = this->handleErrorDialog(CATGETS(DT_catd, 1, 83, "Mailer"),

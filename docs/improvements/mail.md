@@ -114,3 +114,32 @@ by a guess, and a message could write past them.
 `make -C programs/dtmail check` runs the production functions under
 AddressSanitizer and UndefinedBehaviorSanitizer on headers of every length, and
 guards the places that need a display.
+
+## Input of the user who starts the mailer
+
+The command line, the resources, the session file and the files named for
+attachments belong to whoever starts the program. Where `dtmail` is installed
+set-group-id, a caller who can overflow a buffer from them runs code in a
+process whose saved group id is the mail group, so these buffers are bounded
+as well.
+
+- The font list that joins the user font and the glyph font (`-xrm
+  'Dtmail*userFont: ...'`) is built in a `TextBuffer`; it was a 1024-byte
+  buffer filled with `strcpy()` and `strcat()`. The name of the display that
+  is exported with `putenv()` is allocated for its length (it was 256 bytes).
+- A session file is read word by word with `readSessionWord()`, which keeps what
+  fits and skips the rest of a longer word. The session reader used
+  `fscanf("%s")` into buffers of 4097 and 256 bytes. The session file is made
+  readable and writable for its owner only; it was shared with the group.
+- The messages about an attachment file (`-c file`, an attachment added in the
+  compose window or by a ToolTalk message) are built in buffers sized for the
+  path they name, and the name of the file is found with `strrchr()`; the old
+  loop read the byte before the path when it had no slash.
+- The names of the widgets of a header line are built from the whole header
+  name. They were built in 50 bytes, with the name of a header of a message
+  loaded into the compose window written at an offset that depended on its
+  length.
+
+`make -C programs/dtmail check` runs `readSessionWord()` and the widget-name
+function under the sanitizers on input of every length, and guards the places
+that need a display.

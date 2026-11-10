@@ -40,6 +40,7 @@
  */
 
 #include <stdio.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <time.h>
 #include <sys/param.h>
@@ -63,6 +64,34 @@
 
 
 #define INBOX	"INBOX"
+
+// Read the next word of a session file into the size bytes at word.  A word
+// that is longer than fits is cut and the rest of it skipped; the file is the
+// user's to change, and what it names can be of any length.  Returns the
+// length of the word that was kept, or -1 at the end of the file.
+static int
+readSessionWord(FILE * fp, char * word, size_t size)
+{
+    int c;
+    size_t length = 0;
+
+    do {
+	c = getc(fp);
+    } while (c != EOF && isspace(c));
+
+    if (c == EOF || size == 0) {
+	return -1;
+    }
+
+    while (c != EOF && !isspace(c)) {
+	if (length + 1 < size) {
+	    word[length++] = (char) c;
+	}
+	c = getc(fp);
+    }
+    word[length] = '\0';
+    return (int) length;
+}
 
 // For debugging only
 #ifdef LOG_SESSION
@@ -234,7 +263,7 @@ RoamApp::restoreSession(void)
     _mailview = NULL;
     for(;;)
     {
-	if (fscanf(session_fp,"%s",buf) == EOF)
+	if (readSessionWord(session_fp, buf, sizeof(buf)) < 0)
 	  break;
 	
 	switch (buf[0])
@@ -293,7 +322,7 @@ RoamApp::smpSaveSessionLocal(void)
 	session_fp = NULL;
 	return;
     }
-    chmod(pathname, S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP);
+    chmod(pathname, S_IRUSR | S_IWUSR);
     
     for(int i = 0; i<_numWindows; i++)
       _windows[i]->smpSaveSessionLocal();
@@ -367,11 +396,12 @@ RoamMenuWindow::restoreSession(char *buf)
 	FILE	*fp = theRoamApp.sessionFile();
 
 	LOG_FPRINTF(log, (log, "Is a RMW"));
-	if (fscanf(
-		fp, "%s%s%d%d%d%d%d",
-		buf,workspaces,&iconic,&x,&y,&width,&height) != 7)
+	if (readSessionWord(fp, buf, MAXPATHLEN + 1) < 0 ||
+	    readSessionWord(fp, workspaces, 256) < 0 ||
+	    fscanf(fp, "%d%d%d%d%d",
+		   &iconic, &x, &y, &width, &height) != 5)
 	{
-	    fscanf(fp,"%s[\n]",buf);
+	    readSessionWord(fp, buf, MAXPATHLEN + 1);
     	    LOG_CLOSEFILEPTR(log);
 	    return NULL;
 	}
@@ -588,11 +618,12 @@ SendMsgDialog::restoreSession(char *buf)
 
 	LOG_FPRINTF(log, (log, "Is a SMD"));
 
-	if (fscanf(
-		fp, "%s%s%d%d%d%d%d",
-		buf,workspaces,&iconic,&x,&y,&width,&height) != 7)
+	if (readSessionWord(fp, buf, MAXPATHLEN + 1) < 0 ||
+	    readSessionWord(fp, workspaces, 256) < 0 ||
+	    fscanf(fp, "%d%d%d%d%d",
+		   &iconic, &x, &y, &width, &height) != 5)
 	{
-	    fscanf(fp,"%s[\n]",buf);
+	    readSessionWord(fp, buf, MAXPATHLEN + 1);
     	    LOG_CLOSEFILEPTR(log);
 	    return;
 	}

@@ -238,6 +238,14 @@
   `make -C lib/tt/lib check` (sanitizer cases with a
   simulated and, started as the superuser, a real privileged process) and
   `make -C lib/tt/bin check`.
+- dtmail: bound what the user who starts the mailer controls. The font list
+  built from `-xrm` resources, the exported `DISPLAY`, the words of a session
+  file, the messages about an attachment file given with `-c` or a ToolTalk
+  message and the widget names of the header lines of the compose window no
+  longer overflow buffers of a fixed size (they matter where dtmail is
+  installed set-group-id). The session file is accessible to its owner only.
+  Covered by `programs/dtmail/tests/check-local-input.py`; described in
+  `docs/improvements/mail.md`.
 - dtmail, dtmailpr: build the text made from a received message without
   fixed buffers. The address list of a reply, the subject of a reply to a
   message without one, the headers written by "Save As Text", the header line

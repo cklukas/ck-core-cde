@@ -105,6 +105,7 @@
 #include <DtMail/DtMailSigChld.h>
 #include <DtMail/IO.hh>
 #include <DtMail/OptCmd.h>
+#include <DtMail/TextBuffer.hh>
 
 #include "DmxPrintJob.h"
 #include "DtMailGenDialog.hh"
@@ -1007,9 +1008,13 @@ void RoamApp::initialize(int *argcp, char **argv)
 
     // export display and locale settings
 
-    static char displayenv[256];	/* Needs to be static for putenv */
-    sprintf(displayenv, "DISPLAY=%s", XDisplayString(_display));
-    putenv(displayenv);
+    // The name of the display is as long as the user made it; the string has
+    // to stay for putenv().
+    char *displayenv = (char *) malloc(strlen(XDisplayString(_display)) + 9);
+    if (displayenv != NULL) {
+	sprintf(displayenv, "DISPLAY=%s", XDisplayString(_display));
+	putenv(displayenv);
+    }
 
     // Process dtmail opt args.
 
@@ -1096,7 +1101,6 @@ void RoamApp::initialize(int *argcp, char **argv)
 
     if (db) {
 	FontType	userfont;
-        char		*buf = new char[1024];
 
 
 	// Need to check fixed width font mailrc variable.  Assume
@@ -1170,34 +1174,35 @@ void RoamApp::initialize(int *argcp, char **argv)
             load_app_font(baseWidget(), &userfont, &_glyph_name);
         }
 
-	// Create a fontlist that contains the glyph and user fonts
-	strcpy(buf, _user_font);
+	// Create a fontlist that contains the glyph and user fonts.  Both names
+	// can be given on the command line (-xrm) and are as long as the caller
+	// makes them.
+	TextBuffer buf;
+	buf.append(_user_font ? _user_font : "");
 #if 0
 	// Never refer to the "plain" tag so don't add it.
 	if (strchr(_user_font, '=') == NULL) {
 	    // No tag.  Add one
-	    strcat(buf, "=plain, ");
+	    buf.append("=plain, ");
 	}
 #endif
 	// If the symbol font can't be found, use user font above
 	if (_glyph_name) {
-	    strcat(buf, ", ");
-	    strcat(buf, _glyph_name);
-	    strcat(buf, "=attach");
+	    buf.append(", ");
+	    buf.append(_glyph_name);
+	    buf.append("=attach");
 	}
 
 	// Loosely bind font to message list.  This lets users override
  	// with a more strongly bound name (ie "Dtmail*Message_List*FontList");
 	//
 	// Matches the MsgScrollingList in the RoamMenuWindows.
-	XrmPutStringResource(&db, "*Message_List*FontList", buf);
+	XrmPutStringResource(&db, "*Message_List*FontList", buf.text());
 	//
 	// CDExc19318
 	// Matches the UndelMsgScrollingList in the UndelFromListDialog
 	// and overrides the "*XmDialogShell*XmList*FontList" spec above.
-	XrmPutStringResource(&db, "*XmDialogShell*Message_List*FontList", buf);
-
-	delete [] buf;
+	XrmPutStringResource(&db, "*XmDialogShell*Message_List*FontList", buf.text());
     }
 
     // If we don't have a mail file yet, then we need to retrieve the

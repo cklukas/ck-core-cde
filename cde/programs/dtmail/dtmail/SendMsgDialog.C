@@ -71,6 +71,7 @@
 #include <Xm/SeparatoG.h>
 #include <DtMail/IO.hh>
 #include <DtMail/DtMailP.hh>
+#include <DtMail/TextBuffer.hh>
 #include <stdio.h>
 #include <errno.h>
 #include <sys/param.h>
@@ -1515,11 +1516,25 @@ SendMsgDialog::createWorkArea ( Widget parent )
 }
 
 
+// The name of a widget of a header line: a prefix, the label of the header and
+// a suffix.  The label is the name of a header of a message and as long as
+// that makes it.
+static char *
+headerWidgetName(const char * prefix, const char * label, const char * suffix)
+{
+    TextBuffer name;
+
+    name.append(prefix);
+    name.append(label);
+    name.append(suffix);
+    return name.release();
+}
+
 void
 SendMsgDialog::createHeaders(Widget header_form)
 {
     Widget	previous_form = NULL;
-    char	*field_name = new char[50];
+    char	*field_name = NULL;
 
     for (int header = 0; header < _header_list.length(); header++) {
 	HeaderList * hl = _header_list[header];
@@ -1549,9 +1564,8 @@ SendMsgDialog::createHeaders(Widget header_form)
 	    // Create a form, attaching it to the top. This is a special
 	    // case. Other lines are created attached to the form above
 	    // them.
-	    strcpy(field_name, "form_");
-	    strncat(field_name, hl->label, 45);
-	    field_name[strlen(hl->label) + 5] = 0;
+	    delete [] field_name;
+	    field_name = headerWidgetName("form_", hl->label, "");
 	    hl->form_widget =
 		XtVaCreateWidget(field_name,
 				 xmFormWidgetClass,
@@ -1566,9 +1580,8 @@ SendMsgDialog::createHeaders(Widget header_form)
 
 	}
 	else {
-	    strcpy(field_name, "form_");
-	    strncat(field_name, hl->label, 45);
-	    field_name[strlen(hl->label) + 5] = 0;
+	    delete [] field_name;
+	    field_name = headerWidgetName("form_", hl->label, "");
 	    hl->form_widget =
 		XtVaCreateWidget(field_name,
 				 xmFormWidgetClass,
@@ -1585,8 +1598,8 @@ SendMsgDialog::createHeaders(Widget header_form)
 
 	// The label will be to the left of the form.
 	//
-	strcpy(field_name, hl->label);
-	strcat(field_name, ":");
+	delete [] field_name;
+	field_name = headerWidgetName("", hl->label, ":");
 	XmString label = XmStringCreateLocalized(field_name);
 	hl->label_widget =
 	    XtVaCreateManagedWidget(hl->label,
@@ -1599,9 +1612,8 @@ SendMsgDialog::createHeaders(Widget header_form)
 				    NULL);
 	XmStringFree(label);
 	
-	strcpy(field_name, "field_");
-	strncat(field_name, hl->label, 43);
-	field_name[strlen(hl->label) + 6] = 0;
+	delete [] field_name;
+	field_name = headerWidgetName("field_", hl->label, "");
 	
 	hl->field_widget =
 	    XtVaCreateManagedWidget(field_name,
