@@ -238,6 +238,16 @@
   `make -C lib/tt/lib check` (sanitizer cases with a
   simulated and, started as the superuser, a real privileged process) and
   `make -C lib/tt/bin check`.
+- dtmail: handle the data of ToolTalk Mail, Display and Print requests safely.
+  A Mail request without data no longer sends a message buffer that was never
+  set; the file it names must be a regular file of at most 64 MiB, a FIFO is
+  not waited for, and the file is closed and its buffer released correctly. A
+  Display request without data is refused instead of passing a null mailbox
+  name on, a Print request with a buffer uses the file made from it, and that
+  file is created with `mkstemp()` and mode 0600 in `~/.dt/tmp` instead of by
+  `tempnam()` (which fell back to `/tmp` without `$HOME`). Covered by
+  `programs/dtmail/tests/check-tooltalk-handlers.py`; described in
+  `docs/improvements/mail.md`.
 - dtmail: bound what the user who starts the mailer controls. The font list
   built from `-xrm` resources, the exported `DISPLAY`, the words of a session
   file, the messages about an attachment file given with `-c` or a ToolTalk

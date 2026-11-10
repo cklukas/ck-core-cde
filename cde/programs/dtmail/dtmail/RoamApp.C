@@ -87,6 +87,7 @@
 
 #include <signal.h>
 #include <ctype.h>
+#include <new>
 #include <locale.h>
 #include <sys/param.h>
 #include <sys/wait.h>
@@ -504,38 +505,115 @@ tooltalk_msg_handler_done_cb( Widget w, XtPointer client_data, XtPointer )
     XtFree((char*) cbData);
 }
 
+// The data of a request goes into a file of its own, which the display and
+// print commands then open as a mailbox.  The file is made exclusively and for
+// its owner only, in the private temporary directory of the user; without a
+// home directory there is no place for it.
 static char *tooltalk_save_buffer_to_file(
 				unsigned char	*contents,
 				int		 len)
 {
-    char *p = NULL;
-    char *tmpdir = new char[MAXPATHLEN+1];
-
-    // 1. Get buffer content into file.
-    snprintf(tmpdir, MAXPATHLEN+1, "%s/%s", getenv("HOME"), DtPERSONAL_TMP_DIRECTORY);
-    p = tempnam(tmpdir, "mail");
-    if (p == NULL)
+    const char *home = getenv("HOME");
+    if (home == NULL || len <= 0)
     {
-	delete [] tmpdir;
 	return NULL;
     }
 
-    int fd = SafeOpen(p, O_RDWR | O_CREAT);
+    size_t size = strlen(home) + strlen(DtPERSONAL_TMP_DIRECTORY) + 16;
+    char *p = (char *) malloc(size);
+    if (p == NULL)
+    {
+	return NULL;
+    }
+    snprintf(p, size, "%s/%s/mailXXXXXX", home, DtPERSONAL_TMP_DIRECTORY);
+
+    int fd = mkstemp(p);
     if (fd < 0)
     {
-	delete [] tmpdir;
 	free(p);
 	return NULL;
     }
+
     if (SafeWrite(fd, contents, len) != len)
     {
+	unlink(p);
 	free(p);
 	p = NULL;
     }
 
     close(fd);
-    delete [] tmpdir;
     return p;
+}
+
+// The data of a Mail request: the buffer it carries or the contents of the
+// file it names.  The file must be a regular file of a size that a message
+// can have; a file that something else is writing to (a FIFO) is not waited
+// for.  Returns false when there is nothing to send.  *owned is the memory
+// to delete[] when the contents were read from a file.
+static const long TOOLTALK_MAIL_MAX = 64L * 1024 * 1024;
+
+static bool
+tooltalk_mail_data(
+		unsigned char	*contents,
+		int		 len,
+		const char	*file,
+		DtMailBuffer	*mbuf,
+		char		**owned)
+{
+    *owned = NULL;
+    mbuf->buffer = NULL;
+    mbuf->size = 0;
+
+    if (len > 0)
+    {
+	mbuf->buffer = (void *) contents;
+	mbuf->size = (unsigned long) len;
+	return true;
+    }
+    if (file == NULL)
+    {
+	return false;
+    }
+
+    int fd = SafeOpen(file, O_RDONLY | O_NONBLOCK);
+    if (fd < 0)
+    {
+	return false;
+    }
+
+    struct stat st;
+    if (SafeFStat(fd, &st) < 0 || !S_ISREG(st.st_mode) ||
+	st.st_size <= 0 || st.st_size > TOOLTALK_MAIL_MAX)
+    {
+	close(fd);
+	return false;
+    }
+
+    char *data = new (std::nothrow) char[st.st_size];
+    if (data == NULL)
+    {
+	close(fd);
+	return false;
+    }
+
+    size_t have = 0;
+    while (have < (size_t) st.st_size)
+    {
+	ssize_t n = SafeRead(fd, data + have, (size_t) st.st_size - have);
+	if (n <= 0)
+	{
+	    delete [] data;
+	    close(fd);
+	    return false;
+	}
+	have += (size_t) n;
+    }
+    close(fd);
+
+    mbuf->buffer = data;
+    mbuf->size = (unsigned long) have;
+    *owned = data;
+    return true;
 }
 
 static Tt_message
@@ -576,34 +654,9 @@ tooltalk_msg_handler(
 
 	// Construct message handle
 	DtMailBuffer mbuf;
-	if ( len > 0 ) {
-	    mbuf.buffer = (void *)contents;
-	    mbuf.size = (unsigned long)len;
-	} else if ( file != NULL ) {
-	    // 1. Get file content into buffer.
-	    int fd = SafeOpen(file, O_RDONLY);
-	    if (fd < 0) {
-		return msg;
-	    }
-	    struct stat buf;
-	    if (SafeFStat(fd, &buf) < 0) {
-		close(fd);
-		return msg;
-	    }
- 
-	    mbuf.buffer = new char[buf.st_size];
-	    if (!mbuf.buffer) {
-		close(fd);
-		return msg;
-	    }
- 
-	    if (SafeRead(fd, mbuf.buffer, 
-				(unsigned int) buf.st_size) != buf.st_size) {
-		delete (char*) mbuf.buffer;
-		close(fd);
-		return msg;
-	    }
-	    mbuf.size = (unsigned long)buf.st_size;
+	char *owned = NULL;
+	if (!tooltalk_mail_data(contents, len, file, &mbuf, &owned)) {
+	    return msg;
 	}
 	DtMailEnv error;
 	DtMail::Session *d_session = theRoamApp.session()->session();
@@ -615,12 +668,14 @@ tooltalk_msg_handler(
 							NULL,
 							NULL);
 	if ( error.isSet() || !msgHandle ) {
+	    delete [] owned;
 	    return msg;
 	}
 
 	// Send the message
 	theRoamApp.default_transport()->submit(error, msgHandle,
 					       (DtMailBoolean)FALSE);
+	delete [] owned;
 
     } else if ( op == TTME_MAIL_COMPOSE ) {
 	// Bring up blank compose window.
@@ -733,6 +788,9 @@ tooltalk_msg_handler(
 		}
             }
 
+	    // A request without a buffer or a file names no mailbox.
+	    if (NULL == file) return msg;
+
 	    // Check to see if the mbox is already open.  If it is, we will
 	    // simply make sure it's displayed in the current workspace.
 	    if (ses->isMboxOpen(file))
@@ -786,10 +844,10 @@ tooltalk_msg_handler(
 
 	    cbData =
 	      (MsgHandlerDoneCbData*) XtMalloc(sizeof(MsgHandlerDoneCbData));
-	    if (ses->isMboxOpen(file))
+	    if (ses->isMboxOpen(p))
 	    {
 		Widget w = NULL;
-		roamwin = ses->getRMW(file);
+		roamwin = ses->getRMW(p);
 		ses->activateRMW(roamwin);
 		if (NULL != roamwin) roamwin->displayInCurrentWorkspace();
 
@@ -797,7 +855,7 @@ tooltalk_msg_handler(
 	    }
 	    else
 	    {
-	        roamwin = new RoamMenuWindow(file);
+	        roamwin = new RoamMenuWindow(p);
 	        roamwin->initialize();
 	        roamwin->manage();
 		roamwin->list()->select_all_and_display_last(error);

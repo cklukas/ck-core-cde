@@ -143,3 +143,30 @@ as well.
 `make -C programs/dtmail check` runs `readSessionWord()` and the widget-name
 function under the sanitizers on input of every length, and guards the places
 that need a display.
+
+## Requests from other applications
+
+Another application in the user's ToolTalk session can ask `dtmail` to send a
+message (`Mail`), to open a mailbox (`Display`) or to print one (`Print`), with
+the data in a buffer or in a file it names.
+
+- A `Mail` request without a buffer or a file no longer passes a message
+  buffer that was never set to the library. The file a `Mail` request names is
+  read only when it is a regular file of at most 64 MiB: an empty file, a
+  directory, a device or a file that is too large is refused, and a FIFO is
+  not waited for (opening it blocked the mailer until someone wrote to it).
+  The file is closed after it is read (every request left its descriptor open)
+  and its buffer is released with `delete[]`.
+- A `Display` request with neither buffer nor file is refused. It passed a null
+  mailbox name on, which stopped the program.
+- A `Print` request that carried its data in a buffer asked about the mailbox
+  by the name in `file`, which is null in that case. It uses the file that it
+  made from the buffer.
+- The file that is made from a buffer is created with `mkstemp()` in
+  `~/.dt/tmp` with mode 0600 (it was `tempnam()` and `open(O_CREAT)` with mode
+  0644, and fell back to the shared temporary directory when `$HOME` was
+  unset). A request that cannot be given a private file is refused.
+
+`make -C programs/dtmail check` runs the production functions that make the
+data of a request against real files, FIFOs, devices and sparse files under the
+sanitizers, and guards the handlers.
