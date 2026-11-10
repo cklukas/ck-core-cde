@@ -374,6 +374,7 @@ extern void ChangeBell( char *string) ;
 extern void CleanupAndExit( Widget w, int exit_code) ;
 extern void ClearCB( Widget w, XtPointer client_data, XtPointer call_data) ;
 extern void CloseCatalog(void);
+extern int ReadRequest(int fd, char *buf, size_t size);
 extern void CopyrightCB( Widget w, XtPointer client_data, XtPointer call_data) ;
 extern void EditPasswdCB( Widget w, XtPointer client, XtPointer call_data) ;
 extern void FakeFocusIn( Widget focus_widget, XtPointer client_data,

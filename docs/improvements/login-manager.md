@@ -118,6 +118,13 @@ choice back to the manager.
   supplementary groups, that process stops instead of running with the display
   manager's privileges.
 - The length of a message sent to the greeter is checked before it is copied.
+- The greeter reads a request of the manager completely: the length in its
+  header must fit the buffer, the whole message is read however the pipe
+  delivers it, strings are made to end inside it, and the offsets of the strings
+  of a message or a challenge must lie inside the message. A request that
+  does not meet this is ignored. The greeter used a length from the sender to
+  read into a 512 byte buffer and took the first, possibly partial, read for the
+  whole message.
 
 ### The process of a display
 
@@ -196,6 +203,10 @@ handle is ended, the setup fails).
 with real signals, pipes and child processes: a handler that does anything but
 leave a note, a request that arrives before a wait, a child that ignores
 `SIGTERM`, a server that is ready early, late or never.
+
+`tests/check-greeter-request.py` reads requests through the greeter's reader from
+pipes: whole, delivered a byte at a time, too long, shorter than the header,
+cut short and with an unterminated string.
 
 `tests/check-chooser.py` runs the chooser socket, the choices and the client list
 with a real Unix socket: the file and its mode, the argument that names it, a

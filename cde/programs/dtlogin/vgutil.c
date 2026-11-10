@@ -61,6 +61,7 @@
 #include <stdarg.h>
 #define Va_start(a,b) va_start(a,b)
 #include <unistd.h>
+#include <errno.h>
 
 #include <X11/Xlibint.h>
 #include <Xm/Xm.h>
@@ -731,6 +732,56 @@ LogError( unsigned char *fmt, ...)
  *  CloseCatalog
  *
  ***************************************************************************/
+
+/***************************************************************************
+ *
+ *  ReadRequest
+ *
+ *  Read one request of the display manager from FD into BUF (SIZE bytes).  The
+ *  length of a request is what the sender says it is: it must be at least the
+ *  header and fit into BUF, and the whole of it is read, however the pipe
+ *  delivers it.  The last byte is made a NUL so that the strings in the
+ *  request end inside it.  Returns the length, or 0 when there is no (complete,
+ *  valid) request: end of file, an error, a length that does not fit.
+ ***************************************************************************/
+
+int
+ReadRequest(int fd, char *buf, size_t size)
+{
+  RequestHeader *phdr = (RequestHeader *)buf;
+  size_t have = 0, length;
+  ssize_t count;
+
+  if (size < sizeof(*phdr) + 1)
+    return(0);
+
+  while (have < sizeof(*phdr))
+  {
+    count = read(fd, buf + have, sizeof(*phdr) - have);
+    if (count < 0 && errno == EINTR)
+      continue;
+    if (count <= 0)
+      return(0);
+    have += count;
+  }
+
+  length = phdr->length;
+  if (length < sizeof(*phdr) || length > size)
+    return(0);
+
+  while (have < length)
+  {
+    count = read(fd, buf + have, length - have);
+    if (count < 0 && errno == EINTR)
+      continue;
+    if (count <= 0)
+      return(0);
+    have += count;
+  }
+
+  buf[length - 1] = '\0';
+  return((int)length);
+}
 
 void
 CloseCatalog(void)

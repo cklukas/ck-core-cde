@@ -1155,9 +1155,7 @@ RequestCB(
         int *source,
         XtInputId *id)
 {
-  char buf[512];
-  int count;
-  int remainder;
+  char buf[REQUEST_LIM_MAXLEN];
   RequestHeader *phdr = (RequestHeader *)buf;
 
 #ifdef VG_TRACE
@@ -1165,24 +1163,29 @@ RequestCB(
 #endif /* VG_TRACE */
 
  /*
-  * There's a request in the pipe. Read the header.
+  * There's a request in the pipe: read all of it; one that does not fit or
+  * is cut short is not acted on.
   */
-  count = read(0, buf, sizeof(*phdr));
-  if (count != sizeof(*phdr))
+  if (ReadRequest(0, buf, sizeof(buf)) == 0)
   {
     return;
   }
 
  /*
-  * Calculate amount of data after header.
-  */ 
-  remainder =  phdr->length - sizeof(*phdr);
-  if (remainder > 0)
+  * The strings of a request are named by offsets: they must lie inside it.
+  */
+  switch (phdr->opcode)
   {
-   /*
-    * Read remainder of request.
-    */
-    count = read(0, buf+sizeof(*phdr), remainder);
+    case REQUEST_OP_MESSAGE:
+      if (((RequestMessage *)phdr)->offMessage >= phdr->length)
+        return;
+      break;
+    case REQUEST_OP_CHALLENGE:
+      if (phdr->length < sizeof(RequestChallenge) ||
+          ((RequestChallenge *)phdr)->offChallenge >= phdr->length ||
+          ((RequestChallenge *)phdr)->offUserNameSeed >= phdr->length)
+        return;
+      break;
   }
 
  /* 
