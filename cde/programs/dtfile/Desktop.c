@@ -493,15 +493,15 @@ BuildNewOrderlist(
       {
         FileData2 file_data2;
         int n;
+        char *entry = strcmp(file, ".") == 0 ? NULL : file;
 
         DtEliminateDots (full_dir_name);
 
-        if (strcmp(file, ".") == 0) {
-           ReadFileData2(&file_data2, full_dir_name, NULL,IsToolBox);
-        } else {
-           ReadFileData2(&file_data2, full_dir_name, file,IsToolBox);
-        }
-        file_view_data->file_data = FileData2toFileData(&file_data2, &n);
+        n = ReadFileData2(&file_data2, full_dir_name, entry, IsToolBox);
+        file_view_data->file_data = n < 0 ? NULL :
+                                             FileData2toFileData(&file_data2, &n);
+        if (file_view_data->file_data == NULL)
+           file_view_data->file_data = ReadFileData(full_dir_name, entry);
         XtFree(full_dir_name);
         full_dir_name = NULL;
       }

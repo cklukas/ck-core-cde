@@ -1,4 +1,18 @@
 2026-11-10
+- dtfile: validate batched directory-entry packets before they reach cached
+  directory state. The worker now reserves its packet header, aligns record
+  storage, bounds aggregate text before copying, encodes update flags without
+  signed-short overflow, initializes transmitted records, avoids inspecting
+  failed `lstat` output, and completes packet and single-record writes or
+  stops. The reader requires complete headers and payloads, bounds record
+  counts and packet sizes, rejects negative, truncated, trailing, or
+  inconsistent field lengths, and decodes a whole batch transactionally.
+  Malformed responses discard pending replacement data and preserve the
+  previously displayed directory instead of overflowing stack buffers,
+  walking beyond a packet, or installing a partial result. Non-pipe callers
+  retain valid oversized metadata through the unpacked reader. Covered by the
+  production pack/decode cases and producer/consumer contracts in
+  `programs/dtfile/tests/check-directory-packets.py`.
 - dtfile: harden the remaining Trash size, move, empty, and attribute-change
   worker channels. Their producers now complete fixed fields or stop, and
   their callbacks require complete tags, scalars, result arrays, and mandatory

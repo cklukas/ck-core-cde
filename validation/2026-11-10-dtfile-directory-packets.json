@@ -1,0 +1,103 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile directory-entry packet framing and decoding",
+  "source_base": "a3b2a9e191b72f1426f3c96937517107c11e6987",
+  "motif_revision": "5e49c927fb2855e04a86d57bcaf5c89b89db93b2",
+  "motif_prefix": "/home/klukas/tmp/motif-abi9-5e49c927-20261110/prefix",
+  "motif_libXm_sha256": "42692fae0618e7aa7416366d6f430b33103c380caf19fb9dc8218fd9818d445a",
+  "motif_Xm_h_sha256": "26e5d9afeb7cdec2cb73904bfca8bc00e964d87d130c7eeb200f3b25c88d57dc",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    "cde/CHANGES": "bea679b90b28a706f2eabefe20e6279f5b8da22662ffb1868c0ea3f65b2df0d4",
+    "cde/programs/dtfile/Desktop.c": "e4726436ce21288f51b77cf100c6efea8940d4ce912036d5bc1f89a3398e6074",
+    "cde/programs/dtfile/Directory.c": "d6716faf8c6e7dd347390d3572aa2bdab832a3f1d919c8d77221132fe32db969",
+    "cde/programs/dtfile/FileOp.c": "7bfac747d74ef5f43bcc5e2506607bfe2e27b5e3ade18f225d01dc935a2e8e33",
+    "cde/programs/dtfile/Makefile.am": "1193e2d18453f284c4ea078be54462528b833d9700342205e40c9b330cd53e18",
+    "cde/programs/dtfile/tests/check-directory-packets.py": "a8a97f3eeb8c231e2bed59d7be039b369bb812632e0308b9fd3b727c2155ad66",
+    "cde/programs/dtfile/tests/directory-packets.c": "808011b52e9e82c5ef8d5f6f6989bccb67d48b53d2090ad8b36e4d75aabd69f6",
+    "cde/programs/dtfile/tests/directory-packets-baseline.c": "249c8e619c34c0aa073e9480463cdc2d865b429bd7e54023f4f0b5f1de56b24e"
+  },
+  "baseline_control": {
+    "case": "negative FileData2 field length passed to the production legacy decoder",
+    "sanitizers": "address,undefined",
+    "triggered": true,
+    "returncode": -6,
+    "result": "AddressSanitizer rejected the legacy size conversion before the fix"
+  },
+  "focused_regressions": {
+    "cases": 13,
+    "sanitizers": "address,undefined",
+    "remote_seconds": 0.829,
+    "remote_log_sha256": "9d04e41b4d3637ccaf90bc18c4c7a1a280d9fa6571c64283c7202e688d5b7bc8",
+    "local_seconds": 0.33531287498772144,
+    "coverage": [
+      "valid and overflowing aggregate packing, including transactional failure",
+      "failed and successful symbolic-link stat classification",
+      "valid, negative-length, short-header and short-text record decoding",
+      "valid two-record packet, zero and oversized counts, trailing bytes and truncated second-record cleanup",
+      "source contracts for exact producer writes, bounded callback framing, malformed-response cleanup and unpacked non-pipe fallback"
+    ]
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "full_rebuild": false,
+    "initial_exact_prefix_closure": [
+      "dtfile-Desktop.o",
+      "dtfile-Directory.o",
+      "dtfile-FileOp.o",
+      "dtfile relink"
+    ],
+    "initial_exact_prefix_seconds": 2.885,
+    "final_closure": [
+      "dtfile-Directory.o",
+      "dtfile relink"
+    ],
+    "final_start": "2026-11-10T01:26:23.228588297+00:00",
+    "final_end": "2026-11-10T01:26:24.651831770+00:00",
+    "final_seconds": 1.424,
+    "object_sha256": {
+      "dtfile-Desktop.o": "cbb0834bc2e34ea233c25b7568bf047c5458c03dda4623b0e823b1f8ee4b1321",
+      "dtfile-Directory.o": "9ff633ac5d87f04966faa5217e034149610126b06ea396fa61ed24c793c0a102",
+      "dtfile-FileOp.o": "91ce5cfcd32de31be71ce3fcafbda3f87fec26258bf38bbd08f3235ab5099039"
+    },
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile",
+    "output_sha256": "0c4068d02e137e9712737ca2917575756b188ae960fad754df468208293004c4",
+    "build_log_sha256": "2bffcf3dd7674e8649612025b67c85df5a46e7ccfcf39005fcc0bdc5925f6357",
+    "warnings": "Only existing pointer-sign warnings in Desktop.c, assignment-condition warning in Directory.c and dangling-else warning in FileOp.c."
+  },
+  "motif_boundary": {
+    "consumed_headers": 52,
+    "changed_or_missing_headers_between_20a_and_5e49": 0,
+    "header_list_sha256": "4fa0c156255bc6bc0ed00618f8d67e904ca2d9a1870e75e1e5dc20d3b7f0bb50",
+    "changed_objects_use_exact_prefix_headers": true,
+    "needed": "libXm.so.9",
+    "runpath": "/home/klukas/tmp/motif-abi9-5e49c927-20261110/prefix/lib:/usr/dt/lib",
+    "ldd_resolves_exact_prefix": true
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "start": "2026-11-10T01:27:13.680841544+00:00",
+    "end": "2026-11-10T01:27:31.820137737+00:00",
+    "seconds": 18.139,
+    "passed_case_lines": 261,
+    "failure_markers": 0,
+    "log_sha256": "bbad8877dd81f5136d39f8dfaddfa0961fc90ee1b0fd68e9277b8a29837b7c70"
+  },
+  "postconditions": [
+    "make -n reports dtfile is up to date",
+    "no owned compiler, make, test or dtfile process remained before returning CPU2",
+    "the previously displayed directory is retained when a replacement packet is malformed"
+  ],
+  "rejected_or_corrected_attempts": [
+    "The first native pass named an exact Motif path that existed only on rpi4, so uconsole used fallback headers and the old libtool library input. That build was rejected; the complete prefix was transferred with byte, mode and symlink verification before recompilation.",
+    "A new null/initialization guard was initially inserted in the adjacent legacy reader and caused a compile failure. It was moved to ReadFileData2 before the passing build.",
+    "The first 13-case Linux test compile hid S_IFLNK under strict C11. The test compile now requests the same default-source feature namespace used by CDE; production code was unchanged."
+  ],
+  "limitations": [
+    "This non-visual worker-protocol bundle did not launch or inspect a CDE window.",
+    "The standalone ldd invocation lacks build-tree paths for uninstalled CDE DSOs; only the verified Motif resolution is claimed."
+  ]
+}

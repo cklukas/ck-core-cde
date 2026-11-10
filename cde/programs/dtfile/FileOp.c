@@ -1693,6 +1693,7 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
         FileData2 file_data2;
         int n;
         Boolean IsToolBox;
+        char *entry;
 
         DtEliminateDots (full_dir_name);
 
@@ -1701,13 +1702,13 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
         else
           IsToolBox = False;
 
-        if (strcmp(desktopWin->file_name, ".") == 0)
-            ReadFileData2(&file_data2, full_dir_name, NULL, IsToolBox);
-	else
-            ReadFileData2(&file_data2, full_dir_name, desktopWin->file_name,
-                          IsToolBox);
-
-        file_view_data->file_data = FileData2toFileData(&file_data2, &n);
+        entry = strcmp(desktopWin->file_name, ".") == 0 ? NULL :
+                                                           desktopWin->file_name;
+        n = ReadFileData2(&file_data2, full_dir_name, entry, IsToolBox);
+        file_view_data->file_data = n < 0 ? NULL :
+                                             FileData2toFileData(&file_data2, &n);
+        if (file_view_data->file_data == NULL)
+          file_view_data->file_data = ReadFileData(full_dir_name, entry);
         XtFree(full_dir_name);
         full_dir_name = NULL;
       }

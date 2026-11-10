@@ -102,6 +102,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <limits.h>
+#include <stddef.h>
 #include <string.h>
 #include <assert.h>
 
@@ -114,6 +115,8 @@
 #include <Tt/tttk.h>
 
 #include "Encaps.h"
+#include "FileOpProtocol.h"
+#include "FileProcess.h"
 #include "FileMgr.h"
 #include "Desktop.h"
 #include "IconicPath.h"
@@ -152,6 +155,10 @@ extern Boolean removingTrash;
 #ifndef	FILEDATABUF
 #define	FILEDATABUF 50
 #endif /* FILEDATABUF */
+
+#define PIPEMSG_HDR_LEN (2 * sizeof(short) + sizeof(int))
+#define FILEDATA_PACKET_CAPACITY \
+        (PIPEMSG_HDR_LEN + FILEDATABUF * sizeof(FileData2))
 
 #define	NILL '\0'
 
@@ -674,71 +681,144 @@ PipeReadFileData(
    return file_data;
 }
 
+static int
+FileData2Decode(const void *record, size_t available, FileData **result,
+                size_t *used)
+{
+   FileData2 packed;
+   FileData *file_data;
+   const char *textptr;
+   size_t fixed = offsetof(FileData2, text);
+   size_t text_length = 0;
+   size_t record_length;
+   short lengths[5];
+   char **fields[5];
+   int i;
+
+   if (result != NULL) *result = NULL;
+   if (used != NULL) *used = 0;
+   if (record == NULL || result == NULL || used == NULL || available < fixed)
+   {
+      errno = EPROTO;
+      return -1;
+   }
+   memset(&packed, 0, sizeof(packed));
+   memcpy(&packed, record, fixed);
+   lengths[0] = packed.file_name;
+   lengths[1] = packed.action_name;
+   lengths[2] = packed.logical_type;
+   lengths[3] = packed.link;
+   lengths[4] = packed.final_link;
+   for (i = 0; i < 5; i++)
+   {
+      if (lengths[i] < 0 || (size_t)lengths[i] > sizeof(packed.text) - text_length)
+      {
+         errno = EPROTO;
+         return -1;
+      }
+      text_length += (size_t)lengths[i];
+   }
+   record_length = fixed + text_length;
+   record_length = (record_length + sizeof(char *) - 1) & ~(sizeof(char *) - 1);
+   if (record_length > sizeof(FileData2) || record_length > available)
+   {
+      errno = EPROTO;
+      return -1;
+   }
+
+   file_data = (FileData *)XtCalloc(1,sizeof(FileData));
+   fields[0] = &file_data->file_name;
+   fields[1] = &file_data->action_name;
+   fields[2] = &file_data->logical_type;
+   fields[3] = &file_data->link;
+   fields[4] = &file_data->final_link;
+   textptr = (const char *)record + fixed;
+   for (i = 0; i < 5; i++)
+   {
+      if (lengths[i] != 0 || i == 0 || i == 2)
+      {
+         *fields[i] = XtMalloc((size_t)lengths[i] + 1);
+         memcpy(*fields[i], textptr, (size_t)lengths[i]);
+         (*fields[i])[lengths[i]] = NILL;
+      }
+      textptr += lengths[i];
+   }
+   file_data->next		= NULL;
+   file_data->physical_type	= packed.physical_type;
+   file_data->errnum		= packed.errnum;
+   file_data->stat		= packed.stat;
+   file_data->is_subdir		= packed.is_subdir;
+   file_data->is_broken		= packed.is_broken;
+   *result = file_data;
+   *used = record_length;
+   return 0;
+}
+
+static int
+FileData2DecodePacket(const void *packet, size_t length, size_t count,
+                      FileData **result)
+{
+   const char *next = packet;
+   size_t remaining = length;
+   size_t used;
+   size_t i;
+   FileData *head = NULL;
+   FileData **tail = &head;
+
+   if (result != NULL) *result = NULL;
+   if (packet == NULL || result == NULL || count == 0 || count > FILEDATABUF)
+   {
+      errno = EPROTO;
+      return -1;
+   }
+   for (i = 0; i < count; i++)
+   {
+      if (FileData2Decode(next, remaining, tail, &used) != 0)
+         goto malformed;
+      next += used;
+      remaining -= used;
+      tail = &(*tail)->next;
+   }
+   if (remaining != 0)
+   {
+      errno = EPROTO;
+      goto malformed;
+   }
+   *result = head;
+   return 0;
+
+malformed:
+   while (head != NULL)
+   {
+      FileData *discard = head;
+      head = head->next;
+      FreeFileData(discard, True);
+   }
+   return -1;
+}
+
 FileData *
 FileData2toFileData(
 	FileData2 *file_data2,
 	int *l)
 {
-   FileData *file_data;
-   int n;
-   char file_name_buf[MAXPATHLEN];
-   char action_name_buf[MAXPATHLEN];
-   char logical_type_buf[MAXPATHLEN];
-   char link_buf[MAXPATHLEN];
-   char final_link_buf[MAXPATHLEN];
-   char *textptr = file_data2->text;
+   FileData *file_data = NULL;
+   size_t used = 0;
 
-   file_data = (FileData *)XtCalloc(1,sizeof(FileData));
-
-   strncpy(file_name_buf, textptr, n = file_data2->file_name);
-   file_name_buf[n] = NILL;
-   textptr += n;
-
-   strncpy(action_name_buf, textptr, n = file_data2->action_name);
-   action_name_buf[n] = NILL;
-   textptr += n;
-
-   strncpy(logical_type_buf, textptr, n = file_data2->logical_type);
-   logical_type_buf[n] = NILL;
-   textptr += n;
-
-   strncpy(link_buf, textptr, n = file_data2->link);
-   link_buf[n] = NILL;
-   textptr += n;
-
-   strncpy(final_link_buf, textptr, n = file_data2->final_link);
-   final_link_buf[n] = NILL;
-   textptr += n;
-
-   file_data->next		= NULL;
-   file_data->file_name		= XtNewString(file_name_buf);
-   file_data->action_name	= file_data2->action_name
-				? XtNewString(action_name_buf)
-				: NULL;
-   file_data->physical_type	= file_data2->physical_type;
-   file_data->logical_type	= XtNewString(logical_type_buf);
-   file_data->errnum		= file_data2->errnum;
-   file_data->stat		= file_data2->stat;
-
-   file_data->link		= file_data2->link
-				? XtNewString(link_buf)
-				: NULL;
-
-   file_data->final_link	= file_data2->final_link
-				? XtNewString(final_link_buf)
-				: NULL;
-   file_data->is_subdir		= file_data2->is_subdir;
-   file_data->is_broken		= file_data2->is_broken;
-
-   *l = sizeof(*file_data2) - sizeof(file_data2->text)
-         + file_data2->file_name + file_data2->action_name
-         + file_data2->logical_type + file_data2->link
-         + file_data2->final_link;
-
-   *l = (*l + sizeof(char *) - 1) & ~(sizeof(char *) - 1);
-
-   /* return the file data */
+   if (l == NULL || FileData2Decode(file_data2, sizeof(*file_data2),
+                                    &file_data, &used) != 0 || used > INT_MAX)
+   {
+      if (l != NULL) *l = 0;
+      return NULL;
+   }
+   *l = (int)used;
    return file_data;
+}
+
+static Boolean
+FileDataStatIsLink(int stat_result, const struct stat *stat_data)
+{
+   return stat_result == 0 && stat_data != NULL && S_ISLNK(stat_data->st_mode);
 }
 
 /* write PositionInfo to the pipe */
@@ -821,7 +901,7 @@ ReadFileData(
    strcpy(link_file_name, full_file_name);
 
    stat_result = lstat (link_file_name, &stat_buf);
-   if (stat_result == 0 && (stat_buf.st_mode & S_IFMT) == S_IFLNK)
+   if (FileDataStatIsLink(stat_result, &stat_buf))
    {
      while ((link_len = readlink(link_file_name, link_path, MAX_PATH - 1)) > 0)
      {
@@ -1012,6 +1092,52 @@ ReadFileData(
  *    Given a path name, return FileData for a file.
  *------------------------------------------------------------------*/
 
+static int
+FileData2PackText(FileData2 *file_data2, const char *file_name,
+                  const char *action_name, const char *logical_type,
+                  const char *link, const char *final_link)
+{
+   const char *fields[5] = { file_name, action_name, logical_type,
+                             link, final_link };
+   short *lengths[5] = { &file_data2->file_name, &file_data2->action_name,
+                         &file_data2->logical_type, &file_data2->link,
+                         &file_data2->final_link };
+   size_t field_lengths[5];
+   size_t total = 0;
+   size_t length;
+   size_t record_length;
+   int i;
+
+   if (file_data2 == NULL) { errno = EINVAL; return -1; }
+   for (i = 0; i < 5; i++)
+   {
+      if (fields[i] == NULL) fields[i] = "";
+      length = strlen(fields[i]);
+      if (length > SHRT_MAX || length > sizeof(file_data2->text) - total)
+      {
+         errno = EOVERFLOW;
+         return -1;
+      }
+      field_lengths[i] = length;
+      total += length;
+   }
+   record_length = offsetof(FileData2, text) + total;
+   record_length = (record_length + sizeof(char *) - 1) & ~(sizeof(char *) - 1);
+   if (record_length > sizeof(*file_data2) || record_length > INT_MAX)
+   {
+      errno = EOVERFLOW;
+      return -1;
+   }
+   total = 0;
+   for (i = 0; i < 5; i++)
+   {
+      *lengths[i] = (short)field_lengths[i];
+      memcpy(file_data2->text + total, fields[i], field_lengths[i]);
+      total += field_lengths[i];
+   }
+   return (int)record_length;
+}
+
 int
 ReadFileData2(
 	FileData2 *file_data2,
@@ -1037,6 +1163,13 @@ ReadFileData2(
    int stat_result;
    int stat_errno;
    int i;
+
+   if (file_data2 == NULL || full_directory_name == NULL)
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   memset(file_data2, 0, sizeof(*file_data2));
 
    /*  Allocate a new file structure.  */
 
@@ -1067,7 +1200,7 @@ ReadFileData2(
    strcpy(link_file_name, full_file_name);
 
    stat_result = lstat (link_file_name, &stat_buf);
-   if ((stat_buf.st_mode & S_IFMT) == S_IFLNK)
+   if (FileDataStatIsLink(stat_result, &stat_buf))
    {
      while ((link_len = readlink(link_file_name, link_path, MAX_PATH - 1)) > 0)
      {
@@ -1272,37 +1405,8 @@ ReadFileData2(
       strcpy(logical_type_buf, DtDEFAULT_DATA_FT_NAME);
    }
 
-	strcpy(file_data2->text, file_name_buf);
-	file_data2->file_name = strlen(file_name_buf);
-
-	strcat(file_data2->text, action_name_buf);
-	file_data2->action_name = strlen(action_name_buf);
-
-	strcat(file_data2->text, logical_type_buf);
-	file_data2->logical_type = strlen(logical_type_buf);
-
-	strcat(file_data2->text, link_buf);
-	file_data2->link = strlen(link_buf);
-
-	strcat(file_data2->text, final_link_buf);
-	file_data2->final_link = strlen(final_link_buf);
-
-	i = sizeof(*file_data2) - sizeof(file_data2->text)
-		+ file_data2->file_name + file_data2->action_name
-		+ file_data2->logical_type + file_data2->link
-		+ file_data2->final_link;
-
-	i = (i + sizeof(char *) - 1) & ~(sizeof(char *) - 1);
-
-	/*
-	 * This data marshalling operation relies on char[BUFSIZ]
-	 * being large enough for all the text pieces.  However,
-	 * BUFSIZ has nothing to do with the above operations so
-	 * we'll do this assert for now.
-	 */
-	assert( (i <= sizeof(FileData2)) );
-
-	return i;
+	return FileData2PackText(file_data2, file_name_buf, action_name_buf,
+	                         logical_type_buf, link_buf, final_link_buf);
 }
 
 /*--------------------------------------------------------------------
@@ -1355,7 +1459,7 @@ ReadDirectoryProcess(
    FileData2 file_data2;
    Boolean done;
    Boolean update_due;
-   short file_data_count = 0;
+   int file_data_count = 0;
    int i;
    char * ptr;
    char * namePtr;
@@ -1365,9 +1469,12 @@ ReadDirectoryProcess(
    int x, y, stacking_order;
    short pipe_msg;
    int rc;
-   char file_data_buffer[FILEDATABUF * sizeof(FileData2)];
+   union {
+      FileData2 alignment;
+      char bytes[FILEDATA_PACKET_CAPACITY];
+   } file_data_storage;
+   char *file_data_buffer = file_data_storage.bytes;
    char *file_data_buf_ptr = file_data_buffer;
-   char *file_data_count_ptr;
    struct timeval time1, time2;
    long diff;
    char *ptrOrig;
@@ -1552,7 +1659,6 @@ ReadDirectoryProcess(
 	 */
 
    /* initialize pointer into file data buffer */
-#  define PIPEMSG_HDR_LEN (2*sizeof(short) + sizeof(int))
    file_data_buf_ptr = file_data_buffer + PIPEMSG_HDR_LEN;
 
    /* get current time */
@@ -1577,6 +1683,14 @@ ReadDirectoryProcess(
 	 IsToolBox = False;
        len = ReadFileData2((FileData2 *)file_data_buf_ptr,
                            full_directory_name, dp->d_name,IsToolBox);
+       if (len <= 0 || len > (int)sizeof(FileData2) ||
+           (size_t)(file_data_buf_ptr - file_data_buffer) + (size_t)len >
+             sizeof(file_data_storage.bytes))
+       {
+         closedir(dirp);
+         XtFree(full_directory_name);
+         return 1;
+       }
        file_data_buf_ptr += len;
        file_data_count++;
      }
@@ -1594,16 +1708,25 @@ ReadDirectoryProcess(
      if (file_data_count == FILEDATABUF ||
          file_data_count > 0 && (done || update_due))
      {
+       short packet_type = PIPEMSG_FILEDATA3;
+       unsigned short encoded_count = (unsigned short)file_data_count;
+
        if (update_due)
-         file_data_count |= 0x8000;
+         encoded_count |= 0x8000U;
        len = file_data_buf_ptr - (file_data_buffer + PIPEMSG_HDR_LEN);
 
        /* now send the file data through the pipe */
-       *(short *)file_data_buffer = PIPEMSG_FILEDATA3;
-       *(short *)(file_data_buffer + sizeof(short)) = file_data_count;
-       *(int *)(file_data_buffer + 2*sizeof(short)) = len;
-       write(pipe_fd, file_data_buffer,
-             file_data_buf_ptr - file_data_buffer);
+       memcpy(file_data_buffer, &packet_type, sizeof(packet_type));
+       memcpy(file_data_buffer + sizeof(short), &encoded_count,
+              sizeof(encoded_count));
+       memcpy(file_data_buffer + 2 * sizeof(short), &len, sizeof(int));
+       if (DtfileProcessWriteAll(pipe_fd, file_data_buffer,
+                                 (size_t)(file_data_buf_ptr - file_data_buffer)) != 0)
+       {
+         closedir(dirp);
+         XtFree(full_directory_name);
+         return 1;
+       }
 
        /* reset pointer to file data buffer, file count and time stamp */
        file_data_buf_ptr = file_data_buffer + PIPEMSG_HDR_LEN;
@@ -1717,7 +1840,6 @@ UpdateAllProcess(
    DIR *dirp;
    struct dirent * dp;
    Boolean inDtDir;
-   FileData *file_data;
    FileData *old_data, **old_pp;
    FileData2 file_data2;
    char *ptr;
@@ -1984,16 +2106,25 @@ UpdateAllProcess(
           IsToolBox = directory->directoryView->file_mgr_data->toolbox;
         else
           IsToolBox = False;
-        ReadFileData2(&file_data2, full_directory_name, dp->d_name,IsToolBox);
+        n = ReadFileData2(&file_data2, full_directory_name, dp->d_name,
+                          IsToolBox);
+        if (n < 0)
+        {
+           closedir(dirp);
+           XtFree(full_directory_name);
+           return 1;
+        }
       }
-      file_data = FileData2toFileData(&file_data2, &n);
 
       /* now send the file data through the pipe */
-      pipe_msg = PIPEMSG_FILEDATA;
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      PipeWriteFileData(pipe_fd, file_data);
-
-      FreeFileData(file_data, True);
+      pipe_msg = PIPEMSG_FILEDATA2;
+      if (DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+          DtfileProcessWriteAll(pipe_fd, &file_data2, sizeof(file_data2)) != 0)
+      {
+         closedir(dirp);
+         XtFree(full_directory_name);
+         return 1;
+      }
    }
 
    /* all files left in the old file list no longer exist */
@@ -2040,7 +2171,6 @@ UpdateSomeProcess(
    char *full_directory_name;
    struct stat stat_buf;
    long modify_time;
-   FileData *file_data;
    FileData2 file_data2;
    short pipe_msg;
    int i;
@@ -2101,13 +2231,21 @@ UpdateSomeProcess(
       else
         IsToolBox = False;
 
-      ReadFileData2(&file_data2, full_directory_name,
-                               directory->modified_list[i],IsToolBox);
+      if (ReadFileData2(&file_data2, full_directory_name,
+                        directory->modified_list[i], IsToolBox) < 0)
+      {
+         XtFree(full_directory_name);
+         return 1;
+      }
 
       /* now send the file data through the pipe */
       pipe_msg = PIPEMSG_FILEDATA2;
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      write(pipe_fd, &file_data2, sizeof(FileData2));
+      if (DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+          DtfileProcessWriteAll(pipe_fd, &file_data2, sizeof(file_data2)) != 0)
+      {
+         XtFree(full_directory_name);
+         return 1;
+      }
    }
 
    XtFree(full_directory_name);
@@ -2150,7 +2288,7 @@ ReaddirPipeCallback(
    int rc;
    long modify_time = 0;
    char dirname[MAX_PATH];
-   short file_data_count;
+   int file_data_count;
 
 
    /* verify that the directory still exists */
@@ -2173,6 +2311,7 @@ ReaddirPipeCallback(
    n = PipeRead(*fd, &msg, sizeof(short));
    activity = directory->activity;
    done = False;
+   if (n != sizeof(msg)) goto malformed_response;
 
    switch (msg)
    {
@@ -2225,55 +2364,49 @@ ReaddirPipeCallback(
            FileData2 file_data2;
            int n;
 
-           n = PipeRead(*fd, &file_data2, sizeof(FileData2));
-           if (n < sizeof(FileData2)) {
-             perror("PipeRead");
-             fprintf(stderr, "PipeReadFileData2: n = %d, expected %ld\n",
-                     n, (long)sizeof(FileData2));
-           }
+           if (PipeReadExact(*fd, &file_data2, sizeof(file_data2)) != 0)
+             goto malformed_response;
 
            new_data = FileData2toFileData(&file_data2, &n);
+           if (new_data == NULL) goto malformed_response;
            }
 
          if (msg == PIPEMSG_FILEDATA3)
          {
+           unsigned short encoded_count;
            int file_data_length;
-           int n;
            char file_data_buffer[FILEDATABUF * sizeof(FileData2)];
-           char *file_data_buf_ptr;
+           FileData *packet_data;
 
+           if (PipeReadExact(*fd, &encoded_count, sizeof(encoded_count)) != 0 ||
+               PipeReadExact(*fd, &file_data_length, sizeof(file_data_length)) != 0)
+             goto malformed_response;
 
-           n = PipeRead(*fd, &file_data_count, sizeof(short));
-           n = PipeRead(*fd, &file_data_length, sizeof(int));
-
-           if (file_data_count & 0x8000)
+           if (encoded_count & 0x8000U)
            {
-             file_data_count &= 0x7fff;
+             encoded_count &= 0x7fffU;
              update_due = True;
            }
            else
              update_due = False;
 
+           file_data_count = (int)encoded_count;
+           if (file_data_count <= 0 || file_data_count > FILEDATABUF ||
+               file_data_length <= 0 ||
+               (size_t)file_data_length > sizeof(file_data_buffer) ||
+               PipeReadExact(*fd, file_data_buffer,
+                             (size_t)file_data_length) != 0 ||
+               FileData2DecodePacket(file_data_buffer,
+                                     (size_t)file_data_length,
+                                     (size_t)file_data_count,
+                                     &packet_data) != 0)
+             goto malformed_response;
+
            for (new_nextp = &directory->new_data;
                 *new_nextp;
                 new_nextp = &(*new_nextp)->next)
              ;
-
-           n = PipeRead(*fd, file_data_buffer, file_data_length);
-           file_data_buf_ptr = file_data_buffer;
-
-           for (i = 0; i < file_data_count; i++)
-           {
-             /* get next FileData out of buffer */
-             new_data =
-               FileData2toFileData((FileData2 *)file_data_buf_ptr, &n);
-             file_data_buf_ptr += n;
-
-             /* append new_data to end of list */
-             *new_nextp = new_data;
-             new_data->next = NULL;
-             new_nextp = &new_data->next;
-           }
+           *new_nextp = packet_data;
          }
          else
          {
@@ -2380,6 +2513,33 @@ ReaddirPipeCallback(
          done = True;
    }
 
+   goto decoded;
+
+malformed_response:
+   {
+      FileData *discard;
+
+      FileOpProtocolError(toplevel);
+      close(*fd);
+      XtRemoveInput(*id);
+      kill(pipe_data->child, SIGKILL);
+      while (directory->new_data != NULL)
+      {
+         discard = directory->new_data;
+         directory->new_data = discard->next;
+         FreeFileData(discard, True);
+      }
+      directory->errnum = EPROTO;
+      directory->errmsg_needed = False;
+      directory->busy[activity] = False;
+      directory->activity = activity_idle;
+      directory->was_up_to_date = False;
+      XtFree(client_data);
+      ScheduleActivity(directory);
+      return;
+   }
+
+decoded:
    /* check if we are done */
    if (done)
    {
@@ -4435,8 +4595,14 @@ CheckDesktopProcess(
          else
              IsToolBox = False;
 
-         ReadFileData2(&file_data2, full_path, NULL,IsToolBox);
-         new_data = FileData2toFileData(&file_data2, &n);
+         n = ReadFileData2(&file_data2, full_path, NULL, IsToolBox);
+         new_data = n < 0 ? ReadFileData(full_path, NULL) :
+                            FileData2toFileData(&file_data2, &n);
+         if (new_data == NULL)
+         {
+            XtFree(full_path);
+            return 1;
+         }
 
          if (new_data->physical_type != old_data->physical_type ||
              strcmp(new_data->logical_type, old_data->logical_type) != 0)
