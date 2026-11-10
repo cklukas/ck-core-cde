@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile terminal conflict cancellation and first-failure retention",
+  "source_base": "7a59e610bf00c748256dd21ae0762095ce326de9",
+  "motif_revision": "90d98fb7395306ab1f54df3e0d8d247893799a49",
+  "motif_prefix": "/home/klukas/tmp/motif-cde-90d98fb-20261110/prefix",
+  "motif_libXm_sha256": "e049702713e63eb5fbd7759f230e2afb5cb965794d9f901d3fb05734d0f24df3",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    "cde/CHANGES": "36fbe55f2b7c1712902965a4c1fdbb0aede6e11fc977750eda9b012efeac0b32",
+    "cde/programs/dtfile/FileOp.c": "ad4235e528820d74504c95dcd36b056d4108bda8b6524e1921711d07a65e0ee4",
+    "cde/programs/dtfile/tests/check-collision-workflow.py": "752bfa1b115ded4ed2ab1a40246174c370f76f8fe9759734159d713ae71ba14a",
+    "cde/programs/dtfile/tests/collision-workflow.c": "1e54ba5298f021a47933cd13d786fcf2f7ba301bde637ebe0d45005d6bfe47ff",
+    "cde/programs/dtfile/tests/check-transfer-completion.py": "f3a6b4bf82906215e30072836e092c252323ace9234808981517c72e94c5e4a7",
+    "cde/programs/dtfile/tests/transfer-completion.c": "77be147043fe1a84e79ffa7e09960f661a8ec5bfc36ee97db57ed4fbd9ee160b",
+    "docs/improvements/file-manager.md": "4e2920a3c4978f0bb4d23ee174d45fafa41dcfe639074826c01e2e30f1593f8b"
+  },
+  "focused_regressions": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, Linux ARM64",
+    "helper_cases": 3,
+    "helper_seconds": 0.3745804191567004,
+    "helper_receipt_sha256": "cbacaed86d146cb925e225995f414cfce7fef26ec971eb4c450a997e77b9ca5f",
+    "terminal_cancel_cases": 1,
+    "terminal_cancel_receipt_sha256": "6b44c8f619dea8cb3bae64628cb5da0b676847c8e09da32018c4c022a34981c2",
+    "sanitizers": "address,undefined",
+    "leak_detection": true,
+    "source_contracts": {
+      "cancel_is_terminal": true,
+      "first_failure_recorded": true,
+      "no_later_failure_overwrite": true,
+      "clean_cancel_not_success": true
+    }
+  },
+  "preflight_failures": [
+    {
+      "stage": "component checkpoint attempt 1",
+      "finding": "The transfer-completion fixture extracted the conflict worker without its new FileOpRememberFailure dependency.",
+      "resolution": "Added the helper to the fixture's production extraction closure and reran focused qualification."
+    },
+    {
+      "stage": "component checkpoint attempt 2",
+      "finding": "The worker cancellation regression still encoded the legacy successful-cancellation result.",
+      "resolution": "Renamed the case, required rc -1 with ECANCELED, and verified that both occupied targets remain unchanged."
+    },
+    {
+      "stage": "checkpoint wrapper postcondition",
+      "finding": "The wrapper expected 312 top-level PASS lines after the successful checkpoint, but collision-helper cases publish their results in JSON rather than top-level PASS lines.",
+      "resolution": "Accepted the stable 311-line count only after verifying make exit 0, zero failure markers, and the separate green three-case helper receipt; the suite was not rerun."
+    }
+  ],
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "cpu": 2,
+    "full_rebuild": false,
+    "closure": ["dtfile-FileOp.o", "dtfile relink"],
+    "seconds": 1.262249472,
+    "file_op_object_sha256": "b220c5909166153d75be80bac002af547fb547f504013ed1e0e02ae1c646d5e4",
+    "launcher_sha256": "d9a56d5b7f62ca6fd8d4f898227c495838039d9f4af26016e950c79725ae47f3",
+    "output_sha256": "13f14bd2e5984f148119501c43a70b906afa1a1ffa34a5400d0827ef0d7c319a",
+    "runtime_libXm_exact_prefix": true,
+    "warnings": "One pre-existing dangling-else warning in an unchanged FileOp error-reporting region."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "attempts": 3,
+    "successful_runs": 1,
+    "successful_seconds": 16.825527552,
+    "legacy_pass_lines": 311,
+    "collision_helper_cases": 3,
+    "failed_case_lines": 0,
+    "hard_failure_markers": 0,
+    "log_sha256": "0b4654cd478a25e744031dbdb11c5f6bc4637698cdc8d929b530cd37916df883",
+    "helper_receipt_sha256": "9f9c3200297982cec6075dc7cb383491a9a27004d2764d45c3fb1d364ebd59c6"
+  },
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round15-20261110/",
+  "evidence_manifest_sha256": "5d6deacc1de270fc6a2fa27aa6c9551cb44efceba445cf49bd35ff167083a683",
+  "postconditions": [
+    "cancelling conflict review cannot publish a successful completion",
+    "completed work before cancellation remains in place",
+    "the first row, protocol, transfer or cleanup failure remains the terminal errno",
+    "later rows still drain without replacing the original failure cause",
+    "dtfile resolves libXm.so.9 from the exact frozen Motif prefix",
+    "no owned compiler, make or test process remained before returning the serial lane"
+  ],
+  "limitations": [
+    "This conflict-cancellation bundle did not launch or inspect a CDE window.",
+    "The qualified ck-core-fs-lib revision was not changed."
+  ]
+}

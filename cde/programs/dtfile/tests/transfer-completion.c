@@ -484,8 +484,10 @@ static void worker_case(void)
         DtfileConflictBatchFree(&batch);
     }
     fixture(close(reply[1])==0);
+    errno=0;
     int rc=desktop?FileMoveCopyProcessDesktop(output[1],reply[0],target,"local",updates,2,copy?COPY_FILE:MAKE_BUFFER,NULL):
         FileMoveCopyProcess(output[1],reply[0],NULL,target,"local",updates,2,copy?COPY_FILE:MAKE_BUFFER,NULL);
+    int operation_errno=errno;
     fixture(close(reply[0])==0 && close(output[1])==0);
     unsigned char wire[16384];size_t bytes=drain(output[0],wire,sizeof(wire));
     short tag=0;int reported=999;
@@ -494,7 +496,7 @@ static void worker_case(void)
         memcpy(&reported,wire+bytes-sizeof(reported),sizeof(reported));
     }
     CHECK(wire_valid(wire,bytes,1,rc));
-    int success=collision || strstr(case_name,"success")!=NULL;
+    int success=(collision && !strstr(case_name,"cancel")) || strstr(case_name,"success")!=NULL;
     CHECK(tag==PIPEMSG_DONE && reported==rc && rc==(success?0:-1));
     if (!collision && !resolve_target_error) {
         if (!worker_last_fault) CHECK(exact("targets/second",payload,sizeof(payload)));
@@ -502,6 +504,7 @@ static void worker_case(void)
         if (!copy) CHECK(seen_second);
     }
     if (collision && strstr(case_name,"cancel")) {
+        CHECK(operation_errno==ECANCELED);
         CHECK(exact("targets/first","occupied first",14));
         CHECK(exact("targets/second","occupied second",15));
     }

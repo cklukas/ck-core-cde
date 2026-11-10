@@ -81,6 +81,11 @@ rules. Overlong or malformed refresh paths are ignored without changing the
 completed file operation, parent-directory matching observes component
 boundaries, and refreshed desktop metadata replaces its owned optional strings
 without duplicate allocation or null-string copies.
+Conflict review cancellation is a terminal non-success outcome: work completed
+before cancellation remains in place, but the operation is not reported as
+successfully complete. When several conflict rows fail while the worker drains
+the batch, the first failure remains the operation result; later transfer,
+rollback, cleanup or protocol failures cannot hide its original cause.
 
 CK Core CDE develops File Manager as a visual workspace rather than only a
 directory browser.

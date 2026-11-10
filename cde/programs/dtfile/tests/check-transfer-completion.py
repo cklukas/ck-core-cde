@@ -36,7 +36,7 @@ CASES = (
     "worker-normal-last-fails", "worker-desktop-last-fails",
     "worker-normal-resolve", "worker-desktop-resolve",
     "worker-normal-target-resolve", "worker-desktop-target-resolve",
-    "worker-normal-collision-keep-both", "worker-normal-collision-clean-cancel",
+    "worker-normal-collision-keep-both", "worker-normal-collision-cancel",
     "pipe-read-invalid", "pipe-string-negative", "pipe-string-truncated",
     "pipe-string-valid", "pipe-string-field-empty", "pipe-string-field-truncated",
     "pipe-write-oversize", "pipe-field-truncated",
@@ -188,6 +188,7 @@ def extract(source, work, include_workers=True):
         functions += [("FileOp.c", name) for name in
                       ("FileOpPathJoin", "FileOpParentPath", "FileOpDecisionPath",
                        "FileOpUniquePath", "FileOpObservationMatches",
+                       "FileOpRememberFailure",
                        "FileOpConflictOperation", "FileOpHandleConflicts",
                        "FileMoveCopyProcess", "FileMoveCopyProcessDesktop")]
     output, manifest = [], []

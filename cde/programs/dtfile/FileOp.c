@@ -726,6 +726,13 @@ FileOpObservationMatches(const char *target, const struct stat *identity)
           current.st_ctime == identity->st_ctime;
 }
 
+static void
+FileOpRememberFailure(int *failure, int error)
+{
+   if (*failure == 0)
+      *failure = error == 0 ? EIO : error;
+}
+
 static DtfileConflictOperation
 FileOpConflictOperation(int mode)
 {
@@ -789,7 +796,7 @@ FileOpHandleConflicts(int pipe_s2m, int pipe_m2s, char *target_dir,
       XtFree(target);
       continue;
 row_failed:
-      failed = errno == 0 ? EIO : errno;
+      FileOpRememberFailure(&failed, errno);
       goto finished;
    }
 
@@ -799,7 +806,7 @@ row_failed:
    answer = DtfileConflictReadDecisions(pipe_m2s, owner, &batch, &decisions);
    if (answer <= 0)
    {
-      if (answer < 0) failed = errno == 0 ? EIO : errno;
+      FileOpRememberFailure(&failed, answer == 0 ? ECANCELED : errno);
       goto finished;
    }
 
@@ -819,7 +826,7 @@ row_failed:
       if (mode != MAKE_BUFFER &&
           !FileOpObservationMatches(item->source, &sameSourceIdentity[row]))
       {
-         failed = ESTALE;
+         FileOpRememberFailure(&failed, ESTALE);
          PipeWriteErrmsg(pipe_s2m, -1,
                          GETMESSAGE(42, 36, "The source changed while its conflict was being reviewed: %s"),
                          item->source);
@@ -831,7 +838,11 @@ row_failed:
          destination = FileOpDecisionPath(item->target, decision->name);
       else
          destination = XtNewString(item->target);
-      if (destination == NULL) { failed = errno == 0 ? EIO : errno; continue; }
+      if (destination == NULL)
+      {
+         FileOpRememberFailure(&failed, errno);
+         continue;
+      }
 
       if (decision->action == DTFILE_CONFLICT_REPLACE ||
           decision->action == DTFILE_CONFLICT_RENAME_EXISTING ||
@@ -839,7 +850,7 @@ row_failed:
       {
          if (!FileOpObservationMatches(item->target, &sameTargetIdentity[row]))
          {
-            failed = ESTALE;
+            FileOpRememberFailure(&failed, ESTALE);
             PipeWriteErrmsg(pipe_s2m, -1,
                             GETMESSAGE(42, 35, "The destination changed while its conflict was being reviewed: %s"),
                             item->target);
@@ -855,7 +866,7 @@ row_failed:
              !FileManip((Widget)(intptr_t)pipe_s2m, MOVE_FILE, item->target,
                         saved_existing, False, FileOpError, True, desktop_type))
          {
-            failed = errno == 0 ? EIO : errno;
+            FileOpRememberFailure(&failed, errno);
             XtFree(saved_existing); XtFree(destination); continue;
          }
       }
@@ -867,7 +878,7 @@ row_failed:
              !FileManip((Widget)(intptr_t)pipe_s2m, MOVE_FILE, item->target,
                         saved_existing, False, FileOpError, True, desktop_type))
          {
-            failed = errno == 0 ? EIO : errno;
+            FileOpRememberFailure(&failed, errno);
             XtFree(saved_existing); XtFree(destination); continue;
          }
       }
@@ -890,7 +901,7 @@ row_failed:
                              destination, False, FileOpError, True, desktop_type);
       if (!success)
       {
-         failed = errno == 0 ? EIO : errno;
+         FileOpRememberFailure(&failed, errno);
          if (saved_existing != NULL)
          {
             if (!FileManip((Widget)(intptr_t)pipe_s2m, MOVE_FILE,
@@ -907,7 +918,7 @@ row_failed:
          fsErase(saved_existing, &erase_error, False);
          if (erase_error != 0)
          {
-            failed = erase_error;
+            FileOpRememberFailure(&failed, erase_error);
             PipeWriteErrmsg(pipe_s2m, -1,
                             GETMESSAGE(42, 34, "The original destination was retained for recovery at %s."),
                             saved_existing);
@@ -919,7 +930,7 @@ row_failed:
    goto finished;
 
 protocol_failed:
-   failed = errno == 0 ? EIO : errno;
+   FileOpRememberFailure(&failed, errno);
 finished:
    DtfileConflictDecisionsFree(decisions, batch.count);
    DtfileConflictBatchFree(&batch);
@@ -1406,9 +1417,8 @@ FileMoveCopyProcess(
 
 
    pipe_msg = PIPEMSG_DONE;
-   /* A later success or a cancelled conflict dialog cannot erase an
-    * earlier transfer or preflight failure. A clean cancellation retains
-    * its existing non-error result.
+   /* A later success cannot erase an earlier transfer, cancellation or
+    * preflight failure.
     */
    rc = (operationFailed || errorCount != 0) ? -1 : 0;
    write(pipe_s2m, &pipe_msg, sizeof(short));

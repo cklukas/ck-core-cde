@@ -1,4 +1,9 @@
 2026-11-10
+- dtfile: make conflict cancellation and multi-row failure outcomes terminal
+  and deterministic. Cancelling a conflict batch now completes the operation
+  with a cancelled failure status instead of success, and the worker retains
+  the first row, protocol, transfer or cleanup failure rather than replacing
+  it with a later error while the remaining rows drain.
 - dtfile: harden workspace icon refresh after file moves. Source and target
   paths now use checked joins instead of fixed-buffer formatting, parent tests
   no longer copy arbitrary paths or underflow on empty input, prefix rewrites

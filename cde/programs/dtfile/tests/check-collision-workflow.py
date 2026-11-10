@@ -35,7 +35,7 @@ CODEC_CASES = (
     "codec-owner-mismatch", "codec-closed-peer", "codec-pending-sigpipe",
 )
 FOCUSED_CASES = MODEL_CASES + CODEC_CASES
-HELPER_CASES = ("helper-paths", "helper-observations")
+HELPER_CASES = ("helper-paths", "helper-observations", "helper-first-failure")
 
 
 def extract_model(source, work):
@@ -60,19 +60,29 @@ def extract_helpers(source, work):
     records = []
     bodies = []
     for name in ("FileOpPathJoin", "FileOpParentPath", "FileOpDecisionPath",
-                 "FileOpUniquePath", "FileOpObservationMatches"):
+                 "FileOpUniquePath", "FileOpObservationMatches",
+                 "FileOpRememberFailure"):
         body, line = lexical["function"](text, name)
         bodies.append(f'#line {line} {json.dumps(str(source / "FileOp.c"))}\n{body}\n')
         records.append({"function": name, "line": line,
                         "sha256": hashlib.sha256(body.encode()).hexdigest()})
     (work / "collision-helper-production.inc").write_text("\n".join(bodies))
+    conflict_body = lexical["function"](text, "FileOpHandleConflicts")[0]
+    contracts = {
+        "cancel_is_terminal": "answer == 0 ? ECANCELED : errno" in conflict_body,
+        "first_failure_recorded": conflict_body.count("FileOpRememberFailure(") == 10,
+        "no_later_failure_overwrite": len(re.findall(
+            r"(?<![=!<>])failed\s*=(?!=)", conflict_body)) == 1,
+        "clean_cancel_not_success": "clean cancellation retains" not in text,
+    }
     (work / "extraction-manifest.json").write_text(json.dumps({
         "status": "production helper sources extracted for focused execution",
         "module_source": str(source), "functions": records,
         "source_sha256": {"FileOp.c": hashlib.sha256(text.encode()).hexdigest()},
-        "cases": HELPER_CASES,
+        "cases": HELPER_CASES, "source_contract": contracts,
         "scope": "actual path and lstat-observation helpers; not UI or operation execution"
     }, indent=2) + "\n")
+    return contracts
 
 def utc():
     return datetime.now(timezone.utc).isoformat()
@@ -161,7 +171,11 @@ def main():
         report["input_sha256"] = {str(p): digest(p) for p in inputs}
         (work / "collision-workflow.c").write_bytes(fixture.read_bytes())
         stage = extract_helpers if args.helpers_only else extract_model
-        stage(source, work)
+        contracts = stage(source, work)
+        if contracts is not None:
+            report["source_contract"] = contracts
+            if not all(contracts.values()):
+                raise ValueError(f"source contract failed: {contracts}")
         if args.extract_only:
             report.update(status="extracted only; not compiled/executed", passed=None)
             exit_code = 0

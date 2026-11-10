@@ -327,6 +327,11 @@ static int helper_case(const char *name)
         VERIFY(helper_write("observed","replacement",0)==0);
         VERIFY(!FileOpObservationMatches("observed",&observed));
         VERIFY(unlink("observed")==0 && unlink("old-object")==0);
+    } else if(!strcmp(name,"helper-first-failure")) {
+        int failure=0;
+        FileOpRememberFailure(&failure,ESTALE);VERIFY(failure==ESTALE);
+        FileOpRememberFailure(&failure,EACCES);VERIFY(failure==ESTALE);
+        failure=0;FileOpRememberFailure(&failure,0);VERIFY(failure==EIO);
     } else return 2;
     printf("PASS %s\n",name);return 0;
 }
