@@ -69,6 +69,7 @@
 #include "lutil.h"
 #include "cmsdata.h"
 #include "connection.h"
+#include "cmsloop.h"
 
 #ifndef	S_IRWXU
 #define	S_IRWXU		(S_IRUSR|S_IWUSR|S_IXUSR)
@@ -84,8 +85,6 @@
 
 int debug;
 static int standalone;			/* default is 0 */
-static int received_sighup = 0;		/* 1 means we get SIGHUP */
-static int rpc_in_process = 0;		/* 1 means processing client request */
 static int garbage_collection_time = 240; /* in min; default time is 4:00am */
 
 char	*pgname;
@@ -383,41 +382,25 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
         char *argument = NULL;
         program_handle ph = getph();
         struct rpcgen_table *proc;
-	sigset_t blocked, previous;
 
-	/* set rpc_in_process so that sighup handler won't exit right away */
-	rpc_in_process = 1;
-
-	/*
-	 * The garbage collection and debug handlers work on the calendars
-	 * and registrations a request is working on; hold the signals back
-	 * until the request is done.
-	 */
-	sigemptyset(&blocked);
-	sigaddset(&blocked, SIGALRM);
-	sigaddset(&blocked, SIGUSR1);
-	sigaddset(&blocked, SIGUSR2);
-	sigaddset(&blocked, SIGHUP);
-	sigprocmask(SIG_BLOCK, &blocked, &previous);
- 
         /* first do some bounds checking: */
         if (rqstp->rq_vers >= ph->nvers) {
                 svcerr_noproc(transp);
-                goto done;
+                return;
         }
         if (ph->prog[rqstp->rq_vers].nproc == 0) {
                 svcerr_noproc(transp);
-                goto done;
+                return;
         }
         if (rqstp->rq_proc >= ph->prog[rqstp->rq_vers].nproc) {
                 svcerr_noproc(transp);
-                goto done;
+                return;
         }
 
 	if (rqstp->rq_proc == NULLPROC) {
 		if (debug) fprintf(stderr, "rpc.cmsd: ping\n");
 		(void)svc_sendreply(transp, _DtCm_xdr_void, (caddr_t)NULL);
-		goto done;
+		return;
 	}
 
         /* assert - the program number, version and proc numbers are valid */
@@ -425,14 +408,14 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
         argument = (char*)calloc(proc->len_arg, sizeof(char));
         if (argument == NULL && proc->len_arg != 0) {
                 svcerr_systemerr(transp);
-                goto done;
+                return;
         }
         if (!svc_getargs(transp, proc->xdr_arg, argument)) {
                 svcerr_decode(transp);
                 /* free what was decoded before the request was rejected */
                 (void)svc_freeargs(transp, proc->xdr_arg, argument);
                 free(argument);
-                goto done;
+                return;
         }
 
         result = (*proc->proc)(argument, rqstp);
@@ -445,40 +428,6 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
                 exit(1);
         }
         free(argument);
-
-done:
-	rpc_in_process = 0;
-	sigprocmask(SIG_SETMASK, &previous, NULL);
-
-	/* exit if we have received the SIGHUP signal */
-	if (received_sighup == 1) {
-		if (debug)
-			fprintf(stderr, "rpc.cmsd: received SIGHUP, %s",
-				"exiting after finished processing\n");
-		exit(0);
-	}
-}
-
-/*
- * Signal handler for SIGHUP.
- * If we are in the middle of processing a client request,
- * finish processing before we exit.
- */
-static void
-sighup_handler(int sig_num)
-{
-	if (debug)
-		fprintf(stderr, "rpc.cmsd: sighup received\n");
-
-	if (rpc_in_process == 0) {
-		if (debug)
-			fprintf(stderr, "rpc.cmsd: exit from sighup_handler\n");
-		exit(0);
-	} else {
-		if (debug)
-			fprintf(stderr, "rpc.cmsd: set received_sighup to 1\n");
-		received_sighup = 1;
-	}
 }
 
 /*
@@ -512,16 +461,7 @@ init_alarm(void)
 {
 	int next;
 
-#if defined(SVR4) && !defined(__linux__)
-	extern void (*sigset(int, void (*)(int)))(int);
-	sigset(SIGUSR1, garbage_collect);
-	sigset(SIGALRM, garbage_collect);
-	sigset(SIGUSR2, debug_switch);
-#else
-	signal(SIGUSR1, garbage_collect);
-	signal(SIGALRM, garbage_collect);
-	signal(SIGUSR2, debug_switch);
-#endif /* SVR4 */
+	_DtCmsInstallSignalHandlers();
 
 	next = _GetFirstGarbageCollectionTime();
 	alarm((unsigned) next);
@@ -627,10 +567,6 @@ main(int argc, char **argv)
 		fprintf(stderr, "rpc.cmsd: rpc.cmsd is already running.\n");
 		exit(0);
 	}
-
-	/* use signal because we only need it once */
-	signal(SIGHUP, sighup_handler);
-
 
 #if defined(SunOS)
 	/* raise the soft limit of number of file descriptor */
@@ -770,9 +706,21 @@ main(int argc, char **argv)
 	init_alarm();
 	_DtCm_init_hash();
 
-	svc_run();
+	{
+		static const _DtCmsLoopActions actions = {
+			_DtCmsCollectGarbage, _DtCmsSwitchDebug
+		};
 
-	(void)fprintf(stderr, "rpc.cmsd: svc_run returned\n");
+		if (_DtCmsRunServiceLoop(&actions) == 0) {
+			/* SIGHUP: another rpc.cmsd takes over */
+			if (debug)
+				fprintf(stderr,
+					"rpc.cmsd: received SIGHUP, exiting\n");
+			exit(0);
+		}
+	}
+
+	(void)fprintf(stderr, "rpc.cmsd: the wait for requests failed\n");
 	return(1);
 }
 

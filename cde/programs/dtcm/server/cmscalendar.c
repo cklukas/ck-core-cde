@@ -616,13 +616,16 @@ _DtCmsRbToCsaStat(Rb_Status rb_stat)
 	}
 }
 
+/*
+ * Look after the registrations, reminders and logs of all calendars.  The
+ * service loop calls it between two requests when SIGALRM or SIGUSR1 has
+ * arrived.
+ */
 extern void
-garbage_collect(int signal_number)
+_DtCmsCollectGarbage(void)
 {
 	unsigned remain;
 	_DtCmsCalendar *clist = calendar_list;
-
-	(void)signal_number;
 
 	while (clist != NULL) {
 
@@ -650,13 +653,15 @@ garbage_collect(int signal_number)
 		alarm (remain);
 }
 
+/*
+ * Switch the debug output; the service loop calls it between two requests
+ * when SIGUSR2 has arrived.
+ */
 extern void
-debug_switch(int signal_number)
+_DtCmsSwitchDebug(void)
 {
 	_DtCmsCalendar *clist = calendar_list;
 	Access_Entry_4 *l;
-
-	(void)signal_number;
 
 	debug = !debug;
 	fprintf (stderr, "Debug Mode is %s\n", debug ? "ON" : "OFF");

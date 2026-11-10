@@ -11,7 +11,7 @@ if SOLARIS
 rpc_cmsd_LDADD += -lsocket -lnsl -lintl
 endif
 
-rpc_cmsd_SOURCES = parser.c access.c callback.c cmscalendar.c		\
+rpc_cmsd_SOURCES = parser.c access.c callback.c cmscalendar.c cmsloop.c	\
 		   cmsconvert.c cmsentry.c cmsmatch.c delete.c		\
 		   garbage.c insert.c lexit.c list.c log.c lookup.c	\
 		   reclotick.c recount.c relasttick.c reminder.c	\
@@ -23,7 +23,7 @@ rpc_cmsd_SOURCES = parser.c access.c callback.c cmscalendar.c		\
 		   lexer.h reminder.h update.h cmsattr.h data.h		\
 		   list.h repeat.h utility.h cmscalendar.h delete.h	\
 		   log.h reutil.h v4ops.h cmsconvert.h garbage.h	\
-		   lookup.h rpcextras.h v5ops.h
+		   lookup.h rpcextras.h v5ops.h cmsloop.h
 
 BUILT_SOURCES = parser.c parser.h
 CLEANFILES = parser.c parser.h y.tab.c  y.tab.h
@@ -38,9 +38,14 @@ parser.c parser.h: parser.y
 # The request-path tests compile the production log.c and cmsfunc.c, rtable4.c
 # and the libcsa sources they exercise with the sanitizers, and link them with
 # the built rpc.cmsd, so they check the code that is shipped.
-EXTRA_DIST = tests/check-requests.py tests/requests-test.c
+EXTRA_DIST = tests/check-requests.py tests/requests-test.c \
+	     tests/check-loop.py tests/loop-test.c
 
 check-local:
+	CMSD_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rpc_cmsd_CFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
+	CMSD_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
+	CMSD_LIBS='$(rpc_cmsd_LDADD) $(LIBS)' \
+	python3 $(srcdir)/tests/check-loop.py $(srcdir)
 	CMSD_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rpc_cmsd_CFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
 	CMSD_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
 	CMSD_OBJECTS='$(rpc_cmsd_OBJECTS)' \

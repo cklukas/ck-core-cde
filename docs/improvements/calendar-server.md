@@ -79,9 +79,20 @@ token, so what the writers store can be read back.
 `rpc.cmsd` changes its effective user and group to the daemon's at start-up and
 stops if it cannot. When it changes the owner or mode of a calendar file it
 switches to the file owner and back; if the chmod or chown fails, or the switch
-back fails, the daemon stops instead of continuing as `root`. The signals that
-start garbage collection and debugging are held back while a request is being
-processed.
+back fails, the daemon stops instead of continuing as `root`.
+
+## Signals
+
+`SIGALRM` and `SIGUSR1` start the daily garbage collection (the check of the
+registered clients, the reminders and the rewriting of the logs), `SIGUSR2`
+switches the debug output and `SIGHUP` makes the daemon give way to a newer
+one. The handlers only note that the signal arrived. The daemon blocks the four
+signals, serves its requests in its own loop (`cmsloop.c`) and lets the signals
+through only while it waits for the next request, so the work they ask for is
+done between two requests and never inside a handler, where it could interrupt
+the allocator or a request that is half processed. A request that is processed
+when `SIGHUP` arrives is finished and answered first. The daemon ignores
+`SIGPIPE`, so a client that goes away before it gets its reply cannot end it.
 
 ## Tests
 
@@ -99,6 +110,14 @@ log writers and reader with strings of all sizes, creating, updating and
 deleting entries and calendars, and the privilege changes. Run against the code
 from before these changes, the same test source fails 27 of its 29 cases; the
 other two check results that did not change.
+
+`tests/loop-test.c` runs the service loop with a UDP service on the loopback
+interface while another process sends it the four signals: the work they ask
+for never runs during a request or with a signal open, every request is
+answered, a signal that arrives while the loop waits is not lost, and a
+request that is processed when `SIGHUP` arrives is finished first. With
+handlers that do the work themselves, two of its five cases fail, and a third
+fails when the daemon does not ignore `SIGPIPE`.
 
 `lib/csa/tests` tests the XDR routines with hand-made messages: strings and
 arrays at and beyond their limits, counts of two and four billion, lists of

@@ -45,6 +45,13 @@
   position-file initialization falls back to the numeric user ID when account
   lookup is unavailable. Covered by focused path/control and packet sanitizer
   cases.
+- rpc.cmsd: the signal handlers no longer do the work. `SIGALRM`, `SIGUSR1`,
+  `SIGUSR2` and `SIGHUP` only set flags; the daemon keeps them blocked and
+  runs garbage collection (which pings the registered clients and rewrites
+  the logs), the debug switch and the exit between two requests in its own
+  service loop, instead of inside a handler that could interrupt the
+  allocator, a request or the RPC library. It ignores `SIGPIPE`. Covered by
+  `programs/dtcm/server/tests/loop-test.c`.
 - rpc.cmsd and libcsa: bound every string, array and list of the calendar
   protocols. The XDR routines of versions 2 to 5 and of the callback protocol
   now apply named limits (`lib/csa/cmlimits.h`) to requests and replies, check
