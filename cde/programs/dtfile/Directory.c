@@ -361,15 +361,25 @@ static void
 InitializePositionFileName(void)
 {
    struct passwd * pwInfo;
+   char user_name[32];
+   const char *name;
+   size_t length;
 
    /* Determine the name under which the position info is stored */
    if (positionFileName == NULL)
    {
 
       pwInfo = getpwuid(getuid());
-      positionFileName = XtMalloc(strlen(pwInfo->pw_name) +
-                                  strlen(POSITION_FILE_PREFIX) + 1);
-      sprintf(positionFileName, "%s%s", POSITION_FILE_PREFIX, pwInfo->pw_name);
+      if (pwInfo != NULL && pwInfo->pw_name != NULL)
+         name = pwInfo->pw_name;
+      else
+      {
+         snprintf(user_name, sizeof(user_name), "%lu", (unsigned long)getuid());
+         name = user_name;
+      }
+      length = strlen(POSITION_FILE_PREFIX) + strlen(name) + 1;
+      positionFileName = XtMalloc(length);
+      snprintf(positionFileName, length, "%s%s", POSITION_FILE_PREFIX, name);
    }
 }
 
@@ -1057,6 +1067,68 @@ DirectoryBuildChildPath(char *buffer, size_t buffer_size,
 }
 
 static int
+DirectoryCopyText(char *buffer, size_t buffer_size, const char *text)
+{
+   size_t length;
+
+   if (buffer == NULL || buffer_size == 0 || text == NULL)
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   length = strlen(text);
+   if (length >= buffer_size)
+   {
+      buffer[0] = NILL;
+      errno = ENAMETOOLONG;
+      return -1;
+   }
+   memcpy(buffer, text, length + 1);
+   return 0;
+}
+
+static int
+DirectoryBuildFilePath(char *buffer, size_t buffer_size,
+                       const char *directory_name, const char *file_name)
+{
+   return file_name == NULL
+             ? DirectoryCopyText(buffer, buffer_size, directory_name)
+             : DirectoryBuildChildPath(buffer, buffer_size, directory_name,
+                                       file_name);
+}
+
+static int
+DirectoryResolveLinkPath(char *path, size_t path_size, const char *target)
+{
+   char resolved[MAX_PATH];
+   char *separator;
+   size_t prefix_length;
+   size_t target_length;
+
+   if (path == NULL || path_size == 0 || target == NULL)
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   if (target[0] == '/') return DirectoryCopyText(path, path_size, target);
+
+   separator = strrchr(path, '/');
+   prefix_length = separator == NULL ? 0 : (size_t)(separator - path) + 1;
+   target_length = strlen(target);
+   if (prefix_length > sizeof(resolved) - 1 ||
+       target_length > sizeof(resolved) - 1 - prefix_length ||
+       prefix_length + target_length >= path_size)
+   {
+      path[0] = NILL;
+      errno = ENAMETOOLONG;
+      return -1;
+   }
+   memcpy(resolved, path, prefix_length);
+   memcpy(resolved + prefix_length, target, target_length + 1);
+   return DirectoryCopyText(path, path_size, resolved);
+}
+
+static int
 DirectoryWriteStatus(int fd, int status)
 {
    return DtfileProcessWriteAll(fd, &status, sizeof(status));
@@ -1159,8 +1231,6 @@ ReadFileData(
    int link_count;
    char ** link_list;
    int link_len;
-   char * end;
-   char * ptr;
    Boolean recursive_link_found;
    struct stat stat_buf;
    struct stat stat_buf2;
@@ -1170,17 +1240,15 @@ ReadFileData(
 
    /*  Allocate a new file structure.  */
    file_data = (FileData *)XtMalloc(sizeof(FileData));
+   full_file_name[0] = NILL;
+   link_count = 0;
+   link_list = NULL;
 
    /* get the full name of the file */
-   strcpy (full_file_name, full_directory_name);
-   if (file_name)
-   {
-      /* append file name to the directory */
-      if (strcmp(full_directory_name,"/") != 0)
-         strcat (full_file_name, "/");
-      strcat (full_file_name, file_name);
-   }
-   else
+   if (DirectoryBuildFilePath(full_file_name, sizeof(full_file_name),
+                              full_directory_name, file_name) != 0)
+      goto path_failed;
+   if (file_name == NULL)
    {
       /* no file name passed: use last component of directory */
       file_name = strrchr(full_file_name, '/');
@@ -1191,10 +1259,10 @@ ReadFileData(
    }
 
    /* Follow symbolic links to their ultimate destination */
-   link_count = 0;
-   link_list = NULL;
    recursive_link_found = False;
-   strcpy(link_file_name, full_file_name);
+   if (DirectoryCopyText(link_file_name, sizeof(link_file_name),
+                         full_file_name) != 0)
+      goto path_failed;
 
    stat_result = lstat (link_file_name, &stat_buf);
    if (FileDataStatIsLink(stat_result, &stat_buf))
@@ -1206,15 +1274,9 @@ ReadFileData(
                                       (link_count + 2));
 
        /* Force the link to be an absolute path, if necessary */
-       if (link_path[0] != '/')
-       {
-         /* Relative paths are relative to the current directory */
-         end = strrchr(link_file_name, '/') + 1;
-         *end = '\0';
-         strcat(link_file_name, link_path);
-       }
-       else
-         strcpy(link_file_name, link_path);
+       if (DirectoryResolveLinkPath(link_file_name, sizeof(link_file_name),
+                                    link_path) != 0)
+         goto path_failed;
 
        /* Check for a recursive loop; abort if found */
        for (i = 0; i < link_count; i++)
@@ -1222,7 +1284,9 @@ ReadFileData(
          if (strcmp(link_file_name, link_list[i]) == 0)
          {
            /* Back up to last non-recursive portion */
-           strcpy(link_file_name, link_list[link_count - 1]);
+           if (DirectoryCopyText(link_file_name, sizeof(link_file_name),
+                                 link_list[link_count - 1]) != 0)
+             goto path_failed;
            recursive_link_found = True;
            break;
          }
@@ -1243,7 +1307,16 @@ ReadFileData(
      }
    }
    stat_errno = errno;
+   goto fill_data;
 
+path_failed:
+   stat_errno = errno;
+   stat_result = -1;
+   for (i = 0; i < link_count; i++) XtFree(link_list[i]);
+   XtFree((char *)link_list);
+   link_list = NULL;
+
+fill_data:
    /* fill in the FileData structure with the information we found */
    file_data->next = NULL;
    file_data->file_name = XtNewString(file_name? file_name: ".");
@@ -1313,6 +1386,8 @@ ReadFileData(
                                                  NULL, 0, &stat_buf,
                                                  NULL, NULL,
                                                  NULL);
+         if (file_data->logical_type == NULL)
+            file_data->logical_type = XtNewString(DtDEFAULT_DATA_FT_NAME);
 #if defined( DATATYPE_IS_FIXED )
 #else
          /* The problem here is there isn't a way for user to mask
@@ -1328,7 +1403,7 @@ ReadFileData(
          if( S_ISDIR( stat_buf.st_mode ) &&
 	    (strcmp (file_data->logical_type, LT_DIRECTORY) == 0))
          {
-           if( strcmp( file_name, ".." ) != 0
+           if( file_name != NULL && strcmp( file_name, ".." ) != 0
                && strcmp( file_name, "." ) != 0 )
            {
              char * fullPathName;
@@ -1472,7 +1547,6 @@ ReadFileData2(
    int link_count;
    char ** link_list;
    int link_len;
-   char * end;
    char * ptr;
    Boolean recursive_link_found;
    struct stat stat_buf;
@@ -1490,16 +1564,11 @@ ReadFileData2(
    /*  Allocate a new file structure.  */
 
    /* get the full name of the file */
-   strcpy (full_file_name, full_directory_name);
+   if (DirectoryBuildFilePath(full_file_name, sizeof(full_file_name),
+                              full_directory_name, file_name) != 0)
+      return -1;
 
-   if (file_name)
-   {
-      /* append file name to the directory */
-      if (strcmp(full_directory_name,"/") != 0)
-         strcat (full_file_name, "/");
-      strcat (full_file_name, file_name);
-   }
-   else
+   if (file_name == NULL)
    {
       /* no file name passed: use last component of directory */
       file_name = strrchr(full_file_name, '/');
@@ -1513,7 +1582,9 @@ ReadFileData2(
    link_count = 0;
    link_list = NULL;
    recursive_link_found = False;
-   strcpy(link_file_name, full_file_name);
+   if (DirectoryCopyText(link_file_name, sizeof(link_file_name),
+                         full_file_name) != 0)
+      return -1;
 
    stat_result = lstat (link_file_name, &stat_buf);
    if (FileDataStatIsLink(stat_result, &stat_buf))
@@ -1525,15 +1596,9 @@ ReadFileData2(
                                       (link_count + 2));
 
        /* Force the link to be an absolute path, if necessary */
-       if (link_path[0] != '/')
-       {
-         /* Relative paths are relative to the current directory */
-         end = strrchr(link_file_name, '/') + 1;
-         *end = '\0';
-         strcat(link_file_name, link_path);
-       }
-       else
-         strcpy(link_file_name, link_path);
+       if (DirectoryResolveLinkPath(link_file_name, sizeof(link_file_name),
+                                    link_path) != 0)
+         goto encode_failed;
 
        /* Check for a recursive loop; abort if found */
        for (i = 0; i < link_count; i++)
@@ -1541,7 +1606,9 @@ ReadFileData2(
          if (strcmp(link_file_name, link_list[i]) == 0)
          {
            /* Back up to last non-recursive portion */
-           strcpy(link_file_name, link_list[link_count - 1]);
+           if (DirectoryCopyText(link_file_name, sizeof(link_file_name),
+                                 link_list[link_count - 1]) != 0)
+             goto encode_failed;
            recursive_link_found = True;
            break;
          }
@@ -1558,26 +1625,33 @@ ReadFileData2(
      {
       /* probably a broken link; try lstat */
        stat_result = lstat (full_file_name, &stat_buf);
-       strcpy(link_file_name, full_file_name);
+       if (DirectoryCopyText(link_file_name, sizeof(link_file_name),
+                             full_file_name) != 0)
+         goto encode_failed;
      }
    }
    stat_errno = errno;
 
    /* fill in the FileData2 structure with the information we found */
    file_data2->next = NULL;
-   strcpy(file_name_buf, (file_name ? file_name : "."));
+   if (DirectoryCopyText(file_name_buf, sizeof(file_name_buf),
+                         (file_name ? file_name : ".")) != 0)
+      goto encode_failed;
    logical_type_buf[0] = NILL;
    file_data2->is_subdir = False;
    action_name_buf[0] = NILL;
 
    if (link_list)
    {
-      strcpy(link_buf, link_list[0]);
-      strcpy(final_link_buf, link_list[link_count - 1]);
+      if (DirectoryCopyText(link_buf, sizeof(link_buf), link_list[0]) != 0 ||
+          DirectoryCopyText(final_link_buf, sizeof(final_link_buf),
+                            link_list[link_count - 1]) != 0)
+         goto encode_failed;
       for (i = 0; i < link_count; i++) {
          XtFree(link_list[i]);
       }
       XtFree((char *)link_list);
+      link_list = NULL;
    } else {
       final_link_buf[0] = NILL;
       link_buf[0] = NILL;
@@ -1616,9 +1690,12 @@ ReadFileData2(
       {
          file_data2->is_broken = True;
          if (recursive_link_found)
-            strcpy(logical_type_buf, LT_RECURSIVE_LINK);
+            ptr = LT_RECURSIVE_LINK;
          else
-            strcpy(logical_type_buf, LT_BROKEN_LINK);
+            ptr = LT_BROKEN_LINK;
+         if (DirectoryCopyText(logical_type_buf, sizeof(logical_type_buf),
+                               ptr) != 0)
+            goto encode_failed;
       }
       else
       {
@@ -1637,7 +1714,17 @@ ReadFileData2(
                                                  NULL);
 
 #if defined( DATATYPE_IS_FIXED )
-         strcpy(logical_type_buf, ptr);
+         if (ptr == NULL)
+         {
+            errno = EPROTO;
+            goto encode_failed;
+         }
+         if (DirectoryCopyText(logical_type_buf, sizeof(logical_type_buf),
+                               ptr) != 0)
+         {
+            free(ptr);
+            goto encode_failed;
+         }
          free(ptr);
 #else
          /* The problem here is there isn't a way for user to mask
@@ -1650,10 +1737,15 @@ ReadFileData2(
             The work around is manually checking it ourselves.
             When the data typing code is fixed, please remove this check.
          */
+         if( ptr == NULL )
+         {
+            errno = EPROTO;
+            goto encode_failed;
+         }
          if( !IsToolBox && S_ISDIR( stat_buf.st_mode ) &&
 	    (strcmp (ptr, LT_DIRECTORY) == 0))
          {
-           if( strcmp( file_name, ".." ) != 0
+           if( file_name != NULL && strcmp( file_name, ".." ) != 0
                && strcmp( file_name, "." ) != 0 )
            {
              char * fullPathName;
@@ -1675,19 +1767,34 @@ ReadFileData2(
              }
              else
              {
-               strcpy( logical_type_buf, ptr );
+               if (DirectoryCopyText(logical_type_buf,
+                                     sizeof(logical_type_buf), ptr) != 0)
+               {
+                 free(ptr);
+                 goto encode_failed;
+               }
                free( ptr ); /* Don't use XtFree. This pointer is being kept by tooltalk */
              }
            }
            else
            {
-             strcpy( logical_type_buf, ptr );
+             if (DirectoryCopyText(logical_type_buf,
+                                   sizeof(logical_type_buf), ptr) != 0)
+             {
+               free(ptr);
+               goto encode_failed;
+             }
              free( ptr ); /* Don't use XtFree. This pointer is being kept by tooltalk */
            }
          }
          else
          {
-           strcpy( logical_type_buf, ptr );
+           if (DirectoryCopyText(logical_type_buf,
+                                 sizeof(logical_type_buf), ptr) != 0)
+           {
+             free(ptr);
+             goto encode_failed;
+           }
            free( ptr ); /* Don't use XtFree. This pointer is being kept by tooltalk */
          }
 #endif
@@ -1696,7 +1803,17 @@ ReadFileData2(
       if( DtActionExists(logical_type_buf) )
       {
         char *ptr = (char *)DtActionLabel(file_name_buf);
-        strcpy(action_name_buf, ptr);
+        if (ptr == NULL)
+        {
+          errno = EPROTO;
+          goto encode_failed;
+        }
+        if (DirectoryCopyText(action_name_buf, sizeof(action_name_buf),
+                              ptr) != 0)
+        {
+          free(ptr);
+          goto encode_failed;
+        }
         free(ptr);
       }
       else
@@ -1706,7 +1823,12 @@ ReadFileData2(
                                                   NULL);
         if (ptr)
         {
-          strcpy(action_name_buf, ptr);
+          if (DirectoryCopyText(action_name_buf, sizeof(action_name_buf),
+                                ptr) != 0)
+          {
+            DtDtsFreeAttributeValue(ptr);
+            goto encode_failed;
+          }
           DtDtsFreeAttributeValue(ptr);
         }
       }
@@ -1718,11 +1840,22 @@ ReadFileData2(
       memset(&file_data2->stat, 0, sizeof(file_data2->stat));
       file_data2->physical_type = DtUNKNOWN;
       file_data2->is_broken = True;
-      strcpy(logical_type_buf, DtDEFAULT_DATA_FT_NAME);
+      if (DirectoryCopyText(logical_type_buf, sizeof(logical_type_buf),
+                            DtDEFAULT_DATA_FT_NAME) != 0)
+         goto encode_failed;
    }
 
 	return FileData2PackText(file_data2, file_name_buf, action_name_buf,
 	                         logical_type_buf, link_buf, final_link_buf);
+
+encode_failed:
+   if (link_list != NULL)
+   {
+      for (i = 0; i < link_count; i++) XtFree(link_list[i]);
+      XtFree((char *)link_list);
+   }
+   memset(file_data2, 0, sizeof(*file_data2));
+   return -1;
 }
 
 /*--------------------------------------------------------------------
@@ -2581,7 +2714,7 @@ ReaddirPipeCallback(
    FileData *old_data, **old_nextp;
    char *ptr;
    char *err_msg;
-   int i, n;
+   int i;
    int rc;
    long modify_time = 0;
    char dirname[MAX_PATH];
@@ -2605,10 +2738,10 @@ ReaddirPipeCallback(
 
    /* read the next msg from the pipe */
    msg = -1;
-   n = PipeRead(*fd, &msg, sizeof(short));
+   rc = PipeReadExact(*fd, &msg, sizeof(msg));
    activity = directory->activity;
    done = False;
-   if (n != sizeof(msg)) goto malformed_response;
+   if (rc != 0) goto malformed_response;
 
    switch (msg)
    {

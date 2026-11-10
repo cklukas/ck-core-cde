@@ -1,4 +1,13 @@
 2026-11-10
+- dtfile: bound the directory worker's file, symbolic-link and metadata text
+  paths before copying them into fixed records. Oversized names, relative-link
+  expansion, data types and action labels now fail without publishing a partial
+  record; a parentless relative link no longer dereferences before its buffer,
+  null data-type results fail safely, and root-directory metadata avoids a null
+  name comparison. Directory message tags now require a complete read, and
+  position-file initialization falls back to the numeric user ID when account
+  lookup is unavailable. Covered by focused path/control and packet sanitizer
+  cases.
 - dtfile: remove the last raw, pointer-bearing `FileData` directory-worker
   packet. Removed-entry tombstones are now packed into bounded `FileData2`
   records and sent with complete writes; oversized or incomplete records fail

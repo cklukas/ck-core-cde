@@ -125,6 +125,12 @@ static void position_path_case(const char *name)
 {
     char path[MAX_PATH];char directory[MAX_PATH+1];int rc;
     if(!strcmp(name,"file-path-long")){memset(directory,'a',MAX_PATH);directory[MAX_PATH]='\0';rc=DirectoryBuildChildPath(path,sizeof(path),directory,"positions");CHECK(rc==-1&&errno==ENAMETOOLONG&&path[0]=='\0');}
+    else if(!strcmp(name,"file-path-copy")){rc=DirectoryBuildFilePath(path,sizeof(path),"relative",NULL);CHECK(rc==0&&!strcmp(path,"relative"));}
+    else if(!strcmp(name,"file-path-copy-long")){memset(directory,'a',MAX_PATH);directory[MAX_PATH]='\0';rc=DirectoryBuildFilePath(path,sizeof(path),directory,NULL);CHECK(rc==-1&&errno==ENAMETOOLONG&&path[0]=='\0');}
+    else if(!strcmp(name,"file-path-link-relative")){strcpy(path,"/one/two/link");rc=DirectoryResolveLinkPath(path,sizeof(path),"../target");CHECK(rc==0&&!strcmp(path,"/one/two/../target"));}
+    else if(!strcmp(name,"file-path-link-no-parent")){strcpy(path,"link");rc=DirectoryResolveLinkPath(path,sizeof(path),"target");CHECK(rc==0&&!strcmp(path,"target"));}
+    else if(!strcmp(name,"file-path-link-absolute")){strcpy(path,"/old/link");rc=DirectoryResolveLinkPath(path,sizeof(path),"/new/target");CHECK(rc==0&&!strcmp(path,"/new/target"));}
+    else if(!strcmp(name,"file-path-link-long")){strcpy(path,"/base/link");memset(directory,'a',MAX_PATH);directory[MAX_PATH]='\0';rc=DirectoryResolveLinkPath(path,sizeof(path),directory);CHECK(rc==-1&&errno==ENAMETOOLONG&&path[0]=='\0');}
     else if(!strcmp(name,"file-path-root")){rc=DirectoryBuildChildPath(path,sizeof(path),"/","positions");CHECK(rc==0&&!strcmp(path,"/positions"));}
     else {rc=DirectoryBuildChildPath(path,sizeof(path),"/tmp","positions");CHECK(rc==0&&!strcmp(path,"/tmp/positions"));}
 }

@@ -57,6 +57,13 @@ other read and close errors. Symbolic-link copies grow their read buffer when
 it fills, preserving the complete link target. The filesystem regression covers
 deep fixture paths longer than 1024 bytes, directory errors and link growth.
 
+Directory refresh also validates the complete worker message and bounds file
+names, relative symbolic-link expansion, data types and action labels before
+encoding them for the browser. An oversized or incomplete entry is rejected as
+one failed refresh response, so it cannot install partial metadata or overwrite
+a fixed buffer. If account lookup is temporarily unavailable, icon-position
+storage uses the numeric user ID instead of dereferencing a missing account.
+
 CK Core CDE develops File Manager as a visual workspace rather than only a
 directory browser.
 

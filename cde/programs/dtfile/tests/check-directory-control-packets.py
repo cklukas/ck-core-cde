@@ -10,7 +10,9 @@ CASES=("array-valid","array-negative","array-over-limit","path-valid",
        "position-file-over-limit","position-file-long-name",
        "position-file-coordinate-range","position-file-truncated",
        "file-path-valid","file-path-root",
-       "file-path-long","write-done",
+       "file-path-long","file-path-copy","file-path-copy-long",
+       "file-path-link-relative","file-path-link-no-parent",
+       "file-path-link-absolute","file-path-link-long","write-done",
        "write-error","write-path","write-position","status-write",
        "timer-valid","timer-truncated-time","timer-truncated-boolean",
        "timer-invalid-boolean","timer-write")
@@ -64,6 +66,7 @@ def main():
     write_position_callback=extract(texts["Directory.c"],"WritePosInfoPipeCallback")
     timer_process=extract(texts["Directory.c"],"TimerEventProcess")
     timer_callback=extract(texts["Directory.c"],"TimerPipeCallback")
+    position_initializer=extract(texts["Directory.c"],"InitializePositionFileName")
     producers=read_process+update_all+update_some
     contract={
         "path_transactional":"DirectoryReadPathInfo(*fd, &new_count" in callback and
@@ -71,11 +74,15 @@ def main():
         "position_transactional":"DirectoryReadPositionInfo(*fd, &new_count" in callback and
                                  "directory->position_info = new_positions" in callback,
         "done_error_exact":callback.count("PipeReadExact(*fd") >= 7,
+        "message_tag_exact":"PipeReadExact(*fd, &msg, sizeof(msg))" in callback and
+                            "PipeRead(*fd, &msg" not in callback,
         "unknown_tag_malformed":"default:" in callback and "goto malformed_response;" in callback,
         "path_producers_exact":producers.count("DirectoryWritePathInfo(") == 2,
         "position_producer_exact":"PipeWritePositionInfo(pipe_fd" in read_process,
         "position_file_transactional":"if (position_count >= 0)" in read_process and
                                       "if (position_count < 0) position_count = 0" not in read_process,
+        "position_identity_fallback":"pwInfo != NULL && pwInfo->pw_name != NULL" in position_initializer and
+                                     'snprintf(user_name, sizeof(user_name), "%lu"' in position_initializer,
         "status_producers_exact":producers.count("DirectoryWriteDone(") == 3 and
                                  producers.count("DirectoryWriteError(") >= 6,
         "resolved_path_checked":"directory_status != TT_OK || full_directory_name == NULL" in read_process,
@@ -93,6 +100,12 @@ def main():
                              "errno != 0 ? errno : EACCES" in timer_process,
         "timer_path_bounded":"DirectoryBuildChildPath(full_name" in timer_process and
                              "strcpy(namep" not in timer_process,
+        "file_read_paths_bounded":texts["Directory.c"].count("DirectoryBuildFilePath(full_file_name") == 2 and
+                                  texts["Directory.c"].count("DirectoryResolveLinkPath(link_file_name") == 2 and
+                                  "strcat(link_file_name" not in texts["Directory.c"] and
+                                  "strcpy(file_name_buf" not in texts["Directory.c"] and
+                                  "strcpy(action_name_buf" not in texts["Directory.c"] and
+                                  "strcpy(logical_type_buf" not in texts["Directory.c"],
         "timer_malformed_retires_sticky":"StickyProcDiscard(activity" in timer_callback and
                                          "directory->was_up_to_date = False" in timer_callback,
     }
@@ -104,6 +117,8 @@ def main():
            ("Directory.c","DirectoryWriteDone"),("Directory.c","DirectoryWriteError"),
            ("Directory.c","PipeWritePositionInfo"),("Directory.c","PipeReadPositionInfo"),
            ("Directory.c","DirectoryReadPositionInfo"),("Directory.c","DirectoryBuildChildPath"),
+           ("Directory.c","DirectoryCopyText"),("Directory.c","DirectoryBuildFilePath"),
+           ("Directory.c","DirectoryResolveLinkPath"),
            ("Directory.c","DirectoryWriteStatus"),("Directory.c","DirectoryWriteTimerResult"),
            ("Directory.c","DirectoryReadTimerResult"),("Directory.c","DirectoryLoadPositionInfo"))
     functions="\n\n".join(extract(texts[file],name) for file,name in names)

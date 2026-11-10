@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile bounded directory metadata paths",
+  "source_base": "377f89621",
+  "motif_revision": "000646f06f611e59c01d291300d017dad153bb1e",
+  "motif_prefix": "/home/klukas/tmp/motif-cde-000646f0-20261110/prefix",
+  "motif_libXm_sha256": "6a10dd10171ef005ea01602b7a0968d9ad8769a7f90dd5461acda5c6fc2753e8",
+  "motif_Xm_h_sha256": "26e5d9afeb7cdec2cb73904bfca8bc00e964d87d130c7eeb200f3b25c88d57dc",
+  "motif_XmStrDefs_h_sha256": "826fc4257893afa62795c9a1e9190244ae626234111ccacf054c5b62c47858ae",
+  "motif_XmP_h_sha256": "46081aafb16d7146e30b823940ac9fddee543d65d7864d0020fed71317061277",
+  "motif_qualification_note": "The exact serial build completed libXm, then the unrelated mwm client stopped because the standalone Motif tree does not provide CDE-private Dt/SessionM.h. The same configured tree installed only its public headers and completed libXm; no CDE build overlapped.",
+  "motif_transfer": {
+    "source_host": "rpi4",
+    "target_host": "uconsole",
+    "regular_files": 305,
+    "symlinks": 2,
+    "regular_file_hash_manifest_identical": true,
+    "symlink_target_manifest_identical": true
+  },
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round10-20261110/",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    ".ckgit/ci.yml": "1171a0c2feb13dcc78df2a21c9737fd951fe71c159b561286bf9ea4ff52ecec9",
+    ".ckgit/motif-revision": "f014ce283493eb566739289029d29832207197e66c1175105ac5d8a382c2fe02",
+    "cde/CHANGES": "8a6a2457b014481cd4edfe03feb494fc041a2f2abd64007ffd43b2823ab196a4",
+    "docs/improvements/file-manager.md": "471410e30910b3f10fcf0de71a82caf9d868bf998ad2e880603cf546c7906538",
+    "cde/programs/dtfile/Directory.c": "5db233e68908d5fddf570d2b5433f263acf664ad827d24850cfc127d9252c36f",
+    "cde/programs/dtfile/tests/check-directory-control-packets.py": "8c3337ae106763d75bc54b102b66906c5067a99c38d234866379f16836d9b05e",
+    "cde/programs/dtfile/tests/directory-control-packets.c": "2a7cb80a075a3e921d07271a8f8ed55c91967a8b40d7ecade9825ea03983748d"
+  },
+  "focused_regressions": {
+    "directory_control_cases": 37,
+    "directory_packet_cases": 25,
+    "sanitizers": "address,undefined",
+    "control_receipt_sha256": "ea21accf885d267c91fca487b5580bf559dd331cd865ad5667c809f32f1c852d",
+    "packet_receipt_sha256": "bcf6ec7705abd1f899a03d4808cd23f50d219f635ff6e6a2bd77a1a3fffe9fe8",
+    "coverage": [
+      "complete directory worker message tags",
+      "bounded joined and copied file paths",
+      "bounded absolute, relative and parentless symbolic-link targets",
+      "bounded file names, data types, link text and action labels",
+      "null data-type and account lookup results",
+      "unchanged valid packet encoding and decoding"
+    ]
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "cpu": 2,
+    "full_rebuild": false,
+    "closure": ["dtfile-Directory.o", "dtfile relink"],
+    "seconds": 1.342454951,
+    "object_sha256": "430cde572e0440d1f434b097b91a973eb76102da6737f11960af29c06f451075",
+    "output_sha256": "afb2fd9939f8cafa274e614c972e84eef265d80069054effe5353be49f07182d",
+    "warnings": "Only the pre-existing assignment-condition warning in ReadDirectoryProcess.",
+    "failed_preflight": "The first compile attempt replaced Make's top_srcdir include expression with a build-relative path and stopped at Dt/Connect.h before producing an object; build-attempt1.log preserves it. The qualified retry used the exact absolute source include path."
+  },
+  "motif_boundary": {
+    "changed_object_consumed_headers": 25,
+    "missing_headers_against_previous_prefix": 0,
+    "changed_headers_against_previous_prefix": 0,
+    "ldd_resolves_exact_prefix": true,
+    "noninstalled_cde_libraries": "The isolated executable's direct ldd invocation cannot resolve uninstalled CDE libraries; exact libXm mapping was verified separately from that expected build-tree limitation."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "runs": 1,
+    "seconds": 15.997683807,
+    "passed_case_lines": 310,
+    "receipt_lines": 6,
+    "hard_failure_markers": 0,
+    "log_sha256": "924f6b91c039d884a73df2fa3dfb0f8f7c359ae2da9474e9aae283a5c74fde25"
+  },
+  "evidence_sha256": {
+    "build-attempt1.log": "5a5f134d80f0a1cfab8e4d47dbb0fd3f74e95bdedae9edc5c74978598248d1ac",
+    "build.log": "d4842939163dc648b442ca0c51b4cb100e01ebd94961e5bfc866e67fdfbbc9ec",
+    "dry-run.log": "bc00a9985f2f16baa93c0b005b81650e284173a61859064cf2bded67c52885f6",
+    "header-comparison.log": "d6dcebff16f924011349bf1995e2eac5de7c04cc0b8be79a724bcabc695443b9",
+    "postconditions.log": "ad51b50058e7b961c8aeb7f83a65a7762e769b783f7671ea905a3ea75bcf8864"
+  },
+  "postconditions": [
+    "make -n reports dtfile is up to date",
+    "Directory.o and dtfile are newer than the frozen source",
+    "no owned compiler, make or test process remained before returning CPU2",
+    "oversized metadata fails before a partial FileData2 record is published",
+    "valid existing directory metadata and packet behavior remains unchanged"
+  ],
+  "limitations": [
+    "This directory-metadata bundle did not launch or inspect a CDE window.",
+    "The qualified ck-core-fs-lib revision was not changed."
+  ]
+}
