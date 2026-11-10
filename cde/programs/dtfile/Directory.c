@@ -50,9 +50,7 @@
  *              GetLongName
  *              InitializeDirectoryRead
  *              InitializePositionFileName
- *              PipeReadFileData
  *              PipeReadPositionInfo
- *              PipeWriteFileData
  *              PipeWritePositionInfo
  *              ReadDir
  *              ReadDirectory
@@ -144,7 +142,6 @@ extern Boolean removingTrash;
 
 /* kinds of messages sent through the pipe */
 #define PIPEMSG_ERROR               1
-#define PIPEMSG_FILEDATA            2
 #define PIPEMSG_DONE                3
 #define PIPEMSG_PATH_LOGICAL_TYPES  4
 #define PIPEMSG_POSITION_INFO       5
@@ -639,50 +636,6 @@ SomeWindowMapped(void)
  *	The routines below are used to send directory entry information
  *      through the pipe from the background to the main process.
  *------------------------------------------------------------------*/
-
-/* write FileData to the pipe */
-void
-PipeWriteFileData(
-	int fd,
-	FileData *file_data)
-{
-   write(fd, file_data, sizeof(FileData));
-   PipeWriteString(fd, file_data->file_name);
-   PipeWriteString(fd, file_data->action_name);  /* @@@ ??? */
-   PipeWriteString(fd, file_data->logical_type);
-   if (file_data->link)
-      PipeWriteString(fd, file_data->link);
-   if (file_data->final_link)
-      PipeWriteString(fd, file_data->final_link);
-}
-
-
-/* read FileData from the pipe */
-static FileData *
-PipeReadFileData(
-	int fd)
-{
-   FileData *file_data;
-   int n;
-
-   file_data = (FileData *)XtCalloc(1,sizeof(FileData));
-   n = PipeRead(fd, file_data, sizeof(FileData));
-   if (n < sizeof(FileData))
-   {
-      fprintf(stderr, "PipeReadFileData: n = %d, expected %ld\n",
-              n, (long)sizeof(FileData));
-   }
-   file_data->file_name = PipeReadString(fd);
-   file_data->action_name = PipeReadString(fd);
-   file_data->logical_type = PipeReadString(fd);
-   if (file_data->link)
-      file_data->link = PipeReadString(fd);
-   if (file_data->final_link)
-      file_data->final_link = PipeReadString(fd);
-
-   /* return the file data */
-   return file_data;
-}
 
 static int
 FileData2Decode(const void *record, size_t available, FileData **result,
@@ -1479,6 +1432,26 @@ FileData2PackText(FileData2 *file_data2, const char *file_name,
       total += field_lengths[i];
    }
    return (int)record_length;
+}
+
+static int
+FileData2PackFileData(FileData2 *packed, const FileData *file_data)
+{
+   if (packed == NULL || file_data == NULL || file_data->file_name == NULL ||
+       file_data->logical_type == NULL)
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   memset(packed, 0, sizeof(*packed));
+   packed->physical_type = file_data->physical_type;
+   packed->errnum = file_data->errnum;
+   packed->stat = file_data->stat;
+   packed->is_subdir = file_data->is_subdir;
+   packed->is_broken = file_data->is_broken;
+   return FileData2PackText(packed, file_data->file_name,
+                            file_data->action_name, file_data->logical_type,
+                            file_data->link, file_data->final_link);
 }
 
 int
@@ -2450,11 +2423,21 @@ UpdateAllProcess(
         old_data;
         old_data = old_data->next)
    {
+      int encoded_length;
+
       DPRINTF(("UpdateAllProcess: file gone \"%s\"\n", old_data->file_name));
       old_data->errnum = ENOENT;
-      pipe_msg = PIPEMSG_FILEDATA;
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      PipeWriteFileData(pipe_fd, old_data);
+      encoded_length = FileData2PackFileData(&file_data2, old_data);
+      pipe_msg = PIPEMSG_FILEDATA2;
+      if (encoded_length < 0 ||
+          DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+          DtfileProcessWriteAll(pipe_fd, &file_data2,
+                                sizeof(file_data2)) != 0)
+      {
+         closedir(dirp);
+         XtFree(full_directory_name);
+         return 1;
+      }
    }
 
    /* free storage */
@@ -2660,15 +2643,10 @@ ReaddirPipeCallback(
          break;
       }
 
-          case PIPEMSG_FILEDATA:
           case PIPEMSG_FILEDATA2:
           case PIPEMSG_FILEDATA3:
 
-         if (msg == PIPEMSG_FILEDATA)
-         {
-           new_data = PipeReadFileData(*fd);
-         }
-         else if (msg == PIPEMSG_FILEDATA2)
+         if (msg == PIPEMSG_FILEDATA2)
          {
            FileData2 file_data2;
            int n;

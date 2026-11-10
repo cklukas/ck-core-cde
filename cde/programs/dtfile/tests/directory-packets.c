@@ -125,6 +125,15 @@ static void free_list(FileData *head)
     while(head){FileData *next=head->next;FreeFileData(head,True);head=next;}
 }
 
+static void pack_filedata_case(const char *name)
+{
+    FileData source;FileData2 packed;FileData *decoded=NULL;size_t used=0;int rc;
+    memset(&source,0,sizeof(source));source.file_name="alpha";source.action_name="action";source.logical_type="TYPE";source.link="link";source.final_link="final";source.physical_type=7;source.errnum=ENOENT;source.is_subdir=True;
+    if(!strcmp(name,"pack-filedata-null")){errno=0;CHECK(FileData2PackFileData(&packed,NULL)==-1&&errno==EINVAL);return;}
+    if(!strcmp(name,"pack-filedata-overflow")){char *large=malloc(BUFSIZ);memset(large,'x',BUFSIZ-1);large[BUFSIZ-1]=0;source.action_name=large;errno=0;CHECK(FileData2PackFileData(&packed,&source)==-1&&errno==EOVERFLOW);free(large);return;}
+    rc=FileData2PackFileData(&packed,&source);CHECK(rc>0&&packed.next==NULL&&packed.errnum==ENOENT);CHECK(FileData2Decode(&packed,sizeof(packed),&decoded,&used)==0&&!strcmp(decoded->file_name,"alpha")&&!strcmp(decoded->final_link,"final")&&decoded->physical_type==7);FreeFileData(decoded,True);
+}
+
 int main(int argc,char **argv)
 {
     FileData2 one,two;
@@ -138,7 +147,9 @@ int main(int argc,char **argv)
     one_len=make_record(&one,"alpha","TYPE");
     two_len=make_record(&two,"beta","TYPE2");
     CHECK(one_len>0&&two_len>0);
-    if(!strncmp(name,"desktop-",8)) {
+    if(!strncmp(name,"pack-filedata-",14)) {
+        pack_filedata_case(name);
+    } else if(!strncmp(name,"desktop-",8)) {
         desktop_case(name,&one);
     } else if(!strcmp(name,"pack-valid")) {
         CHECK(one.file_name==5&&one.action_name==6&&one.logical_type==4);

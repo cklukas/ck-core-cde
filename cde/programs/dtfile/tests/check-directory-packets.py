@@ -3,7 +3,8 @@
 import argparse, hashlib, json, os, re, subprocess, sys, time
 from pathlib import Path
 
-CASES=("pack-valid","pack-overflow","stat-failed","stat-link",
+CASES=("pack-valid","pack-overflow","pack-filedata-valid",
+       "pack-filedata-null","pack-filedata-overflow","stat-failed","stat-link",
        "decode-valid","decode-negative",
        "decode-short-header","decode-short-text","packet-valid",
        "packet-zero-count","packet-large-count","packet-extra-byte",
@@ -89,6 +90,7 @@ def main():
     desktop=(source/"Desktop.c").read_text();fileop=(source/"FileOp.c").read_text()
     desktop_callback=extract_function(directory,"CheckDesktopPipeCallback")
     desktop_process=extract_function(directory,"CheckDesktopProcess")
+    update_all=extract_function(directory,"UpdateAllProcess")
     contract={
         "packet_capacity_includes_header":"PIPEMSG_HDR_LEN + FILEDATABUF * sizeof(FileData2)" in directory,
         "packet_producer_exact":directory.count("DtfileProcessWriteAll(pipe_fd, file_data_buffer") == 1,
@@ -108,6 +110,11 @@ def main():
         "desktop_malformed_retires":"FileOpProtocolError(toplevel)" in desktop_callback and
                                     "kill(pipe_data->child, SIGKILL)" in desktop_callback and
                                     "directory->busy[activity] = False" in desktop_callback,
+        "tombstone_filedata2":"FileData2PackFileData(&file_data2, old_data)" in update_all and
+                              update_all.count("DtfileProcessWriteAll(pipe_fd, &file_data2") >= 2 and
+                              re.search(r"\bPIPEMSG_FILEDATA\b",directory) is None and
+                              "PipeWriteFileData" not in directory and
+                              "PipeReadFileData" not in directory,
         "desktop_fallback":"ReadFileData(full_dir_name, entry)" in desktop,
         "fileop_fallback":"ReadFileData(full_dir_name, entry)" in fileop,
     }
@@ -116,6 +123,7 @@ def main():
                             ("FileData2Decode","FileData2toFileData",
                              "DirectoryWriteDesktopRecord","DirectoryReadDesktopRecord",
                              "FileData2DecodePacket","FileData2PackText",
+                             "FileData2PackFileData",
                              "FileDataStatIsLink"))
     fixture=(tests/"directory-packets.c").read_text().replace("/* PRODUCTION_FUNCTIONS */",functions)
     generated=work/"directory-packets.c";generated.write_text(fixture)

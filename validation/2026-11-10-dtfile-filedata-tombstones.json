@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile removed-entry FileData2 tombstones",
+  "source_base": "d56333a62c17145735533dc0ab75fd843b6611e3",
+  "motif_revision": "2443a6fb4546db3683743d95ac907383721e2d82",
+  "motif_prefix": "/home/klukas/tmp/motif-abi9-2443a6fb4-20261110/prefix",
+  "motif_libXm_sha256": "a585f5a492cf5681ecf6db56c79350cfc54a5ea64327682e6fb68f77b5d9f218",
+  "motif_Xm_h_sha256": "26e5d9afeb7cdec2cb73904bfca8bc00e964d87d130c7eeb200f3b25c88d57dc",
+  "motif_qualification_receipt": "/home/klukas/tmp/motif-abi9-2443a6fb4-20261110/results/receipt.json",
+  "motif_transfer_evidence": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-motif-2443-transfer-20261110/",
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round9-20261110/",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    ".ckgit/ci.yml": "446c4a010acab854f1ad8e435a8365d5d0dbb5e7a9ba1797ea3614df35252a33",
+    ".ckgit/motif-revision": "a6c7390feaad68f398fe631f102d940e3df806ffff173ec4119977b8224511ad",
+    "cde/CHANGES": "93af54e12d43fe2298997d375ee42f34bb92ebe0cfc99ab8751911eefa5161ea",
+    "cde/programs/dtfile/Directory.c": "13136c9570603b170c0f929dc701c62456b5bb3ba5d46111a3e75c8f469ed74a",
+    "cde/programs/dtfile/tests/check-directory-packets.py": "f443fc945206ff2482bb70fac6623a5bfe9fc474b3ecf4cbc6497f6d9fa320bd",
+    "cde/programs/dtfile/tests/directory-packets.c": "5e3b82f61014ec4f421e261189c48c4ea58d7a48f27e047b97c5bc5eb6a6bb48"
+  },
+  "focused_regressions": {
+    "cases": 25,
+    "sanitizers": "address,undefined",
+    "remote_seconds": 0.19025294622406363,
+    "local_seconds": 0.5368136250181124,
+    "remote_log_sha256": "0415d6823d22bc41e4c90f8950850da59a8d930ef15b060801fecef3db25d740",
+    "coverage": [
+      "valid removed-entry FileData to FileData2 conversion",
+      "null source and oversized text rejection",
+      "preservation of scalar metadata and bounded text fields",
+      "absence of the obsolete raw FileData tag, reader and writer",
+      "complete FileData2 tombstone writes"
+    ]
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "full_rebuild": false,
+    "closure": ["dtfile-Directory.o", "dtfile relink"],
+    "seconds": 1.494321646,
+    "object_sha256": "4ad931837519ecd0aeb69d1c0527799fae8662a18535e1b429d353ad8d8be065",
+    "output_sha256": "25a7f58c52ead9adc26b1bccb41e4f706ced08e993a0e036a345c757244a19e7",
+    "build_log_sha256": "f6349c47577b1e66898a53905de3c7c6393c9467e0e1765e229f3fe27fb18749",
+    "warnings": "Only the pre-existing assignment-condition warning in UpdateAllProcess."
+  },
+  "motif_boundary": {
+    "dependency_files": 58,
+    "unique_consumed_headers": 77,
+    "prefix_headers_compared": 71,
+    "identical_source_fallbacks": 1,
+    "identical_system_X11_bitmap_fallbacks": 5,
+    "changed_or_missing_effective_headers_between_c46_and_2443": 0,
+    "comparison_receipt_sha256": "92ececf04a50fdae4c495ac5c02716b3d706d316c20c332dc49be05f784f322e",
+    "ldd_resolves_exact_prefix": true,
+    "ldd_mapping_sha256": "8846ce8b342fe6d6b599a64e5ffc6df1fd8869cde067bf61ba3e93c0bbd1a097"
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "runs": 1,
+    "seconds": 20.937211567,
+    "passed_case_lines": 304,
+    "failure_markers": 0,
+    "log_sha256": "a97da0267dd40b9b38f3ab55c06e9e0e6108bb1e7eb3f20501307f299b323c40"
+  },
+  "postconditions": [
+    "make -n reports dtfile is up to date",
+    "no owned compiler, make or test process remained before returning CPU2",
+    "removed-entry packets no longer serialize FileData pointer values",
+    "oversized tombstones fail before a tag or partial record is published"
+  ],
+  "limitations": [
+    "This worker-protocol bundle did not launch or inspect a CDE window.",
+    "The qualified ck-core-fs-lib revision was not changed."
+  ]
+}

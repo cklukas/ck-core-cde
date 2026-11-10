@@ -1,4 +1,9 @@
 2026-11-10
+- dtfile: remove the last raw, pointer-bearing `FileData` directory-worker
+  packet. Removed-entry tombstones are now packed into bounded `FileData2`
+  records and sent with complete writes; oversized or incomplete records fail
+  before publication, and the obsolete short-read decoder is gone. Covered by
+  focused production-helper sanitizer cases.
 - dtfile: replace the desktop-refresh worker's raw `FileData` pointer-bearing
   records with validated `FileData2` packets. Desktop refresh now rejects
   truncated strings, records and tags transactionally, checks ToolTalk path
