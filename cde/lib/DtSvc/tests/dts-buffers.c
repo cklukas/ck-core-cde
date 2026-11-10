@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <locale.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -153,6 +154,49 @@ static void plain_free(void *p)
 	free(p);
 }
 
+/* reads and mappings of the file contents under the control of the test */
+static int mapping_fails;	/* mmap() fails */
+static int read_mode;		/* 0: as the file is, 1: the first 40 bytes and then the end, 2: EIO */
+
+static void *t_mmap(void *address, size_t length, int protection, int flags, int fd, off_t offset)
+{
+	if (mapping_fails) {
+		errno = ENODEV;
+		return MAP_FAILED;
+	}
+	return mmap(address, length, protection, flags, fd, offset);
+}
+
+static ssize_t t_read(int fd, void *buffer, size_t count)
+{
+	if (read_mode == 2) {
+		errno = EIO;
+		return -1;
+	}
+	if (read_mode == 1) {
+		static int served;
+
+		if (served) {
+			served = 0;
+			return 0;
+		}
+		served = 1;
+		count = count > 40 ? 40 : count;
+	}
+	return read(fd, buffer, count);
+}
+
+/* a byte that is not a character leaves the character as it finds it; the
+   test sets it to a value no byte of a pattern has */
+static int t_mbtowc(wchar_t *wc, const char *s, size_t n)
+{
+	int length = mbtowc(wc, s, n);
+
+	if (length < 0 && wc)
+		*wc = (wchar_t)0x7ffffff0;
+	return length;
+}
+
 #define malloc t_malloc
 #define calloc t_calloc
 #define realloc t_realloc
@@ -160,6 +204,9 @@ static void plain_free(void *p)
 #define strdup t_strdup
 #define popen t_popen
 #define pclose t_pclose
+#define mmap t_mmap
+#define read t_read
+#define mbtowc t_mbtowc
 
 /* ---- stubs for what Dts.c takes from the rest of the library ---- */
 
@@ -292,6 +339,7 @@ static DtDtsMMRecord *name_list(type_info_t *linfo, DtDtsMMDatabase *db, DtDtsMM
 	return (rec_ptr + 1 < record_table + record_count) ? rec_ptr + 1 : NULL;
 }
 
+#ifndef REAL_PROBES
 /* The probes below look at the file system; the scenarios supply the answers. */
 static const struct stat *get_stat(type_info_t *info)
 {
@@ -314,6 +362,7 @@ static const char *get_link_path(type_info_t *info)
 	(void)info;
 	return NULL;
 }
+#endif
 
 static int type_mode(char *attr, type_info_t *info)
 {
@@ -801,6 +850,14 @@ static void scenario_expand_keyword(const char *arena)
 	expect_expansion("%file%", NULL, "%file%");
 	assert(expand_keyword(NULL, "/a/b.txt") == NULL);
 
+	/* the suffix and the base are those of the name, not of the whole path */
+	expect_expansion("%suffix%", "/a.d/README", "");
+	expect_expansion("%base%", "/a.d/README", "README");
+	expect_expansion("%suffix%", "/a.d/archive.tar.gz", "gz");
+	expect_expansion("%base%", "/a.d/archive.tar.gz", "archive.tar");
+	expect_expansion("%dir%", "/top", "/");
+	expect_expansion("%dir%", "/a/b/c.d", "/a/b");
+
 	/* a name without a directory part */
 	expect_expansion("%dir%", "plain.c", ".");
 	expect_expansion("%name%", "plain.c", "plain.c");
@@ -826,6 +883,17 @@ static void scenario_expand_keyword(const char *arena)
 
 /* ---- shell expansion ---- */
 
+/* expand_shell() took the text only before commands were run with the keywords quoted */
+static char *shell_expand(const char *attr, const char *path)
+{
+#ifdef OLD_EXPAND_SHELL
+	(void)path;
+	return expand_shell(attr);
+#else
+	return expand_shell(attr, path);
+#endif
+}
+
 static void scenario_expand_shell(const char *arena)
 {
 	char *result, *zeros;
@@ -850,32 +918,32 @@ static void scenario_expand_shell(const char *arena)
 	assert(append(NULL, "more") == NULL);
 	assert(disarm() == 1);
 
-	result = expand_shell("plain");
+	result = shell_expand("plain", NULL);
 	assert(result && strcmp(result, "plain") == 0);
 	free(result);
-	result = expand_shell("a`printf XY`b");
+	result = shell_expand("a`printf XY`b", NULL);
 	assert(result && strcmp(result, "aXYb") == 0);
 	free(result);
-	result = expand_shell("`printf 1`+`printf 2`");
+	result = shell_expand("`printf 1`+`printf 2`", NULL);
 	assert(result && strcmp(result, "1+2") == 0);
 	free(result);
 	zeros = repeat('0', 300);
-	result = expand_shell("<`printf '%0300d' 0`>");
+	result = shell_expand("<`printf '%0300d' 0`>", NULL);
 	assert(result && strlen(result) == 302 && strncmp(result + 1, zeros, 300) == 0);
 	free(result);
 	free(zeros);
-	assert(expand_shell(NULL) == NULL);
+	assert(shell_expand(NULL, NULL) == NULL);
 	assert(open_pipes == 0);		/* every pipe was closed */
 
 	/* a command that cannot be started is reported as text, not as a format */
-	assert(expand_shell("x`popen-fails %s%n`y") == NULL);
+	assert(shell_expand("x`popen-fails %s%n`y", NULL) == NULL);
 	assert(strcmp(reported_format, "%s") == 0);
 	assert(strcmp(reported_argument, "popen-fails %s%n") == 0);
 
 	for (k = 1; k < 30; ++k) {
 		before = live;
 		arm(k);
-		result = expand_shell("x`printf ab`y`printf cd`z");
+		result = shell_expand("x`printf ab`y`printf cd`z", NULL);
 		used = disarm();
 		assert(result == NULL || strcmp(result, "xabycdz") == 0);
 		free(result);
@@ -1070,6 +1138,332 @@ static void scenario_set_vals(const char *arena)
 	assert(live == 0);
 }
 
+/* ---- commands in values ---- */
+
+static void scenario_shell_text(const char *arena)
+{
+	char *result;
+
+	(void)arena;
+	/* a backquote without a partner is text */
+	result = shell_expand("a`b", NULL);
+	assert(result && strcmp(result, "a`b") == 0);
+	free(result);
+	result = shell_expand("x`printf 1`y`z", NULL);
+	assert(result && strcmp(result, "x1y`z") == 0);
+	free(result);
+	result = shell_expand("`", NULL);
+	assert(result && strcmp(result, "`") == 0);
+	free(result);
+
+	/* the keywords of a command are one word each */
+	result = shell_expand("`printf '[%s]' %name%`", "/d/a b;c.txt");
+	assert(result && strcmp(result, "[a b;c.txt]") == 0);
+	free(result);
+	result = shell_expand("`printf '[%s]' %file%`", "/d/it's.txt");
+	assert(result && strcmp(result, "[/d/it's.txt]") == 0);
+	free(result);
+	result = shell_expand("`printf '[%s]' %suffix%`", "/d/noext");
+	assert(result && strcmp(result, "[]") == 0);
+	free(result);
+	assert(live == 0);
+}
+
+/* A file name with a command in backquotes is a name, not a command. */
+static void scenario_value_injection(const char *arena)
+{
+	char here[MAXPATHLEN], marker[MAXPATHLEN + 16], *path, *result;
+	DtShmBoson plain = _DtDtsMMStringToBoson("icon-%name%-%file%");
+	DtShmBoson quoted = _DtDtsMMStringToBoson("`printf '<%s>' %name%`");
+	struct stat st;
+
+	assert(getcwd(here, sizeof here));
+	assert(chdir(arena) == 0);
+	snprintf(marker, sizeof marker, "%s/pwned", arena);
+	unlink(marker);
+	path = concat(arena, "/x`touch pwned`.txt", "");
+
+	result = expand_value(plain, path);
+	assert(result);
+	assert(strstr(result, "icon-x`touch pwned`.txt-") == result);
+	free(result);
+	assert(stat(marker, &st) == -1);
+
+	result = expand_value(quoted, path);
+	assert(result && strcmp(result, "<x`touch pwned`.txt>") == 0);
+	free(result);
+	assert(stat(marker, &st) == -1);
+
+	free(path);
+	assert(chdir(here) == 0);
+	assert(live == 0);
+}
+
+/* A byte that is not a character is that byte for the comparison. */
+static void scenario_invalid_characters(const char *arena)
+{
+	(void)arena;
+	if (!setlocale(LC_ALL, "C.UTF-8"))
+		return;				/* no locale with invalid sequences */
+	assert(gmatch("\xff", "\xfe") == 0);
+	assert(gmatch("\xff", "\xff") == 1);
+	assert(gmatch("a\xff" "b", "a?b") == 1);
+	assert(gmatch("\xfe", "[\xfe\xff]") == 1);
+	assert(gmatch("\xff\xfe", "\xff\xff") == 0);
+	assert(gmatch("na\xc3\xafve", "na?ve") == 1);
+	setlocale(LC_ALL, "C");
+}
+
+#ifdef REAL_PROBES
+/* ---- the file probes ---- */
+
+static char *make_path(const char *arena, const char *name)
+{
+	return concat(arena, "/", name);
+}
+
+static const char *link_of(const char *path, type_info_t **info)
+{
+	*info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+	assert(*info);
+	get_link_info(*info);
+	return (*info)->link_path;
+}
+
+static void scenario_links(const char *arena)
+{
+	char *dir = make_path(arena, "links"), *target, *rel, *chain, *dangling, *a, *b;
+	char *up, *path, *expected;
+	type_info_t *info;
+	const char *found;
+	int i;
+
+	assert(mkdir(dir, 0700) == 0);
+	target = make_path(dir, "target");
+	write_file(target, "x");
+	rel = make_path(dir, "rel");
+	chain = make_path(dir, "chain");
+	dangling = make_path(dir, "dangling");
+	a = make_path(dir, "a");
+	b = make_path(dir, "b");
+	assert(symlink("target", rel) == 0);
+	assert(symlink("rel", chain) == 0);
+	assert(symlink("missing", dangling) == 0);
+	assert(symlink("b", a) == 0);
+	assert(symlink("a", b) == 0);
+
+	/* a file that is no link leads to itself */
+	found = link_of(target, &info);
+	assert(found && strcmp(found, target) == 0);
+	assert(strcmp(info->link_name, "target") == 0);
+	free(cleanup(0, info));
+
+	/* the target of a link is whole, and a relative one starts in the
+	   directory of the link */
+	found = link_of(rel, &info);
+	assert(found && strcmp(found, target) == 0);
+	assert(strcmp(info->link_name, "target") == 0);
+	free(cleanup(0, info));
+	found = link_of(chain, &info);
+	assert(found && strcmp(found, target) == 0);
+	free(cleanup(0, info));
+
+	/* an absolute target, and a target in another directory */
+	up = make_path(arena, "up");
+	assert(symlink(target, up) == 0);
+	found = link_of(up, &info);
+	assert(found && strcmp(found, target) == 0);
+	free(cleanup(0, info));
+	path = make_path(dir, "sub");
+	assert(mkdir(path, 0700) == 0);
+	free(path);
+	path = make_path(dir, "sub/outward");
+	assert(symlink("../target", path) == 0);
+	found = link_of(path, &info);
+	expected = make_path(dir, "sub/../target");
+	assert(found && strcmp(found, expected) == 0);
+	free(cleanup(0, info));
+	free(expected);
+	unlink(path);
+	free(path);
+	path = make_path(dir, "sub");
+	rmdir(path);
+	free(path);
+
+	/* a link to nothing is the name that is missing */
+	found = link_of(dangling, &info);
+	assert(found && found != (char *)-1);
+	assert(strcmp(info->link_name, "missing") == 0);
+	free(cleanup(0, info));
+
+	/* links that lead back to themselves end with an error */
+	alarm(20);
+	found = link_of(a, &info);
+	alarm(0);
+	assert(found == (char *)-1);
+	assert(info->error == ELOOP);
+	free(cleanup(0, info));
+
+	/* a long chain that ends */
+	for (i = 0; i < 30; ++i) {
+		char from[32], to[32];
+
+		snprintf(from, sizeof from, "c%d", i);
+		snprintf(to, sizeof to, i ? "c%d" : "target", i - 1);
+		path = make_path(dir, from);
+		assert(symlink(to, path) == 0);
+		free(path);
+	}
+	path = make_path(dir, "c29");
+	found = link_of(path, &info);
+	assert(found && strcmp(found, target) == 0);
+	free(cleanup(0, info));
+	free(path);
+	for (i = 0; i < 30; ++i) {
+		char from[32];
+
+		snprintf(from, sizeof from, "c%d", i);
+		path = make_path(dir, from);
+		unlink(path);
+		free(path);
+	}
+
+	unlink(a);
+	unlink(b);
+	unlink(dangling);
+	unlink(chain);
+	unlink(rel);
+	unlink(up);
+	unlink(target);
+	rmdir(dir);
+	free(a);
+	free(b);
+	free(dangling);
+	free(chain);
+	free(rel);
+	free(up);
+	free(target);
+	free(dir);
+	assert(live == 0);
+}
+
+static void scenario_contents(const char *arena)
+{
+	char *path = make_path(arena, "contents"), *text = repeat('A', 100);
+	type_info_t *info;
+	const char *buffer;
+	unsigned k, used;
+	size_t i;
+
+	write_file(path, text);
+
+	/* mapped */
+	info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+	buffer = get_buff(info);
+	assert(buffer && get_buff_size(info) == 100 && memcmp(buffer, text, 100) == 0);
+	free(cleanup(0, info));
+
+	/* read, and the file ends early: what was not read is zeros */
+	mapping_fails = 1;
+	read_mode = 1;
+	info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+	buffer = get_buff(info);
+	assert(buffer);
+	assert(get_buff_size(info) == 40);
+	for (i = 0; i < 101; ++i)
+		assert(i < 40 ? buffer[i] == 'A' : buffer[i] == 0);
+	free(cleanup(0, info));
+	read_mode = 0;
+
+	/* read completely */
+	info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+	buffer = get_buff(info);
+	assert(buffer && get_buff_size(info) == 100 && memcmp(buffer, text, 100) == 0);
+	free(cleanup(0, info));
+
+	/* a read that fails gives nothing, now and when asked again */
+	read_mode = 2;
+	info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+	assert(get_buff(info) == NULL);
+	assert(info->error == EIO);
+	assert(info->buffer == NULL);
+	info->error = 0;
+	assert(get_buff(info) == NULL);
+	free(cleanup(0, info));
+	read_mode = 0;
+
+	/* memory that runs out while the contents are read */
+	for (k = 1; k < 20; ++k) {
+		long before = live;
+
+		info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+		assert(info);
+		arm(k);
+		buffer = get_buff(info);
+		used = disarm();
+		assert(buffer == NULL || get_buff_size(info) == 100);
+		free(cleanup(0, info));
+		assert(live == before);
+		if (used < k)
+			break;
+	}
+	assert(k < 20);
+	mapping_fails = 0;
+
+	/* an empty file has nothing */
+	write_file(path, "");
+	info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+	assert(get_buff(info) == NULL);
+	free(cleanup(0, info));
+
+	unlink(path);
+	free(path);
+	free(text);
+	assert(live == 0);
+}
+
+/* The size of a buffer given by the caller is what the matching trusts. */
+static void scenario_buffer_sizes(const char *arena)
+{
+	static const struct {
+		const char *attr;
+		int size;
+		int match;
+	} tests[] = {
+		/* a size that says there is nothing to look at */
+		{ "0 byte 0x48", -1, 0 }, { "0 byte 0x48", 0, 0 }, { "0 byte 0x48", -5, 0 },
+		{ "-5 string world", -5, 0 }, { "0 string HELLO", 0, 0 },
+		{ "5 byte 0x48", -5, 0 }, { "5 string x", -1, 0 }, { "5 byte 0x48", 0, 0 },
+		/* positions beyond the end */
+		{ "100 byte 0x48", 11, 0 }, { "12 string x", 11, 0 }, { "11 byte 0", 11, 0 },
+		{ "10 short 0", 11, 0 }, { "8 long 0x6f", 11, 0 },
+		/* positions in it, also counted from the end */
+		{ "0 string HELLO", 11, 1 }, { "6 string world", 11, 1 }, { "-5 string world", 11, 1 },
+		{ "-11 string HELLO", 11, 1 }, { "-12 string HELLO", 11, 0 }, { "-0 string x", 11, 0 },
+		{ "0 byte 0x48", 4, 1 }, { "3 string LO", 5, 1 }, { "3 string LO ", 4, 0 },
+	};
+	size_t i;
+
+	(void)arena;
+	for (i = 0; i < sizeof tests / sizeof tests[0]; ++i) {
+		/* the buffer is exactly as long as it is said to be, or shorter */
+		size_t length = tests[i].size > 0 ? (size_t)tests[i].size : 1;
+		char *buffer = malloc(length), *attr = strdup(tests[i].attr);
+		type_info_t *info;
+
+		assert(buffer && attr);
+		memcpy(buffer, "HELLO world", length);
+		info = set_vals(NULL, buffer, tests[i].size, NULL, NULL, NULL, NULL);
+		assert(info);
+		assert(type_content(attr, info) == tests[i].match);
+		free(cleanup(0, info));
+		free(attr);
+		free(buffer);
+	}
+	assert(live == 0);
+}
+#endif
+
 /* ---- driver ---- */
 
 int main(int argc, char **argv)
@@ -1086,6 +1480,14 @@ int main(int argc, char **argv)
 		{ "expand_shell", scenario_expand_shell },
 		{ "attribute_lists", scenario_attribute_lists },
 		{ "set_vals", scenario_set_vals },
+		{ "shell_text", scenario_shell_text },
+		{ "value_injection", scenario_value_injection },
+		{ "invalid_characters", scenario_invalid_characters },
+#ifdef REAL_PROBES
+		{ "links", scenario_links },
+		{ "contents", scenario_contents },
+		{ "buffer_sizes", scenario_buffer_sizes },
+#endif
 	};
 	size_t i;
 

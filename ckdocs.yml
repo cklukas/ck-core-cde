@@ -41,6 +41,7 @@ nav:
           - docs/improvements/folder-comparison.md
           - docs/improvements/launching.md
           - docs/improvements/subprocess-control.md
+          - docs/improvements/data-types.md
           - docs/improvements/calendar-server.md
           - docs/improvements/login-manager.md
           - docs/improvements/tooltalk.md

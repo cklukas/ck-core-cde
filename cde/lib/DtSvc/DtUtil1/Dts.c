@@ -95,9 +95,9 @@ typedef	struct	type_info
 	const struct stat	*file_lstat;
 	int			file_fd;
 	const char		*buffer;
-	int			buff_size;
-	int			mmap_size_to_free;
-	int			size_to_free;
+	long			buff_size;
+	long			mmap_size_to_free;
+	long			size_to_free;
 	const char		*opt_name;
 	int			error;
 	const char		*link_path;
@@ -170,6 +170,25 @@ _DtDtsClear(void)
 	_DtSvcProcessUnlock();
 }
 
+/*
+ * The character at the start of s.  A byte that does not start a valid
+ * multibyte character is the character of its own value, so that the
+ * comparison never reads a character that was not set.
+ */
+static wchar_t
+mb_char(const char *s)
+{
+	wchar_t	wc = L'\0';
+
+	if(mbtowc(&wc, s, MB_CUR_MAX) < 0)
+	{
+		/* leave the conversion state as it was before the bad byte */
+		(void)mbtowc(NULL, NULL, 0);
+		return((wchar_t)(unsigned char)*s);
+	}
+	return(wc);
+}
+
 static int
 gmatch(const char *string, const char *pattern)
 {
@@ -183,15 +202,15 @@ top:
 	for (; 1; _MBADV(pattern), _MBADV(string))
 	{
 		lower_bound = (wchar_t)MAXINT;
-		mbtowc(&string_ch, string, MB_CUR_MAX);
-		mbtowc(&pattern_ch, pattern, MB_CUR_MAX);
+		string_ch = mb_char(string);
+		pattern_ch = mb_char(pattern);
 		switch (pattern_ch)
 		{
 		case L'[':
 			k = 0;
-			for(mbtowc(&pattern_ch, _MBADV(pattern), MB_CUR_MAX);
+			for(pattern_ch = mb_char(_MBADV(pattern));
                             pattern_ch != L'\0';
-                            mbtowc(&pattern_ch, _MBADV(pattern), MB_CUR_MAX))
+                            pattern_ch = mb_char(_MBADV(pattern)))
 			{
 				switch (pattern_ch)
 				{
@@ -206,8 +225,7 @@ top:
 				case L'-':
 					if(lower_bound <= string_ch) {
 					    p = (char *)pattern;
-					    mbtowc(&pattern_ch, _MBADV(pattern),
-						   MB_CUR_MAX);
+					    pattern_ch = mb_char(_MBADV(pattern));
 					    k |= (string_ch <= pattern_ch);
 					    pattern = p;
 					}
@@ -253,7 +271,7 @@ csh_match_star(const char *string, const char *pattern)
 	wchar_t         pattern_ch;
 	wchar_t         string_ch;
 
-	mbtowc(&pattern_ch, pattern, MB_CUR_MAX);
+	pattern_ch = mb_char(pattern);
 	switch (pattern_ch)
 	{
 	case L'\0':
@@ -272,11 +290,11 @@ csh_match_star(const char *string, const char *pattern)
 		}
 		break;
 	default:
-		mbtowc(&pattern_ch, pattern, MB_CUR_MAX);
+		pattern_ch = mb_char(pattern);
 		_MBADV(pattern);
 		while (*string)
 		{
-			mbtowc(&string_ch, string, MB_CUR_MAX);
+			string_ch = mb_char(string);
 			_MBADV(string);
 			if(string_ch == pattern_ch && gmatch(string, pattern))
 			{
@@ -418,16 +436,13 @@ set_vals(const char		*fn,
 		}
 	}
 			
-	if(buf)
+	/*
+	 * A buffer is as long as the caller says; a buffer of no length or
+	 * of a negative one has nothing to look at.
+	 */
+	if(buf && bs > 0)
 	{
 		linfo->buffer = buf;
-	}
-	/*
-	 * 04/30/96 - What should this if() REALLY be?  Chances are
-	 * pretty good that bs will either not equal 0 or not equal -1!
-	 */
-	if(bs != 0 || bs != -1)
-	{
 		linfo->buff_size = bs;
 	}
 	if(fs)
@@ -651,6 +666,11 @@ get_lstat(type_info_t *info)
 		else
 		{
 			info->file_lstat = (struct stat *)malloc(sizeof(struct stat));
+			if(!info->file_lstat)
+			{
+				info->error = ENOMEM;
+				return(0);
+			}
 			memcpy((char *)info->file_lstat, &buf, sizeof(buf));
 		}
 	}
@@ -685,6 +705,11 @@ get_stat(type_info_t *info)
 		else
 		{
 			info->file_stat = (struct stat *)malloc(sizeof(struct stat));
+			if(!info->file_stat)
+			{
+				info->error = ENOMEM;
+				return(0);
+			}
 			memcpy((char *)info->file_stat, &buf, sizeof(buf));
 		}
 	}
@@ -702,31 +727,86 @@ islink(type_info_t *info)
 	return(0);
 }
 
+/*
+ * Follow the symbolic links from the file to what they lead to: link_path
+ * is the last name and link_name its last component.  A relative target is
+ * relative to the directory of the link.  A chain of more than
+ * DTS_MAX_LINKS links, or one that leads back to itself, is an error.
+ */
+#define DTS_MAX_LINKS 40
+
 void
 get_link_info(type_info_t *info)
 {
-	char		buff[MAXPATHLEN];
-	const	char	*name = 0;
-	int		n;
+	char		buff[MAXPATHLEN + 1];
+	char		*name = 0;
+	ssize_t		n;
+	int		links = 0;
 
 	if(info->link_path == 0)
 	{
-		if((name = get_file_path(info)) == 0)
+		if(get_file_path(info) == 0)
 		{
 			info->link_path = (char *)-1;
 			info->link_name = (char *)-1;
 			return;
 		}
-		else
+		name = strdup(get_file_path(info));
+		if(name == 0)
 		{
-			name = strdup(name);
+			info->error = ENOMEM;
+			info->link_path = (char *)-1;
+			info->link_name = (char *)-1;
+			return;
 		}
-		while((n = readlink(name, buff, MAXPATHLEN)) > 0)
+		for(;;)
 		{
-	
-			buff[n - 1] = 0;
-			free((void *)name);
-			name = strdup(buff);
+			char	*next;
+
+			n = readlink(name, buff, MAXPATHLEN);
+			if(n < 0)
+			{
+				break;
+			}
+			if(n == 0 || n >= MAXPATHLEN)
+			{
+				/* an empty target, or one that was cut off */
+				errno = (n == 0) ? ENOENT : ENAMETOOLONG;
+				n = -1;
+				break;
+			}
+			if(++links > DTS_MAX_LINKS)
+			{
+				errno = ELOOP;
+				n = -1;
+				break;
+			}
+			buff[n] = '\0';
+			if(buff[0] == '/')
+			{
+				next = strdup(buff);
+			}
+			else
+			{
+				/* relative to the directory of the link */
+				char	*slash = strrchr(name, '/');
+				size_t	dir_len = slash ? (size_t)(slash - name) + 1 : 0;
+
+				next = (char *)malloc(dir_len + (size_t)n + 1);
+				if(next)
+				{
+					memcpy(next, name, dir_len);
+					memcpy(next + dir_len, buff, (size_t)n + 1);
+				}
+			}
+			if(next == 0)
+			{
+				errno = ENOMEM;
+				n = -1;
+				break;
+			}
+			free(name);
+			name = next;
 		}
 		if(errno == EINVAL || errno == ENOENT)
 		{
@@ -743,6 +823,7 @@ get_link_info(type_info_t *info)
 		}
 		else
 		{
+			free(name);
 			info->error = errno;
 			info->link_path = (char *)-1;
 			info->link_name = (char *)-1;
@@ -765,6 +846,40 @@ get_link_name(type_info_t *info)
 	return(info->link_name);
 }
 
+/*
+ * Read from fd until size bytes are in buffer or the file ends; returns the
+ * number of bytes, or -1 with errno set.
+ */
+static ssize_t
+read_file(int fd, char *buffer, size_t size)
+{
+	size_t	have = 0;
+
+	while(have < size)
+	{
+		ssize_t	got = read(fd, buffer + have, size - have);
+
+		if(got < 0)
+		{
+			if(errno == EINTR)
+			{
+				continue;
+			}
+			return(-1);
+		}
+		if(got == 0)
+		{
+			break;
+		}
+		have += (size_t)got;
+	}
+	return((ssize_t)have);
+}
+
+/*
+ * The contents of the file, mapped or read; buff_size is their length,
+ * which is what could be read, not what the file had when it was looked at.
+ */
 static const char *
 get_buff(type_info_t *info)
 {
@@ -773,27 +888,49 @@ get_buff(type_info_t *info)
 	if(!info->buffer && info->buffer != (char *)-1)
 	{
 		buf = get_stat(info);
-		if(buf && buf->st_size)
+		if(buf && buf->st_size > 0)
 		{
+			char	*mem;
+			ssize_t	got;
+			long	size;
+
+			if(buf->st_size >= LONG_MAX)
+			{
+				/* more than a buffer can describe */
+				info->error = EFBIG;
+				return((char *)0);
+			}
+			size = (long)buf->st_size;
 			if ((info->file_fd == -1) && (get_fd(info) == -1))
 			   return 0;
 			
-			info->mmap_size_to_free = buf->st_size;
-			if((info->buffer = mmap(NULL,
-				buf->st_size,
-				PROT_READ, MAP_PRIVATE,
-				info->file_fd, 0)) == (char *)-1)
+			mem = mmap(NULL, (size_t)size, PROT_READ, MAP_PRIVATE,
+				info->file_fd, 0);
+			if(mem != (char *)MAP_FAILED)
 			{
-				info->mmap_size_to_free = -1;
-				info->size_to_free = buf->st_size+1;
-				info->buffer = malloc(info->size_to_free);
-				if(read(info->file_fd, (void *)info->buffer,
-						info->size_to_free) == -1)
-				{
-					return(0);
-				}
+				info->buffer = mem;
+				info->mmap_size_to_free = size;
+				info->buff_size = size;
+				return(info->buffer);
 			}
-			info->buff_size = buf->st_size;
+
+			/* what is read is kept in memory that starts as zeros */
+			mem = (char *)calloc((size_t)size + 1, 1);
+			if(mem == 0)
+			{
+				info->error = ENOMEM;
+				return(0);
+			}
+			got = read_file(info->file_fd, mem, (size_t)size);
+			if(got < 0)
+			{
+				info->error = errno;
+				free(mem);
+				return(0);
+			}
+			info->buffer = mem;
+			info->size_to_free = size + 1;
+			info->buff_size = (long)got;
 		}
 		else
 		{
@@ -804,7 +941,7 @@ get_buff(type_info_t *info)
 	return(info->buffer);
 }
 
-int
+long
 get_buff_size(type_info_t *info)
 {
 	return(info->buff_size);
@@ -895,7 +1032,8 @@ type_content(char *attr, type_info_t *info)
 {
 	int	match = 0;
 	char	*c;
-	int	end = 0, s;
+	int	end = 0;
+	size_t	s, avail;
 	long	offset;
 	const	char	*buff = 0;
 	const	struct	stat	*buf;
@@ -940,10 +1078,11 @@ type_content(char *attr, type_info_t *info)
 		}
 	}
 	buff = get_buff(info);
-	if((long)buff == 0 || (long)buff == -1)
+	if((long)buff == 0 || (long)buff == -1 || get_buff_size(info) <= 0)
 	{
 		return(0);
 	}
+	avail = (size_t)get_buff_size(info);
 
 	attr = strdup(attr);
 	if(!attr)
@@ -959,8 +1098,7 @@ type_content(char *attr, type_info_t *info)
 	}
 	if(!isdigit((unsigned char)*c) && *c != '-')
 	{
-		/* find where c is in buff */
-		printf("start as string not ready yet\n");
+		/* a start given as a string is not supported */
 		match = 0;
 	}
 	else
@@ -972,33 +1110,28 @@ type_content(char *attr, type_info_t *info)
 		}
 
 		offset = strtol(c, NULL, 10);
-		if(offset < 0 || offset > INT_MAX)
+		if(offset < 0)
 		{
 			/* not an offset a buffer could be indexed with */
 			free(attr);
 			return(0);
 		}
-		s = (int)offset;
+		s = (size_t)offset;
 		if(end) 
 		{
-			if (buf)
+			/* counted from the end of what was read */
+			if (s > avail)
 			{
-				if (s > buf->st_size)
-				{
-					free(attr);
-					return(match);
-				}
-				s = buf->st_size - s;
+				free(attr);
+				return(match);
 			}
-			else
-			{
-				if (!info->buff_size || (s > info->buff_size))
-				{
-					free(attr);
-					return(match);
-				}
-				s = info->buff_size - s;
-			}
+			s = avail - s;
+		}
+		if(s > avail)
+		{
+			/* starts after the end of the contents */
+			free(attr);
+			return(0);
 		}
 		c = _XStrtok(NULL, " \t\n", strtok_buf);
 		if(!c)
@@ -1021,7 +1154,7 @@ type_content(char *attr, type_info_t *info)
 				break;
 			}
 			cl = strlen(c);
-			if((info->buff_size-s) >= cl && memcmp(&buff[s], c, cl) == 0)
+			if((avail - s) >= (size_t)cl && memcmp(&buff[s], c, cl) == 0)
 			{
 				match = 1;
 			}
@@ -1040,7 +1173,7 @@ type_content(char *attr, type_info_t *info)
 			match = 0;
 			while(c = _XStrtok(NULL, "\t \n", strtok_buf))
 			{
-				if(s+i*sizeof(lv)+sizeof(lv) > get_buff_size(info))
+				if(s+i*sizeof(lv)+sizeof(lv) > avail)
 				{
 					match = 0;
 					break;
@@ -1070,7 +1203,7 @@ type_content(char *attr, type_info_t *info)
 			match = 0;
 			for(i = 0;(c = _XStrtok(NULL, "\t \n", strtok_buf)); i++)
 			{
-				if(s+i*sizeof(lv)+sizeof(lv) > get_buff_size(info))
+				if(s+i*sizeof(lv)+sizeof(lv) > avail)
 				{
 					match = 0;
 					break;
@@ -1103,7 +1236,7 @@ type_content(char *attr, type_info_t *info)
 			match = 0;
 			for(i = 0;(c = _XStrtok(NULL, "\t \n", strtok_buf)); i++)
 			{
-				if(s+i*sizeof(lv)+sizeof(lv) > get_buff_size(info))
+				if(s+i*sizeof(lv)+sizeof(lv) > avail)
 				{
 					match = 0;
 					break;
@@ -1629,152 +1762,172 @@ DtDtsBufferToDataType(const void *buffer, const int size, const char *name)
 	return(dt);
 }
 
-static char *
-expand_keyword(const char *attr_in, const char *in_pathname)
+/*
+ * Add the first n bytes of value to the string in *buf, which holds *used
+ * bytes and has room for *size.  With quote the bytes are quoted for the
+ * shell as one word.  Returns 0 when memory runs out.
+ */
+static int
+add_text(char **buf, size_t *used, size_t *size,
+	const char *value, size_t n, int quote)
 {
-	char	*buf;
-	char	*netPath;
-	char	*c;
-	char	*tmp;
-	char	*grown;
-	const char	*dir;
-	int	i;
-	int	n;
-	char	*p;
-	char	*attr = (char *)attr_in;
+	size_t	need = *used + n + 1;
+	size_t	i;
 
-
-	if(!attr)
+	if(quote)
 	{
-		return(attr);
+		need = *used + 2 + 4 * n + 1;
 	}
-	if(in_pathname)
+	if(need > *size)
 	{
-		n = strlen(attr)+1;
-		buf = (char *) calloc(1, n);
-		netPath = strdup(in_pathname);
-		if(!buf || !netPath)
-		{
-			goto no_memory;
-		}
+		size_t	new_size = *size ? *size : 64;
+		char	*grown;
 
-		for(c = attr, i= 0; *c && i < n; c++)
+		while(new_size < need)
 		{
-			if ( *c != '%' )
+			new_size *= 2;
+		}
+		grown = (char *)realloc(*buf, new_size);
+		if(!grown)
+		{
+			return(0);
+		}
+		*buf = grown;
+		*size = new_size;
+	}
+	if(quote)
+	{
+		(*buf)[(*used)++] = '\'';
+		for(i = 0; i < n; i++)
+		{
+			if(value[i] == '\'')
 			{
-				buf[i++] = *c;
-				buf[i]=0;   /* ensure null string termination */
-				continue;
-			}
-			/* check for keyword matches */
-			if ( !strncmp(c,"%file%",6) )
-			{
-				n += strlen(netPath) - 6;
-				grown = (char *)realloc(buf, n);
-				if(!grown)
-				{
-					goto no_memory;
-				}
-				buf = grown;
-				strcpy((buf+i), netPath);
-				i += strlen(netPath);
-				c += 5;
-				continue;
-			}
-			else if ( !strncmp(c,"%dir%",5) )
-			{
-				/* a name without a directory part lives in "." */
-				tmp = strrchr(netPath, '/');
-				if(tmp)
-				{
-					*tmp = '\0';
-				}
-				dir = tmp ? netPath : ".";
-				n += strlen(dir) - 5;
-				grown = (char *)realloc(buf, n);
-				if(!grown)
-				{
-					goto no_memory;
-				}
-				buf = grown;
-				strcpy((buf+i),dir);
-				i += strlen(dir);
-				if(tmp)
-				{
-					*tmp = '/';
-				}
-				c += 4;
-			}
-			else if ( !strncmp(c,"%name%",6) )
-			{
-				tmp = strrchr(netPath, '/');
-				tmp = tmp ? tmp + 1 : netPath;
-				n += strlen(tmp) - 6;
-				grown = (char *)realloc(buf, n);
-				if(!grown)
-				{
-					goto no_memory;
-				}
-				buf = grown;
-				strcpy((buf+i),tmp);
-				i +=strlen(tmp);
-				c += 5;
-			}
-			else if ( !strncmp(c,"%suffix%",8) )
-			{
-				if ((p = strrchr(netPath,'.')) != NULL)
-				{
-					p++;
-					n += strlen(p) - 8;
-					grown = (char *)realloc(buf, n);
-					if(!grown)
-					{
-						goto no_memory;
-					}
-					buf = grown;
-					strcpy((buf+i),p);
-					i +=strlen(p);
-				}
-				c += 7;
-			}
-			else if ( !strncmp(c,"%base%",6) )
-			{
-				tmp = strrchr(netPath, '/');
-				tmp = tmp ? tmp + 1 : netPath;
-				if ((p = strrchr(tmp,'.')) != NULL)
-				{
-					n += p-tmp - 6;
-					grown = (char *)realloc(buf, n);
-					if(!grown)
-					{
-						goto no_memory;
-					}
-					buf = grown;
-					strncpy((buf+i),tmp,p-tmp);
-					buf[i+p-tmp] = '\0';
-					i += p-tmp;
-				}
-				c += 5;
+				memcpy(*buf + *used, "'\\''", 4);
+				*used += 4;
 			}
 			else
-			{ /* no match -- just copy the character */
-				buf[i++] = *c;
-				buf[i]=0;   /* ensure null string termination */
-				continue;
+			{
+				(*buf)[(*used)++] = value[i];
 			}
 		}
-		free(netPath);
-		return(buf);
-
-	no_memory:
-		free(buf);
-		free(netPath);
-		return(NULL);
+		(*buf)[(*used)++] = '\'';
 	}
 	else
 	{
+		memcpy(*buf + *used, value, n);
+		*used += n;
+	}
+	(*buf)[*used] = '\0';
+	return(1);
+}
+
+/*
+ * Replace the keywords %file%, %dir%, %name%, %suffix% and %base% of attr
+ * with the parts of the path.  The name is the part after the last slash,
+ * the suffix what follows the last dot of the name, and the base the name
+ * without that dot and the suffix.  With quote each part is quoted for the
+ * shell, so that a file name cannot become more than one word of a command.
+ */
+static char *
+expand_keywords(const char *attr, const char *in_pathname, int quote)
+{
+	char		*buf = 0;
+	size_t		used = 0, size = 0;
+	const char	*c;
+	const char	*name, *dot;
+	size_t		dir_len;
+
+	if(!attr)
+	{
+		return(0);
+	}
+	if(!in_pathname)
+	{
 		return(strdup(attr));
 	}
+	name = strrchr(in_pathname, '/');
+	dir_len = name ? (size_t)(name - in_pathname) : 0;
+	name = name ? name + 1 : in_pathname;
+	dot = strrchr(name, '.');
+
+	if(!add_text(&buf, &used, &size, "", 0, 0))
+	{
+		return(0);
+	}
+	for(c = attr; *c; )
+	{
+		int	ok = 1;
+
+		if(*c != '%')
+		{
+			ok = add_text(&buf, &used, &size, c, 1, 0);
+			c++;
+		}
+		else if(!strncmp(c, "%file%", 6))
+		{
+			ok = add_text(&buf, &used, &size, in_pathname,
+					strlen(in_pathname), quote);
+			c += 6;
+		}
+		else if(!strncmp(c, "%dir%", 5))
+		{
+			/* a name without a directory part lives in "." and a
+			 * name in the root directory has "/" for its directory */
+			if(!name || name == in_pathname)
+			{
+				ok = add_text(&buf, &used, &size, ".", 1, quote);
+			}
+			else if(dir_len == 0)
+			{
+				ok = add_text(&buf, &used, &size, "/", 1, quote);
+			}
+			else
+			{
+				ok = add_text(&buf, &used, &size, in_pathname,
+						dir_len, quote);
+			}
+			c += 5;
+		}
+		else if(!strncmp(c, "%name%", 6))
+		{
+			ok = add_text(&buf, &used, &size, name, strlen(name),
+					quote);
+			c += 6;
+		}
+		else if(!strncmp(c, "%suffix%", 8))
+		{
+			/* a name without a suffix has the empty one */
+			ok = dot ? add_text(&buf, &used, &size, dot + 1,
+					strlen(dot + 1), quote)
+				 : add_text(&buf, &used, &size, "", 0, quote);
+			c += 8;
+		}
+		else if(!strncmp(c, "%base%", 6))
+		{
+			size_t	n = dot ? (size_t)(dot - name) : strlen(name);
+
+			ok = add_text(&buf, &used, &size, name, n, quote);
+			c += 6;
+		}
+		else
+		{
+			/* no match -- just copy the character */
+			ok = add_text(&buf, &used, &size, c, 1, 0);
+			c++;
+		}
+		if(!ok)
+		{
+			free(buf);
+			return(0);
+		}
+	}
+	return(buf);
+}
+
+static char *
+expand_keyword(const char *attr_in, const char *in_pathname)
+{
+	return(expand_keywords(attr_in, in_pathname, 0));
 }
 
 /*
@@ -1810,13 +1963,24 @@ append(char *old, char *add)
 	return(new);
 }
 
+/* The output of a command that is put into a value is cut at this length. */
+#define DTS_MAX_COMMAND_OUTPUT	65536
+
+/*
+ * Replace the commands in backquotes of attr with their output.  The text
+ * between the commands is kept as it is.  The keywords of the commands are
+ * replaced first, each as one word for the shell, when a path is given;
+ * the text that is put in for them is never searched for commands.  A
+ * backquote that has no partner stays in the text.
+ */
 char *
-expand_shell(const char *attr)
+expand_shell(const char *attr, const char *in_pathname)
 {
 	char	*srch;
 	char	*nattr;
 	char	*start, *end;
-	int	size;
+	char	*kept;			/* the first byte not yet in results */
+	size_t	size;
 	FILE	*fd;
 	char	buff[200];
 	char	*results = 0;
@@ -1830,9 +1994,11 @@ expand_shell(const char *attr)
 	{
 		return(NULL);
 	}
-	srch = nattr;
+	srch = kept = nattr;
 	while((start = DtStrchr(srch, '`')) != NULL)
 	{
+		char	*command;
+
 		if((srch != start) && _is_previous_single(srch, start) && 
 		   (*(start-1) == '`'))
 		{
@@ -1841,32 +2007,44 @@ expand_shell(const char *attr)
 		}
 		if((end = DtStrchr(&start[1], '`')) == NULL)
 		{
-			srch = start + 1;
-			continue;
+			/* no partner: the rest of the text stays as it is */
+			break;
 		}
 		*start = '\0';
 		*end = '\0';
-		results = append(results, srch);
+		results = append(results, kept);
 		if(!results)
 		{
 			free(nattr);
 			return(NULL);
 		}
 
-		if((fd = popen(&start[1], "r")) == NULL)
+		command = expand_keywords(&start[1], in_pathname, 1);
+		if(!command)
 		{
-			_DtSimpleError(
-				DtProgName, DtError, NULL,
-				"%s", &start[1]);
 			free(nattr);
 			free(results);
 			return(NULL);
 		}
+		if((fd = popen(command, "r")) == NULL)
+		{
+			_DtSimpleError(
+				DtProgName, DtError, NULL,
+				"%s", command);
+			free(command);
+			free(nattr);
+			free(results);
+			return(NULL);
+		}
+		free(command);
 
 		memset(buff, '\0', sizeof(buff));
-		while(size = fread(buff, 1, sizeof(buff)-1, fd))
+		size = 0;
+		while(size < DTS_MAX_COMMAND_OUTPUT &&
+			fread(buff, 1, sizeof(buff)-1, fd))
 		{
 			buff[sizeof(buff)-1] = '\0';
+			size += strlen(buff);
 			results = append(results, buff);
 			if(!results)
 			{
@@ -1877,9 +2055,9 @@ expand_shell(const char *attr)
 			memset(buff, '\0', sizeof(buff));
 		}
 		pclose(fd);
-		srch = end+1;
+		srch = kept = end+1;
 	}
-	results = append(results, srch);
+	results = append(results, kept);
 	free(nattr);
 	return(results);
 }
@@ -1893,17 +2071,16 @@ expand_value(DtShmBoson attr, char *in_pathname)
 
 	if(attr && attr != -1)
 	{
+		/*
+		 * The commands in the text of the database run with the
+		 * keywords quoted; the keywords of the rest of the text and
+		 * of what the commands print are replaced afterwards.
+		 */
 		tmp = _DtDtsMMExpandValue(_DtDtsMMBosonToString(attr));
-		exp = expand_keyword(tmp, in_pathname);
-		shell_exp = expand_shell(exp);
-
+		shell_exp = expand_shell(tmp, in_pathname);
 		_DtDtsMMSafeFree(tmp);
-		if(shell_exp)
-		{
-			free(exp);
-			exp = expand_keyword(shell_exp, in_pathname);
-			free(shell_exp);
-		}
+		exp = expand_keyword(shell_exp, in_pathname);
+		free(shell_exp);
 	}
 	else
 	{

@@ -3,12 +3,13 @@ MAINTAINERCLEANFILES = Makefile.in
 lib_LTLIBRARIES = libDtSvc.la
 
 EXTRA_DIST = tests/check-dts-buffers.py tests/dts-buffers.c tests/check-dts-mm.py \
-             tests/check-svc-pam.py
+             tests/check-svc-pam.py tests/check-dbreader.py tests/dbreader-test.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-dts-buffers.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dts-mm.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-svc-pam.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-dbreader.py
 
 # in order to try to keep lib versions the same across platforms, (2.1.0)
 if BSD

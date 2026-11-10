@@ -58,6 +58,10 @@
  */
 #define MAX_LINE_LENGTH	1024
 
+/* the most replacements of variables in one line, and the longest result */
+#define MAX_VARIABLE_REPLACEMENTS	1000
+#define MAX_EXPANDED_LINE_LENGTH	(1 << 20)
+
 /* Structure to hold $variable definitions */
 typedef struct {
    char * varName;
@@ -66,6 +70,7 @@ typedef struct {
 
 
 static int variableCount;
+static int variableCapacity;	/* entries variableSet has room for */
 static VariableEntry * variableSet;
 
 /*
@@ -126,8 +131,7 @@ static void ClearVariables( void ) ;
 static Boolean DefineVariable( 
                         Boolean * versionCanBeSet,
                         char *varString,
-                        char * fileName,
-			int *variableSetSize) ;
+        char * fileName) ;
 static void SplitField(
                         DtDtsDbField ** fields,
                         int * slotToUse,
@@ -495,7 +499,7 @@ get_variable (
     */
        for (i=0, ppchar = environ; *ppchar; *ppchar++, i++) 
        {
-	  if ((tmp = (char *) DtStrrchr (*ppchar, '=')) != NULL)
+	  if ((tmp = (char *) DtStrchr (*ppchar, '=')) != NULL)
 	  {
 	     int  evar_len = tmp - *ppchar;
 	     if ( (key_len == evar_len) 
@@ -567,12 +571,23 @@ read_line (
 	int n,
         FILE *fd )
 {
+   size_t length;
+
    if ((fgets (string, n, fd)) == NULL)
       return (NULL);
-   else {
-      string[strlen (string) - 1] = '\000';
-      return (string);
+
+   length = strlen (string);
+   if (length > 0 && string[length - 1] == '\n')
+      string[length - 1] = '\000';
+   else if (length > 0 && length == (size_t)n - 1)
+   {
+      /* The line is longer than the buffer: the rest of it is dropped. */
+      int c;
+
+      while ((c = getc (fd)) != EOF && c != '\n')
+         ;
    }
+   return (string);
 }
 
 /*********************
@@ -783,6 +798,7 @@ _DtDbFillVariables (
    char *replacementEnd;
    int currentOffset;
    Boolean escape = False;
+   int expansions = 0;
 
    start = *line;
    lineLen = strlen (*line)+1;
@@ -804,7 +820,7 @@ _DtDbFillVariables (
       if (len > 1) 
       {
 	 /* Move passed the multi-byte char. */
-	 for (i = 0; (i < len) && (*start != '\0'); start++);
+	 for (i = 0; (i < len) && (*start != '\0'); i++, start++);
 	 continue;
       }
 
@@ -826,7 +842,7 @@ _DtDbFillVariables (
 	 if (len > 1) 
 	 {
 	    /* Move passed the multi-byte char. */
-	    for (i = 0; (i < len) && (*start != '\0'); start++);
+	    for (i = 0; (i < len) && (*start != '\0'); i++, start++);
 	    continue;
 	 }
       }
@@ -909,6 +925,16 @@ _DtDbFillVariables (
 	 /* Resync, in case entry_line was realloc'ed */
 	 start = *line + currentOffset;
 	 brackets = FALSE;
+
+	 /*
+	  * The text put in is searched for variables as well, so a value
+	  * that refers to itself would never end: the rest of the line
+	  * stays as it is when a line has had too many replacements or
+	  * has grown too long.
+	  */
+	 if (++expansions > MAX_VARIABLE_REPLACEMENTS ||
+	     lineLen > MAX_EXPANDED_LINE_LENGTH)
+	    break;
 	}
 	 if(*start != 0)
 		start++;
@@ -920,6 +946,30 @@ _DtDbFillVariables (
    {
 	clean_line(line);
    }
+}
+
+/*
+ * Report a problem with a database file: FORMAT is a message of the catalog
+ * with one or two strings in it, which are the first two arguments.  The
+ * message is as long as the strings need.
+ */
+static void
+report_error(const char *format, const char *first, const char *second)
+{
+   size_t size;
+   char *message;
+
+   if (first == NULL)
+      first = "";
+   if (second == NULL)
+      second = "";
+   size = strlen(format) + strlen(first) + strlen(second) + 1;
+   message = (char *)malloc(size);
+   if (message == NULL)
+      return;
+   snprintf(message, size, format, first, second);
+   _DtSimpleError(DtProgName, DtError, NULL, "%s", message);
+   free(message);
 }
 
 /*********************
@@ -961,11 +1011,9 @@ ReadNextEntry(
    char *start;
    char *last;
    char *save;
-   char *error_buffer = NULL;
    short startDef;
    char * errorName;
    char * version;
-   int variableSetSize = 0;
 
    while (1) 
    {
@@ -1006,7 +1054,7 @@ ReadNextEntry(
       if ((strncmp(start, "set ", 4) == 0) &&
           (strlen(start) >= 4))
       {
-         if (!DefineVariable(versionCanBeSet, start + 4, file_name, &variableSetSize))
+         if (!DefineVariable(versionCanBeSet, start + 4, file_name))
          {
             /*
              * An attempt was made to redefine the Db version; this
@@ -1030,11 +1078,8 @@ ReadNextEntry(
             if ((strlen(version) > 0) && (strcmp(version, VERSION_ID))) 
             { 
                /* Bad version number; give error, and ignore this file */
-	       error_buffer = XtMalloc(MAXPATHLEN);
-               sprintf(error_buffer, invalidVersion, file_name);
-               _DtSimpleError(DtProgName, DtError, NULL, "%s", error_buffer);
+	       report_error(invalidVersion, file_name, "");
                XtFree(version);
-	       XtFree(error_buffer);
                return(False);
             }
 
@@ -1100,14 +1145,10 @@ ReadNextEntry(
 	 { 
 	    if (multi_line || (indx >=1)) 
 	    {
-	       error_buffer = XtMalloc(MAXPATHLEN);
                errorName = (*fieldPtr)[0].fieldValue ? 
                       (*fieldPtr)[0].fieldValue : 
 		      XrmQuarkToString((*fieldPtr)[0].fieldName);
-	       (void) sprintf (error_buffer, incompleteDefn, errorName, 
-			       file_name);
-	       _DtSimpleError (DtProgName, DtError, NULL, "%s", error_buffer);
-	       XtFree(error_buffer);
+	       report_error(incompleteDefn, errorName, file_name);
 	       remove_defn = True;
 	    }
 	    break;
@@ -1141,7 +1182,7 @@ ReadNextEntry(
 	 if ((strncmp(start, "set ", 4) == 0) &&
 	     (strlen(start) >= 4))
 	 {
-	    if (!DefineVariable(versionCanBeSet, start + 4, file_name, &variableSetSize))
+	    if (!DefineVariable(versionCanBeSet, start + 4, file_name))
             {
                /*
                 * An attempt was made to redefine the Db version; this
@@ -1160,14 +1201,10 @@ ReadNextEntry(
 	    /* if '{' found in the middle of definition, ignore defn */
 	    if ( startDef != AT_START  )
 	    {
-	       error_buffer = XtMalloc(MAXPATHLEN);
                errorName = (*fieldPtr)[0].fieldValue ? 
                       (*fieldPtr)[0].fieldValue : 
 		      XrmQuarkToString ((*fieldPtr)[0].fieldName);
-	       (void) sprintf (error_buffer, invalidStartSymbol, errorName, 
-			       file_name);
-	       _DtSimpleError (DtProgName, DtError, NULL, "%s", error_buffer);
-	       XtFree(error_buffer);
+	       report_error(invalidStartSymbol, errorName, file_name);
                remove_defn = True;
                break;
 	    }
@@ -1179,14 +1216,10 @@ ReadNextEntry(
 	 /* we are no longer at definition start, note if start symbol found */
 	 if ( startDef == AT_START ) 
 	 {
-	    if (error_buffer) XtMalloc(MAXPATHLEN);
             errorName = (*fieldPtr)[0].fieldValue ? 
                    (*fieldPtr)[0].fieldValue : 
 		   XrmQuarkToString ((*fieldPtr)[0].fieldName);
-	    (void) sprintf (error_buffer, missingStartSymbol, errorName, 
-	                    file_name);
-	    _DtSimpleError (DtProgName, DtError, NULL, "%s", error_buffer);
-	    XtFree(error_buffer);
+	    report_error(missingStartSymbol, errorName, file_name);
             remove_defn = True;
             break;
 	 }
@@ -1196,27 +1229,19 @@ ReadNextEntry(
 	 {
             if (multi_line) 
 	    {
-	       error_buffer = XtMalloc(MAXPATHLEN);
                errorName = (*fieldPtr)[0].fieldValue ? 
                       (*fieldPtr)[0].fieldValue : 
 		      XrmQuarkToString ((*fieldPtr)[0].fieldName);
-	       (void) sprintf (error_buffer, multiLineDefn, errorName, 
-			       file_name);
-	       _DtSimpleError (DtProgName, DtError, NULL, "%s", error_buffer);
-	       XtFree(error_buffer);
+	       report_error(multiLineDefn, errorName, file_name);
 	       remove_defn = True;
 	    }
 	    /* if '}' end found with no starting '{', ignore defn */
 	    if ( strncmp(start, "}", 1) == 0 && startDef != START_SYMBOL )
 	    {
-	       error_buffer = XtMalloc(MAXPATHLEN);
                errorName = (*fieldPtr)[0].fieldValue ? 
                       (*fieldPtr)[0].fieldValue :
 		      XrmQuarkToString ((*fieldPtr)[0].fieldName);
-	       (void) sprintf (error_buffer, noStartSymbol, errorName, 
-			       file_name);
-	       _DtSimpleError (DtProgName, DtError, NULL, "%s", error_buffer);
-	       XtFree(error_buffer);
+	       report_error(noStartSymbol, errorName, file_name);
 	       remove_defn = True;
 	    }
 	    break;
@@ -1233,13 +1258,10 @@ ReadNextEntry(
                 DTUNLIMITEDFIELDS) &&
              (indx > recordDescriptions[*returnRecordIndex].maxFields))
 	 {
-	    error_buffer = XtMalloc(MAXPATHLEN);
             errorName = (*fieldPtr)[0].fieldValue ? 
                    (*fieldPtr)[0].fieldValue :
 		   XrmQuarkToString ((*fieldPtr)[0].fieldName);
-            (void)sprintf (error_buffer, tooManyFields, errorName, file_name);
-            _DtSimpleError (DtProgName, DtError, NULL, "%s", error_buffer);
-	    XtFree(error_buffer);
+	    report_error(tooManyFields, errorName, file_name);
 	    remove_defn = True;
 	    break;
 	 }
@@ -1430,7 +1452,8 @@ ResolveVariableReference(
           * leftover portion of the variable reference.
           */
          (void)strncpy(*buf + start, value, (size_t)valueLen);
-         (void)strcpy(*buf + start + valueLen, *buf + start + len);
+         memmove(*buf + start + valueLen, *buf + start + len,
+                 strlen(*buf + start + len) + 1);
          *buf_len -= (len - valueLen);
       }
       else
@@ -1462,7 +1485,7 @@ ResolveVariableReference(
    }
 
    /* If no match is found, then replace the reference with nothing */
-   (void)strcpy(*buf + start, *buf + start + len);
+   memmove(*buf + start, *buf + start + len, strlen(*buf + start + len) + 1);
    *buf_len -= len;
    XtFree((char *) var);
 }
@@ -1526,14 +1549,12 @@ static Boolean
 DefineVariable(
         Boolean * versionCanBeSet,
         char *varString,
-        char * fileName,
-	int *variableSetSize)
+        char * fileName)
 {
    char * nameStart;
    char * valStart;
    int i;
    int len;
-   char *errorBuffer;
 
    /* Find the start of the variable name */
    nameStart = varString;
@@ -1588,6 +1609,10 @@ DefineVariable(
    }
    else
    {
+      /* "set NAME" without a value or an '=' is no definition */
+      if (*valStart == '\0')
+         return(True);
+
       *valStart = '\0';
       valStart++;
 
@@ -1627,10 +1652,7 @@ DefineVariable(
       if (!*versionCanBeSet)
       {
          /* Log an error, and ignore the definition */
-	 errorBuffer = XtMalloc(MAXPATHLEN);
-         sprintf(errorBuffer, cantSetVersion, fileName);
-         _DtSimpleError(DtProgName, DtError, NULL, "%s", errorBuffer);
-	 XtFree(errorBuffer);
+	 report_error(cantSetVersion, fileName, "");
          return(False);
       }
    }
@@ -1649,38 +1671,48 @@ DefineVariable(
    _DtSvcProcessLock();
    for (i = 0; i < variableCount; i++)
    {
+      char *newValue;
+
       if (strcmp(nameStart, variableSet[i].varName))
          continue;
 
-      free((void *)variableSet[i].value);
-      variableSet[i].value = malloc((size_t)(strlen(valStart) + 1));
-      (void)strcpy(variableSet[i].value, valStart);
+      /* when memory is short the variable keeps its value */
+      if ((newValue = strdup(valStart)) != NULL)
+      {
+         free((void *)variableSet[i].value);
+         variableSet[i].value = newValue;
+      }
       _DtSvcProcessUnlock();
       return(True);
    }
 
    /* New entry; allocate space, if needed */
-   if (variableCount >= *variableSetSize)
+   if (variableCount >= variableCapacity)
    {
-      *variableSetSize += 10;
-      if (variableSet == NULL)
+      VariableEntry *grown;
+
+      grown = (VariableEntry *) realloc((void *)variableSet, 
+                   (size_t)(sizeof(VariableEntry) * (variableCapacity + 10)));
+      if (grown == NULL)
       {
-         variableSet = (VariableEntry *) 
-                      malloc(sizeof(VariableEntry) * (*variableSetSize));
+         /* the variable is not defined */
+         _DtSvcProcessUnlock();
+         return(True);
       }
-      else
-      {
-         variableSet = (VariableEntry *) realloc((void *)variableSet, 
-                      (size_t)(sizeof(VariableEntry) * (*variableSetSize)));
-      }
+      variableSet = grown;
+      variableCapacity += 10;
    }
 
-   variableSet[variableCount].varName = 
-            (char *)malloc((size_t)strlen(nameStart) + 1);
-   (void)strcpy(variableSet[variableCount].varName, nameStart);
-   variableSet[variableCount].value = 
-            (char *)malloc((size_t)strlen(valStart) + 1);
-   (void)strcpy(variableSet[variableCount].value, valStart);
+   variableSet[variableCount].varName = strdup(nameStart);
+   variableSet[variableCount].value = strdup(valStart);
+   if (variableSet[variableCount].varName == NULL ||
+       variableSet[variableCount].value == NULL)
+   {
+      free((void *)variableSet[variableCount].varName);
+      free((void *)variableSet[variableCount].value);
+      _DtSvcProcessUnlock();
+      return(True);
+   }
    variableCount++;
    _DtSvcProcessUnlock();
    return(True);

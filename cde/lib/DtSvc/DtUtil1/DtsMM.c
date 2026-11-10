@@ -31,6 +31,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <limits.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -323,6 +326,11 @@ _DtDtsMMInit(int override)
 {
 	DtDirPaths *dirs = _DtGetDatabaseDirPaths();
 	char	*CacheFile = _DtDtsMMCacheName(1);
+	if(!CacheFile)
+	{
+		_DtFreeDatabaseDirPaths(dirs);
+		return 0;
+	}
 	if(override)
 	{
 		if (!_DtDtsMMCreateDb(dirs, CacheFile, override))
@@ -351,6 +359,11 @@ _DtDtsMMInit(int override)
 		{
 			free(CacheFile);
 			CacheFile = _DtDtsMMCacheName(0);
+			if(!CacheFile)
+			{
+				_DtFreeDatabaseDirPaths(dirs);
+				return 0;
+			}
 			_debug_print_name(CacheFile, "Private");
 			/* Check return status, and pass status to caller. */
 			if (!_DtDtsMMCreateDb(dirs, CacheFile, override))
@@ -379,6 +392,11 @@ _DtsMMListDb(void)
 	}
 
 	list = (char **)malloc((head->num_db+1)*sizeof(char *));
+	if(!list)
+	{
+		_DtSvcProcessUnlock();
+		return(NULL);
+	}
 	for ( i = 0; i < head->num_db; i++ )
 	{
 		list[i] = (char *)_DtDtsMMBosonToString(db_list[i].databaseName);
@@ -542,47 +560,124 @@ _DtDtsMMPathHash(DtDirPaths *dirs)
 	return(pathhash);
 }
 
+/* the longest part of the display name that goes into the name of the cache */
+#define DTS_MAX_DISPLAY_NAME	64
+
+/*
+ * The name of the file of the cache: the shared one of the display, which
+ * is named by the host and the number of the display (and not its screen),
+ * or one that only this process uses.  Nothing of the display name but
+ * letters, digits and the characters of a host name and a display number
+ * becomes part of the file name, so it cannot name another directory.
+ * Returns NULL when memory runs out.
+ */
 char *
 _DtDtsMMCacheName(int override)
 {
-	char	*dsp = getenv("DISPLAY");
-	char	*results = 0;
-	char	*c;
+	const char	*dsp = getenv("DISPLAY");
+	char		*results = 0;
 
 	if(override && dsp)
 	{
-		results = malloc(strlen(_DTDTSMMTEMPDIR)+
-				 strlen(_DTDTSMMTEMPFILE)+
-				strlen(dsp)+3);
-		sprintf(results, "%s/%s%s",
+		char		name[DTS_MAX_DISPLAY_NAME + 1];
+		size_t		n = 0;
+		int		after_colon = 0;
+		const char	*p;
+
+		for(p = dsp; *p && n < DTS_MAX_DISPLAY_NAME; p++)
+		{
+			unsigned char	ch = (unsigned char)*p;
+
+			if(ch == ':')
+			{
+				after_colon = 1;
+			}
+			else if(ch == '.' && after_colon)
+			{
+				/* the screen is not part of the name */
+				break;
+			}
+			name[n++] = (isalnum(ch) || ch == ':' || ch == '.' ||
+				     ch == '-' || ch == '_') ? (char)ch : '_';
+		}
+		name[n] = '\0';
+
+		results = malloc(strlen(_DTDTSMMTEMPDIR) +
+				 strlen(_DTDTSMMTEMPFILE) + n + 3);
+		if(results)
+		{
+			sprintf(results, "%s/%s%s",
 				_DTDTSMMTEMPDIR,
 				_DTDTSMMTEMPFILE,
-				dsp);
-		c = strchr(results, ':');
-		c = strchr(c, '.');
-		if(c)
-		{
-			*c = '\0';
+				name);
 		}
 	}
 	else
 	{
-	/* tempnam(3) is affected by the TMPDIR environment variable. */
-	/* This creates problems for rename() if "tmpfile" and "cacheFile" */
-	/* are on different file systems.  Use tmpnam(3) to create the */
-	/* unique file name instead. */
-		char tmpnam_buf[L_tmpnam + 1];
+		/* The name is that of a file only this process makes. */
+		static unsigned long	serial;
+		char			unique[64];
 
+		_DtSvcProcessLock();
+		snprintf(unique, sizeof(unique), "%ld_%lu_%lu",
+			(long)getpid(), (unsigned long)time(NULL), ++serial);
+		_DtSvcProcessUnlock();
 		results = (char *)malloc(strlen(_DTDTSMMTEMPDIR) +
 					 strlen(_DTDTSMMTEMPFILE) +
-					 L_tmpnam + 3);
-		tmpnam(tmpnam_buf);
-		sprintf(results, "%s/%s%s", _DTDTSMMTEMPDIR, _DTDTSMMTEMPFILE,
-			basename(tmpnam_buf));
+					 strlen(unique) + 2);
+		if(results)
+		{
+			sprintf(results, "%s/%s%s", _DTDTSMMTEMPDIR,
+				_DTDTSMMTEMPFILE, unique);
+		}
 	}
 	return(results);
 }
 
+
+/*
+ * A cache file starts with a header; the offsets of the header are indexes
+ * of the integers that follow it, and what they lead to lies inside the
+ * file.
+ */
+static int
+cache_size_fits(off_t size)
+{
+	return(size >= (off_t)sizeof(DtDtsMMHeader) && size <= (off_t)INT_MAX);
+}
+
+static int
+index_inside(long index, long count, size_t item, size_t size)
+{
+	size_t	room, start;
+
+	if(index < 0 || count < 0 || size < sizeof(DtDtsMMHeader))
+	{
+		return(0);
+	}
+	room = size - sizeof(DtDtsMMHeader);
+	if((size_t)index > room / sizeof(int))
+	{
+		return(0);
+	}
+	start = (size_t)index * sizeof(int);
+	return(count == 0 || (size_t)count <= (room - start) / item);
+}
+
+static int
+cache_header_valid(const DtDtsMMHeader *header, size_t size)
+{
+	return(index_inside(header->db_offset, header->num_db,
+				sizeof(DtDtsMMDatabase), size) &&
+		index_inside(header->files_offset, header->files_count,
+				sizeof(DtShmBoson), size) &&
+		index_inside(header->mtimes_offset, header->files_count,
+				sizeof(time_t), size) &&
+		index_inside(header->str_tbl_offset, 0, 1, size) &&
+		index_inside(header->name_list_offset, 0, 1, size) &&
+		(header->no_name_offset == -1 ||
+			index_inside(header->no_name_offset, 0, 1, size)));
+}
 
 int
 _DtDtsMMapDB(const char *CacheFile)
@@ -598,10 +693,11 @@ _DtDtsMMapDB(const char *CacheFile)
 		_DtDtsMMUnLoad();
 	}
 
-	mmaped_fd  = open(CacheFile, O_RDONLY, 0400);
+	mmaped_fd  = open(CacheFile, O_RDONLY|O_NOCTTY, 0400);
 	if(mmaped_fd !=  -1)
 	{
-		if(fstat(mmaped_fd, &buf) == 0 && buf.st_uid == getuid())
+		if(fstat(mmaped_fd, &buf) == 0 && buf.st_uid == getuid() &&
+			cache_size_fits(buf.st_size))
 		{
 			mmaped_db = (char *)mmap(NULL,
 					buf.st_size,
@@ -617,10 +713,20 @@ _DtDtsMMapDB(const char *CacheFile)
 					0);
 			if(mmaped_db != (void *) -1)
 			{
-				success = TRUE;
 				mmaped_size = buf.st_size;
 				head = (DtDtsMMHeader *)mmaped_db;
-				db_list = (DtDtsMMDatabase *)_DtDtsMMGetPtr(head->db_offset);
+				if(cache_header_valid(head, mmaped_size))
+				{
+					success = TRUE;
+					db_list = (DtDtsMMDatabase *)_DtDtsMMGetPtr(head->db_offset);
+				}
+				else
+				{
+					/* a file that is no cache of this version */
+					munmap(mmaped_db, mmaped_size);
+					mmaped_size = 0;
+					head = 0;
+				}
 			}
 			else
 			{
@@ -629,6 +735,15 @@ _DtDtsMMapDB(const char *CacheFile)
 					(char*) CacheFile, NULL);
 			}
 		}
+		if(!success)
+		{
+			close(mmaped_fd);
+			mmaped_fd = 0;
+		}
+	}
+	else
+	{
+		mmaped_fd = 0;
 	}
 	if(!success)
 	{

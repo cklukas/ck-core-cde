@@ -45,6 +45,21 @@
   position-file initialization falls back to the numeric user ID when account
   lookup is unavailable. Covered by focused path/control and packet sanitizer
   cases.
+- libDtSvc: read data types and database files within the data they have. File
+  contents are matched within what could be read (a failed or short read no
+  longer leaves unwritten memory in the comparison; sizes of zero or less, and
+  offsets beyond the end or counted from the end, are handled), symbolic links
+  are followed to their end with a limit and without dropping the last character
+  of the target, the file names that replace `%file%`, `%name%` and the other
+  keywords are quoted in commands and never searched for commands themselves,
+  `%suffix%` and `%base%` belong to the file name, the cache file name is built
+  from the display name safely and a cache header is checked before the file is
+  mapped. The database file reader builds its messages in buffers that fit the
+  names, no longer cuts the last character of a line without a newline, keeps
+  more than ten variables, ends the expansion of variables that refer to
+  themselves and searches the rest of a line after a multibyte character. New
+  documentation page `docs/improvements/data-types.md`; covered by
+  `make -C lib/DtSvc check`.
 - rpc.cmsd: look at the request path again. The size and the check of a calendar
   and the registration of a callback (versions 4 and 5) now need rights to the
   calendar, the debug-only procedure that discarded a calendar's appointments
