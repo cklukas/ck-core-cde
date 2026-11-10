@@ -67,6 +67,11 @@ Refresh-time child paths and cached modified-subdirectory paths use the same
 bounded join. Attribute view also bounds owner, group and symbolic-link display
 text and shows a placeholder if an unusual timestamp cannot be converted,
 rather than allowing account data or formatting failures to corrupt the row.
+Copy, move and link dialogs compose their selected-object captions as Motif
+strings, so a translated caption or long object name is not copied through a
+fixed text buffer. Their destination and preview paths are joined with explicit
+capacity checks; an oversized resolved path is rejected before an operation is
+started instead of being truncated or copied past the target buffer.
 
 CK Core CDE develops File Manager as a visual workspace rather than only a
 directory browser.

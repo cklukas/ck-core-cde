@@ -1,4 +1,9 @@
 2026-11-10
+- dtfile: make copy, move and link dialog labels and destination paths
+  independent of fixed localized-text assumptions. Selected-object labels now
+  compose Motif strings directly, while rename, preview and resolved target
+  paths use checked joins and reject values that do not fit before starting a
+  file operation. Covered by focused path-boundary and source-contract cases.
 - dtfile: bound the remaining directory refresh and attribute-display paths.
   Refresh checks and cached modified-subdirectory checks now reject child paths
   that do not fit instead of concatenating into fixed buffers or indexing before

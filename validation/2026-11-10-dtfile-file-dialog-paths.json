@@ -1,0 +1,100 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile bounded file-dialog labels and destination paths",
+  "source_base": "e2478dd31",
+  "motif_revision": "90d98fb7395306ab1f54df3e0d8d247893799a49",
+  "motif_prefix": "/home/klukas/tmp/motif-cde-90d98fb-20261110/prefix",
+  "motif_libXm_sha256": "e049702713e63eb5fbd7759f230e2afb5cb965794d9f901d3fb05734d0f24df3",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    "cde/CHANGES": "07e0b047fd0e550dfae891b58ef724e42789e2d43afe8498d36bbbd680570802",
+    "cde/programs/dtfile/FileDialog.c": "192615d21cb58fe7951557450b0cb82e697785b950a6cfcde299813e1aa48845",
+    "cde/programs/dtfile/Makefile.am": "93c8e762a4bbf689bc47ab22b3b72cd7fb6f4588c30e8426e6ce39a9e09c01fe",
+    "cde/programs/dtfile/tests/check-file-dialog-safety.py": "d6ad28a74a6ad957e81a0bb0db685ff31e640319e959bb4685e267a118133e8f",
+    "cde/programs/dtfile/tests/file-dialog-safety.c": "ada731d443863c5761bf91d2cc1b8e9eb21f8c715b9e3e77e97996e7d14c8c27",
+    "docs/improvements/file-manager.md": "39196a382cd2135baa9c86a389fe0712389379ba1ad20f444b0dd26d1efdb86a"
+  },
+  "focused_regressions": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, Linux ARM64",
+    "cases": 10,
+    "seconds": 0.3153301137499511,
+    "sanitizers": "address,undefined",
+    "leak_detection": true,
+    "receipt_sha256": "0a215a74c833d388285054b4f88bb40de115d5062db457007b299ef4061c8e64",
+    "checkpoint_receipt_sha256": "61cc9bb98f6c589c984bb131a5ba14705c53447ca43ca3a1a292f9118da9244b",
+    "coverage": [
+      "root and non-root destination joins",
+      "exact-capacity destination joins",
+      "oversized and null path components",
+      "absolute and relative target resolution",
+      "oversized resolved paths",
+      "resolver failures",
+      "structured selected-object labels in copy, move and link dialogs",
+      "bounded rename and preview call sites"
+    ]
+  },
+  "preflight_failures": [
+    {
+      "stage": "focused compile",
+      "finding": "The extracted GetToPath function retained three unused legacy locals.",
+      "resolution": "Removed the dead declarations; the production translation unit and strict extracted fixture remain warning-clean for those declarations."
+    },
+    {
+      "stage": "macOS focused runtime",
+      "finding": "Apple ASan rejects detect_leaks=1 on this platform.",
+      "resolution": "The driver records detect_leaks=0 only on Darwin. Final qualification used Linux ASan+UBSan with leak detection enabled; no macOS LSan claim is made."
+    },
+    {
+      "stage": "generated Makefile refresh",
+      "finding": "The relocated build's config.status still referenced an obsolete source tree and initially generated an old dtfile test/object definition.",
+      "resolution": "Generated an alternate Makefile from the current automake template, verified the current FileConflict object graph and new test stanza, relocated only its four source path variables, and installed that verified generated file before the dry run."
+    },
+    {
+      "stage": "incremental compile",
+      "finding": "The focused fixture had masked an unavailable legacy NILL macro in the new helper.",
+      "resolution": "Replaced it with the portable null character, removed the fixture definition, reran all ten focused cases, then compiled the production object successfully."
+    }
+  ],
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "cpu": 2,
+    "full_rebuild": false,
+    "closure": ["dtfile-Directory.o", "dtfile-FileDialog.o", "dtfile relink"],
+    "closure_note": "Directory.o was the only declared extra dependency because its dependency file points at the refreshed exact Motif prefix. Public header bytes are unchanged from the previously qualified prefix.",
+    "successful_retry_seconds": 0.972130560,
+    "directory_object_sha256": "06f9a497f0cc0cbba7f06bf05c028d424f427b33979c1ff2599b5d146f71dbcb",
+    "file_dialog_object_sha256": "9e3dc2d7289971ac2d2e213e0a07a5e43170ce7d01bc4a7597c932826ee4e3f4",
+    "output_sha256": "6e285448bededb1f895ff1cdb9d87eb264dafdd347029cd81f36979b0d81fb78",
+    "runtime_libXm_exact_prefix": true,
+    "warnings": "Only pre-existing assignment-condition warnings in Directory.c and FileDialog.c."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "runs": 1,
+    "seconds": 16.393634048,
+    "legacy_pass_lines": 311,
+    "file_dialog_cases": 10,
+    "failed_case_lines": 0,
+    "hard_failure_markers": 0,
+    "log_sha256": "c411d99dc287ea5ba9a71b22bd24610afc38321d331c1476b92d7484f0b278ef"
+  },
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round12-20261110/",
+  "evidence_manifest_sha256": "f1578890c1ef076b2fb3bba477738311af487f90cc47b184260c9fa2c8361f37",
+  "postconditions": [
+    "copy, move and link selected-object labels no longer use a fixed localized-text buffer",
+    "rename paths fail before a partial target is submitted",
+    "preview and resolved target paths reject oversized results",
+    "valid root, directory, absolute and relative paths retain their existing spelling",
+    "dtfile resolves libXm.so.9 from the exact frozen Motif prefix",
+    "no owned compiler, make or test process remained before returning the serial lane"
+  ],
+  "limitations": [
+    "This file-dialog safety bundle did not launch or inspect a CDE window.",
+    "The qualified ck-core-fs-lib revision was not changed.",
+    "Darwin ASan ran without leak detection; Linux provided the leak-enabled sanitizer qualification."
+  ]
+}

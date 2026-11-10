@@ -118,9 +118,17 @@ void RenameDone(
                         int rc) ;
 static Boolean GetToPath(
                         char *to,
+                        size_t to_size,
                         char *new_name,
                         char *host_in,
                         char *dir_in) ;
+static Boolean FileDialogBuildPath(
+                        char *path,
+                        size_t path_size,
+                        const char *directory,
+                        const char *name) ;
+static XmString FileDialogSelectedObjectLabel(
+                        const char *file_name) ;
 static void FileTypePreview(
                         Widget w,
                         String new_name,
@@ -152,6 +160,62 @@ static void DialogCancel(
                         XtPointer call_data) ;
 
 /********    End Static Function Declarations    ********/
+
+
+static Boolean
+FileDialogBuildPath(
+        char *path,
+        size_t path_size,
+        const char *directory,
+        const char *name)
+{
+   size_t directory_length;
+   size_t name_length;
+   size_t separator_length;
+   size_t total_length;
+
+   if (path == NULL || path_size == 0 || directory == NULL || name == NULL)
+      return False;
+
+   directory_length = strlen(directory);
+   name_length = strlen(name);
+   separator_length = strcmp(directory, "/") == 0 ? 0 : 1;
+   if (directory_length >= path_size ||
+       separator_length > path_size - directory_length - 1 ||
+       name_length > path_size - directory_length - separator_length - 1)
+      return False;
+
+   total_length = directory_length + separator_length + name_length;
+   memcpy(path, directory, directory_length);
+   if (separator_length != 0) path[directory_length] = '/';
+   memcpy(path + directory_length + separator_length, name, name_length);
+   path[total_length] = '\0';
+   return True;
+}
+
+
+static XmString
+FileDialogSelectedObjectLabel(
+        const char *file_name)
+{
+   XmString prefix;
+   XmString separator;
+   XmString name;
+   XmString prefix_with_separator;
+   XmString label;
+
+   prefix = XmStringCreateLocalized(
+         (char *)GETMESSAGE(10, 37, "Selected object:"));
+   separator = XmStringCreateLocalized(" ");
+   name = XmStringCreateLocalized((char *)(file_name != NULL ? file_name : ""));
+   prefix_with_separator = XmStringConcat(prefix, separator);
+   label = XmStringConcat(prefix_with_separator, name);
+   XmStringFree(prefix);
+   XmStringFree(separator);
+   XmStringFree(name);
+   XmStringFree(prefix_with_separator);
+   return label;
+}
 
 
 
@@ -262,7 +326,6 @@ ShowCopyFileDialog(
    FileMgrData * file_mgr_data;
    static FileViewData * file_view_data;    /* static because it is passed to RenameOk callback */
 
-   char name_string[18+MAX_PATH];
    char * directory_name;
    char * tmpStr, *tempStr;
 
@@ -380,9 +443,8 @@ ShowCopyFileDialog(
                  HELP_COPY_DIALOG_STR);
 
 
-   sprintf (name_string, "%s ", ((char *)GETMESSAGE(10, 37, "Selected object:")));
-   strcat (name_string, file_view_data->file_data->file_name);
-   label_string = XmStringCreateLocalized (name_string);
+   label_string = FileDialogSelectedObjectLabel(
+         file_view_data->file_data->file_name);
 
    n = 0;
    XtSetArg (args[n], XmNlabelString, label_string);        n++;
@@ -743,7 +805,6 @@ ShowMoveFileDialog(
    static FileMgrData * file_mgr_data;   /* static because it is passed to RenameOk callback */
    FileViewData * file_view_data;
 
-   char name_string[18+MAX_PATH];
    char * directory_name;
    char * tmpStr, *tempStr;
 
@@ -852,9 +913,8 @@ ShowMoveFileDialog(
                  HELP_MOVE_DIALOG_STR);
 
 
-   sprintf (name_string, "%s ", ((char *)GETMESSAGE(10, 37, "Selected object:")));
-   strcat (name_string, file_view_data->file_data->file_name);
-   label_string = XmStringCreateLocalized (name_string);
+   label_string = FileDialogSelectedObjectLabel(
+         file_view_data->file_data->file_name);
 
    n = 0;
    XtSetArg (args[n], XmNlabelString, label_string);		n++;
@@ -1065,7 +1125,6 @@ ShowLinkFileDialog(
    static FileMgrData * file_mgr_data;   /* static because it is passed to RenameOk callback */
    FileViewData * file_view_data;
 
-   char name_string[18+MAX_PATH];
    char * directory_name;
    char * tmpStr, *tempStr;
 
@@ -1174,9 +1233,8 @@ ShowLinkFileDialog(
                  HELP_LINK_DIALOG_STR);
 
 
-   sprintf (name_string, "%s ", ((char *)GETMESSAGE(10, 37, "Selected object:")));
-   strcat (name_string, file_view_data->file_data->file_name);
-   label_string = XmStringCreateLocalized (name_string);
+   label_string = FileDialogSelectedObjectLabel(
+         file_view_data->file_data->file_name);
 
    n = 0;
    XtSetArg (args[n], XmNlabelString, label_string);        n++;
@@ -1525,25 +1583,34 @@ RenameOk(
      msg = XtNewString(GetSharedMessage(NO_SPACES_ALLOWED_ERROR));
 #endif
 
-   switch (call_struct->mode)
+   if (msg == NULL)
    {
-     case COPY_FILE:
-     case LINK_FILE:
-       new_name = XmTextFieldGetString (call_struct->file_text_widget);
-       new_name = (char *) _DtStripSpaces (new_name);
-       if (strlen (new_name) == 0)
-         msg = XtNewString(GETMESSAGE(10, 11,
-                                      "A file or folder cannot have a blank name."));
+      switch (call_struct->mode)
+      {
+        case COPY_FILE:
+        case LINK_FILE:
+          new_name = XmTextFieldGetString (call_struct->file_text_widget);
+          new_name = (char *) _DtStripSpaces (new_name);
+          if (strlen (new_name) == 0)
+            msg = XtNewString(GETMESSAGE(10, 11,
+                                         "A file or folder cannot have a blank name."));
 #ifdef _CHECK_FOR_SPACES
-       else if (DtStrchr (new_name, ' ') != NULL ||
-                DtStrchr (new_name, '\t') != NULL)
-         msg = XtNewString(GetSharedMessage(NO_SPACES_ALLOWED_ERROR));
+          else if (DtStrchr (new_name, ' ') != NULL ||
+                   DtStrchr (new_name, '\t') != NULL)
+            msg = XtNewString(GetSharedMessage(NO_SPACES_ALLOWED_ERROR));
 #endif
-       sprintf(new, "%s/%s", new_dir, new_name );
-       break;
-     case MOVE_FILE:
-       sprintf(new, "%s/%s", new_dir, call_struct->file_name);
-       break;
+          if (msg == NULL &&
+              !FileDialogBuildPath(new, sizeof(new), new_dir, new_name))
+            msg = XtNewString(GETMESSAGE(10, 13,
+                                         "Invalid file or folder name."));
+          break;
+        case MOVE_FILE:
+          if (!FileDialogBuildPath(new, sizeof(new), new_dir,
+                                   call_struct->file_name))
+            msg = XtNewString(GETMESSAGE(10, 13,
+                                         "Invalid file or folder name."));
+          break;
+      }
    }
 
    if (msg != NULL)
@@ -1653,14 +1720,13 @@ RenameDone(
 static Boolean
 GetToPath (
         char *to,
+        size_t to_size,
         char *new_name,
         char *host_in,
         char *dir_in)
 {
-   char *ptr;
-   char *host_name;
-   char *directory_name;
    char *path;
+   size_t path_length;
    Tt_status tt_status;
 
    if (strncmp (new_name, "/", 1) == 0)
@@ -1674,10 +1740,8 @@ GetToPath (
    }
    else
    {
-      if (strcmp(dir_in, "/") == 0)
-         sprintf(to, "%s%s", dir_in, new_name);
-      else
-         sprintf(to, "%s/%s", dir_in, new_name);
+      if (!FileDialogBuildPath(to, to_size, dir_in, new_name))
+         return (False);
 
       if ((path = (char *) ResolveLocalPathName (host_in,
                                                  to,
@@ -1687,7 +1751,13 @@ GetToPath (
          return (False);
    }
 
-   strcpy (to, path);
+   path_length = strlen(path);
+   if (path_length >= to_size)
+   {
+      XtFree(path);
+      return (False);
+   }
+   memcpy(to, path, path_length + 1);
 
    XtFree(path);
    return (True);
@@ -1754,7 +1824,8 @@ FileTypePreview(
    if (new_name[0] == '~')
       new_name = _DtChangeTildeToHome (new_name);
 
-   if (GetToPath (whole_name, new_name, call_struct->host_name,
+   if (GetToPath (whole_name, sizeof(whole_name), new_name,
+                                 call_struct->host_name,
                                  call_struct->directory_name) == False)
       strcpy(whole_name, " ");
 
