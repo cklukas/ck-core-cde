@@ -80,6 +80,7 @@ extern "C" {
 #include "DtMailGenDialog.hh"
 #include "DtMailHelp.hh"
 #include <DtMail/DtMailError.hh>
+#include <DtMail/TextBuffer.hh>
 #include "Help.hh"
 #include <Dt/Help.h>
 #include "Attachment.h"
@@ -285,19 +286,26 @@ ComposeFamily::appendSignature(SendMsgDialog * compose)
     compose->get_editor()->textEditor()->set_to_top();
 }
 
+// The subject of a reply to a message that has none.  It names the time the
+// message was sent when the message says so; that is the text of its header up
+// to the first character that would break the subject into lines.
+static char *
+replySubjectWithoutOriginal(const char * sent)
+{
+    TextBuffer subject;
+
+    subject.append("Re: Your Message");
+    if (sent != NULL) {
+	subject.append(" Sent on ");
+	subject.append(sent, strcspn(sent, "\r\n\t"));
+    }
+    return subject.release();
+}
+
 char *
 ComposeFamily::valueToAddrString(DtMailValueSeq & value)
 {
-    int max_len = 0;
-    int count;
-
-    for (count = 0; count < value.length(); count++) {
-	max_len += strlen(*(value[count]));
-    }
-
-    char * str = new char[max_len + count + 1];
-    str[0] = 0;
-
+    TextBuffer str;
     DtMailBoolean need_comma = DTM_FALSE;
 
     for (int cat = 0; cat < value.length(); cat++)
@@ -314,18 +322,18 @@ ComposeFamily::valueToAddrString(DtMailValueSeq & value)
 		continue ;
 
 	    if (need_comma) {
-		strcat(str, ", ");
+		str.append(", ");
 	    }
 
 	    need_comma = DTM_TRUE;
 
-	    strcat(str, addr->dtm_address);
+	    str.append(addr->dtm_address);
 	}
 
         delete addr_seq;
     }
 
-    return(str);
+    return(str.release());
 }
 
 
@@ -494,20 +502,13 @@ ReplyCmd::doit()
 	    value.clear();
 	    env->getHeader(error, DtMailMessageSubject, DTM_TRUE, value);
 	    if (error.isSet()) {
-		subject = new char[200];
-		strcpy(subject, "Re: ");
 		DtMailValueSeq sent;
 		env->getHeader(error,
 			       DtMailMessageSentTime,
 			       DTM_TRUE,
 			       sent);
-		if (error.isSet()) {
-		    strcat(subject, "Your Message");
-		}
-		else {
-		    strcat(subject, "Your Message Sent on ");
-		    strcat(subject, *(sent[0]));
-		}
+		subject = replySubjectWithoutOriginal(
+			error.isSet() ? NULL : (const char *) *(sent[0]));
 		newsend->setHeader("Subject", subject);
 	    }
 	    else {
@@ -643,20 +644,13 @@ ReplyAllCmd::doit()
 			   DTM_TRUE, 
 			   value);
 	    if ( error.isSet() ) {
-		subject = new char[200];
-		strcpy(subject, "Re: ");
 		DtMailValueSeq sent;
 		env->getHeader(error,
 			       DtMailMessageSentTime,
 			       DTM_TRUE,
 			       sent);
-		if (error.isSet()) {
-		    strcat(subject, "Your Message");
-		}
-		else {
-		    strcat(subject, "Your Message Sent on ");
-		    strcat(subject, *(sent[0]));
-		}
+		subject = replySubjectWithoutOriginal(
+			error.isSet() ? NULL : (const char *) *(sent[0]));
 		newsend->setHeader("Subject", subject);
 	    } else {
 		// Get the BE store of header.  It may contain newlines or 

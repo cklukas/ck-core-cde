@@ -48,6 +48,7 @@
  */
 
 #include "dmx.hh"
+#include <DtMail/TextBuffer.hh>
 // For CHARSET
 #include <Dt/LocaleXlate.h>
 #include <locale.h>
@@ -169,27 +170,26 @@ DmxMsg::printHeader (enum DmxHeaderType htype)
 	// the addlInfo string is any extra info needed by the
 	// viewer, such as a message number
 
-	char *buffer = new char [1024];
-	memset (buffer, 0, 1024);
+	TextBuffer text;
 
 	switch (htype)
 	{
 		case MSGLIST:
-			sprintf (buffer, "%s%s%s %s",
-				indicator, status, addlInfo,
-				formatHeader (msgHeader, MSGLIST));
+			text.append (indicator);
+			text.append (status);
+			text.append (addlInfo ? addlInfo : "");
+			text.append (" ");
+			text.append (formatHeader (msgHeader, MSGLIST));
 			break;
 		case MSGHEADER:
-			sprintf (buffer, "%s",
-				formatHeader (msgHeader, MSGHEADER));
+			text.append (formatHeader (msgHeader, MSGHEADER));
 			break;
 		default:
 			printf ("error in DmxMsg::display\n");
 			break;
 	}
 
-
-	return buffer;
+	return text.release ();
 }
 
 
@@ -209,7 +209,7 @@ DmxMsg::display (void)
 	char *buf = NULL;
 // For CHARSET
 	char *mime_cs = NULL, *from_cs = NULL, *to_cs = NULL;
-	char *v3_cs = new char [64];
+	char v3_cs[64] = "";
 	
 	if (cachedValues != B_TRUE)
 		parse ();	// read in body part info
@@ -241,7 +241,7 @@ DmxMsg::display (void)
 	  value.clear();
 	  firstPart->getHeader(env, DtMailMessageV3charset, DTM_TRUE, value);
 	  if (env.isNotSet()) {
-		 strcpy(v3_cs, *(value[0]));
+		 copyBounded(v3_cs, sizeof(v3_cs), *(value[0]));
 	  } else {
 		 err = B_TRUE;
 		 env.clear();
@@ -273,7 +273,7 @@ DmxMsg::display (void)
         value.clear();
         envelope->getHeader(env, DtMailMessageV3charset, DTM_TRUE, value);
         if (env.isNotSet()) {
-           strcpy(v3_cs, *(value[0]));
+           copyBounded(v3_cs, sizeof(v3_cs), *(value[0]));
         } else {
 	  	   err = B_TRUE;
            env.clear();
@@ -294,9 +294,7 @@ DmxMsg::display (void)
 		 NULL,
 		 NULL,
 		 &ret);
-	  strcpy(v3_cs, "DEFAULT");
-	  strcat(v3_cs, ".");
-	  strcat(v3_cs, ret);
+	  snprintf(v3_cs, sizeof(v3_cs), "DEFAULT.%s", ret ? ret : "");
 	  free(ret);
    }
 
@@ -423,7 +421,6 @@ DmxMsg::display (void)
 
 	}
 
-	delete [] v3_cs;
 	return;
 }
 

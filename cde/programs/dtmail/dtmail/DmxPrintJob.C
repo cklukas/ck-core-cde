@@ -275,7 +275,17 @@ DmxPrintJob::execute (void)
               subject[j++] = orig_subject[i];
         }
         subject[j] = '\0';
-        sprintf(filename, "%s/%s.ps", getenv("HOME"), subject);
+
+        // The subject of a message can be as long as the sender likes: the
+        // name of the file keeps what fits next to the directory and ".ps".
+        const char *home = getenv("HOME");
+        if (home == NULL)
+          home = ".";
+        size_t room = MAXPATHLEN + 1;
+        size_t keep = (strlen(home) + 5 < room) ? room - strlen(home) - 5 : 0;
+        if ((size_t) j > keep)
+          subject[keep] = '\0';
+        snprintf(filename, room, "%s/%s.ps", home, subject);
 
 	_print_setup->setPrintToFileName(filename);
         free(orig_subject);

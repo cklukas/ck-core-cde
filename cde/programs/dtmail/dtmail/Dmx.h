@@ -183,6 +183,9 @@ class DmxMsg
 };
 
 
+// The messages of a mailbox that are printed at once; the others are left out.
+#define DMXMAXMESSAGES	2048
+
 class DmxMailbox
 {
 private:
@@ -192,7 +195,7 @@ private:
     static const int	_firstIndex;
     char		*_fileName;
     DtMail::MailBox	*_mbox;
-    DmxMsg		_messages[2048];
+    DmxMsg		_messages[DMXMAXMESSAGES];
     DmxMsg		*_message;
     int			_messageCount;
 public:

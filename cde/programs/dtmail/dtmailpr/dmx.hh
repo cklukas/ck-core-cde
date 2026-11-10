@@ -137,6 +137,9 @@ class DmxMsg
 };
 
 
+// The messages of a mailbox that are printed at once; the others are left out.
+#define DMXMAXMESSAGES	1024
+
 class DmxMailbox
 {
 	public:
@@ -152,7 +155,7 @@ class DmxMailbox
 		void		createHeaderRequest (DtMailHeaderRequest &);
 		void		printMailboxInfo (void);
 
-		DmxMsg		msg [1024];
+		DmxMsg		msg [DMXMAXMESSAGES];
 };
 
 

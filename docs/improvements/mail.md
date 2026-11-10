@@ -77,3 +77,40 @@ and the directory is often one that other users can write to.
 `RFCMailBox.C` with AddressSanitizer and UndefinedBehaviorSanitizer next to
 `tests/mailbox-files.C`, links them with the built `libDtMail.a`, and opens,
 changes and saves real mailbox files in an empty directory for each case.
+
+## Text made from a received message
+
+The reply commands, "Save As Text", the print commands and `dtmailpr` put
+addresses, the date, the subject and character set names of the message into
+headers of a reply, into the text they write and into the name of a print
+file. Those strings come from the sender. The buffers that held them were sized
+by a guess, and a message could write past them.
+
+- `include/DtMail/TextBuffer.hh` holds text that grows as it is appended to.
+  The address list of a reply (`ComposeFamily::valueToAddrString()`; every `,`
+  of a header becomes `, ` and the buffer was sized for the header), the text
+  of all headers that `Save As Text` writes (`DmxMsg::getHeaders()` doubled its
+  buffer once) and the header line of `dtmailpr` (a buffer of 1024 bytes) are
+  built in it.
+- A reply to a message without a `Subject` header builds its subject in the
+  same way (it used a buffer of 200 bytes for the date of the message), and the
+  date stops at the first line break, so that it stays a single line of the
+  subject.
+- The character set name of a message (`X-Sun-Charset`) is copied with
+  `copyBounded()` into a buffer that starts empty (it was copied with
+  `strcpy()` into 64 bytes and read before it was set), and the default
+  character set is named with `snprintf()`.
+- The name of the print file that is made from the subject is cut to fit next
+  to the home directory and the suffix `.ps`; it was written with `sprintf()`
+  into a buffer of `MAXPATHLEN`. A program without `$HOME` uses the current
+  directory.
+- The function that reduces the sender to a name (`phrase()` of `dmx` and
+  `dtmailpr`) allocated one byte too few for an address of 5120 bytes or more
+  and did not free its buffer on every path.
+- Printing or saving as text more than 2047 messages at once, and `dtmailpr` on
+  a mailbox of more than 1023 messages, wrote pointers past the array of
+  messages. The commands now use the first messages and say how many.
+
+`make -C programs/dtmail check` runs the production functions under
+AddressSanitizer and UndefinedBehaviorSanitizer on headers of every length, and
+guards the places that need a display.

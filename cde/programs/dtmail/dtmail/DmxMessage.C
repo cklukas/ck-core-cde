@@ -82,6 +82,7 @@
 #include "MailSession.hh"
 #include "RoamApp.h"
 #include "str_utils.h"
+#include <DtMail/TextBuffer.hh>
 
 
 DmxMsg::DmxMsg (void)
@@ -165,26 +166,19 @@ DmxMsg::getHeaders (DtMailBoolean abbreviated_only)
     char		*name;
     DtMailValueSeq	value;
 
-    // Code from MsgScrollingList - display_message().
-    // We're trying to reduce heap size by not allocating and 
-    // deleting space in every loop iteration.  So just have a 
-    // fixed size buffer initially.
-    // 
-
-    // Initial line size.  When not enough, allocate more.
-    int			buffer_size = 2048;   
-    char		*buffer = new char [buffer_size];
-    int			count = 0;
+    // The text of the headers grows with the headers: nothing can be said
+    // about its size beforehand.
+    TextBuffer		buffer;
     int			hdr_num = 0;
-    char		*newline = "\n";
-    char		*separator = ": ";
+    const char		*newline = "\n";
+    const char		*separator = ": ";
     int			val = 0;
 
     //
     // Iterate through each header in the message and add it
     // to the buffer.
     //
-    for (hdr_hnd = env->getFirstHeader(error, &name, value), *buffer = '\0';
+    for (hdr_hnd = env->getFirstHeader(error, &name, value);
 	 hdr_hnd && !error.isSet();
 	 hdr_hnd = env->getNextHeader(error, hdr_hnd, &name, value), hdr_num++)
     {
@@ -199,38 +193,18 @@ DmxMsg::getHeaders (DtMailBoolean abbreviated_only)
 		continue;
 	    }
 	}
-	    
-	for (val=0;  val<value.length();  val++)
-	  count += strlen(name) +
-		   strlen(*(value[val])) +
-		   strlen(separator) +
-		   strlen(newline) + 1;
-
-	if (count > buffer_size)
-	{
-	    // Need to increase buffer size.
-	    char	*new_buffer;
-	    
-	    buffer_size *= 2;
-	    new_buffer = new char [buffer_size];
-	    memset(new_buffer, 0, buffer_size);
-
-	    strcpy(new_buffer, buffer);
-	    delete [] buffer;
-	    buffer = new_buffer;
-	}
 
 	for (val=0;  val<value.length();  val++)
 	{
-	    strcat(buffer, name);
+	    buffer.append(name);
 		
 	    if (hdr_num != 0 || strcmp(name, "From") != 0)
-	      strcat(buffer, separator);
+	      buffer.append(separator);
 	    else
-	      strcat(buffer, " ");
+	      buffer.append(" ");
 		
-	    strcat(buffer, *(value[val]));
-	    strcat(buffer, newline);
+	    buffer.append(*(value[val]));
+	    buffer.append(newline);
 	}
 	value.clear();
 	free(name);
@@ -239,7 +213,7 @@ DmxMsg::getHeaders (DtMailBoolean abbreviated_only)
     //
     // Need to free this after using;
     //
-    return buffer;
+    return buffer.release();
 }
 	
 
@@ -299,7 +273,7 @@ DmxMsg::display (
     int			mode = 0;
 
     // For CHARSET
-    char		v3_cs[64],
+    char		v3_cs[64] = "",
 			*mime_cs = NULL,
 			*from_cs = NULL,
 			*to_cs = NULL;
@@ -335,7 +309,7 @@ DmxMsg::display (
 	value.clear();
 	firstPart->getHeader(env, DtMailMessageV3charset, DTM_TRUE, value);
 	if (env.isNotSet()) {
-	    strcpy(v3_cs, *(value[0]));
+	    copyBounded(v3_cs, sizeof(v3_cs), *(value[0]));
 	} else {
 	     err = DTM_TRUE;
 	     env.clear();
@@ -371,7 +345,7 @@ DmxMsg::display (
             value.clear();
             envelope->getHeader(env, DtMailMessageV3charset, DTM_TRUE, value);
             if (env.isNotSet()) {
-                strcpy(v3_cs, *(value[0]));
+                copyBounded(v3_cs, sizeof(v3_cs), *(value[0]));
             } else {
 	  	err = DTM_TRUE;
                 env.clear();
@@ -392,9 +366,7 @@ DmxMsg::display (
 		 			NULL,
 		 			NULL,
 		 			&ret);
-	strcpy(v3_cs, "DEFAULT");
-	strcat(v3_cs, ".");
-	strcat(v3_cs, ret);
+	snprintf(v3_cs, sizeof(v3_cs), "DEFAULT.%s", ret ? ret : "");
 	free(ret);
     }
 

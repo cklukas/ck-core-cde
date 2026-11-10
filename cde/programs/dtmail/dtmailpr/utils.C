@@ -233,7 +233,11 @@ phrase(char *name, int token, int comma)
 	if (name == NOSTR)
 		return(NOSTR);
 	if (strlen(name) >= (unsigned)LINESIZE)
-		nbufp = (char *)malloc(strlen(name));
+	{
+		nbufp = (char *)malloc(strlen(name) + 1);
+		if (nbufp == NULL)
+			return(NOSTR);
+	}
 	else
 		nbufp = nbuf;
 	gotlt = 0;
@@ -305,6 +309,8 @@ phrase(char *name, int token, int comma)
 			if (token && (!comma || c == '\n')) {
 			done:
 				cp[-1] = 0;
+				if (nbufp != nbuf)
+					free(nbufp);
 				return cp;
 			}
 			lastsp = 1;
@@ -346,8 +352,12 @@ phrase(char *name, int token, int comma)
 		}
 	}
 	*cp2 = 0;
-	return (token ? --cp : equal(name, nbufp) ? name :
-	    nbufp == nbuf ? savestr(nbuf) : nbufp);
+	if (token || equal(name, nbufp)) {
+		if (nbufp != nbuf)
+			free(nbufp);
+		return (token ? --cp : name);
+	}
+	return (nbufp == nbuf ? savestr(nbuf) : nbufp);
 }
 
 

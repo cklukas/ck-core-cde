@@ -238,6 +238,17 @@
   `make -C lib/tt/lib check` (sanitizer cases with a
   simulated and, started as the superuser, a real privileged process) and
   `make -C lib/tt/bin check`.
+- dtmail, dtmailpr: build the text made from a received message without
+  fixed buffers. The address list of a reply, the subject of a reply to a
+  message without one, the headers written by "Save As Text", the header line
+  of dtmailpr, the character set name of a message and the name of a print file
+  made from the subject no longer overflow buffers sized by a guess; they use
+  the new `include/DtMail/TextBuffer.hh` or bounded copies. `phrase()` allocates
+  the terminator it writes and frees its buffer; printing or saving more
+  messages than the array holds uses the first ones instead of writing past it.
+  A date in the subject of a reply stops at the first line break. Covered by
+  `programs/dtmail/tests/check-message-text.py` (the production functions under
+  the sanitizers and source guards); described in `docs/improvements/mail.md`.
 - libDtMail: create the temporary file of a mailbox save exclusively, resolve
   links safely and stop starting a shell to expand paths. The file next to
   the mailbox is now made with `mkstemp()` (it was a predictable name opened

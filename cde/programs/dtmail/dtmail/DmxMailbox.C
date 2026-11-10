@@ -167,6 +167,12 @@ DmxMailbox::loadMessages (void)
 			if (handleError (env, "msgLoop") == DTM_TRUE)
 				exit (1);
 			break; // break out if error
+		} else if (i + 1 >= DMXMAXMESSAGES) {
+			fprintf (stderr,
+				"loadMessages: only the first %d messages are used.\n",
+				DMXMAXMESSAGES - _firstIndex);
+			moreMessages = DTM_FALSE;
+			break;
 		} else {
 			i++;	
 			_messages [i].setHandle (next);
