@@ -20,6 +20,8 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/check-process-lifecycle.py tests/process-lifecycle.c \
              tests/check-directory-packets.py tests/directory-packets.c \
              tests/directory-packets-baseline.c \
+             tests/check-directory-control-packets.py \
+             tests/directory-control-packets.c \
              tests/check-sync-controller.py tests/sync-controller.c \
              tests/check-sync-retry-ui.py SyncFeature.h.in
 
@@ -35,6 +37,10 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-directory-packets.py \
 		--module-source "$(abs_srcdir)" \
 		--work-dir "$(abs_builddir)/directory-packet-check"
+	$(RM) -r "$(abs_builddir)/directory-control-check"
+	CC="$(CC)" python3 $(srcdir)/tests/check-directory-control-packets.py \
+		--module-source "$(abs_srcdir)" \
+		--work-dir "$(abs_builddir)/directory-control-check"
 	$(RM) -r "$(abs_builddir)/filemanip-helper-check"
 	CC="$(CC)" python3 $(srcdir)/tests/check-filemanip-safety.py \
 		--module-source "$(abs_srcdir)" --helper-only \

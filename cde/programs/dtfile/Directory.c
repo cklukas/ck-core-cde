@@ -103,6 +103,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <assert.h>
 
@@ -159,6 +160,8 @@ extern Boolean removingTrash;
 #define PIPEMSG_HDR_LEN (2 * sizeof(short) + sizeof(int))
 #define FILEDATA_PACKET_CAPACITY \
         (PIPEMSG_HDR_LEN + FILEDATABUF * sizeof(FileData2))
+#define DIRECTORY_PATH_LIMIT (MAX_PATH + 1)
+#define DIRECTORY_POSITION_LIMIT (256 * 1024)
 
 #define	NILL '\0'
 
@@ -821,29 +824,247 @@ FileDataStatIsLink(int stat_result, const struct stat *stat_data)
    return stat_result == 0 && stat_data != NULL && S_ISLNK(stat_data->st_mode);
 }
 
+static void
+DirectoryFreeStrings(char **values, int count)
+{
+   int i;
+
+   if (values == NULL) return;
+   for (i = 0; i < count; i++) XtFree(values[i]);
+   XtFree((char *)values);
+}
+
+static int
+DirectoryArrayBytes(int count, size_t item_size, int limit, size_t *bytes)
+{
+   if (bytes == NULL || count < 0 || count > limit ||
+       (count != 0 && item_size > SIZE_MAX / (size_t)count))
+   {
+      errno = EPROTO;
+      return -1;
+   }
+   *bytes = (size_t)count * item_size;
+   return 0;
+}
+
+static int
+DirectoryReadPathInfo(int fd, int *count, char ***logical_types, char **tt_path)
+{
+   char **values = NULL;
+   char *path = NULL;
+   size_t bytes;
+   int decoded_count;
+   int i;
+
+   if (count == NULL || logical_types == NULL || tt_path == NULL)
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   *count = 0;
+   *logical_types = NULL;
+   *tt_path = NULL;
+   if (PipeReadExact(fd, &decoded_count, sizeof(decoded_count)) != 0 ||
+       DirectoryArrayBytes(decoded_count, sizeof(*values),
+                           DIRECTORY_PATH_LIMIT, &bytes) != 0)
+      return -1;
+   if (decoded_count != 0) values = (char **)XtCalloc(1, bytes);
+   for (i = 0; i < decoded_count; i++)
+      if (PipeReadStringField(fd, &values[i]) != 0 || values[i] == NULL)
+         goto malformed;
+   if (PipeReadStringField(fd, &path) != 0) goto malformed;
+   *count = decoded_count;
+   *logical_types = values;
+   *tt_path = path;
+   return 0;
+
+malformed:
+   DirectoryFreeStrings(values, decoded_count);
+   XtFree(path);
+   return -1;
+}
+
+static int
+DirectoryWritePathInfo(int fd, int count, char *const *logical_types,
+                       const char *tt_path)
+{
+   short message = PIPEMSG_PATH_LOGICAL_TYPES;
+   size_t bytes;
+   int i;
+
+   if (DirectoryArrayBytes(count, sizeof(*logical_types),
+                           DIRECTORY_PATH_LIMIT, &bytes) != 0 ||
+       (count != 0 && logical_types == NULL))
+      return -1;
+   (void)bytes;
+   if (DtfileProcessWriteAll(fd, &message, sizeof(message)) != 0 ||
+       DtfileProcessWriteAll(fd, &count, sizeof(count)) != 0)
+      return -1;
+   for (i = 0; i < count; i++)
+      if (logical_types[i] == NULL || PipeWriteString(fd, logical_types[i]) < 0)
+         return -1;
+   return PipeWriteString(fd, (char *)tt_path) < 0 ? -1 : 0;
+}
+
+static int
+DirectoryWriteDone(int fd, long modify_time)
+{
+   short message = PIPEMSG_DONE;
+
+   return DtfileProcessWriteAll(fd, &message, sizeof(message)) != 0 ||
+          DtfileProcessWriteAll(fd, &modify_time, sizeof(modify_time)) != 0
+             ? -1 : 0;
+}
+
+static int
+DirectoryWriteError(int fd, int error, long modify_time)
+{
+   short message = PIPEMSG_ERROR;
+
+   return DtfileProcessWriteAll(fd, &message, sizeof(message)) != 0 ||
+          DtfileProcessWriteAll(fd, &error, sizeof(error)) != 0 ||
+          DtfileProcessWriteAll(fd, &modify_time, sizeof(modify_time)) != 0
+             ? -1 : 0;
+}
+
 /* write PositionInfo to the pipe */
-void
+static int
 PipeWritePositionInfo(
 	int fd,
 	PositionInfo *position_info)
 {
-   PipeWriteString(fd, position_info->name);
-   write(fd, &position_info->x, sizeof(Position));
-   write(fd, &position_info->y, sizeof(Position));
-   write(fd, &position_info->stacking_order, sizeof(int));
+   if (position_info == NULL || position_info->name == NULL)
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   return PipeWriteString(fd, position_info->name) < 0 ||
+          DtfileProcessWriteAll(fd, &position_info->x,
+                                sizeof(position_info->x)) != 0 ||
+          DtfileProcessWriteAll(fd, &position_info->y,
+                                sizeof(position_info->y)) != 0 ||
+          DtfileProcessWriteAll(fd, &position_info->stacking_order,
+                                sizeof(position_info->stacking_order)) != 0
+             ? -1 : 0;
 }
 
 
 /* read PositionInfo from the pipe */
-static void
+static int
 PipeReadPositionInfo(
 	int fd,
 	PositionInfo *position_info)
 {
-   position_info->name = PipeReadString(fd);
-   PipeRead(fd, &position_info->x, sizeof(Position));
-   PipeRead(fd, &position_info->y, sizeof(Position));
-   PipeRead(fd, &position_info->stacking_order, sizeof(int));
+   if (position_info == NULL) { errno = EINVAL; return -1; }
+   memset(position_info, 0, sizeof(*position_info));
+   if (PipeReadStringField(fd, &position_info->name) != 0 ||
+       position_info->name == NULL ||
+       PipeReadExact(fd, &position_info->x, sizeof(position_info->x)) != 0 ||
+       PipeReadExact(fd, &position_info->y, sizeof(position_info->y)) != 0 ||
+       PipeReadExact(fd, &position_info->stacking_order,
+                     sizeof(position_info->stacking_order)) != 0)
+   {
+      XtFree(position_info->name);
+      position_info->name = NULL;
+      return -1;
+   }
+   return 0;
+}
+
+static int
+DirectoryReadPositionInfo(int fd, int *count, PositionInfo **positions)
+{
+   PositionInfo *values = NULL;
+   size_t bytes;
+   int decoded_count;
+   int i;
+
+   if (count == NULL || positions == NULL) { errno = EINVAL; return -1; }
+   *count = 0;
+   *positions = NULL;
+   if (PipeReadExact(fd, &decoded_count, sizeof(decoded_count)) != 0 ||
+       DirectoryArrayBytes(decoded_count, sizeof(*values),
+                           DIRECTORY_POSITION_LIMIT, &bytes) != 0)
+      return -1;
+   if (decoded_count != 0) values = (PositionInfo *)XtCalloc(1, bytes);
+   for (i = 0; i < decoded_count; i++)
+      if (PipeReadPositionInfo(fd, &values[i]) != 0) goto malformed;
+   *count = decoded_count;
+   *positions = values;
+   return 0;
+
+malformed:
+   while (i-- > 0) XtFree(values[i].name);
+   XtFree((char *)values);
+   return -1;
+}
+
+static int
+DirectoryBuildPositionPath(char *buffer, size_t buffer_size,
+                           const char *directory_name, const char *file_name)
+{
+   const char *separator;
+   int length;
+
+   if (buffer == NULL || buffer_size == 0 || directory_name == NULL ||
+       file_name == NULL)
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   separator = strcmp(directory_name, "/") == 0 ? "" : "/";
+   length = snprintf(buffer, buffer_size, "%s%s%s", directory_name,
+                     separator, file_name);
+   if (length < 0 || (size_t)length >= buffer_size)
+   {
+      buffer[0] = NILL;
+      errno = ENAMETOOLONG;
+      return -1;
+   }
+   return 0;
+}
+
+static int
+DirectoryLoadPositionInfo(FILE *stream, PositionInfo **positions)
+{
+   PositionInfo *values = NULL;
+   char name[MAX_PATH];
+   size_t bytes;
+   size_t length;
+   int requested;
+   int count = 0;
+   int x, y, stacking_order;
+
+   if (stream == NULL || positions == NULL) { errno = EINVAL; return -1; }
+   *positions = NULL;
+   if (fscanf(stream, "%d\n", &requested) != 1 ||
+       DirectoryArrayBytes(requested, sizeof(*values),
+                           DIRECTORY_POSITION_LIMIT, &bytes) != 0)
+      return -1;
+   if (requested != 0) values = (PositionInfo *)XtCalloc(1, bytes);
+   while (count < requested)
+   {
+      if (fgets(name, sizeof(name), stream) == NULL) goto malformed;
+      length = strlen(name);
+      if (length <= 1 || name[length - 1] != '\n' ||
+          fscanf(stream, "%d %d %d\n", &x, &y, &stacking_order) != 3 ||
+          x < SHRT_MIN || x > SHRT_MAX || y < SHRT_MIN || y > SHRT_MAX)
+         goto malformed;
+      name[length - 1] = NILL;
+      values[count].name = XtNewString(name);
+      values[count].x = (Position)x;
+      values[count].y = (Position)y;
+      values[count].stacking_order = stacking_order;
+      count++;
+   }
+   *positions = values;
+   return count;
+
+malformed:
+   while (count-- > 0) XtFree(values[count].name);
+   XtFree((char *)values);
+   errno = EPROTO;
+   return -1;
 }
 
 /*--------------------------------------------------------------------
@@ -1466,7 +1687,6 @@ ReadDirectoryProcess(
    char file_name[MAX_PATH];
    int position_count;
    FILE * fptr;
-   int x, y, stacking_order;
    short pipe_msg;
    int rc;
    union {
@@ -1478,6 +1698,8 @@ ReadDirectoryProcess(
    struct timeval time1, time2;
    long diff;
    char *ptrOrig;
+   Tt_status component_status;
+   Tt_status directory_status;
 
    DPRINTF(("ReadDirectoryProcess(%d, \"%s\", \"%s\")\n",
             pipe_fd, host_name, directory_name));
@@ -1496,8 +1718,6 @@ ReadDirectoryProcess(
 
    for (;;)
    {
-      Tt_status tt_status;
-
       if (ptr != NULL)
          *ptr = '\0';
 
@@ -1511,9 +1731,15 @@ ReadDirectoryProcess(
                                                   namePtr,
                                                   NULL,
                                                   home_host_name,
-                                                  &tt_status );
-      if( TT_OK != tt_status )
-        break;
+                                                  &component_status );
+      if (component_status != TT_OK || full_directory_name == NULL)
+      {
+         XtFree(full_directory_name);
+         XtFree(ptrOrig);
+         DirectoryFreeStrings(path_logical_types, path_count);
+         (void)DirectoryWriteError(pipe_fd, -1, 0);
+         return 1;
+      }
 
       DtEliminateDots (full_directory_name);
       path_logical_types = (char **) XtRealloc((char *)path_logical_types,
@@ -1563,35 +1789,34 @@ ReadDirectoryProcess(
    XtFree(ptrOrig);
 
    /* get the full name of the current directory */
+   full_directory_name = ResolveLocalPathName( host_name,
+                                               directory_name,
+                                               NULL,
+                                               home_host_name,
+                                               &directory_status );
+   if (directory_status != TT_OK || full_directory_name == NULL)
    {
-     Tt_status tt_status;
-     full_directory_name = ResolveLocalPathName( host_name,
-                                                 directory_name,
-                                                 NULL,
-                                                 home_host_name,
-                                                 &tt_status );
-     /* It's ok not to check for tt_status.
-        The code below will handle it properly.
-     */
+      DirectoryFreeStrings(path_logical_types, path_count);
+      (void)DirectoryWriteError(pipe_fd, -1, 0);
+      XtFree(full_directory_name);
+      return 1;
    }
 
    /* send the path_logical_types back through the pipe */
-   pipe_msg = PIPEMSG_PATH_LOGICAL_TYPES;
    DPRINTF(("ReadDirectoryProcess: sending %d path_logical_types\n",
             path_count));
-   write(pipe_fd, &pipe_msg, sizeof(short));
-   write(pipe_fd, &path_count, sizeof(int));
-   for(i = 0; i < path_count; i++)
-   {
-     PipeWriteString(pipe_fd, path_logical_types[i]);
-     XtFree((char *) path_logical_types[i]);
-   }
-   XtFree((char *) path_logical_types);
-
-   /* send the tt_path */
    tt_path = GetTTPath(full_directory_name);
-   PipeWriteString(pipe_fd, tt_path);
+   rc = DirectoryWritePathInfo(pipe_fd, path_count, path_logical_types,
+                               tt_path);
+   for(i = 0; i < path_count; i++)
+     XtFree((char *) path_logical_types[i]);
+   XtFree((char *) path_logical_types);
    XtFree(tt_path);
+   if (rc != 0)
+   {
+      XtFree(full_directory_name);
+      return 1;
+   }
 
    /*
     * Stat the directory to get its timestamp.
@@ -1601,13 +1826,11 @@ ReadDirectoryProcess(
        stat(full_directory_name, &stat_buf) != 0)
    {
       /* send an error code back through the pipe */
-      pipe_msg = PIPEMSG_ERROR;
       rc = errno;
       modify_time = 0;
       DPRINTF(("ReadDirectoryProcess: sending errno %d (stat failed)\n", rc));
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      write(pipe_fd, &rc, sizeof(int));
-      write(pipe_fd, &modify_time, sizeof(long));
+      (void)DirectoryWriteError(pipe_fd, rc, modify_time);
+      XtFree(full_directory_name);
       return 1;
    }
 
@@ -1629,13 +1852,10 @@ ReadDirectoryProcess(
    if (dirp == NULL)
    {
       /* send an error code back through the pipe */
-      pipe_msg = PIPEMSG_ERROR;
       rc = errno;
       DPRINTF(("ReadDirectoryProcess: sending errno %d (opendir failed)\n",
                rc));
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      write(pipe_fd, &rc, sizeof(int));
-      write(pipe_fd, &modify_time, sizeof(long));
+      (void)DirectoryWriteError(pipe_fd, rc, modify_time);
       XtFree( full_directory_name );
       return 1;
    }
@@ -1749,63 +1969,40 @@ ReadDirectoryProcess(
    /* load position info, if available */
 
    /* construct full name of the position info file */
-   if (strcmp(full_directory_name,"/") != 0)
-     sprintf( file_name, "%s/%s", full_directory_name, positionFileName );
-   else
-     sprintf( file_name, "%s%s", full_directory_name, positionFileName );
-
    /* read the count from the position info file */
    position_count = 0;
-   if ((fptr = fopen(file_name, "r")) != NULL)
+   if (DirectoryBuildPositionPath(file_name, sizeof(file_name),
+                                  full_directory_name, positionFileName) == 0 &&
+       (fptr = fopen(file_name, "r")) != NULL)
    {
      PositionInfo * position_info = NULL;
-     fscanf(fptr, "%d\n", &position_count);
-
-     if (position_count > 0)
-     {
-       /* allocate position info array */
-       position_info = (PositionInfo *)
-         XtMalloc(position_count * sizeof(PositionInfo));
-
-       /* read the position info from the file */
-       i = 0;
-       while (i < position_count)
-       {
-         if( fgets( file_name, MAX_PATH, fptr ) != NULL &&
-             fscanf(fptr, "%d %d %d\n", &x, &y, &stacking_order ) == 3  )
-         {
-           int len = strlen(file_name);
-           file_name[len-1] = 0x0;
-           position_info[i].name = XtNewString(file_name);
-           position_info[i].x = x,
-           position_info[i].y = y,
-           position_info[i].stacking_order = stacking_order;
-           i++;
-         }
-         else
-           break;
-       }
-       position_count = i;
-     }
+     position_count = DirectoryLoadPositionInfo(fptr, &position_info);
 
      fclose(fptr);
 
-     /* send the position info back through the pipe */
-     pipe_msg = PIPEMSG_POSITION_INFO;
-     DPRINTF(("ReadDirectoryProcess: sending %d position_info\n",
-              position_count));
-     write(pipe_fd, &pipe_msg, sizeof(short));
-     write(pipe_fd, &position_count, sizeof(int));
-     for (i = 0; i < position_count; i++)
+     if (position_count >= 0)
      {
-       PipeWriteString( pipe_fd, position_info[i].name );
-       XtFree( position_info[i].name );
-       write( pipe_fd, &(position_info[i].x), sizeof(Position));
-       write( pipe_fd, &(position_info[i].y), sizeof(Position));
-       write( pipe_fd, &(position_info[i].stacking_order), sizeof(int));
-
+       /* send the position info back through the pipe */
+       pipe_msg = PIPEMSG_POSITION_INFO;
+       DPRINTF(("ReadDirectoryProcess: sending %d position_info\n",
+                position_count));
+       rc = DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+            DtfileProcessWriteAll(pipe_fd, &position_count,
+                                  sizeof(position_count)) != 0 ? -1 : 0;
+       for (i = 0; i < position_count; i++)
+       {
+         if (rc == 0 && PipeWritePositionInfo(pipe_fd, &position_info[i]) != 0)
+           rc = -1;
+         XtFree( position_info[i].name );
+       }
+       XtFree( (char *)position_info );
+       if (rc != 0)
+       {
+         XtFree(full_directory_name);
+         closedir(dirp);
+         return 1;
+       }
      }
-     XtFree( (char *)position_info );
    }
 
    XtFree(full_directory_name);
@@ -1813,10 +2010,7 @@ ReadDirectoryProcess(
 
    /* send a 'done' msg through the pipe */
    DPRINTF(("ReadDirectoryProcess: sending DONE\n"));
-   pipe_msg = PIPEMSG_DONE;
-   write(pipe_fd, &pipe_msg, sizeof(short));
-   write(pipe_fd, &modify_time, sizeof(long));
-   return 0;
+   return DirectoryWriteDone(pipe_fd, modify_time) == 0 ? 0 : 1;
 }
 
 
@@ -1846,6 +2040,7 @@ UpdateAllProcess(
    short pipe_msg;
    int n, i, rc=0;
    Tt_status tt_status;
+   Tt_status component_status;
    char **path_logical_types;
    int path_count;
    char *ptrOrig;
@@ -1881,7 +2076,6 @@ UpdateAllProcess(
       ptrOrig = ptr = XtNewString(directory_name);
       for (;;)
       {
-         Tt_status tt_status;
          char *namePtr;
 
          if (ptr != NULL)
@@ -1897,9 +2091,15 @@ UpdateAllProcess(
                                                   namePtr,
                                                   NULL,
                                                   home_host_name,
-                                                  &tt_status );
-         if( TT_OK != tt_status )
-           break;
+                                                  &component_status );
+         if (component_status != TT_OK || full_directory_name == NULL)
+         {
+            XtFree(full_directory_name);
+            XtFree(ptrOrig);
+            DirectoryFreeStrings(path_logical_types, path_count);
+            (void)DirectoryWriteError(pipe_fd, -1, 0);
+            return 1;
+         }
 
          DtEliminateDots (full_directory_name);
          path_logical_types = (char **) XtRealloc((char *)path_logical_types,
@@ -1959,23 +2159,27 @@ UpdateAllProcess(
          The code below will handle it properly.
       */
 
+      if (tt_status != TT_OK || full_directory_name == NULL)
+      {
+         DirectoryFreeStrings(path_logical_types, path_count);
+         XtFree(full_directory_name);
+         (void)DirectoryWriteError(pipe_fd, -1, 0);
+         return 1;
+      }
+
       /* send the path_logical_types back through the pipe */
-      pipe_msg = PIPEMSG_PATH_LOGICAL_TYPES;
       DPRINTF(("ReadDirectoryProcess: sending %d path_logical_types\n",
             path_count));
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      write(pipe_fd, &path_count, sizeof(int));
-      for(i = 0; i < path_count; i++)
-      {
-        PipeWriteString(pipe_fd, path_logical_types[i]);
-        XtFree((char *) path_logical_types[i]);
-      }
-      XtFree((char *) path_logical_types);
-
-      /* send the tt_path */
       tt_path = GetTTPath(full_directory_name);
-      PipeWriteString(pipe_fd, tt_path);
+      rc = DirectoryWritePathInfo(pipe_fd, path_count, path_logical_types,
+                                  tt_path);
+      DirectoryFreeStrings(path_logical_types, path_count);
       XtFree(tt_path);
+      if (rc != 0)
+      {
+         XtFree(full_directory_name);
+         return 1;
+      }
    }
    else
    {
@@ -1986,15 +2190,13 @@ UpdateAllProcess(
                                                  &tt_status );
    }
 
-   if( TT_OK != tt_status )
+   if (tt_status != TT_OK || full_directory_name == NULL)
    {
-      pipe_msg = PIPEMSG_ERROR;
       rc = -1;
       modify_time = 0;
       DPRINTF(("UpdateAllProcess: sending errno %d (tooltalk failed)\n", rc));
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      write(pipe_fd, &rc, sizeof(int));
-      write(pipe_fd, &modify_time, sizeof(long));
+      (void)DirectoryWriteError(pipe_fd, rc, modify_time);
+      XtFree(full_directory_name);
       return 1;
    }
    (void) DtEliminateDots (full_directory_name);
@@ -2007,13 +2209,10 @@ UpdateAllProcess(
        stat(full_directory_name, &stat_buf) != 0)
    {
       /* send an error code back through the pipe */
-      pipe_msg = PIPEMSG_ERROR;
       rc = errno;
       modify_time = 0;
       DPRINTF(("UpdateAllProcess: sending errno %d (stat failed)\n", rc));
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      write(pipe_fd, &rc, sizeof(int));
-      write(pipe_fd, &modify_time, sizeof(long));
+      (void)DirectoryWriteError(pipe_fd, rc, modify_time);
       XtFree( full_directory_name );
       return 1;
    }
@@ -2033,12 +2232,9 @@ UpdateAllProcess(
    if (dirp == NULL)
    {
       /* send an error code back through the pipe */
-      pipe_msg = PIPEMSG_ERROR;
       rc = errno;
       DPRINTF(("UpdateAllProcess: sending errno %d (opendir failed)\n", rc));
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      write(pipe_fd, &rc, sizeof(int));
-      write(pipe_fd, &modify_time, sizeof(long));
+      (void)DirectoryWriteError(pipe_fd, rc, modify_time);
       XtFree( full_directory_name );
       return 1;
    }
@@ -2144,13 +2340,9 @@ UpdateAllProcess(
 
    /* send a 'done' msg through the pipe */
    DPRINTF(("UpdateAllProcess: sending DONE\n"));
-   pipe_msg = PIPEMSG_DONE;
-   write(pipe_fd, &pipe_msg, sizeof(short));
-   write(pipe_fd, &modify_time, sizeof(long));
-
    if (dirp)
        closedir(dirp);
-   return 0;
+   return DirectoryWriteDone(pipe_fd, modify_time) == 0 ? 0 : 1;
 }
 
 
@@ -2190,33 +2382,36 @@ UpdateSomeProcess(
                                                  NULL,
                                                  home_host_name,
                                                  &tt_status );
-     if( TT_OK != tt_status )
+     if (tt_status != TT_OK || full_directory_name == NULL)
      {
-       pipe_msg = PIPEMSG_ERROR;
        rc = -1;
        modify_time = 0;
        DPRINTF(("UpdateSomeProcess: sending errno %d (stat failed)\n", rc));
-       write(pipe_fd, &pipe_msg, sizeof(short));
-       write(pipe_fd, &rc, sizeof(int));
-       write(pipe_fd, &modify_time, sizeof(long));
+       (void)DirectoryWriteError(pipe_fd, rc, modify_time);
+       XtFree(full_directory_name);
        return 1;
      }
    }
    (void) DtEliminateDots (full_directory_name);
 
    /* stat the directory to get the timestamp */
-   if (stat(full_directory_name, &stat_buf) < 0 ||
-       ! (stat_buf.st_mode & S_IXUSR) )
+   if (stat(full_directory_name, &stat_buf) < 0)
    {
       /* send an error code back through the pipe */
-      pipe_msg = PIPEMSG_ERROR;
       rc = errno;
       modify_time = 0;
       DPRINTF(("UpdateSomeProcess: sending errno %d (stat failed)\n", rc));
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      write(pipe_fd, &rc, sizeof(int));
-      write(pipe_fd, &modify_time, sizeof(long));
+      (void)DirectoryWriteError(pipe_fd, rc, modify_time);
       XtFree( full_directory_name );
+      return 1;
+   }
+   if (! (stat_buf.st_mode & S_IXUSR))
+   {
+      rc = EACCES;
+      modify_time = 0;
+      DPRINTF(("UpdateSomeProcess: directory is not searchable\n"));
+      (void)DirectoryWriteError(pipe_fd, rc, modify_time);
+      XtFree(full_directory_name);
       return 1;
    }
    modify_time = stat_buf.st_mtime;
@@ -2252,10 +2447,7 @@ UpdateSomeProcess(
 
    /* send a 'done' msg through the pipe */
    DPRINTF(("UpdateSomeProcess: sending DONE\n"));
-   pipe_msg = PIPEMSG_DONE;
-   write(pipe_fd, &pipe_msg, sizeof(short));
-   write(pipe_fd, &modify_time, sizeof(long));
-   return 0;
+   return DirectoryWriteDone(pipe_fd, modify_time) == 0 ? 0 : 1;
 }
 
 
@@ -2316,29 +2508,23 @@ ReaddirPipeCallback(
    switch (msg)
    {
       case PIPEMSG_PATH_LOGICAL_TYPES:
-         /* get the number of path components */
-         PipeRead(*fd, &n, sizeof(int));
+      {
+         int new_count;
+         char **new_types;
+         char *new_tt_path;
+
+         if (DirectoryReadPathInfo(*fd, &new_count, &new_types,
+                                   &new_tt_path) != 0)
+            goto malformed_response;
 
          /* free logical types */
          for (i = 0; i < directory->path_count; i++)
            XtFree(directory->path_logical_types[i]);
-
-         /* allocate array of the right size */
-         if (directory->path_count != n)
-         {
-            directory->path_count = n;
-            directory->path_logical_types = (char **)
-              XtRealloc((char *)directory->path_logical_types,
-                        n*sizeof(char *));
-         }
-
-         /* get new logical types */
-         for (i = 0; i < directory->path_count; i++)
-           directory->path_logical_types[i] = PipeReadString(*fd);
-
-         /* get the tt_path */
+         XtFree((char *)directory->path_logical_types);
          XtFree(directory->tt_path_name);
-         directory->tt_path_name = PipeReadString(*fd);
+         directory->path_count = new_count;
+         directory->path_logical_types = new_types;
+         directory->tt_path_name = new_tt_path;
 
          /* update all views */
          for (i = 0; i < directory->numOfViews; i++)
@@ -2350,6 +2536,7 @@ ReaddirPipeCallback(
          }
          XSync(XtDisplay(toplevel), False);
          break;
+      }
 
           case PIPEMSG_FILEDATA:
           case PIPEMSG_FILEDATA2:
@@ -2464,34 +2651,33 @@ ReaddirPipeCallback(
          break;
 
       case PIPEMSG_POSITION_INFO:
+      {
+         int new_count;
+         PositionInfo *new_positions;
+
+         if (DirectoryReadPositionInfo(*fd, &new_count, &new_positions) != 0)
+            goto malformed_response;
          /* free old position info names */
          for (i = 0; i < directory->position_count; i++)
             XtFree(directory->position_info[i].name);
-
-         /* get number of positions and realloc array, if necessary */
-         PipeRead(*fd, &n, sizeof(int));
-         if (directory->position_count != n)
-         {
-            directory->position_count = n;
-            directory->position_info = (PositionInfo *) XtRealloc(
-                     (char *)directory->position_info, n*sizeof(PositionInfo));
-         }
-
-         /* read new position info */
-         for (i = 0; i < n; i++)
-            PipeReadPositionInfo(*fd, &directory->position_info[i]);
+         XtFree((char *)directory->position_info);
+         directory->position_count = new_count;
+         directory->position_info = new_positions;
          break;
+      }
 
       case PIPEMSG_DONE:
-         PipeRead(*fd, &modify_time, sizeof(long));
+         if (PipeReadExact(*fd, &modify_time, sizeof(modify_time)) != 0)
+            goto malformed_response;
          directory->errnum = 0;
          directory->errmsg_needed = False;
          done = True;
          break;
 
       case PIPEMSG_ERROR:
-         PipeRead(*fd, &rc, sizeof(int));
-         PipeRead(*fd, &modify_time, sizeof(long));
+         if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0 ||
+             PipeReadExact(*fd, &modify_time, sizeof(modify_time)) != 0)
+            goto malformed_response;
          if (rc != directory->errnum)
          {
             directory->errnum = rc;
@@ -2508,9 +2694,7 @@ ReaddirPipeCallback(
 	       "ReaddirPipeCallback: badmsg=%d, ppid=%d pid=%d fd=%d activ'y=%d\n",
 	       msg, getppid(), getpid(), *fd, activity);
 	 }
-         directory->errnum = -1;
-         directory->errmsg_needed = False;
-         done = True;
+         goto malformed_response;
    }
 
    goto decoded;

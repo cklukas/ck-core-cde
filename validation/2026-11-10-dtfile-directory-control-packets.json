@@ -1,0 +1,91 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile directory-worker control packets and saved positions",
+  "source_base": "6892f7a9dafad47f82bc5222751cfc922d8d59fb",
+  "motif_revision": "02826ca77744e54e6d96c114ff11814202ef23b7",
+  "motif_prefix": "/home/klukas/tmp/motif-abi9-02826ca77-20261110/prefix",
+  "motif_libXm_sha256": "9f0c452758ee7fd723a0267bc402b9d09f9d1d15519bc9a65048635496cc235f",
+  "motif_Xm_h_sha256": "26e5d9afeb7cdec2cb73904bfca8bc00e964d87d130c7eeb200f3b25c88d57dc",
+  "motif_transfer_receipt": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-motif02826-transfer-20261110/",
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round6-20261110/",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    ".ckgit/ci.yml": "abf1a51202aca1a721b05eff0c543596d6aac628cc8e860d90e2abec06af7539",
+    ".ckgit/motif-revision": "7c6b22f4af541ba7883cdd0bcd6ae8f937ad064fa3f21a910dd8b155a3094541",
+    "cde/CHANGES": "44e195b7a6d0a293817d43754dba29ff187fba03a056e02a4abec747e5f6613e",
+    "cde/programs/dtfile/Directory.c": "aa9bf2eab90918457b7b2826bbf0666b11b43abac3fe4cd3f0a05c5ff6a35823",
+    "cde/programs/dtfile/Makefile.am": "ac2bbbcdd1530176942bbc54a64292cda1a69e36c4e9ede5d2d5711cad4392be",
+    "cde/programs/dtfile/tests/check-directory-control-packets.py": "cf5ea3ecbb083d3b19d79e38a410cd50187d52192a0642012dfbfd885b51ad38",
+    "cde/programs/dtfile/tests/directory-control-packets.c": "29dc0b17610c53dd0a37f8517427b076e4a5cc773af27d172d367b0f1c0fc9d6"
+  },
+  "focused_regressions": {
+    "cases": 25,
+    "sanitizers": "address,undefined",
+    "remote_seconds": 0.955874839,
+    "local_seconds": 0.550047833006829,
+    "remote_log_sha256": "257f3f43fb33484653793b12707f55d463cfd4654093860b2d53dee5ae7c4d04",
+    "remote_result_sha256": "e7f83e70971af666537783824efca040350e390188931704a73fe1f39347b126",
+    "coverage": [
+      "negative and excessive array, path-type and position counts",
+      "mandatory, null and truncated path strings plus truncated position records",
+      "transactional saved-position parsing for negative and excessive counts, long names, narrow-width coordinate overflow and partial files",
+      "bounded root and non-root saved-position path construction",
+      "exact path, position, DONE and ERROR producer records",
+      "source contracts for transactional callback replacement, malformed-tag shutdown, ToolTalk resolution checks and deterministic permission errors"
+    ]
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "full_rebuild": false,
+    "closure": [
+      "dtfile-Directory.o",
+      "dtfile relink"
+    ],
+    "start": "2026-11-10T02:02:21.378948+00:00",
+    "end": "2026-11-10T02:02:22.750406+00:00",
+    "seconds": 1.371457335,
+    "object_sha256": "e0b687e512d1a87de3eb9f29783fd9615df255031c2ed6ce7e845a43566cfa1b",
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile",
+    "output_sha256": "a2370f113ab480939184c1520fcdf9b423d0eeaba50463c3b3f7c036d036cbb0",
+    "build_log_sha256": "dfedac25f35ce4a49eb1c4410cb3c043267b82feabb5ba5aa228da4b74b78e8f",
+    "warnings": "Only the pre-existing assignment-condition warning in UpdateAllProcess."
+  },
+  "motif_boundary": {
+    "dependency_files": 46,
+    "unique_consumed_headers": 76,
+    "prefix_headers_compared": 71,
+    "changed_or_missing_effective_headers_between_5e49_and_02826": 0,
+    "identical_system_X11_bitmap_fallbacks": 5,
+    "comparison_receipt_sha256": "089d9ccd82fb1d025ac97e22ee7b337a5595914d97451321fa025d35accaca10",
+    "needed": "libXm.so.9",
+    "ldd_resolves_exact_prefix": true,
+    "ldd_mapping_sha256": "3a25c0a532734c80892a24f877a16cd9a618d80ebec851c8a2281bd839a0e6c2"
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "runs": 1,
+    "start": "2026-11-10T02:02:51.570611+00:00",
+    "end": "2026-11-10T02:03:08.431551+00:00",
+    "seconds": 16.860938988,
+    "passed_case_lines": 286,
+    "failure_markers": 0,
+    "log_sha256": "0571fa8de46896b16507088facea7d786385fdff91af7091b9dd64cfcc5d299f"
+  },
+  "postconditions": [
+    "make -n reports dtfile is up to date",
+    "no owned compiler, make or test process remained before returning CPU2",
+    "the prior path, position and directory-entry state is retained when a replacement control packet is malformed",
+    "malformed saved-position files do not emit an empty replacement packet"
+  ],
+  "rejected_or_corrected_attempts": [
+    "The first focused relink regenerated a stale helper-object list from config.status's historical source path. It was rejected; Makefile was regenerated explicitly from the staged Makefile.in before the passing relink.",
+    "The first consumed-header audit retained make dependency target colons as filename characters. The corrected audit normalized dependency tokens and then covered every effective consumed Motif or fallback header."
+  ],
+  "limitations": [
+    "This non-visual worker-protocol bundle did not launch or inspect a CDE window.",
+    "The standalone ldd invocation lacks build-tree paths for uninstalled CDE DSOs; only the verified Motif resolution is claimed."
+  ]
+}

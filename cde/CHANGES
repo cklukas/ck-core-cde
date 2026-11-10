@@ -1,4 +1,20 @@
 2026-11-10
+- dtfile: complete the directory worker control-channel validation. Path-type
+  and position-info arrays are now decoded into bounded temporary storage and
+  replace cached state only after every count, string, coordinate, and control
+  field is complete. Negative or excessive counts, missing mandatory strings,
+  truncated records, unknown tags, and short DONE/ERROR payloads terminate the
+  worker safely while preserving the prior directory state. Producers now use
+  exact writes for path, position, DONE, and ERROR packets and stop on failure.
+  Position files no longer allocate directly from an unchecked declared count,
+  strip the last byte from an unterminated name, narrow out-of-range X11
+  coordinates, or turn malformed records into an empty update that discards
+  cached positions. Their path construction is now bounded as well. A failed
+  ToolTalk path or path-component resolution is rejected and released before
+  dereference, and a non-searchable update directory reports `EACCES` instead
+  of stale `errno` state.
+  Covered by the production helper cases in
+  `programs/dtfile/tests/check-directory-control-packets.py`.
 - dtfile: validate batched directory-entry packets before they reach cached
   directory state. The worker now reserves its packet header, aligns record
   storage, bounds aggregate text before copying, encodes update flags without
