@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 typedef int Boolean;
@@ -152,6 +153,13 @@ static void writer_case(const char *name)
     close(p[0]);
 }
 
+static void time_case(void)
+{
+    char value[100];time_t stamp=0;
+    DirectoryFormatFileTime(stamp,value,sizeof(value));
+    CHECK(value[0]!='\0'&&value[0]!='?'&&strchr(value,'\n')==NULL);
+}
+
 static void timer_case(const char *name)
 {
     int p[2],status=99,decoded_status=99;long stamp=17,decoded_stamp=99;Boolean changed=True,decoded_changed=True;
@@ -175,6 +183,7 @@ int main(int argc,char **argv)
     else if(!strncmp(name,"position-file-",14))position_file_case(name);
     else if(!strncmp(name,"position-",9))position_case(name);
     else if(!strncmp(name,"file-path-",10))position_path_case(name);
+    else if(!strcmp(name,"time-format-valid"))time_case();
     else if(!strncmp(name,"write-",6))writer_case(name);
     else if(!strncmp(name,"timer-",6)||!strcmp(name,"status-write"))timer_case(name);
     else return 2;

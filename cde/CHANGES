@@ -1,4 +1,11 @@
 2026-11-10
+- dtfile: bound the remaining directory refresh and attribute-display paths.
+  Refresh checks and cached modified-subdirectory checks now reject child paths
+  that do not fit instead of concatenating into fixed buffers or indexing before
+  an empty directory name. Attribute rows bound account-service user and group
+  names, link targets and every formatted output, and use a stable placeholder
+  when local time conversion fails. Covered by focused directory path, time and
+  source-contract cases.
 - dtfile: bound the directory worker's file, symbolic-link and metadata text
   paths before copying them into fixed records. Oversized names, relative-link
   expansion, data types and action labels now fail without publishing a partial

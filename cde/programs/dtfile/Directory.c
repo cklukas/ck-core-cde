@@ -2481,15 +2481,16 @@ UpdateAllProcess(
       {
          if (strcmp(dp->d_name, old_data->file_name) == 0)
          {
-             char *tname;
+             char tname[MAX_PATH];
              struct stat sbuf;
  
              /* check modified times */
-             tname = XtMalloc(strlen(full_directory_name)+strlen(dp->d_name)+2);
-             sprintf(tname,"%s/%s",full_directory_name,dp->d_name);
-             if((lstat(tname,&sbuf)>=0)&&sbuf.st_mtime!=old_data->stat.st_mtime)
+             if (DirectoryBuildChildPath(tname, sizeof(tname),
+                                         full_directory_name,
+                                         dp->d_name) != 0 ||
+                 ((lstat(tname, &sbuf) >= 0) &&
+                  sbuf.st_mtime != old_data->stat.st_mtime))
                  old_data = NULL;
-             XtFree(tname);
              if(old_data == NULL)
                  break;
 
@@ -3836,7 +3837,6 @@ DirectoryEndModify(
       {
          Directory *subdir;
          char subdir_name[MAX_PATH + 1];
-         char *p;
          int i;
 
          /*
@@ -3844,15 +3844,14 @@ DirectoryEndModify(
           * cached, schedule an activity_checking_dir to make sure that
           * the subdirectory is still readable.
           */
-         strcpy(subdir_name, directory_name);
-         p = subdir_name + strlen(subdir_name);
-         if (p[-1] != '/')
-           *p++ = '/';
-
          for (i = 0; i < directory->modified_count; i++)
          {
-            strcpy(p, directory->modified_list[i]);
-            subdir = FindDirectory(host_name, subdir_name);
+            if (DirectoryBuildChildPath(subdir_name, sizeof(subdir_name),
+                                        directory_name,
+                                        directory->modified_list[i]) != 0)
+               subdir = NULL;
+            else
+               subdir = FindDirectory(host_name, subdir_name);
             if (subdir)
             {
                DPRINTF(("   schedule check for subdir \"%s\"\n",
@@ -4025,16 +4024,37 @@ UpdateCachedDirectories(
  *
  *------------------------------------------------------------------*/
 
+static void
+DirectoryFormatFileTime(time_t value, char *buffer, size_t buffer_size)
+{
+#ifdef NLS16
+   struct tm *tms = localtime(&value);
+
+   if (tms == NULL ||
+       strftime(buffer, buffer_size,
+                GetSharedMessage(DIRECTORY_DATE_FORMAT), tms) == 0)
+      snprintf(buffer, buffer_size, "%s", "?");
+#else
+   char *text = ctime(&value);
+   size_t length;
+
+   if (text == NULL)
+   {
+      snprintf(buffer, buffer_size, "%s", "?");
+      return;
+   }
+   snprintf(buffer, buffer_size, "%s", text);
+   length = strlen(buffer);
+   if (length != 0 && buffer[length - 1] == '\n') buffer[--length] = NILL;
+   if (length > 4) memmove(buffer, buffer + 4, length - 3);
+#endif
+}
+
 char *
 GetLongName(
         FileData *file_data )
 {
-#ifdef NLS16
-   struct tm * tms;
    char time_string[100];
-#else
-   char * time_string;
-#endif /* NLS16 */
    char link_path[MAX_PATH + 5];
    static gid_t group_id = (gid_t)-1;
    static uid_t user_id = (uid_t)-1;
@@ -4043,6 +4063,7 @@ GetLongName(
    static char group_name[20];
    static char user_name[20];
    char * long_name;
+   const size_t long_name_size = MAX_PATH * 3;
    time_t long_modify_time;
    char permission;
    char usr_read_priv, usr_write_priv, usr_exec_priv;
@@ -4050,7 +4071,7 @@ GetLongName(
    char oth_read_priv, oth_write_priv, oth_exec_priv;
 
    /*  Generate the long list name.  */
-   long_name = (char *) XtMalloc(sizeof(char) * (MAX_PATH * 3));
+   long_name = (char *) XtMalloc(long_name_size);
    long_name[0]='\0';
 
    /* Initially, assume their is not a soft link */
@@ -4064,12 +4085,12 @@ GetLongName(
        group_data = getgrgid (file_data->stat.st_gid);
        if (group_data)
        {
-         strcpy (group_name, group_data->gr_name);
-         if (strlen (group_name) == 0)
-            strcpy (group_name, "root");
+         snprintf(group_name, sizeof(group_name), "%s", group_data->gr_name);
+         if (group_name[0] == NILL)
+            snprintf(group_name, sizeof(group_name), "%s", "root");
        }
        else
-         strcpy (group_name, "root");
+         snprintf(group_name, sizeof(group_name), "%s", "root");
      }
 
      if (file_data->stat.st_uid != user_id)
@@ -4079,9 +4100,10 @@ GetLongName(
        /* Initially, assume their is not a user name */
        user_name[0] = '\0';
        if (user_data)
-         strcpy (user_name, user_data->pw_name);
+         snprintf(user_name, sizeof(user_name), "%s", user_data->pw_name);
        else
-         sprintf(user_name,"%ld",(long)user_id);
+         snprintf(user_name, sizeof(user_name), "%lu",
+                  (unsigned long)user_id);
      }
    }
    else
@@ -4092,16 +4114,8 @@ GetLongName(
       /* determine how much space we have for an error message */
       long_modify_time = 747616435;
                          /* just needed to determine the length of a date */
-#ifdef NLS16
-      tms = localtime(&long_modify_time);
-      strftime( time_string, 100,
-                GetSharedMessage(DIRECTORY_DATE_FORMAT),
-                tms);
-#else
-      time_string = ctime ((time_t *)&long_modify_time);
-      time_string[strlen(time_string)-1] = 0x0;
-      time_string += 4;
-#endif
+      DirectoryFormatFileTime(long_modify_time, time_string,
+                              sizeof(time_string));
       msg_len = 10 + 3 + 9 + 1 + 9 + 1 + 9 + 1 + strlen(time_string);
 
       /* generate the error message */
@@ -4110,10 +4124,8 @@ GetLongName(
       error_msg[msg_len - 1] = '\0';
       strcat(error_msg, ")");
 
-      sprintf( long_name, "%-28.28s  %s  %9d %s",
-                            file_data->file_name,
-                            time_string,
-                            0, error_msg );
+      snprintf(long_name, long_name_size, "%-28.28s  %s  %9d %s",
+               file_data->file_name, time_string, 0, error_msg);
 
       return (long_name);
    }
@@ -4170,22 +4182,13 @@ GetLongName(
 
 
    long_modify_time = file_data->stat.st_mtime;
-#ifdef NLS16
-   tms = localtime(&long_modify_time);
-   strftime( time_string, 100,
-             GetSharedMessage(DIRECTORY_DATE_FORMAT),
-             tms);
-#else
-   time_string = ctime ((time_t *)&long_modify_time);
-   time_string[strlen(time_string)-1] = 0x0;
-   time_string += 4;
-#endif
+   DirectoryFormatFileTime(long_modify_time, time_string,
+                           sizeof(time_string));
 
    /* Fill in the name of where the link goes */
    if (file_data->link)
    {
-     strcpy( link_path, " -> " );
-     strcpy( link_path + 4, file_data->link );
+     snprintf(link_path, sizeof(link_path), " -> %s", file_data->link);
    }
 
    {
@@ -4196,11 +4199,11 @@ GetLongName(
        int len = strlen( file_data->file_name );
        if( len > NAME_PRECISION )
        {
-	 int i;
 	 char name[NAME_PRECISION];
-	 sprintf( name, "%-20.20s%s", file_data->file_name, ELLIPSIS);
+	 snprintf(name, sizeof(name), "%-20.20s%s",
+	          file_data->file_name, ELLIPSIS);
 
-	 sprintf( long_name, "%-28.28s  %s  %9ld  %c%c%c%c%c%c%c%c%c%c  %-9s  %-9s  %s",
+	 snprintf( long_name, long_name_size, "%-28.28s  %s  %9ld  %c%c%c%c%c%c%c%c%c%c  %-9s  %-9s  %s",
 		  name,
 		  time_string,
 		  (long)file_data->stat.st_size,
@@ -4213,7 +4216,7 @@ GetLongName(
        }
        else
        {
-	 sprintf( long_name, "%-28.28s  %s  %9ld  %c%c%c%c%c%c%c%c%c%c  %-9s  %-9s  %s",
+	 snprintf( long_name, long_name_size, "%-28.28s  %s  %9ld  %c%c%c%c%c%c%c%c%c%c  %-9s  %-9s  %s",
 		  file_data->file_name,
 		  time_string,
 		  (long)file_data->stat.st_size,
@@ -4248,6 +4251,7 @@ GetLongName(
 	 int chr_bytes = mblen(file_data->file_name + byte_len, MB_CUR_MAX);
 	 if (chr_bytes > 0)
 	 {
+	   if ((size_t)byte_len + (size_t)chr_bytes >= long_name_size) break;
 	   strncpy(long_name + byte_len, file_data->file_name + byte_len, chr_bytes);
 	 }
 	 else if (chr_bytes < 0)
@@ -4265,18 +4269,23 @@ GetLongName(
        if (copy_len < len)
        {
 	 /* truncated name, add ellipsis */
-	 strncpy(long_name + byte_len, ELLIPSIS, sizeof(ELLIPSIS) - 1);
-	 byte_len+= sizeof(ELLIPSIS) - 1;
+	 if ((size_t)byte_len + sizeof(ELLIPSIS) - 1 < long_name_size)
+	 {
+	   strncpy(long_name + byte_len, ELLIPSIS, sizeof(ELLIPSIS) - 1);
+	   byte_len+= sizeof(ELLIPSIS) - 1;
+	 }
        }
        else
        {
 	 /* full name, pad it with spaces up to the proper length */
-	 for (; count <  NAME_PRECISION ; count++)
+	 for (; count < NAME_PRECISION &&
+	        (size_t)byte_len + 1 < long_name_size; count++)
 	 {
 	   long_name[byte_len++]=' ';
 	 }
        }
-       sprintf( long_name + byte_len, "  %s  %9ld  %c%c%c%c%c%c%c%c%c%c  %-9s  %-9s  %s",
+       snprintf( long_name + byte_len, long_name_size - (size_t)byte_len,
+	        "  %s  %9ld  %c%c%c%c%c%c%c%c%c%c  %-9s  %-9s  %s",
 		time_string,
 		(long)file_data->stat.st_size,
 		permission,

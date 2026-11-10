@@ -12,7 +12,7 @@ CASES=("array-valid","array-negative","array-over-limit","path-valid",
        "file-path-valid","file-path-root",
        "file-path-long","file-path-copy","file-path-copy-long",
        "file-path-link-relative","file-path-link-no-parent",
-       "file-path-link-absolute","file-path-link-long","write-done",
+       "file-path-link-absolute","file-path-link-long","time-format-valid","write-done",
        "write-error","write-path","write-position","status-write",
        "timer-valid","timer-truncated-time","timer-truncated-boolean",
        "timer-invalid-boolean","timer-write")
@@ -62,6 +62,7 @@ def main():
     read_process=extract(texts["Directory.c"],"ReadDirectoryProcess")
     update_all=extract(texts["Directory.c"],"UpdateAllProcess")
     update_some=extract(texts["Directory.c"],"UpdateSomeProcess")
+    end_modify=extract(texts["Directory.c"],"DirectoryEndModify")
     write_position=extract(texts["Directory.c"],"WritePosInfoProcess")
     write_position_callback=extract(texts["Directory.c"],"WritePosInfoPipeCallback")
     timer_process=extract(texts["Directory.c"],"TimerEventProcess")
@@ -90,6 +91,17 @@ def main():
                                   update_all.count("component_status != TT_OK || full_directory_name == NULL") == 1,
         "update_paths_checked":update_all.count("tt_status != TT_OK || full_directory_name == NULL") == 2 and
                                "tt_status != TT_OK || full_directory_name == NULL" in update_some,
+        "update_entry_path_bounded":"DirectoryBuildChildPath(tname, sizeof(tname)" in update_all and
+                                    "sprintf(tname" not in update_all,
+        "modified_subdir_path_bounded":"DirectoryBuildChildPath(subdir_name, sizeof(subdir_name)" in end_modify and
+                                      "strcpy(subdir_name" not in end_modify and
+                                      "p[-1]" not in end_modify,
+        "attribute_display_bounded":"snprintf(group_name, sizeof(group_name)" in texts["Directory.c"] and
+                                    "snprintf(user_name, sizeof(user_name)" in texts["Directory.c"] and
+                                    "snprintf(link_path, sizeof(link_path)" in texts["Directory.c"] and
+                                    texts["Directory.c"].count("DirectoryFormatFileTime(long_modify_time") == 2 and
+                                    "tms == NULL" in texts["Directory.c"] and
+                                    "text == NULL" in texts["Directory.c"],
         "permission_error_stable":"rc = EACCES;" in update_some and
                                   "stat(full_directory_name, &stat_buf) < 0" in update_some,
         "position_status_exact":"DirectoryWriteStatus(pipe_fd" in write_position and
@@ -119,6 +131,7 @@ def main():
            ("Directory.c","DirectoryReadPositionInfo"),("Directory.c","DirectoryBuildChildPath"),
            ("Directory.c","DirectoryCopyText"),("Directory.c","DirectoryBuildFilePath"),
            ("Directory.c","DirectoryResolveLinkPath"),
+           ("Directory.c","DirectoryFormatFileTime"),
            ("Directory.c","DirectoryWriteStatus"),("Directory.c","DirectoryWriteTimerResult"),
            ("Directory.c","DirectoryReadTimerResult"),("Directory.c","DirectoryLoadPositionInfo"))
     functions="\n\n".join(extract(texts[file],name) for file,name in names)

@@ -1,0 +1,95 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile bounded directory refresh and attribute display",
+  "source_base": "3a2403c3c",
+  "motif_revision": "90d98fb7395306ab1f54df3e0d8d247893799a49",
+  "motif_prefix": "/home/klukas/tmp/motif-cde-90d98fb-20261110/prefix",
+  "motif_libXm_sha256": "e049702713e63eb5fbd7759f230e2afb5cb965794d9f901d3fb05734d0f24df3",
+  "motif_Xm_h_sha256": "26e5d9afeb7cdec2cb73904bfca8bc00e964d87d130c7eeb200f3b25c88d57dc",
+  "motif_XmStrDefs_h_sha256": "826fc4257893afa62795c9a1e9190244ae626234111ccacf054c5b62c47858ae",
+  "motif_XmP_h_sha256": "46081aafb16d7146e30b823940ac9fddee543d65d7864d0020fed71317061277",
+  "motif_incremental_build": {
+    "jobs": 1,
+    "cpu": 2,
+    "full_rebuild": false,
+    "changed_sources": 21,
+    "initial_stale_objects": 20,
+    "initial_seconds": 279.189935104,
+    "freshness_correction": "Disclosure.c had changed but retained an archive timestamp older than its existing object. A freshness audit forced only Disclosure.lo and the libXm relink before final installation.",
+    "freshness_seconds": 26.185877504,
+    "install_seconds": 5.200610048,
+    "public_headers_identical_to_previous_prefix": true
+  },
+  "motif_transfer": {
+    "source_host": "rpi4",
+    "target_host": "uconsole",
+    "regular_files": 305,
+    "symlinks": 2,
+    "regular_file_manifest_sha256": "0bf596aa5c58c52d61312f45682fc3973cdfde97b65690cb0632f19b6f63df7e",
+    "symlink_manifest_sha256": "6f5f781a49e94c62b9c7515a5dae907fb9dde58c769acf70d6a8d10eb616eb63",
+    "manifests_identical": true
+  },
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    ".ckgit/ci.yml": "337e293772cd1a02a2942308472c4914f93ef4b88e7f3a3bf71780111869ad95",
+    ".ckgit/motif-revision": "518f0bd8189583d4fe472644b35a63dd0082110c17bea1e455673f61384b84b5",
+    "cde/CHANGES": "03f4be90a06a1ea189d97bda799bc177015d703d6b4ad7cdd08758c59242c523",
+    "docs/improvements/file-manager.md": "9fb4d3bab7d43f5986ec8c0a7c2fa9aeb128ce3dddc7f8ea318f05bae2cf0721",
+    "cde/programs/dtfile/Directory.c": "66d7e9df22474fbc41c5c3cbe5dd78660ee7314f79ca67cd4fa8d2a6c72ba705",
+    "cde/programs/dtfile/tests/check-directory-control-packets.py": "c9f6f6694bd703a9f2045d046ba8a38cd9498cdd1181997ab2c1bd7d7d251c54",
+    "cde/programs/dtfile/tests/directory-control-packets.c": "be3056a44602893a5065605428460d99e028bd9430ff870de1dee958d901a7f8"
+  },
+  "focused_regressions": {
+    "cases": 38,
+    "seconds": 1.028675541980192,
+    "sanitizers": "address,undefined",
+    "receipt_sha256": "5b4d60f2210eee886fc0493527a8401bfe51d9f179123b04d286e9c0be141f",
+    "coverage": [
+      "bounded refresh-time child paths",
+      "bounded cached modified-subdirectory paths",
+      "empty directory names without indexing before the buffer",
+      "bounded owner, group and symbolic-link display text",
+      "failed local time conversion",
+      "bounded multibyte name truncation and padding",
+      "unchanged valid timestamp display"
+    ]
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "cpu": 2,
+    "full_rebuild": false,
+    "closure": ["dtfile-Directory.o", "dtfile relink"],
+    "seconds": 1.360343040,
+    "object_sha256": "06f9a497f0cc0cbba7f06bf05c028d424f427b33979c1ff2599b5d146f71dbcb",
+    "output_sha256": "f7b13a728728ff9a6cfe71310fbe335b173f0627fa940efa85fd5118ad26530a",
+    "runtime_libXm_exact_prefix": true,
+    "warnings": "Only the pre-existing assignment-condition warning in ReadDirectoryProcess."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "runs": 1,
+    "seconds": 15.933618176,
+    "passed_case_lines": 311,
+    "failed_case_lines": 0,
+    "hard_failure_markers": 0,
+    "log_sha256": "1e40e3b97c7e7edc57dcc69298151fdb3eecc3e3ded220121e57661c43b10a0e",
+    "motif_note": "The checkpoint's source harnesses do not load libXm. The final Disclosure.lo freshness correction changed only the dynamically loaded library; the executable's NEEDED entry, runpath and exact final libXm mapping were reverified afterward without a second checkpoint run."
+  },
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round11-20261110/",
+  "evidence_manifest_sha256": "5364c0bbc70bfb64118058d472642b5e20c2844a7d47d2134f5c9c8dd87ad297",
+  "postconditions": [
+    "the exact Motif revision's 21 changed libXm sources are represented by rebuilt objects",
+    "the final Motif prefix has identical regular-file and symlink manifests on rpi4 and uconsole",
+    "dtfile resolves libXm.so.9 from the exact final prefix",
+    "the changed CDE source and test bytes match the focused and native validation receipts",
+    "no clean or full Motif or CDE rebuild was performed",
+    "valid existing directory refresh and attribute-display behavior remains unchanged"
+  ],
+  "limitations": [
+    "This directory refresh/display bundle did not launch or inspect a CDE window.",
+    "The qualified ck-core-fs-lib revision was not changed."
+  ]
+}

@@ -63,6 +63,10 @@ encoding them for the browser. An oversized or incomplete entry is rejected as
 one failed refresh response, so it cannot install partial metadata or overwrite
 a fixed buffer. If account lookup is temporarily unavailable, icon-position
 storage uses the numeric user ID instead of dereferencing a missing account.
+Refresh-time child paths and cached modified-subdirectory paths use the same
+bounded join. Attribute view also bounds owner, group and symbolic-link display
+text and shows a placeholder if an unusual timestamp cannot be converted,
+rather than allowing account data or formatting failures to corrupt the row.
 
 CK Core CDE develops File Manager as a visual workspace rather than only a
 directory browser.
