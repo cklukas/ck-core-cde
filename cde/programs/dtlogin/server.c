@@ -55,7 +55,8 @@
 # include	"dm.h"
 # include	"vgmsg.h"
 
-static int receivedUsr1;
+static volatile sig_atomic_t receivedUsr1;	/* SIGUSR1: the server is ready */
+static volatile sig_atomic_t pauseTimedOut;	/* SIGALRM: the pause is over */
 
 
 
@@ -72,8 +73,6 @@ static SIGVAL PingBlocked( int arg ) ;
 static int    PingLost( Display *display ) ;
 static SIGVAL abortOpen( int arg ) ;
 static int    serverPause( unsigned t, int serverPid) ;
-static SIGVAL serverPauseAbort( int arg ) ;
-static SIGVAL serverPauseUsr1( int arg ) ;
 
 
 
@@ -89,14 +88,40 @@ static Display	*dpy;
 
 
 
+/*
+ * The handlers leave a note; serverPause looks at the notes.
+ */
 static SIGVAL
 CatchUsr1( int arg )
 {
-#if defined(SYSV) || defined(SVR4)
-    (void) signal (SIGUSR1, CatchUsr1);
-#endif
-    Debug ("Display Manager caught SIGUSR1\n");
-    ++receivedUsr1;
+    (void) arg;
+    receivedUsr1 = 1;
+}
+
+static SIGVAL
+PauseAlarm( int arg )
+{
+    (void) arg;
+    pauseTimedOut = 1;
+}
+
+/* SIGCHLD only has to end the sleep of the pause */
+static SIGVAL
+PauseChild( int arg )
+{
+    (void) arg;
+}
+
+/* a handler that does not restart the system calls it interrupts */
+static void
+CatchSignal( int sig, void (*handler)(int), struct sigaction *previous )
+{
+    struct sigaction action;
+
+    memset (&action, 0, sizeof (action));
+    action.sa_handler = handler;
+    sigemptyset (&action.sa_mask);
+    sigaction (sig, &action, previous);
 }
 
 static const char * 
@@ -120,7 +145,7 @@ StartServerOnce( struct display *d )
 
     Debug ("Starting server for %s\n", d->name);
     receivedUsr1 = 0;
-    signal (SIGUSR1, CatchUsr1);
+    CatchSignal (SIGUSR1, CatchUsr1, NULL);
     argv = d->argv;
     switch (pid = fork ()) {
     case 0:
@@ -226,88 +251,59 @@ StartServer( struct display *d )
 
 /*
  * sleep for t seconds, return 1 if the server is dead when
- * the sleep finishes, 0 else
+ * the sleep finishes, 0 else.  The sleep ends early when the server says
+ * it is ready (SIGUSR1) or ends (SIGCHLD).
  */
-
-static sigjmp_buf	pauseAbort;
-static int	serverPauseRet;
-
-static SIGVAL
-serverPauseAbort( int arg )
-{
-    Debug ("Display Manager pause timed out\n");
-    siglongjmp (pauseAbort, 1);
-}
-
-static SIGVAL
-serverPauseUsr1( int arg )
-{
-    Debug ("Display Manager pause received SIGUSR1\n");
-    ++receivedUsr1;
-    siglongjmp (pauseAbort, 1);
-}
 
 static int 
 serverPause( unsigned t, int serverPid )
 {
-    int		pid;
+    sigset_t		block, previous;
+    struct sigaction	oldAlarm, oldChild;
+    int			pid;
+    int			dead = 0;
 
-    serverPauseRet = 0;
     Debug ("Display Manager pausing until SIGUSR1 from server or timeout\n");
-    if (!sigsetjmp (pauseAbort, 1)) {
-	signal (SIGALRM, serverPauseAbort);
-	signal (SIGUSR1, serverPauseUsr1);
-#ifdef SYSV
-	if (receivedUsr1)
-	    alarm ((unsigned) 1);
-	else
-	    alarm (t);
-#else
-	if (!receivedUsr1)
-	    alarm (t);
-	else
-	    Debug ("ServerPause(): already received USR1\n");
-#endif
-	for (;;) {
-#ifdef SYSV
-	    pid = wait ((waitType *) 0);
-#else
-	    if (!receivedUsr1)
-		pid = wait ((waitType *) 0);
-	    else
-#  ifdef	SVR4
-                {
-		    int dummy;
-		pid = waitpid ((pid_t) 0,&dummy,WNOHANG);
-                }
-#  else
-		pid = wait3 ((waitType *) 0, WNOHANG,
-			     (struct rusage *) 0);
-#  endif
-#endif
-	    if (pid == serverPid ||
-		pid == -1 && errno == ECHILD)
-	    {
-		Debug ("Server dead\n");
-		serverPauseRet = 1;
-		break;
-	    }
-#ifndef SYSV
-	    if (pid == 0) {
-		Debug ("Server alive and kicking\n");
-		break;
-	    }
-#endif
+
+    /* the notes are looked at, and the sleep entered, with the signals blocked */
+    sigemptyset (&block);
+    sigaddset (&block, SIGUSR1);
+    sigaddset (&block, SIGALRM);
+    sigaddset (&block, SIGCHLD);
+    sigprocmask (SIG_BLOCK, &block, &previous);
+    CatchSignal (SIGALRM, PauseAlarm, &oldAlarm);
+    CatchSignal (SIGCHLD, PauseChild, &oldChild);
+    pauseTimedOut = 0;
+    if (!receivedUsr1)
+	alarm (t);
+    else
+	Debug ("ServerPause(): already received USR1\n");
+
+    for (;;) {
+	pid = waitpid ((pid_t) -1, NULL, WNOHANG);
+	if (pid == serverPid || (pid == -1 && errno == ECHILD)) {
+	    dead = 1;
+	    break;
 	}
+	if (pid > 0)
+	    continue;
+	if (receivedUsr1 || pauseTimedOut) {
+	    Debug ("Server alive and kicking\n");
+	    break;
+	}
+	sigsuspend (&previous);
     }
+
     alarm ((unsigned) 0);
-    signal (SIGALRM, SIG_DFL);
-    signal (SIGUSR1, CatchUsr1);
-    if (serverPauseRet) {
+    sigaction (SIGALRM, &oldAlarm, NULL);
+    sigaction (SIGCHLD, &oldChild, NULL);
+    sigprocmask (SIG_SETMASK, &previous, NULL);
+    if (dead) {
+	Debug ("Server dead\n");
 	Debug ("Server died\n");
 	LogError(ReadCatalog(MC_LOG_SET,MC_LOG_SRV_DIED,MC_DEF_LOG_SRV_DIED));
     }
-    return serverPauseRet;
+    return dead;
 }
 
 

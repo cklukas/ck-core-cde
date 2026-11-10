@@ -69,6 +69,15 @@
   crash the daemon or make it allocate without bound. The routines of versions
   2 to 4 are maintained in `rtable{2,3,4}_xdr.c` instead of being generated.
   Covered by `make -C lib/csa check` (17 cases under the sanitizers).
+- dtlogin: the process that manages a display no longer does its work in signal
+  handlers. The handlers for the manager's SIGTERM and SIGHUP, the alarm and the
+  X server's SIGUSR1 only leave a note; the waits for the greeter, for its end,
+  for the user's session, for a process group that is stopped and for the
+  server look at the notes with the signals blocked and sleep with
+  `pselect`/`sigsuspend`, so a request is neither lost nor run on top of
+  whatever the process was doing. A wait for a child that does not exist ends
+  instead of looping, and a pending request does not cut short the wait for a
+  stopped process group. Covered by `programs/dtlogin/tests/check-session-signals.py`.
 - dtlogin: an expired password is changed in the login screen. The greeter
   puts the questions of the PAM password section (current and new password,
   messages of the modules) to the user, `libDtSvc` runs `pam_chauthtok` with a

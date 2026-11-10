@@ -189,10 +189,6 @@ static void SessionExit( struct display *d, int status) ;
 static void SessionPingFailed( struct display *d) ;
 static int  StartClient(struct verify_info *verify, struct display *d,
                         int *pidp) ;
-static SIGVAL catchAlrm( int arg ) ;
-static SIGVAL catchHUP( int arg ) ;
-static SIGVAL catchTerm( int arg ) ;
-static SIGVAL waitAbort( int arg ) ;
 static void SetupDisplay(struct display *d);
 
 static void TellGreeter(RequestHeader *phdr);
@@ -232,8 +228,6 @@ static struct greet_info	greet;
 static struct verify_info	verify;
 static char			*defaultLanguage = NULL;
 
-static sigjmp_buf	abortSession;
-
 #ifdef __KERBEROS
   static char krb_ticket_string[MAXPATHLEN];
 #endif /* __KERBEROS */
@@ -243,18 +237,143 @@ XrmDatabase XresourceDB;
 XrmDatabase XDB;
 
 
-static SIGVAL
-catchTerm( int arg )
+/*
+ * The signals that reach the session process only leave a note.  The places
+ * that wait (for the greeter, for its exit, for the session, for the display)
+ * block the signals while they look at the notes and sleep with the previous
+ * mask, so that a signal ends the sleep and is not lost, and everything that
+ * has to be done about it is done by the code that was waiting, not by the
+ * handler.
+ */
+static volatile sig_atomic_t	termRequested;	/* SIGTERM: stop the display */
+static volatile sig_atomic_t	hupRequested;	/* SIGHUP: restart the display */
+static volatile sig_atomic_t	alarmRaised;	/* SIGALRM: the time waited for is over */
+
+static void
+NoteSignal( int sig )
 {
-    siglongjmp (abortSession, 1);
+    switch (sig) {
+    case SIGTERM: termRequested = 1; break;
+    case SIGHUP:  hupRequested = 1; break;
+    case SIGALRM: alarmRaised = 1; break;
+    }
 }
 
-static sigjmp_buf	pingTime;
-
-static SIGVAL
-catchAlrm( int arg )
+/* SIGCHLD only has to interrupt the sleep of a waiter */
+static void
+NoteChild( int sig )
 {
-    siglongjmp (pingTime, 1);
+    (void) sig;
+}
+
+/* a handler that does not restart the system calls it interrupts */
+static void
+CatchSignal( int sig, void (*handler)(int), struct sigaction *previous )
+{
+    struct sigaction action;
+
+    memset (&action, 0, sizeof (action));
+    action.sa_handler = handler;
+    sigemptyset (&action.sa_mask);
+    sigaction (sig, &action, previous);
+}
+
+/*
+ * Wait until PID has ended, SECONDS have passed (0: no limit) or, when
+ * NOTICE is set, a request to terminate or restart has arrived.  Any other
+ * child that ends meanwhile is reaped.  Returns 1 with the status of the child,
+ * 0 when the time is over, -1 on a request, -2 when there is no such child.
+ */
+static int
+AwaitChild( int pid, unsigned seconds, int notice, waitType *status )
+{
+    sigset_t		block, previous;
+    struct sigaction	oldAlarm, oldChild;
+    waitType		ended;
+    int			result, reaped;
+
+    sigemptyset (&block);
+    sigaddset (&block, SIGCHLD);
+    sigaddset (&block, SIGALRM);
+    sigaddset (&block, SIGTERM);
+    sigaddset (&block, SIGHUP);
+    sigprocmask (SIG_BLOCK, &block, &previous);
+    CatchSignal (SIGCHLD, NoteChild, &oldChild);
+    CatchSignal (SIGALRM, NoteSignal, &oldAlarm);
+    alarmRaised = 0;
+    if (seconds)
+	alarm (seconds);
+
+    for (;;) {
+	reaped = waitpid (-1, &ended, WNOHANG);
+	if (reaped == pid) {
+	    if (status)
+		*status = ended;
+	    result = 1;
+	    break;
+	}
+	if (reaped > 0)
+	    continue;
+	if (reaped == -1 && errno == ECHILD) {
+	    result = -2;
+	    break;
+	}
+	if (notice && (termRequested || hupRequested)) {
+	    result = -1;
+	    break;
+	}
+	if (alarmRaised) {
+	    result = 0;
+	    break;
+	}
+	sigsuspend (&previous);
+    }
+
+    if (seconds)
+	alarm (0);
+    sigaction (SIGALRM, &oldAlarm, NULL);
+    sigaction (SIGCHLD, &oldChild, NULL);
+    sigprocmask (SIG_SETMASK, &previous, NULL);
+    return result;
+}
+
+/*
+ * Wait until there is something to read from FD.  Returns 1 then and 0 when
+ * a request to terminate or restart has arrived (or the descriptor is bad).
+ */
+static int
+WaitForInput( int fd )
+{
+    sigset_t	block, previous;
+    fd_set	readable;
+    int		result;
+
+    if (fd < 0 || fd >= FD_SETSIZE)
+	return 0;
+
+    sigemptyset (&block);
+    sigaddset (&block, SIGTERM);
+    sigaddset (&block, SIGHUP);
+    sigprocmask (SIG_BLOCK, &block, &previous);
+    for (;;) {
+	if (termRequested || hupRequested) {
+	    result = 0;
+	    break;
+	}
+	FD_ZERO (&readable);
+	FD_SET (fd, &readable);
+	result = pselect (fd + 1, &readable, NULL, NULL, NULL, &previous);
+	if (result > 0) {
+	    result = 1;
+	    break;
+	}
+	if (result < 0 && errno != EINTR) {
+	    result = 0;
+	    break;
+	}
+    }
+    sigprocmask (SIG_SETMASK, &previous, NULL);
+    return result;
 }
 
 #if defined(__STDC__)
@@ -351,10 +470,31 @@ ErrorHandler( Display *dpy, XErrorEvent *event )
 
     Display 		*dpy;
 
+/*
+ * Wait for the session of the user to end.  The display is pinged every
+ * pingInterval minutes.  FALSE when the wait was ended by a request to
+ * terminate: the session is still running then.
+ */
+static int
+WaitForSession( struct display *d )
+{
+    for (;;) {
+	switch (AwaitChild (clientPid, d->pingInterval * 60, TRUE, NULL)) {
+	case 0:
+	    if (!PingServer (d, (Display *) NULL))
+		SessionPingFailed (d);
+	    break;
+	case -1:
+	    return FALSE;
+	default:
+	    return TRUE;
+	}
+    }
+}
+
 void
 ManageSession( struct display *d )
 {
-    int			pid;
     Window		root = 0;
    /* Display 		*dpy; */
 #ifdef BYPASSLOGIN
@@ -512,64 +652,35 @@ ManageSession( struct display *d )
 #endif
 
     clientPid = 0;
-    if (!sigsetjmp (abortSession, 1)) {
-	signal (SIGTERM, catchTerm);
+    CatchSignal (SIGTERM, NoteSignal, NULL);
+
+    /*
+     * Start the clients, changing uid/groups
+     *	   setting up environment and running the session
+     */
+    if (StartClient (&verify, d, &clientPid)) {
+	Debug ("Client started\n");
+
 	/*
-	 * Start the clients, changing uid/groups
-	 *	   setting up environment and running the session
+	 * We've changed dtlogin to pass HUP's down to the children
+	 * so ignore any HUP's once the client has started.
 	 */
-	if (StartClient (&verify, d, &clientPid)) {
-	    Debug ("Client started\n");
+	signal(SIGHUP, SIG_IGN);
 
-	    /*
-	     * We've changed dtlogin to pass HUP's down to the children
-	     * so ignore any HUP's once the client has started.
-	     */
-	    signal(SIGHUP, SIG_IGN);
+	/*
+	 * Wait for session to end; a request to terminate ends it.
+	 */
+	if (!WaitForSession (d))
+	    AbortClient (clientPid);
 
-	    /*
-	     * Wait for session to end,
-	     */
-	    for (;;) {
-		if (d->pingInterval)
-		{
-		    if (!sigsetjmp (pingTime, 1))
-		    {
-			signal (SIGALRM, catchAlrm);
-			alarm (d->pingInterval * 60);
-			pid = wait ((waitType *) 0);
-			alarm (0);
-		    }
-		    else
-		    {
-			alarm (0);
-		    	if (!PingServer (d, (Display *) NULL))
-			    SessionPingFailed (d);
-		    }
-		}
-		else
-		{
-		    pid = wait ((waitType *) 0);
-		}
-		if (pid == clientPid)
-		    break;
-	    }
-
-	    /*
-	     * We've changed dtlogin to pass HUP's down to the children
-	     * so ignore any HUP's once the client has started.
-	     */
-	    signal(SIGHUP, SIG_DFL);
-	} else {
-	    LogError(ReadCatalog(
-		MC_LOG_SET,MC_LOG_FAIL_START,MC_DEF_LOG_FAIL_START));
-	}
+	/*
+	 * We've changed dtlogin to pass HUP's down to the children
+	 * so ignore any HUP's once the client has started.
+	 */
+	signal(SIGHUP, SIG_DFL);
     } else {
-	/*
-	 * when terminating the session, nuke
-	 * the child and then run the reset script
-	 */
-	AbortClient (clientPid);
+	LogError(ReadCatalog(
+	    MC_LOG_SET,MC_LOG_FAIL_START,MC_DEF_LOG_FAIL_START));
     }
 
     /*
@@ -1644,29 +1755,20 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
     }
 }
 
-static sigjmp_buf	tenaciousClient;
-
-static SIGVAL
-waitAbort( int arg )
-{
-	siglongjmp (tenaciousClient, 1);
-}
-
 #if defined(SYSV) || defined(SVR4)
 # include	<ctype.h>
 #define killpg(pgrp, sig) kill(-(pgrp), sig)
 #endif /* SYSV */
 
+/* seconds a process group gets to end after it was asked to */
+#define ABORT_WAIT	10
+
 static int 
 AbortClient( int pid )
 {
     int	sig = SIGTERM;
-#ifdef __STDC__
-    volatile int	i;
-#else
     int	i;
-#endif
-    int	retId;
+
     for (i = 0; i < 4; i++) {
 	if (killpg (pid, sig) == -1) {
 	    switch (errno) {
@@ -1678,16 +1780,9 @@ AbortClient( int pid )
 		return 0;
 	    }
 	}
-	if (!sigsetjmp (tenaciousClient, 1)) {
-	    (void) signal (SIGALRM, waitAbort);
-	    (void) alarm ((unsigned) 10);
-	    retId = wait ((waitType *) 0);
-	    (void) alarm ((unsigned) 0);
-	    (void) signal (SIGALRM, SIG_DFL);
-	    if (retId == pid)
-		break;
-	} else
-	    signal (SIGALRM, SIG_DFL);
+	/* the request that led here must not cut the wait short */
+	if (AwaitChild (pid, ABORT_WAIT, FALSE, NULL) != 0)
+	    break;
 	sig = SIGKILL;
     }
     return 1;
@@ -1718,8 +1813,9 @@ source( struct verify_info *verify, char *file )
 	    return 1;
 	    break;
 	default:
-	    while (wait (&result) != pid)
-		    ;
+	    /* the script is waited for to its end; there is no other way out */
+	    if (AwaitChild (pid, 0, FALSE, &result) != 1)
+		return 1;
 	    break;
 	}
 	return waitVal (result);
@@ -1833,21 +1929,26 @@ int         response[2], request[2];
 
 /* Fixes problem with dtlogin signal handling */
 static int greeterPid = 0;
-static struct display *greeter_d = NULL;
 
-static SIGVAL
-catchHUP(int arg)
+/*
+ * The display was asked to stop (SIGTERM) or to start again (SIGHUP) while
+ * the greeter was there: end the greeter and the session process.
+ */
+static void
+GreeterRequestEnds( struct display *d )
 {
-    Debug("Caught SIGHUP\n");
-    if (greeterPid) 
+    if (hupRequested)
     {
-	Debug("Killing greeter process:  %d\n", greeterPid);
-	kill(greeterPid, SIGHUP);
+	Debug("Caught SIGHUP\n");
+	if (greeterPid)
+	{
+	    Debug("Killing greeter process:  %d\n", greeterPid);
+	    kill(greeterPid, SIGHUP);
+	}
+	SessionExit(d, REMANAGE_DISPLAY);
     }
-    if (greeter_d)
-      SessionExit(greeter_d, REMANAGE_DISPLAY);
-    else
-      exit(REMANAGE_DISPLAY);
+    AbortClient(greeterPid);
+    SessionExit(d, UNMANAGE_DISPLAY);
 }
 
 static void 
@@ -1855,7 +1956,6 @@ RunGreeter( struct display *d, struct greet_info *greet,
             struct verify_info *verify )
 {
 
-    int       pid;
     waitType	status;
     
     int		rbytes;
@@ -1867,6 +1967,7 @@ RunGreeter( struct display *d, struct greet_info *greet,
     int 	notify_dt;
     int		dupfp = -1;
     int		dupfp2 = -1;
+    int		ended;
 
 #ifdef __PASSWD_ETC
 #  ifndef U_NAMELEN
@@ -1903,15 +2004,14 @@ RunGreeter( struct display *d, struct greet_info *greet,
 #endif
 
     greeterPid = 0;
-    if (!sigsetjmp (abortSession, 1)) {
-	signal(SIGTERM, catchTerm);
+    {
+	CatchSignal(SIGTERM, NoteSignal, NULL);
 
 	/*
-	 * We've changed dtlogin to pass HUP's down to the children
-	 * so ignore any HUP's once the client has started.
+	 * dtlogin passes HUP's down to the children: a request to restart
+	 * the display ends the greeter.
 	 */
-	greeter_d = d;
-        signal(SIGHUP, catchHUP);
+        CatchSignal(SIGHUP, NoteSignal, NULL);
 
 	/*
 	 *  set up communication pipes...
@@ -2201,13 +2301,20 @@ RunGreeter( struct display *d, struct greet_info *greet,
 #endif /* SIA */
 
 	    /*
+	     * A request to terminate or restart the display ends the greeter...
+	     */
+	    if (termRequested || hupRequested) {
+		GreeterRequestEnds(d);
+	    }
+
+	    /*
 	     * Wait for Greeter to end...
 	     */
-	    for (;;) {
-		pid = wait (&status);
-		if (pid == greeterPid)
-		    break;
-	    }
+	    ended = AwaitChild (greeterPid, 0, TRUE, &status);
+	    if (ended == -1)
+		GreeterRequestEnds(d);
+	    if (ended != 1)
+		status = waitCompose (0, 0, NOTIFY_ABORT);	/* the greeter is gone */
 
 
 	    /*
@@ -2356,10 +2463,6 @@ RunGreeter( struct display *d, struct greet_info *greet,
 	    }
 	}
         signal(SIGHUP, SIG_DFL);
-    }
-    else {
-	AbortClient(greeterPid);
-	SessionExit(d, UNMANAGE_DISPLAY);
     }
 }
 
@@ -3132,6 +3235,13 @@ AskGreeter(
   if (preqhdr) TellGreeter(preqhdr);
 
   phdr->opcode = REQUEST_OP_NONE;
+
+ /*
+  * A request to terminate or restart the display is not left waiting for the
+  * greeter: it is treated like a greeter that has gone.
+  */
+  if (!WaitForInput(response[0]))
+    return(0);
 
   count = read(response[0], buf, sizeof(*phdr));
 

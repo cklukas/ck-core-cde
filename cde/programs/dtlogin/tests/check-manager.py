@@ -33,6 +33,10 @@ loader_start = "/*\n * Load the resources in file into the X server" if "RunXrdb
 chooser_start = "/* seconds an accepted chooser connection may stay silent */" if "CHOOSER_REPLY_TIMEOUT" in choose \
                 else "int\nProcessChooserSocket ("
 
+# the notes the session process's handlers leave and the waits that look at them (not in older sources)
+signal_start = "/*\n * The signals that reach the session process only leave a note."
+signal_helpers = until(session, signal_start, "#if defined(__STDC__)\nstatic int\nFileNameCompare") if signal_start in session else ""
+
 if "SetSessionGroups" in session:
     groups_function = block(session, "static int\nSetSessionGroups(")
 else:
@@ -149,7 +153,7 @@ char *_ExpandLang(char *string, char *lang) { (void)lang; return strdup(string);
 ''' + block(util, "int\nappendArg(") + block(util, "int\nparseArgs(") + block(util, "void\nfreeEnv (") \
     + until(session, loader_start, "/***************************************************************************\n *\n *  LoadAltDtsResources"
             ).replace('"/var/dt/dtlogin_XXXXXX"', '"dtlogin_XXXXXX"') \
-    + block(session, "static void\nTellGreeter(") + block(session, "static int\nAskGreeter(") + groups_function + r'''
+    + signal_helpers + block(session, "static void\nTellGreeter(") + block(session, "static int\nAskGreeter(") + groups_function + r'''
 int test_Ask(char *buffer, int length) { return AskGreeter(NULL, buffer, length); }
 int test_Groups(struct verify_info *verify) { return SetSessionGroups(verify); }
 '''
@@ -170,6 +174,7 @@ server_unit = r'''
 #define setgid StubSetgid
 static int receivedUsr1;
 static void CatchUsr1(int arg) { (void)arg; }
+static void CatchSignal(int sig, void (*handler)(int), struct sigaction *previous) { (void)sig; (void)handler; (void)previous; }
 static int serverPause(unsigned t, int serverPid) { (void)t; (void)serverPid; return 0; }
 struct passwd puser;
 void CleanUpChild(void) { }

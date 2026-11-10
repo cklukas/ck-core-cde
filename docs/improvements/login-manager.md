@@ -112,6 +112,28 @@ choice back to the manager.
   manager's privileges.
 - The length of a message sent to the greeter is checked before it is copied.
 
+### The process of a display
+
+The manager sends `SIGHUP` to the process of every display when it rescans its
+configuration and `SIGTERM` when a display is stopped, and the X server sends
+`SIGUSR1` to it when it is ready. These handlers called the debug log, ended
+the display and jumped out of whatever the process was doing (a read from the
+greeter, `wait`, the PAM conversation, `malloc`).
+
+- The handlers of `SIGTERM`, `SIGHUP`, `SIGALRM` and `SIGUSR1` in this process
+  only leave a note. The waits look at the notes with the signals blocked and
+  sleep with the previous mask (`pselect`, `sigsuspend`), so a signal that
+  arrives just before a wait is not lost, and a signal ends the wait it arrives
+  in.
+- The wait for the greeter's answer, for the end of the greeter, for the end of
+  the user's session (with the periodic ping of the X server), for a process
+  group that is being stopped and for the X server's `SIGUSR1` are such waits.
+  A request to stop or restart the display ends the greeter and the process
+  from the code that was waiting; it no longer runs from the handler.
+- A wait for a child that has no such child ended in an endless loop of failed
+  `wait` calls; it now ends. A process group that was asked to stop is waited
+  for even when the request to stop is already pending.
+
 ## Authentication through PAM
 
 On a system with PAM, `dtlogin` checks passwords with the helper of `libDtSvc`
@@ -161,6 +183,12 @@ greeter that ends, damaged answers and questions longer than a message can hold.
 `lib/DtSvc/tests/check-svc-pam.py` has the scenarios of the helper (the questions
 reach the caller's conversation, the conversation of the login is set again, the
 handle is ended, the setup fails).
+
+`tests/check-session-signals.py` runs the waits of the display process
+(`AskGreeter`, `AbortClient`, the wait for a child and the pause for the X server)
+with real signals, pipes and child processes: a handler that does anything but
+leave a note, a request that arrives before a wait, a child that ignores
+`SIGTERM`, a server that is ready early, late or never.
 
 `tests/check-chooser.py` runs the chooser socket, the choices and the client list
 with a real Unix socket: the file and its mode, the argument that names it, a
@@ -237,5 +265,3 @@ at exit; the code from before the change fails all four scenarios.
   against real `pam_unix` as well: the greeter answered the questions, the
   password was changed, the old one was refused afterwards and the new one was
   accepted.
-- Session-side signal handling, the chooser socket and allocation-failure paths
-  are not yet reviewed.
