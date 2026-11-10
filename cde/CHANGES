@@ -1,4 +1,12 @@
 2026-11-10
+- dtfile: harden the remaining directory status channels. Position-save and
+  periodic timer results now use complete writes and exact, transactional
+  reads; incomplete or invalid timer replies retire desynchronized sticky
+  workers instead of returning them to the reuse pool. Link-check path joins
+  are bounded, and failed position-file path resolution no longer reaches
+  file I/O through a null pointer. Missing position files are treated as an
+  already-complete removal, and access failures never report stale zero
+  `errno`. Covered by the directory control-packet production helper cases.
 - dtfile: complete the directory worker control-channel validation. Path-type
   and position-info arrays are now decoded into bounded temporary storage and
   replace cached state only after every count, string, coordinate, and control

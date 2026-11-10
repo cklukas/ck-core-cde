@@ -1,0 +1,87 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile directory position-save and timer status packets",
+  "source_base": "6683515c6cb37ddee8e5013eb1d5d936635e817b",
+  "motif_revision": "b4c0c5824a36a442922d3789ad7399890291900a",
+  "motif_prefix": "/home/klukas/tmp/motif-abi9-b4c0c5824-20261110/prefix",
+  "motif_libXm_sha256": "dd8bfa7a4b65978125d110b245983fb434ee6ca8a2d8b46f3fa3ab793c7490d1",
+  "motif_Xm_h_sha256": "26e5d9afeb7cdec2cb73904bfca8bc00e964d87d130c7eeb200f3b25c88d57dc",
+  "motif_qualification_receipt": "/home/klukas/tmp/motif-abi9-b4c0c5824-20261110/results/receipt.json",
+  "motif_transfer_evidence": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-motif-b4-transfer-20261110/",
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round7-20261110/",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    ".ckgit/ci.yml": "156ecd359a39790cbb613ff605d493aa806c1cafbc6a179d34a880b6ef8dd65b",
+    ".ckgit/motif-revision": "031173ddea2a4bf82aada37cd2169c4489b770f1ab98e4a8c88f25e4a6a85808",
+    "cde/CHANGES": "a5d3d282fc661640717fbb354cc988c841fa7c10d8dee576eb1e541dffc16a49",
+    "cde/programs/dtfile/Directory.c": "0cd805099d1d820aaf15ad4712330c81132e0f4882821c11a8521efbf734bb4a",
+    "cde/programs/dtfile/tests/check-directory-control-packets.py": "163953a18004a3e40cf4e5a548d190f40146005ec6fae6d59431d5ae92755bd0",
+    "cde/programs/dtfile/tests/directory-control-packets.c": "725dc8ea51586be7b6cc5a92b10129f84540c952a2701812eb2f68846062c3b8"
+  },
+  "focused_regressions": {
+    "cases": 31,
+    "sanitizers": "address,undefined",
+    "remote_seconds": 0.2946060746908188,
+    "local_seconds": 1.06,
+    "remote_log_sha256": "983f94f63c49b4ed92d5c883dc4ee676b0816d763ec7b2b574a95e28124c701d",
+    "coverage": [
+      "complete position-save status writes and exact callback reads",
+      "complete timer result writes and transactional exact reads",
+      "truncated timer timestamps and Boolean fields",
+      "invalid Boolean encodings",
+      "bounded saved-position and timer child-path construction",
+      "source contracts for malformed sticky-worker retirement and stable ENOENT/EACCES handling"
+    ]
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "full_rebuild": false,
+    "closure": [
+      "dtfile-Directory.o",
+      "dtfile relink"
+    ],
+    "seconds": 1.909648464,
+    "object_sha256": "4b387a788bd23031fb149a10b1539ffc14721da6660820703a7ac8258b6770a9",
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile",
+    "output_sha256": "81253e9896b099c112abd0718b8d2b1532ea6afd494461885f67bb0f42900976",
+    "build_log_sha256": "4dc7ea7a88784df9a5fc940cb9f54d7e2ffe7717f72f6b2ae3327e63055b08cc",
+    "warnings": "Only the pre-existing assignment-condition warning in UpdateAllProcess."
+  },
+  "motif_boundary": {
+    "dependency_files": 58,
+    "unique_consumed_headers": 77,
+    "prefix_headers_compared": 71,
+    "identical_source_fallbacks": 1,
+    "identical_system_X11_bitmap_fallbacks": 5,
+    "changed_or_missing_effective_headers_between_02826_and_b4c0": 0,
+    "comparison_receipt_sha256": "6839a439bfcbcba37017c3c7bc0dc27141d7fcef6c8c6491cd0452b86b6e688c",
+    "needed": "libXm.so.9",
+    "ldd_resolves_exact_prefix": true,
+    "ldd_mapping_sha256": "fe68c44c80ecb60e94b692690d7d8f886a0600d0b928e0cdbb4c76984ebd5552"
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "runs": 1,
+    "seconds": 27.25349598,
+    "passed_case_lines": 292,
+    "failure_markers": 0,
+    "log_sha256": "a513f7684bba5beed31d3896b8907c8809361fca3e83e4f9abe6f68b0eebf4e4"
+  },
+  "postconditions": [
+    "make -n reports dtfile is up to date",
+    "no owned compiler, make or test process remained before returning CPU2",
+    "malformed fixed-field replies reset scheduling state without reusing a desynchronized worker",
+    "missing position files are treated as an already-complete removal"
+  ],
+  "rejected_or_corrected_attempts": [
+    "The first Motif transfer archive used the default tar format and rounded nanosecond mtimes. It was rejected before publication; a PAX-format retry preserved and verified every byte, mode, symlink target and nanosecond mtime.",
+    "The first dry run exposed config.status's historical source-root path. It was corrected to the retained staged source before compilation; the repeated dry run then showed only Directory.o and the dtfile relink."
+  ],
+  "limitations": [
+    "This non-visual worker-protocol bundle did not launch or inspect a CDE window.",
+    "The qualified ck-core-fs-lib revision exposes no accepted atomic-replacement writer API, so position-file replacement behavior is not claimed crash-safe in this round."
+  ]
+}

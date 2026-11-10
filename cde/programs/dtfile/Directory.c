@@ -1000,8 +1000,8 @@ malformed:
 }
 
 static int
-DirectoryBuildPositionPath(char *buffer, size_t buffer_size,
-                           const char *directory_name, const char *file_name)
+DirectoryBuildChildPath(char *buffer, size_t buffer_size,
+                        const char *directory_name, const char *file_name)
 {
    const char *separator;
    int length;
@@ -1021,6 +1021,49 @@ DirectoryBuildPositionPath(char *buffer, size_t buffer_size,
       errno = ENAMETOOLONG;
       return -1;
    }
+   return 0;
+}
+
+static int
+DirectoryWriteStatus(int fd, int status)
+{
+   return DtfileProcessWriteAll(fd, &status, sizeof(status));
+}
+
+static int
+DirectoryWriteTimerResult(int fd, int status, long modify_time,
+                          Boolean link_changed)
+{
+   return DtfileProcessWriteAll(fd, &status, sizeof(status)) != 0 ||
+          DtfileProcessWriteAll(fd, &modify_time, sizeof(modify_time)) != 0 ||
+          DtfileProcessWriteAll(fd, &link_changed, sizeof(link_changed)) != 0
+             ? -1 : 0;
+}
+
+static int
+DirectoryReadTimerResult(int fd, int *status, long *modify_time,
+                         Boolean *link_changed)
+{
+   int new_status;
+   long new_modify_time;
+   Boolean new_link_changed;
+
+   if (status == NULL || modify_time == NULL || link_changed == NULL)
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   *status = EPROTO;
+   *modify_time = 0;
+   *link_changed = False;
+   if (PipeReadExact(fd, &new_status, sizeof(new_status)) != 0 ||
+       PipeReadExact(fd, &new_modify_time, sizeof(new_modify_time)) != 0 ||
+       PipeReadExact(fd, &new_link_changed, sizeof(new_link_changed)) != 0 ||
+       (new_link_changed != False && new_link_changed != True))
+      return -1;
+   *status = new_status;
+   *modify_time = new_modify_time;
+   *link_changed = new_link_changed;
    return 0;
 }
 
@@ -1971,8 +2014,8 @@ ReadDirectoryProcess(
    /* construct full name of the position info file */
    /* read the count from the position info file */
    position_count = 0;
-   if (DirectoryBuildPositionPath(file_name, sizeof(file_name),
-                                  full_directory_name, positionFileName) == 0 &&
+   if (DirectoryBuildChildPath(file_name, sizeof(file_name),
+                               full_directory_name, positionFileName) == 0 &&
        (fptr = fopen(file_name, "r")) != NULL)
    {
      PositionInfo * position_info = NULL;
@@ -4251,16 +4294,25 @@ WritePosInfoProcess(
    fileName = ResolveLocalPathName( directory->host_name,
                                     directory->directory_name, positionFileName,
                                     home_host_name, &tt_status );
-   /* Don't have to check for tt_status
-      directory->host_name is home_host_name and ResolveLocalPathName will
-      always return a good path
-   */
+   if (tt_status != TT_OK || fileName == NULL)
+   {
+      rc = EIO;
+      (void)DirectoryWriteStatus(pipe_fd, rc);
+      XtFree(fileName);
+      return 1;
+   }
    DPRINTF(("WritePosInfoProcess: count %d, file %s\n",
             position_count, fileName));
 
    /* Remove old files, if no position information for this view */
    if (position_count <= 0)
+   {
       rc = unlink(fileName);
+      if (rc == 0 || errno == ENOENT)
+         rc = 0;
+      else
+         rc = errno != 0 ? errno : EIO;
+   }
    else
    {
       /* open the file for writing */
@@ -4292,7 +4344,11 @@ WritePosInfoProcess(
 
    /* send result back thorugh the pipe */
    DPRINTF(("WritePosInfoProcess: done (rc %d)\n", rc));
-   write(pipe_fd, &rc, sizeof(int));
+   if (DirectoryWriteStatus(pipe_fd, rc) != 0)
+   {
+      XtFree(fileName);
+      return 1;
+   }
    XtFree( fileName );
    return 0;
 }
@@ -4312,12 +4368,28 @@ WritePosInfoPipeCallback(
 {
    PipeCallbackData *pipe_data = (PipeCallbackData *)client_data;
    Directory *directory = pipe_data->directory;
+   ActivityStatus activity = pipe_data->activity;
    int rc;
-   int i;
 
    /* get return code from the pipe */
    rc = -1;
-   PipeRead(*fd, &rc, sizeof(int));
+   if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0)
+   {
+      FileOpProtocolError(toplevel);
+      close(*fd);
+      XtRemoveInput(*id);
+      kill(pipe_data->child, SIGKILL);
+      if (!DirectoryGone(directory))
+      {
+         directory->busy[activity] = False;
+         directory->activity = activity_idle;
+         ScheduleActivity(directory);
+      }
+      else
+         ScheduleActivity(NULL);
+      XtFree(client_data);
+      return;
+   }
 
    /* close the pipe and cancel the callback */
    close(*fd);
@@ -4334,7 +4406,7 @@ WritePosInfoPipeCallback(
    DPRINTF(("WritePosInfoPipeCallback: rc %d\n", rc));
 
    /* reset the busy flag and schedule new work, if any */
-   directory->busy[activity_writing_posinfo] = False;
+   directory->busy[activity] = False;
    directory->activity = activity_idle;
    ScheduleActivity(directory);
 }
@@ -4487,11 +4559,8 @@ TimerEventProcess(
    struct stat stat_buf;
    long modify_time;
    Boolean link_changed;
-   Boolean was_broken;
    FileData *file_data;
    char full_name[MAX_PATH];
-   char *namep;
-   short pipe_msg;
    int prev_link_kind;
    int cur_link_kind;
    int link_rc;
@@ -4514,7 +4583,7 @@ TimerEventProcess(
        stat(directory->path_name, &stat_buf) != 0)
    {
       /* stat or access failed */
-      rc = errno;
+      rc = errno != 0 ? errno : EACCES;
       modify_time = 0;
    }
    else
@@ -4534,11 +4603,6 @@ TimerEventProcess(
    link_changed = False;
    if (rc == 0 && activity == activity_checking_links)
    {
-      strcpy(full_name, directory->path_name);
-      namep = full_name + strlen(full_name);
-      if (namep[-1] != '/')
-        *namep++ = '/';
-
       /* check all links */
       for (file_data = directory->file_data;
            file_data && !link_changed;
@@ -4549,7 +4613,13 @@ TimerEventProcess(
             continue;
 
          /* Check if the file is still a symbolic link */
-         strcpy(namep, file_data->file_name);
+         if (DirectoryBuildChildPath(full_name, sizeof(full_name),
+                                     directory->path_name,
+                                     file_data->file_name) != 0)
+         {
+            link_changed = True;
+            break;
+         }
          link_rc = lstat(full_name, &stat_buf);
          if (link_rc != 0 || (stat_buf.st_mode & S_IFMT) != S_IFLNK)
          {
@@ -4583,10 +4653,8 @@ TimerEventProcess(
    }
 
    /* send result back through the pipe */
-   write(pipe_fd, &rc, sizeof(int));
-   write(pipe_fd, &modify_time, sizeof(long));
-   write(pipe_fd, &link_changed, sizeof(Boolean));
-   return 0;
+   return DirectoryWriteTimerResult(pipe_fd, rc, modify_time, link_changed) == 0
+             ? 0 : 1;
 }
 
 
@@ -4632,6 +4700,22 @@ StickyProcIdle(
    }
 }
 
+static void
+StickyProcDiscard(ActivityStatus activity, StickyProcDesc *sticky_proc)
+{
+   StickyProcDesc **entry;
+
+   if (sticky_proc == NULL) return;
+   entry = &ActivityTable[activity].sticky_procs;
+   while (*entry != NULL && *entry != sticky_proc)
+      entry = &(*entry)->next;
+   if (*entry == sticky_proc) *entry = sticky_proc->next;
+   close(sticky_proc->pipe_s2m_fd);
+   close(sticky_proc->pipe_m2s_fd);
+   kill(sticky_proc->child, SIGKILL);
+   XtFree((char *)sticky_proc);
+}
+
 
 /*--------------------------------------------------------------------
  * TimerPipeCallback
@@ -4650,17 +4734,36 @@ TimerPipeCallback(
    int rc;
    long modify_time;
    Boolean link_changed;
-   int i;
+   ActivityStatus activity = pipe_data->activity;
 
    /* get return code from the pipe */
-   rc = -1;
-   PipeRead(*fd, &rc, sizeof(int));
-   PipeRead(*fd, &modify_time, sizeof(long));
-   PipeRead(*fd, &link_changed, sizeof(Boolean));
+   if (DirectoryReadTimerResult(*fd, &rc, &modify_time, &link_changed) != 0)
+   {
+      FileOpProtocolError(toplevel);
+      XtRemoveInput(*id);
+      if (pipe_data->sticky_proc != NULL)
+         StickyProcDiscard(activity, pipe_data->sticky_proc);
+      else
+      {
+         close(*fd);
+         kill(pipe_data->child, SIGKILL);
+      }
+      if (!DirectoryGone(directory))
+      {
+         directory->busy[activity] = False;
+         directory->activity = activity_idle;
+         directory->was_up_to_date = False;
+         ScheduleActivity(directory);
+      }
+      else
+         ScheduleActivity(NULL);
+      XtFree(client_data);
+      return;
+   }
 
    /* close the pipe and cancel the callback */
    if (pipe_data->sticky_proc)
-      StickyProcIdle(pipe_data->activity, pipe_data->sticky_proc,
+      StickyProcIdle(activity, pipe_data->sticky_proc,
                      maxRereadProcsPerTick);
    else
       close(*fd);
@@ -4679,7 +4782,7 @@ TimerPipeCallback(
      rc, directory->errnum, modify_time, (long)directory->modify_time, link_changed));
 
    /* reset the busy flag and schedule new work, if any */
-   directory->busy[directory->activity] = False;
+   directory->busy[activity] = False;
    directory->activity = activity_idle;
    ScheduleActivity(directory);
 

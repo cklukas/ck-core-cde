@@ -11,7 +11,9 @@ CASES=("array-valid","array-negative","array-over-limit","path-valid",
        "position-file-coordinate-range","position-file-truncated",
        "file-path-valid","file-path-root",
        "file-path-long","write-done",
-       "write-error","write-path","write-position")
+       "write-error","write-path","write-position","status-write",
+       "timer-valid","timer-truncated-time","timer-truncated-boolean",
+       "timer-invalid-boolean","timer-write")
 
 def balanced(text,start,opening,closing):
     depth=0;i=start
@@ -58,6 +60,10 @@ def main():
     read_process=extract(texts["Directory.c"],"ReadDirectoryProcess")
     update_all=extract(texts["Directory.c"],"UpdateAllProcess")
     update_some=extract(texts["Directory.c"],"UpdateSomeProcess")
+    write_position=extract(texts["Directory.c"],"WritePosInfoProcess")
+    write_position_callback=extract(texts["Directory.c"],"WritePosInfoPipeCallback")
+    timer_process=extract(texts["Directory.c"],"TimerEventProcess")
+    timer_callback=extract(texts["Directory.c"],"TimerPipeCallback")
     producers=read_process+update_all+update_some
     contract={
         "path_transactional":"DirectoryReadPathInfo(*fd, &new_count" in callback and
@@ -79,6 +85,16 @@ def main():
                                "tt_status != TT_OK || full_directory_name == NULL" in update_some,
         "permission_error_stable":"rc = EACCES;" in update_some and
                                   "stat(full_directory_name, &stat_buf) < 0" in update_some,
+        "position_status_exact":"DirectoryWriteStatus(pipe_fd" in write_position and
+                                "PipeReadExact(*fd, &rc" in write_position_callback and
+                                "errno == ENOENT" in write_position,
+        "timer_status_exact":"DirectoryWriteTimerResult(pipe_fd" in timer_process and
+                             "DirectoryReadTimerResult(*fd" in timer_callback and
+                             "errno != 0 ? errno : EACCES" in timer_process,
+        "timer_path_bounded":"DirectoryBuildChildPath(full_name" in timer_process and
+                             "strcpy(namep" not in timer_process,
+        "timer_malformed_retires_sticky":"StickyProcDiscard(activity" in timer_callback and
+                                         "directory->was_up_to_date = False" in timer_callback,
     }
     if not all(contract.values()):raise ValueError(f"directory control contract mismatch: {contract}")
     names=(("FileOp.c","PipeRead"),("FileOp.c","PipeReadExact"),
@@ -87,8 +103,9 @@ def main():
            ("Directory.c","DirectoryReadPathInfo"),("Directory.c","DirectoryWritePathInfo"),
            ("Directory.c","DirectoryWriteDone"),("Directory.c","DirectoryWriteError"),
            ("Directory.c","PipeWritePositionInfo"),("Directory.c","PipeReadPositionInfo"),
-           ("Directory.c","DirectoryReadPositionInfo"),("Directory.c","DirectoryBuildPositionPath"),
-           ("Directory.c","DirectoryLoadPositionInfo"))
+           ("Directory.c","DirectoryReadPositionInfo"),("Directory.c","DirectoryBuildChildPath"),
+           ("Directory.c","DirectoryWriteStatus"),("Directory.c","DirectoryWriteTimerResult"),
+           ("Directory.c","DirectoryReadTimerResult"),("Directory.c","DirectoryLoadPositionInfo"))
     functions="\n\n".join(extract(texts[file],name) for file,name in names)
     fixture=(tests/"directory-control-packets.c").read_text().replace("/* PRODUCTION_FUNCTIONS */",functions)
     generated=work/"directory-control-packets.c";generated.write_text(fixture);binary=work/"directory-control-packets"

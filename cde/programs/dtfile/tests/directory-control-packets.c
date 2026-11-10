@@ -124,9 +124,9 @@ static void position_file_case(const char *name)
 static void position_path_case(const char *name)
 {
     char path[MAX_PATH];char directory[MAX_PATH+1];int rc;
-    if(!strcmp(name,"file-path-long")){memset(directory,'a',MAX_PATH);directory[MAX_PATH]='\0';rc=DirectoryBuildPositionPath(path,sizeof(path),directory,"positions");CHECK(rc==-1&&errno==ENAMETOOLONG&&path[0]=='\0');}
-    else if(!strcmp(name,"file-path-root")){rc=DirectoryBuildPositionPath(path,sizeof(path),"/","positions");CHECK(rc==0&&!strcmp(path,"/positions"));}
-    else {rc=DirectoryBuildPositionPath(path,sizeof(path),"/tmp","positions");CHECK(rc==0&&!strcmp(path,"/tmp/positions"));}
+    if(!strcmp(name,"file-path-long")){memset(directory,'a',MAX_PATH);directory[MAX_PATH]='\0';rc=DirectoryBuildChildPath(path,sizeof(path),directory,"positions");CHECK(rc==-1&&errno==ENAMETOOLONG&&path[0]=='\0');}
+    else if(!strcmp(name,"file-path-root")){rc=DirectoryBuildChildPath(path,sizeof(path),"/","positions");CHECK(rc==0&&!strcmp(path,"/positions"));}
+    else {rc=DirectoryBuildChildPath(path,sizeof(path),"/tmp","positions");CHECK(rc==0&&!strcmp(path,"/tmp/positions"));}
 }
 
 static void writer_case(const char *name)
@@ -146,6 +146,21 @@ static void writer_case(const char *name)
     close(p[0]);
 }
 
+static void timer_case(const char *name)
+{
+    int p[2],status=99,decoded_status=99;long stamp=17,decoded_stamp=99;Boolean changed=True,decoded_changed=True;
+    CHECK(pipe(p)==0);
+    if(!strcmp(name,"status-write")){CHECK(DirectoryWriteStatus(p[1],23)==0);close(p[1]);CHECK(PipeReadExact(p[0],&decoded_status,sizeof(decoded_status))==0&&decoded_status==23);close(p[0]);return;}
+    if(!strcmp(name,"timer-write")){CHECK(DirectoryWriteTimerResult(p[1],23,stamp,True)==0);close(p[1]);CHECK(DirectoryReadTimerResult(p[0],&decoded_status,&decoded_stamp,&decoded_changed)==0&&decoded_status==23&&decoded_stamp==17&&decoded_changed==True);close(p[0]);return;}
+    must_write(p[1],&status,sizeof(status));
+    if(strcmp(name,"timer-truncated-time"))must_write(p[1],&stamp,sizeof(stamp));
+    if(strcmp(name,"timer-truncated-time")&&strcmp(name,"timer-truncated-boolean")){if(!strcmp(name,"timer-invalid-boolean"))changed=2;must_write(p[1],&changed,sizeof(changed));}
+    close(p[1]);
+    int rc=DirectoryReadTimerResult(p[0],&decoded_status,&decoded_stamp,&decoded_changed);close(p[0]);
+    if(!strcmp(name,"timer-valid"))CHECK(rc==0&&decoded_status==99&&decoded_stamp==17&&decoded_changed==True);
+    else CHECK(rc==-1&&decoded_status==EPROTO&&decoded_stamp==0&&decoded_changed==False);
+}
+
 int main(int argc,char **argv)
 {
     const char *name;if(argc!=2)return 2;name=argv[1];
@@ -155,6 +170,7 @@ int main(int argc,char **argv)
     else if(!strncmp(name,"position-",9))position_case(name);
     else if(!strncmp(name,"file-path-",10))position_path_case(name);
     else if(!strncmp(name,"write-",6))writer_case(name);
+    else if(!strncmp(name,"timer-",6)||!strcmp(name,"status-write"))timer_case(name);
     else return 2;
     if(!failed)printf("PASS %s\n",name);return failed;
 }
