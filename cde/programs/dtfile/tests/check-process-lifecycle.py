@@ -50,6 +50,7 @@ def main():
     source_contract = {
         "checked_pipe_sites": file_op_text.count("DtfileProcessPipe("),
         "raw_pipe_sites": len(re.findall(r"(?<!Process)\bpipe\s*\(", file_op_text)),
+        "raw_write_sites": len(re.findall(r"(?<!Process)\bwrite\s*\(", file_op_text)),
         "child__exit_sites": file_op_text.count("_exit(rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE)"),
         "shared_static_status": "static int status" in file_op_text,
         "per_operation_status": "cb_data->status" in file_op_text,
@@ -57,6 +58,7 @@ def main():
             r"select failed in FileMoveCopy.*?XtAppAddInput", file_op_text, re.S)),
     }
     if source_contract != {"checked_pipe_sites": 4, "raw_pipe_sites": 0,
+                           "raw_write_sites": 1,
                            "child__exit_sites": 3, "shared_static_status": False,
                            "per_operation_status": True, "select_failure_handoff": True}:
         raise SystemExit(f"FileOp startup contract mismatch: {source_contract}")

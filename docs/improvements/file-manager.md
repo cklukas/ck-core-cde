@@ -86,6 +86,11 @@ before cancellation remains in place, but the operation is not reported as
 successfully complete. When several conflict rows fail while the worker drains
 the batch, the first failure remains the operation result; later transfer,
 rollback, cleanup or protocol failures cannot hide its original cause.
+Background operation control messages are also written completely, with
+interrupted and partial writes handled and a closed reader reported without a
+fatal `SIGPIPE`. If the parent channel is lost before a modification notice,
+the worker stops before changing that item; if final status cannot be
+published, the worker exits unsuccessfully instead of claiming completion.
 
 CK Core CDE develops File Manager as a visual workspace rather than only a
 directory browser.

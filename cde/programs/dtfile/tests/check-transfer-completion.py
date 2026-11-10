@@ -40,6 +40,8 @@ CASES = (
     "pipe-read-invalid", "pipe-string-negative", "pipe-string-truncated",
     "pipe-string-valid", "pipe-string-field-empty", "pipe-string-field-truncated",
     "pipe-write-oversize", "pipe-field-truncated",
+    "pipe-producer-packets", "pipe-producer-closed",
+    "pipe-modify-unresolved-source",
     "pipe-index-negative", "pipe-index-equal", "pipe-index-valid",
     "trash-index-negative", "trash-index-equal", "trash-index-valid",
     "trash-results-negative", "trash-results-null", "trash-results-oversize",
@@ -178,7 +180,8 @@ def extract(source, work, include_workers=True):
                   "FilePathsFree", "FileReadLink", "FileManip")] + [
         ("FileOp.c", name) for name in (
             "PipeRead", "PipeReadExact", "PipeWriteString", "PipeReadStringField",
-            "PipeReadString", "PipeWriteErrmsg", "FileOpReadIndex",
+            "PipeReadString", "FileOpWriteTag", "FileOpWriteTaggedInt",
+            "FileOpWriteTaggedLong", "PipeWriteErrmsg", "FileOpReadIndex",
             "FileOpError", "CreateFileFromBuffer", "SendModifyMsg",
             "appendErrorMessage", "DisplayErrorMessage")
     ]

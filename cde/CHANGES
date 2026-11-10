@@ -1,4 +1,12 @@
 2026-11-10
+- dtfile: complete background file-operation protocol writes and fail safely
+  when their control channel is lost. Conflict replies, modification notices,
+  errors, completion records, rename results and create results now use the
+  shared EINTR-, short-write- and SIGPIPE-safe writer. A failed pre-mutation
+  notice stops the affected filesystem change, failed completion publication
+  makes the worker fail, and unresolved source-directory metadata no longer
+  reaches `stat` through a null path. Covered by focused extracted-production
+  packet, closed-reader and unresolved-path cases.
 - dtfile: make conflict cancellation and multi-row failure outcomes terminal
   and deterministic. Cancelling a conflict batch now completes the operation
   with a cancelled failure status instead of success, and the worker retains

@@ -364,7 +364,39 @@ static void pipe_case(void)
         return;
     }
     fixture(pipe(channel)==0);
-    if (!strcmp(case_name,"pipe-field-truncated")) {
+    if (!strcmp(case_name,"pipe-producer-packets")) {
+        const short first=PIPEMSG_DONE,second=PIPEMSG_TARGET_TIME;
+        const int result=-7;const long timestamp=123456;
+        CHECK(FileOpWriteTaggedInt(channel[1],first,result)==0);
+        CHECK(FileOpWriteTaggedLong(channel[1],second,timestamp)==0);
+        CHECK(PipeWriteErrmsg(channel[1],-1,"message",NULL)==0);
+        fixture(close(channel[1])==0);
+        unsigned char wire[128];size_t bytes=drain(channel[0],wire,sizeof(wire)),at=0;
+        short tag;int encoded_result;long encoded_time;
+        CHECK(wire_take(wire,bytes,&at,&tag,sizeof(tag)) && tag==first);
+        CHECK(wire_take(wire,bytes,&at,&encoded_result,sizeof(encoded_result)) && encoded_result==result);
+        CHECK(wire_take(wire,bytes,&at,&tag,sizeof(tag)) && tag==second);
+        CHECK(wire_take(wire,bytes,&at,&encoded_time,sizeof(encoded_time)) && encoded_time==timestamp);
+        CHECK(wire_take(wire,bytes,&at,&tag,sizeof(tag)) && tag==PIPEMSG_FILEOP_ERROR);
+        CHECK(wire_take(wire,bytes,&at,&encoded_result,sizeof(encoded_result)) && encoded_result==-1);
+        CHECK(wire_string(wire,bytes,&at) && wire_string(wire,bytes,&at) && at==bytes);
+        return;
+    } else if (!strcmp(case_name,"pipe-producer-closed")) {
+        fixture(close(channel[0])==0);errno=0;
+        CHECK(FileOpWriteTag(channel[1],PIPEMSG_DONE)==-1 && errno==EPIPE);
+        errno=0;CHECK(FileOpWriteTaggedInt(channel[1],PIPEMSG_DONE,0)==-1 && errno==EPIPE);
+        errno=0;CHECK(FileOpWriteTaggedLong(channel[1],PIPEMSG_TARGET_TIME,0)==-1 && errno==EPIPE);
+        errno=0;CHECK(PipeWriteErrmsg(channel[1],-1,"message",NULL)==-1 && errno==EPIPE);
+        fixture(close(channel[1])==0);return;
+    } else if (!strcmp(case_name,"pipe-modify-unresolved-source")) {
+        DirUpdate update;memset(&update,0,sizeof(update));
+        update.host="local";update.directory="missing";update.file="entry";
+        resolve_target_error=1;errno=0;
+        CHECK(SendModifyMsg(channel[1],MOVE_FILE,False,".",&update,0,"entry")==0);
+        fixture(close(channel[1])==0);
+        unsigned char wire[128];size_t bytes=drain(channel[0],wire,sizeof(wire));
+        CHECK(wire_valid(wire,bytes,0,0));return;
+    } else if (!strcmp(case_name,"pipe-field-truncated")) {
         int value=0;fixture(write(channel[1],"xy",2)==2);fixture(close(channel[1])==0);
         CHECK(PipeReadExact(channel[0],&value,sizeof(value))==-1);
     } else if (!strncmp(case_name,"pipe-index-",11)) {

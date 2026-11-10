@@ -70,7 +70,7 @@ def extract_helpers(source, work):
     conflict_body = lexical["function"](text, "FileOpHandleConflicts")[0]
     contracts = {
         "cancel_is_terminal": "answer == 0 ? ECANCELED : errno" in conflict_body,
-        "first_failure_recorded": conflict_body.count("FileOpRememberFailure(") == 10,
+        "first_failure_recorded": conflict_body.count("FileOpRememberFailure(") == 11,
         "no_later_failure_overwrite": len(re.findall(
             r"(?<![=!<>])failed\s*=(?!=)", conflict_body)) == 1,
         "clean_cancel_not_success": "clean cancellation retains" not in text,
@@ -143,7 +143,8 @@ def main():
     work.mkdir(parents=True, mode=0o700)
     (work / "tmp").mkdir(mode=0o700)
     env = dict(os.environ, TMPDIR=str(work / "tmp"), LANG="C", LC_ALL="C")
-    env.setdefault("ASAN_OPTIONS", "detect_leaks=1:abort_on_error=1")
+    leak_check = "0" if os.uname().sysname == "Darwin" else "1"
+    env.setdefault("ASAN_OPTIONS", f"detect_leaks={leak_check}:abort_on_error=1")
     env.setdefault("UBSAN_OPTIONS", "halt_on_error=1:print_stacktrace=1")
     os.environ["TMPDIR"] = env["TMPDIR"]
     source = args.module_source.resolve()

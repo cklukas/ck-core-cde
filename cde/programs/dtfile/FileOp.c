@@ -451,6 +451,38 @@ PipeReadString(
  *------------------------------------------------------------------*/
 
 static int
+FileOpWriteTag(
+	int fd,
+	short tag)
+{
+   return DtfileProcessWriteAll(fd, &tag, sizeof(tag));
+}
+
+static int
+FileOpWriteTaggedInt(
+	int fd,
+	short tag,
+	int value)
+{
+   if (FileOpWriteTag(fd, tag) != 0 ||
+       DtfileProcessWriteAll(fd, &value, sizeof(value)) != 0)
+      return -1;
+   return 0;
+}
+
+static int
+FileOpWriteTaggedLong(
+	int fd,
+	short tag,
+	long value)
+{
+   if (FileOpWriteTag(fd, tag) != 0 ||
+       DtfileProcessWriteAll(fd, &value, sizeof(value)) != 0)
+      return -1;
+   return 0;
+}
+
+static int
 PipeWriteErrmsg(
 	int fd,
 	int rc,
@@ -461,10 +493,9 @@ PipeWriteErrmsg(
 
    DPRINTF(("PipeWriteErrmsg: sending error %d \"%s\"\n", rc, msg));
 
-   write(fd, &pipe_msg, sizeof(short));
-   write(fd, &rc, sizeof(int));
-   PipeWriteString(fd, msg);
-   PipeWriteString(fd, arg);
+   if (FileOpWriteTaggedInt(fd, pipe_msg, rc) != 0 ||
+       PipeWriteString(fd, msg) < 0 || PipeWriteString(fd, arg) < 0)
+      return -1;
 
    return 0;
 }
@@ -492,6 +523,7 @@ moveCopyLinkCancel(
         XtPointer call_data )
 {
     const int rc = PIPEMSG_CANCEL;
+    int fd = filop_confirm_fd;
 
     /* close the dialog */
     XtUnmanageChild((Widget)client_data);
@@ -499,8 +531,9 @@ moveCopyLinkCancel(
     XtDestroyWidget((Widget)client_data);
 
     /* send return code through the pipe to the background proc */
-    write(filop_confirm_fd, &rc, sizeof(int));
     filop_confirm_fd = -1;
+    if (DtfileProcessWriteAll(fd, &rc, sizeof(rc)) != 0)
+       FileOpProtocolError(toplevel);
 }
 
 
@@ -516,6 +549,7 @@ moveCopyLinkOK(
         XtPointer call_data )
 {
     const int rc = PIPEMSG_PROCEED;
+    int fd = filop_confirm_fd;
 
     /* close the dialog */
     XtUnmanageChild((Widget)client_data);
@@ -523,8 +557,9 @@ moveCopyLinkOK(
     XtDestroyWidget((Widget)client_data);
 
     /* send affirmative return code through the pipe to the background proc */
-    write(filop_confirm_fd, &rc, sizeof(int));
     filop_confirm_fd = -1;
+    if (DtfileProcessWriteAll(fd, &rc, sizeof(rc)) != 0)
+       FileOpProtocolError(toplevel);
 }
 
 
@@ -558,7 +593,7 @@ FileOpError(
  *   modifed.
  *------------------------------------------------------------------*/
 
-static void
+static int
 SendModifyMsg(
 	int pipe_fd,
 	int mode,
@@ -581,8 +616,8 @@ SendModifyMsg(
       {
          modify_time = stat_buf.st_mtime;
          pipe_msg = PIPEMSG_TARGET_TIME;
-         write(pipe_fd, &pipe_msg, sizeof(short));
-         write(pipe_fd, &modify_time, sizeof(long));
+         if (FileOpWriteTaggedLong(pipe_fd, pipe_msg, modify_time) != 0)
+            return -1;
       }
    }
 
@@ -599,7 +634,8 @@ SendModifyMsg(
                                       home_host_name,
                                       &tt_status);
 
-      if (stat(dir_path, &stat_buf) == 0)
+      if (tt_status == TT_OK && dir_path != NULL &&
+          stat(dir_path, &stat_buf) == 0)
          modify_time = stat_buf.st_mtime;
       XtFree(dir_path);
       updates[j].time_sent = True;
@@ -607,10 +643,12 @@ SendModifyMsg(
 
    /* send the modify message */
    pipe_msg = PIPEMSG_FILE_MODIFIED;
-   write(pipe_fd, &pipe_msg, sizeof(short));
-   write(pipe_fd, &i, sizeof(int));
-   write(pipe_fd, &modify_time, sizeof(long));
-   PipeWriteString(pipe_fd, target_file);
+   if (FileOpWriteTag(pipe_fd, pipe_msg) != 0 ||
+       DtfileProcessWriteAll(pipe_fd, &i, sizeof(i)) != 0 ||
+       DtfileProcessWriteAll(pipe_fd, &modify_time, sizeof(modify_time)) != 0 ||
+       PipeWriteString(pipe_fd, target_file) < 0)
+      return -1;
+   return 0;
 }
 
 /*--------------------------------------------------------------------
@@ -885,8 +923,14 @@ row_failed:
 
       leaf = strrchr(destination, '/');
       leaf = leaf == NULL ? destination : leaf + 1;
-      SendModifyMsg(pipe_s2m, mode, *first_op, target_dir, updates, index,
-                    (char *)leaf);
+      if (SendModifyMsg(pipe_s2m, mode, *first_op, target_dir, updates, index,
+                        (char *)leaf) != 0)
+      {
+         FileOpRememberFailure(&failed, errno);
+         XtFree(saved_existing);
+         XtFree(destination);
+         goto finished;
+      }
       *first_op = False;
       if (decision->action == DTFILE_CONFLICT_MERGE)
          success = FileManip((Widget)(intptr_t)pipe_s2m, MERGE_DIR,
@@ -958,7 +1002,6 @@ FileMoveCopyProcess(
    long current;
    char *tmpStr, *target_file;
    struct stat stat_buf, from_stat_buf;
-   short pipe_msg;
    int sameCount = 0;
    int errorCount = 0;
    int *sameIndex = NULL;
@@ -986,10 +1029,8 @@ FileMoveCopyProcess(
               directory, host, host);
 #endif
      PipeWriteErrmsg(pipe_s2m, -1, msg1, NULL);
-     pipe_msg = PIPEMSG_DONE;
      rc = -1;
-     write(pipe_s2m, &pipe_msg, sizeof(short));
-     write(pipe_s2m, &rc, sizeof(int));
+     (void)FileOpWriteTaggedInt(pipe_s2m, PIPEMSG_DONE, rc);
      return rc;
    }
 
@@ -1160,9 +1201,14 @@ FileMoveCopyProcess(
           {
               if(S_ISDIR(stat_buf.st_mode))
             {
-                pipe_msg = PIPEMSG_MOVE_TO_SAME_DIR;
-                write(pipe_s2m, &pipe_msg, sizeof(short));
-                write(pipe_s2m, &i, sizeof(int));
+                if (FileOpWriteTaggedInt(pipe_s2m,
+                                         PIPEMSG_MOVE_TO_SAME_DIR, i) != 0)
+                {
+                   operationFailed = True;
+                   XtFree((char *)from);
+                   XtFree((char *)target_file);
+                   break;
+                }
                 errorCount++;
 
                 continue;
@@ -1324,8 +1370,14 @@ FileMoveCopyProcess(
        * the wrong timestamp is sent, the window will be updated and
        * redrawn twice instead of just once.
        */
-      SendModifyMsg(pipe_s2m, mode, first_op, target_dir, updates, i,
-                    updates[i].file);
+      if (SendModifyMsg(pipe_s2m, mode, first_op, target_dir, updates, i,
+                        updates[i].file) != 0)
+      {
+         operationFailed = True;
+         if (mode != MAKE_BUFFER) XtFree((char *)from);
+         XtFree((char *)target_file);
+         break;
+      }
       first_op = False;
 
       if (mode == MAKE_BUFFER)
@@ -1416,13 +1468,12 @@ FileMoveCopyProcess(
    XtFree((char *)sameTargetIdentity);
 
 
-   pipe_msg = PIPEMSG_DONE;
    /* A later success cannot erase an earlier transfer, cancellation or
     * preflight failure.
     */
    rc = (operationFailed || errorCount != 0) ? -1 : 0;
-   write(pipe_s2m, &pipe_msg, sizeof(short));
-   write(pipe_s2m, &rc, sizeof(int));
+   if (FileOpWriteTaggedInt(pipe_s2m, PIPEMSG_DONE, rc) != 0)
+      rc = -1;
 
    XtFree ((char *) target_dir);
    target_dir = NULL;
@@ -1453,7 +1504,6 @@ FileMoveCopyProcessDesktop(
    Boolean first_op = True;
    Boolean return_val = False;
    Boolean operationFailed = False;
-   short pipe_msg;
    Tt_status tt_status;
 
    /*  Get the fully qualified destination path.  */
@@ -1469,10 +1519,8 @@ FileMoveCopyProcessDesktop(
               directory, host, host);
 #endif
      PipeWriteErrmsg(pipe_s2m, -1, msg1, NULL);
-     pipe_msg = PIPEMSG_DONE;
      rc = -1;
-     write(pipe_s2m, &pipe_msg, sizeof(short));
-     write(pipe_s2m, &rc, sizeof(int));
+     (void)FileOpWriteTaggedInt(pipe_s2m, PIPEMSG_DONE, rc);
      return rc;
    }
    DtEliminateDots(to);
@@ -1517,7 +1565,13 @@ FileMoveCopyProcessDesktop(
       } /* end if dealing with regular files */
 
 
-      SendModifyMsg(pipe_s2m, mode, first_op, to, updates, i, updates[i].file);
+      if (SendModifyMsg(pipe_s2m, mode, first_op, to, updates, i,
+                        updates[i].file) != 0)
+      {
+         operationFailed = True;
+         if (mode != MAKE_BUFFER) XtFree((char *)from);
+         break;
+      }
 
       return_val = True;
 
@@ -1556,10 +1610,9 @@ FileMoveCopyProcessDesktop(
          operationFailed = True;
    }
 
-   pipe_msg = PIPEMSG_DONE;
    rc = operationFailed ? -1 : 0;
-   write(pipe_s2m, &pipe_msg, sizeof(short));
-   write(pipe_s2m, &rc, sizeof(int));
+   if (FileOpWriteTaggedInt(pipe_s2m, PIPEMSG_DONE, rc) != 0)
+      rc = -1;
 
    XtFree ((char *) to);
    return rc;
@@ -2552,7 +2605,7 @@ ChangeIconNameProcess(
    {
       DPRINTF(("ChangeIconNameProcess: sending exist error\n"));
       pipe_msg = PIPEMSG_FILEOP_ERROR;
-      write(pipe_fd, &pipe_msg, sizeof(short));
+      (void)FileOpWriteTag(pipe_fd, pipe_msg);
       XtFree(new_name);
       return 1;
    }
@@ -2562,7 +2615,7 @@ ChangeIconNameProcess(
       /* Name is not unique */
       DPRINTF(("ChangeIconNameProcess: sending exist error\n"));
       pipe_msg = PIPEMSG_EXIST_ERROR;
-      write(pipe_fd, &pipe_msg, sizeof(short));
+      (void)FileOpWriteTag(pipe_fd, pipe_msg);
 
       XtFree(full_name);
       XtFree(new_name);
@@ -2576,7 +2629,7 @@ ChangeIconNameProcess(
    {
       DPRINTF(("ChadengeIconNameProcess: sending exist error\n"));
       pipe_msg = PIPEMSG_FILEOP_ERROR;
-      write(pipe_fd, &pipe_msg, sizeof(short));
+      (void)FileOpWriteTag(pipe_fd, pipe_msg);
       XtFree(full_name);
       XtFree(new_name);
       return 1;
@@ -2592,7 +2645,7 @@ ChangeIconNameProcess(
    {
      DPRINTF(("ChangeIconNameProcess: sending exist error\n"));
      pipe_msg = PIPEMSG_FILEOP_ERROR;
-     write(pipe_fd, &pipe_msg, sizeof(short));
+     (void)FileOpWriteTag(pipe_fd, pipe_msg);
      XtFree(full_name);
      XtFree(new_name);
      return 1;
@@ -2605,15 +2658,13 @@ ChangeIconNameProcess(
    if (rc == 0)
    {
      pipe_msg = PIPEMSG_FILE_MODIFIED;
-     write(pipe_fd, &pipe_msg, sizeof(short));
-     write(pipe_fd, &modify_time, sizeof(long));
+     if (FileOpWriteTaggedLong(pipe_fd, pipe_msg, modify_time) != 0)
+        rc = -1;
    }
    DPRINTF(("ChangeIconNameProcess: sending DONE, rc %d\n", rc));
-   pipe_msg = PIPEMSG_DONE;
-   write(pipe_fd, &pipe_msg, sizeof(short));
-   write(pipe_fd, &rc, sizeof(int));
-   if (rc == 0)
-      PipeWriteString(pipe_fd, full_name);
+   if (FileOpWriteTaggedInt(pipe_fd, PIPEMSG_DONE, rc) != 0 ||
+       (rc == 0 && PipeWriteString(pipe_fd, full_name) < 0))
+      rc = -1;
    XtFree( full_name );
    return rc;
 }
@@ -3318,21 +3369,22 @@ MakeFileProcess(
       /* send a modified message back through the pipe */
       modify_time = 0;
       dir_path = ResolveLocalPathName(to_host, to_dir, NULL, home_host_name, &tt_status);
-      if (stat(dir_path, &stat_buf) == 0)
+      if (tt_status == TT_OK && dir_path != NULL &&
+          stat(dir_path, &stat_buf) == 0)
          modify_time = stat_buf.st_mtime;
       XtFree(dir_path);
 
       pipe_msg = PIPEMSG_FILE_MODIFIED;
-      write(pipe_fd, &pipe_msg, sizeof(short));
-      write(pipe_fd, &modify_time, sizeof(long));
+      if (FileOpWriteTaggedLong(pipe_fd, pipe_msg, modify_time) != 0)
+         rc = errno == 0 ? EIO : errno;
 
       /* do the work */
-      if (type == DtDIRECTORY)
+      if (rc == 0 && type == DtDIRECTORY)
       {
          if (mkdir (to, (int) DtFILE_DIR_CREATION_MASK) != 0)
             rc = errno;
       }
-      else
+      else if (rc == 0)
       {
          unsigned int mode;
 
@@ -3349,11 +3401,10 @@ MakeFileProcess(
    }
 
    /* send a 'done' msg through the pipe */
-   pipe_msg = PIPEMSG_DONE;
    DPRINTF(("MakeFileProcess: sending DONE, rc %d\n", rc));
-   write(pipe_fd, &pipe_msg, sizeof(short));
-   write(pipe_fd, &rc, sizeof(int));
-   PipeWriteString(pipe_fd, to);
+   if (FileOpWriteTaggedInt(pipe_fd, PIPEMSG_DONE, rc) != 0 ||
+       PipeWriteString(pipe_fd, to) < 0)
+      rc = rc == 0 ? EIO : rc;
 
    XtFree(to);
 

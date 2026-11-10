@@ -1,0 +1,86 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile complete and failure-aware background operation protocol writes",
+  "source_base": "9eabd1a0c0784115d2183cc0ada35c2dd9fa7db4",
+  "motif_revision": "90d98fb7395306ab1f54df3e0d8d247893799a49",
+  "motif_prefix": "/home/klukas/tmp/motif-cde-90d98fb-20261110/prefix",
+  "motif_libXm_sha256": "e049702713e63eb5fbd7759f230e2afb5cb965794d9f901d3fb05734d0f24df3",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    "cde/CHANGES": "b5d30b737549abe93b1b37afbdb549e14ae9fcab0b449aa1b2dbdbc4fb5de485",
+    "cde/programs/dtfile/FileOp.c": "90b6eb9c16305e8dc392a2ba7d31f15e24f2a3462f97ec2529277a436e8aa1d4",
+    "cde/programs/dtfile/tests/check-collision-workflow.py": "e4a7810eb39de624ac307b6c1d70397b252b2cc3121c3f3c8a26b09308d4f4dc",
+    "cde/programs/dtfile/tests/check-process-lifecycle.py": "0492c7e7fcb3f38471f28f04159f35f3ee510b4a4a9890ec29dbdb22f52e8d34",
+    "cde/programs/dtfile/tests/check-transfer-completion.py": "a20c5dcab7e2762e1c52622124cb031de554bd2a84ff8e3fd4865e86b08dbcd1",
+    "cde/programs/dtfile/tests/transfer-completion.c": "932f6e0835158a0f480425cf823a572a4c962745308a870740e1e40f030a0020",
+    "docs/improvements/file-manager.md": "0c84fe16d7314c9f2dbab579ffa6ac2eb07bc7bf34ae37832552ccda3876499f"
+  },
+  "focused_regressions": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, Linux ARM64",
+    "transfer_and_protocol_cases": 68,
+    "transfer_and_protocol_seconds": 1.1663927608169615,
+    "transfer_and_protocol_receipt_sha256": "37b98d6b0f96632160fb7ae0a1afbf9cba8be58c74b6aa59b02dbc20033d85b5",
+    "process_lifecycle_cases": 15,
+    "process_lifecycle_seconds": 0.36475334456190467,
+    "process_lifecycle_receipt_sha256": "dba8c93da259ae6ee779925652be6e90403ebf2777e082d5f2c0e3e3a38dbf75",
+    "collision_helper_cases": 3,
+    "collision_helper_seconds": 0.27245108131319284,
+    "collision_helper_receipt_sha256": "3290e21b37738dc1777737488f8cf25a4c872d34446b3b6c44797f77e827b897",
+    "sanitizers": "address,undefined",
+    "leak_detection": true
+  },
+  "preflight_failures": [
+    {
+      "stage": "Mac collision helper focused attempt 1",
+      "finding": "The source contract still required exactly ten first-failure recording sites after the lost-channel path added an eleventh site.",
+      "resolution": "Updated the contract to the new exact closure and reran the focused helper suite."
+    },
+    {
+      "stage": "Mac collision helper focused attempt 2",
+      "finding": "The driver forced AddressSanitizer leak detection on macOS, where this runtime does not support it.",
+      "resolution": "Disabled only leak detection on Darwin, retained address and undefined-behavior sanitizers, and confirmed the three helper cases pass."
+    }
+  ],
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "cpu": 2,
+    "full_rebuild": false,
+    "closure": ["dtfile-FileOp.o", "dtfile relink"],
+    "seconds": 1.178717184,
+    "prior_comparable_seconds": 1.262249472,
+    "file_op_object_sha256": "6830303f1a88a6920a0b05f009cd6830f1a661c1a5ff3778a31b43643db52a23",
+    "output_sha256": "051fd24a88b641bd397a1096b77ef9de4637c209069601c8936bfc699adc38ee",
+    "runtime_libXm_exact_prefix": true,
+    "post_build_dry_run": "make: 'dtfile' is up to date.",
+    "warnings": "One pre-existing dangling-else warning in an unchanged FileOp error-reporting region."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 2 make -j1 check-local in programs/dtfile",
+    "attempts": 1,
+    "successful_runs": 1,
+    "successful_seconds": 16.723954688,
+    "legacy_pass_lines": 314,
+    "failed_case_lines": 0,
+    "hard_failure_markers": 0,
+    "log_sha256": "b84709b802d60cd84f7ede6d3eff44acb41fce150ac17d312ff5736762ad4102",
+    "collision_helper_receipt_sha256": "b72f03b2d5bcf02ad6105eabcd1197fa2490065c72de7a8173b5f15798916ab7"
+  },
+  "evidence_directory": "/Volumes/PRO-BLADE/Development/ck-core-fs-qualification/cde-round16-20261110/",
+  "evidence_manifest_sha256": "33e2c9af16bf5f0efc22ef2225f9027e63d245363790f387cbb795ce8e65fad6",
+  "postconditions": [
+    "file-operation control packets use complete EINTR- and SIGPIPE-safe writes",
+    "a lost modification-notice channel stops the affected item before mutation",
+    "a completion-publication failure makes the worker exit unsuccessfully",
+    "unresolved source-directory metadata cannot pass a null path to stat",
+    "dtfile resolves libXm.so.9 from the exact frozen Motif prefix",
+    "no owned compiler, make or test process remained before returning the serial lane"
+  ],
+  "limitations": [
+    "This protocol bundle did not launch or inspect a CDE window.",
+    "The qualified ck-core-fs-lib revision was not changed and Apply remains disabled."
+  ]
+}
