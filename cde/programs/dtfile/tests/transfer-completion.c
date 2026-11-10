@@ -23,6 +23,7 @@ typedef char *String;
 typedef int Tt_status;
 typedef struct DesktopRec DesktopRec;
 typedef struct { int file_count; } FileOpCBData;
+typedef struct { int file_count; int done_count; } MoveToTrashCBData;
 typedef void (*FileOperationErrorProc)(Widget, char *, char *);
 #define True 1
 #define False 0
@@ -365,13 +366,47 @@ static void pipe_case(void)
     fixture(pipe(channel)==0);
     if (!strcmp(case_name,"pipe-field-truncated")) {
         int value=0;fixture(write(channel[1],"xy",2)==2);fixture(close(channel[1])==0);
-        CHECK(FileOpReadField(channel[0],&value,sizeof(value))==-1);
+        CHECK(PipeReadExact(channel[0],&value,sizeof(value))==-1);
     } else if (!strncmp(case_name,"pipe-index-",11)) {
         FileOpCBData data={.file_count=2};int value=!strcmp(case_name,"pipe-index-negative")?-1:
             !strcmp(case_name,"pipe-index-equal")?2:1,decoded=99;
         fixture(write(channel[1],&value,sizeof(value))==sizeof(value));fixture(close(channel[1])==0);
         int result=FileOpReadIndex(channel[0],&data,&decoded);
         CHECK(result==(!strcmp(case_name,"pipe-index-valid")?0:-1));CHECK(decoded==value);
+    } else if (!strncmp(case_name,"trash-index-",12)) {
+        MoveToTrashCBData data={.file_count=2,.done_count=
+            !strcmp(case_name,"trash-index-negative")?-1:
+            !strcmp(case_name,"trash-index-equal")?2:1};
+        int decoded=99,result=MoveToTrashResultIndex(&data,&decoded);
+        CHECK(result==(!strcmp(case_name,"trash-index-valid")?0:-1));
+        if (!strcmp(case_name,"trash-index-valid")) CHECK(decoded==1);
+    } else if (!strncmp(case_name,"trash-results-",14)) {
+        int values[2]={7,11},decoded[2]={99,99};
+        if (!strcmp(case_name,"trash-results-negative")) {
+            errno=0;CHECK(TrashReadResults(channel[0],decoded,-1)==-1 && errno==EINVAL);
+        } else if (!strcmp(case_name,"trash-results-null")) {
+            errno=0;CHECK(TrashReadResults(channel[0],NULL,1)==-1 && errno==EINVAL);
+        } else if (!strcmp(case_name,"trash-results-oversize")) {
+            errno=0;CHECK(TrashReadResults(channel[0],decoded,INT_MAX)==-1 && errno==EINVAL);
+        } else {
+            size_t bytes=!strcmp(case_name,"trash-results-truncated")?sizeof(int):sizeof(values);
+            fixture(write(channel[1],values,bytes)==(ssize_t)bytes);fixture(close(channel[1])==0);
+            int result=TrashReadResults(channel[0],decoded,2);
+            CHECK(result==(!strcmp(case_name,"trash-results-valid")?0:-1));
+            if (!strcmp(case_name,"trash-results-valid"))
+                CHECK(decoded[0]==7 && decoded[1]==11);
+            fixture(close(channel[0])==0);return;
+        }
+    } else if (!strcmp(case_name,"pipe-string-field-empty")) {
+        short length=0;char *value=(char *)1;
+        fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
+        fixture(close(channel[1])==0);
+        CHECK(PipeReadStringField(channel[0],&value)==0 && value==NULL);
+    } else if (!strcmp(case_name,"pipe-string-field-truncated")) {
+        short length=3;char *value=(char *)1;
+        fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
+        fixture(write(channel[1],"x",1)==1);fixture(close(channel[1])==0);
+        CHECK(PipeReadStringField(channel[0],&value)==-1 && value==NULL);
     } else if (!strcmp(case_name,"pipe-string-negative")) {
         short length=-1;fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
         fixture(close(channel[1])==0);errno=0;
@@ -494,7 +529,7 @@ int main(int argc,char **argv)
     if (!strncmp(case_name,"worker-",7)) worker_case();
     else
 #endif
-    if (!strncmp(case_name,"pipe-",5)) pipe_case();
+    if (!strncmp(case_name,"pipe-",5) || !strncmp(case_name,"trash-",6)) pipe_case();
     else if (!strncmp(case_name,"buffer-",7)) buffer_case();
     else copy_case();
     if (!failed) printf("PASS %s\n",case_name);

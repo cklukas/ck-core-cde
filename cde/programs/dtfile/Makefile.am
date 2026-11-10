@@ -91,7 +91,7 @@ endif
 dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 Desktop.c       Directory.c     Encaps.c        File.c \
 		 FileDialog.c    FileManip.c     FileMgr.c       FileOp.c \
-		 FileProcess.c FileProcess.h \
+		 FileProcess.c FileProcess.h FileOpProtocol.h \
 		 FileConflict.c FileConflict.h FileConflictWire.c FileConflictWire.h \
 		 FileConflictDialog.c FileConflictDialog.h \
 		 Filter.c        FilterP.c       Find.c          FindP.c \

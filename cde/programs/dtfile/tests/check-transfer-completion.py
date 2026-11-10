@@ -38,8 +38,12 @@ CASES = (
     "worker-normal-target-resolve", "worker-desktop-target-resolve",
     "worker-normal-collision-keep-both", "worker-normal-collision-clean-cancel",
     "pipe-read-invalid", "pipe-string-negative", "pipe-string-truncated",
-    "pipe-string-valid", "pipe-write-oversize", "pipe-field-truncated",
+    "pipe-string-valid", "pipe-string-field-empty", "pipe-string-field-truncated",
+    "pipe-write-oversize", "pipe-field-truncated",
     "pipe-index-negative", "pipe-index-equal", "pipe-index-valid",
+    "trash-index-negative", "trash-index-equal", "trash-index-valid",
+    "trash-results-negative", "trash-results-null", "trash-results-oversize",
+    "trash-results-truncated", "trash-results-valid",
 )
 
 
@@ -147,9 +151,11 @@ def constant(text, name):
 def extract(source, work, include_workers=True):
     """Copy complete production definitions verbatim, preserving source lines."""
     filenames = ("FileManip.c", "FileOp.c", "FileProcess.c", "FileProcess.h",
+                 "FileOpProtocol.h",
                  "FileConflict.c", "FileConflict.h",
                  "FileConflictWire.c", "FileConflictWire.h",
-                 "Main.h", "FileMgr.h", "Common.h", "SharedMsgs.h")
+                 "Main.h", "FileMgr.h", "Common.h", "SharedMsgs.h", "Trash.c",
+                 "ModAttrP.c")
     raw = {name: (source / name).read_bytes() for name in filenames}
     text = {name: data.decode("utf-8") for name, data in raw.items()}
     definitions = [
@@ -171,11 +177,13 @@ def extract(source, work, include_workers=True):
                  ("FilePathCopy", "FilePathJoin", "FileParentPath",
                   "FilePathsFree", "FileReadLink", "FileManip")] + [
         ("FileOp.c", name) for name in (
-            "PipeRead", "PipeWriteString", "PipeReadString", "PipeWriteErrmsg",
-            "FileOpReadField", "FileOpReadIndex",
+            "PipeRead", "PipeReadExact", "PipeWriteString", "PipeReadStringField",
+            "PipeReadString", "PipeWriteErrmsg", "FileOpReadIndex",
             "FileOpError", "CreateFileFromBuffer", "SendModifyMsg",
             "appendErrorMessage", "DisplayErrorMessage")
     ]
+    functions += [("Trash.c", "MoveToTrashResultIndex"),
+                  ("Trash.c", "TrashReadResults")]
     if include_workers:
         functions += [("FileOp.c", name) for name in
                       ("FileOpPathJoin", "FileOpParentPath", "FileOpDecisionPath",
@@ -199,14 +207,14 @@ def extract(source, work, include_workers=True):
                        ("FileOpPipeCB", "ChangeIconPipeCB", "MakeFilePipeCB")}
     protocol_contract = {
         "fileop_index_reads": callback_bodies["FileOpPipeCB"].count("FileOpReadIndex("),
-        "fileop_checked_fields": callback_bodies["FileOpPipeCB"].count("FileOpReadField("),
-        "rename_checked_fields": callback_bodies["ChangeIconPipeCB"].count("FileOpReadField("),
-        "create_checked_fields": callback_bodies["MakeFilePipeCB"].count("FileOpReadField("),
+        "fileop_checked_fields": callback_bodies["FileOpPipeCB"].count("PipeReadExact("),
+        "rename_checked_fields": callback_bodies["ChangeIconPipeCB"].count("PipeReadExact("),
+        "create_checked_fields": callback_bodies["MakeFilePipeCB"].count("PipeReadExact("),
         "callbacks_check_tag_size": sum("n != sizeof(pipe_msg)" in body
                                         for body in callback_bodies.values()),
         "optional_error_arguments": sum(
-            "err_msg == NULL || err_arg == NULL" not in body and
-            "if (err_msg == NULL) goto malformed;" in body
+            "PipeReadStringField(*fd, &err_arg)" in body and
+            "err_arg == NULL" not in body
             for body in (callback_bodies["FileOpPipeCB"],
                          callback_bodies["ChangeIconPipeCB"])),
     }
@@ -216,6 +224,66 @@ def extract(source, work, include_workers=True):
                              "optional_error_arguments": 2}:
         raise ValueError(f"callback protocol contract mismatch: {protocol_contract}")
     result["protocol_contract"] = protocol_contract
+    consumer_bodies = {
+        name: function(text[filename], name)[0]
+        for filename, name in (
+            ("Trash.c", "TrashRecSizePipeCB"),
+            ("Trash.c", "EmptyTrashPipeCB"),
+            ("ModAttrP.c", "AttrChangePipeCB"))
+    }
+    move_start = text["Trash.c"].index("MoveToTrashPipeCB(")
+    move_end = text["Trash.c"].index("\nstatic void\nMoveToTrash(", move_start)
+    consumer_bodies["MoveToTrashPipeCB"] = text["Trash.c"][move_start:move_end]
+    move_request_end = text["Trash.c"].index("\n/*====================================================================", move_end)
+    move_request_body = text["Trash.c"][move_end:move_request_end]
+    empty_request_start = text["Trash.c"].index("\nstatic void\nEmptyTrash(")
+    empty_request_end = text["Trash.c"].index("\n/* Never truncate", empty_request_start)
+    empty_request_body = text["Trash.c"][empty_request_start:empty_request_end]
+    producer_bodies = [
+        function(text[filename], name)[0]
+        for filename, name in (
+            ("Trash.c", "TrashMaybeStartRecSizeScan"),
+            ("Trash.c", "MoveToTrashProcess"),
+            ("Trash.c", "EmptyTrashProcess"),
+            ("ModAttrP.c", "AttrChangeProcess"))
+    ]
+    consumer_contract = {
+        "callbacks_with_protocol_feedback": sum(
+            "FileOpProtocolError(" in body for body in consumer_bodies.values()),
+        "recsize_exact_fields": consumer_bodies["TrashRecSizePipeCB"].count("PipeReadExact("),
+        "move_exact_fields": consumer_bodies["MoveToTrashPipeCB"].count("PipeReadExact("),
+        "move_checked_indices": consumer_bodies["MoveToTrashPipeCB"].count("MoveToTrashResultIndex("),
+        "empty_exact_fields": consumer_bodies["EmptyTrashPipeCB"].count("PipeReadExact("),
+        "empty_checked_results": consumer_bodies["EmptyTrashPipeCB"].count("TrashReadResults("),
+        "empty_suppresses_duplicate_feedback":
+            consumer_bodies["EmptyTrashPipeCB"].count("!protocol_error") >= 2,
+        "attribute_exact_fields": consumer_bodies["AttrChangePipeCB"].count("PipeReadExact("),
+        "raw_producer_writes": sum(len(re.findall(r"(?<!\w)write\s*\(", body))
+                                   for body in producer_bodies),
+        "callbacks_check_tag_size": sum("sizeof(pipe_msg)" in body
+                                         for body in consumer_bodies.values()),
+        "move_request_guard":
+            "!RestoreCountValid(file_count) || file_list == NULL" in move_request_body,
+        "empty_request_guard":
+            "!RestoreCountValid(del_count) || del_list == NULL" in empty_request_body,
+    }
+    expected_consumer_contract = {
+        "callbacks_with_protocol_feedback": 4,
+        "recsize_exact_fields": 1,
+        "move_exact_fields": 2,
+        "move_checked_indices": 3,
+        "empty_exact_fields": 1,
+        "empty_checked_results": 1,
+        "empty_suppresses_duplicate_feedback": True,
+        "attribute_exact_fields": 2,
+        "raw_producer_writes": 0,
+        "callbacks_check_tag_size": 4,
+        "move_request_guard": True,
+        "empty_request_guard": True,
+    }
+    if consumer_contract != expected_consumer_contract:
+        raise ValueError(f"worker consumer contract mismatch: {consumer_contract}")
+    result["consumer_contract"] = consumer_contract
     (work / "extraction-manifest.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 
@@ -279,6 +347,8 @@ def main(argv=None):
               "ASAN_OPTIONS": env["ASAN_OPTIONS"], "UBSAN_OPTIONS": env["UBSAN_OPTIONS"],
               "duration_baseline": "First dedicated qualification; no measured baseline assumed.",
               "coverage_limits": "Regular-file transfers and actual buffer/worker functions. "
+              "Trash result bounds and shared decoders execute as extracted production code; "
+              "the four Xt callback integrations are source-contract checks. "
               "No GUI, directory transfers, remote resolver or native-device-fault claim. "
               "UI/notification adapters and reported syscall faults are test-only.",
               "cases": [], "passed": False}

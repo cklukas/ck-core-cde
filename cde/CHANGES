@@ -1,4 +1,19 @@
 2026-11-10
+- dtfile: harden the remaining Trash size, move, empty, and attribute-change
+  worker channels. Their producers now complete fixed fields or stop, and
+  their callbacks require complete tags, scalars, result arrays, and mandatory
+  paths before changing Trash, cache, or dialog state. Invalid request counts
+  are rejected before callback-array allocation. Oversized result counts,
+  truncated arrays, extra move results, and malformed responses fail the
+  pending items, release the Xt input, and show protocol feedback instead of
+  indexing past an operation, treating zero-filled results as successful
+  deletion, or leaving an operation hung. A status-returning string decoder
+  now distinguishes a valid empty optional field from a truncated field. The
+  recursive-size child now uses `_exit`, and the shared exact-read and
+  protocol-error helpers are available to every dtfile pipe consumer. Covered
+  by the string-field and Trash index/result cases and
+  callback/producer contracts in
+  `programs/dtfile/tests/check-transfer-completion.py`.
 - dtfile: reject malformed legacy worker responses before they reach file,
   directory-cache, or widget state. Exact reads now reject negative sizes and
   truncated fields; string writes reject lengths that cannot fit the protocol

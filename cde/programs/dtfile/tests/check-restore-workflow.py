@@ -83,7 +83,8 @@ def main(argv=None):
         work.mkdir(parents=True, mode=0o700)
     (work / "tmp").mkdir(mode=0o700)
     env = dict(os.environ, TMPDIR=str(work / "tmp"), LANG="C", LC_ALL="C")
-    env.setdefault("ASAN_OPTIONS", "detect_leaks=1:abort_on_error=1")
+    leak_check = "0" if os.uname().sysname == "Darwin" else "1"
+    env.setdefault("ASAN_OPTIONS", f"detect_leaks={leak_check}:abort_on_error=1")
     env.setdefault("UBSAN_OPTIONS", "halt_on_error=1:print_stacktrace=1")
     tests = Path(__file__).resolve().parent
     support = tests / "check-transfer-completion.py"

@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-10",
+  "topic": "dtfile Trash and attribute worker protocol hardening",
+  "source_base": "86be87bcd7041b478d9c32e9d37d5ef818cbee9b",
+  "motif_source_revision": "5e49c927fb2855e04a86d57bcaf5c89b89db93b2",
+  "motif_validation_runtime": "/home/klukas/tmp/cde-c23-batch02-20261102-01/motif-prefix",
+  "motif_runtime_policy": "The source pin was refreshed without reviewing Motif changes. This bundle was validated against the coherent Motif20a runtime used while the fixes were established; the exact new source pin is deferred to the next checkpoint.",
+  "fs_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "fs_apply_enabled": false,
+  "source_sha256": {
+    ".ckgit/ci.yml": "ba9494a43b47eb85a834591eab37d2697638c59e81074d38caf2a71849c8e155",
+    ".ckgit/motif-revision": "b7924039840a46aab9ee5bc3640c6740f73d50aacb1592ba28d9f63256e0ee02",
+    "cde/CHANGES": "f8fdedd5ac0dbeae20bc01a4974db09dac5d7fb7c3f6962a374c483ef8529da0",
+    "cde/programs/dtfile/FileOp.c": "687f4998b6ba4a65419febcb2ac8ef8bfb63c6e04399c9d0940ea80a8f6fe5f0",
+    "cde/programs/dtfile/FileOpProtocol.h": "0e071b636d0da676e0e043bdc32b9deac5dff7c3e63e610bfc0fb8a4fae04f72",
+    "cde/programs/dtfile/Makefile.am": "efb4a7caabd1ad99873fc46094934b11dedae05c4b92d23d0303ef0a1a4a3114",
+    "cde/programs/dtfile/ModAttrP.c": "bd94658a1f7a22766e8d8ea072778f6a7053f2832010002a780777d4c264a364",
+    "cde/programs/dtfile/Trash.c": "3746a4f4481ea42eccd216acd1c55469df3ecb7acdfe340abd9b6febd21a9972",
+    "cde/programs/dtfile/tests/check-restore-workflow.py": "795fa6969a008fa2c0b9220fcdd8a22fa9699cae7b4ee5320aeab7321bd23789",
+    "cde/programs/dtfile/tests/check-transfer-completion.py": "689b755aa9762734f111631e6706702dd2a77a8e8170310e29cfe1fd351895b3",
+    "cde/programs/dtfile/tests/transfer-completion.c": "d1abe3986c20b40d4dc90e0462c7100180cf206e015e06a626eac94737d99608"
+  },
+  "focused_regressions": {
+    "cases": 19,
+    "sanitizers": "address,undefined",
+    "remote_seconds": 13.809,
+    "remote_log_sha256": "001b4d5174ba88a3f5cf5b4eed7265c086379fbb8433804a5329b477e3e5ab4d",
+    "local_cases": 19,
+    "restore_short_tag_case": "passed",
+    "coverage": "Shared exact/string decoders and Trash result bounds execute extracted production definitions. The four Xt callback integrations and producer exact-write requirements are source-contract checks."
+  },
+  "native_build": {
+    "host": "uconsole",
+    "compiler": "Debian clang 19.1.7, C23, Linux ARM64",
+    "jobs": 1,
+    "start": "2026-11-10T01:00:06.461030774+00:00",
+    "end": "2026-11-10T01:00:08.981405419+00:00",
+    "seconds": 2.521,
+    "closure": [
+      "dtfile-FileOp.o",
+      "dtfile-ModAttrP.o",
+      "dtfile-Trash.o",
+      "dtfile relink"
+    ],
+    "full_rebuild": false,
+    "object_sha256": {
+      "dtfile-FileOp.o": "5c4e5e230e003c7331b4d7006aba19563e0fe116d2fdfdbc989b0877a0498d5d",
+      "dtfile-ModAttrP.o": "b4901add7a506d184dee7331d443868ca38e3af2a6e054edbb1f7d1829ff66ed",
+      "dtfile-Trash.o": "dbc79e4808fc7e885ef64999c37062c0bec8c54beaa7bf7747558f2cc3fff2d2"
+    },
+    "output": "/home/klukas/tmp/cde-hardening-20261102-01/transfer-completion-native-20261103-01/build/programs/dtfile/.libs/dtfile",
+    "output_sha256": "bd23342ed83867145726341fb188767e6c0c27ad6fa9137785a6270fb4fd5e58",
+    "build_log_sha256": "d2632710fbec58983ea48faaaeda3049ac0e320559d09a8199b4c0618984728e",
+    "warnings": "Only the known legacy dangling-else warning in FileOp.c and assignment-condition warning in Trash.c."
+  },
+  "component_checkpoint": {
+    "command": "taskset -c 1 make -j1 check-local in programs/dtfile",
+    "seconds": 16.292,
+    "passed_case_lines": 248,
+    "failure_markers": 0,
+    "log_sha256": "00a9682d77c5e059c75e88dc2d3f32fdbd209e13db9a1b76c6ad84c010808411"
+  },
+  "postconditions": [
+    "make -n reports dtfile is up to date",
+    "libXm.so.9 resolves to the established coherent Motif20a prefix",
+    "No owned compiler, make, test or dtfile process remained before returning CPU1"
+  ],
+  "setup_diagnostics": [
+    "The retained out-of-tree Makefile was regenerated from the candidate Makefile.in and its historical source path was replaced with the retained candidate source path.",
+    "One mistaken config.status invocation created /home/klukas/programs/dtfile/Makefile; the exact task-owned file and empty directories were identified and removed immediately.",
+    "The first process postcheck matched its own shell command. A second exact-pattern audit confirmed no owned worker remained."
+  ],
+  "limitations": [
+    "This non-visual worker-protocol bundle did not launch or inspect a CDE window.",
+    "The exact Motif 5e49 runtime build was not consumed during this bundle; compatibility with that fetched pin belongs to the next checkpoint."
+  ]
+}

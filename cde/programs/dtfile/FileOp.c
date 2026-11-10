@@ -133,6 +133,7 @@
 #include "FileConflictDialog.h"
 #include "FileConflictWire.h"
 #include "FileProcess.h"
+#include "FileOpProtocol.h"
 #include "dtcopy/fsrtns.h"
 
 
@@ -242,7 +243,7 @@ typedef struct
 static void
 DisplayDuplicateOpError(FileOpCBData *cb_data,int index);
 
-static void
+void
 FileOpStartError(Widget parent, int error)
 {
    char message[512];
@@ -254,7 +255,7 @@ FileOpStartError(Widget parent, int error)
               message, NULL, HelpRequestCB);
 }
 
-static void
+void
 FileOpProtocolError(Widget parent)
 {
    _DtMessage(parent == NULL ? toplevel : parent,
@@ -264,8 +265,8 @@ FileOpProtocolError(Widget parent)
               NULL, HelpRequestCB);
 }
 
-static int
-FileOpReadField(int fd, void *value, size_t size)
+int
+PipeReadExact(int fd, void *value, size_t size)
 {
    if (size > INT_MAX) { errno = EOVERFLOW; return -1; }
    return PipeRead(fd, value, (int)size) == (int)size ? 0 : -1;
@@ -274,7 +275,7 @@ FileOpReadField(int fd, void *value, size_t size)
 static int
 FileOpReadIndex(int fd, const FileOpCBData *cb_data, int *index)
 {
-   return FileOpReadField(fd, index, sizeof(*index)) == 0 &&
+   return PipeReadExact(fd, index, sizeof(*index)) == 0 &&
           *index >= 0 && *index < cb_data->file_count ? 0 : -1;
 }
 
@@ -398,37 +399,47 @@ PipeWriteString(
 }
 
 
+int
+PipeReadStringField(int fd, char **value)
+{
+   short len;
+   char *s;
+
+   if (value == NULL) { errno = EINVAL; return -1; }
+   *value = NULL;
+
+   /* get the length */
+   if (PipeReadExact(fd, &len, sizeof(len)) != 0) return -1;
+
+   if (len == 0)
+      return 0;
+   if (len < 0) { errno = EPROTO; return -1; }
+
+   /* get the string */
+   s = (char *)XtMalloc(len + 1);
+   if (PipeReadExact(fd, s, (size_t)len) != 0)
+   {
+      XtFree(s);
+      return -1;
+   }
+
+   s[len] = '\0';
+   *value = s;
+   return 0;
+}
+
 /*--------------------------------------------------------------------
  * PipeReadString:
- *   read a string from the pipe
+ *   read a string from the pipe; an empty field and an error both map to NULL
+ *   for compatibility. New packet decoders use PipeReadStringField instead.
  *------------------------------------------------------------------*/
 
 char *
 PipeReadString(
 	int fd)
 {
-   short len;
-   char *s;
-   int n;
-
-   /* get the length */
-   if (PipeRead(fd, &len, sizeof(short)) != sizeof(short))
-      return NULL;
-
-   if (len == 0)
-      return NULL;
-   if (len < 0) { errno = EPROTO; return NULL; }
-
-   /* get the string */
-   s = (char *)XtMalloc(len + 1);
-   if (PipeRead(fd, s, len) != len)
-   {
-      XtFree(s);
-      return NULL;
-   }
-
-   s[len] = '\0';
-   return s;
+   char *value;
+   return PipeReadStringField(fd, &value) == 0 ? value : NULL;
 }
 
 
@@ -1785,10 +1796,10 @@ FileOpPipeCB(
    switch (pipe_msg)
    {
       case PIPEMSG_FILEOP_ERROR:
-         if (FileOpReadField(*fd, &rc, sizeof(rc)) != 0) goto malformed;
-         err_msg = PipeReadString(*fd);
-         err_arg = PipeReadString(*fd);
-         if (err_msg == NULL) goto malformed;
+         if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0) goto malformed;
+         if (PipeReadStringField(*fd, &err_msg) != 0 ||
+             PipeReadStringField(*fd, &err_arg) != 0 || err_msg == NULL)
+            goto malformed;
          if (cb_data->desktop)
             FileOperationError(cb_data->file_view_data->widget,
                                err_msg, err_arg);
@@ -1815,8 +1826,8 @@ FileOpPipeCB(
          break;
 
       case PIPEMSG_CONFIRM:
-         err_msg = PipeReadString(*fd);
-         if (err_msg == NULL) goto malformed;
+         if (PipeReadStringField(*fd, &err_msg) != 0 || err_msg == NULL)
+            goto malformed;
          title = XtNewString(GETMESSAGE(9,11, "File Manager - Move/Copy/Link Warning"));
          filop_confirm_fd = cb_data->pipe_m2s;
          _DtMessageDialog(toplevel, title, err_msg, NULL, TRUE,
@@ -1846,7 +1857,7 @@ FileOpPipeCB(
 
       case PIPEMSG_TARGET_TIME:
          /* get the modify time and update the directory cache */
-         if (FileOpReadField(*fd, &modify_time, sizeof(modify_time)) != 0)
+         if (PipeReadExact(*fd, &modify_time, sizeof(modify_time)) != 0)
             goto malformed;
          DirectoryModifyTime(cb_data->host, cb_data->directory, modify_time);
          break;
@@ -1868,10 +1879,10 @@ FileOpPipeCB(
       case PIPEMSG_FILE_MODIFIED:
          /* get the update index and modify time */
          if (FileOpReadIndex(*fd, cb_data, &i) != 0 ||
-             FileOpReadField(*fd, &modify_time, sizeof(modify_time)) != 0)
+             PipeReadExact(*fd, &modify_time, sizeof(modify_time)) != 0)
             goto malformed;
-         target_file = PipeReadString(*fd);
-         if (target_file == NULL) goto malformed;
+         if (PipeReadStringField(*fd, &target_file) != 0 || target_file == NULL)
+            goto malformed;
          DPRINTF (("PIPEMSG_FILE_MODIFIED %s\n", target_file));
 
          /* mark the file updated in the cached target directory */
@@ -1894,7 +1905,7 @@ FileOpPipeCB(
          break;
 
       case PIPEMSG_DONE:
-         if (FileOpReadField(*fd, &rc, sizeof(rc)) != 0) goto malformed;
+         if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0) goto malformed;
          done = True;
          break;
 
@@ -2588,7 +2599,7 @@ ChangeIconPipeCB(
    if (pipe_msg == PIPEMSG_FILE_MODIFIED)
    {
       /* get modify time */
-      if (FileOpReadField(*fd, &modify_time, sizeof(modify_time)) != 0)
+      if (PipeReadExact(*fd, &modify_time, sizeof(modify_time)) != 0)
          goto malformed;
 
       /* mark the old & new files as modified in the directory cache */
@@ -2622,10 +2633,10 @@ ChangeIconPipeCB(
    else if (pipe_msg == PIPEMSG_FILEOP_ERROR)
    {
       /* the rename failed */
-      if (FileOpReadField(*fd, &rc, sizeof(rc)) != 0) goto malformed;
-      err_msg = PipeReadString(*fd);
-      err_arg = PipeReadString(*fd);
-      if (err_msg == NULL) goto malformed;
+      if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0) goto malformed;
+      if (PipeReadStringField(*fd, &err_msg) != 0 ||
+          PipeReadStringField(*fd, &err_arg) != 0 || err_msg == NULL)
+         goto malformed;
       FileOperationError(msg_widget, err_msg, err_arg);
       XtFree(err_msg);
       XtFree(err_arg);
@@ -2634,12 +2645,12 @@ ChangeIconPipeCB(
    else if (pipe_msg == PIPEMSG_DONE)
    {
       /* get the return code */
-      if (FileOpReadField(*fd, &rc, sizeof(rc)) != 0) goto malformed;
+      if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0) goto malformed;
       if (rc == 0)
       {
          /* the rename was successful */
-         full_name = PipeReadString(*fd);
-         if (full_name == NULL) goto malformed;
+         if (PipeReadStringField(*fd, &full_name) != 0 || full_name == NULL)
+            goto malformed;
 
          /* All went well, destroy the text field */
          XtUnmanageChild(cb_data->w);
@@ -3252,7 +3263,7 @@ MakeFilePipeCB(
    if (pipe_msg == PIPEMSG_FILE_MODIFIED)
    {
       /* get modify time */
-      if (FileOpReadField(*fd, &modify_time, sizeof(modify_time)) != 0)
+      if (PipeReadExact(*fd, &modify_time, sizeof(modify_time)) != 0)
          goto malformed;
 
       /* mark the file updated in the directory cache */
@@ -3265,9 +3276,10 @@ MakeFilePipeCB(
 
    if (pipe_msg == PIPEMSG_DONE)
    {
-      if (FileOpReadField(*fd, &rc, sizeof(rc)) != 0) goto malformed;
-      full_name = PipeReadString(*fd);
-      if (rc == 0 && full_name == NULL) goto malformed;
+      if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0) goto malformed;
+      if (PipeReadStringField(*fd, &full_name) != 0 ||
+          (rc == 0 && full_name == NULL))
+         goto malformed;
    }
    else
    {

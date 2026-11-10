@@ -52,6 +52,8 @@
 #include <pwd.h>
 #include <errno.h>
 #include <ctype.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include <Xm/Xm.h>
 #include <Xm/XmP.h>
@@ -66,6 +68,8 @@
 #include "Encaps.h"
 #include "SharedProcs.h"
 #include "FileMgr.h"
+#include "FileProcess.h"
+#include "FileOpProtocol.h"
 #include "Desktop.h"
 #include "Main.h"
 #include "Help.h"
@@ -306,9 +310,10 @@ AttrChangeProcess(
   /* send a 'done' msg through the pipe */
   DPRINTF(("AttrChangeProcess: sending DONE, rc %d\n", rc));
   pipe_msg = PIPEMSG_DONE;
-  write(pipe_fd, &pipe_msg, sizeof(short));
-  write(pipe_fd, &rc, sizeof(int));
-  write(pipe_fd, &modify_time, sizeof(long));
+  if (DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+      DtfileProcessWriteAll(pipe_fd, &rc, sizeof(rc)) != 0 ||
+      DtfileProcessWriteAll(pipe_fd, &modify_time, sizeof(modify_time)) != 0)
+    return -1;
 
   return rc;
 }
@@ -330,28 +335,36 @@ AttrChangePipeCB(
    char *title, *err_msg, *err_arg;
    long modify_time;
    int i, n, rc;
+   Boolean malformed = False;
 
    /* read the msg from the pipe */
    pipe_msg = -1;
    n = PipeRead(*fd, &pipe_msg, sizeof(short));
 
-   if (pipe_msg == PIPEMSG_DONE)
+   if (n == sizeof(pipe_msg) && pipe_msg == PIPEMSG_DONE)
    {
-      PipeRead(*fd, &rc, sizeof(int));
-      PipeRead(*fd, &modify_time, sizeof(long));
+      if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0 ||
+          PipeReadExact(*fd, &modify_time, sizeof(modify_time)) != 0)
+         malformed = True;
    }
    else
    {
       fprintf(stderr, "Internal error in AttrChangePipeCB: bad pipe_msg %d\n",
               pipe_msg);
-      rc = 0;
+      malformed = True;
+   }
+
+   if (malformed)
+   {
+      rc = -1;
       modify_time = 0;
+      FileOpProtocolError(toplevel);
    }
 
    DPRINTF(("AttrChangePipeCB: n %d, pipe_msg %d, rc %d\n", n, pipe_msg, rc));
 
    /* if error, post error message */
-   if (rc)
+   if (rc && !malformed)
    {
       err_msg = XtNewString(GETMESSAGE(22,3,"Cannot change properties for %s"));
       FileOperationError(toplevel, err_msg, cb_data->file);
@@ -504,7 +517,7 @@ ModAttrChange(
 
       DBGFORK(("%s:  child exiting (rc %d)\n", pname, rc));
 
-      exit(rc);
+      _exit(rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
    }
 
    DBGFORK(("%s:  forked child<%d>, pipe %d\n", pname, pid, pipe_fd[0]));

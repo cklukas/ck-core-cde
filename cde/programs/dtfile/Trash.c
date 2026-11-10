@@ -150,6 +150,8 @@
 #include "MultiView.h"
 #include "Help.h"
 #include "FileMgr.h"
+#include "FileProcess.h"
+#include "FileOpProtocol.h"
 #include "Desktop.h"
 #include "Main.h"
 #include "SharedMsgs.h"
@@ -1257,11 +1259,11 @@ TrashRecSizePipeCB(
 {
    short pipe_msg;
    int n;
+   Boolean malformed = False;
 
    pipe_msg = -1;
    n = PipeRead(*fd, &pipe_msg, sizeof(short));
-   if (n <= 0)
-      pipe_msg = -1;
+   if (n != sizeof(pipe_msg)) goto malformed_response;
 
    switch (pipe_msg)
    {
@@ -1271,8 +1273,10 @@ TrashRecSizePipeCB(
          String name;
          int i;
 
-         PipeRead(*fd, &size, sizeof(unsigned long long));
-         name = PipeReadString(*fd);
+         if (PipeReadExact(*fd, &size, sizeof(size)) != 0)
+            goto malformed_response;
+         if (PipeReadStringField(*fd, &name) != 0 || name == NULL)
+            goto malformed_response;
          if (name)
          {
             for (i = 0; i < numTrashItems; i++)
@@ -1291,19 +1295,29 @@ TrashRecSizePipeCB(
       }
 
       case PIPEMSG_RECSIZE_DONE:
+         break;
+
       default:
-         close(*fd);
-         XtRemoveInput(*id);
-         trashRecsizeInput = 0;
-         trashRecsizePipe = -1;
-         trashRecsizeRunning = False;
-         TrashSetStatusMsg(NULL);
-         WriteTrashEntries();
-         if (trashFileMgrData)
-           UpdateHeaders((FileMgrRec *)trashFileMgrData->file_mgr_rec,
-                         trashFileMgrData, False);
-         return;
+         goto malformed_response;
    }
+   if (pipe_msg == PIPEMSG_RECSIZE) return;
+   goto finished;
+
+malformed_response:
+   malformed = True;
+
+finished:
+   if (malformed) FileOpProtocolError(toplevel);
+   close(*fd);
+   XtRemoveInput(*id);
+   trashRecsizeInput = 0;
+   trashRecsizePipe = -1;
+   trashRecsizeRunning = False;
+   TrashSetStatusMsg(NULL);
+   WriteTrashEntries();
+   if (trashFileMgrData)
+     UpdateHeaders((FileMgrRec *)trashFileMgrData->file_mgr_rec,
+                   trashFileMgrData, False);
 }
 
 
@@ -1370,6 +1384,7 @@ TrashMaybeStartRecSizeScan( void )
    if (pid == 0)
    {
       int j;
+      int sent_done = 0;
       short msg;
       unsigned long long size;
 
@@ -1378,14 +1393,18 @@ TrashMaybeStartRecSizeScan( void )
       {
          size = TrashCalcDirSize(paths[j]);
          msg = PIPEMSG_RECSIZE;
-         write(pipe_fd[1], &msg, sizeof(short));
-         write(pipe_fd[1], &size, sizeof(unsigned long long));
-         PipeWriteString(pipe_fd[1], names[j]);
+         if (DtfileProcessWriteAll(pipe_fd[1], &msg, sizeof(msg)) != 0 ||
+             DtfileProcessWriteAll(pipe_fd[1], &size, sizeof(size)) != 0 ||
+             PipeWriteString(pipe_fd[1], names[j]) < 0)
+            break;
       }
-      msg = PIPEMSG_RECSIZE_DONE;
-      write(pipe_fd[1], &msg, sizeof(short));
+      if (j == count)
+      {
+         msg = PIPEMSG_RECSIZE_DONE;
+         sent_done = DtfileProcessWriteAll(pipe_fd[1], &msg, sizeof(msg)) == 0;
+      }
       close(pipe_fd[1]);
-      exit(0);
+      _exit(j == count && sent_done ? EXIT_SUCCESS : EXIT_FAILURE);
    }
 
    close(pipe_fd[1]);
@@ -3483,7 +3502,7 @@ MoveToTrashProcess(
    DIR * dirp;
    struct dirent * entry;
    Boolean success;
-   int i, rc, rv;
+   int i, rc;
    char savechar;
 
    for (i = 0; i < file_count; i++)
@@ -3498,8 +3517,9 @@ MoveToTrashProcess(
          pipe_msg = PIPEMSG_OTHER_ERROR;
          rc = BAD_FILE_ERROR;
          DPRINTF(("MoveToTrashProcess: sending BAD_FILE_ERROR\n"));
-         rv = write(pipe_fd, &pipe_msg, sizeof(short));
-         rv = write(pipe_fd, &rc, sizeof(int));
+         if (DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+             DtfileProcessWriteAll(pipe_fd, &rc, sizeof(rc)) != 0)
+            return;
          continue;
       }
       if (path && MatchesSacredDirectory(path))
@@ -3509,8 +3529,9 @@ MoveToTrashProcess(
          pipe_msg = PIPEMSG_OTHER_ERROR;
          rc = BAD_FILE_SACRED;
          DPRINTF(("MoveToTrashProcess: sending BAD_FILE_SACRED\n"));
-         rv = write(pipe_fd, &pipe_msg, sizeof(short));
-         rv = write(pipe_fd, &rc, sizeof(int));
+         if (DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+             DtfileProcessWriteAll(pipe_fd, &rc, sizeof(rc)) != 0)
+            return;
          continue;
       }
 
@@ -3548,8 +3569,9 @@ MoveToTrashProcess(
            XtFree(path);
            pipe_msg = PIPEMSG_OTHER_ERROR;
            DPRINTF(("MoveToTrashProcess: sending BAD_TRASH message\n"));
-           rv = write(pipe_fd, &pipe_msg, sizeof(short));
-           rv = write(pipe_fd, &rc, sizeof(int));
+           if (DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+               DtfileProcessWriteAll(pipe_fd, &rc, sizeof(rc)) != 0)
+              return;
            continue;
          }
          else if (CheckAccess(path, W_OK) != 0 && !S_ISLNK(s1.st_mode))
@@ -3559,8 +3581,9 @@ MoveToTrashProcess(
             pipe_msg = PIPEMSG_OTHER_ERROR;
             rc = VERIFY_FILE;
             DPRINTF(("MoveToTrashProcess: sending VERIFY_FILE\n"));
-            rv = write(pipe_fd, &pipe_msg, sizeof(short));
-            rv = write(pipe_fd, &rc, sizeof(int));
+            if (DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+                DtfileProcessWriteAll(pipe_fd, &rc, sizeof(rc)) != 0)
+               return;
             continue;
          }
 
@@ -3594,8 +3617,9 @@ MoveToTrashProcess(
                pipe_msg = PIPEMSG_OTHER_ERROR;
                rc = VERIFY_DIR;
                DPRINTF(("MoveToTrashProcess: sending VERIFY_DIR\n"));
-               rv = write(pipe_fd, &pipe_msg, sizeof(short));
-               rv = write(pipe_fd, &rc, sizeof(int));
+               if (DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+                   DtfileProcessWriteAll(pipe_fd, &rc, sizeof(rc)) != 0)
+                  return;
                continue;
             }
          }
@@ -3611,14 +3635,29 @@ MoveToTrashProcess(
       {
          pipe_msg = PIPEMSG_DONE;
          DPRINTF(("MoveToTrashProcess: sending DONE\n"));
-         rv = write(pipe_fd, &pipe_msg, sizeof(short));
-         PipeWriteString(pipe_fd, path);
-         PipeWriteString(pipe_fd, to);
+         if (DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) != 0 ||
+             PipeWriteString(pipe_fd, path) < 0 ||
+             PipeWriteString(pipe_fd, to) < 0)
+         {
+            XtFree(path);
+            XtFree(to);
+            return;
+         }
       }
 
       XtFree(path);
       XtFree(to);
    }
+}
+
+static int
+MoveToTrashResultIndex(const MoveToTrashCBData *cb_data, int *index)
+{
+   if (cb_data == NULL || index == NULL || cb_data->done_count < 0 ||
+       cb_data->done_count >= cb_data->file_count)
+      return -1;
+   *index = cb_data->done_count;
+   return 0;
 }
 
 
@@ -3636,7 +3675,8 @@ MoveToTrashPipeCB(
    MoveToTrashCBData *cb_data = (MoveToTrashCBData *)client_data;
    short pipe_msg;
    int i, j, n, rc;
-   char *title, *err_msg, *err_arg;
+   char *title, *err_msg = NULL, *err_arg = NULL;
+   char *path = NULL, *to = NULL;
    int badCount;
    String buf;
    int bufsize;
@@ -3656,25 +3696,34 @@ MoveToTrashPipeCB(
    pipe_msg = -1;
    n = PipeRead(*fd, &pipe_msg, sizeof(short));
    DPRINTF(("MoveToTrashPipeCB: n %d, pipe_msg %d\n", n, pipe_msg));
+   if (n != sizeof(pipe_msg)) goto malformed_response;
 
    switch (pipe_msg)
    {
       case PIPEMSG_FILEOP_ERROR:
-         PipeRead(*fd, &rc, sizeof(int));
-         err_msg = PipeReadString(*fd);
-         err_arg = PipeReadString(*fd);
+         if (MoveToTrashResultIndex(cb_data, &i) != 0 ||
+             PipeReadExact(*fd, &rc, sizeof(rc)) != 0)
+            goto malformed_response;
+         if (PipeReadStringField(*fd, &err_msg) != 0 ||
+             PipeReadStringField(*fd, &err_arg) != 0 || err_msg == NULL)
+            goto malformed_response;
 
          FileOperationError(toplevel, err_msg, err_arg);
 
          XtFree(err_msg);
          XtFree(err_arg);
+         err_msg = err_arg = NULL;
 
-         cb_data->rc[cb_data->done_count++] = BAD_FILE_ERROR;
+         cb_data->rc[i] = BAD_FILE_ERROR;
+         cb_data->done_count++;
          break;
 
       case PIPEMSG_OTHER_ERROR:
-         PipeRead(*fd, &rc, sizeof(int));
-         cb_data->rc[cb_data->done_count++] = rc;
+         if (MoveToTrashResultIndex(cb_data, &i) != 0 ||
+             PipeReadExact(*fd, &rc, sizeof(rc)) != 0)
+            goto malformed_response;
+         cb_data->rc[i] = rc;
+         cb_data->done_count++;
          break;
 
       case PIPEMSG_TARGET_TIME:
@@ -3684,23 +3733,41 @@ MoveToTrashPipeCB(
          break;
 
       case PIPEMSG_DONE:
-         i = cb_data->done_count++;
-         cb_data->path[i] = PipeReadString(*fd);
-         cb_data->to[i] = PipeReadString(*fd);
+         if (MoveToTrashResultIndex(cb_data, &i) != 0)
+            goto malformed_response;
+         if (PipeReadStringField(*fd, &path) != 0 ||
+             PipeReadStringField(*fd, &to) != 0 || path == NULL || to == NULL)
+            goto malformed_response;
+         cb_data->path[i] = path;
+         cb_data->to[i] = to;
+         path = to = NULL;
          cb_data->rc[i] = 0;
+         cb_data->done_count++;
          break;
 
       default:
         fprintf(stderr,
                 "Internal error in MoveToTrashPipeCB: bad pipe_msg %d\n",
                 pipe_msg);
-        /* Don't know how it can get in here, but if it does, we'll try to
-         * simulate an error condition.  Without it, the SGI hung up
-         */
-        while (cb_data->done_count < cb_data->file_count)
-           cb_data->rc[cb_data->done_count++] = BAD_FILE_ERROR;
+        goto malformed_response;
 
    }
+
+   goto decoded;
+
+malformed_response:
+   XtFree(err_msg);
+   XtFree(err_arg);
+   XtFree(path);
+   XtFree(to);
+   FileOpProtocolError(toplevel);
+   if (cb_data->done_count < 0) cb_data->done_count = 0;
+   if (cb_data->done_count > cb_data->file_count)
+      cb_data->done_count = cb_data->file_count;
+   while (cb_data->done_count < cb_data->file_count)
+      cb_data->rc[cb_data->done_count++] = BAD_FILE_ERROR;
+
+decoded:
 
 
    /* if still more files to be processed, return now to wait for the rest */
@@ -4117,6 +4184,13 @@ MoveToTrash(
    int pipe_fd[2];
    int pid;
 
+   if (!RestoreCountValid(file_count) || file_list == NULL)
+   {
+     FileOpStartError(toplevel, EINVAL);
+     if (msg != 0) tttk_message_fail(msg, TT_DESKTOP_EINVAL, 0, 1);
+     return;
+   }
+
    if( !TrashInitialized )
    {
      if (msg != 0) {
@@ -4175,7 +4249,7 @@ MoveToTrash(
 
       DBGFORK(("%s:  child exiting\n", pname));
 
-      exit(0);
+      _exit(EXIT_SUCCESS);
    }
 
    DBGFORK(("%s:  forked child<%d>, pipe %d\n", pname, pid, pipe_fd[0]));
@@ -4881,7 +4955,7 @@ EmptyTrashProcess(
 	int del_count,
 	int *rc)
 {
-   int i, rv;
+   int i;
    short pipe_msg;
 
    /*
@@ -4897,8 +4971,21 @@ EmptyTrashProcess(
    /* send return codes back trough the pipe */
    pipe_msg = PIPEMSG_DONE;
    DPRINTF(("EmptyTrashProcess: sending DONE\n"));
-   rv = write(pipe_fd, &pipe_msg, sizeof(short));
-   rv = write(pipe_fd, rc, del_count * sizeof(int));
+   if (RestoreCountValid(del_count) && rc != NULL &&
+       DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) == 0)
+      (void)DtfileProcessWriteAll(pipe_fd, rc,
+                                  (size_t)del_count * sizeof(*rc));
+}
+
+static int
+TrashReadResults(int fd, int *results, int count)
+{
+   if (results == NULL || count <= 0 || count > INT_MAX / (int)sizeof(*results))
+   {
+      errno = EINVAL;
+      return -1;
+   }
+   return PipeReadExact(fd, results, (size_t)count * sizeof(*results));
 }
 
 
@@ -4916,23 +5003,29 @@ EmptyTrashPipeCB(
    EmptyTrashCBData *cb_data = (EmptyTrashCBData *)client_data;
    short pipe_msg;
    int i, j, k, n, rc;
-   char *title, *err_msg, *err_arg;
+   char *title, *err_msg = NULL, *err_arg = NULL;
    int problemCount, itemCount;
    String buf;
    int bufsize;
    char *file_name;
+   Boolean protocol_error = False;
 
    /* read the next msg from the pipe */
    pipe_msg = -1;
+   if (!RestoreCountValid(cb_data->del_count)) goto malformed_response;
+   for (i = 0; i < cb_data->del_count; i++) cb_data->rc[i] = -1;
    n = PipeRead(*fd, &pipe_msg, sizeof(short));
    DPRINTF(("EmptyTrashPipeCB: n %d, pipe_msg %d\n", n, pipe_msg));
+   if (n != sizeof(pipe_msg)) goto malformed_response;
 
    switch (pipe_msg)
    {
       case PIPEMSG_FILEOP_ERROR:
-         PipeRead(*fd, &rc, sizeof(int));
-         err_msg = PipeReadString(*fd);
-         err_arg = PipeReadString(*fd);
+         if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0)
+            goto malformed_response;
+         if (PipeReadStringField(*fd, &err_msg) != 0 ||
+             PipeReadStringField(*fd, &err_arg) != 0 || err_msg == NULL)
+            goto malformed_response;
          /* This call will popup an error dialog.
 
             FileOperationError(toplevel, err_msg, err_arg);
@@ -4944,17 +5037,31 @@ EmptyTrashPipeCB(
          */
          XtFree(err_msg);
          XtFree(err_arg);
-         return;
+         err_msg = err_arg = NULL;
+         break;
 
       case PIPEMSG_DONE:
-         PipeRead(*fd, cb_data->rc, cb_data->del_count * sizeof(int));
+         if (TrashReadResults(*fd, cb_data->rc, cb_data->del_count) != 0)
+            goto malformed_response;
          break;
 
       default:
-        fprintf(stderr,
-                "Internal error in EmptyTrashPipeCB: bad pipe_msg %d\n",
-                pipe_msg);
+         fprintf(stderr,
+                 "Internal error in EmptyTrashPipeCB: bad pipe_msg %d\n",
+                 pipe_msg);
+         goto malformed_response;
    }
+   goto decoded;
+
+malformed_response:
+   XtFree(err_msg);
+   XtFree(err_arg);
+   if (RestoreCountValid(cb_data->del_count))
+      for (i = 0; i < cb_data->del_count; i++) cb_data->rc[i] = -1;
+   protocol_error = True;
+   FileOpProtocolError(toplevel);
+
+decoded:
 
    /* close the pipe and cancel the callback */
    DPRINTF(("EmptyTrashPipeCB: done\n"));
@@ -4997,7 +5104,7 @@ EmptyTrashPipeCB(
          {
             /* erase failed */
             problemCount++;
-            if (itemCount < 8)
+            if (!protocol_error && itemCount < 8)
             {
                char * msg = XtNewString(GETMESSAGE(27,96, "The following objects could not be removed from the file system:   \n"));
 
@@ -5026,7 +5133,7 @@ EmptyTrashPipeCB(
       TrashUpdateWindowIcon();
 
       /* Report any errors */
-      if (problemCount)
+      if (problemCount && !protocol_error)
       {
          /* If more items than can be displayed, let user know */
          if (itemCount < problemCount)
@@ -5064,7 +5171,7 @@ EmptyTrashPipeCB(
          /* arrange for the directory containing the file to be updated */
          UpdateDirectoryOf(cb_data->del_list[0].trash);
       }
-      else
+      else if (!protocol_error)
       {
          /*  put up an error message saying the file couldn't be removed */
          char *buffer;
@@ -5122,6 +5229,13 @@ EmptyTrash(
    int pipe_fd[2];
    int pid;
 
+   if (!RestoreCountValid(del_count) || del_list == NULL)
+   {
+     FileOpStartError(toplevel, EINVAL);
+     if (msg != 0) tttk_message_fail(msg, TT_DESKTOP_EINVAL, 0, 1);
+     return;
+   }
+
    if( !TrashInitialized )
    {
      if (msg != 0) {
@@ -5171,7 +5285,7 @@ EmptyTrash(
 
       DBGFORK(("%s:  child exiting\n", pname));
 
-      exit(0);
+      _exit(EXIT_SUCCESS);
    }
 
    DBGFORK(("%s:  forked child<%d>, pipe %d\n", pname, pid, pipe_fd[0]));
