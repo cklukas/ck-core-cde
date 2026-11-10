@@ -238,6 +238,13 @@
   `make -C lib/tt/lib check` (sanitizer cases with a
   simulated and, started as the superuser, a real privileged process) and
   `make -C lib/tt/bin check`.
+- dtmail: format the text of mail server errors and the lock dialog with
+  `snprintf()`, and quote the sound file named by `realsound` in the mailrc
+  as one argument for the shell. The answer of a POP3 or IMAP server no longer
+  overflows the 2048-byte dialog buffer, and the command that plays a sound is
+  no longer built in a fixed buffer from an unquoted name. Covered by
+  `programs/dtmail/tests/check-message-text.py`; described in
+  `docs/improvements/mail.md`.
 - dtmail: handle the data of ToolTalk Mail, Display and Print requests safely.
   A Mail request without data no longer sends a message buffer that was never
   set; the file it names must be a regular file of at most 64 MiB, a FIFO is

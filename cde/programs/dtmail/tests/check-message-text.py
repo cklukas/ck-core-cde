@@ -392,6 +392,53 @@ int main(int argc, char **argv) { return dispatch(argc, argv, scenarios); }
     print("phrase() of %s: %d scenarios passed" % (relative, run_harness("phrase" + relative.replace("/", "_").replace(".", "_"), harness)))
 
 # ---------------------------------------------------------------------------------------------------
+# a file name from the mailrc as one word for the shell (RoamMenuWindow.C)
+window = read("dtmail/RoamMenuWindow.C")
+quoter = block(window, r"^static char \*\nquotedForShell\(const char \* name\)\n", required=False)
+if quoter is None:
+    problems.append("RoamMenuWindow.C has no quotedForShell(): the sound named in the mailrc is given to the "
+                    "shell in a buffer of 1500 bytes without quoting")
+else:
+    harness = COMMON + r'''
+#include <DtMail/TextBuffer.hh>
+''' + quoter + r'''
+static std::string through_the_shell(const std::string &name)
+{
+    char *q = quotedForShell(name.c_str());
+    /* the shell prints the one word it got; a name with a newline or a quote must come back as it went in */
+    std::string command = std::string("printf %s ") + q;
+    delete [] q;
+    FILE *p = popen(command.c_str(), "r");
+    std::string out; char b[4096]; size_t n;
+    while ((n = fread(b, 1, sizeof b, p)) > 0) out.append(b, n);
+    pclose(p);
+    return out;
+}
+static int plain_and_odd_names_are_one_word() {
+    for (const char *name : {"beep.au", "a b", "$(touch /nonexistent/x)", "`id`", "a;b", "a|b", "a&b", "a'b", "'", "''",
+                             "a\"b", "a\\b", "*", "~", "a\nb", "-n", "--version", "\t"})
+        CHECK(through_the_shell(name) == name);
+    return 0;
+}
+static int long_names_are_one_word() {
+    for (size_t n : {1, 1499, 1500, 1501, 5000, 20000}) {
+        std::string name(n, 'q');
+        CHECK(through_the_shell(name) == name);
+        std::string quotes(n / 2 + 1, '\'');
+        CHECK(through_the_shell(quotes) == quotes);
+    }
+    return 0;
+}
+static Scenario scenarios[] = {
+    {"plain_and_odd_names_are_one_word", plain_and_odd_names_are_one_word},
+    {"long_names_are_one_word", long_names_are_one_word},
+    {NULL, NULL}
+};
+int main(int argc, char **argv) { return dispatch(argc, argv, scenarios); }
+'''
+    print("Quoting of a file name: %d scenarios passed" % run_harness("quoting", harness))
+
+# ---------------------------------------------------------------------------------------------------
 # The places that need a display or a mailbox: source guards.
 def body_without_comments(text):
     return re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
@@ -433,6 +480,12 @@ for relative, array, limit in (("dtmail/Dmx.h", r"_messages\s*\[\s*(\w+)\s*\]", 
 for relative in ("dtmail/DmxMailbox.C", "dtmailpr/mailbox.C"):
     if "DMXMAXMESSAGES" not in body_without_comments(read(relative)):
         problems.append("%s: loadMessages() does not stop at the end of the array of messages" % relative)
+
+window_code = body_without_comments(window)
+if re.search(r"\bsprintf\s*\(\s*buffer", window_code):
+    problems.append("dtmail/RoamMenuWindow.C: the text of a mail server error is written to a dialog buffer with sprintf()")
+if re.search(r"new char\s*\[\s*1500\s*\]", window_code):
+    problems.append("dtmail/RoamMenuWindow.C: the sound command is built in a buffer of 1500 bytes")
 
 if problems:
     sys.exit("message text checks failed:\n  " + "\n  ".join(problems))

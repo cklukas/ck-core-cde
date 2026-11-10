@@ -84,7 +84,7 @@ The reply commands, "Save As Text", the print commands and `dtmailpr` put
 addresses, the date, the subject and character set names of the message into
 headers of a reply, into the text they write and into the name of a print
 file. Those strings come from the sender. The buffers that held them were sized
-by a guess, and a message could write past them.
+by a guess, and a message, or the server it came from, could write past them.
 
 - `include/DtMail/TextBuffer.hh` holds text that grows as it is appended to.
   The address list of a reply (`ComposeFamily::valueToAddrString()`; every `,`
@@ -110,6 +110,13 @@ by a guess, and a message could write past them.
 - Printing or saving as text more than 2047 messages at once, and `dtmailpr` on
   a mailbox of more than 1023 messages, wrote pointers past the array of
   messages. The commands now use the first messages and say how many.
+- The text of a mail server error (the answer of a POP3 or IMAP server, the
+  command that failed) and the text of the lock dialog are formatted into the
+  dialog buffer with `snprintf()`; they were written with `sprintf()` into 2048
+  bytes, and a server chooses how long its answer is.
+- The sound that is played when new mail arrives (`realsound` in the mailrc) is
+  quoted as one argument for the shell by `quotedForShell()`; the command was
+  formatted into a buffer of 1500 bytes without quoting.
 
 `make -C programs/dtmail check` runs the production functions under
 AddressSanitizer and UndefinedBehaviorSanitizer on headers of every length, and

@@ -96,6 +96,7 @@
 #include <Dt/Dnd.h>
 #include <DtMail/DtMailTypes.h>
 #include <DtMail/IO.hh>
+#include <DtMail/TextBuffer.hh>
 #include "SelectFileCmd.h"
 #include "RoamMenuWindow.h"
 #include "RoamApp.h"
@@ -4321,7 +4322,7 @@ RoamMenuWindow::syncViewAndStore(
 	    char *buffer = new char[2048];
 	    char *errmsgarg =	va_arg(args, char*);
 
-	    sprintf(buffer, "%s", errmsgarg);
+	    snprintf(buffer, 2048, "%s", errmsgarg);
 	    this->_genDialog->setToTextFieldDialog(
 				CATGETS(DT_catd, 2, 10, "Mailer"),
 				buffer, DTM_TRUE);
@@ -4354,7 +4355,7 @@ RoamMenuWindow::syncViewAndStore(
 
 	    errmsg = CATGETS(DT_catd, 1, 256, "Mail server access failed:\n%s");
 
-	    sprintf(buffer, errmsg, errmsgarg);
+	    snprintf(buffer, 2048, errmsg, errmsgarg);
 	    this->_genDialog->setToErrorDialog(
 				CATGETS(DT_catd, 2, 10, "Mailer"),
 				buffer);
@@ -4384,7 +4385,7 @@ RoamMenuWindow::syncViewAndStore(
 	    errmsg =
 	      CATGETS(DT_catd, 1, 258, "User Getmail command failed:\n%s");
 
-	    sprintf(buffer, errmsg, errmsgarg);
+	    snprintf(buffer, 2048, errmsg, errmsgarg);
 	    this->_genDialog->setToErrorDialog(
 				CATGETS(DT_catd, 2, 10, "Mailer"),
 				buffer);
@@ -4420,7 +4421,7 @@ RoamMenuWindow::syncViewAndStore(
 	    char *buffer = new char[2048];
 	    char *errmsgarg =	va_arg(args, char*);
 
-	    sprintf(buffer, "%s", errmsgarg);
+	    snprintf(buffer, 2048, "%s", errmsgarg);
 	    this->_genDialog->setToErrorDialog(
 				CATGETS(DT_catd, 2, 10, "Mailer"),
 				buffer);
@@ -4539,7 +4540,7 @@ RoamMenuWindow::syncViewAndStore(
 
         // We are not able to obtain a .dtmail lock on this folder,
         // ask user if he wants to open it as read only.
-	sprintf(buffer, msgfmt, errormsg, path, ok, cancel, lockpath);
+	snprintf(buffer, 2048, msgfmt, errormsg, path, ok, cancel, lockpath);
         _genDialog->setToQuestionDialog(mailer, buffer);
 	answer =_genDialog->post_and_return(ok, cancel, DTMAILHELPOPENREADONLY);
 	this->normalCursor();
@@ -4877,6 +4878,23 @@ RoamMenuWindow::deactivate_default_attach_menu()
     _att_select_all->deactivate();
 }
 
+// A file name as one word for the shell.
+static char *
+quotedForShell(const char * name)
+{
+    TextBuffer quoted;
+
+    quoted.append("'");
+    for (const char * c = name; *c; c++) {
+	if (*c == '\'')
+	    quoted.append("'\\''");
+	else
+	    quoted.append(c, 1);
+    }
+    quoted.append("'");
+    return quoted.release();
+}
+
 void
 RoamMenuWindow::newMailIndicators(void)
 {
@@ -4920,10 +4938,16 @@ RoamMenuWindow::newMailIndicators(void)
 	if (error.isNotSet()) {
 	    struct stat stat;
 	    if (SafeStat("/usr/bin/audioplay", &stat) == 0) {
-		char *play_str = new char[1500];
-		sprintf(play_str, "/usr/bin/audioplay %s", val);
-		system(play_str);
-		delete [] play_str;
+		// The name of the sound comes from the mailrc: it is one
+		// argument, whatever characters it has.
+		char *sound = quotedForShell(val);
+		TextBuffer play_str;
+		play_str.append("/usr/bin/audioplay ");
+		play_str.append(sound);
+		delete [] sound;
+		if (system(play_str.text()) == -1) {
+		    // the sound is a courtesy
+		}
 	    }
 	}
 
