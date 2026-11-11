@@ -89,7 +89,8 @@ static const int _ttDtNumProcessRequests =
 static Ttdt_session_requests
 _ttDtKnownRequests()
 {
-	Ttdt_session_requests known = TTDT_SESSION_DO_COMMAND;
+	Ttdt_session_requests known = TTDT_SESSION_DO_COMMAND |
+				      TTDT_SESSION_SET_XINFO;
 	for (int r = 0; r < _ttDtNumProcessRequests; r++) {
 		known |= _ttDtProcessRequests[ r ].request;
 	}
@@ -145,7 +146,7 @@ _ttDtProcessRequestsPat(
 
 //
 // Create patterns for either session_join or message_accept.  A contract
-// (message_accept) takes no requests of the process.
+// (message_accept) takes Set_XInfo and no other request.
 //
 Tt_pattern *_TtDtProcid::
 pats_create(
@@ -159,18 +160,27 @@ pats_create(
 	if ((requests & ~_ttDtKnownRequests()) != 0) {
 		return (Tt_pattern *)tt_error_pointer( TT_ERR_NUM );
 	}
-	if ((contract != 0) && (requests != 0)) {
+	if ((contract != 0) &&
+	    ((requests & ~(Ttdt_session_requests)TTDT_SESSION_SET_XINFO) != 0)) {
 		return (Tt_pattern *)tt_error_pointer( TT_ERR_NUM );
 	}
 	if (((requests & TTDT_SESSION_DO_COMMAND) != 0) && (cb == 0)) {
 		// nobody could answer a Do_Command that is not passed on
 		return (Tt_pattern *)tt_error_pointer( TT_ERR_POINTER );
 	}
-	Ttdt_session_requests processRequests =
-		requests & ~(Ttdt_session_requests)TTDT_SESSION_DO_COMMAND;
-	// the patterns every join and every accept makes, a pattern for
-	// Do_Command and one for the requests of the process if they are
-	// asked for, and the end of the array
+	if (((requests & TTDT_SESSION_SET_XINFO) != 0) && (shell == 0) &&
+	    (cb == 0)) {
+		// nobody could answer a Set_XInfo: the library answers it
+		// only for a shell, and otherwise passes it on
+		return (Tt_pattern *)tt_error_pointer( TT_ERR_POINTER );
+	}
+	Ttdt_session_requests processRequests = requests &
+		~(Ttdt_session_requests)(TTDT_SESSION_DO_COMMAND |
+					 TTDT_SESSION_SET_XINFO);
+	// the patterns every join and every accept makes (Set_XInfo among
+	// them, if it is asked for), a pattern for Do_Command and one for the
+	// requests of the process if they are asked for, and the end of the
+	// array
 	int numPats = 11;
 	if ((requests & TTDT_SESSION_DO_COMMAND) != 0) {
 		numPats++;
@@ -201,8 +211,10 @@ pats_create(
 		tt_pattern_register( pats[i] );
 		pats[++i] = ttdt_Get_XInfo_pat(	TT_HANDLE, contract,
 				_ttdt_do_Get_XInfo, shell, 1 );
-		pats[++i] = ttdt_Set_XInfo_pat(	TT_HANDLE, contract,
-				_ttdt_do_Set_XInfo, shell, 1 );
+		if ((requests & TTDT_SESSION_SET_XINFO) != 0) {
+			pats[++i] = ttdt_Set_XInfo_pat(	TT_HANDLE, contract,
+					_ttdt_do_Set_XInfo, shell, 1 );
+		}
 		pats[++i] = _ttdt_pat(TTDT_RAISE, _ttdt_contract_cb, TT_HANDLE,
 				contract, (void *)_ttdt_do_RaiseLower, shell, 0 );
 		tt_pattern_op_add( pats[i], _ttDtOp( TTDT_LOWER ) );
@@ -225,8 +237,10 @@ pats_create(
 		tt_pattern_register( pats[i] );
 		pats[++i] = ttdt_Get_XInfo_pat(	TT_HANDLE, contract,
 				(Ttdt_XInfo_out_cb)cb, clientData, 1 );
-		pats[++i] = ttdt_Set_XInfo_pat(	TT_HANDLE, contract,
-				(Ttdt_XInfo_in_cb)cb, clientData, 1 );
+		if ((requests & TTDT_SESSION_SET_XINFO) != 0) {
+			pats[++i] = ttdt_Set_XInfo_pat(	TT_HANDLE, contract,
+					(Ttdt_XInfo_out_cb)cb, clientData, 1 );
+		}
 		pats[++i] = _ttdt_pat(TTDT_RAISE, _ttdt_contract_cb, TT_HANDLE,
 				contract, (void *)cb, clientData, 0 );
 		tt_pattern_op_add( pats[i], _ttDtOp( TTDT_LOWER ) );

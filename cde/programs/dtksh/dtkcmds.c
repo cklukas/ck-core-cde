@@ -6200,6 +6200,9 @@ do_ttdt_session_join(
          case TTDT_GET_SYSINFO:
             request = TTDT_SESSION_GET_SYSINFO;
             break;
+         case TTDT_SET_XINFO:
+            request = TTDT_SESSION_SET_XINFO;
+            break;
          default:
             errmsg = strdup(GETMESSAGE(
              "ttdt_session_join does not answer the request %s"));

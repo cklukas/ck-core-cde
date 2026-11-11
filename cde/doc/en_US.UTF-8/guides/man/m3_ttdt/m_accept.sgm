@@ -28,6 +28,7 @@
 <ParamDef>void *<Parameter>clientdata</Parameter></ParamDef>
 <ParamDef>int <Parameter>accept</Parameter></ParamDef>
 <ParamDef>int <Parameter>sendStatus</Parameter></ParamDef>
+<ParamDef>Ttdt_contract_requests <Parameter>requests</Parameter></ParamDef>
 </FuncSynopsis>
 </RefSynopsisDiv>
 <RefSect1>
@@ -73,6 +74,35 @@ treats messages in (2) like (3).
 <SystemItem Class="Constant">NULL</SystemItem>, <Function>ttdt_message_accept</Function> passes messages in (3) to the
 <Emphasis>cb</Emphasis> callback; otherwise it fails with
 <SystemItem Class="Constant">TT_DESKTOP_ENOTSUP</SystemItem>.</Para>
+<Para>The <Symbol Role="Message">Set_XInfo</Symbol> request is registered for only if
+the caller asks for it in <Emphasis>requests</Emphasis>, which is zero
+(<SystemItem Class="Constant">TTDT_CONTRACT_NO_REQUESTS</SystemItem>) or
+<SystemItem Class="Constant">TTDT_CONTRACT_SET_XINFO</SystemItem>; there is no other
+value. A request that is not asked for is not registered for and fails with
+<SystemItem Class="Constant">TT_DESKTOP_ENOTSUP</SystemItem>. If it is asked for and
+<Symbol Role="Variable">shell</Symbol> is not
+<SystemItem Class="Constant">NULL</SystemItem>, the ToolTalk service handles it
+transparently; if <Symbol Role="Variable">shell</Symbol> is
+<SystemItem Class="Constant">NULL</SystemItem>, it is passed to the
+<Emphasis>cb</Emphasis> callback, which is then required.
+</Para>
+<Para>What <Symbol Role="Message">Set_XInfo</Symbol> does is this: the display of a
+widget cannot be changed, and neither can its visual or depth, so the request
+sets the <SystemItem Class="EnvironVar">DISPLAY</SystemItem> environment variable to
+its display argument and nothing else. The windows and the connection to the X
+server that the program already has stay where they are, and only what the program
+starts or opens afterwards (the programs it runs, a connection it makes with the
+default display) uses the new display. The display must be a host name or the path
+of a socket, a colon and a number (letters, digits and <Literal>._-:/[]%+@,</Literal>
+only, no blanks or shell characters, at most 512 characters), the visual, if there
+is one, a name of the visuals of <Filename>X.h</Filename> (<Literal>StaticGray</Literal>
+to <Literal>DirectColor</Literal>) and the depth, if there is one, 1 to 32. A request
+with a value that is not one of these fails with
+<SystemItem Class="Constant">TT_DESKTOP_EINVAL</SystemItem>, one with a display that is
+missing or with a null byte inside a string with
+<SystemItem Class="Constant">TT_DESKTOP_EPROTO</SystemItem>, and the environment
+is not changed.
+</Para>
 <Para>If
 <Emphasis>accept</Emphasis> is True,
 <Function>ttdt_message_accept</Function> calls
@@ -114,6 +144,14 @@ The application can use
 </Para>
 <VariableList>
 <VarListEntry>
+<Term>TT_ERR_NUM</Term>
+<ListItem>
+<Para><Emphasis>requests</Emphasis> has a value that is none of the above.
+The contract was not accepted.
+</Para>
+</ListItem>
+</VarListEntry>
+<VarListEntry>
 <Term>TT_ERR_NOMP</Term>
 <ListItem>
 <Para>The
@@ -125,7 +163,10 @@ The application can use
 <Term>TT_ERR_POINTER</Term>
 <ListItem>
 <Para>The pointer passed does not point to an object
-of the correct type for this operation.
+of the correct type for this operation, or <Emphasis>requests</Emphasis> asks for
+<Symbol Role="Message">Set_XInfo</Symbol> and both <Symbol Role="Variable">shell</Symbol>
+and <Emphasis>cb</Emphasis> are <SystemItem Class="Constant">NULL</SystemItem>.
+The contract was not accepted.
 </Para>
 </ListItem>
 </VarListEntry>

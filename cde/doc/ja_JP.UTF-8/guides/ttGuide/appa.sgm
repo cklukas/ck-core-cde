@@ -1185,10 +1185,11 @@ op</Symbol>と<Symbol Role="Variable">scope</Symbol>で要求を作成し、そ�
 </IndexTerm>ttdt_message_accept</Title>
 <ProgramListing>Tt_pattern *     ttdt_message_accept(     Tt_message         contract,
                                           Ttdt_contract_cb   cb,
-                                          void *             clientdata,
                                           Widget             shell,
+                                          void *             clientdata,
                                           int                accept,
-                                          int                sendStatus );
+                                          int                sendStatus,
+                                          Ttdt_contract_requests requests );
 </ProgramListing>
 </Example>
 <Para><Filename>ttdt_message_accept</Filename>関数は、ToolTalk要求を処理することを
@@ -1361,16 +1362,33 @@ ed</Command></Para></Entry>
 </Para></Entry>
 </Row>
 <Row>
-<Entry><Para><Command>Get_XInfo</Command>,
+<Entry><Para><Command>Get_XInfo</Command>
 <IndexTerm>
 <Primary>Get_XInfo要求</Primary>
-</IndexTerm><Command>Set_XInfo</Command><IndexTerm>
-<Primary>Set_XInfo要求</Primary>
 </IndexTerm></Para></Entry>
 <Entry><Para><Symbol Role="Variable">shell</Symbol>パラメータがNULLでない場合は、
-これらの要求は透過的に処理されます。<Symbol Role="Variable">shell</Symbol>パラメー
-タがNULLで、<Emphasis>cb</Emphasis>パラメータがNULLでない場合は、これらの要求はコ
-ールバック・ルーチンに渡されます。それ以外の場合は、これらの要求はエラー
+この要求は透過的に処理されます。<Symbol Role="Variable">shell</Symbol>パラメー
+タがNULLで、<Emphasis>cb</Emphasis>パラメータがNULLでない場合は、この要求はコ
+ールバック・ルーチンに渡されます。それ以外の場合は、この要求はエラー
+<IndexTerm>
+<Primary>TT_DESKTOP_ENOTSUP</Primary>
+</IndexTerm><IndexTerm>
+<Primary>エラー・メッセージ</Primary>
+<Secondary>TT_DESKTOP_ENOTSUP</Secondary>
+</IndexTerm><Filename>TT_DESKTOP_ENOTSUP</Filename>とともに異常終了します。
+</Para></Entry>
+</Row>
+<Row>
+<Entry><Para><Command>Set_XInfo</Command><IndexTerm>
+<Primary>Set_XInfo要求</Primary>
+</IndexTerm></Para></Entry>
+<Entry><Para><Symbol Role="Variable">requests</Symbol>パラメータで指定されていて
+(<Literal>TTDT_CONTRACT_SET_XINFO</Literal>)、<Symbol Role="Variable">shell</Symbol>パラメータが
+NULLでない場合、この要求は透過的に処理されます。その場合、要求が運ぶディスプレイに
+環境変数<Filename>$DISPLAY</Filename>を設定し、プログラムのウィンドウと接続はそのままにします。
+<Symbol Role="Variable">shell</Symbol>パラメータがNULLの場合は、コールバック・ルーチンに渡されます
+(コールバックが必要です)。<Symbol Role="Variable">requests</Symbol>パラメータで指定されていない場合は、
+この要求はエラー
 <IndexTerm>
 <Primary>TT_DESKTOP_ENOTSUP</Primary>
 </IndexTerm><IndexTerm>
@@ -1450,6 +1468,10 @@ ed</Command></Para></Entry>
 ルがどの配信範囲にも参加していないと、ディスパッチされたメッセージによってptypeの
 他のインスタンスが起動されます。</Para>
 </Note>
+<Para><Symbol Role="Variable">requests</Symbol>パラメータには、<Literal>TTDT_CONTRACT_NO_REQUESTS</Literal>(0)か
+<Literal>TTDT_CONTRACT_SET_XINFO</Literal>を指定します。これ以外の値はなく、これ以外の値を指定すると、
+コントラクトが受け入れられる前に<Literal>TT_ERR_NUM</Literal>で呼び出しが失敗します。指定しなかった
+要求に対しては登録が行われないため、その要求は異常終了します。</Para>
 <Para><Emphasis>accept</Emphasis>がtureの場合、<Filename>ttdt_message_accept</Filename>関数は次を呼び出します。</Para>
 <programlisting><IndexTerm><Primary>tt_message_accept( contract )</Primary></IndexTerm>
 tt_message_accept(   contract   )</ProgramListing>
@@ -1501,6 +1523,11 @@ tt_message_accept(   contract   )</ProgramListing>
 </THead>
 <TBody>
 <Row>
+<Entry><Para><Filename>TT_ERR_NUM</Filename></Para></Entry>
+<Entry><Para><Symbol Role="Variable">requests</Symbol>パラメータに、上記以外の値が指定されました。
+コントラクトは受け入れられませんでした。</Para></Entry>
+</Row>
+<Row>
 <Entry><Para><Filename><IndexTerm>
 <Primary>TT_ERR_NOMP</Primary>
 </IndexTerm><IndexTerm>
@@ -1521,6 +1548,9 @@ tt_message_accept(   contract   )</ProgramListing>
 </IndexTerm>TT_ERR_POINTER</Filename></Para></Entry>
 <Entry><Para>渡されたポインタが、このオペレーションに適した型のオブジェクトを指し
 ていません。たとえば、文字列が必要なときにポインタは整数を指している場合などです。
+また、<Symbol Role="Variable">requests</Symbol>でSet_XInfoを指定し、<Symbol Role="Variable">shell</Symbol>
+パラメータと<Emphasis>cb</Emphasis>パラメータの両方がNULLの場合にも返されます。
+コントラクトは受け入れられませんでした。
 </Para></Entry>
 </Row>
 <Row>
@@ -2325,11 +2355,13 @@ Tt_pattern * ttdt_session_join( const char *        sessid,
 <Entry><Para><Filename><IndexTerm>
 <Primary>Set_XInfo要求</Primary>
 </IndexTerm>Set_XInfo</Filename></Para></Entry>
-<Entry><Para><Symbol Role="Variable">shell</Symbol>パラメータの値がNULLでなく、シ
-ェルが実体化された<Emphasis>mappedWhenManaged</Emphasis>
-<Emphasis>applicationShellWidget</Emphasis>の場合、このメッセージは透過的に処理さ
-れます。シェルが<Emphasis>mappedWhenManaged applicationShellWidge</Emphasis>でない
-場合は、エラー
+<Entry><Para><Symbol Role="Variable">requests</Symbol>パラメータで指定されていて
+(<Literal>TTDT_SESSION_SET_XINFO</Literal>)、<Symbol Role="Variable">shell</Symbol>パラメータの値が
+NULLでない場合、このメッセージは透過的に処理されます。その場合、メッセージが運ぶディスプレイに
+環境変数<Filename>$DISPLAY</Filename>を設定し、プログラムのウィンドウと接続はそのままにします。
+<Symbol Role="Variable">shell</Symbol>パラメータがNULLの場合は、コールバックに渡されます
+(コールバックが必要です)。<Symbol Role="Variable">requests</Symbol>パラメータで指定されていない場合は、
+エラー
 <Filename><IndexTerm>
 <Primary>TT_DESKTOP_ENOTSUP</Primary>
 </IndexTerm><IndexTerm>
@@ -2416,9 +2448,11 @@ NULLでないことが必要です)、このメッセージはコールバック
 <Literal>TTDT_SESSION_GET_ENVIRONMENT</Literal>、<Literal>TTDT_SESSION_SET_ENVIRONMENT</Literal>、
 <Literal>TTDT_SESSION_GET_SITUATION</Literal>、<Literal>TTDT_SESSION_SET_SITUATION</Literal>、
 <Literal>TTDT_SESSION_SIGNAL</Literal>、<Literal>TTDT_SESSION_GET_SYSINFO</Literal>、
-<Literal>TTDT_SESSION_DO_COMMAND</Literal>のビット単位のORを指定します。指定しなかった要求に
+<Literal>TTDT_SESSION_DO_COMMAND</Literal>、<Literal>TTDT_SESSION_SET_XINFO</Literal>のビット単位のORを指定します。指定しなかった要求に
 対しては登録が行われないため、その要求は異常終了します。セッション内のどのプロセスでも
-これらの要求を送信できるので、プロセスが必要とする要求だけを指定してください。</Para>
+これらの要求を送信できるので、プロセスが必要とする要求だけを指定してください。シェルがない場合、
+<Literal>TTDT_SESSION_DO_COMMAND</Literal>と<Literal>TTDT_SESSION_SET_XINFO</Literal>には、要求の渡し先となる
+コールバックが必要です。</Para>
 <Para>これらの要求が運ぶ値は、何かが変更される前に検査されます。値が不正な要求は異常終了し、
 何も変更しません。<Literal>Set_Environment</Literal>の変数にはシェル変数の名前を指定する必要が
 あり、値は32768バイト以内でなければなりません。また、メッセージで設定してはならない変数は
@@ -2428,6 +2462,8 @@ NULLでないことが必要です)、このメッセージはコールバック
 が起動するプログラムに渡さない変数)は、<Literal>TT_DESKTOP_EACCES</Literal>とともに異常終了します。
 <Literal>Set_Locale</Literal>のロケールにはパスを表せない名前、<Literal>Set_Situation</Literal>の
 ディレクトリには絶対パス、<Literal>Signal</Literal>にはシステムのシグナルを指定する必要があります。
+<Literal>Set_XInfo</Literal>のディスプレイには、ホスト名またはソケットのパス、コロン、番号の形式(512文字以内)、
+ビジュアルには<Filename>X.h</Filename>のビジュアル名、深さには1から32を指定する必要があります。
 文字列の途中にヌル・バイトがある場合は<Literal>TT_DESKTOP_EPROTO</Literal>とともに、それ以外の形式や
 サイズが不正な値は<Literal>TT_DESKTOP_EINVAL</Literal>とともに異常終了します。</Para>
 <Para>

@@ -1099,7 +1099,8 @@ CoEditor::_acceptContract(
 					      TTDT_SESSION_NO_REQUESTS );
 	}
 	_contractPats = ttdt_message_accept( msg, CoEditor::contractCB_,
-					     shell, this, 1, 1 );
+					     shell, this, 1, 1,
+					     TTDT_CONTRACT_NO_REQUESTS );
 	Tt_status status = tt_ptr_error( _contractPats );
 	if (status != TT_OK) {
 		return status;

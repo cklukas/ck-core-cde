@@ -206,6 +206,7 @@ or change the state of the whole process:
 | `Set_Locale` | `setlocale()` for any category |
 | `Get_Environment`, `Get_Situation`, `Get_Locale`, `Get_Sysinfo` | answered with the value of any environment variable, the working directory, the locale and the `uname()` fields |
 | `Do_Command` | passed to the callback of the program, whether or not the program had a use for it |
+| `Set_XInfo` | with a shell widget, set `$DISPLAY` (see below for what it does now); the handler read the display through the wrong type, so the variable was set to a few bytes of the stack, and the request the library itself sends never reached it, since its depth argument did not match the pattern |
 
 Any process of the session could send these, and the session's authentication
 level does not tell programs of one user apart (see above), so a program that had
@@ -228,6 +229,7 @@ each request:
 | `TTDT_SESSION_SIGNAL` | `Signal` | replies, then sends the program the signal |
 | `TTDT_SESSION_GET_SYSINFO` | `Get_Sysinfo` | replies with the `uname()` fields |
 | `TTDT_SESSION_DO_COMMAND` | `Do_Command` | passes the request to the callback of the program, which must then be given |
+| `TTDT_SESSION_SET_XINFO` | `Set_XInfo` | with a shell widget, sets `$DISPLAY` to the display in the request; without one, passes the request to the callback of the program, which must then be given |
 
 The values stand for one request each, so a program that only answers questions
 does not take on the requests that change it: `ttdt_sender_imprint_on()`, for
@@ -240,8 +242,14 @@ one that is addressed to a program that did not ask is failed by the library wit
 `TT_DESKTOP_ENOTSUP` (`tttk_Xt_input_handler()` fails what no callback took, as it
 did before). Nothing in the program changes. `ttdt_session_join()` itself returns
 `TT_ERR_NUM` for a value that is none of the above and `TT_ERR_POINTER` when
-`TTDT_SESSION_DO_COMMAND` is asked for without a callback. `ttdt_message_accept()`
-never registered for these requests and takes no argument for them.
+`TTDT_SESSION_DO_COMMAND` or `TTDT_SESSION_SET_XINFO` is asked for without a
+callback (and, for `Set_XInfo`, without a shell). `ttdt_message_accept()` never
+registered for the requests that act on the process; it has a last argument of its
+own, a `Ttdt_contract_requests` that is zero (`TTDT_CONTRACT_NO_REQUESTS`) or
+`TTDT_CONTRACT_SET_XINFO`, for the one request a contract may carry that changes
+the program, `Set_XInfo`: asked for, it is answered like the join does for a
+request tied to the contract (the message id of the contract is its last argument);
+not asked for, it fails. Any other value is `TT_ERR_NUM`, and nothing is accepted.
 
 There is no value that stands for all of them. A program that asks for
 `TTDT_SESSION_SET_ENVIRONMENT`, `TTDT_SESSION_SET_SITUATION` or
@@ -251,6 +259,26 @@ takes the requests as further arguments (`TTDT_GET_SYSINFO` and so on, no argume
 for none), and the code that Application Builder generates asks for
 `TTDT_SESSION_DO_COMMAND` only when the project connects an action to a
 `Do_Command` message.
+
+### What Set_XInfo does
+
+The display of a widget cannot be changed after it exists, and neither can its
+visual or depth. A program that asks to answer `Set_XInfo` therefore gets exactly
+one thing from it: the library sets `$DISPLAY` to the display in the request. The
+windows and the connection to the X server that the program already has stay where
+they are; only what it starts afterwards (the programs it runs, a connection it
+opens to the default display) uses the new display. The handler does not refuse
+when the program already has a connection to another display, because setting the
+variable for what comes next is the whole use of the request, and a program that
+does not want that does not ask for it. The display is checked as described below,
+and so are the other two arguments: the visual, if there is one, must be one of the
+six names of `X.h` and the depth, if there is one, 1 to 32. The request is
+answered only after the variable is set, and fails, with the variable untouched,
+when a value does not pass.
+
+Nothing in the tree sends `Set_XInfo`, and the request the library builds for it
+(`ttdt_Set_XInfo()`) now agrees with the pattern of a handler: all three arguments
+are in arguments (the depth used to be in-out, which no pattern matched).
 
 ### What the requests may carry
 
@@ -271,6 +299,8 @@ first one is set):
 | locale | letters, digits and `_.@+,=;-`, beginning with a letter or a digit, no `..`, at most 1024 characters: a name for `setlocale()` that cannot name a path |
 | directory | absolute, no control characters, shorter than `PATH_MAX` |
 | display | letters, digits and `._-:/[]%+@,`, beginning with a letter, a digit, `:`, `/` or `[`, with a colon in it, at most 512 characters |
+| visual (`Set_XInfo`) | one of `StaticGray`, `GrayScale`, `StaticColor`, `PseudoColor`, `TrueColor`, `DirectColor` |
+| depth (`Set_XInfo`) | 1 to 32 |
 | signal | 1 to `NSIG - 1` |
 
 A value of the wrong shape or size is `TT_DESKTOP_EINVAL`. The list of the
@@ -341,8 +371,9 @@ imprints. Only these ask for something:
 | `ttsnoop` | `TTDT_SESSION_DO_COMMAND` | the callback of the session it joins shows every request to the person who runs the tool and lets that person fill in the answer; it never runs anything |
 | programs made with Application Builder | `TTDT_SESSION_DO_COMMAND`, when the project connects an action to it | the generated callback runs that action; nothing is asked for otherwise |
 
-All the others ask for nothing, because none of them sends or handles any of
-these requests: `dtfile`, `dtterm` (including the terminal server), `dtcm`
+Nothing asks for `Set_XInfo` or accepts a contract with `TTDT_CONTRACT_SET_XINFO`:
+no program of the desktop sends it. All the others ask for nothing, because none of
+them sends or handles any of these requests: `dtfile`, `dtterm` (including the terminal server), `dtcm`
 (including the appointment editor), `dtmail`, `dtinfo`, `dtcreate`, `dticon`, the
 template in `examples` and the `CoEd` demo. They keep the window requests that
 their shell widget and callbacks decide, `Get_Status`, and the media requests
@@ -785,6 +816,23 @@ places in the documents from before the Japanese guides were brought up to date
 (the Japanese guides, the English synopsis of the reference page, the example of
 the media message set, the demo, eight message catalogs), and the prototype of
 `tttk_block_while()` in both guides, which had never had its first parameter.
+
+`Set_XInfo` is part of the same test. It is one more of the requests the test sends
+to a process that asked for none, each, and all of them. The cases that have a
+realized shell (`Xt`) run on an X server that the test starts (`Xvfb`, skipped
+when the system has none): without asking, the request fails and `$DISPLAY` is
+the one of the server; asked for, it is handled, `$DISPLAY` is the display in the
+request and the connection of the shell is still to the server. A process that asked
+for it is sent a display that is shell syntax, one without a colon, one with a null
+byte, one of a thousand characters, a missing one, a visual that is none, one of a
+hundred characters and depths of 0 and 64, which must all fail with the status
+that says why, and then a good one. A contract is accepted by a process that waits
+for one and sent the request with its id, with and without a shell and with and
+without asking (`TTDT_CONTRACT_SET_XINFO`); an unknown value is `TT_ERR_NUM`. Against the library from before
+(`TT_REQUESTS_OLD_XINFO=1`), where the request is registered for every program that
+has a shell and the handler reads the display through the wrong type, its checks of
+Set_XInfo fail, among them the process with a shell that asked for nothing and whose
+`$DISPLAY` becomes unrelated bytes.
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
 with the sanitizers next to a test program and runs each case in its own

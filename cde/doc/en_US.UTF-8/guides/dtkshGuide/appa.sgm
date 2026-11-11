@@ -1026,7 +1026,9 @@ using the <filename>ttdt_session_quit</filename> command. Each
 the shell answers (<filename>TTDT_GET_LOCALE</filename>, <filename>TTDT_SET_LOCALE</filename>,
 <filename>TTDT_GET_ENVIRONMENT</filename>, <filename>TTDT_SET_ENVIRONMENT</filename>,
 <filename>TTDT_GET_SITUATION</filename>, <filename>TTDT_SET_SITUATION</filename>,
-<filename>TTDT_SIGNAL</filename> or <filename>TTDT_GET_SYSINFO</filename>); without
+<filename>TTDT_SIGNAL</filename>, <filename>TTDT_GET_SYSINFO</filename> or
+<filename>TTDT_SET_XINFO</filename>, which sets <filename>$DISPLAY</filename> and
+needs a <emphasis>shellWidgetHandle</emphasis>); without
 one the shell answers none of them.</para>
 <para><filename>ttdt_session_quit</filename> <symbol role="Variable">status</symbol> <symbol role="Variable">sessId sessPatterns quit</symbol></para>
 <para>Destroys the message patterns specified by the <emphasis>sessPatterns</emphasis> argument and, if the <symbol role="Variable">quit</symbol> argument

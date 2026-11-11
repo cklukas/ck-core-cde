@@ -2249,7 +2249,9 @@ request of the whole process that the shell answers; it is one of
 <literal>TTDT_GET_LOCALE</literal>, <literal>TTDT_SET_LOCALE</literal>,
 <literal>TTDT_GET_ENVIRONMENT</literal>, <literal>TTDT_SET_ENVIRONMENT</literal>,
 <literal>TTDT_GET_SITUATION</literal>, <literal>TTDT_SET_SITUATION</literal>,
-<literal>TTDT_SIGNAL</literal> and <literal>TTDT_GET_SYSINFO</literal>. Without
+<literal>TTDT_SIGNAL</literal>, <literal>TTDT_GET_SYSINFO</literal> and
+<literal>TTDT_SET_XINFO</literal>, which sets <literal>$DISPLAY</literal> and needs a
+<emphasis>shellWidgetHandle</emphasis>. Without
 a <emphasis>request</emphasis> argument the shell answers none of them. This
 command returns an opaque pattern handle in
 the <symbol role="Variable">variable</symbol> argument; this handle can be

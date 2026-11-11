@@ -13,6 +13,8 @@ lib/tt/bin/ttsession/Makefile.am):
                        ttdt_session_join() of a libtt from before the requests
                        were asked for; this is how the test is shown to fail
                        on that library
+  TT_REQUESTS_OLD_XINFO optional: the same for a libtt from before Set_XInfo
+                       was asked for
 The test starts a process-tree ttsession of its own, which needs the
 portmapper to register with and is skipped without it.  It runs a process that
 joins the session with some of the requests of the process asked for (none,
@@ -24,11 +26,14 @@ questions are answered, the callback gets Do_Command); every other one fails
 and leaves the process as it was.  The programs are compiled and linked with
 the sanitizers when the build does not already carry them, and a sanitizer
 report from either of them, from the library they use or from ttsession fails
-the test.
+the test.  Set_XInfo is also tried on a process with a realized shell on an
+X server (Xvfb, when there is one), and as a request of a contract.
 """
+import atexit
 import os
 from pathlib import Path
 import re
+import select
 import shlex
 import shutil
 import subprocess
@@ -42,6 +47,7 @@ compile_cmd = shlex.split(os.environ["TT_REQUESTS_COMPILE"])
 link_cmd = shlex.split(os.environ["TT_REQUESTS_LINK"])
 libs = shlex.split(os.environ.get("TT_REQUESTS_LIBS", ""))
 old_join = bool(os.environ.get("TT_REQUESTS_OLD_JOIN"))
+old_xinfo = bool(os.environ.get("TT_REQUESTS_OLD_XINFO"))
 builddir = Path.cwd()
 work = Path(tempfile.mkdtemp(prefix="tt-requests-", dir=os.environ.get("TMPDIR")))
 failures = []
@@ -50,12 +56,12 @@ failures = []
 # they ask about
 REQUESTS = ["get_locale", "get_environment", "get_situation", "get_sysinfo",
             "set_locale", "set_environment", "set_situation", "signal",
-            "do_command"]
+            "do_command", "set_xinfo"]
 OPS = {"get_locale": "Get_Locale", "get_environment": "Get_Environment",
        "get_situation": "Get_Situation", "get_sysinfo": "Get_Sysinfo",
        "set_locale": "Set_Locale", "set_environment": "Set_Environment",
        "set_situation": "Set_Situation", "signal": "Signal",
-       "do_command": "Do_Command"}
+       "do_command": "Do_Command", "set_xinfo": "Set_XInfo"}
 
 
 def finish():
@@ -81,15 +87,17 @@ sanitize = ["-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
 if any(a.startswith("-fsanitize") for a in compile_cmd):
     sanitize = []                    # the build already carries them
 extra = ["-DTT_SESSION_REQUESTS_OLD_JOIN"] if old_join else []
+if old_xinfo:
+    extra.append("-DTT_SESSION_REQUESTS_OLD_XINFO")
 
 obj = work / "session-requests-test.o"
 program = work / "session-requests-test"
 r = subprocess.run(compile_cmd + sanitize + extra +
                    ["-c", str(srcdir / "tests/session-requests-test.c"), "-o", str(obj)],
-                   cwd=builddir, text=True, capture_output=True)
+                   cwd=builddir, text=True, errors="replace", capture_output=True)
 if r.returncode == 0:
     r = subprocess.run(link_cmd + sanitize + ["-o", str(program), str(obj)] + libs,
-                       cwd=builddir, text=True, capture_output=True)
+                       cwd=builddir, text=True, errors="replace", capture_output=True)
 if r.returncode:
     check("session-requests-test builds", False, r.stderr)
     finish()
@@ -118,6 +126,39 @@ env["TT_SESSION"] = sid
 target = (work / "target").resolve()
 target.mkdir()
 
+# The processes that have a shell need an X server to open a display on: Xvfb,
+# if the system has it, picks a free display number and says which.
+XINFO_GOOD = "xinfo.example.com:7.0"
+xvfb = None
+xdisplay = None
+if shutil.which("Xvfb"):
+    read_end, write_end = os.pipe()
+    xvfb = subprocess.Popen(["Xvfb", "-displayfd", str(write_end), "-screen", "0",
+                             "320x200x24", "-nolisten", "tcp"], pass_fds=(write_end,),
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    os.close(write_end)
+    ready_fds, _, _ = select.select([read_end], [], [], 20)
+    number = os.read(read_end, 16).decode().strip() if ready_fds else ""
+    os.close(read_end)
+    if number.isdigit():
+        xdisplay = ":" + number
+    else:
+        xvfb.kill()
+        xvfb = None
+
+
+def stop_xvfb():
+    """The server ends with the test, whatever ends the test."""
+    if xvfb is not None and xvfb.poll() is None:
+        xvfb.terminate()
+        try:
+            xvfb.wait(timeout=30)
+        except subprocess.TimeoutExpired:
+            xvfb.kill()
+
+
+atexit.register(stop_xvfb)
+
 
 # A sanitizer report from any of the processes fails the test, wherever in the
 # library or in ttsession it comes from: the processes use libtt the way a
@@ -135,13 +176,36 @@ def parse(text, key):
     return [l.split() for l in text.splitlines() if l.startswith(key + " ")]
 
 
-def run_case(label, asked):
+def parse_state(text):
+    """The "state" line of a process as a dictionary, None if there is not one.
+    $DISPLAY, the last but one, can hold anything a process was told to set."""
+    lines = [l for l in text.splitlines() if l.startswith("state ")]
+    if len(lines) != 1:
+        return None
+    m = re.match(r"state (.*) display=(.*) connection=(\S+)$", lines[0])
+    if not m:
+        return {}
+    seen = dict(w.split("=", 1) for w in m.group(1).split())
+    seen["display"] = m.group(2)
+    seen["connection"] = m.group(3)
+    return seen
+
+
+def handler_env(shell):
+    henv = dict(env)
+    if shell:
+        henv["DISPLAY"] = xdisplay
+    return henv
+
+
+def run_case(label, asked, shell=False):
     """One process that asked for `asked`, and every request sent to it."""
     home = (work / ("process-" + label)).resolve()
     home.mkdir()
-    handler = subprocess.Popen([str(program), "handle", str(home)] + sorted(asked),
-                               env=env, cwd=work, stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    handler = subprocess.Popen([str(program), "handle", str(home)] +
+                               (["shell"] if shell else []) + sorted(asked),
+                               env=handler_env(shell), cwd=work, stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
     # a process id holds blanks: "ready PROCID locale=yes|no"
     ready = handler.stdout.readline().rstrip("\n")
     if not (ready.startswith("ready ") and " locale=" in ready):
@@ -152,7 +216,7 @@ def run_case(label, asked):
     procid = ready[len("ready "):ready.rindex(" locale=")]
     can_set_locale = ready.endswith("locale=yes")
     sent = subprocess.run([str(program), "send", procid] + REQUESTS, env=env, cwd=target,
-                          text=True, capture_output=True, timeout=180)
+                          text=True, errors="replace", capture_output=True, timeout=180)
     handler.stdin.close()
     try:
         text = handler.stdout.read()
@@ -204,11 +268,10 @@ def run_case(label, asked):
           "\nsender: " + sent.stdout.replace("\n", "\n        "))
 
     # what happened to the process
-    state = parse(text, "state")
-    if len(state) != 1:
+    seen = parse_state(text)
+    if seen is None:
         check("%s: the process ends and reports its state" % label, False, text)
         return
-    seen = dict(w.split("=", 1) for w in state[0][1:])
     expected = {
         "env": "changed" if "set_environment" in asked else "original",
         "cwd": str(target) if "set_situation" in asked else str(home),
@@ -217,6 +280,11 @@ def run_case(label, asked):
         "docommands": "2" if "do_command" in asked else "0",
         "probe2": "(unset)",
         "probe3": "(unset)",
+        # $DISPLAY is the one of the X server, or what Set_XInfo set it to; the
+        # connection of the shell stays where it was
+        "display": ((XINFO_GOOD if "set_xinfo" in asked else xdisplay) if shell
+                    else "(unset)"),
+        "connection": xdisplay if shell else "(none)",
     }
     wrong = ["%s is %s, wanted %s" % (k, seen.get(k), v)
              for k, v in expected.items() if seen.get(k) != v] + reports(text)
@@ -248,7 +316,7 @@ def run_hostile():
     home.mkdir()
     handler = subprocess.Popen([str(program), "handle", str(home)] + REQUESTS,
                                env=env, cwd=work, stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
     ready = handler.stdout.readline().rstrip("\n")
     if not (ready.startswith("ready ") and " locale=" in ready):
         handler.kill()
@@ -256,7 +324,7 @@ def run_hostile():
         return
     procid = ready[len("ready "):ready.rindex(" locale=")]
     sent = subprocess.run([str(program), "hostile", procid], env=env, cwd=target,
-                          text=True, capture_output=True, timeout=300)
+                          text=True, errors="replace", capture_output=True, timeout=300)
     handler.stdin.close()
     try:
         text = handler.stdout.read()
@@ -275,34 +343,130 @@ def run_hostile():
     wrong += reports(sent.stdout + sent.stderr)
     check("hostile: values no message may act on are failed", not wrong and sent.returncode == 0,
           "\n".join(wrong) + "\n" + sent.stdout + sent.stderr)
-    state = parse(text, "state")
-    if len(state) != 1:
+    seen = parse_state(text)
+    if seen is None:
         check("hostile: the process ends and reports its state", False, text)
         return
-    seen = dict(w.split("=", 1) for w in state[0][1:])
     # the valid requests at the end took one variable away and set another
     expected = {"env": "(unset)", "cwd": str(home), "signals": "0", "locale": "C",
-                "docommands": "0", "probe2": "(unset)", "probe3": "valid"}
+                "docommands": "0", "probe2": "(unset)", "probe3": "valid",
+                "display": "(unset)", "connection": "(none)"}
     wrong = ["%s is %s, wanted %s" % (k, seen.get(k), v)
              for k, v in expected.items() if seen.get(k) != v] + reports(text)
     check("hostile: the process is changed by the valid requests only", not wrong,
           "\n".join(wrong) + "\n" + text)
 
 
+# Set_XInfo of a process with a shell sets $DISPLAY (what the process starts and
+# opens from now on uses it) and leaves the connection it has; values that are not
+# a display, a visual and a depth fail.
+XINFO_FAILS = {
+    "garbage": "einval", "nocolon": "einval", "nul": "eproto", "long": "einval",
+    "unset": "eproto", "visual": "einval", "visual-long": "einval",
+    "depth-zero": "einval", "depth-big": "einval",
+}
+
+
+def start_handler(label, words, shell):
+    home = (work / ("process-" + label)).resolve()
+    home.mkdir()
+    handler = subprocess.Popen([str(program), "handle", str(home)] + words,
+                               env=handler_env(shell), cwd=work, stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
+    ready = handler.stdout.readline().rstrip("\n")
+    if not (ready.startswith("ready ") and " locale=" in ready):
+        handler.kill()
+        check("%s: the process joins the session" % label, False, ready + handler.stdout.read())
+        return None, None
+    return handler, ready[len("ready "):ready.rindex(" locale=")]
+
+
+def finish_handler(handler):
+    handler.stdin.close()
+    try:
+        text = handler.stdout.read()
+        handler.wait(timeout=30)
+    except subprocess.TimeoutExpired:
+        handler.kill()
+        text = "the process did not end"
+    return text, (parse_state(text) or {})
+
+
+def run_xinfo_values():
+    handler, procid = start_handler("xinfo-values", ["shell", "set_xinfo"], True)
+    if handler is None:
+        return
+    sent = subprocess.run([str(program), "xinfo", procid], env=env, cwd=target,
+                          text=True, errors="replace", capture_output=True, timeout=300)
+    text, seen = finish_handler(handler)
+    results = {w[1]: w[2:4] for w in parse(sent.stdout, "xinfo")}
+    wrong = []
+    for name, status in XINFO_FAILS.items():
+        if results.get(name) != ["failed", status]:
+            wrong.append("%s: %s, wanted failed %s" % (name, results.get(name), status))
+    if results.get("valid") != ["handled", "ok"]:
+        wrong.append("valid: %s, wanted handled ok" % results.get("valid"))
+    for key, want in (("display", XINFO_GOOD), ("connection", xdisplay)):
+        if seen.get(key) != want:
+            wrong.append("%s is %s, wanted %s" % (key, seen.get(key), want))
+    wrong += reports(sent.stdout + sent.stderr + text)
+    check("set_xinfo: a display, visual and depth that are none are failed, a good one is set",
+          not wrong and sent.returncode == 0, "\n".join(wrong) + "\n" + sent.stdout + sent.stderr + text)
+
+
+def run_contract(label, words, shell, accepts, display):
+    """A contract the process accepts, with the Set_XInfo that follow it."""
+    handler, procid = start_handler(label, ["contract"] + words, shell)
+    if handler is None:
+        return
+    sent = subprocess.run([str(program), "contract", procid], env=env, cwd=target,
+                          text=True, errors="replace", capture_output=True, timeout=300)
+    text, seen = finish_handler(handler)
+    results = {w[1]: w[2:4] for w in parse(sent.stdout, "contract")}
+    wrong = []
+    wanted = {"valid": ["handled", "ok"] if "set_xinfo" in words else ["failed", "enotsup"]}
+    if shell:
+        wanted["garbage"] = ["failed", "einval"] if "set_xinfo" in words else ["failed", "enotsup"]
+    for name, want in wanted.items():
+        if results.get(name) != want:
+            wrong.append("%s: %s, wanted %s" % (name, results.get(name), " ".join(want)))
+    if [w[1] for w in parse(text, "accepted")] != [accepts]:
+        wrong.append("accepted %s, wanted %s" % ([w[1] for w in parse(text, "accepted")], accepts))
+    if seen.get("display") != display:
+        wrong.append("display is %s, wanted %s" % (seen.get("display"), display))
+    wrong += reports(sent.stdout + sent.stderr + text)
+    check("%s: the contract takes Set_XInfo only if asked" % label,
+          not wrong and sent.returncode == 0, "\n".join(wrong) + "\n" + sent.stdout + text)
+
+
 run_case("none", [])
 for name in REQUESTS:
     run_case(name, [name])
 run_case("all", REQUESTS)
+if xdisplay:
+    run_case("shell-none", [], shell=True)
+    run_case("shell-set_xinfo", ["set_xinfo"], shell=True)
+    run_case("shell-all", REQUESTS, shell=True)
+    run_xinfo_values()
+else:
+    print("skip  no Xvfb: the cases with a shell are not run")
 if not old_join:
     run_hostile()
+run_contract("contract-none", [], False, "ok", "(unset)")
+run_contract("contract-set_xinfo", ["set_xinfo"], False, "ok", "(unset)")
+if xdisplay:
+    run_contract("contract-shell-none", ["shell"], True, "ok", xdisplay)
+    run_contract("contract-shell-set_xinfo", ["shell", "set_xinfo"], True, "ok", XINFO_GOOD)
 
 if not old_join:
-    r = subprocess.run([str(program), "arguments"], env=env, cwd=work, text=True,
+    r = subprocess.run([str(program), "arguments"], env=env, cwd=work, text=True, errors="replace",
                        capture_output=True, timeout=60)
     joins = {w[1]: w[2] for w in parse(r.stdout, "join")}
     check("a request that cannot be answered is refused, none at all is not",
           joins == {"do_command-without-callback": "pointer",
                     "unknown-request": "num",
+                    "set_xinfo-without-callback-or-shell": "pointer",
+                    "set_xinfo-with-callback": "ok",
                     "no-requests-without-callback": "ok"} and not reports(r.stdout + r.stderr),
           r.stdout + r.stderr)
 
@@ -312,6 +476,7 @@ try:
 except subprocess.TimeoutExpired:
     session.kill()
     session.wait()
+stop_xvfb()
 served = out.read_text()
 check("ttsession ends without a sanitizer report", not reports(served), served)
 prog = sid.split()[2]

@@ -166,9 +166,10 @@ typedef Tt_message	(*Ttdt_contract_cb)(
 			);
 /*
  * The Desktop requests that report or change the state of the whole
- * process, not of a window.  The library answers one only if the process
- * asks for it here: ttdt_session_join() registers for none of them
- * otherwise, and a request nobody registered for is failed.
+ * process, not of a window, and Set_XInfo, which sets the display of what the
+ * process starts.  The library answers one only if the process asks for it
+ * here: ttdt_session_join() registers for none of them otherwise, and a
+ * request nobody registered for is failed.
  *
  * Each value stands for one request.  Combine them with |.
  */
@@ -183,7 +184,8 @@ enum {
 	TTDT_SESSION_SET_SITUATION	= 1 << 5,
 	TTDT_SESSION_SIGNAL		= 1 << 6,
 	TTDT_SESSION_GET_SYSINFO	= 1 << 7,
-	TTDT_SESSION_DO_COMMAND		= 1 << 8
+	TTDT_SESSION_DO_COMMAND		= 1 << 8,
+	TTDT_SESSION_SET_XINFO		= 1 << 9
 };
 Tt_pattern	       *ttdt_session_join(
 				const char	       *sessid,
@@ -205,13 +207,26 @@ Tt_status		ttdt_session_quit(
  *
  **********************************************************************
  */
+/*
+ * The Desktop requests that change the process and that a contract may carry.
+ * ttdt_message_accept() answers one only if the process asks for it here, and
+ * a request nobody registered for is failed.
+ *
+ * Each value stands for one request.  Combine them with |.
+ */
+typedef unsigned int	Ttdt_contract_requests;
+enum {
+	TTDT_CONTRACT_NO_REQUESTS	= 0,
+	TTDT_CONTRACT_SET_XINFO		= 1 << 0
+};
 Tt_pattern	       *ttdt_message_accept(
 				Tt_message	contract,
 				Ttdt_contract_cb	cb,
 				Widget		shell,
 				void	       *clientdata,
 				int		accept,
-				int		sendStatus
+				int		sendStatus,
+				Ttdt_contract_requests	requests
 			);
 Tt_pattern	       *ttdt_subcontract_manage(
 				Tt_message	subcontract,

@@ -455,10 +455,11 @@ TTmedia_ptype_declareCB(
      *	  (1)	Get|Set_Geometry,	transparently			(a)
      *		Get|Set_Iconified,
      *		Get|Set_Mapped,
-     *		Get|Set_XInfo,
+     *		Get_XInfo,
      *		Raise, Lower
      *	  (2)	Pause, Resume		passed to Ttdt_contract_cb	(b)
      *	  (3)	Quit, Get_Status	passed to Ttdt_contract_cb	(c)
+     *	  (4)	Set_XInfo		fails, unless the last arg asks for it
      *
      *	NOTES:
      *	  (a)	type (1) requests are handled transparently because the shell
@@ -478,7 +479,8 @@ TTmedia_ptype_declareCB(
 		pPad->app_shell,	/* shell widget */
 		pPad->mainWindow,	/* client data */
 		1,			/* call tt_message_accept() */
-		1);			/* send STATUS notice to requestor */
+		1,			/* send STATUS notice to requestor */
+		TTDT_CONTRACT_NO_REQUESTS);
     if (tt_ptr_error((void *) ttrc) != TT_OK) {
         fprintf(stderr,
 		"Could not ttdt_message_accept the edit request: %s\n",

@@ -280,7 +280,8 @@ docname=%s, data=%d)\n",
 	}
 
 	contract_pats = ttdt_message_accept(msg, contract_cb, clientdata,
-						c->frame, 1, 1);
+						c->frame, 1, 1,
+						TTDT_CONTRACT_NO_REQUESTS);
 
 	if ((status = tt_ptr_error(contract_pats)) != TT_OK) {
 		fprintf(stderr, "dtcm: load_cb could not accept message: %s\n",

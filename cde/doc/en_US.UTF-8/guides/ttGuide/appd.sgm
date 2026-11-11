@@ -293,7 +293,8 @@ myAcmeSheetLoadCB(
                 ttdt_session_join( 0, myContractCB, myShell, 0, 1,
                                    TTDT_SESSION_NO_REQUESTS );
         }
-        ttdt_message_accept( msg, myContractCB, myShell, 0, 1, 1 );
+        ttdt_message_accept( msg, myContractCB, myShell, 0, 1, 1,
+                               TTDT_CONTRACT_NO_REQUESTS );
         tt_free( contents ); tt_free( file ); tt_free( docname );
         return 0;
 }

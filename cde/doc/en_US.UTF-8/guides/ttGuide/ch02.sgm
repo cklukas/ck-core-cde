@@ -540,7 +540,8 @@ handle the request.
             Widget            shell,
             void              *client_data,
             int               accept,
-            int               send_status)
+            int               send_status,
+            Ttdt_contract_requests requests)
 </programlisting>
 </sect3>
 <Sect3 Id="TTUG.HTU.div.27">

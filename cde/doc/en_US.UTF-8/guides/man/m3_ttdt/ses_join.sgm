@@ -52,8 +52,9 @@ If
 <Function>ttdt_session_join</Function> function
 registers for the following
 <SystemItem Class="Constant">TT_HANDLER</SystemItem>-addressed requests; the
-requests in (1) and <Symbol Role="Message">Do_Command</Symbol> in (4) only if
-the caller asks for them in <Emphasis>requests</Emphasis>:
+requests in (1), <Symbol Role="Message">Set_XInfo</Symbol> and
+<Symbol Role="Message">Do_Command</Symbol> in (4) only if the caller asks for them
+in <Emphasis>requests</Emphasis>:
 </Para>
 <OrderedList>
 <ListItem>
@@ -66,7 +67,7 @@ the caller asks for them in <Emphasis>requests</Emphasis>:
 <Para><Symbol Role="Message">Pause</Symbol>, <Symbol Role="Message">Resume</Symbol>, <Symbol Role="Message">Quit</Symbol></Para>
 </ListItem>
 <ListItem>
-<Para><Symbol Role="Message">Get_Status</Symbol>, <Emphasis>Do_Command</Emphasis></Para>
+<Para><Symbol Role="Message">Get_Status</Symbol>, <Emphasis>Do_Command</Emphasis>, <Emphasis>Set_XInfo</Emphasis></Para>
 </ListItem>
 </OrderedList>
 <Para>If
@@ -86,8 +87,9 @@ it transparently.
 <SystemItem Class="Constant">TTDT_SESSION_GET_SITUATION</SystemItem>,
 <SystemItem Class="Constant">TTDT_SESSION_SET_SITUATION</SystemItem>,
 <SystemItem Class="Constant">TTDT_SESSION_SIGNAL</SystemItem>,
-<SystemItem Class="Constant">TTDT_SESSION_GET_SYSINFO</SystemItem> and
-<SystemItem Class="Constant">TTDT_SESSION_DO_COMMAND</SystemItem>; each stands
+<SystemItem Class="Constant">TTDT_SESSION_GET_SYSINFO</SystemItem>,
+<SystemItem Class="Constant">TTDT_SESSION_DO_COMMAND</SystemItem> and
+<SystemItem Class="Constant">TTDT_SESSION_SET_XINFO</SystemItem>; each stands
 for the request of the same name. A request that was not asked for is not
 registered for: a request nobody registered for fails with
 <SystemItem Class="Constant">TT_ERR_NO_MATCH</SystemItem>, and one addressed to
@@ -98,9 +100,34 @@ Ask for
 <SystemItem Class="Constant">TTDT_SESSION_SET_SITUATION</SystemItem> and
 <SystemItem Class="Constant">TTDT_SESSION_SIGNAL</SystemItem> only if every
 process of the session may change the environment variables, the working
-directory and the signals of this one.
+directory and the signals of this one, and
+<SystemItem Class="Constant">TTDT_SESSION_SET_XINFO</SystemItem> only if every
+process of the session may set the <SystemItem Class="EnvironVar">DISPLAY</SystemItem>
+of what this one starts. <SystemItem Class="Constant">TTDT_SESSION_SET_XINFO</SystemItem>
+and <SystemItem Class="Constant">TTDT_SESSION_DO_COMMAND</SystemItem> need a
+callback if <Symbol Role="Variable">shell</Symbol> is
+<SystemItem Class="Constant">NULL</SystemItem> (without it the call fails with
+<SystemItem Class="Constant">TT_ERR_POINTER</SystemItem>), since the callback is
+what the request is passed to.
 </Para>
-<Para>What these requests carry is checked before anything is changed, and a
+<Para>What <Symbol Role="Message">Set_XInfo</Symbol> does is this: the display of a
+widget cannot be changed, and neither can its visual or depth, so the request
+sets the <SystemItem Class="EnvironVar">DISPLAY</SystemItem> environment variable to
+its display argument and nothing else. The windows and the connection to the X
+server that the program already has stay where they are, and only what the program
+starts or opens afterwards (the programs it runs, a connection it makes with the
+default display) uses the new display. The display must be a host name or the path
+of a socket, a colon and a number (letters, digits and <Literal>._-:/[]%+@,</Literal>
+only, no blanks or shell characters, at most 512 characters), the visual, if there
+is one, a name of the visuals of <Filename>X.h</Filename> (<Literal>StaticGray</Literal>
+to <Literal>DirectColor</Literal>) and the depth, if there is one, 1 to 32. A request
+with a value that is not one of these fails with
+<SystemItem Class="Constant">TT_DESKTOP_EINVAL</SystemItem>, one with a display that is
+missing or with a null byte inside a string with
+<SystemItem Class="Constant">TT_DESKTOP_EPROTO</SystemItem>, and the environment
+is not changed.
+</Para>
+<Para>What the requests in (1) carry is checked before anything is changed, and a
 request with a value that fails is failed and changes nothing.
 A variable of <Symbol Role="Message">Set_Environment</Symbol> must have the name
 of a shell variable (letters, digits and underscore, not beginning with a digit,

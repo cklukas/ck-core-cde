@@ -1,4 +1,31 @@
 2026-11-11
+- libtt: `Set_XInfo` is answered only by a program that asks for it. A program
+  that gave `ttdt_session_join()` or `ttdt_message_accept()` a shell widget had a
+  handler registered for it, which set `$DISPLAY` from the message of any program of
+  the session; the handler read the display through the wrong type, so the variable
+  became a few unrelated bytes of the stack. The request is now registered only
+  with `TTDT_SESSION_SET_XINFO` (a new bit of `Ttdt_session_requests`, in `dtksh`
+  `ttdt_session_join ... TTDT_SET_XINFO`) or, for a contract, with the new last
+  argument of `ttdt_message_accept()`, a `Ttdt_contract_requests` that is zero or
+  `TTDT_CONTRACT_SET_XINFO` (every caller passes `TTDT_CONTRACT_NO_REQUESTS`; any
+  other value is `TT_ERR_NUM` and accepts nothing). Without a shell the request
+  needs a callback (`TT_ERR_POINTER`). Otherwise it fails like any request nobody
+  answers (`TT_ERR_NO_MATCH`, or `TT_DESKTOP_ENOTSUP` when addressed to the
+  program). When it is answered with a shell it does what its handler always
+  meant to: it sets `$DISPLAY`, and leaves the windows and the connection of the
+  program where they are. The display must be of the form host or socket, colon and
+  number (at most 512 characters, no null byte), the visual one of the six names of
+  `X.h` and the depth 1 to 32, else the request fails and nothing is set
+  (`TT_DESKTOP_EINVAL`, `_EPROTO` for a missing display or a null byte). The
+  request built by `ttdt_Set_XInfo()` sent its depth in-out, which the pattern of a
+  handler (in) never matched; it is in now. The sizes of the strings of the request
+  are checked before any callback sees them. The manual pages and guides (English
+  and Japanese), the `dtksh` documents and the documented-calls check follow, and
+  the check now also requires the description of the `dtksh` command to name every
+  request it takes. Covered by the session requests test of
+  `make -C lib/tt/bin/ttsession check` (with an Xvfb server for the cases that have
+  a shell; against the previous library its checks of `Set_XInfo` fail); described in
+  `docs/improvements/tooltalk.md`.
 - dtmail, dtmailpr: remove the message "The dtmail program is not running as
   group \"mail\"" and the texts around it, which nothing has shown since the
   mailer stopped needing the mail group. `DTME_BadRunGroup` is gone from

@@ -1261,7 +1261,7 @@ msgDtAccept(
 	    return;
     }
     Tt_pattern *pats = ttdt_message_accept( msg, 0, 0, instance->messageProps,
-					    1, 1 );
+					    1, 1, TTDT_CONTRACT_NO_REQUESTS );
     Tt_status status = tt_ptr_error( pats );
     DtTtSetLabel( instance->messageFooterLabel,
 		  "ttdt_message_accept()", status );

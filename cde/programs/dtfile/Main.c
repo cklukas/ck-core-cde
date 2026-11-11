@@ -3231,7 +3231,7 @@ ViewAccept(
    /* Returned patterns automatically get destroyed when msg is destroyed */
    ttdt_message_accept( msg, SessionCallback,
 		        _DtGetDialogShell( (DialogData *)view->dialog_data ),
-		        view, 1, 1 );
+		        view, 1, 1, TTDT_CONTRACT_NO_REQUESTS );
 }
 
 

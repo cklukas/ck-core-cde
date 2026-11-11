@@ -427,7 +427,8 @@ Tt_message attachmt_msg_handler(
       return msg;
    }
 
-   pattern = ttdt_message_accept(msg, NULL, (Widget)0, client_data, 1, 1);
+   pattern = ttdt_message_accept(msg, NULL, (Widget)0, client_data, 1, 1,
+				 TTDT_CONTRACT_NO_REQUESTS);
    dieFromTtError(tt_ptr_error(pattern),
 		"attachmt_msg_handler.ttdt_message_accept", NULL, NULL);
 
@@ -642,7 +643,8 @@ tooltalk_msg_handler(
 
     // Need to check the return value of this call.
     //
-    pattern = ttdt_message_accept(msg, NULL, (Widget)0, client_data, 1, 1);
+    pattern = ttdt_message_accept(msg, NULL, (Widget)0, client_data, 1, 1,
+				 TTDT_CONTRACT_NO_REQUESTS);
     dieFromTtError(tt_ptr_error(pattern),
 		"tooltalk_msg_handler.ttdt_message_accept", NULL, NULL);
 

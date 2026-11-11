@@ -161,7 +161,8 @@ extern const char  *Tttk_yoffset:
         Widget <Symbol Role="Variable">shell</Symbol>,
         void *<Emphasis>clientdata</Emphasis>,
         int <Emphasis>accept</Emphasis>,
-        int <Emphasis>sendStatus</Emphasis>);
+        int <Emphasis>sendStatus</Emphasis>,
+        Ttdt_contract_requests <Emphasis>requests</Emphasis>);
 </Synopsis>
 <Synopsis>char *ttdt_open(int *<Emphasis>ttfd</Emphasis>,
         const char *<Emphasis>toolname</Emphasis>,

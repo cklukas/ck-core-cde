@@ -201,10 +201,19 @@ ttdt_message_accept(
 	Widget		shell,
 	void	       *clientData,
 	int		accept,
-	int		sendStatus
+	int		sendStatus,
+	Ttdt_contract_requests requests
 )
 {
 	Tt_status status;
+	// nothing is accepted for a request that cannot be answered
+	if ((requests & ~(Ttdt_contract_requests)TTDT_CONTRACT_SET_XINFO) != 0) {
+		return (Tt_pattern *)tt_error_pointer( TT_ERR_NUM );
+	}
+	if (((requests & TTDT_CONTRACT_SET_XINFO) != 0) && (shell == 0) &&
+	    (cb == 0)) {
+		return (Tt_pattern *)tt_error_pointer( TT_ERR_POINTER );
+	}
 	if (accept) {
 		status = tt_message_accept( contract );
 		if (status != TT_OK) {
@@ -212,7 +221,9 @@ ttdt_message_accept(
 		}
 	}
 	Tt_pattern *pats = _ttdtme->pats_create( contract, cb, shell,
-						 clientData, 0 );
+			clientData, ((requests & TTDT_CONTRACT_SET_XINFO) != 0) ?
+				TTDT_SESSION_SET_XINFO :
+				TTDT_SESSION_NO_REQUESTS );
 	status = tt_ptr_error( pats );
 	if (status == TT_OK) {
 		tt_message_user_set( contract, _TttkContractKey, pats );

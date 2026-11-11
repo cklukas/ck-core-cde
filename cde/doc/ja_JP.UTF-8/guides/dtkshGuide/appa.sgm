@@ -940,7 +940,9 @@ trueまたはfalseのいずれかが設定されます。このコマンドは�
 <filename>TTDT_SET_LOCALE</filename>、<filename>TTDT_GET_ENVIRONMENT</filename>、
 <filename>TTDT_SET_ENVIRONMENT</filename>、<filename>TTDT_GET_SITUATION</filename>、
 <filename>TTDT_SET_SITUATION</filename>、<filename>TTDT_SIGNAL</filename>、
-<filename>TTDT_GET_SYSINFO</filename>)を指定します。指定しない場合、シェルはこれらのいずれにも応答しません。</para>
+<filename>TTDT_GET_SYSINFO</filename>、および<filename>$DISPLAY</filename>を設定する
+<filename>TTDT_SET_XINFO</filename>。後者には<emphasis>shellWidgetHandle</emphasis>が必要です)を
+指定します。指定しない場合、シェルはこれらのいずれにも応答しません。</para>
 <para><filename>ttdt_session_quit</filename> <symbol role="Variable">status</symbol> <symbol role="Variable">sessId sessPatterns quit</symbol></para>
 <para><emphasis>sessPatterns</emphasis>引き数によって指定したメッセージ・パターンを破棄します。 <symbol role="Variable">quit</symbol>
 引き数に<emphasis>true</emphasis>が設定されているときは、<emphasis>sessId</emphasis>引数によって指定された

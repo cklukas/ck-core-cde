@@ -26,6 +26,7 @@
 #define _TTDT_MAX_VARIABLES		128	// variables in an environment message
 #define _TTDT_MAX_LOCALE_NAME		1024	// the composite name of LC_ALL is the longest
 #define _TTDT_MAX_DISPLAY		512
+#define _TTDT_MAX_VISUAL_NAME		32
 #define _TTDT_MAX_VARIABLE_NAME		255
 #define _TTDT_MAX_VARIABLE_VALUE	32768
 

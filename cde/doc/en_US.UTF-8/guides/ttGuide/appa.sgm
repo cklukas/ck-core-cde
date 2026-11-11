@@ -1179,10 +1179,11 @@ returns zero. This call does not return any errors.</Para>
 </IndexTerm>ttdt_message_accept</Title>
 <ProgramListing>Tt_pattern *     ttdt_message_accept(     Tt_message         contract,
                                           Ttdt_contract_cb   cb,
-                                          void *             clientdata,
                                           Widget             shell,
+                                          void *             clientdata,
                                           int                accept,
-                                          int                sendStatus );
+                                          int                sendStatus,
+                                          Ttdt_contract_requests requests );
 </ProgramListing>
 </Example>
 <Para>The <Filename>ttdt_message_accept</Filename> function accepts a contract to handle a ToolTalk
@@ -1337,15 +1338,24 @@ requests fail with the error<IndexTerm>
 <Filename>TT_DESKTOP_ENOTSUP</Filename>.</Para></Entry>
 </Row>
 <Row>
-<Entry><Para><Command>Get_XInfo</Command>,<IndexTerm>
+<Entry><Para><Command>Get_XInfo</Command><IndexTerm>
 <Primary>Get_XInfo request</Primary>
+</IndexTerm></Para></Entry>
+<Entry><Para>If the <Symbol Role="Variable">shell</Symbol> parameter is not null, this request is handled transparently; if the <Symbol Role="Variable">shell</Symbol> parameter is
+null and the <Emphasis>cb</Emphasis> parameter is not null, this request is passed to the callback routine; otherwise, this
+request fails with the error<IndexTerm>
+<Primary>TT_DESKTOP_ENOTSUP</Primary>
+</IndexTerm><IndexTerm>
+<Primary>error messages</Primary>
+<Secondary>TT_DESKTOP_ENOTSUP</Secondary>
 </IndexTerm>
-<Command>Set_XInfo</Command><IndexTerm>
+<Filename>TT_DESKTOP_ENOTSUP</Filename>.</Para></Entry>
+</Row>
+<Row>
+<Entry><Para><Command>Set_XInfo</Command><IndexTerm>
 <Primary>Set_XInfo request</Primary>
 </IndexTerm></Para></Entry>
-<Entry><Para>If the <Symbol Role="Variable">shell</Symbol> parameter is not null, these requests are handled transparently; if the <Symbol Role="Variable">shell</Symbol> parameter is
-null and the <Emphasis>cb</Emphasis> parameter is not null, these requests are passed to the callback routine; otherwise, these
-requests fail with the error<IndexTerm>
+<Entry><Para>If the <Symbol Role="Variable">requests</Symbol> parameter asks for it (<Literal>TTDT_CONTRACT_SET_XINFO</Literal>) and the <Symbol Role="Variable">shell</Symbol> parameter is not null, this request is handled transparently: it sets the environment variable <Filename>$DISPLAY</Filename> to the display it carries, and leaves the windows and the connection of the program where they are. If the <Symbol Role="Variable">shell</Symbol> parameter is null, it is passed to the callback routine, which must then be given. If <Symbol Role="Variable">requests</Symbol> does not ask for it, this request fails with the error<IndexTerm>
 <Primary>TT_DESKTOP_ENOTSUP</Primary>
 </IndexTerm><IndexTerm>
 <Primary>error messages</Primary>
@@ -1420,6 +1430,7 @@ dispatched to its ptype; otherwise, the tool should undeclare its ptype while it
 is busy. If the tool does not join any scopes, the dispatched messages will cause
 other instances of the ptype to be started.</Para>
 </Note>
+<Para>The <Symbol Role="Variable">requests</Symbol> parameter is <Literal>TTDT_CONTRACT_NO_REQUESTS</Literal> (zero) or <Literal>TTDT_CONTRACT_SET_XINFO</Literal>; there is no other value, and any other value fails the call with <Literal>TT_ERR_NUM</Literal> before the contract is accepted. A request that is not asked for is not registered for and fails.</Para>
 <Para>If the <Emphasis>accept</Emphasis> argument is true, the <Filename>ttdt_message_accept</Filename> function calls</Para>
 <programlisting><IndexTerm><Primary>tt_message_accept( contract )</Primary></IndexTerm>
 tt_message_accept(   contract   )</ProgramListing>
@@ -1467,6 +1478,11 @@ returned, the returned array is an error pointer that can be decoded with<IndexT
 </THead>
 <TBody>
 <Row>
+<Entry><Para><Filename>TT_ERR_NUM</Filename></Para></Entry>
+<Entry><Para>The <Symbol Role="Variable">requests</Symbol> parameter has a value that is none of the above.
+The contract was not accepted.</Para></Entry>
+</Row>
+<Row>
 <Entry><Para><Filename><IndexTerm>
 <Primary>TT_ERR_NOMP</Primary>
 </IndexTerm><IndexTerm>
@@ -1487,7 +1503,10 @@ correctly.</Para></Entry>
 </IndexTerm>TT_ERR_POINTER</Filename></Para></Entry>
 <Entry><Para>The pointer passed does not point at an object of the correct
 type for this operation. For example, the pointer may point to
-an integer when a character string is needed.</Para></Entry>
+an integer when a character string is needed. It is also returned when
+<Symbol Role="Variable">requests</Symbol> asks for <Literal>Set_XInfo</Literal> and both the
+<Symbol Role="Variable">shell</Symbol> and <Emphasis>cb</Emphasis> parameters are null. The
+contract was not accepted.</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><Command><IndexTerm>
@@ -2247,9 +2266,7 @@ this message fails with the error<IndexTerm>
 <Entry><Para><Filename><IndexTerm>
 <Primary>Set_XInfo request</Primary>
 </IndexTerm>Set_XInfo</Filename></Para></Entry>
-<Entry><Para>If the value of the <Symbol Role="Variable">shell</Symbol> parameter is not null and the shell is a realized <Emphasis>mappedWhenManaged
-applicationShellWidget</Emphasis>, this message is handled transparently; if the shell is not a
-<Emphasis>mappedWhenManaged applicationShellWidget</Emphasis>, this message fails with the error
+<Entry><Para>If the <Symbol Role="Variable">requests</Symbol> parameter asks for it (<Literal>TTDT_SESSION_SET_XINFO</Literal>) and the value of the <Symbol Role="Variable">shell</Symbol> parameter is not null, this message is handled transparently: it sets the environment variable <Filename>$DISPLAY</Filename> to the display it carries, and leaves the windows and the connection of the program where they are. If the <Symbol Role="Variable">shell</Symbol> parameter is null, it is passed to the callback, which must then be given. If <Symbol Role="Variable">requests</Symbol> does not ask for it, this message fails with the error
 <Filename><IndexTerm>
 <Primary>TT_DESKTOP_ENOTSUP</Primary>
 </IndexTerm><IndexTerm>
@@ -2323,8 +2340,8 @@ the message fails with the error <SystemItem Class="Constant"><IndexTerm>
 </Table>
 <Para>If the <Emphasis>sessid</Emphasis> parameter is null, the default session is joined.</Para>
 <Para>If the <Emphasis>join</Emphasis> parameter is set, the specified session is joined.</Para>
-<Para>The <Symbol Role="Variable">requests</Symbol> parameter is zero or the bitwise OR of the requests the process answers on behalf of the whole process: <Literal>TTDT_SESSION_GET_LOCALE</Literal>, <Literal>TTDT_SESSION_SET_LOCALE</Literal>, <Literal>TTDT_SESSION_GET_ENVIRONMENT</Literal>, <Literal>TTDT_SESSION_SET_ENVIRONMENT</Literal>, <Literal>TTDT_SESSION_GET_SITUATION</Literal>, <Literal>TTDT_SESSION_SET_SITUATION</Literal>, <Literal>TTDT_SESSION_SIGNAL</Literal>, <Literal>TTDT_SESSION_GET_SYSINFO</Literal> and <Literal>TTDT_SESSION_DO_COMMAND</Literal>. A request that is not asked for is not registered for and fails. Any process in the session can send these requests, so ask only for those the process needs.</Para>
-<Para>What these requests carry is checked before anything is changed, and a request with a value that fails is failed and changes nothing. A <Literal>Set_Environment</Literal> variable must have the name of a shell variable, a value of at most 32768 bytes, and not be one that a message may not set: <Literal>PATH</Literal>, <Literal>HOME</Literal>, <Literal>LD_*</Literal>, <Literal>DYLD_*</Literal>, <Literal>TT_*</Literal> and the other variables that change which code a process loads or runs, whom it believes it is, or where it finds its credentials and resources (the variables <Filename>ttsession</Filename> does not pass on to the programs it starts) fail with <Literal>TT_DESKTOP_EACCES</Literal>. A <Literal>Set_Locale</Literal> locale must be a name that cannot name a path, a <Literal>Set_Situation</Literal> directory an absolute path, a <Literal>Signal</Literal> a signal of the system; a string with a null byte inside fails with <Literal>TT_DESKTOP_EPROTO</Literal> and any other value of the wrong shape or size with <Literal>TT_DESKTOP_EINVAL</Literal>.</Para>
+<Para>The <Symbol Role="Variable">requests</Symbol> parameter is zero or the bitwise OR of the requests the process answers on behalf of the whole process: <Literal>TTDT_SESSION_GET_LOCALE</Literal>, <Literal>TTDT_SESSION_SET_LOCALE</Literal>, <Literal>TTDT_SESSION_GET_ENVIRONMENT</Literal>, <Literal>TTDT_SESSION_SET_ENVIRONMENT</Literal>, <Literal>TTDT_SESSION_GET_SITUATION</Literal>, <Literal>TTDT_SESSION_SET_SITUATION</Literal>, <Literal>TTDT_SESSION_SIGNAL</Literal>, <Literal>TTDT_SESSION_GET_SYSINFO</Literal>, <Literal>TTDT_SESSION_DO_COMMAND</Literal> and <Literal>TTDT_SESSION_SET_XINFO</Literal>. A request that is not asked for is not registered for and fails. Without a shell, <Literal>TTDT_SESSION_DO_COMMAND</Literal> and <Literal>TTDT_SESSION_SET_XINFO</Literal> need a callback, which they are passed to. Any process in the session can send these requests, so ask only for those the process needs.</Para>
+<Para>What these requests carry is checked before anything is changed, and a request with a value that fails is failed and changes nothing. A <Literal>Set_Environment</Literal> variable must have the name of a shell variable, a value of at most 32768 bytes, and not be one that a message may not set: <Literal>PATH</Literal>, <Literal>HOME</Literal>, <Literal>LD_*</Literal>, <Literal>DYLD_*</Literal>, <Literal>TT_*</Literal> and the other variables that change which code a process loads or runs, whom it believes it is, or where it finds its credentials and resources (the variables <Filename>ttsession</Filename> does not pass on to the programs it starts) fail with <Literal>TT_DESKTOP_EACCES</Literal>. A <Literal>Set_Locale</Literal> locale must be a name that cannot name a path, a <Literal>Set_Situation</Literal> directory an absolute path, a <Literal>Signal</Literal> a signal of the system, a <Literal>Set_XInfo</Literal> display a host name or socket path, a colon and a number (at most 512 characters), its visual one of the visual names of <Filename>X.h</Filename> and its depth 1 to 32; a string with a null byte inside fails with <Literal>TT_DESKTOP_EPROTO</Literal> and any other value of the wrong shape or size with <Literal>TT_DESKTOP_EINVAL</Literal>.</Para>
 <Para>A<IndexTerm>
 <Primary>ttdt_contract_cb</Primary>
 </IndexTerm><IndexTerm>

@@ -20,7 +20,9 @@ quotation marks, after the markup and entities of the document are taken out.
 
 The dtksh command ttdt_session_join takes the requests as further arguments, so
 that the usage of the command (the guide of dtksh in every language and the
-message catalogs of dtksh in every locale) has to name them in square brackets.
+message catalogs of dtksh in every locale) has to name them in square brackets,
+and the description in the documents has to name every request that the command
+takes (programs/dtksh/dtkcmds.c).
 """
 from pathlib import Path
 import re
@@ -125,13 +127,34 @@ for root in roots:
 # before, and in the message catalogs message 104
 USAGE_DOC = re.compile(r"<(?:filename|command)>ttdt_session_join</(?:filename|command)>"
                        r"\s*<(?:symbol|arg)\b.*?(?:</para>|</cmdsynopsis>)", re.S)
+NEXT_USAGE = re.compile(r"<(?:filename|command)>ttdt_session_quit</(?:filename|command)>"
+                        r"\s*<(?:symbol|arg)\b")
 USAGE_MSG = re.compile(r"\[[^\]]*\.\.\.\]")
+# the requests the command takes, from the command itself
+command = (top / "programs/dtksh/dtkcmds.c").read_text(encoding="utf-8", errors="replace")
+command = command[command.index("do_ttdt_session_join("):]
+command = command[:command.index("ADDBUILTIN")]
+REQUEST_NAMES = sorted(set(re.findall(r"case (TTDT_\w+):", command)))
+if not REQUEST_NAMES:
+    print("the dtksh command ttdt_session_join takes no requests: nothing to check against")
+    sys.exit(2)
 for path in sorted((top / "doc").rglob("*.sgm")):
+    if not path.is_file():      # links that a documentation build leaves
+        continue
     original = path.read_text(encoding="utf-8", errors="replace")
     for m in USAGE_DOC.finditer(original):
         if "request" not in plain(m.group(0)):
             fail(path, original.count("\n", 0, m.start()) + 1,
                  "the usage of the dtksh command ttdt_session_join has no requests")
+        # the description that follows names every request the command takes
+        following = NEXT_USAGE.search(original, m.end())
+        described = plain(original[m.start():following.start() if following
+                                   else m.end() + 4000])
+        for name in REQUEST_NAMES:
+            if name not in described:
+                fail(path, original.count("\n", 0, m.start()) + 1,
+                     "the description of the dtksh command ttdt_session_join "
+                     "does not name the request %s" % name)
 for path in sorted((top / "programs").rglob("dtksh.msg")):
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if re.match(r"104\s+\"?[^\"]*ttdt_session_join\s", line) and not USAGE_MSG.search(line):

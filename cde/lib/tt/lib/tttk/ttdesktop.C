@@ -1072,29 +1072,41 @@ ttdt_Get_Iconified_pat(
 }
 
 //
-// Pattern callback for Set_XInfo requests
+// Pattern callback for Set_XInfo requests.  The display of a widget cannot
+// be changed and neither can its visual or depth, so the request sets $DISPLAY,
+// which is what the process starts and opens from now on use; the windows and
+// the connection it has stay where they are.  The display must have the shape
+// of one, the visual one of the names of X.h, the depth 1 to 32.
 //
 Tt_message
 _ttdt_do_Set_XInfo(
 	Tt_message	msg,
 	void	       *,
 	Tt_message	,
-	char           *display,
-	int,		//visual
-	int		//depth
+	char          **display,
+	int	       *visual,
+	int	       *depth
 )
 {
-	if (display == 0) {
-		tttk_message_fail( msg, TT_ERR_POINTER, 0, 0 );
-		tttk_message_destroy( msg );
+	Tt_status status = TT_OK;
+	if (*display == 0) {
+		status = TT_DESKTOP_EPROTO;
+	} else if (_tttk_message_arg_is_set( msg, 1 ) && (*visual == -1)) {
+		status = TT_DESKTOP_EINVAL;
+	} else if (_tttk_message_arg_is_set( msg, 2 ) &&
+		   ((*depth < 1) || (*depth > 32))) {
+		status = TT_DESKTOP_EINVAL;
+	}
+	if (status == TT_OK) {
+		status = _ttdt_adopt_display( *display );
+	}
+	if (status != TT_OK) {
+		tttk_message_fail( msg, status, 0, 1 );
 		return 0;
 	}
-	//
-	// Cannot change the X display of a widget,
-	// so just set $DISPLAY
-	//
-	_tt_putenv( "DISPLAY", display );
-	return msg;
+	tt_message_reply( msg );
+	tttk_message_destroy( msg );
+	return 0;
 }
 
 //
@@ -1269,7 +1281,8 @@ _ttdt_GSet_XInfo(
 		if (status != TT_OK) {
 			return (Tt_message)tt_error_pointer( status );
 		}
-		status = tt_message_iarg_add( msg, TT_INOUT, Tttk_integer,
+		// as the pattern of a handler has it: all three are in arguments
+		status = tt_message_iarg_add( msg, TT_IN, Tttk_integer,
 					      depth );
 		if (status != TT_OK) {
 			return (Tt_message)tt_error_pointer( status );
@@ -1324,8 +1337,27 @@ _ttdt_XInfo_out_cb(
 )
 {
 	_TttkItem2Free fuse = msg;
-	char *display = _tttk_message_arg_val( msg, 0, 0 );
-	char *_visual = _tttk_message_arg_val( msg, 1, 0 );
+	//
+	// The arguments of a request are the sender's: strings of bounded
+	// size with no null byte inside.
+	//
+	char *display = 0;
+	char *_visual = 0;
+	Tt_status argStatus = TT_OK;
+	if (_tttk_message_arg_is_set( msg, 0 )) {
+		argStatus = _ttdt_arg_string( msg, 0, _TTDT_MAX_DISPLAY,
+					      &display );
+	}
+	if ((argStatus == TT_OK) && _tttk_message_arg_is_set( msg, 1 )) {
+		argStatus = _ttdt_arg_string( msg, 1, _TTDT_MAX_VISUAL_NAME,
+					      &_visual );
+	}
+	if (argStatus != TT_OK) {
+		tt_free( display );
+		tt_free( _visual );
+		fuse = (caddr_t)0;
+		return _ttDtRefuse( msg, 0, argStatus );
+	}
 	int visual = _ttDtVisual( _visual );
 	tt_free( _visual );
 	int depth = _tttk_message_arg_ival( msg, 2, 1 );
@@ -1352,7 +1384,7 @@ Tt_pattern
 ttdt_Set_XInfo_pat(
 	Tt_category		category,
 	Tt_message		commission,
-	Ttdt_XInfo_in_cb	callback,
+	Ttdt_XInfo_out_cb	callback,
 	void		       *clientdata,
 	int			register_it
 )

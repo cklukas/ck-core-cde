@@ -125,9 +125,9 @@ Tt_message		_ttdt_do_Set_XInfo(
 				Tt_message	msg,
 				void	       *widget,
 				Tt_message	,
-				char           *display,
-				int		visual,
-				int		depth
+				char          **display,
+				int	       *visual,
+				int	       *depth
 			);
 Tt_message		_ttdt_do_Get_XInfo(
 				Tt_message	msg,
@@ -394,7 +394,7 @@ Tt_message		ttdt_Set_XInfo(
 Tt_pattern		ttdt_Set_XInfo_pat(
 				Tt_category		category,
 				Tt_message		commission,
-				Ttdt_XInfo_in_cb	callback,
+				Ttdt_XInfo_out_cb	callback,
 				void		       *clientdata,
 				int			register_it
 			);
