@@ -35,12 +35,12 @@
 #ifndef _TT_DB_RPC_MESSAGE_ROUTINES_H
 #define _TT_DB_RPC_MESSAGE_ROUTINES_H
 
-#include "mp/mp_message_utils.h"
+#include "mp/mp_c_message_utils.h"
 #include "db/db_server.h"
 
-extern void _tt_get_rpc_message (const _tt_message&, _Tt_message_ptr&);
+extern void _tt_get_rpc_message (const _tt_message&, _Tt_c_message_ptr&);
 extern void _tt_get_rpc_messages (const _tt_message_list&,
-				  _Tt_message_list_ptr&);
+				  _Tt_c_message_list_ptr&);
 extern _Tt_db_results _tt_set_rpc_message (const _Tt_message_ptr&,
 					   _tt_message&);
 

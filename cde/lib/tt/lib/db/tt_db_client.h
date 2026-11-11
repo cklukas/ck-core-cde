@@ -41,6 +41,7 @@
 #define _TT_DBCLIENT_SIDE
 
 #include "mp/mp_message.h"
+#include "mp/mp_c_message_utils.h"
 #include "util/tt_object.h"
 #include "util/tt_string.h"
 #include "db/tt_db_access_utils.h"
@@ -277,7 +278,7 @@ public:
   // is addressed to, the message is deleteed from the database.
   _Tt_db_results dequeueMessages (const _Tt_string          &file,
 				  const _Tt_string_list_ptr &ptypes,
-				  _Tt_message_list_ptr      &messages);
+				  _Tt_c_message_list_ptr    &messages);
 
   // Gets the remote ends' idea of what the netfile version of the specified
   // file is.

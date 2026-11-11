@@ -81,7 +81,7 @@ class _Tt_c_procid : public _Tt_procid {
 	_Tt_string		_default_file; 
 	_Tt_string		_default_ptype;
 	_Tt_c_session_ptr	_default_session;
-	_Tt_message_list_ptr	_undelivered;
+	_Tt_c_message_list_ptr	_undelivered;
 	_Tt_c_message_ptr	_unvoted;
 	_Tt_typecb_table_ptr 	_ptype_callbacks;
 	_Tt_typecb_table_ptr 	_otype_callbacks;

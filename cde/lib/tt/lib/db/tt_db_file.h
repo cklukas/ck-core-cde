@@ -40,6 +40,7 @@
 #include "db/tt_db_hostname_global_map_ref.h"
 #include "db/tt_db_access_utils.h"
 #include "db/tt_db_property_utils.h"
+#include "mp/mp_c_message_utils.h"
 #if defined(OPT_BUG_AIX)
 #	undef copy
 #endif
@@ -157,7 +158,7 @@ public:
   // the specified ptypes.  If there are no other ptypes that this message
   // is addressed to, the message is deleted from the database.
   _Tt_db_results dequeueMessages (const _Tt_string_list_ptr &ptypes,
-				  _Tt_message_list_ptr      &messages);
+				  _Tt_c_message_list_ptr    &messages);
 
   // Gets the results of the last database operation made with this object. 
   _Tt_db_results getDBResults () const

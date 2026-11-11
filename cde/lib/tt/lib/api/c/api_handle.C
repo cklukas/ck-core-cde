@@ -170,7 +170,7 @@ lookup_mhandle(_Tt_c_message_ptr m)
 		}
 	}
 	// not found, add an entry
-	if (((_Tt_c_message *)m.c_pointer())->is_a_diff()) {
+	if (m->is_a_diff()) {
 		return((Tt_message)0);
 	}
 	_Tt_api_handle_ptr n = new _Tt_api_handle;

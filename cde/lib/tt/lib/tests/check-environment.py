@@ -106,7 +106,9 @@ if r.returncode:
     fail("link failed:\n" + r.stderr)
 
 env = dict(os.environ)
-env["ASAN_OPTIONS"] = "detect_leaks=0:abort_on_error=0"
+# the sources of the production code are linked in front of libtt, which
+# holds the same globals: that is how the test checks the code that ships
+env["ASAN_OPTIONS"] = "detect_leaks=0:abort_on_error=0:detect_odr_violation=0"
 env["UBSAN_OPTIONS"] = "halt_on_error=1:print_stacktrace=1"
 env["TT_ENV_TEST_DIR"] = str(work)
 cases = run([str(binary), "--list"], env=env).stdout.split()

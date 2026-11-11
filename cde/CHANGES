@@ -24,6 +24,31 @@
   English catalog, with each installed locale and without a catalog; it fails
   on the tree before this change and on eighteen deliberately broken copies
   of the catalogs, the code and the help volumes.
+- libtt: the client decodes what it receives into its own classes. The library
+  decoded the messages `ttsession` delivered, the messages dequeued from the
+  database of a file and every file it looked up into the classes it shares with
+  the server, and then called the operations of the client classes on them
+  (`_Tt_c_message`, `_Tt_c_file`), which only worked because the client classes
+  hold no data of their own. UBSan reported this for every message a client
+  received (`next_message`, `lookup_mhandle` and `update_message`) and for every
+  file-scoped operation. A message list is now decoded into a
+  `_Tt_c_message_list` (`tt_c_xdr_next_message_args`, the client's counterpart of
+  the server's xdr functions), the messages dequeued from a file likewise, and
+  `find_file` makes `_Tt_c_file` objects; the casts are gone. The session
+  requests test of `make -C lib/tt/bin/ttsession check` now fails on a
+  sanitizer report from either of its processes, the library or `ttsession`,
+  wherever it comes from (against the previous library every check that
+  receives a message fails). File-scoped delivery, live and queued, was also run by hand against the
+  sanitizer build of `rpc.ttdbserverd`: the previous library reports the
+  confusion, this one reports nothing.
+- libtt: `_Tt_string::cat()` no longer passes a null pointer to `memcpy()` for
+  an empty string. `ttsession` reported it when a session ended, and it made the
+  `table-directory` case of `make -C lib/tt/bin/ttdbserverd check` fail in a
+  sanitizer build.
+- libtt: the environment check of `make -C lib/tt/lib check` runs in a sanitizer
+  build. It links the production sources in front of `libtt`, which holds the
+  same globals; AddressSanitizer's duplicate-global check ended the test program
+  before it listed its cases.
 2026-11-10
 - dtfile: build the directory control-packet test and the file conflict
   dialog placement code cleanly with GCC 14. The test program ended an `if`

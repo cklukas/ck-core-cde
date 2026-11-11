@@ -203,7 +203,7 @@ _Tt_c_file::process_message_queue(
 	int dispatch_msgs
 )
 {
-	_Tt_message_list_ptr	msgs;
+	_Tt_c_message_list_ptr	msgs;
 	Tt_status		status;
 	_Tt_db_results		dbStatus;
 
@@ -221,10 +221,10 @@ _Tt_c_file::process_message_queue(
 	if (! dispatch_msgs) {
 		return TT_OK;
 	}
-	_Tt_message_list_cursor msg( msgs );
+	_Tt_c_message_list_cursor msg( msgs );
 	while (msg.next()) {
 		msg->set_state( TT_QUEUED );
-		(void)((_Tt_c_message *)(*msg).c_pointer())->dispatch( 1 );
+		(void)msg->dispatch( 1 );
 	}
 	return TT_OK;
 }

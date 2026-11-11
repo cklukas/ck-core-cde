@@ -33,4 +33,4 @@
  */
 #include <mp/mp_c_message.h>
 
-implement_ptr_to(_Tt_c_message)
+implement_list_of(_Tt_c_message)

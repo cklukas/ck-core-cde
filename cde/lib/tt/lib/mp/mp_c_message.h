@@ -53,7 +53,6 @@ class _Tt_c_message : public _Tt_message {
 				_rpc_dispatch() const;
 	_Tt_rpc_procedure_number
 				_rpc_dispatch_2() const;
-	// See _Tt_c_procid::next_message() before adding data members!
 };
 
 #endif				/* _MP_C_MESSAGE_H */

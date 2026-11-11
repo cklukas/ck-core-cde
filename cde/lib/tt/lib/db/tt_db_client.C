@@ -1141,7 +1141,7 @@ _Tt_db_client::queueMessage (const _Tt_string          &file,
 _Tt_db_results
 _Tt_db_client::dequeueMessages (const _Tt_string          &file,
 				const _Tt_string_list_ptr &ptypes,
-				_Tt_message_list_ptr      &messages)
+				_Tt_c_message_list_ptr    &messages)
 {
 	_tt_dequeue_msgs_args args;
 	

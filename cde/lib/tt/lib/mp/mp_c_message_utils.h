@@ -31,12 +31,12 @@
  *
  * Copyright (c) 1990 by Sun Microsystems, Inc.
  *
- * Utilities declarations for _Tt_s_message
+ * Utilities declarations for _Tt_c_message
  */
 #ifndef MP_C_MESSAGE_UTILS_H
 #define MP_C_MESSAGE_UTILS_H
 #include <mp/mp_message_utils.h>
 
 class _Tt_c_message;
-declare_derived_ptr_to(_Tt_c_message,_Tt_message)
+declare_derived_list_of(_Tt_c_message,_Tt_message)
 #endif				/* MP_C_MESSAGE_UTILS_H */

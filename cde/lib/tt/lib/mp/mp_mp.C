@@ -34,7 +34,7 @@
 
 #include "mp/mp_global.h"
 #include "mp/mp_mp.h"
-#include "mp/mp_file.h"
+#include "mp/mp_c_file.h"
 #include "mp/mp_session.h"
 #include "mp/mp_c_session.h"
 #include "mp/mp_procid.h"
@@ -119,8 +119,9 @@ generate_pattern_id()
 
 
 // 
-// Finds the _Tt_file object associated with the network pathname <path>.
-// Optionally creates the _Tt_file object.  Returns:
+// Finds the _Tt_c_file object associated with the network pathname <path>.
+// Optionally creates the _Tt_c_file object: files are looked up for the
+// client side of the MP (see find_session).  Returns:
 //	TT_OK		but: if (! createIfNot), then fp.is_null() is possible
 //	TT_ERR_FILE
 //	TT_ERR_PATH
@@ -165,7 +166,7 @@ _Tt_mp::find_file(
 
 	Tt_status status = TT_OK;
 	if (createIfNot) {
-		file = new _Tt_file( path );
+		file = new _Tt_c_file( path );
 		if (file.is_null()) {
 			return TT_ERR_NOMEM;
 		}

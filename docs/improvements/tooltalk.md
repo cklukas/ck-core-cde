@@ -1,6 +1,6 @@
 ---
 title: ToolTalk
-description: How ttsession and rpc.ttdbserverd validate requests, how sessions are authenticated, how the programs ttsession starts get their environment and which Desktop requests a joined program answers.
+description: How ttsession and rpc.ttdbserverd validate requests, how sessions are authenticated, how the programs ttsession starts get their environment, which Desktop requests a joined program answers and what the client library decodes into.
 ---
 
 # ToolTalk
@@ -274,6 +274,30 @@ template in `examples` and the `CoEd` demo. They keep the window requests that
 their shell widget and callbacks decide, `Get_Status`, and the media requests
 that their ptypes declare. A program that does not ask answers none of these
 requests, and a request for one is failed as described above.
+
+## Objects the client decodes
+
+A client holds the messages it receives and the files it joins as the classes of
+the client side of the library (`_Tt_c_message`, `_Tt_c_file`), which add the
+operations only a client does. The library used to decode what it received into
+the classes it shares with the server (the list of messages `ttsession`
+delivers, the messages dequeued from the database of a file, the file object that
+`find_file` made) and to call the operations of the client classes on those
+objects. That is undefined behaviour, however much it looked like it worked
+because the client classes have no members of their own, and UBSan reported it
+for every message a program received. The client now decodes into its own
+classes: `tt_c_xdr_next_message_args` is the counterpart of the xdr functions of
+the server (`mp_s_xdr_functions`) for the delivery of a message list, the
+messages dequeued from a file are a `_Tt_c_message_list`, and `find_file` makes
+`_Tt_c_file` objects. The wire format is the one the server encodes.
+
+A check that holds the library to this has to reach it: the session requests
+test (see below) fails on any sanitizer report from the processes that use the
+library as a client, whatever file it names. File-scoped messages need the
+database of a mount point the caller owns, which a check run by a user cannot
+make, so they are not part of `make check`; they were run against the sanitizer
+build of `rpc.ttdbserverd` on a scratch file system, live and queued, once with
+the library from before and once with this one.
 
 ## Database server
 
@@ -637,6 +661,13 @@ request must fail (`TT_ERR_NO_MATCH` when sent to nobody in particular,
 `ttdt_session_join()` refuses are checked too. Built against the library from
 before the change (`TT_REQUESTS_OLD_JOIN=1`), the cases that ask for less than all
 of the requests fail: the library answers every one of them.
+
+The test also fails on a sanitizer report, from either of the two processes, from
+the library they use or from `ttsession` (which is searched when it has ended),
+wherever the report comes from: opening, joining, receiving, replying, sending and
+closing are the paths of every client, and the check keeps no list of reports to
+overlook. Against the library from before the objects the client decodes were
+typed (see above), every check that receives a message fails.
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
 with the sanitizers next to a test program and runs each case in its own

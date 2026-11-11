@@ -551,7 +551,7 @@ _Tt_db_file::queueMessage (const _Tt_string_list_ptr &ptypes,
 			     
 _Tt_db_results
 _Tt_db_file::dequeueMessages (const _Tt_string_list_ptr &ptypes,
-			      _Tt_message_list_ptr      &messages)
+			      _Tt_c_message_list_ptr    &messages)
 {
   if (isFileInDatabase()) {
     dbResults = dbFileDatabase->dequeueMessages(dbFileNetworkPath,

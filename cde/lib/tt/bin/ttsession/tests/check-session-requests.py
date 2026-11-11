@@ -22,7 +22,9 @@ asked for is handled and does what it is for (the environment variable, the
 working directory, the locale and the signal of the process change, the
 questions are answered, the callback gets Do_Command); every other one fails
 and leaves the process as it was.  The programs are compiled and linked with
-the sanitizers when the build does not already carry them.
+the sanitizers when the build does not already carry them, and a sanitizer
+report from either of them, from the library they use or from ttsession fails
+the test.
 """
 import os
 from pathlib import Path
@@ -117,21 +119,16 @@ target = (work / "target").resolve()
 target.mkdir()
 
 
-# UBSan reports go on after the report, so they are looked for in what the
-# programs print.  This test is about the code of tttk and the test program,
-# so a UBSan report in one of their files fails it; an AddressSanitizer or
-# leak report fails it wherever it is.
-tttk_dir = srcdir / ".." / ".." / "lib" / "tttk"
-here = sorted({p.name for p in tttk_dir.iterdir() if p.suffix in (".C", ".h")}
-              | {"session-requests-test.c"})
-UBSAN_HERE = re.compile(r"(^|/)(%s):\d+:\d+: runtime error:" %
-                        "|".join(re.escape(n) for n in here))
+# A sanitizer report from any of the processes fails the test, wherever in the
+# library or in ttsession it comes from: the processes use libtt the way a
+# client does (open, join, receive, reply, send, close), so the library is
+# checked as it is shipped, with no report left out.  UBSan reports go on after
+# the report, so they are looked for in what the processes print.
+SANITIZER = re.compile(r"runtime error:|ERROR: AddressSanitizer|LeakSanitizer")
 
 
 def reports(text):
-    return [l for l in text.splitlines()
-            if UBSAN_HERE.search(l)
-            or "ERROR: AddressSanitizer" in l or "LeakSanitizer" in l]
+    return [l for l in text.splitlines() if SANITIZER.search(l)]
 
 
 def parse(text, key):
@@ -236,7 +233,7 @@ if not old_join:
     check("a request that cannot be answered is refused, none at all is not",
           joins == {"do_command-without-callback": "pointer",
                     "unknown-request": "num",
-                    "no-requests-without-callback": "ok"},
+                    "no-requests-without-callback": "ok"} and not reports(r.stdout + r.stderr),
           r.stdout + r.stderr)
 
 session.terminate()
@@ -245,6 +242,8 @@ try:
 except subprocess.TimeoutExpired:
     session.kill()
     session.wait()
+served = out.read_text()
+check("ttsession ends without a sanitizer report", not reports(served), served)
 prog = sid.split()[2]
 for vers in ("1", "4"):
     subprocess.run(["rpcinfo", "-d", prog, vers], stdout=subprocess.DEVNULL,

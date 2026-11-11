@@ -11,6 +11,7 @@ libmp_la_SOURCES = mp_arg.C            mp_arg_utils.C          mp_auth.C \
         mp_c_mp.C           mp_c_msg_context.C      mp_c_msg_context_utils.C \
         mp_c_pattern.C      mp_c_procid.C           mp_c_procid_utils.C \
         mp_c_session.C      mp_c_session_prop.C     mp_c_session_utils.C \
+        mp_c_xdr_functions.C \
         mp_context.C        mp_context_utils.C      mp_desktop.C \
         mp_desktop_utils.C  mp_file.C               mp_file_utils.C \
         mp_message.C        mp_message_utils.C      mp_mp.C \

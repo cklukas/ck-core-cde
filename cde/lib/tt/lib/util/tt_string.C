@@ -686,8 +686,12 @@ cat(const _Tt_string &s) const
 	_Tt_string	result(len()+s.len());
 	int		result_len = len() + s.len();
 
-	memcpy(result->content,(*this)->content,len());
-	memcpy(result->content+len(),s->content,s.len());
+	if (len() > 0) {
+		memcpy(result->content,(*this)->content,len());
+	}
+	if (s.len() > 0) {
+		memcpy(result->content+len(),s->content,s.len());
+	}
 	(result->content)[result_len] = '\0';
 	return result;
 }
@@ -697,7 +701,9 @@ cat(char c) const
 {
 	_Tt_string	result(len()+1);
 	int		result_len = len() + 1;
-	memcpy(result->content,(*this)->content,len());
+	if (len() > 0) {
+		memcpy(result->content,(*this)->content,len());
+	}
 	(result->content)[result_len-1] = c;
 	(result->content)[result_len] = '\0';
 	return result;

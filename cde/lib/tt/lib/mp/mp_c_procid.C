@@ -44,6 +44,7 @@
 #include <mp/mp_c_procid.h>
 #include <mp/mp_rpc_interface.h>
 #include <mp/mp_c_session.h>
+#include <mp/mp_c_xdr_functions.h>
 #include <mp/mp_stream_socket.h>
 #include <util/tt_int_rec.h>
 #include <arpa/inet.h>
@@ -497,12 +498,12 @@ next_message(_Tt_c_message_ptr &msg)
 	Tt_status		rstatus = TT_OK;
 
 	if (_undelivered.is_null() || _undelivered->count() == 0) {
-		_Tt_next_message_args	args;
+		_Tt_c_next_message_args	args;
 
 		rstatus = default_session()->call(TT_RPC_NEXT_MESSAGE,
 						 (xdrproc_t)tt_xdr_procid,
 						 (char *)&proc,
-						 (xdrproc_t)tt_xdr_next_message_args,
+						 (xdrproc_t)tt_c_xdr_next_message_args,
 						 (char *)&args);
 		switch (rstatus) {
 		      case TT_OK:
@@ -542,7 +543,7 @@ next_message(_Tt_c_message_ptr &msg)
 	if (_undelivered.is_null() || _undelivered->count() == 0) {
 		msg = 0;
 	} else {
-		msg = (_Tt_c_message *)_undelivered->bot().c_pointer();
+		msg = _undelivered->bot();
 		_undelivered->dequeue();
 			
 		if (msg->queue() && msg->scope() == TT_FILE) {

@@ -32,7 +32,7 @@
  * Copyright (c) 1992 by Sun Microsystems, Inc.
  */
 
-#include "mp/mp_message.h"
+#include "mp/mp_c_message.h"
 #include "util/tt_string.h"
 #include "util/tt_xdr_utils.h"
 #include "db/tt_db_rpc_message_routines.h"
@@ -57,9 +57,9 @@ void __vec_delete (void *, int , int , void *, int , int )
 
 void
 _tt_get_rpc_message (const _tt_message &rpc_message,
-_Tt_message_ptr   &message)
+_Tt_c_message_ptr &message)
 {
-	message = (_Tt_message *)NULL;
+	message = (_Tt_c_message *)NULL;
 
 	if (rpc_message.body.body_len) {
 		XDR xdrs;
@@ -69,22 +69,22 @@ _Tt_message_ptr   &message)
 			      (u_int)rpc_message.body.body_len,
 			      XDR_DECODE);
 		
-		message = new _Tt_message;
+		message = new _Tt_c_message;
 		(void)message->xdr(&xdrs);
 	}
 }
 
 void
 _tt_get_rpc_messages (const _tt_message_list &rpc_messages,
-		      _Tt_message_list_ptr   &messages)
+		      _Tt_c_message_list_ptr &messages)
 {
-	messages = (_Tt_message_list *)NULL;
+	messages = (_Tt_c_message_list *)NULL;
 
 	if (rpc_messages.messages_len) {
-		messages = new _Tt_message_list;
+		messages = new _Tt_c_message_list;
 		
 		for (unsigned int i=0; i < rpc_messages.messages_len; i++) {
-			_Tt_message_ptr message_ptr;
+			_Tt_c_message_ptr message_ptr;
 
 			_tt_get_rpc_message(rpc_messages.messages_val [i],
 					    message_ptr);
