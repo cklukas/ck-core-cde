@@ -215,16 +215,86 @@ def run_case(label, asked):
         "signals": "2" if "signal" in asked else "0",
         "locale": "C.UTF-8" if "set_locale" in asked and can_set_locale else "C",
         "docommands": "2" if "do_command" in asked else "0",
+        "probe2": "(unset)",
+        "probe3": "(unset)",
     }
     wrong = ["%s is %s, wanted %s" % (k, seen.get(k), v)
              for k, v in expected.items() if seen.get(k) != v] + reports(text)
     check("%s: the process changes only as asked" % label, not wrong, "\n".join(wrong) + "\n" + text)
 
 
+# What a process that asked for all the requests still refuses: no message may
+# set a variable that changes what the process loads or runs, name something
+# that is no variable, hand it a locale that names a path, a directory that is
+# not absolute or a signal that is none, or send it a string with a null byte
+# inside or of absurd length.  Each is failed, and the process is left as it was.
+HOSTILE = {
+    "env-ld-preload": "eacces", "env-path": "eacces", "env-tt-prefix": "eacces",
+    "env-name-digit": "einval", "env-name-equals": "einval", "env-name-empty": "einval",
+    "env-name-blank": "einval", "env-name-long": "einval", "env-name-nul": "eproto",
+    "env-value-long": "einval", "env-value-nul": "eproto", "env-mixed": "eacces",
+    "env-many": "einval", "env-get-name-blank": "einval",
+    "locale-path": "einval", "locale-dots": "einval", "locale-empty": "einval",
+    "locale-category": "einval", "locale-long": "einval", "locale-nul": "eproto",
+    "locale-many": "einval",
+    "situation-relative": "einval", "situation-control": "einval",
+    "situation-long": "einval", "situation-nul": "eproto", "situation-missing": "enoent",
+    "signal-zero": "einval", "signal-huge": "einval", "signal-negative": "einval",
+}
+
+
+def run_hostile():
+    home = (work / "process-hostile").resolve()
+    home.mkdir()
+    handler = subprocess.Popen([str(program), "handle", str(home)] + REQUESTS,
+                               env=env, cwd=work, stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    ready = handler.stdout.readline().rstrip("\n")
+    if not (ready.startswith("ready ") and " locale=" in ready):
+        handler.kill()
+        check("hostile: the process joins the session", False, ready + handler.stdout.read())
+        return
+    procid = ready[len("ready "):ready.rindex(" locale=")]
+    sent = subprocess.run([str(program), "hostile", procid], env=env, cwd=target,
+                          text=True, capture_output=True, timeout=300)
+    handler.stdin.close()
+    try:
+        text = handler.stdout.read()
+        handler.wait(timeout=30)
+    except subprocess.TimeoutExpired:
+        handler.kill()
+        text = "the process did not end"
+    results = {w[1]: w[2:4] for w in parse(sent.stdout, "hostile")}
+    wrong = []
+    for name, status in HOSTILE.items():
+        if results.get(name) != ["failed", status]:
+            wrong.append("%s: %s, wanted failed %s" % (name, results.get(name), status))
+    for name in ("env-remove", "env-valid"):
+        if results.get(name) != ["handled", "ok"]:
+            wrong.append("%s: %s, wanted handled ok" % (name, results.get(name)))
+    wrong += reports(sent.stdout + sent.stderr)
+    check("hostile: values no message may act on are failed", not wrong and sent.returncode == 0,
+          "\n".join(wrong) + "\n" + sent.stdout + sent.stderr)
+    state = parse(text, "state")
+    if len(state) != 1:
+        check("hostile: the process ends and reports its state", False, text)
+        return
+    seen = dict(w.split("=", 1) for w in state[0][1:])
+    # the valid requests at the end took one variable away and set another
+    expected = {"env": "(unset)", "cwd": str(home), "signals": "0", "locale": "C",
+                "docommands": "0", "probe2": "(unset)", "probe3": "valid"}
+    wrong = ["%s is %s, wanted %s" % (k, seen.get(k), v)
+             for k, v in expected.items() if seen.get(k) != v] + reports(text)
+    check("hostile: the process is changed by the valid requests only", not wrong,
+          "\n".join(wrong) + "\n" + text)
+
+
 run_case("none", [])
 for name in REQUESTS:
     run_case(name, [name])
 run_case("all", REQUESTS)
+if not old_join:
+    run_hostile()
 
 if not old_join:
     r = subprocess.run([str(program), "arguments"], env=env, cwd=work, text=True,

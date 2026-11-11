@@ -31,6 +31,7 @@
 <FuncDef>Tt_status <Function>ttdt_sender_imprint_on</Function></FuncDef>
 <ParamDef>const char *<Parameter>handler</Parameter></ParamDef>
 <ParamDef>Tt_message <Parameter>contract</Parameter></ParamDef>
+<ParamDef>Ttdt_sender_imprints <Parameter>imprints</Parameter></ParamDef>
 <ParamDef>char **<Parameter>display</Parameter></ParamDef>
 <ParamDef>int *<Parameter>width</Parameter></ParamDef>
 <ParamDef>int *<Parameter>height</Parameter></ParamDef>
@@ -46,10 +47,30 @@
 <Function>ttdt_sender_imprint_on</Function> function
 is used to make the calling tool act equivalently to a child of
 another specified tool.
-The calling tool adopts the other
+The calling tool can adopt the other
 tool's X11 display, locale, and current working directory.
 It also learns the other tool's X11 geometry, so that it may
 position itself appropriately.
+</Para>
+<Para>The calling process is changed only in the ways named in
+<Emphasis>imprints</Emphasis>, which is zero
+(<SystemItem Class="Constant">TTDT_IMPRINT_NONE</SystemItem>) or the bitwise OR of any of
+<SystemItem Class="Constant">TTDT_IMPRINT_LOCALE</SystemItem> (the locale of the
+other tool is set with <Function>setlocale</Function>),
+<SystemItem Class="Constant">TTDT_IMPRINT_SITUATION</SystemItem> (the working
+directory is changed to that of the other tool) and
+<SystemItem Class="Constant">TTDT_IMPRINT_DISPLAY</SystemItem> (the
+<SystemItem Class="EnvironVar">DISPLAY</SystemItem> environment variable is set
+to the display of the other tool).
+There is no value that stands for all of them, and a value that is none of
+them is an error.
+Only the requests that the changes and the other arguments need are sent:
+<Symbol Role="Message">Get_Locale</Symbol>,
+<Symbol Role="Message">Get_Situation</Symbol> and
+<Symbol Role="Message">Get_XInfo</Symbol> for the changes named, and
+<Symbol Role="Message">Get_XInfo</Symbol> and
+<Symbol Role="Message">Get_Geometry</Symbol> for the values that the caller asks
+to be returned.
 </Para>
 <Para>If the
 <Emphasis>handler</Emphasis> argument is non-
@@ -60,7 +81,9 @@ position itself appropriately.
 <Emphasis>contract</Emphasis> argument is non-
 <SystemItem Class="Constant">NULL</SystemItem>, the requests are addressed to the
 &cdeman.tt.message.sender; of the contract, using
-<SystemItem Class="Constant">TT_HANDLER</SystemItem>.</Para>
+<SystemItem Class="Constant">TT_HANDLER</SystemItem>.
+The requests are always addressed to one tool, since what the replies carry is
+put into the calling process.</Para>
 <Para>The
 <Emphasis>contract</Emphasis> argument is passed to
 &cdeman.tttk.message.create; as the
@@ -69,10 +92,11 @@ position itself appropriately.
 <Para>If the
 <Symbol Role="Variable">display</Symbol> argument is not
 <SystemItem Class="Constant">NULL</SystemItem>, <Function>ttdt_sender_imprint_on</Function> returns the other tool's display in
-<Symbol Role="Variable">*display</Symbol>. If
-<Symbol Role="Variable">display</Symbol> is
-<SystemItem Class="Constant">NULL</SystemItem>, <Function>ttdt_sender_imprint_on</Function> sets the
-<SystemItem Class="EnvironVar">DISPLAY</SystemItem> environment variable to the other tool's display.
+<Symbol Role="Variable">*display</Symbol>, whether or not
+<SystemItem Class="Constant">TTDT_IMPRINT_DISPLAY</SystemItem> is named.
+The
+<SystemItem Class="EnvironVar">DISPLAY</SystemItem> environment variable is set
+only if it is.
 </Para>
 <Para>If each of the
 <Symbol Role="Variable">width</Symbol>, <Symbol Role="Variable">height</Symbol>, <Symbol Role="Variable">xoffset</Symbol>, and
@@ -93,6 +117,27 @@ passes the
 <SystemItem Class="Constant">NULL</SystemItem>, <Function>ttdt_sender_imprint_on</Function> sets
 <Symbol Role="Variable">*display</Symbol> to a string that can be freed with
 <Function>tt_free</Function>.</Para>
+<Para>The replies are checked before anything is done with them. A locale
+must be a name of letters, digits and <Literal>_.@+,=;-</Literal> that
+begins with a letter or a digit and cannot name a path; a directory must be an
+absolute path without control characters and shorter than
+<SystemItem Class="Constant">PATH_MAX</SystemItem>; a display must have the
+form of a host, a colon and a number, or of the path of a socket and a colon and
+a number, without blanks or shell characters, and be at most 512 characters; a
+size or position of a window must fit the 16 bits of the X protocol. A string
+with a null byte inside, or longer than these limits, cannot be used either.
+If a reply cannot be used, the other tool is not believed in anything: the
+calling process is not changed, nothing is returned in
+<Symbol Role="Variable">*display</Symbol>, <Symbol Role="Variable">*width</Symbol>,
+<Symbol Role="Variable">*height</Symbol>, <Symbol Role="Variable">*xoffset</Symbol> and
+<Symbol Role="Variable">*yoffset</Symbol>, and the function returns
+<SystemItem Class="Constant">TT_DESKTOP_EPROTO</SystemItem>
+(<SystemItem Class="Constant">TT_DESKTOP_EINVAL</SystemItem> for a string that is too
+long). A request that the other tool fails does not do this: the
+other replies are still used, and the function returns the status with which the
+request was failed. A reply that comes after the function has stopped waiting
+changes nothing.
+</Para>
 <Para>If for some reason no width or height is returned by the other tool,
 <Function>ttdt_sender_imprint_on</Function> sets
 <Symbol Role="Variable">*width</Symbol> or
@@ -114,6 +159,37 @@ If no positional information is returned,
 <Term>TT_OK</Term>
 <ListItem>
 <Para>The operation completed successfully.
+</Para>
+</ListItem>
+</VarListEntry>
+<VarListEntry>
+<Term>TT_ERR_NUM</Term>
+<ListItem>
+<Para><Emphasis>imprints</Emphasis> has a value that is none of the above.
+Nothing was sent.
+</Para>
+</ListItem>
+</VarListEntry>
+<VarListEntry>
+<Term>TT_ERR_POINTER</Term>
+<ListItem>
+<Para>Both <Emphasis>handler</Emphasis> and <Emphasis>contract</Emphasis> are
+<SystemItem Class="Constant">NULL</SystemItem>. Nothing was sent.
+</Para>
+</ListItem>
+</VarListEntry>
+<VarListEntry>
+<Term>TT_DESKTOP_EPROTO</Term>
+<ListItem>
+<Para>A reply had a null byte inside a string, or a value that cannot be a
+locale, a directory, a display or a size.
+</Para>
+</ListItem>
+</VarListEntry>
+<VarListEntry>
+<Term>TT_DESKTOP_EINVAL</Term>
+<ListItem>
+<Para>A reply had a string that is too long.
 </Para>
 </ListItem>
 </VarListEntry>
@@ -160,11 +236,14 @@ implementation specific, but is at least 2000.)
 </RefSect1>
 <RefSect1>
 <Title>APPLICATION USAGE</Title>
-<Para>If both the
-<Emphasis>handler</Emphasis> and
-<Emphasis>contract</Emphasis> are zero, the requests are addressed to no tool in
-particular, using
-<SystemItem Class="Constant">TT_PROCEDURE</SystemItem>; this is not recommended.
+<Para>The function also returns the status with which the other tool failed one
+of the requests, such as
+<SystemItem Class="Constant">TT_DESKTOP_ENOTSUP</SystemItem> or
+<SystemItem Class="Constant">TT_ERR_NO_MATCH</SystemItem> when it has not asked
+&cdeman.ttdt.session.join; to answer it, and the status of a change that the
+system refuses (a locale it does not have, a directory that cannot be entered).
+Name in <Emphasis>imprints</Emphasis> only what the tool needs: a tool that
+only wants to place its window needs none of them.
 </Para>
 </RefSect1>
 <RefSect1>

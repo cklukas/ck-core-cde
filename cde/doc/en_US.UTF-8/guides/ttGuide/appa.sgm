@@ -1136,6 +1136,18 @@ on the file server that owns <Symbol Role="Variable">pathname</Symbol>, the file
 <Filename>TT_FILE_IN_SESSION</Filename>.</Para>
 </ListItem>
 <ListItem>
+<Para>The replies are checked before anything is done with them. A locale must be
+a name of letters, digits and <Literal>_.@+,=;-</Literal> that begins with a letter or a digit and
+cannot name a path; a directory must be an absolute path without control
+characters; a display must have the form of a host, a colon and a number, or of
+the path of a socket and a colon and a number, without blanks or shell characters;
+a size or position of a window must fit the 16 bits of the X protocol; and a
+string must not have a null byte inside or be of absurd length. If a reply
+cannot be used, ToolA is not believed in anything: ToolB is not changed,
+nothing is returned in the parameters, and the function returns
+<Literal>TT_DESKTOP_EPROTO</Literal> (<Literal>TT_DESKTOP_EINVAL</Literal> for a string that is too long).
+A request that ToolA fails does not do this; the other replies are still used.
+A reply that comes after the function has stopped waiting changes nothing.</Para>
 <Para>The <Emphasis>app2run</Emphasis> and <Emphasis>ms_timeout</Emphasis> parameters are passed to the<IndexTerm>
 <Primary>tttk_block_while</Primary>
 </IndexTerm><IndexTerm>
@@ -1895,6 +1907,7 @@ instead of a specific error status.</Para></Entry>
 </IndexTerm>ttdt_sender_imprint_on</Title>
 <ProgramListing>Tt_status    ttdt_sender_imprint_on(  const char *   handler,
                                       Tt_message     contract,
+                                      Ttdt_sender_imprints imprints,
                                       char **        display,
                                       int *          width,
                                       int *          height,
@@ -1906,16 +1919,27 @@ instead of a specific error status.</Para></Entry>
 </Example>
 <Para>The <Filename>ttdt_sender_imprint_on</Filename> function causes the calling tool (&ldquo;ToolB&rdquo;) to
 adopt the behavior and certain characteristics of another tool (&ldquo;ToolA&rdquo;). ToolB
-adopts ToolA's X11 display, locale, and current working directory; it also learns
+can adopt ToolA's X11 display, locale, and current working directory; it also learns
 ToolA's X11 geometry so that it can position itself appropriately.</Para>
-<Para>If the <Symbol Role="Variable">display</Symbol> parameter is null, the<IndexTerm>
+<Para>ToolB is changed only in the ways named in the <Symbol Role="Variable">imprints</Symbol> parameter, which is zero
+(<Literal>TTDT_IMPRINT_NONE</Literal>) or the bitwise OR of any of
+<Literal>TTDT_IMPRINT_LOCALE</Literal> (ToolB sets ToolA's locale),
+<Literal>TTDT_IMPRINT_SITUATION</Literal> (ToolB changes to ToolA's working directory) and
+<Literal>TTDT_IMPRINT_DISPLAY</Literal> (ToolB sets <Filename>$DISPLAY</Filename> to ToolA's display).
+There is no value that stands for all of them, and a value that is none of
+them is an error. Only the requests that the named changes, the
+<Symbol Role="Variable">display</Symbol> parameter and the geometry parameters need are sent, and all
+of them are addressed to ToolA: to the <Symbol Role="Variable">handler</Symbol>, or, if that is null, to the sender of
+<Symbol Role="Variable">contract</Symbol>. If both are null, nothing is sent and the function fails.</Para>
+<Para>If the <Symbol Role="Variable">display</Symbol> parameter is not null, ToolA's display is returned in
+this parameter, whether or not <Literal>TTDT_IMPRINT_DISPLAY</Literal> is named; the<IndexTerm>
 <Primary>$DISPLAY</Primary>
 </IndexTerm><IndexTerm>
 <Primary>environment variables</Primary>
 <Secondary>$DISPLAY</Secondary>
 </IndexTerm>
 environment variable <Filename>$DISPLAY</Filename> is set to
-ToolA's display; otherwise, ToolA's display is returned in this parameter. The
+ToolA's display only if that value is named. The
 returned value is a string that can be freed with the<IndexTerm>
 <Primary>ToolTalk functions</Primary>
 <Secondary>tt_free</Secondary>
@@ -1959,8 +1983,8 @@ request is not sent to ToolA.</Para>
 <Primary>toolkit messages</Primary>
 <Secondary>tttk_block_while</Secondary>
 </IndexTerm>
-<Filename>tttk_block_while</Filename> function to block on the replies to the Get_Geometry
-request sent by this function.</Para>
+<Filename>tttk_block_while</Filename> function to block on the replies to the requests
+sent by this function.</Para>
 <Para><!--Original XRef content: 'Table&numsp;A&hyphen;15'--><XRef Role="CodeOrFigureOrTable" Linkend="TTUG.MsgTk.mkr.15"> lists the possible errors that can be returned by this function.</Para>
 <Table Id="TTUG.MsgTk.tbl.27" Frame="Topbot">
 <Title Id="TTUG.MsgTk.mkr.15">Possible Errors Returned by the ttdt_sender_imprint_on</Title>
@@ -1974,6 +1998,24 @@ request sent by this function.</Para>
 </Row>
 </THead>
 <TBody>
+<Row>
+<Entry><Para><Filename>TT_ERR_NUM</Filename></Para></Entry>
+<Entry><Para>The <Symbol Role="Variable">imprints</Symbol> parameter has a value that is none of the above.
+Nothing was sent.</Para></Entry>
+</Row>
+<Row>
+<Entry><Para><Filename>TT_ERR_POINTER</Filename></Para></Entry>
+<Entry><Para>Both <Symbol Role="Variable">handler</Symbol> and <Symbol Role="Variable">contract</Symbol> are null. Nothing was sent.</Para></Entry>
+</Row>
+<Row>
+<Entry><Para><Filename>TT_DESKTOP_EPROTO</Filename></Para></Entry>
+<Entry><Para>A reply had a null byte inside a string, or a value that cannot be a
+locale, a directory, a display or a size.</Para></Entry>
+</Row>
+<Row>
+<Entry><Para><Filename>TT_DESKTOP_EINVAL</Filename></Para></Entry>
+<Entry><Para>A reply had a string that is too long.</Para></Entry>
+</Row>
 <Row>
 <Entry><Para><Command><IndexTerm>
 <Primary>TT_DESKTOP_ETIMEDOUT</Primary>
@@ -2282,6 +2324,7 @@ the message fails with the error <SystemItem Class="Constant"><IndexTerm>
 <Para>If the <Emphasis>sessid</Emphasis> parameter is null, the default session is joined.</Para>
 <Para>If the <Emphasis>join</Emphasis> parameter is set, the specified session is joined.</Para>
 <Para>The <Symbol Role="Variable">requests</Symbol> parameter is zero or the bitwise OR of the requests the process answers on behalf of the whole process: <Literal>TTDT_SESSION_GET_LOCALE</Literal>, <Literal>TTDT_SESSION_SET_LOCALE</Literal>, <Literal>TTDT_SESSION_GET_ENVIRONMENT</Literal>, <Literal>TTDT_SESSION_SET_ENVIRONMENT</Literal>, <Literal>TTDT_SESSION_GET_SITUATION</Literal>, <Literal>TTDT_SESSION_SET_SITUATION</Literal>, <Literal>TTDT_SESSION_SIGNAL</Literal>, <Literal>TTDT_SESSION_GET_SYSINFO</Literal> and <Literal>TTDT_SESSION_DO_COMMAND</Literal>. A request that is not asked for is not registered for and fails. Any process in the session can send these requests, so ask only for those the process needs.</Para>
+<Para>What these requests carry is checked before anything is changed, and a request with a value that fails is failed and changes nothing. A <Literal>Set_Environment</Literal> variable must have the name of a shell variable, a value of at most 32768 bytes, and not be one that a message may not set: <Literal>PATH</Literal>, <Literal>HOME</Literal>, <Literal>LD_*</Literal>, <Literal>DYLD_*</Literal>, <Literal>TT_*</Literal> and the other variables that change which code a process loads or runs, whom it believes it is, or where it finds its credentials and resources (the variables <Filename>ttsession</Filename> does not pass on to the programs it starts) fail with <Literal>TT_DESKTOP_EACCES</Literal>. A <Literal>Set_Locale</Literal> locale must be a name that cannot name a path, a <Literal>Set_Situation</Literal> directory an absolute path, a <Literal>Signal</Literal> a signal of the system; a string with a null byte inside fails with <Literal>TT_DESKTOP_EPROTO</Literal> and any other value of the wrong shape or size with <Literal>TT_DESKTOP_EINVAL</Literal>.</Para>
 <Para>A<IndexTerm>
 <Primary>ttdt_contract_cb</Primary>
 </IndexTerm><IndexTerm>

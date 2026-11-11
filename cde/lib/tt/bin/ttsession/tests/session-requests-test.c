@@ -13,10 +13,10 @@
  * set_environment, get_situation, set_situation, signal, get_sysinfo,
  * do_command; none at all if there are no names) and a callback that answers
  * Do_Command by recording it, and prints "ready PROCID locale=yes|no".  The
- * working directory is WORKDIR, the variable TT_SESSION_REQUESTS_PROBE is
+ * working directory is WORKDIR, the variable SESSION_REQUESTS_PROBE is
  * "original" and SIGUSR1 is counted.  It serves its connection until its
  * standard input ends, then prints
- *   state env=VALUE cwd=DIRECTORY signals=N locale=NAME docommands=N
+ *   state env=VALUE cwd=DIRECTORY signals=N locale=NAME docommands=N probe2=VALUE probe3=VALUE
  * which says what happened to the process.
  *
  * send sends each request OP (the operation names get_locale ... do_command
@@ -27,6 +27,14 @@
  * request), enotsup (the handler failed it) or the number, and ARGUMENTS the
  * values the reply carries for the arguments after the first (all of them
  * for Get_Situation, whose one argument is the answer), if it was handled.
+ *
+ * hostile PROCID sends the process, which asked for all the requests, values
+ * that no message may make it act on (names of variables that are not names
+ * or that no message may set, locales that name a path, directories that are
+ * not absolute, signals that are none, strings with a null byte inside or of
+ * absurd length) and prints "hostile NAME STATE STATUS" for each, then the
+ * valid requests that remove a variable and set another.  The state of the
+ * process afterwards says that the hostile ones changed nothing.
  *
  * arguments calls ttdt_session_join() with requests it must refuse (and one it
  * must not) and prints "join NAME STATUS" for each.
@@ -47,7 +55,9 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 
-#define PROBE "TT_SESSION_REQUESTS_PROBE"
+#define PROBE "SESSION_REQUESTS_PROBE"
+#define PROBE2 "SESSION_REQUESTS_PROBE2"
+#define PROBE3 "SESSION_REQUESTS_PROBE3"
 
 #ifdef TT_SESSION_REQUESTS_OLD_JOIN
 /* the header of that library does not have the requests: name them here */
@@ -200,10 +210,12 @@ handle(int argc, char **argv)
     }
 
     locale = setlocale(LC_CTYPE, NULL);
-    printf("state env=%s cwd=%s signals=%d locale=%s docommands=%d\n",
+    printf("state env=%s cwd=%s signals=%d locale=%s docommands=%d probe2=%s probe3=%s\n",
 	   getenv(PROBE) ? getenv(PROBE) : "(unset)",
 	   getcwd(cwd, sizeof cwd) ? cwd : "(none)",
-	   (int)signals, locale ? locale : "(none)", do_commands);
+	   (int)signals, locale ? locale : "(none)", do_commands,
+	   getenv(PROBE2) ? getenv(PROBE2) : "(unset)",
+	   getenv(PROBE3) ? getenv(PROBE3) : "(unset)");
     fflush(stdout);
     ttdt_session_quit(NULL, pats, 1);
     ttdt_close(NULL, NULL, 0);
@@ -228,6 +240,10 @@ status_name(Tt_status s, char *buf, size_t size)
     case TT_OK:			return "ok";
     case TT_ERR_NO_MATCH:	return "nomatch";
     case TT_DESKTOP_ENOTSUP:	return "enotsup";
+    case TT_DESKTOP_EACCES:	return "eacces";
+    case TT_DESKTOP_EINVAL:	return "einval";
+    case TT_DESKTOP_EPROTO:	return "eproto";
+    case TT_DESKTOP_ENOENT:	return "enoent";
     case TT_ERR_NUM:		return "num";
     case TT_ERR_POINTER:	return "pointer";
     default:
@@ -291,18 +307,12 @@ make_request(int r, const char *handler, const char *workdir)
     return msg;
 }
 
-static void
-send_one(int r, const char *handler, const char *workdir, int fd)
+/* Wait for the reply to, or the failure of, a request that was sent. */
+static Tt_message
+exchange(Tt_message sent, int fd)
 {
-    Tt_message sent = make_request(r, handler, workdir);
-    Tt_status status = tt_message_send(sent);
     int rounds;
 
-    if (status != TT_OK) {
-	printf("result %s %s failed send:%d\n", requests[r].op,
-	       handler ? "addressed" : "unaddressed", (int)status);
-	return;
-    }
     for (rounds = 0; rounds < 40; rounds++) {
 	struct pollfd pfd = { fd, POLLIN, 0 };
 	Tt_message got;
@@ -312,40 +322,60 @@ send_one(int r, const char *handler, const char *workdir, int fd)
 	while ((got = tt_message_receive()) != NULL &&
 	       tt_ptr_error(got) == TT_OK) {
 	    Tt_state state;
-	    char buf[16], values[1024] = "";
-	    int n, i;
 
 	    if (got != sent) {
 		tt_message_destroy(got);
 		continue;
 	    }
 	    state = tt_message_state(got);
-	    if (state != TT_HANDLED && state != TT_FAILED &&
-		state != TT_REJECTED)
-		continue;
-	    /* the answers: after the question, and all of Get_Situation's */
-	    n = state == TT_HANDLED ? tt_message_args_count(got) : 0;
-	    for (i = requests[r].request == TTDT_SESSION_GET_SITUATION ? 0 : 1;
-		 i < n; i++) {
-		char *v = tt_message_arg_val(got, i);
-
-		if (tt_ptr_error(v) == TT_OK && v != NULL) {
-		    size_t used = strlen(values);
-
-		    snprintf(values + used, sizeof values - used, " %s", v);
-		    tt_free(v);
-		}
-	    }
-	    printf("result %s %s %s %s%s\n", requests[r].op,
-		   handler ? "addressed" : "unaddressed", state_name(state),
-		   status_name(tt_message_status(got), buf, sizeof buf), values);
-	    fflush(stdout);
-	    tt_message_destroy(got);
-	    return;
+	    if (state == TT_HANDLED || state == TT_FAILED ||
+		state == TT_REJECTED)
+		return got;
 	}
     }
-    printf("result %s %s timeout -\n", requests[r].op,
-	   handler ? "addressed" : "unaddressed");
+    return NULL;
+}
+
+static void
+send_one(int r, const char *handler, const char *workdir, int fd)
+{
+    Tt_message sent = make_request(r, handler, workdir);
+    Tt_status status = tt_message_send(sent);
+    Tt_message got;
+    Tt_state state;
+    char buf[16], values[1024] = "";
+    int n, i;
+
+    if (status != TT_OK) {
+	printf("result %s %s failed send:%d\n", requests[r].op,
+	       handler ? "addressed" : "unaddressed", (int)status);
+	return;
+    }
+    got = exchange(sent, fd);
+    if (got == NULL) {
+	printf("result %s %s timeout -\n", requests[r].op,
+	       handler ? "addressed" : "unaddressed");
+	return;
+    }
+    state = tt_message_state(got);
+    /* the answers: after the question, and all of Get_Situation's */
+    n = state == TT_HANDLED ? tt_message_args_count(got) : 0;
+    for (i = requests[r].request == TTDT_SESSION_GET_SITUATION ? 0 : 1;
+	 i < n; i++) {
+	char *v = tt_message_arg_val(got, i);
+
+	if (tt_ptr_error(v) == TT_OK && v != NULL) {
+	    size_t used = strlen(values);
+
+	    snprintf(values + used, sizeof values - used, " %s", v);
+	    tt_free(v);
+	}
+    }
+    printf("result %s %s %s %s%s\n", requests[r].op,
+	   handler ? "addressed" : "unaddressed", state_name(state),
+	   status_name(tt_message_status(got), buf, sizeof buf), values);
+    fflush(stdout);
+    tt_message_destroy(got);
 }
 
 static int
@@ -382,6 +412,202 @@ send_requests(int argc, char **argv)
 	send_one(r, NULL, workdir, fd);
 	if (strcmp(argv[2], "-") != 0)
 	    send_one(r, argv[2], workdir, fd);
+    }
+    tt_close();
+    return 0;
+}
+
+/*
+ * Requests with values that no message may make a process act on.  Each
+ * name stands for one request and the values it carries.
+ */
+static void
+str(Tt_message m, const char *s)
+{
+    tt_message_arg_add(m, TT_IN, Tttk_string, s);
+}
+
+static void
+bytes(Tt_message m, const char *s, int len)
+{
+    tt_message_barg_add(m, TT_IN, Tttk_string, (const unsigned char *)s, len);
+}
+
+/* a string of n copies of c */
+static void
+repeated(Tt_message m, char c, int n)
+{
+    char *s = malloc(n + 1);
+
+    memset(s, c, n);
+    s[n] = '\0';
+    str(m, s);
+    free(s);
+}
+
+static const struct {
+    const char *name;
+    const char *op;
+} hostile_cases[] = {
+    { "env-ld-preload",		"Set_Environment" },
+    { "env-path",		"Set_Environment" },
+    { "env-tt-prefix",		"Set_Environment" },
+    { "env-name-digit",		"Set_Environment" },
+    { "env-name-equals",	"Set_Environment" },
+    { "env-name-empty",		"Set_Environment" },
+    { "env-name-blank",		"Set_Environment" },
+    { "env-name-long",		"Set_Environment" },
+    { "env-name-nul",		"Set_Environment" },
+    { "env-value-long",		"Set_Environment" },
+    { "env-value-nul",		"Set_Environment" },
+    { "env-mixed",		"Set_Environment" },
+    { "env-many",		"Set_Environment" },
+    { "env-get-name-blank",	"Get_Environment" },
+    { "locale-path",		"Set_Locale" },
+    { "locale-dots",		"Set_Locale" },
+    { "locale-empty",		"Set_Locale" },
+    { "locale-category",	"Set_Locale" },
+    { "locale-long",		"Set_Locale" },
+    { "locale-nul",		"Set_Locale" },
+    { "locale-many",		"Set_Locale" },
+    { "situation-relative",	"Set_Situation" },
+    { "situation-control",	"Set_Situation" },
+    { "situation-long",		"Set_Situation" },
+    { "situation-nul",		"Set_Situation" },
+    { "situation-missing",	"Set_Situation" },
+    { "signal-zero",		"Signal" },
+    { "signal-huge",		"Signal" },
+    { "signal-negative",	"Signal" },
+    /* valid, and the last: they take the variable away and put another in */
+    { "env-remove",		"Set_Environment" },
+    { "env-valid",		"Set_Environment" }
+};
+#define NHOSTILE ((int)(sizeof(hostile_cases) / sizeof(hostile_cases[0])))
+
+static void
+fill_hostile(const char *name, Tt_message m)
+{
+    int i;
+    char var[32];
+
+    if (strcmp(name, "env-ld-preload") == 0) {
+	str(m, "LD_PRELOAD"); str(m, "/tmp/evil.so");
+    } else if (strcmp(name, "env-path") == 0) {
+	str(m, "PATH"); str(m, "/tmp");
+    } else if (strcmp(name, "env-tt-prefix") == 0) {
+	str(m, "TT_SESSION"); str(m, "x");
+    } else if (strcmp(name, "env-name-digit") == 0) {
+	str(m, "1BAD"); str(m, "v");
+    } else if (strcmp(name, "env-name-equals") == 0) {
+	str(m, "A=B"); str(m, "v");
+    } else if (strcmp(name, "env-name-empty") == 0) {
+	str(m, ""); str(m, "v");
+    } else if (strcmp(name, "env-name-blank") == 0) {
+	str(m, "A B"); str(m, "v");
+    } else if (strcmp(name, "env-name-long") == 0) {
+	repeated(m, 'A', 300); str(m, "v");
+    } else if (strcmp(name, "env-name-nul") == 0) {
+	bytes(m, "FOO\0BAR", 7); str(m, "v");
+    } else if (strcmp(name, "env-value-long") == 0) {
+	str(m, PROBE2); repeated(m, 'v', 40000);
+    } else if (strcmp(name, "env-value-nul") == 0) {
+	str(m, PROBE2); bytes(m, "ab\0cd", 5);
+    } else if (strcmp(name, "env-mixed") == 0) {
+	/* the first is fine, the second no message may set: nothing is set */
+	str(m, PROBE2); str(m, "set");
+	str(m, "LD_LIBRARY_PATH"); str(m, "/tmp");
+    } else if (strcmp(name, "env-many") == 0) {
+	for (i = 0; i < 200; i++) {
+	    snprintf(var, sizeof var, "SESSION_REQUESTS_MANY%d", i);
+	    str(m, var); str(m, "v");
+	}
+    } else if (strcmp(name, "env-get-name-blank") == 0) {
+	str(m, "A B"); tt_message_arg_add(m, TT_OUT, Tttk_string, NULL);
+    } else if (strcmp(name, "locale-path") == 0) {
+	str(m, "LC_CTYPE"); str(m, "/tmp/evil");
+    } else if (strcmp(name, "locale-dots") == 0) {
+	str(m, "LC_CTYPE"); str(m, "..");
+    } else if (strcmp(name, "locale-empty") == 0) {
+	str(m, "LC_CTYPE"); str(m, "");
+    } else if (strcmp(name, "locale-category") == 0) {
+	str(m, "LC_FOO"); str(m, "C");
+    } else if (strcmp(name, "locale-long") == 0) {
+	str(m, "LC_CTYPE"); repeated(m, 'a', 2000);
+    } else if (strcmp(name, "locale-nul") == 0) {
+	str(m, "LC_CTYPE"); bytes(m, "C\0x", 3);
+    } else if (strcmp(name, "locale-many") == 0) {
+	for (i = 0; i < 20; i++) {
+	    str(m, "LC_CTYPE"); str(m, "C");
+	}
+    } else if (strcmp(name, "situation-relative") == 0) {
+	str(m, "relative/dir");
+    } else if (strcmp(name, "situation-control") == 0) {
+	str(m, "/tmp/a\nb");
+    } else if (strcmp(name, "situation-long") == 0) {
+	repeated(m, 'd', 5000);
+    } else if (strcmp(name, "situation-nul") == 0) {
+	bytes(m, "/tmp\0/x", 7);
+    } else if (strcmp(name, "situation-missing") == 0) {
+	str(m, "/nonexistent-directory-of-the-session-requests-test");
+    } else if (strcmp(name, "signal-zero") == 0) {
+	tt_message_iarg_add(m, TT_IN, Tttk_integer, 0);
+    } else if (strcmp(name, "signal-huge") == 0) {
+	tt_message_iarg_add(m, TT_IN, Tttk_integer, 99999);
+    } else if (strcmp(name, "signal-negative") == 0) {
+	tt_message_iarg_add(m, TT_IN, Tttk_integer, -5);
+    } else if (strcmp(name, "env-remove") == 0) {
+	/* a variable without a value is removed */
+	str(m, PROBE); tt_message_arg_add(m, TT_IN, Tttk_string, NULL);
+    } else if (strcmp(name, "env-valid") == 0) {
+	str(m, PROBE3); str(m, "valid");
+    }
+}
+
+static int
+hostile(int argc, char **argv)
+{
+    int fd, c;
+
+    if (argc < 3) {
+	fprintf(stderr, "usage: hostile PROCID\n");
+	return 2;
+    }
+    if (tt_ptr_error(tt_open()) != TT_OK) {
+	fprintf(stderr, "tt_open failed\n");
+	return 2;
+    }
+    fd = tt_fd();
+    if (tt_session_join(tt_default_session()) != TT_OK) {
+	fprintf(stderr, "cannot join the session\n");
+	return 2;
+    }
+    for (c = 0; c < NHOSTILE; c++) {
+	Tt_message sent = tt_message_create(), got;
+	Tt_status status;
+	char buf[16];
+
+	tt_message_class_set(sent, TT_REQUEST);
+	tt_message_scope_set(sent, TT_SESSION);
+	tt_message_address_set(sent, TT_HANDLER);
+	tt_message_handler_set(sent, argv[2]);
+	tt_message_op_set(sent, hostile_cases[c].op);
+	fill_hostile(hostile_cases[c].name, sent);
+	status = tt_message_send(sent);
+	if (status != TT_OK) {
+	    printf("hostile %s failed send:%d\n", hostile_cases[c].name,
+		   (int)status);
+	    continue;
+	}
+	got = exchange(sent, fd);
+	if (got == NULL) {
+	    printf("hostile %s timeout -\n", hostile_cases[c].name);
+	    continue;
+	}
+	printf("hostile %s %s %s\n", hostile_cases[c].name,
+	       state_name(tt_message_state(got)),
+	       status_name(tt_message_status(got), buf, sizeof buf));
+	fflush(stdout);
+	tt_message_destroy(got);
     }
     tt_close();
     return 0;
@@ -427,8 +653,10 @@ main(int argc, char **argv)
 	return handle(argc, argv);
     if (argc >= 2 && strcmp(argv[1], "send") == 0)
 	return send_requests(argc, argv);
+    if (argc >= 2 && strcmp(argv[1], "hostile") == 0)
+	return hostile(argc, argv);
     if (argc >= 2 && strcmp(argv[1], "arguments") == 0)
 	return refuse();
-    fprintf(stderr, "usage: %s handle|send|arguments ...\n", argv[0]);
+    fprintf(stderr, "usage: %s handle|send|hostile|arguments ...\n", argv[0]);
     return 2;
 }

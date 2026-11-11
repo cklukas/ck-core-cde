@@ -9,7 +9,8 @@
  * (see _Tt_s_message::set_start_env).  The sender of the message is not the
  * one who installed the ptype or runs the session, so a name that changes
  * which code the started program runs or loads, whom it believes it is, or
- * where it finds its credentials, is not passed on.
+ * where it finds its credentials, is not passed on (the names are listed in
+ * util/tt_env_names.h, which libtt also applies to Set_Environment requests).
  *
  * The owner of the session can change this by setting TOOLTALK_START_ENV
  * for ttsession.  Its value is a comma separated list of entries:

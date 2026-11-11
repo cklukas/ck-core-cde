@@ -100,6 +100,27 @@ Ask for
 process of the session may change the environment variables, the working
 directory and the signals of this one.
 </Para>
+<Para>What these requests carry is checked before anything is changed, and a
+request with a value that fails is failed and changes nothing.
+A variable of <Symbol Role="Message">Set_Environment</Symbol> must have the name
+of a shell variable (letters, digits and underscore, not beginning with a digit,
+at most 255 characters), a value of at most 32768 bytes, and a request names at
+most 128 variables. The variables that change which code a process runs or
+loads, whom it believes it is, or where it finds its credentials and its
+resources, such as <SystemItem Class="EnvironVar">PATH</SystemItem>,
+<SystemItem Class="EnvironVar">HOME</SystemItem>, <SystemItem Class="EnvironVar">LD_*</SystemItem>,
+<SystemItem Class="EnvironVar">DYLD_*</SystemItem> and <SystemItem Class="EnvironVar">TT_*</SystemItem>, are the
+variables that &cdeman.ttsession; does not pass on to the programs it starts,
+and fail with <SystemItem Class="Constant">TT_DESKTOP_EACCES</SystemItem>. A
+variable without a value is removed. A locale of <Symbol Role="Message">Set_Locale</Symbol>
+must be a name of letters, digits and <Literal>_.@+,=;-</Literal> that begins with a
+letter or a digit and cannot name a path; the directory of
+<Symbol Role="Message">Set_Situation</Symbol> an absolute path without control
+characters; the number of <Symbol Role="Message">Signal</Symbol> a signal of the
+system. A string with a null byte inside fails with
+<SystemItem Class="Constant">TT_DESKTOP_EPROTO</SystemItem>, any other value of the
+wrong shape or size with <SystemItem Class="Constant">TT_DESKTOP_EINVAL</SystemItem>.
+</Para>
 <Para>If
 <Symbol Role="Variable">shell</Symbol> is non-
 <SystemItem Class="Constant">NULL</SystemItem>, then it is expected to be a realized

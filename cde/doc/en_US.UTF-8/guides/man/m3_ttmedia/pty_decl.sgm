@@ -300,7 +300,8 @@ myAcmeSheetLoadCB(
                 return 0;
         }
         int w, h, x, y = INT_MAX;
-        ttdt_sender_imprint_on(0, msg, 0, &amp;w, &amp;h, &amp;x, &amp;y, myCntxt, 5000);
+        ttdt_sender_imprint_on(0, msg, TTDT_IMPRINT_DISPLAY,
+                                0, &amp;w, &amp;h, &amp;x, &amp;y, myCntxt, 5000);
         positionMyWindowRelativeTo(w, h, x, y);
         if (maxBuffersAreNowOpen) {
                 /* Un-volunteer to handle future requests until less busy */

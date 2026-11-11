@@ -7,40 +7,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "mp_start_env.h"
-
-//
-// Names that are not passed unless the owner of the session approves them:
-// the ones that change which program or library is run, how the shell and
-// the interpreters behave, whom the program believes it is, where it finds
-// its credentials, resource files and actions, and the ones ToolTalk itself
-// uses to connect a started client with its session.  The list cannot be
-// complete, which is why the owner can restrict the names to a list instead.
-//
-static const char *const unsafe_names[] = {
-	// search paths and the behavior of the shell that runs the start string
-	"PATH", "IFS", "ENV", "BASH_ENV", "SHELL", "SHELLOPTS", "BASHOPTS",
-	"PS4", "CDPATH", "PROMPT_COMMAND",
-	// the C library and the resolver
-	"GCONV_PATH", "LOCPATH", "NLSPATH", "GLIBC_TUNABLES", "HOSTALIASES",
-	"RES_OPTIONS", "RESOLV_HOST_CONF", "LOCALDOMAIN",
-	// whom the program believes it is and where it finds its credentials
-	"HOME", "USER", "LOGNAME", "XAUTHORITY", "ICEAUTHORITY",
-	// where the toolkit and the desktop look for resources and actions
-	"XENVIRONMENT", "XFILESEARCHPATH", "XUSERFILESEARCHPATH",
-	"XAPPLRESDIR", "XBMLANGPATH", "XLOCALEDIR", "DTDATABASESEARCHPATH",
-	// other runtimes
-	"CLASSPATH", "JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS",
-	"NODE_OPTIONS", "NODE_PATH", "TCLLIBPATH",
-	0
-};
-
-static const char *const unsafe_prefixes[] = {
-	"LD_", "DYLD_", "MALLOC_", "BASH_FUNC_",
-	"PYTHON", "PERL", "RUBY",
-	// ToolTalk
-	"TT_", "_TT_", "_SUN_TT_", "TOOLTALK", "TTAUTHORITY", "TTPATH", "TTSESSION",
-	0
-};
+#include "util/tt_env_names.h"
 
 // The names a strict policy passes on its own.
 static const char *const strict_names[] = {
@@ -195,7 +162,7 @@ check(const char *name) const
 		}
 		return _TT_START_ENV_NOT_APPROVED;
 	}
-	if (in_names(unsafe_names, name) || has_prefix(unsafe_prefixes, name)) {
+	if (_tt_env_name_unsafe(name)) {
 		return _TT_START_ENV_UNSAFE;
 	}
 	return _TT_START_ENV_OK;

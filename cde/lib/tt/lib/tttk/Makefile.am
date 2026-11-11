@@ -8,6 +8,7 @@ noinst_LTLIBRARIES = libtttk.la
 libtttk_la_CXXFLAGS = $(TT_VERSION_DEFINE) -I../ -I../../lib \
 	-I$(top_srcdir)/lib/tt/lib
 
-libtttk_la_SOURCES = ttdesktop.C     ttdtfile.C      ttdtprocid.C \
+libtttk_la_SOURCES = ttdesktop.C     ttdtfile.C      ttdtimprint.C ttdtprocess.C \
+	             ttdtprocid.C \
 	             ttmedia.C       tttk.C          tttk2free.C \
 		     tttkmessage.C   tttkpattern.C   tttkutils.C

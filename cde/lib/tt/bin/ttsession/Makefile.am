@@ -30,8 +30,11 @@ ttsession_SOURCES = mp_server.C
 # the observer of a notice with a disposition must not get it twice.  The
 # session requests test does the same for the Desktop requests that act on a
 # whole process: a process answers only those it asked ttdt_session_join() for.
+# The sender imprint test runs ttdt_sender_imprint_on() against a handler that
+# answers well or badly: the calling process is changed only as it is asked.
 EXTRA_DIST = tests/check-notice.py tests/notice-test.c \
-	     tests/check-session-requests.py tests/session-requests-test.c
+	     tests/check-session-requests.py tests/session-requests-test.c \
+	     tests/check-sender-imprint.py tests/imprint-test.c
 
 tt_check_compile = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS)
 tt_check_link = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS)
@@ -46,3 +49,7 @@ check-local: ttsession
 	TT_REQUESTS_LINK='$(tt_check_link)' \
 	TT_REQUESTS_LIBS='$(tt_check_libs)' \
 	python3 $(srcdir)/tests/check-session-requests.py $(srcdir) ./ttsession
+	TT_IMPRINT_COMPILE='$(tt_check_compile)' \
+	TT_IMPRINT_LINK='$(tt_check_link)' \
+	TT_IMPRINT_LIBS='$(tt_check_libs)' \
+	python3 $(srcdir)/tests/check-sender-imprint.py $(srcdir) ./ttsession

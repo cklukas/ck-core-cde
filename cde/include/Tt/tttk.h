@@ -120,9 +120,25 @@ char		       *ttdt_open(
 				const char     *version,
 				int		sendStarted
 			);
+/*
+ * What ttdt_sender_imprint_on() changes in the calling process from the
+ * replies of the handler.  The process is changed only in the ways named
+ * here; the handler's display, if it is asked for with the display argument,
+ * and its geometry are returned to the caller whatever is named.
+ *
+ * Each value stands for one change.  Combine them with |.
+ */
+typedef unsigned int	Ttdt_sender_imprints;
+enum {
+	TTDT_IMPRINT_NONE	= 0,
+	TTDT_IMPRINT_LOCALE	= 1 << 0,	/* setlocale() as the handler */
+	TTDT_IMPRINT_SITUATION	= 1 << 1,	/* chdir() to the handler's directory */
+	TTDT_IMPRINT_DISPLAY	= 1 << 2	/* $DISPLAY of the handler */
+};
 Tt_status		ttdt_sender_imprint_on(
 				const char     *handler,
 				Tt_message	commission,
+				Ttdt_sender_imprints imprints,
 				char	      **display,
 				int	       *width,
 				int	       *height,

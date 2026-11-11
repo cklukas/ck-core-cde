@@ -24,6 +24,46 @@
   English catalog, with each installed locale and without a catalog; it fails
   on the tree before this change and on eighteen deliberately broken copies
   of the catalogs, the code and the help volumes.
+- libtt: `ttdt_sender_imprint_on()` changes the calling process only in the ways
+  the caller names. The function put the locale, the working directory and (when
+  the caller passed no place to return the display in) `$DISPLAY` of whoever
+  answered into its own process, sent `Get_Geometry`, `Get_XInfo` and `Get_Locale`
+  to no one in particular whenever it was not given a handler (the documented
+  address to the sender of the contract was never made, so any program of the
+  session could answer), and used what came back without looking at it. It has a new argument after the contract, a `Ttdt_sender_imprints`
+  that is zero or the bitwise OR of `TTDT_IMPRINT_LOCALE`, `_SITUATION` and
+  `_DISPLAY` (no value stands for all of them; `TT_ERR_NUM` for any other).
+  Only the requests that are needed are sent, always to one handler or to the
+  sender of the contract (`TT_ERR_POINTER` without either), and the display and
+  geometry that the caller asks for are returned whether or not a change is
+  named. The replies are checked (locales that cannot name a path, absolute
+  directories, displays that are a host or a socket and a number, window sizes
+  of 16 bits, no null byte inside a string, bounded lengths); a reply that fails
+  makes the call change and return nothing and answer `TT_DESKTOP_EPROTO` (or
+  `_EINVAL`), a request that the handler fails is reported with its status and
+  the other replies are used. The replies are put into the process after the
+  wait, and a request that was not answered by then loses its callback: a reply
+  that came late used to be written into the stack of the call that had
+  returned. The `CoEd` demo names all three imprints. Covered by the new sender
+  imprint test of `make -C lib/tt/bin/ttsession check` (all 27 checks fail
+  against the previous library); described in `docs/improvements/tooltalk.md`.
+- libtt: the Desktop requests that a program has asked to answer check what
+  they carry. `Set_Environment` no longer sets any variable a message sends:
+  `PATH`, `HOME`, `LD_*`, `DYLD_*`, `TT_*` and the other names that
+  `ttsession` does not pass on to the programs it starts (now one table,
+  `util/tt_env_names.C`) fail with `TT_DESKTOP_EACCES`, names that are not shell
+  names and values over 32768 bytes with `TT_DESKTOP_EINVAL`, and a request is
+  checked as a whole before the first variable is set; a variable without a value
+  is removed instead of set to the empty string. `Set_Locale` takes only the
+  names of locales that cannot name a path, `Set_Situation` only absolute
+  directories without control characters, `Signal` only numbers of signals,
+  `Get_Environment` and `Get_Locale` only well formed names, and a string with a
+  null byte inside or beyond its bound fails the request
+  (`TT_DESKTOP_EPROTO`, `_EINVAL`); a locale the system does not have is
+  reported as `TT_DESKTOP_EINVAL`. Covered by the session requests test of
+  `make -C lib/tt/bin/ttsession check`, which sends 29 such requests to a
+  process that asked for everything (the previous library failed 26 of the 29
+  cases: it set `LD_PRELOAD`, accepted locales that name a path, and so on).
 - libtt: the client decodes what it receives into its own classes. The library
   decoded the messages `ttsession` delivered, the messages dequeued from the
   database of a file and every file it looked up into the classes it shares with

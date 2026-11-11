@@ -37,6 +37,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <locale.h>
+#include <signal.h>
 #include <unistd.h>
 #include <errno.h>
 #if defined(OPT_SYSINFO)
@@ -52,6 +53,7 @@
 #include "Tt/tt_c.h"
 #include "api/c/api_api.h"
 #include "util/tt_Xlib.h"
+#include "util/tt_env_names.h"
 #include "util/tt_port.h"
 #include "Tt/tttk.h"
 #include "tttk/tttk2free.h"
@@ -60,8 +62,12 @@
 #include "tttk/tttkpattern.h"
 #include "tttk/ttdtprocid.h"
 #include "tttk/ttdesktop.h"
+#include "tttk/ttdtprocess.h"
 
 extern _TtDtProcid *_ttdtme;
+
+static Tt_message	_ttDtRefuse( Tt_message msg, void *clientData,
+				     Tt_status status );
 
 // These should be in a .h file...?
 
@@ -1195,7 +1201,15 @@ _ttdt_XInfo_in_cb(
 		return msg;
 	}
 	_TttkItem2Free fuse = msg;
-	char *display = _tttk_message_arg_val( msg, 0, 0 );
+	char *display = 0;
+	if (_tttk_message_arg_is_set( msg, 0 )) {
+		Tt_status status = _ttdt_arg_string( msg, 0, _TTDT_MAX_DISPLAY,
+						     &display );
+		if (status != TT_OK) {
+			fuse = (caddr_t)0;
+			return _ttDtRefuse( msg, clientData, status );
+		}
+	}
 	char *visual = _tttk_message_arg_val( msg, 1, 0 );
 	int _visual = _ttDtVisual( visual );
 	tt_free( visual );
@@ -1363,8 +1377,35 @@ ttdt_Get_XInfo_pat(
 }
 
 //
+// Arguments that cannot be used.  A request is failed; a reply to a request
+// of ttdt_sender_imprint_on() (clientData is its ImprintInfo) is noted there.
+// Either way msg is gone.
+//
+static Tt_message
+_ttDtRefuse(
+	Tt_message	msg,
+	void	       *clientData,
+	Tt_status	status
+)
+{
+	if (_tttk_message_am_handling( msg )) {
+		tttk_message_fail( msg, status, 0, 1 );
+	} else {
+		if (clientData != 0) {
+			_ttDtImprintReplied( (ImprintInfo *)clientData, msg,
+					     status );
+		}
+		tttk_message_destroy( msg );
+	}
+	return 0;
+}
+
+//
 // Parse Get_Locale reply and pass it to user callback.
 // Also used to parse Set_Locale request and pass it to _ttDtApplyLocale().
+// The categories and the locales are strings of the sizes and shapes of
+// names, and are freed when the callback returns.  A locale may be left out
+// (null) by a handler that does not answer for its category.
 //
 Tt_message
 _ttDtGetLocaleCB(
@@ -1380,30 +1421,47 @@ _ttDtGetLocaleCB(
 	if (status != TT_OK) {
 		return (Tt_message)tt_error_pointer( status );
 	}
-	_TttkList2Free fuses( numArgs + 2 );
 	int n = numArgs / 2;
+	if (n > _TTDT_MAX_LOCALE_PAIRS) {
+		fuse = (caddr_t)0;
+		return _ttDtRefuse( msg, clientData, TT_DESKTOP_EINVAL );
+	}
+	_TttkList2Free fuses( 2 * n + 2 );
 	char **categories = (char **)tt_malloc( (n + 1) * sizeof(char *) );
 	char **locales    = (char **)tt_malloc( (n + 1) * sizeof(char *) );
-	categories[ n ]   = 0;
-	locales[    n ]   = 0;
+	if ((categories == 0) || (locales == 0)) {
+		tt_free( (caddr_t)categories );
+		tt_free( (caddr_t)locales );
+		fuse = (caddr_t)0;
+		return _ttDtRefuse( msg, clientData, TT_ERR_NOMEM );
+	}
+	for (int i = 0; i <= n; i++) {
+		categories[ i ] = 0;
+		locales[    i ] = 0;
+	}
 	//
 	// We only need these guys until after we call clientCB
 	//
 	fuses += (caddr_t)categories;
 	fuses += (caddr_t)locales;
 	for (int i = 0; i < n; i++) {
-		categories[i] = tt_message_arg_val( msg, 2 * i );
-		status = tt_ptr_error( categories[i] );
-		if (status != TT_OK) {
-			return (Tt_message)tt_error_pointer( status );
+		status = _ttdt_arg_string( msg, 2 * i, _TTDT_MAX_CATEGORY_NAME,
+					   &categories[i] );
+		if (status == TT_OK) {
+			fuses += categories[i];
+			if (_tttk_message_arg_is_set( msg, 2 * i + 1 )) {
+				status = _ttdt_arg_string( msg, 2 * i + 1,
+						_TTDT_MAX_LOCALE_NAME,
+						&locales[i] );
+				if (status == TT_OK) {
+					fuses += locales[i];
+				}
+			}
 		}
-		fuses += categories[i];
-		locales[i] = tt_message_arg_val( msg, 2 * i + 1 );
-		status = tt_ptr_error( locales[i] );
 		if (status != TT_OK) {
-			return (Tt_message)tt_error_pointer( status );
+			fuse = (caddr_t)0;
+			return _ttDtRefuse( msg, clientData, status );
 		}
-		fuses += locales[i];
 	}
 	fuse = (caddr_t)0; // aborts message destruction
 	Ttdt_Get_Locale_msg_cb _cb = (Ttdt_Get_Locale_msg_cb)clientCB;
@@ -1413,74 +1471,29 @@ _ttDtGetLocaleCB(
 }
 
 //
-// Map a locale category name to a locale #defined in locale.h
-//
-static int
-_ttDtCategory(
-	const char *categoryName
-)
-{
-	if (categoryName == 0) {
-		return -1;
-	}
-	int category = -1;
-	if (strcmp( categoryName, "LC_CTYPE" ) == 0) {
-		category = LC_CTYPE;
-	} else if (strcmp( categoryName, "LC_NUMERIC" ) == 0) {
-		category = LC_NUMERIC;
-	} else if (strcmp( categoryName, "LC_TIME" ) == 0) {
-		category = LC_TIME;
-	} else if (strcmp( categoryName, "LC_COLLATE" ) == 0) {
-		category = LC_COLLATE;
-	} else if (strcmp( categoryName, "LC_MONETARY" ) == 0) {
-		category = LC_MONETARY;
-	} else if (strcmp( categoryName, "LC_MESSAGES" ) == 0) {
-		category = LC_MESSAGES;
-	} else if (strcmp( categoryName, "LC_ALL" ) == 0) {
-		category = LC_ALL;
-	}
-	return category;
-}
-
-//
-// A callback used internally that sets the locales of this
-// address space.  If clientData is non-zero, assumes it is a
-// DisplayInfo *.
+// A callback used internally that sets the locales of this address space
+// from a Set_Locale request, and answers it.
 //
 static Tt_message
 _ttDtApplyLocale(
 	Tt_message	msg,
-	void	       *clientData,
+	void	       *,
 	const char    **categories,
 	const char    **locales
 )
 {
-	DisplayInfo *info = (DisplayInfo *)clientData;
-	if (info != 0) {
-		info->repliesOutStanding--;
-	}
-	int i = 0;
-	while (categories[ i ] != 0) {
-		int category = _ttDtCategory( categories[ i ] );
-		if (category != -1) {
-			setlocale( category, locales[ i ] );
-		}
-		tt_free( (caddr_t)categories[ i ] );
-		tt_free( (caddr_t)locales[ i ] );
-		i++;
-	}
-	tt_free( (caddr_t)categories );
-	tt_free( (caddr_t)locales );
-	if (_tttk_message_am_handling( msg )) {
-		// We are being used as a pattern callback
+	Tt_status status = _ttdt_adopt_locale( categories, locales );
+	if (status == TT_OK) {
 		tt_message_reply( msg );
+		tttk_message_destroy( msg );
+	} else {
+		tttk_message_fail( msg, status, 0, 1 );
 	}
-	tttk_message_destroy( msg );
 	return 0;
 }
 
 //
-// If clientCB is 0, uses _ttDtApplyLocale, q.v. re clientData.
+// The reply is passed to clientCB, which is required.
 //
 Tt_message
 ttdt_Get_Locale(
@@ -1497,7 +1510,7 @@ ttdt_Get_Locale(
 		_handler = tt_message_sender( commission );
 	}
 	if (clientCB == 0) {
-		clientCB = _ttDtApplyLocale;
+		return (Tt_message)tt_error_pointer( TT_ERR_POINTER );
 	}
 	Tt_message msg = _ttDtPMessageCreate( commission, TT_REQUEST,
 				TT_SESSION, handler,
@@ -1537,36 +1550,8 @@ ttdt_Get_Locale(
 }
 
 //
-// A TtDtGetSituationMsgCB used internally to chdir() to the path
-// returned in a reply to Get_Situation.  If clientData is nonzero,
-// assumes it is a DisplayInfo *.
-//
-static Tt_message
-_ttDtApplySituation(
-	Tt_message	msg,
-	void	       *clientData,
-	char           *cwd
-)
-{
-	DisplayInfo *info = (DisplayInfo *)clientData;
-	if (info != 0) {
-		info->repliesOutStanding--;
-	}
-	if ((cwd != 0) && (chdir( cwd ) != 0)) {
-		_tt_syslog( 0, LOG_ERR, "_ttDtApplySituation(): "
-			    "chdir( %s ): %m", cwd );
-	}
-	tt_free( (char *)cwd );
-	if (_tttk_message_am_handling( msg )) {
-		// We are being used as a pattern callback
-		tt_message_reply( msg );
-	}
-	tttk_message_destroy( msg );
-	return 0;
-}
-
-//
-// Parse Get_Situation reply and pass it to user callback
+// Parse Get_Situation reply and pass it to user callback.  The directory is
+// a string of the size of a path, freed with tt_free() by the callback.
 //
 static Tt_message
 _ttDtGetSituationCB(
@@ -1581,10 +1566,13 @@ _ttDtGetSituationCB(
 		return msg;
 	}
 	_TttkItem2Free fuse = msg;
-	char *cwd = tt_message_arg_val( msg, 0 );
-	Tt_status status = tt_ptr_error( cwd );
-	if (status != TT_OK) {
-		return (Tt_message)tt_error_pointer( status );
+	char *cwd = 0;
+	if (_tttk_message_arg_is_set( msg, 0 )) {
+		Tt_status status = _ttdt_arg_string( msg, 0, PATH_MAX, &cwd );
+		if (status != TT_OK) {
+			fuse = (caddr_t)0;
+			return _ttDtRefuse( msg, clientData, status );
+		}
 	}
 	Ttdt_Get_Situation_msg_cb _cb = (Ttdt_Get_Situation_msg_cb)clientCB;
 	msg = (*_cb)( msg, clientData, cwd );
@@ -1593,7 +1581,7 @@ _ttDtGetSituationCB(
 }
 
 //
-// If clientCB is 0, uses _ttDtApplySituation, q.v. re clientData.
+// The reply is passed to clientCB, which is required.
 //
 Tt_message
 ttdt_Get_Situation(
@@ -1609,7 +1597,7 @@ ttdt_Get_Situation(
 		_handler = tt_message_sender( commission );
 	}
 	if (clientCB == 0) {
-		clientCB = _ttDtApplySituation;
+		return (Tt_message)tt_error_pointer( TT_ERR_POINTER );
 	}
 	Tt_message msg = _ttDtPMessageCreate( commission, TT_REQUEST,
 				TT_SESSION, _handler,
@@ -1635,6 +1623,58 @@ ttdt_Get_Situation(
 	}
 	fuse = (caddr_t)0;
 	return msg;
+}
+
+//
+// Set or remove the variables of a Set_Environment request: pairs of a name
+// and, if it is to be set, a value.  Everything is checked before the first
+// variable is changed, so that a request that asks for one that no message
+// may set (TT_DESKTOP_EACCES) or one that is not a variable at all
+// (TT_DESKTOP_EINVAL) changes nothing.
+//
+static Tt_status
+_ttDtSetEnvironment(
+	Tt_message	msg,
+	int		n
+)
+{
+	if (n > _TTDT_MAX_VARIABLES) {
+		return TT_DESKTOP_EINVAL;
+	}
+	char **names  = (char **)calloc( n + 1, sizeof(char *) );
+	char **values = (char **)calloc( n + 1, sizeof(char *) );
+	Tt_status status = ((names != 0) && (values != 0)) ? TT_OK : TT_ERR_NOMEM;
+	for (int i = 0; (status == TT_OK) && (i < n); i++) {
+		status = _ttdt_arg_string( msg, 2 * i, _TTDT_MAX_VARIABLE_NAME,
+					   &names[ i ] );
+		if (status == TT_OK) {
+			if (! _ttdt_variable_name_valid( names[ i ] )) {
+				status = TT_DESKTOP_EINVAL;
+			} else if (_tt_env_name_unsafe( names[ i ] )) {
+				_tt_syslog( 0, LOG_WARNING, "not setting $%s "
+					    "for a Set_Environment request",
+					    names[ i ] );
+				status = TT_DESKTOP_EACCES;
+			}
+		}
+		if ((status == TT_OK) && _tttk_message_arg_is_set( msg, 2*i+1 )) {
+			status = _ttdt_arg_string( msg, 2 * i + 1,
+						   _TTDT_MAX_VARIABLE_VALUE,
+						   &values[ i ] );
+		}
+	}
+	for (int i = 0; (status == TT_OK) && (i < n); i++) {
+		status = _ttdt_adopt_variable( names[ i ], values[ i ] );
+	}
+	for (int i = 0; (names != 0) && (i < n); i++) {
+		tt_free( names[ i ] );
+	}
+	for (int i = 0; (values != 0) && (i < n); i++) {
+		tt_free( values[ i ] );
+	}
+	free( names );
+	free( values );
+	return status;
 }
 
 //
@@ -1665,12 +1705,18 @@ _ttdt_posix_cb(
 	    case TTDT_SET_LOCALE:
 		return _ttDtGetLocaleCB( msg, pat, (void *)_ttDtApplyLocale, 0 );
 	    case TTDT_GET_LOCALE:
+		if (numArgs / 2 > _TTDT_MAX_LOCALE_PAIRS) {
+			tttk_message_fail( msg, TT_DESKTOP_EINVAL, 0, 1 );
+			return 0;
+		}
 		for (i = 0; i < numArgs/2; i++) {
-			categoryName = _tttk_message_arg_val( msg, 2 * i, 0 );
-			if (categoryName == 0) {
-				continue;
+			status = _ttdt_arg_string( msg, 2 * i,
+					_TTDT_MAX_CATEGORY_NAME, &categoryName );
+			if (status != TT_OK) {
+				tttk_message_fail( msg, status, 0, 1 );
+				return 0;
 			}
-			category = _ttDtCategory( categoryName );
+			category = _ttdt_category( categoryName );
 			if (category != -1) {
 				tt_message_arg_val_set( msg, 2 * i + 1,
 						setlocale( category, 0 ));
@@ -1680,47 +1726,60 @@ _ttdt_posix_cb(
 		tt_message_reply( msg );
 		tttk_message_destroy( msg );
 		return 0;
-	    case TTDT_SET_ENVIRONMENT:
 	    case TTDT_GET_ENVIRONMENT:
+		if (numArgs / 2 > _TTDT_MAX_VARIABLES) {
+			tttk_message_fail( msg, TT_DESKTOP_EINVAL, 0, 1 );
+			return 0;
+		}
 		for (i = 0; i < numArgs/2; i++) {
-			variable = _tttk_message_arg_val( msg, 2 * i, 0 );
-			if (variable == 0) {
-				continue;
+			status = _ttdt_arg_string( msg, 2 * i,
+					_TTDT_MAX_VARIABLE_NAME, &variable );
+			if ((status == TT_OK) &&
+			    ! _ttdt_variable_name_valid( variable )) {
+				status = TT_DESKTOP_EINVAL;
 			}
-			if (op == TTDT_GET_ENVIRONMENT) {
-				tt_message_arg_val_set( msg, 2 * i + 1,
-						getenv( variable ));
-			} else if (_tttk_message_arg_is_set( msg, 2*i+1 )) {
-				value = _tttk_message_arg_val( msg, 2*i+1, 0 );
-				_tt_putenv( variable, value );
-				tt_free( value );
-			} else {
-				_tt_putenv( variable, 0 );
+			if (status != TT_OK) {
+				tt_free( variable );
+				tttk_message_fail( msg, status, 0, 1 );
+				return 0;
 			}
+			tt_message_arg_val_set( msg, 2 * i + 1, getenv( variable ));
 			tt_free( variable );
 		}
 		tt_message_reply( msg );
 		tttk_message_destroy( msg );
 		return 0;
+	    case TTDT_SET_ENVIRONMENT:
+		status = _ttDtSetEnvironment( msg, numArgs / 2 );
+		if (status != TT_OK) {
+			tttk_message_fail( msg, status, 0, 1 );
+			return 0;
+		}
+		tt_message_reply( msg );
+		tttk_message_destroy( msg );
+		return 0;
 	    case TTDT_SET_SITUATION:
-		value = _tttk_message_arg_val( msg, 0, 0 );
-		if (value == 0) {
+		value = 0;
+		if ((numArgs > 0) && _tttk_message_arg_is_set( msg, 0 )) {
+			status = _ttdt_arg_string( msg, 0, PATH_MAX, &value );
+		} else {
+			// the file of the message is the directory
 			value = tt_message_file( msg );
-			if (tt_ptr_error( value ) != TT_OK) {
+			status = tt_ptr_error( value );
+			if (status != TT_OK) {
 				value = 0;
+			} else if (value == 0) {
+				status = TT_DESKTOP_EPROTO;
 			}
 		}
-		if (value == 0) {
-			tttk_message_fail( msg, TT_DESKTOP_EPROTO, 0, 1 );
-			return 0;
-		}
-		if (chdir( value ) != 0) {
-			tt_free( value );
-			tttk_message_fail( msg, _tt_errno_status( errno ),
-					   0, 1 );
-			return 0;
+		if (status == TT_OK) {
+			status = _ttdt_adopt_directory( value );
 		}
 		tt_free( value );
+		if (status != TT_OK) {
+			tttk_message_fail( msg, status, 0, 1 );
+			return 0;
+		}
 		tt_message_reply( msg );
 		tttk_message_destroy( msg );
 		return 0;
@@ -1742,7 +1801,7 @@ _ttdt_posix_cb(
 		return 0;
 	    case TTDT_SIGNAL:
 		i = _tttk_message_arg_ival( msg, 0, 0 );
-		if (i <= 0) {
+		if ((i <= 0) || (i >= NSIG)) {
 			tttk_message_fail( msg, TT_DESKTOP_EINVAL, 0, 1 );
 			return 0;
 		}

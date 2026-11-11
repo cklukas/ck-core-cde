@@ -338,7 +338,10 @@ CoEditor::_init(
 	int width, height, xOffset, yOffset;
 	width = height = xOffset = yOffset = INT_MAX;
 	_contract = msg;
-	ttdt_sender_imprint_on( 0, msg, 0, &_w, &_h, &_x, &_y,
+	ttdt_sender_imprint_on( 0, msg,
+				TTDT_IMPRINT_LOCALE | TTDT_IMPRINT_SITUATION |
+				TTDT_IMPRINT_DISPLAY,
+				0, &_w, &_h, &_x, &_y,
 				myContext, 10 * timeOutFactor );
 	return TT_OK;
 }

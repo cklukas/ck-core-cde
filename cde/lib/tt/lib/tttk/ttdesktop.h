@@ -36,14 +36,39 @@
 #include "Tt/tttk.h"
 #include "tttk/tttkmessage.h"
 
+//
+// What ttdt_sender_imprint_on() has collected from the replies so far.  The
+// replies only fill this in; the process is changed from it when the imprint
+// has stopped waiting, so that a reply that comes too late changes nothing.
+//
+#define _TTDT_IMPRINT_REQUESTS	4	// Get_Geometry, Get_XInfo, Get_Locale, Get_Situation
+
 typedef struct {
 	int	    repliesOutStanding;
+	Tt_status   status;		// of the first request that failed or was answered wrongly
+	int         malformed;		// a reply had arguments that cannot be used
+	Tt_message  pending[ _TTDT_IMPRINT_REQUESTS ];	// the requests not answered yet
 	int         width;
 	int         height;
 	int         xOffset;
 	int         yOffset;
-	char       *display;
-} DisplayInfo;
+	char       *display;		// tt_free()
+	char       *cwd;		// free()
+	char      **categories;		// free(), ended by a null pointer
+	char      **locales;		// free(), as many as categories, may hold nulls
+} ImprintInfo;
+
+//
+// A request of ttdt_sender_imprint_on() has been answered (status TT_OK) or
+// has been answered with arguments that cannot be used (the status says how
+// they are wrong).  A request that the handler failed is not answered with
+// arguments that cannot be used: the imprint goes on with the other replies.
+//
+void			_ttDtImprintReplied(
+				ImprintInfo    *info,
+				Tt_message	msg,
+				Tt_status	status
+			);
 
 Tt_pattern		_ttDesktopPatternFinish(
 				Tt_pattern	pat,

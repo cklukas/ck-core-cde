@@ -118,7 +118,8 @@ owns the session, so `ttsession` limits what a message can set:
 - A variable that cannot be set stops the start of the program.
 
 The list cannot be complete, which is why the owner can restrict the names to a
-list. Each dropped name is written to the system log (`not setting $NAME for the
+list. The same names are the ones a `Set_Environment` request may not set in a
+program that asked to answer it (see *What the requests may carry*). Each dropped name is written to the system log (`not setting $NAME for the
 start of a ptype`), also with `-s`, once for every start that asked for it.
 
 The owner of the session sets `TOOLTALK_START_ENV` in the environment of the
@@ -245,12 +246,85 @@ never registered for these requests and takes no argument for them.
 There is no value that stands for all of them. A program that asks for
 `TTDT_SESSION_SET_ENVIRONMENT`, `TTDT_SESSION_SET_SITUATION` or
 `TTDT_SESSION_SIGNAL` lets every program of the session change its environment,
-its working directory and its signals; the environment it sets is not limited
-the way the start environment of a ptype is. In `dtksh`, `ttdt_session_join`
+its working directory and its signals, within the limits below. In `dtksh`, `ttdt_session_join`
 takes the requests as further arguments (`TTDT_GET_SYSINFO` and so on, no argument
 for none), and the code that Application Builder generates asks for
 `TTDT_SESSION_DO_COMMAND` only when the project connects an action to a
 `Do_Command` message.
+
+### What the requests may carry
+
+A program that asks for a request has not asked for any value, and the sender is
+another program. What the library does with the arguments of these requests is
+therefore limited, and a request with an argument that fails is failed as a whole
+and changes nothing (the variables of a `Set_Environment` are checked before the
+first one is set):
+
+| Argument | What it must be |
+|---|---|
+| any string | no null byte inside (`TT_DESKTOP_EPROTO`) |
+| name of a variable | letters, digits and `_`, not beginning with a digit, at most 255 characters |
+| a variable that no message may set | not one of the names and prefixes of the table in *Environment of started programs* (`PATH`, `HOME`, `LD_*`, `DYLD_*`, `TT_*` and so on); `TT_DESKTOP_EACCES` |
+| value of a variable | at most 32768 bytes; no value removes the variable |
+| variables in a request | at most 128 |
+| categories in a locale request | at most 16, each a category of `<locale.h>` |
+| locale | letters, digits and `_.@+,=;-`, beginning with a letter or a digit, no `..`, at most 1024 characters: a name for `setlocale()` that cannot name a path |
+| directory | absolute, no control characters, shorter than `PATH_MAX` |
+| display | letters, digits and `._-:/[]%+@,`, beginning with a letter, a digit, `:`, `/` or `[`, with a colon in it, at most 512 characters |
+| signal | 1 to `NSIG - 1` |
+
+A value of the wrong shape or size is `TT_DESKTOP_EINVAL`. The list of the
+variables is the one that `ttsession` uses for the start environment of a ptype
+(`util/tt_env_names.C`); it is not changed by `TOOLTALK_START_ENV`, which is the
+setting of the owner of a session. A program that needs to set one of these
+variables for itself does not get it from a message.
+
+### The calling side: ttdt_sender_imprint_on
+
+`ttdt_sender_imprint_on()` is the other end of these requests: it asks the
+sender of a message (or a handler the caller names) for its locale, its working
+directory and its display, so that the calling program acts like a child of
+that tool. It used to put every answer into its own process, and to set
+`$DISPLAY` whenever the caller passed no place to return the display in. It now
+has an `unsigned int` argument, `Ttdt_sender_imprints`, in the same style as
+the requests of `ttdt_session_join()`:
+
+| Value | What the calling process takes from the handler |
+|---|---|
+| `TTDT_IMPRINT_LOCALE` | the locale of every category, with `setlocale()` |
+| `TTDT_IMPRINT_SITUATION` | the working directory, with `chdir()` |
+| `TTDT_IMPRINT_DISPLAY` | `$DISPLAY` |
+
+The call changes the process in these ways and no other. There is no value for
+all of them, and `TT_ERR_NUM` is returned, with nothing sent, for a value that
+is none of them. Only the requests that are needed are sent: `Get_Locale`,
+`Get_Situation` and `Get_XInfo` for the changes named, `Get_XInfo` also when the
+caller asks for the display to be returned and `Get_Geometry` when it asks for a
+geometry. Values the caller asks to be returned (display and geometry) are
+returned whether or not a change is named; the old rule that a null display
+pointer means "set `$DISPLAY`" is gone.
+
+The requests are always addressed to one tool, the handler or the sender of the
+contract; without either the call returns `TT_ERR_POINTER` and sends nothing.
+(Until now `Get_Geometry`, `Get_XInfo` and `Get_Locale` went to no one in particular
+whenever the caller named no handler, although the documentation said they went to
+the sender of the contract, so any program of the session could answer, and the display, locale and directory
+of whoever did were put into the calling process.)
+
+The replies are checked against the table above before they are used, and a
+reply that fails is not believed in anything: the call changes nothing, returns
+nothing, and answers `TT_DESKTOP_EPROTO` (`TT_DESKTOP_EINVAL` for a string that
+is too long). Window sizes and positions must fit the 16 bits of the X protocol.
+A handler that merely fails a request (it has not asked `ttdt_session_join()` to
+answer it, for instance) is not a hostile one: the other replies are used and the
+call returns the status of the failed request. The replies are written down while
+the call waits and put into the process afterwards, when it has stopped waiting,
+and a request that is still unanswered then loses its callback, so a reply that
+comes late finds nothing to write into. (The callbacks used to point at the
+stack of the call, which was gone by then.)
+
+The `CoEd` demo names all three. A program that only wants to place its window
+next to the sender's names none and asks for the geometry.
 
 ### What the clients of the desktop ask for
 
@@ -258,8 +332,8 @@ Every program of the desktop that calls `ttdt_session_join()` was looked at for
 the requests it handles in its own code and for the programs that send these
 requests. Apart from `ttsnoop`, which sends what its user composes, `dtpad` is
 the only program of the desktop that sends one of them (`Get_Sysinfo`), and
-`ttdt_sender_imprint_on()` is used by the `CoEd` demo only. Only these ask for
-something:
+`ttdt_sender_imprint_on()` is used by the `CoEd` demo only, which names all three
+imprints. Only these ask for something:
 
 | Program | Asks for | Why |
 |---|---|---|
@@ -662,12 +736,43 @@ request must fail (`TT_ERR_NO_MATCH` when sent to nobody in particular,
 before the change (`TT_REQUESTS_OLD_JOIN=1`), the cases that ask for less than all
 of the requests fail: the library answers every one of them.
 
+A third part of the session requests test sends a process that asked for all the
+requests values that no message may make it act on: variables that change what
+a process loads or runs (`LD_PRELOAD`, `PATH`, a `TT_` name), names that are no
+names, values and names of absurd length, 200 variables, a request that holds a
+variable that is fine and one that is not, locales that name a path, a category
+that does not exist, directories that are not absolute or have a newline, a
+directory that does not exist, signals that are none, and strings with a null
+byte inside. Each must be failed with the status that says why, and the process
+must be as it was except for the valid requests at the end, which remove one
+variable and set another.
+
 The test also fails on a sanitizer report, from either of the two processes, from
 the library they use or from `ttsession` (which is searched when it has ended),
 wherever the report comes from: opening, joining, receiving, replying, sending and
 closing are the paths of every client, and the check keeps no list of reports to
 overlook. Against the library from before the objects the client decodes were
 typed (see above), every check that receives a message fails.
+
+The sender imprint test runs next to it (`check-sender-imprint.py`). One process
+answers `Get_Locale`, `Get_Situation`, `Get_XInfo` and `Get_Geometry` the way a
+scenario says and writes down which it was asked, and a second calls
+`ttdt_sender_imprint_on()` and reports what it returned and what happened to
+its own directory, locale and `$DISPLAY`. With nothing asked for nothing is
+sent or changed; each imprint alone asks for its request alone and changes its
+one thing; with all of them and the display and geometry returned, four requests
+are sent and everything is taken; a value that is none of them and a call without
+a handler or a contract send nothing; a handler that fails every request, or one,
+is reported and the replies that are good are used. Fourteen handlers send a
+reply that cannot be used (a locale that is a path, `..`, has a blank, a null
+byte or 2000 characters; a directory that is relative, has a newline, a null
+byte or 5000 characters; a display that is shell syntax, has no colon, a null byte
+or 1000 characters; a width of 2^30), and the process is left as it was. A handler that does
+not answer makes the call time out, and one that answers a second and a half
+later, while the process goes on serving its connection, changes nothing (the
+callbacks of the call used to be called with a pointer to its stack at that
+point, which AddressSanitizer reports). Built for the call of the library from
+before the imprints (`TT_IMPRINT_OLD_CALL=1`), all 27 checks fail.
 
 `make -C lib/tt/slib check` compiles the production decoding and request code
 with the sanitizers next to a test program and runs each case in its own
