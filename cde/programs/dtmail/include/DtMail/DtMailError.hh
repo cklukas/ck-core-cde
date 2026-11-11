@@ -70,7 +70,6 @@ typedef enum {
   DTME_AlreadyLocked,
   DTME_BadArg,
   DTME_BadMailAddress,
-  DTME_BadRunGroup,
   DTME_FileCreateFailed,
   DTME_FolderNotSet,
   DTME_GetLockRefused,

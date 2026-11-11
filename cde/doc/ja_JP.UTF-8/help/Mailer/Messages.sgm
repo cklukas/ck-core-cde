@@ -256,27 +256,6 @@
 </Step>
 </Procedure>
 </Sect1>
-<Sect1 Id="DTMAILHELPNOINSTALLMAIL">
-<Title> メール・プログラムが適切にインストールされていません。</Title>
-<Para><GlossTerm Role="nogloss">実行グループの設定が間違っているので、実行できません。</GlossTerm></Para>
-<!--
-<location id=DTMAILHELPNOINSTALLMAIL>&empty;<\location>
--->
-<Para>ある種のシステム上では、メール・プログラムは、"mail" に設定した
-グループ ID (実行グループ) で実行しなければなりません。
-ユーザが属する実行グループは、メール・プログラムを実行できるように設定されていません。</Para>
-<Procedure>
-<Title>可能な解決策:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.14">
-<Para> グループのアクセス権が、メール・プログラムを実行できるように正しく設定されていることをシステム管理者に確認してください。
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
 <Sect1 Id="DTMAILHELPNOVIEW">
 <Title> ユーザには <Emphasis>ファイル名</Emphasis> を表示するアクセス権がありません。</Title>
 <!--
@@ -732,26 +711,6 @@
 <ListItem Id="HMLR.MSG.item.42">
 <Para> メール以外の何らかの方法で受信予定者に連絡して、メッセージを受信したかどうかを確認してください。
 受信していない場合は、再送信する必要があります。
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
-<Sect1 Id="DTMAILHELPBADGROUPID">
-<Title>メールを終了しますか?	</Title>
-<!--
-<location id=DTMAILHELPBADGROUPID>&empty;<\location>
--->
-<Para>メールが正しくインストールされていないようです。メールを終了して、変更しなければなりません。
-</Para>
-<Procedure>
-<Title>可能な解決策:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.43">
-<Para> 終了して、メール・プログラムのアクセス権を変更する必要があります。
-システム管理者が root になり、/usr/dt/bin/dtmail のアクセス権を変更してくれるはずです。
 </Para>
 </ListItem>
 </ItemizedList>

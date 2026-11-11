@@ -2325,7 +2325,7 @@ SaveAsTextCmd::doit()
 
 	    dialog->setToErrorDialog(
 			    CATGETS(DT_catd, 3, 50, "Mailer"),
-			    CATGETS(DT_catd, 2, 16, "No message selected."));
+			    CATGETS(DT_catd, 2, 15, "No message selected."));
 	    dialog->post_and_return(NULL);
 
             return;

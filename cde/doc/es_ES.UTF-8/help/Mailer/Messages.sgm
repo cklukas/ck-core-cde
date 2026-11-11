@@ -284,31 +284,6 @@ correctamente o póngase en contacto con el administrador del sistema.
 </Step>
 </Procedure>
 </Sect1>
-<Sect1 Id="DTMAILHELPNOINSTALLMAIL">
-<Title>La Aplicación de correo no se ha
-instalado bien y no se puede ejecutar porque el grupo
-de ejecución está mal configurado.</Title>
-<!--
-<location id=DTMAILHELPNOINSTALLMAIL>&empty;<\location>
--->
-<Para>En algunos sistemas, la Aplicación de correo debe ejecutarse con el
-id de grupo (grupo de ejecución) establecido en "mail". El grupo de
-ejecución no se ha definido para que la Aplicación de correo pueda
-ejecutarse.</Para>
-<Procedure>
-<Title>Solución posible:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.14">
-<Para>Compruebe con el administrador del sistema que los permisos
-del grupo estén bien definidos para que la Aplicación de correo sea
-ejecutable.
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
 <Sect1 Id="DTMAILHELPNOVIEW">
 <Title>No tiene permisos para ver el
 <Emphasis>nombre de archivo</Emphasis>.</Title>
@@ -792,29 +767,6 @@ que volver a enviarlo.</Title>
 <Para>Póngase en contacto con el destinatario en cuestión con otro
 medio que no sea el correo y pregúntele si ha recibido el mensaje. Si
 no es así, tendrá que volver a enviarlo.
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
-<Sect1 Id="DTMAILHELPBADGROUPID">
-<Title>¿Salir del correo?</Title>
-<!--
-<location id=DTMAILHELPBADGROUPID>&empty;<\location>
--->
-<Para>Parece ser que el correo no está instalado correctamente. Tendrá
-que salir del correo y realizar algunos cambios.
-</Para>
-<Procedure>
-<Title>Solución posible:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.43">
-<Para>Tendrá que salir y cambiar los permisos de la Aplicación de
-correo.
-El administrador del sistema le indicará cómo convertirse en usuario
-root y cómo cambiar los permisos en /usr/dt/bin/dtmail.
 </Para>
 </ListItem>
 </ItemizedList>

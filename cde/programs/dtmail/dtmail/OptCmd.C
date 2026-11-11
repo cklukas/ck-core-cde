@@ -508,7 +508,7 @@ void OptCmd::update_source()
     int answer = 0;
 
     genDialog()->setToErrorDialog(CATGETS(DT_catd, 2, 1, "Mailer"),
-      CATGETS(DT_catd, 2, 25, "There were unrecoverable syntax errors found in the ~/.mailrc file.\nMail options settings can be applied in the current session but can\nnot be saved to file."));
+      CATGETS(DT_catd, 2, 24, "There were unrecoverable syntax errors found in the ~/.mailrc file.\nMail options settings can be applied in the current session but can\nnot be saved to the file."));
     helpId = DTMAILHELPERROR;
     genDialog()->post_and_return(CATGETS(DT_catd, 3, 5, "OK"), helpId);
     return;
@@ -550,16 +550,16 @@ int OptCmd::doFileLockingCheck()
 
 	if (is_set != use_file_locking)
 	{
-	    char	    *message = CATGETS(DT_catd, 2, 26,
+	    char	    *message = CATGETS(DT_catd, 2, 25,
 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options.");
             genDialog()->setToQuestionDialog(
 				CATGETS(DT_catd, 2, 1, "Mailer"),
 				message);
 	    answer =
               genDialog()->post_and_return(
-				CATGETS(DT_catd, 2, 27, "Reopen"),
-				CATGETS(DT_catd, 2, 29, "Cancel"),
-				CATGETS(DT_catd, 2, 28, "Continue"),
+				CATGETS(DT_catd, 2, 26, "Reopen"),
+				CATGETS(DT_catd, 2, 28, "Cancel"),
+				CATGETS(DT_catd, 2, 27, "Continue"),
 				"AdvancedMailOptions");
 
 	    //

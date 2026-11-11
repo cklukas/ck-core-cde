@@ -536,7 +536,7 @@ ViewMsgDialog::save_selected_attachment(
 
 	  _genDialog->setToErrorDialog(
 		    CATGETS(DT_catd, 1, 177, "Mailer"),
-		    CATGETS(DT_catd, 2, 20, "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file.") );
+		    CATGETS(DT_catd, 2, 19, "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file.") );
 	  helpId = DTMAILHELPSELECTATTACH;
 	  answer = _genDialog->post_and_return(
 			CATGETS(DT_catd, 3, 75, "OK"), helpId );

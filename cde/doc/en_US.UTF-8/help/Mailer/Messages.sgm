@@ -279,28 +279,6 @@ your system administrator.
 </Step>
 </Procedure>
 </Sect1>
-<Sect1 Id="DTMAILHELPNOINSTALLMAIL">
-<Title>Mailer has not been properly installed and</Title>
-<Para><GlossTerm Role="nogloss">cannot run because the execution group is incorrectly set.</GlossTerm></Para>
-<!--
-<location id=DTMAILHELPNOINSTALLMAIL>&empty;<\location>
--->
-<Para>On some systems, Mailer must be run with the group id (execution group)
-set to "mail". Your execution group has not been set so that
-Mailer can run.</Para>
-<Procedure>
-<Title>Possible Solution:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.14">
-<Para>Check with your system administrator to set the group permission
-correctly on the Mailer executable.
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
 <Sect1 Id="DTMAILHELPNOVIEW">
 <Title>You do not have permission to view <Emphasis>file name</Emphasis>.</Title>
 <!--
@@ -773,28 +751,6 @@ necessary, and resend the message.
 <Para>Contact the intended recipient by some means other than mail
 and ask them if they received your message. If not, you may have to
 resend.
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
-<Sect1 Id="DTMAILHELPBADGROUPID">
-<Title>Exit Mail?</Title>
-<!--
-<location id=DTMAILHELPBADGROUPID>&empty;<\location>
--->
-<Para>It appears that mail is installed incorrectly. You will have to
-exit mail and make some changes.
-</Para>
-<Procedure>
-<Title>Possible Solution:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.43">
-<Para>You will need to exit and change your permissions for Mailer.
-Your system administrator should help you by becoming root
-and changing permissions in /usr/dt/bin/dtmail.
 </Para>
 </ListItem>
 </ItemizedList>

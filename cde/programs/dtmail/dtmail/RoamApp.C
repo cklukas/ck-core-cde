@@ -390,7 +390,7 @@ int dieFromTtError(Tt_status errid, char *procname, char *errmsg, char *helpid)
 
 	error.logError(
 		DTM_TRUE,
-		CATGETS(DT_catd, 2, 30, "%s returned ToolTalk error: %s\n"),
+		CATGETS(DT_catd, 2, 29, "%s returned ToolTalk error: %s\n"),
 		procname, tt_status_message(errid));
 
 	DtMailGenDialog *exit_dialog = new DtMailGenDialog(
@@ -1337,12 +1337,12 @@ void RoamApp::initialize(int *argcp, char **argv)
                                          	theApplication->baseWidget());
         mailrc_dialog->setToQuestionDialog(
 				CATGETS(DT_catd, 2, 1, "Mailer"),
-				CATGETS(DT_catd, 2, 22,
+				CATGETS(DT_catd, 2, 21,
 					"There were unrecoverable syntax errors found in the ~/.mailrc file.\nCheck for more messages on terminal. Fix the errors and restart dtmail.\nIf you choose to continue you will not be able to save any changes made\nin the options dialog to file.") );
         helpId = DTMAILHELPERROR;
         answer = mailrc_dialog->post_and_return(
-					CATGETS(DT_catd, 2, 23, "Continue"),
-					CATGETS(DT_catd, 2, 24, "Exit"),
+					CATGETS(DT_catd, 2, 22, "Continue"),
+					CATGETS(DT_catd, 2, 23, "Exit"),
 					helpId);
 	if (answer == 2) {
 	    XtRemoveAllCallbacks(

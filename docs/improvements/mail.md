@@ -110,6 +110,11 @@ callbacks of `Session`, `Application` and `RoamApp`, `isSetMailGidNeeded()`,
 `GetGroupName()` and `GetIdForGroupName()`, and the check at the start of
 `dtmail` that stopped it when it was not running as the group `mail` (together
 with the `__ignore_group_permissions` setting that switched the check off).
+The messages that went with the check went too, in every catalog and help
+volume: `DTME_BadRunGroup` and its text, the first message of the mailer
+"Mailer has not been properly installed, and cannot run because the execution
+group is incorrectly set", and the help sections *Mailer has not been properly
+installed* and *Exit Mail?* ([Message catalogs](#message-catalogs)).
 
 To check an installation, `ls -l $(bindir)/dtmailspool` shows owner `root`,
 group `mail` and `-rwxr-sr-x`, and `dtmail` and `dtmailpr` have no `s` in their
@@ -382,3 +387,51 @@ the data in a buffer or in a file it names.
 `make -C programs/dtmail check` runs the production functions that make the
 data of a request against real files, FIFOs, devices and sparse files under the
 sanitizers, and guards the handlers.
+
+## Message catalogs
+
+Two catalogs of the mailer are indexed by number. `libDtMail` looks the text of
+an error up as message "enumerator + 1" of set 1 of `libDtMail.msg`, with the
+English text in `Common/DtMailError.C` as the fall-back when no catalog is
+installed, so the order of `DTMailError_t`, of those texts and of the messages
+of the catalog is one order. `dtmail` names the messages of `DtMail.msg` by a
+literal set and number in its `CATGETS` calls. Taking a message out of either
+catalog gives every later message a new number, and it has to do so in the
+English source, in the source of every locale and in every call that names one;
+a gap, or one locale left behind, shows the text of a neighbouring message
+under an error or a dialog, or a conversion of another type (`%s` where an
+integer is passed) than the one the code passes.
+
+`make -C programs/dtmail/libDtMail check` runs `tests/check-message-catalogs.py`
+over these catalogs:
+
+- the enumerators, the fall-back texts and the English catalog name the same
+  errors in the same order, and the comment above each message of the catalog
+  names the error that has its number;
+- every locale numbers its messages like the English source: unique numbers
+  without gaps, no more than the English source has, the same error named above
+  a message and the same conversions in it; the locales that the build installs
+  (`programs/localized/Makefile.am`) have exactly the English set of messages in
+  every set;
+- every `CATGETS` call on set 2 of `DtMail.msg` names the message whose text is
+  its default;
+- no removed message is left: the enumerator, the help sections or their
+  identifiers, or the text of the message in a source file;
+- gencat accepts every source, and the compiled catalog read back with
+  `catgets()` holds the messages of the source under the numbers of the source;
+- the production `DtMailEnv` (`Common/DtMailError.C`, compiled with the
+  sanitizers) returns, for every error, the text of its message from the English
+  catalog and from each installed locale, the fall-back text without a catalog,
+  and "invalid error" for a value beyond the table.
+
+The test fails on the sources before the removal of the message about the group
+and on copies of the catalogs, the code and the help volumes with one defect each
+(a locale or message left under its old number, two messages swapped, a message
+missing or doubled, a changed conversion, a call that was not renumbered, an
+enumerator or a table entry out of place, a help section that came back, a source
+that gencat refuses).
+
+`libDtMail.msg` of ko_KR, sv_SE and zh_TW is in the layout of an older
+enumeration, has no comments that name the errors and is not part of the build
+(only de_DE, es_ES, fr_FR, it_IT and ja_JP are installed); the test can check
+its numbers and conversions but not what its messages say.

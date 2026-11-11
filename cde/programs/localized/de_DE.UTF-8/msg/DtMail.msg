@@ -784,75 +784,71 @@ fragen."
 
 3 "Fenster können nicht initialisiert werden. Anforderung wird beendet.\n"
 
-4 " wurde nicht ordnungsgemäß installiert\n\
-und kann nicht ausgeführt werden, da die Ausführungsgruppe\n\
-falsch gesetzt ist."
-
-5 "Fehlende Berechtigung zum Anzeigen von %s"
+4 "Fehlende Berechtigung zum Anzeigen von %s"
 $ \t    /* NL_COMMENT
 $ \t     * The %s is the name of the mailbox the user doesn't have
 $ \t     * permission to view.
 $ \t     */
 
-6 "Der Briefkasten %s ist ein Verzeichnis und kann nicht geöffnet werden."
+5 "Der Briefkasten %s ist ein Verzeichnis und kann nicht geöffnet werden."
 
-7 "%s kann nicht geleert werden, da nicht vorhanden."
+6 "%s kann nicht geleert werden, da nicht vorhanden."
 
-8 "Behälter %s wurde geleert"
+7 "Behälter %s wurde geleert"
 
-9 "Fehler - %s konnte nicht geleert werden"
+8 "Fehler - %s konnte nicht geleert werden"
 
-10 "Post"
+9 "Post"
 
-11 "%s"
+10 "%s"
+
+11 "Post"
 
 12 "Post"
 
-13 "Post"
+13 "Es muß eine Anlage ausgewählt werden, bevor eine Datei mit dem Befehl \"Speichern als\" gespeichert werden kann."
 
-14 "Es muß eine Anlage ausgewählt werden, bevor eine Datei mit dem Befehl \"Speichern als\" gespeichert werden kann."
+14 "Fehler - mailrc ist nicht abrufbar."
 
-15 "Fehler - mailrc ist nicht abrufbar."
-
-16 "Keine Meldung ausgewählt."
+15 "Keine Meldung ausgewählt."
 $ \t/* NL_COMMENT
 $ \t * No mail message has been selected by the user.
 $ \t */
 
-17 "\"%s\" wurde bearbeitet. Trotzdem löschen?"
+16 "\"%s\" wurde bearbeitet. Trotzdem löschen?"
 
-18 "Fehler: Datei %s kann nicht eingeschlossen werden"
+17 "Fehler: Datei %s kann nicht eingeschlossen werden"
+
+18 "Vor dem Speichern in einer Datei mit dem Befehl\n\
+\"Speichern als\" muß eine Anlage ausgewählt werden."
 
 19 "Vor dem Speichern in einer Datei mit dem Befehl\n\
 \"Speichern als\" muß eine Anlage ausgewählt werden."
 
-20 "Vor dem Speichern in einer Datei mit dem Befehl\n\
-\"Speichern als\" muß eine Anlage ausgewählt werden."
+20 "Post"
 
-21 "Post"
-
-22 "Irreparable Syntaxfehler in der Datei ~/.mailrc gefunden.\nAchten Sie auf weitere Meldungen am Terminal. Die Fehler beheben und dtmail erneut starten.\nSollten Sie trotzdem fortfahren, werden Sie keine Änderungen in der\nDatei options dialog to?? speichern können."
-23 "Fortfahren"
-24 "Beenden"
-25 " Irreparable Syntaxfehler in der Datei ~/.mailrc gefunden.\nDie Einstellungen der Postoptionen können zwar in der aktuellen Session angewendet, jedoch nicht\nin der Datei gespeichert werden." 
+21 "Irreparable Syntaxfehler in der Datei ~/.mailrc gefunden.\nAchten Sie auf weitere Meldungen am Terminal. Die Fehler beheben und dtmail erneut starten.\nSollten Sie trotzdem fortfahren, werden Sie keine Änderungen in der\nDatei options dialog to?? speichern können."
+22 "Fortfahren"
+23 "Beenden"
+24 " Irreparable Syntaxfehler in der Datei ~/.mailrc gefunden.\nDie Einstellungen der Postoptionen können zwar in der aktuellen Session angewendet, jedoch nicht\nin der Datei gespeichert werden." 
 
 $ 
 $ Messages for file locking dialog displayed from the Advanced option pane.
 $ 
 $ "-NEW"
-26 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
+25 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
 $ "-NEW"
-27 "Reopen"
+26 "Reopen"
 $ "-NEW"
-28 "Continue"
+27 "Continue"
 $ "-NEW"
-29 "Cancel"
+28 "Cancel"
 
 $ 
 $ Messages for ToolTalk errors.
 $ 
 $ "-NEW"
-30 "%s returned ToolTalk error: %s\n"
+29 "%s returned ToolTalk error: %s\n"
 
 $set 3        Redefine set#
 

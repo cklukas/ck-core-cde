@@ -48,7 +48,6 @@ $set 1 libDtMail API set
 29 指定的郵遞位址無法處理。
 30 郵件傳遞失敗。
 31 MD5 類別記號與訊息內容不相符。
-32 有效的執行群組並非 "mail"
 
 $ 
 $ Strings from libDtMail/Common/DtMailValuesBuiltin.C

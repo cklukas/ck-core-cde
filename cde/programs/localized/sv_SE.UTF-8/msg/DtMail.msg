@@ -391,34 +391,33 @@ $set 2
 1 "Elektronisk post"
 2 "ToolTalk har inte initierats. Den elektroniska posten kan inte köras utan ToolTalk.\nFörsök att starta /usr/dt/bin/dtsession eller kontakta systemadministratören."
 3 "Det går inte att initiera fönstret. Programmet avslutas.\n"
-4 "Den elektroniska posten har inte installerats på rätt sätt.\nProgrammet kan inte köras eftersom inställningen för\nexekveringsgruppen är felaktig."
-5 "Du har inte behörighet att visa %s"
+4 "Du har inte behörighet att visa %s"
 $ 	    /* NL_COMMENT
 $ 	     * The %s is the name of the mailbox the user doesn't have
 $ 	     * permission to view.
 $ 	     */
-6 "Brevlådan %s är en katalog och kan inte öppnas."
-7 "Det går inte att tömma %s. Den finns inte."
-8 "Brevlådan %s har tömts"
-9 "Fel - det gick inte att tömma %s"
-10 "Elektronisk post"
-11 "%s"
+5 "Brevlådan %s är en katalog och kan inte öppnas."
+6 "Det går inte att tömma %s. Den finns inte."
+7 "Brevlådan %s har tömts"
+8 "Fel - det gick inte att tömma %s"
+9 "Elektronisk post"
+10 "%s"
+11 "Elektronisk post"
 12 "Elektronisk post"
-13 "Elektronisk post"
-14 "Du måste markera en bilaga innan du kan använda\nkommandot \"Spara som\" för att spara filen."
+13 "Du måste markera en bilaga innan du kan använda\nkommandot \"Spara som\" för att spara filen."
 
-15 "Fel - Det går inte att hämta mailrc."
-16 "Inget meddelande har markerats."
+14 "Fel - Det går inte att hämta mailrc."
+15 "Inget meddelande har markerats."
 $ 	/* NL_COMMENT
 $ 	 * No mail message has been selected by the user.
 $ 	 */
-17 "Du har redigerat \"%s\". Vill du ta bort den ändå?"
-18 "Fel: Det går inte att infoga filen %s"
+16 "Du har redigerat \"%s\". Vill du ta bort den ändå?"
+17 "Fel: Det går inte att infoga filen %s"
+18 "Du måste markera en bilaga innan du kan använda kommandot\n \"Spara som\" för att spara filen."
+
 19 "Du måste markera en bilaga innan du kan använda kommandot\n \"Spara som\" för att spara filen."
 
-20 "Du måste markera en bilaga innan du kan använda kommandot\n \"Spara som\" för att spara filen."
-
-21 "Elektronisk post"
+20 "Elektronisk post"
 
 
 $set 3

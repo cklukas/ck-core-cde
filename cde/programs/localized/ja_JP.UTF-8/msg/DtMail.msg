@@ -627,49 +627,47 @@ $set 2
 2 "ToolTalk が初期化されていません。ToolTalk を使用しないとメール・プログラムを実行できません。\n/usr/dt/bin/dtsession を起動するか、システム管理者に問い合わせてください。"
 
 3 "ウィンドウを初期化できません。終了します。\n"
-4 "メール・プログラムが適切にインストールされていません。\n\
-実行グループの設定が間違っているので、実行できません。"
-5 "ユーザは %s を表示するアクセス権がありません。"
+4 "ユーザは %s を表示するアクセス権がありません。"
 $ 	    /* NL_COMMENT
 $ 	     * The %s is the name of the mailbox the user doesn't have
 $ 	     * permission to view.
 $ 	     */
-6 "メールボックス %s はディレクトリなので開けません。"
-7 "%s を空にできません。存在しません。"
-8 "コンテナ %s を空にしました。"
-9 "エラー - %s を空にできません。"
-10 "メール・プログラム"
-11 "%s"
+5 "メールボックス %s はディレクトリなので開けません。"
+6 "%s を空にできません。存在しません。"
+7 "コンテナ %s を空にしました。"
+8 "エラー - %s を空にできません。"
+9 "メール・プログラム"
+10 "%s"
+11 "メール・プログラム"
 12 "メール・プログラム"
-13 "メール・プログラム"
-14 "\"別名保存\" コマンドを発行してファイルを保存する前に、\n\
+13 "\"別名保存\" コマンドを発行してファイルを保存する前に、\n\
 アタッチメントを選択する必要があります。"
 
-15 "エラー - mailrc を取得できません。"
-16 "メッセージを選択していません。"
+14 "エラー - mailrc を取得できません。"
+15 "メッセージを選択していません。"
 $ 	/* NL_COMMENT
 $ 	 * No mail message has been selected by the user.
 $ 	 */
 
 
-17 "\"%s\" は編集されています。削除してもいいですか?"
-18 "エラー: ファイル %s を取り込めません。"
+16 "\"%s\" は編集されています。削除してもいいですか?"
+17 "エラー: ファイル %s を取り込めません。"
+18 "\"別名保存\" コマンドを発行してファイルを保存する前に、\n\
+アタッチメントを選択する必要があります。"
+
+
 19 "\"別名保存\" コマンドを発行してファイルを保存する前に、\n\
 アタッチメントを選択する必要があります。"
 
-
-20 "\"別名保存\" コマンドを発行してファイルを保存する前に、\n\
-アタッチメントを選択する必要があります。"
-
-21 "メール・プログラム"
-22 "~/.mailrcのファイルに回復することができない構文のエラーを見つけました。\n\
+20 "メール・プログラム"
+21 "~/.mailrcのファイルに回復することができない構文のエラーを見つけました。\n\
 ターミナル上のメッセージを調べて下さい。\n\
 エラーを確認し、dtmailを再起動してください。\n\
 もし継続を選ぶならば、ファイルするためのオプションダイアログでの変更の幾らかは\n\
 保存できません。"
-23 "継続"
-24 "終了"
-25 "~/.mailrcのファイルに回復することができない構文のエラーを見つけました。\n\
+22 "継続"
+23 "終了"
+24 "~/.mailrcのファイルに回復することができない構文のエラーを見つけました。\n\
 メール・オプションの環境は現在のセッションでは適用されますが、\n\
 ファイルに保存はされません。"
 
@@ -677,19 +675,19 @@ $
 $ Messages for file locking dialog displayed from the Advanced option pane.
 $ 
 $ "-NEW"
-26 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
+25 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
 $ "-NEW"
-27 "Reopen"
+26 "Reopen"
 $ "-NEW"
-28 "Continue"
+27 "Continue"
 $ "-NEW"
-29 "Cancel"
+28 "Cancel"
 
 $ 
 $ Messages for ToolTalk errors.
 $ 
 $ "-NEW"
-30 "%s returned ToolTalk error: %s\n"
+29 "%s returned ToolTalk error: %s\n"
 
 $set 3
 1 "自動保存中..."

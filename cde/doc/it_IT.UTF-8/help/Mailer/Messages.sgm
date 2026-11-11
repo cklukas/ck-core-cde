@@ -265,28 +265,6 @@ rivolgersi all'amministratore di sistema.
 </Step>
 </Procedure>
 </Sect1>
-<Sect1 Id="DTMAILHELPNOINSTALLMAIL">
-<Title>La Gestione posta non è stata installata correttamente,
-e non può essere avviata perché il gruppo di esecuzione non è impostato correttamente.</Title>
-<!--
-<location id=DTMAILHELPNOINSTALLMAIL>&empty;<\location>
--->
-<Para>Su alcuni sistemi, la Gestione posta deve essere avviata con l'id del gruppo (di esecuzione)
-impostato come "mail". Il gruppo di esecuzione non è impostato nel modo richiesto per
-l'avvio della Gestione posta.</Para>
-<Procedure>
-<Title>Possibile soluzione:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.14">
-<Para>Chiedere all'amministratore di sistema di impostare le autorizzazioni del gruppo
-nel modo richiesto dalla Gestione posta.
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
 <Sect1 Id="DTMAILHELPNOVIEW">
 <Title>Autorizzazioni insufficienti per visualizzare <Emphasis>nome_file</Emphasis>.</Title>
 <!--
@@ -743,28 +721,6 @@ In caso contrario, ripetere l'invio.</Title>
 <ListItem Id="HMLR.MSG.item.42">
 <Para>Contattare il destinatario e chiedere conferma dell'arrivo del messaggio.
 Se il messaggio non è arrivato a destinazione, ripetere l'invio.
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
-<Sect1 Id="DTMAILHELPBADGROUPID">
-<Title>Exit Mail?</Title>
-<!--
-<location id=DTMAILHELPBADGROUPID>&empty;<\location>
--->
-<Para>La Gestione posta non sembra installata correttamente. Occorrerà uscire
-e apportare alcune modifiche.
-</Para>
-<Procedure>
-<Title>Possibile soluzione:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.43">
-<Para>Uscire, diventare superutente e cambiare le autorizzazioni
-per la Gestione posta in /usr/dt/bin/dtmail. Se necessario, chiedere
-assistenza all'amministratore di sistema.
 </Para>
 </ListItem>
 </ItemizedList>

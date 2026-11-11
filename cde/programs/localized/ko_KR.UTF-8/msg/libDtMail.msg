@@ -48,7 +48,6 @@ $set 1 libDtMail API set
 29 지정한 우편 주소를 처리할 수 없습니다.
 30 우편 배달 이동이 실패했습니다.
 31 MD5 서명이 메세지 내용과 맞지 않습니다.
-32 유효한 수행 그룹은 "mail"이 아닙니다.
 
 $ 
 $ Strings from libDtMail/Common/DtMailValuesBuiltin.C

@@ -899,7 +899,7 @@ MsgScrollingList::copySelected(
 
 	    dialog->setToErrorDialog(
 				CATGETS(DT_catd, 3, 50, "Mailer"),
-				CATGETS(DT_catd, 2, 16, "No message selected."));
+				CATGETS(DT_catd, 2, 15, "No message selected."));
 	    dialog->post_and_return(helpId);
 	}
 	return(1);
@@ -912,7 +912,7 @@ MsgScrollingList::copySelected(
     // The following is an error message.  "mailrc" is the name of the
     // mail resource file.  Translate as appropriate.
     //
-    parent()->message(CATGETS(DT_catd, 2, 15,"Error - Unable to get mailrc."));
+    parent()->message(CATGETS(DT_catd, 2, 14,"Error - Unable to get mailrc."));
     return(1);
     }
 
@@ -1528,7 +1528,7 @@ MsgScrollingList::display_no_message()
 	 * No mail message has been selected by the user.
 	 */
 
-    parent()->message(CATGETS(DT_catd, 2, 16, "No message selected."));
+    parent()->message(CATGETS(DT_catd, 2, 15, "No message selected."));
     _displayed_item_position = 0;
     _selected_item_position = 0;
 

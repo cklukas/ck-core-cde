@@ -543,63 +543,60 @@ $set 2
 2 "ToolTalk non è inizializzato. La Gestione posta non può essere avviata senza ToolTalk.\nProvare ad avviare /usr/dt/bin/dtsession, oppure rivolgersi all'amministratore di sistema." 
 
 3 "Impossibile inizializzare le finestre. Operazione interrotta.\n" 
-4 "La Gestione posta non è stata installata correttamente, \n\
-e non può essere avviata perché il gruppo di \n\
-esecuzione non è impostato correttamente."
-5 "Autorizzazioni insufficienti per visualizzare %s" 
+4 "Autorizzazioni insufficienti per visualizzare %s" 
 $ 	    /* NL_COMMENT
 $ 	     * The %s is the name of the mailbox the user doesn't have
 $ 	     * permission to view.
 $ 	     */
-6 "La casella postale %s è una directory e non può essere aperta." 
-7 "Impossibile vuotare %s. Il raccoglitore non esiste." 
-8 "Il raccoglitore %s è stato vuotato" 
-9 "Errore - Impossibile vuotare %s" 
-10 "Gestione posta" 
-11 "%s" 
+5 "La casella postale %s è una directory e non può essere aperta." 
+6 "Impossibile vuotare %s. Il raccoglitore non esiste." 
+7 "Il raccoglitore %s è stato vuotato" 
+8 "Errore - Impossibile vuotare %s" 
+9 "Gestione posta" 
+10 "%s" 
+11 "Gestione posta" 
 12 "Gestione posta" 
-13 "Gestione posta" 
-14 "Prima di eseguire il comando \"Salvare come\" \noccorre selezionare un allegato." 
+13 "Prima di eseguire il comando \"Salvare come\" \noccorre selezionare un allegato." 
 
-15 "Errore - Impossibile individuare mailrc." 
-16 "Nessun messaggio selezionato." 
+14 "Errore - Impossibile individuare mailrc." 
+15 "Nessun messaggio selezionato." 
 $ 	/* NL_COMMENT
 $ 	 * No mail message has been selected by the user.
 $ 	 */
 
 
-17 "\"%s\" è stato modificato. Confermare ugualmente la cancellazione?" 
-18 "Errore: Impossibile includere il file %s" 
+16 "\"%s\" è stato modificato. Confermare ugualmente la cancellazione?" 
+17 "Errore: Impossibile includere il file %s" 
+18 "Prima di eseguire il comando \"Salvare come\" \noccorre selezionare un allegato." 
+
+
 19 "Prima di eseguire il comando \"Salvare come\" \noccorre selezionare un allegato." 
 
-
-20 "Prima di eseguire il comando \"Salvare come\" \noccorre selezionare un allegato." 
-
-21 "Gestione posta" 
+20 "Gestione posta" 
 
 
-22 "Errori gravi nel file ~/.mailrc file.\nControllare la finestra Terminale per ulteriori messaggi. Correggere gli errori e riavviare dtmail.\nAltrimenti, non sarà possibile salvare su file le modifiche apportate nel dialogo Opzioni."
-23 "Continuare"
-24 "Uscire"
-25 "Errori gravi nel file ~/.mailrc \nÈ possibile applicare le impostazioni alla sessione \ncorrente però non sarà possibile salvarle su file." 
+21 "Errori gravi nel file ~/.mailrc file.\nControllare la finestra Terminale per ulteriori messaggi. Correggere gli errori e riavviare dtmail.\nAltrimenti, non sarà possibile salvare su file le modifiche apportate nel dialogo Opzioni."
+22 "Continuare"
+23 "Uscire"
+24 "Errori gravi nel file ~/.mailrc \nÈ possibile applicare le impostazioni alla sessione \ncorrente però non sarà possibile salvarle su file." 
 
 $ 
 $ Messages for file locking dialog displayed from the Advanced option pane.
 $ 
 $ "-NEW"
-26 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
+25 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
 $ "-NEW"
-27 "Reopen"
+26 "Reopen"
 $ "-NEW"
-28 "Continue"
+27 "Continue"
 $ "-NEW"
-29 "Cancel"
+28 "Cancel"
 
 $ 
 $ Messages for ToolTalk errors.
 $ 
 $ "-NEW"
-30 "%s returned ToolTalk error: %s\n"
+29 "%s returned ToolTalk error: %s\n"
 
 
 $set 3

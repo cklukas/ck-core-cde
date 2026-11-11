@@ -1,3 +1,29 @@
+2026-11-11
+- dtmail, dtmailpr: remove the message "The dtmail program is not running as
+  group \"mail\"" and the texts around it, which nothing has shown since the
+  mailer stopped needing the mail group. `DTME_BadRunGroup` is gone from
+  `DTMailError_t`, from the fall-back texts of `libDtMail` and from set 1 of
+  `libDtMail.msg`, and message 4 ("Mailer has not been properly installed,
+  and cannot run because the execution group is incorrectly set") is gone from
+  set 2 of `DtMail.msg`; the two help sections of the Mailer volume that
+  explained them, *Mailer has not been properly installed* and *Exit Mail?*,
+  are gone from the volume of every locale. The catalogs are indexed by number
+  (`libDtMail` looks an error up as message "enumerator + 1", `dtmail` names
+  messages of `DtMail.msg` in its `CATGETS` calls), so every message after a
+  removed one has a new number: the English sources, the sources of the
+  locales and the 31 calls that named a message of set 2 were renumbered
+  together, with no entry left in the place of the old one. A catalog that
+  was installed before this change shows the wrong text under many errors
+  and mailer messages until it is installed again. A new check,
+  `libDtMail/tests/check-message-catalogs.py` (run by `make check`), reads
+  every catalog source against the enumeration, the fall-back texts and the
+  calls (same numbers, same error named above each message, same conversions,
+  the installed locales with exactly the English set of messages), runs
+  gencat on every source and reads each compiled catalog back, and looks every
+  error up through the production `DtMailEnv` under the sanitizers with the
+  English catalog, with each installed locale and without a catalog; it fails
+  on the tree before this change and on eighteen deliberately broken copies
+  of the catalogs, the code and the help volumes.
 2026-11-10
 - dtfile: build the directory control-packet test and the file conflict
   dialog placement code cleanly with GCC 14. The test program ended an `if`

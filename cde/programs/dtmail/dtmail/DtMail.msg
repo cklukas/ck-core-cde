@@ -614,59 +614,58 @@ $set 2
 2 "ToolTalk is not initialized. Mailer cannot run without ToolTalk.\nTry starting /usr/dt/bin/dtsession, or contact your System Administrator." 
 
 3 "Unable to initialize windows. Exiting.\n" 
-4 "Mailer has not been properly installed,\nand cannot run because the execution group\nis incorrectly set."
-5 "You do not have permission to view %s" 
+4 "You do not have permission to view %s" 
 $ 	    /* NL_COMMENT
 $ 	     * The %s is the name of the mailbox the user doesn't have
 $ 	     * permission to view.
 $ 	     */
-6 "The mailbox %s is a directory and can not be opened." 
-7 "Unable to empty %s. It does not exist." 
-8 "Container %s was emptied" 
-9 "Error - wasn't able to empty %s" 
-10 "Mailer" 
-11 "%s" 
+5 "The mailbox %s is a directory and can not be opened." 
+6 "Unable to empty %s. It does not exist." 
+7 "Container %s was emptied" 
+8 "Error - wasn't able to empty %s" 
+9 "Mailer" 
+10 "%s" 
+11 "Mailer" 
 12 "Mailer" 
-13 "Mailer" 
-14 "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file." 
+13 "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file." 
 
-15 "Error - Unable to get mailrc." 
-16 "No message selected." 
+14 "Error - Unable to get mailrc." 
+15 "No message selected." 
 $ 	/* NL_COMMENT
 $ 	 * No mail message has been selected by the user.
 $ 	 */
 
 
-17 "You have edited \"%s\". Delete anyway?" 
-18 "Error: Cannot include file %s" 
+16 "You have edited \"%s\". Delete anyway?" 
+17 "Error: Cannot include file %s" 
+18 "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file." 
+
+
 19 "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file." 
 
-
-20 "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file." 
-
-21 "Mailer" 
-22 "There were unrecoverable syntax errors found in the ~/.mailrc file.\nCheck for more messages on terminal. Fix the errors and restart dtmail.\nIf you choose to continue you will not be able to save any changes made\nin the options dialog to file."
-23 "Continue"
-24 "Exit"
-25 "There were unrecoverable syntax errors found in the ~/.mailrc file.\nMail options settings can be applied in the current session but can\nnot be saved to the file." 
+20 "Mailer" 
+21 "There were unrecoverable syntax errors found in the ~/.mailrc file.\nCheck for more messages on terminal. Fix the errors and restart dtmail.\nIf you choose to continue you will not be able to save any changes made\nin the options dialog to file."
+22 "Continue"
+23 "Exit"
+24 "There were unrecoverable syntax errors found in the ~/.mailrc file.\nMail options settings can be applied in the current session but can\nnot be saved to the file." 
 
 $ 
 $ Messages for file locking dialog displayed from the Advanced option pane.
 $ 
 $ "-NEW"
-26 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
+25 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
 $ "-NEW"
-27 "Reopen"
+26 "Reopen"
 $ "-NEW"
-28 "Continue"
+27 "Continue"
 $ "-NEW"
-29 "Cancel"
+28 "Cancel"
 
 $ 
 $ Messages for ToolTalk errors.
 $ 
 $ "-NEW"
-30 "%s returned ToolTalk error: %s\n"
+29 "%s returned ToolTalk error: %s\n"
 
 $set 3
 1 "Auto-saving..." 

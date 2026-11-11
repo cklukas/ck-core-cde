@@ -742,76 +742,72 @@ Lancez /usr/dt/bin/dtsession ou adressez-vous à l'administrateur système."
 
 3 "Impossible d'initialiser les fenêtres. Abandon en cours.\n"
 
-4 "L'installation du programme courrier présente\n\
-des erreurs ; le programme ne peut pas être\n\
-lancé car le groupe d'exécution est incorrect."
-
-5 "Vous n'êtes pas autorisé à visualiser %s."
+4 "Vous n'êtes pas autorisé à visualiser %s."
 $ \t    /* NL_COMMENT   
 $ \t     * The %s is the name of the mailbox the user doesn't have   
 $ \t     * permission to view.   
 $ \t     */   
 
-6 "La boîte aux lettres %s est un répertoire ; son ouverture est impossible."
+5 "La boîte aux lettres %s est un répertoire ; son ouverture est impossible."
 
-7 "Impossible de vider %s (conteneur inexistant)."
+6 "Impossible de vider %s (conteneur inexistant)."
 
-8 "Le conteneur %s a été vidé."
+7 "Le conteneur %s a été vidé."
 
-9 "Erreur - %s n'a pas été vidé."
+8 "Erreur - %s n'a pas été vidé."
 
-10 "Programme courrier"
+9 "Programme courrier"
 
-11 "%s"
+10 "%s"
+
+11 "Programme courrier"
 
 12 "Programme courrier"
 
-13 "Programme courrier"
-
-14 "Avant de lancer la commande \"Sauvegarder sous\",\n\
+13 "Avant de lancer la commande \"Sauvegarder sous\",\n\
 vous devez sélectionner une connexion."
 
-15 "Erreur - Impossible d'obtenir mailrc."
+14 "Erreur - Impossible d'obtenir mailrc."
 
-16 "Aucun message sélectionné."
+15 "Aucun message sélectionné."
 $ \t/* NL_COMMENT   
 $ \t * No mail message has been selected by the user.   
 $ \t */   
 
-17 "\"%s\" a été modifié. Confirmez-vous la suppression ?"
+16 "\"%s\" a été modifié. Confirmez-vous la suppression ?"
 
-18 "Erreur: Impossible d'inclure le fichier %s."
+17 "Erreur: Impossible d'inclure le fichier %s."
+
+18 "Avant de lancer la commande \"Sauvegarder sous\",\n\
+vous devez sélectionner une connexion."
 
 19 "Avant de lancer la commande \"Sauvegarder sous\",\n\
 vous devez sélectionner une connexion."
 
-20 "Avant de lancer la commande \"Sauvegarder sous\",\n\
-vous devez sélectionner une connexion."
+20 "Programme courrier"
 
-21 "Programme courrier"
-
-22 "Des erreurs de syntaxes irréparables ont eu lieu dans le fichier ~/.mailrc.\nVérifiez les autres messages du terminal. Corrigez les erreurs et relancez dtmail.\nSi vous continuez, vous ne pourrez peut-être pas sauvegarder les modifications effectuées \ndans la boîte de dialogue options."
-23 "Continuer"
-24 "Quitter"
-25 " Des erreurs de syntaxes irréparables ont eu lieu dans le fichier ~/.mailrc.\nVous pouvez appliquer les configurations d'options de courrier dans la session en cours mais \nvous ne pourrez pas les sauvegarder dans le fichier." 
+21 "Des erreurs de syntaxes irréparables ont eu lieu dans le fichier ~/.mailrc.\nVérifiez les autres messages du terminal. Corrigez les erreurs et relancez dtmail.\nSi vous continuez, vous ne pourrez peut-être pas sauvegarder les modifications effectuées \ndans la boîte de dialogue options."
+22 "Continuer"
+23 "Quitter"
+24 " Des erreurs de syntaxes irréparables ont eu lieu dans le fichier ~/.mailrc.\nVous pouvez appliquer les configurations d'options de courrier dans la session en cours mais \nvous ne pourrez pas les sauvegarder dans le fichier." 
 
 $ 
 $ Messages for file locking dialog displayed from the Advanced option pane.
 $ 
 $ "-NEW"
-26 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
+25 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
 $ "-NEW"
-27 "Reopen"
+26 "Reopen"
 $ "-NEW"
-28 "Continue"
+27 "Continue"
 $ "-NEW"
-29 "Cancel"
+28 "Cancel"
 
 $ 
 $ Messages for ToolTalk errors.
 $ 
 $ "-NEW"
-30 "%s returned ToolTalk error: %s\n"
+29 "%s returned ToolTalk error: %s\n"
 
 
 $set 3        Redefine set#

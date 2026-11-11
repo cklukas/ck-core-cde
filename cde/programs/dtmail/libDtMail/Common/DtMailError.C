@@ -99,9 +99,6 @@ static const char * error_strings[] = {
   // - DTME_BadMailAddress
   "The specified mail address could not be processed.",
   
-  // - DTME_BadRunGroup
-  "The dtmail program is not running as group \"mail\".",
-
   // - DTME_FileCreateFailed
   "The requested file could not be created.",
 

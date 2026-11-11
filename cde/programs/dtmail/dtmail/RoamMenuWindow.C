@@ -1608,7 +1608,7 @@ RoamMenuWindow::open(
 	     * The %s is the name of the mailbox the user doesn't have
 	     * permission to view.
 	     */
-	    sprintf(buf, CATGETS(DT_catd, 2, 5,
+	    sprintf(buf, CATGETS(DT_catd, 2, 4,
 		   "You do not have permission to view %s"), _mailbox_fullpath);
 
 	    _genDialog->setToQuestionDialog(
@@ -1626,7 +1626,7 @@ RoamMenuWindow::open(
 	}
 	else if ((DTMailError_t)error == DTME_IsDirectory)
 	{
-	    sprintf(buf, CATGETS(DT_catd, 2, 6,
+	    sprintf(buf, CATGETS(DT_catd, 2, 5,
 		    "The mailbox %s is a directory and can not be opened."),
 		    _mailbox_fullpath);
 
@@ -4263,7 +4263,7 @@ RoamMenuWindow::syncViewAndStore(
 
 	errmsg = CATGETS(DT_catd, 1, 238, "Mailer is confused about the state of this mailbox.\nIt may be that another process has rewritten this mailbox in an unexpected way.\n\nSelecting OK will cause the Mailer to close and reopen the mailbox.\nNOTE that any changes made to the mailbox since the last save may be lost.");
 	this->_genDialog->setToErrorDialog(
-				CATGETS(DT_catd, 2, 10, "Mailer"),
+				CATGETS(DT_catd, 2, 9, "Mailer"),
 				errmsg);
 	answer = this->_genDialog->post_and_return(
 				CATGETS(DT_catd, 3, 29, "OK"),
@@ -4278,7 +4278,7 @@ RoamMenuWindow::syncViewAndStore(
 	
 	errmsg = CATGETS(DT_catd, 1, 239, "Mailer can no longer access this mailbox.\nIt may be that another process has deleted the mailbox file.\n\nSelecting OK will cause the Mailer to close and reopen the mailbox.\nNOTE that any changes made to the mailbox since the last save may be lost.\n\nSelecting CANCEL will leave the mailbox unchanged.");
 	this->_genDialog->setToErrorDialog(
-				CATGETS(DT_catd, 2, 10, "Mailer"),
+				CATGETS(DT_catd, 2, 9, "Mailer"),
 				errmsg);
 	answer = this->_genDialog->post_and_return(
 				CATGETS(DT_catd, 3, 29, "OK"),
@@ -4302,7 +4302,7 @@ RoamMenuWindow::syncViewAndStore(
 
 	    snprintf(buffer, 2048, "%s", errmsgarg);
 	    this->_genDialog->setToTextFieldDialog(
-				CATGETS(DT_catd, 2, 10, "Mailer"),
+				CATGETS(DT_catd, 2, 9, "Mailer"),
 				buffer, DTM_TRUE);
 	    answer = this->_genDialog->post_and_return(
 				CATGETS(DT_catd, 3, 29, "Ok"),
@@ -4335,7 +4335,7 @@ RoamMenuWindow::syncViewAndStore(
 
 	    snprintf(buffer, 2048, errmsg, errmsgarg);
 	    this->_genDialog->setToErrorDialog(
-				CATGETS(DT_catd, 2, 10, "Mailer"),
+				CATGETS(DT_catd, 2, 9, "Mailer"),
 				buffer);
 	    answer = this->_genDialog->post_and_return(
 				CATGETS(DT_catd, 1, 257, "Options..."),
@@ -4365,7 +4365,7 @@ RoamMenuWindow::syncViewAndStore(
 
 	    snprintf(buffer, 2048, errmsg, errmsgarg);
 	    this->_genDialog->setToErrorDialog(
-				CATGETS(DT_catd, 2, 10, "Mailer"),
+				CATGETS(DT_catd, 2, 9, "Mailer"),
 				buffer);
 	    answer = this->_genDialog->post_and_return(
 				CATGETS(DT_catd, 1, 257, "Options..."),
@@ -4401,7 +4401,7 @@ RoamMenuWindow::syncViewAndStore(
 
 	    snprintf(buffer, 2048, "%s", errmsgarg);
 	    this->_genDialog->setToErrorDialog(
-				CATGETS(DT_catd, 2, 10, "Mailer"),
+				CATGETS(DT_catd, 2, 9, "Mailer"),
 				buffer);
 	    answer = this->_genDialog->post_and_return(
 				CATGETS(DT_catd, 1, 257, "Options..."),
@@ -4425,7 +4425,7 @@ RoamMenuWindow::syncViewAndStore(
 	errmsg = CATGETS(DT_catd, 1, 240, "Mailer can no longer access this mailbox.\nAnother process has rewritten the mailbox file changing the inode.\n\nSelecting OK will cause the Mailer to close and reopen the mailbox.\nNOTE that any changes made to the mailbox since the last save may be lost.\n\nSelecting CANCEL will leave the mailbox unchanged.");
 
 	this->_genDialog->setToErrorDialog(
-				CATGETS(DT_catd, 2, 10, "Mailer"),
+				CATGETS(DT_catd, 2, 9, "Mailer"),
 				errmsg);
 	answer = this->_genDialog->post_and_return(
 				CATGETS(DT_catd, 3, 29, "OK"),
@@ -4695,7 +4695,7 @@ RoamMenuWindow::postErrorDialog(
     // Assume that the char *text that comes in has already 
     // been processed for i18n.
 
-    _genDialog->setToErrorDialog(CATGETS(DT_catd, 2, 13, "Mailer"),
+    _genDialog->setToErrorDialog(CATGETS(DT_catd, 2, 12, "Mailer"),
 				 (char *)text_str);
     
     helpId = DTMAILHELPERROR;
@@ -4970,7 +4970,7 @@ RoamMenuWindow::save_selected_attachment(
 
 	  _genDialog->setToErrorDialog(
 		    CATGETS(DT_catd, 1, 80, "Mailer"),
-		    CATGETS(DT_catd, 2, 14, "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file.") );
+		    CATGETS(DT_catd, 2, 13, "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file.") );
 	  helpId = DTMAILHELPSELECTATTACH;
 	  answer = _genDialog->post_and_return(
 			CATGETS(DT_catd, 3, 33, "OK"), helpId );

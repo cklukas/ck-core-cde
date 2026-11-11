@@ -271,29 +271,6 @@ adressez-vous à l'administrateur système.
 </Step>
 </Procedure>
 </Sect1>
-<Sect1 Id="DTMAILHELPNOINSTALLMAIL">
-<Title>L'installation du Programme courrier présente
-des erreurs; le programme ne peut pas être lancé car le groupe
-d'éxécution est incorrect.</title>
-<!--
-<location id=DTMAILHELPNOINSTALLMAIL>&empty;<\location>
--->
-<Para>Sur certains systèmes, le Programme courrier doit être lancé avec l'ID groupe
-(groupe d'exécution) "mail". La définition de votre groupe d'exécution ne
-permet pas au programme de s'exécuter.</Para>
-<Procedure>
-<Title>Solution possible:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.14">
-<Para>Demandez à l'administrateur système de définir le groupe d'exécution
-approprié.
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
 <Sect1 Id="DTMAILHELPNOVIEW">
 <Title>Vous n'êtes pas autorisé à visualiser <Emphasis>nom_fichier</Emphasis>.</Title>
 <!--
@@ -767,28 +744,6 @@ Si tel n'est pas le cas, relancez la transmission.</title>
 <ListItem Id="HMLR.MSG.item.42">
 <Para>Demandez au destinataire s'il a reçu votre message. Si tel n'est pas
 le cas, envoyez de nouveau le message.
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
-<Sect1 Id="DTMAILHELPBADGROUPID">
-<Title>Voulez-vous quitter le Programme courrier?</Title>
-<!--
-<location id=DTMAILHELPBADGROUPID>&empty;<\location>
--->
-<Para>L'installation du Programme courrier présente des erreurs. Vous devez quitter
-l'application et corriger les erreurs.</Para>
-<Procedure>
-<Title>Solution possible:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.43">
-<Para>Quittez le Programme courrier et modifiez les droits
-d'accès au programme. Votre administrateur système vous y aidera en se
-connectant en tant root et en modifiant les droits d'accès de
-/usr/dt/bin/dtmail.
 </Para>
 </ListItem>
 </ItemizedList>

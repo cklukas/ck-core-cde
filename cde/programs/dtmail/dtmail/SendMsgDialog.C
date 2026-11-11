@@ -938,7 +938,7 @@ SendMsgDialog::changeHeaderState(const char * name)
 	    if (!hl->value || strcmp(value, hl->value) != 0) {
 		char *buf = new char[256];
 		sprintf(buf, 
-			CATGETS(DT_catd, 2, 17,
+			CATGETS(DT_catd, 2, 16,
 				"You have edited \"%s\". Delete anyway?"), 
 			hl->label);
 		_genDialog->setToWarningDialog(CATGETS(DT_catd, 3, 71,
@@ -1103,7 +1103,7 @@ you may have to resend this message."));
     smd->_close_button->activate();
 
     // popup the error dialog
-    smd->_genDialog->setToErrorDialog(CATGETS(DT_catd, 2, 21, "Mailer"),
+    smd->_genDialog->setToErrorDialog(CATGETS(DT_catd, 2, 20, "Mailer"),
 			     (char *) buf);
     smd->_genDialog->post_and_return(CATGETS(DT_catd, 3, 76, "OK"), helpId);
     delete [] buf;
@@ -1164,7 +1164,7 @@ SendMsgDialog::send_message(const char * trans_impl, int trans_type)
 	_send_button->activate();
 	_close_button->activate();
 
-	_genDialog->setToErrorDialog(CATGETS(DT_catd, 2, 21, "Mailer"),
+	_genDialog->setToErrorDialog(CATGETS(DT_catd, 2, 20, "Mailer"),
 				     (char *) buf);
 	_genDialog->post_and_return(CATGETS(DT_catd, 3, 76, "OK"), helpId);
 
@@ -1350,7 +1350,7 @@ resend this message."));
 	_close_button->activate();
 
 	// popup the error dialog
-	this->_genDialog->setToErrorDialog(CATGETS(DT_catd, 2, 21, "Mailer"),
+	this->_genDialog->setToErrorDialog(CATGETS(DT_catd, 2, 20, "Mailer"),
 		(char *) buf);
 	this->_genDialog->post_and_return(CATGETS(DT_catd, 3, 76, "OK"),
 		helpId);
@@ -1736,7 +1736,7 @@ SendMsgDialog::include_file(
     // I don't need to open the file to see if it's readable if loadFile()
     // returns error status.
     if ( (fp = fopen(selection, "r")) == NULL ) {
-	sprintf(buf, CATGETS(DT_catd, 2, 18, "Error: Cannot include file %s"),
+	sprintf(buf, CATGETS(DT_catd, 2, 17, "Error: Cannot include file %s"),
 		selection);
 	theInfoDialogManager->post(
 				   "Mailer", 
@@ -1874,7 +1874,7 @@ SendMsgDialog::save_selected_attachment(
 	
 	_genDialog->setToErrorDialog(
 				     CATGETS(DT_catd, 1, 120, "Mailer"),
-				     CATGETS(DT_catd, 2, 19, "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file.") );
+				     CATGETS(DT_catd, 2, 18, "An attachment needs to be selected before issuing the\n\"Save As\" command to save to a file.") );
 	helpId = DTMAILHELPSELECTATTACH;
 	answer = _genDialog->post_and_return(
 					     CATGETS(DT_catd, 3, 74, "OK"), helpId );

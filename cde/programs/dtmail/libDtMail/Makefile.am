@@ -14,9 +14,11 @@ libDtMail_a_LIBADD = Common/*.o RFC/*.o
 # in tests/check-mailbox-files.py) with the sanitizers, open and save mailboxes
 # and talk to a mail server of their own through the public interface of
 # libDtMail, and link with the built libDtMail.a, so they check the code that is
-# shipped.
+# shipped.  tests/check-message-catalogs.py checks the numbering of the message
+# catalogs of every locale against the code that reads them.
 EXTRA_DIST = tests/check-mailbox-files.py tests/mailbox-files.C \
-             tests/check-spool-client.py tests/spool-client.C
+             tests/check-spool-client.py tests/spool-client.C \
+             tests/check-message-catalogs.py tests/message-catalogs.C
 
 check-local:
 	DTMAIL_CC='$(CC) $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
@@ -29,3 +31,8 @@ check-local:
 	DTMAIL_LINK='$(LIBTOOL) --tag=CXX --mode=link $(CXX) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
 	DTMAIL_LIBS='$(DTCLIENTLIBS) $(XTOOLLIB) $(LTLIBICONV) $(LIBS)' \
 	python3 $(srcdir)/tests/check-mailbox-files.py $(srcdir) libDtMail.a
+	GENCAT='$(GENCAT)' \
+	DTMAIL_COMPILE='$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) -I$(srcdir)/Common -I$(srcdir)/RFC -I$(top_srcdir)/programs/dtmail/include -I$(top_srcdir)/programs/dtmail/include/utils -DTTLOCK_OFF -DDL_NOT_DYNAMIC $(AM_CXXFLAGS) $(CXXFLAGS)' \
+	DTMAIL_LINK='$(LIBTOOL) --tag=CXX --mode=link $(CXX) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
+	DTMAIL_LIBS='$(DTCLIENTLIBS) $(XTOOLLIB) $(LTLIBICONV) $(LIBS)' \
+	python3 $(srcdir)/tests/check-message-catalogs.py $(srcdir) libDtMail.a

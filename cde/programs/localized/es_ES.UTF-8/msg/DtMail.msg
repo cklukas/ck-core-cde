@@ -740,76 +740,72 @@ Intente iniciar /usr/dt/bin/dtsession, o consulte al administrador del sistema."
 
 3 "No es posible inicializar ventanas. Se sale.\n"
 
-4 "La Aplicación de correo no está instalada correctamente,\n\
-y no se puede ejecutar porque el grupo de ejecución\n\
-se ha establecido incorrectamente."
-
-5 "No tiene permiso para ver %s"
+4 "No tiene permiso para ver %s"
 $ \t    /* NL_COMMENT    
 $ \t     * The %s is the name of the mailbox the user doesn't have    
 $ \t     * permission to view.    
 $ \t     */    
 
-6 "El buzón %s es un directorio y no se pudo abrir."
+5 "El buzón %s es un directorio y no se pudo abrir."
 
-7 "No es posible vaciar %s. No existe."
+6 "No es posible vaciar %s. No existe."
 
-8 "El contenedor %s estaba vacío"
+7 "El contenedor %s estaba vacío"
 
-9 "Error - no fue posible vaciar %s"
+8 "Error - no fue posible vaciar %s"
 
-10 "Aplicación de correo"
+9 "Aplicación de correo"
 
-11 "%s"
+10 "%s"
+
+11 "Aplicación de correo"
 
 12 "Aplicación de correo"
 
-13 "Aplicación de correo"
-
-14 "Es necesario seleccionar un anexo antes de emitir el\n\
+13 "Es necesario seleccionar un anexo antes de emitir el\n\
 mandato \"Guardar Como\" para guardar un archivo."
 
-15 "Error - No es posible obtener mailrc."
+14 "Error - No es posible obtener mailrc."
 
-16 "No hay mensaje seleccionado."
+15 "No hay mensaje seleccionado."
 $ \t/* NL_COMMENT    
 $ \t * No mail message has been selected by the user.    
 $ \t */    
 
-17 "Ha editado \"%s\". ¿Suprimir de todas formas?"
+16 "Ha editado \"%s\". ¿Suprimir de todas formas?"
 
-18 "Error: No se puede incluir el archivo %s"
+17 "Error: No se puede incluir el archivo %s"
 
-19 "Es necesario seleccionar un anexo antes de emitir el\n\
+18 "Es necesario seleccionar un anexo antes de emitir el\n\
 mandato \"Guardar Como\" para guardar un archivo."
 
-20 "Es necesario seleccionar un anexo antes de emitir el mandato\n\
+19 "Es necesario seleccionar un anexo antes de emitir el mandato\n\
 \"Guardar Como\" para guardar un archivo."
 
-21 "Aplicación de correo"
+20 "Aplicación de correo"
 
-22 "Se encontraron errores de sintaxis irrecuperables en el archivo ~/.mailrc.\nVerifique si hay más mensajes en el terminal. Corrija los errores y vuelva a activar dtmail.\nSi continúa no podrá guardar en un archivo ningún cambio efectuado\nen el cuadro de diálogo de opciones."
-23 "Continuar"
-24 "Salir"
-25 "Se encontraron errores de sintaxis irrecuperables en el archivo ~/.mailrc.\nEs posible aplicar las opciones de correo a la sesión actual pero\nno se pueden guardar en el archivo." 
+21 "Se encontraron errores de sintaxis irrecuperables en el archivo ~/.mailrc.\nVerifique si hay más mensajes en el terminal. Corrija los errores y vuelva a activar dtmail.\nSi continúa no podrá guardar en un archivo ningún cambio efectuado\nen el cuadro de diálogo de opciones."
+22 "Continuar"
+23 "Salir"
+24 "Se encontraron errores de sintaxis irrecuperables en el archivo ~/.mailrc.\nEs posible aplicar las opciones de correo a la sesión actual pero\nno se pueden guardar en el archivo." 
 
 $ 
 $ Messages for file locking dialog displayed from the Advanced option pane.
 $ 
 $ "-NEW"
-26 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
+25 "The value of the file locking option has changed.\nTo take immediate effect, folders need to be closed and reopened.\n  o Click on 'Reopen' to reopen folders,\n    making the new option take effect immediately.\n  o Click on 'Continue' to avoid reopening folders.\n    The new option will take effect the next time you open a folder.\n  o Click on 'Cancel' to cancel the Apply and return to editing options."
 $ "-NEW"
-27 "Reopen"
+26 "Reopen"
 $ "-NEW"
-28 "Continue"
+27 "Continue"
 $ "-NEW"
-29 "Cancel"
+28 "Cancel"
 
 $ 
 $ Messages for ToolTalk errors.
 $ 
 $ "-NEW"
-30 "%s returned ToolTalk error: %s\n"
+29 "%s returned ToolTalk error: %s\n"
 
 
 $set 3        Redefine set#

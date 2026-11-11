@@ -290,31 +290,6 @@ oder den Systemadministrator kontaktieren.
 </Step>
 </Procedure>
 </Sect1>
-<Sect1 Id="DTMAILHELPNOINSTALLMAIL">
-<Title>Post wurde nicht ordnungsgemäß installiert und
-kann nicht ausgeführt werden, da die Ausführungsgruppe falsch
-gesetzt ist.</title>
-<!--
-<location id=DTMAILHELPNOINSTALLMAIL>&empty;<\location>
--->
-<Para>Auf einigen Systemen muß zum Ausführen der Anwendung 'Post' die Gruppen-ID
-(Ausführungsgruppe) auf "mail" gesetzt sein. Die Ausführungsgruppe
-des Benutzers ist nicht so gesetzt, daß die Anwendung 'Post' ausgeführt
-werden kann.</Para>
-<Procedure>
-<Title>Mögliche Lösung:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.14">
-<Para>Zusammen mit dem Systemadministrator prüfen, ob die
-Gruppenberechtigungen in der ausführbaren Datei der Anwendung 'Post'
-korrekt gesetzt sind.
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
 <Sect1 Id="DTMAILHELPNOVIEW">
 <Title>Fehlende Berechtigung zum Anzeigen von <Emphasis>Dateiname</Emphasis>.</Title>
 <!--
@@ -811,27 +786,6 @@ Wenn nicht, muß die Nachricht erneut gesendet werden.</title>
 <Para>Den geplanten Empfänger (nicht mit Hilfe der Anwendung 'Post')
 kontaktieren und fragen, ob die Nachricht empfangen wurden. Falls
 nicht, muß die Nachricht erneut gesendet werden.
-</Para>
-</ListItem>
-</ItemizedList>
-</Step>
-</Procedure>
-</Sect1>
-<Sect1 Id="DTMAILHELPBADGROUPID">
-<Title>Postprogramm beenden?</Title>
-<!--
-<location id=DTMAILHELPBADGROUPID>&empty;<\location>
--->
-<Para>Die Anwendung 'Post' scheint inkorrekt installiert zu sein. Der Benutzer
-muß die Anwendung beenden und einige Änderungen vornehmen.</Para>
-<Procedure>
-<Title>Mögliche Lösung:</Title>
-<Step>
-<ItemizedList Mark="&bull;">
-<ListItem Id="HMLR.MSG.item.43">
-<Para>Der Benutzer muß die Anwendung verlassen und die Berechtigungen
-ändern. Dazu sollte der Systemadministrator unter der Benutzer-ID Root
-die Berechtigungen in /usr/dt/bin/dtmail ändern.
 </Para>
 </ListItem>
 </ItemizedList>
