@@ -279,8 +279,8 @@ docname=%s, data=%d)\n",
 		return msg;
 	}
 
-	contract_pats = ttdt_message_accept(msg, contract_cb, clientdata,
-						c->frame, 1, 1,
+	contract_pats = ttdt_message_accept(msg, contract_cb, c->frame,
+						clientdata, 1, 1,
 						TTDT_CONTRACT_NO_REQUESTS);
 
 	if ((status = tt_ptr_error(contract_pats)) != TT_OK) {

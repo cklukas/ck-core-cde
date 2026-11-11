@@ -414,6 +414,31 @@ def run_xinfo_values():
           not wrong and sent.returncode == 0, "\n".join(wrong) + "\n" + sent.stdout + sent.stderr + text)
 
 
+def run_lifecycle():
+    """What the library does for Quit, Pause and Resume of a shell it was given
+    without a callback: Quit only asks the window to close, as a window manager
+    would, and not with the silent or force argument that it cannot promise;
+    Pause makes the shell insensitive and Resume undoes it."""
+    handler, procid = start_handler("lifecycle", ["shell", "nocallback"], True)
+    if handler is None:
+        return
+    sent = subprocess.run([str(program), "lifecycle", procid], env=env, cwd=target,
+                          text=True, errors="replace", capture_output=True, timeout=300)
+    text, seen = finish_handler(handler)
+    results = {w[1]: w[2:4] for w in parse(sent.stdout, "lifecycle")}
+    want = {"quit-silent": ["failed", "enotsup"], "quit-force": ["failed", "enotsup"],
+            "quit": ["handled", "ok"], "pause": ["handled", "ok"],
+            "pause-again": ["handled", "ealready"], "resume": ["handled", "ok"],
+            "resume-again": ["handled", "ealready"]}
+    wrong = ["%s: %s, wanted %s" % (name, results.get(name), " ".join(w))
+             for name, w in want.items() if results.get(name) != w]
+    if seen.get("sensitive") != "yes":
+        wrong.append("the shell is sensitive: %s, wanted yes" % seen.get("sensitive"))
+    wrong += reports(sent.stdout + sent.stderr + text)
+    check("lifecycle: a shell is asked to close and paused as the requests say",
+          not wrong and sent.returncode == 0, "\n".join(wrong) + "\n" + sent.stdout + text)
+
+
 def run_contract(label, words, shell, accepts, display):
     """A contract the process accepts, with the Set_XInfo that follow it."""
     handler, procid = start_handler(label, ["contract"] + words, shell)
@@ -448,6 +473,7 @@ if xdisplay:
     run_case("shell-set_xinfo", ["set_xinfo"], shell=True)
     run_case("shell-all", REQUESTS, shell=True)
     run_xinfo_values()
+    run_lifecycle()
 else:
     print("skip  no Xvfb: the cases with a shell are not run")
 if not old_join:

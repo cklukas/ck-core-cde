@@ -908,8 +908,8 @@ load_cb(
 		return msg;
 	}
 
-	de->contract_pats = ttdt_message_accept(msg, contract_cb, clientdata,
-						de->c->frame, 1, 1,
+	de->contract_pats = ttdt_message_accept(msg, contract_cb, de->c->frame,
+						clientdata, 1, 1,
 						TTDT_CONTRACT_NO_REQUESTS);
 
 	tt_ptype_undeclare(ptype);

@@ -248,14 +248,10 @@ _ttdt_contract_cb(
 		}
 		dpy = (Display *)CALLXT(XtDisplay)( widget );
 		win = CALLXT(XtWindow)( widget );
-		if (widget == 0) {
-			tttk_message_fail( msg, TT_DESKTOP_ENOTSUP, 0, 0 );
-			return 0;
-		}
 		switch (op) {
 		    case TTDT_QUIT:
 			silent = _tttk_message_arg_ival( msg, 0, 0 );
-			force  = _tttk_message_arg_ival( msg, 0, 0 );
+			force  = _tttk_message_arg_ival( msg, 1, 0 );
 			if (silent || force) {
 				//
 				// tttk cannot guarantee that the application
@@ -266,7 +262,9 @@ _ttdt_contract_cb(
 						   0, 0 );
 				return 0;
 			}
+			memset( &ev, 0, sizeof(ev) );
 			ev.type = ClientMessage;
+			ev.display = dpy;
 			ev.window = win;
 			if (wmProtocols == 0) {
 				wmProtocols = CALLX11(XInternAtom)( dpy,

@@ -33,6 +33,12 @@
  * values the reply carries for the arguments after the first (all of them
  * for Get_Situation, whose one argument is the answer), if it was handled.
  *
+ * lifecycle PROCID sends a process that joined with a shell and no callback
+ * (handle WORKDIR shell nocallback) Quit with the silent argument, with the force
+ * argument and with neither, then Pause and Resume twice each, and prints
+ * "lifecycle NAME STATE STATUS" for each; the state of the process says whether
+ * its shell is sensitive.
+ *
  * contract PROCID sends the request Accept_Test, waits for the Status notice
  * of the process that accepted it, and sends Set_XInfo requests that carry the
  * message id of the contract, a valid one and one that is not; it prints
@@ -152,6 +158,7 @@ join(Ttdt_contract_cb cb, Ttdt_session_requests wanted, Widget shell)
 
 /* ttdt_message_accept() of this library or of the one from before Set_XInfo */
 static int bad_contract_request;	/* ask for a request that is none */
+static int no_callback;			/* join without a callback */
 
 static Tt_pattern *
 accept_contract(Tt_message msg, Ttdt_contract_cb cb, Widget shell,
@@ -291,6 +298,10 @@ handle(int argc, char **argv)
 	    bad_contract_request = 1;
 	    continue;
 	}
+	if (strcmp(argv[i], "nocallback") == 0) {
+	    no_callback = 1;
+	    continue;
+	}
 	r = by_name(argv[i]);
 	if (r < 0) {
 	    fprintf(stderr, "unknown request %s\n", argv[i]);
@@ -331,7 +342,7 @@ handle(int argc, char **argv)
 	    return 2;
 	}
     } else {
-	pats = join(contract_cb, wanted, shell);
+	pats = join(no_callback ? NULL : contract_cb, wanted, shell);
 	if (tt_ptr_error(pats) != TT_OK) {
 	    fprintf(stderr, "ttdt_session_join: %s\n",
 		    tt_status_message(tt_ptr_error(pats)));
@@ -357,12 +368,13 @@ handle(int argc, char **argv)
     }
 
     locale = setlocale(LC_CTYPE, NULL);
-    printf("state env=%s cwd=%s signals=%d locale=%s docommands=%d probe2=%s probe3=%s display=%s connection=%s\n",
+    printf("state env=%s cwd=%s signals=%d locale=%s docommands=%d probe2=%s probe3=%s sensitive=%s display=%s connection=%s\n",
 	   getenv(PROBE) ? getenv(PROBE) : "(unset)",
 	   getcwd(cwd, sizeof cwd) ? cwd : "(none)",
 	   (int)signals, locale ? locale : "(none)", do_commands,
 	   getenv(PROBE2) ? getenv(PROBE2) : "(unset)",
 	   getenv(PROBE3) ? getenv(PROBE3) : "(unset)",
+	   shell == (Widget)0 ? "(none)" : XtIsSensitive(shell) ? "yes" : "no",
 	   getenv("DISPLAY") ? getenv("DISPLAY") : "(unset)", connection);
     fflush(stdout);
     if (pats != NULL)
@@ -390,6 +402,7 @@ status_name(Tt_status s, char *buf, size_t size)
     case TT_ERR_NO_MATCH:	return "nomatch";
     case TT_DESKTOP_ENOTSUP:	return "enotsup";
     case TT_DESKTOP_EACCES:	return "eacces";
+    case TT_DESKTOP_EALREADY:	return "ealready";
     case TT_DESKTOP_EINVAL:	return "einval";
     case TT_DESKTOP_EPROTO:	return "eproto";
     case TT_DESKTOP_ENOENT:	return "enoent";
@@ -861,6 +874,52 @@ xinfo_request(const char *name, const char *handler, const char *contract_id)
     return m;
 }
 
+static int connect_sender(int *fd);
+
+/* Quit and Pause of a process that joined with a shell and no callback */
+static int
+lifecycle(int argc, char **argv)
+{
+    static const struct {
+	const char *name;
+	const char *op;
+	int silent, force;
+    } steps[] = {
+	{ "quit-silent",	"Quit",		1, 0 },
+	{ "quit-force",		"Quit",		0, 1 },
+	{ "quit",		"Quit",		0, 0 },
+	{ "pause",		"Pause",	0, 0 },
+	{ "pause-again",	"Pause",	0, 0 },
+	{ "resume",		"Resume",	0, 0 },
+	{ "resume-again",	"Resume",	0, 0 }
+    };
+    int fd;
+    unsigned int s;
+
+    if (argc < 3) {
+	fprintf(stderr, "usage: lifecycle PROCID\n");
+	return 2;
+    }
+    if (connect_sender(&fd) != 0)
+	return 2;
+    for (s = 0; s < sizeof steps / sizeof steps[0]; s++) {
+	Tt_message m = tt_message_create();
+
+	tt_message_class_set(m, TT_REQUEST);
+	tt_message_scope_set(m, TT_SESSION);
+	tt_message_address_set(m, TT_HANDLER);
+	tt_message_handler_set(m, argv[2]);
+	tt_message_op_set(m, steps[s].op);
+	if (strcmp(steps[s].op, "Quit") == 0) {
+	    tt_message_iarg_add(m, TT_IN, Tttk_boolean, steps[s].silent);
+	    tt_message_iarg_add(m, TT_IN, Tttk_boolean, steps[s].force);
+	}
+	send_and_print("lifecycle", steps[s].name, m, fd);
+    }
+    tt_close();
+    return 0;
+}
+
 static int
 connect_sender(int *fd)
 {
@@ -998,10 +1057,12 @@ main(int argc, char **argv)
 	return hostile(argc, argv);
     if (argc >= 2 && strcmp(argv[1], "xinfo") == 0)
 	return xinfo(argc, argv);
+    if (argc >= 2 && strcmp(argv[1], "lifecycle") == 0)
+	return lifecycle(argc, argv);
     if (argc >= 2 && strcmp(argv[1], "contract") == 0)
 	return contract(argc, argv);
     if (argc >= 2 && strcmp(argv[1], "arguments") == 0)
 	return refuse();
-    fprintf(stderr, "usage: %s handle|send|hostile|xinfo|contract|arguments ...\n", argv[0]);
+    fprintf(stderr, "usage: %s handle|send|hostile|xinfo|lifecycle|contract|arguments ...\n", argv[0]);
     return 2;
 }

@@ -1,4 +1,19 @@
 2026-11-11
+- libtt, dtcm: review of what a program that gives the library a shell widget
+  is answered for without asking (the window requests, `Quit`, `Pause`,
+  `Resume`): they act on the shell window only and stay; the reasons are in
+  `docs/improvements/tooltalk.md`. The review found two faults. `Quit` read its
+  force argument from the first argument, so a `Quit` with only the force
+  argument closed the shell of a program that had no callback instead of
+  failing with `TT_DESKTOP_ENOTSUP`, and the `WM_DELETE_WINDOW` event it sends
+  is now built whole (it was sent with fields never set) and its dead second
+  check of the widget is gone. `dtcm` and its appointment editor passed the
+  client data of the contract to `ttdt_message_accept()` as the shell and the frame
+  as the client data, so the window requests of the contract (`Get_Geometry`,
+  `Raise`, `Pause` and so on) ran on a calendar record as if it were a widget; they
+  pass the frame as the shell. Covered by a lifecycle case of the session requests
+  test, which runs `Quit` with the silent argument, the force argument and neither,
+  and `Pause` and `Resume` twice, on a process with a shell and no callback.
 - libtt: `Set_XInfo` is answered only by a program that asks for it. A program
   that gave `ttdt_session_join()` or `ttdt_message_accept()` a shell widget had a
   handler registered for it, which set `$DISPLAY` from the message of any program of

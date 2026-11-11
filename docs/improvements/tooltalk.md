@@ -280,6 +280,48 @@ Nothing in the tree sends `Set_XInfo`, and the request the library builds for it
 (`ttdt_Set_XInfo()`) now agrees with the pattern of a handler: all three arguments
 are in arguments (the depth used to be in-out, which no pattern matched).
 
+### What a shell is still given without asking
+
+The window requests (`Get_Geometry`, `Set_Geometry`, `Get_Iconified`,
+`Set_Iconified`, `Get_Mapped`, `Set_Mapped`, `Raise`, `Lower`, `Get_XInfo`), `Quit`,
+`Pause`, `Resume` and `Get_Status` are not among the values above, on purpose. The
+library answers them for a program that passes a shell widget (for `Quit`, `Pause`
+and `Resume` also without a callback), and passes them to the callback otherwise.
+They were reviewed as the requests above were, with the contract in mind, and
+they stay as they are:
+
+- They act on the shell window of the program and on nothing else: the window is
+  moved, resized, iconified, mapped, raised, lowered, asked to close or made
+  insensitive. None of them sets or reads what the program uses to decide what it
+  runs, loads, opens or writes (its environment, directory, locale, signals or
+  display), and none carries a value that the program acts on beyond the geometry
+  of a window. What a sender could do to the program with them it could do with
+  the window manager, and the program can fail any of them by giving a callback.
+- `Quit` is the close request of a window manager. The library sends
+  `WM_DELETE_WINDOW` to the shell, so whatever the program does when its window is
+  closed (a question about unsaved work, for example) happens; it ends nothing by
+  itself. The silent and force forms, which it cannot promise to carry out, are
+  failed with `TT_DESKTOP_ENOTSUP` (the force argument was read from the first
+  argument, and so let `Quit` with only force through). It is the one request that
+  every client of the desktop that has a callback already has a case for (`dtfile`,
+  `dtterm`, `dtcm`, `dtmail`, `dtpad`, `ttsnoop` and the code Application Builder
+  generates), so asking for it would change nothing for them, and a contract's
+  `Quit` without a callback is failed, as it always was.
+- `Pause` makes the shell insensitive and `Resume` undoes it; asking twice answers
+  `TT_DESKTOP_EALREADY`. It is a state of one window that its sender can undo, and
+  the program can undo it with a callback that refuses.
+- For a contract these patterns carry the message id of the contract, so only the
+  sender of the contract reaches them; the window requests of `ttdt_session_join()`
+  can be sent by any program of the session, which is why a program that must not
+  be paused or moved gives a callback that fails them.
+
+The review found one way in which this was not true. The calendar (`dtcm`) and its
+appointment editor gave `ttdt_message_accept()` their client data where the
+function takes the shell, and their frame where it takes the client data, so the
+window requests tied to the contract ran on a calendar record as if it were a
+widget. They now pass the frame as the shell. The guides listed the arguments in
+the wrong order, which is where the order came from.
+
 ### What the requests may carry
 
 A program that asks for a request has not asked for any value, and the sender is
