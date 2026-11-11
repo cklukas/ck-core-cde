@@ -171,6 +171,7 @@ extern const char  *Tttk_yoffset:
 </Synopsis>
 <Synopsis>Tt_status ttdt_sender_imprint_on(const char *<Emphasis>handler</Emphasis>,
         Tt_message <Emphasis>contract</Emphasis>,
+        Ttdt_sender_imprints <Emphasis>imprints</Emphasis>,
         char **<Symbol Role="Variable">display</Symbol>,
         int *<Symbol Role="Variable">width</Symbol>,
         int *<Symbol Role="Variable">height</Symbol>,
@@ -183,7 +184,8 @@ extern const char  *Tttk_yoffset:
         Ttdt_contract_cb <Emphasis>cb</Emphasis>,
         Widget <Symbol Role="Variable">shell</Symbol>,
         void *<Emphasis>clientdata</Emphasis>,
-        int <Emphasis>join</Emphasis>);
+        int <Emphasis>join</Emphasis>,
+        Ttdt_session_requests <Emphasis>requests</Emphasis>);
 </Synopsis>
 <Synopsis>Tt_status ttdt_session_quit(const char *<Emphasis>sessid</Emphasis>,
         Tt_pattern *<Emphasis>sess_pats</Emphasis>,

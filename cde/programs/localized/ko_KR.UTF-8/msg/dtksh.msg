@@ -100,7 +100,7 @@ $set 5
 101 원시 매개변수는 정수이어야 합니다: %s
 102 id 매개변수는 16진수이어야 합니다: %s
 103 사용법: ttdt_close status procId newProcId sendStopped
-104 사용법: ttdt_session_join variable status sessId shellWidgetHandle join
+104 사용법: ttdt_session_join variable status sessId shellWidgetHandle join [request ...]
 105 사용법: ttdt_session_quit status sessId sessPatterns quit
 106 sessPatterns 매개변수가 유효하지 않습니다: %s
 107 사용법: ttdt_file_event status op patterns send

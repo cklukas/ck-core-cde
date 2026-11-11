@@ -926,7 +926,7 @@ ProcessTTInput()
 <para><filename>ttdt_open</filename>の呼び出しによって返されるprocIDが局所にスペースを含んでいるため、procID環境変数は二重引用付で囲む必要があります。</para>
 <programlisting>ttdt_close STATUS &ldquo;$PROC_ID&rdquo; &ldquo;$NEW_PROC_ID&rdquo; False
 </programlisting>
-<para><filename>ttdt_session_join</filename> <symbol role="Variable">variable</symbol> <symbol role="Variable">status</symbol> s <symbol role="Variable">essId shellWidgetHandle join</symbol></para>
+<para><filename>ttdt_session_join</filename> <symbol role="Variable">variable</symbol> <symbol role="Variable">status</symbol> s <symbol role="Variable">essId shellWidgetHandle join</symbol> [<symbol role="Variable">request ...</symbol>]</para>
 <para>多くの標準のデスクトップ・メッセージ・インタフェースのパターンとデフォルトの
 コールバックを登録することによって、適切なデスクトップとして<emphasis>sessId</emphasis>引き数で
 指定したセッションを結合します。<emphasis>sessId</emphasis>引き数に値が指定されていない(空の
@@ -935,7 +935,12 @@ ProcessTTInput()
 <command>applicationShellWidget</command>を参照します。<emphasis>join</emphasis>引き数はブール値で、
 trueまたはfalseのいずれかが設定されます。このコマンドは、<symbol role="Variable">variable</symbol>引き数に
 隠された <symbol role="Variable">pattern</symbol>ハンドルを返します。このハンドルが必要なくなったときは、
-<filename>ttdt_session_quit</filename>コマンドを使用して破棄できます。</para>
+<filename>ttdt_session_quit</filename>コマンドを使用して破棄できます。各<emphasis>request</emphasis>
+引き数には、シェルが応答するプロセス全体の要求(<filename>TTDT_GET_LOCALE</filename>、
+<filename>TTDT_SET_LOCALE</filename>、<filename>TTDT_GET_ENVIRONMENT</filename>、
+<filename>TTDT_SET_ENVIRONMENT</filename>、<filename>TTDT_GET_SITUATION</filename>、
+<filename>TTDT_SET_SITUATION</filename>、<filename>TTDT_SIGNAL</filename>、
+<filename>TTDT_GET_SYSINFO</filename>)を指定します。指定しない場合、シェルはこれらのいずれにも応答しません。</para>
 <para><filename>ttdt_session_quit</filename> <symbol role="Variable">status</symbol> <symbol role="Variable">sessId sessPatterns quit</symbol></para>
 <para><emphasis>sessPatterns</emphasis>引き数によって指定したメッセージ・パターンを破棄します。 <symbol role="Variable">quit</symbol>
 引き数に<emphasis>true</emphasis>が設定されているときは、<emphasis>sessId</emphasis>引数によって指定された

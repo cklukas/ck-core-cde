@@ -204,7 +204,7 @@ $set 5        Redefine set#
 
 103 "Syntaxe: fern_ttdt état ID_processus nouv_ID_processus arrêt_envoi"
 
-104 "Syntaxe: jonction_sessions_ttdt variable état ID_session Desc_widget_shell jonction"
+104 "Syntaxe: ttdt_session_join variable état ID_session Desc_widget_shell jonction [requête ...]"
 
 105 "Syntaxe: sortie_session_ttdt état ID_session modèles_session sortie"
 

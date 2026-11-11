@@ -205,7 +205,7 @@ $set 5        Redefine set#
 
 103 "Uso:   ttdt_close estado Idproc IdProcnuevo enviarDetenido"
 
-104 "Uso:   ttdt_session_join variable estado Idsesión ManejadorWidgetshell join"
+104 "Uso:   ttdt_session_join variable estado Idsesión ManejadorWidgetshell join [petición ...]"
 
 105 "Uso:   ttdt_session_quit estado Idsesión Patrones-sesión quit"
 

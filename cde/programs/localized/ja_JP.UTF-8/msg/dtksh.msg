@@ -101,7 +101,7 @@ $set 5
 101 ソース・パラメータは整数でなければなりません: %s
 102 id パラメータは 16 進数でなければなりません: %s
 103 使用方法: ttdt_close ステータス procId newProcId sendStopped
-104 使用方法: ttdt_session_join 変数 ステータス sessId shellWidgetHandle join
+104 使用方法: ttdt_session_join 変数 ステータス sessId shellWidgetHandle join [要求 ...]
 105 使用方法: ttdt_session_quit ステータス sessId sessPatterns quit
 106 sessPatterns パラメータは無効です: %s
 107 使用方法: ttdt_file_event ステータス op パターン send

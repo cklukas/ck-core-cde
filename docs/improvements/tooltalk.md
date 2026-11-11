@@ -774,6 +774,18 @@ callbacks of the call used to be called with a pointer to its stack at that
 point, which AddressSanitizer reports). Built for the call of the library from
 before the imprints (`TT_IMPRINT_OLD_CALL=1`), all 27 checks fail.
 
+`make -C lib/tt/lib check` also runs `check-documented-calls.py`, which needs no
+build. It reads the functions of `include/Tt/tttk.h` with the number of their
+parameters, and looks in every manual page and guide of `doc/` (all languages),
+in `examples/` and in the demos for the name of one followed by an argument list:
+a prototype, a synopsis or a call with another number of arguments fails. The
+usage of the `dtksh` command `ttdt_session_join`, in the documents and in
+message 104 of `dtksh.msg` of every locale, must name its requests. It found 22
+places in the documents from before the Japanese guides were brought up to date
+(the Japanese guides, the English synopsis of the reference page, the example of
+the media message set, the demo, eight message catalogs), and the prototype of
+`tttk_block_while()` in both guides, which had never had its first parameter.
+
 `make -C lib/tt/slib check` compiles the production decoding and request code
 with the sanitizers next to a test program and runs each case in its own
 process. The program builds its requests by hand, with lengths and null markers

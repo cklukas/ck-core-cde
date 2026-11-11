@@ -101,7 +101,7 @@ $set 5
 101 資源參數必須為整數：%s
 102 id 參數必須為十六進位數：%s
 103 用法：ttdt_close status procId newProcId sendStopped
-104 用法：ttdt_session_join variable status sessId shellWidgetHandle join
+104 用法：ttdt_session_join variable status sessId shellWidgetHandle join [request ...]
 105 用法：ttdt_session_quit status sessId sessPatterns quit
 106 sessPatterns 參數無效：%s
 107 用法：ttdt_file_event status op patterns send

@@ -24,6 +24,24 @@
   English catalog, with each installed locale and without a catalog; it fails
   on the tree before this change and on eighteen deliberately broken copies
   of the catalogs, the code and the help volumes.
+- Documentation: every manual page, guide, example, demo and message catalog
+  shows the calls of the Desktop interface the way `include/Tt/tttk.h` declares
+  them. The Japanese guides (`ttGuide`, the programmer's overview and the guide to
+  `dtksh`) still showed `ttdt_session_join()` with five arguments and
+  `ttdt_sender_imprint_on()` with nine; they now show the `requests` and
+  `imprints` arguments with their explanation and the checks on the values, as
+  the English ones do. The English synopses in `Tttttk.sgm`, the example of the
+  media message set and the pages of the requests (`Get_Environment`,
+  `Set_Locale` and the others) were brought up to date as well, the programmer's
+  overview no longer asks every application to handle the requests that act on
+  the whole process, and the guide shows `tttk_block_while()` with its
+  `XtAppContext`. The usage of the `dtksh` command `ttdt_session_join` in the
+  message catalogs of all nine locales names the optional requests (the French
+  catalog had translated the name of the command). `make -C lib/tt/lib check`
+  runs `check-documented-calls.py`, which compares the arguments of every call of
+  a function of `tttk.h` in `doc/`, `examples/` and the demos with its
+  declaration, and the usage of the `dtksh` command with `requests`; it fails 22
+  of the places in the documents from before.
 - libtt: `ttdt_sender_imprint_on()` changes the calling process only in the ways
   the caller names. The function put the locale, the working directory and (when
   the caller passed no place to return the display in) `$DISPLAY` of whoever

@@ -205,7 +205,7 @@ $set 5        Redefine set#
 
 103 "Verwendung: ttdt_close Status ProzID neueProzID Sendestopp"
 
-104 "Verwendung: ttdt_session_join Variable Status Sess-ID shellWidgetHandle join"
+104 "Verwendung: ttdt_session_join Variable Status Sess-ID shellWidgetHandle join [Anforderung ...]"
 
 105 "Verwendung: ttdt_session_quit Status Sess-ID SessMuster quit"
 

@@ -101,7 +101,7 @@ $set 5
 101 'source' 参数必须是一个整数: %s
 102 'id' 参数必须是一个十六进制数: %s
 103 用法: ttdt_close status procId newProcId sendStopped
-104 用法: ttdt_session_join variable status sessId shellWidgetHandle join
+104 用法: ttdt_session_join variable status sessId shellWidgetHandle join [request ...]
 105 用法: ttdt_session_quit status sessId sessPatterns quit
 106 'sessPatterns' 参数是无效的: %s
 107 用法: ttdt_file_event status op patterns send

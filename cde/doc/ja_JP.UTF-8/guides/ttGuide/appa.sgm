@@ -1951,6 +1951,7 @@ ToolTalkクライアントに求めます。</Para>
 </IndexTerm>ttdt_sender_imprint_on</Title>
 <ProgramListing>Tt_status    ttdt_sender_imprint_on(  const char *   handler,
                                       Tt_message     contract,
+                                      Ttdt_sender_imprints imprints,
                                       char **        display,
                                       int *          width,
                                       int *          height,
@@ -1963,17 +1964,29 @@ ToolTalkクライアントに求めます。</Para>
 <Para><Filename>ttdt_sender_imprint_on</Filename>関数を呼び出すと、呼び出し側ツー
 ル(以下、ツールBとします)で別のツール(以下ツールAとします)の動作と特定の特性が採
 用されます。ツールBは、ツールAのX11ディスプレイ、ロケール、現在のワーキング・ディ
-レクトリを採用します。更に、自身を正しい位置に置くためにツールAのX11ジオメトリを
+レクトリを採用できます。更に、自身を正しい位置に置くためにツールAのX11ジオメトリを
 取得します。</Para>
-<Para><Symbol Role="Variable">display</Symbol>パラメータがNULLの場合、
+<Para>ツールBが変更されるのは、<Symbol Role="Variable">imprints</Symbol>パラメータで指定した
+項目だけです。このパラメータには、0(<Literal>TTDT_IMPRINT_NONE</Literal>)か、
+<Literal>TTDT_IMPRINT_LOCALE</Literal>(ツールBがツールAのロケールを設定する)、
+<Literal>TTDT_IMPRINT_SITUATION</Literal>(ツールBがツールAのワーキング・ディレクトリへ移動する)、
+<Literal>TTDT_IMPRINT_DISPLAY</Literal>(ツールBが<Filename>$DISPLAY</Filename>をツールAの
+ディスプレイに設定する)のビット単位のORを指定します。すべてを表す値はなく、これら以外の値を
+指定するとエラーになります。指定した変更、<Symbol Role="Variable">display</Symbol>パラメータ、
+およびジオメトリ・パラメータに必要な要求だけが送信され、そのすべてがツールAに宛てて送信されます。
+宛先は<Symbol Role="Variable">handler</Symbol>です。<Symbol Role="Variable">handler</Symbol>がNULLの場合は、
+<Symbol Role="Variable">contract</Symbol>の送信者になります。両方がNULLの場合は何も送信されず、
+関数は失敗します。</Para>
+<Para><Symbol Role="Variable">display</Symbol>パラメータがNULLでない場合、
+<Literal>TTDT_IMPRINT_DISPLAY</Literal>を指定したかどうかにかかわらず、ツールAのディスプレイが
+このパラメータに返されます。
 <IndexTerm>
 <Primary>$DISPLAY</Primary>
 </IndexTerm><IndexTerm>
 <Primary>環境変数</Primary>
 <Secondary>$DISPLAY</Secondary>
-</IndexTerm>環境変数<Filename>$DISPLAY</Filename>は、ツールAのディスプレイに設定
-されます。<Symbol Role="Variable">display</Symbol>パラメータがNULLでない場合、
-ツールAのディスプレイがこのパラメータに返されます。戻り値は、
+</IndexTerm>環境変数<Filename>$DISPLAY</Filename>がツールAのディスプレイに設定されるのは、
+<Literal>TTDT_IMPRINT_DISPLAY</Literal>を指定した場合だけです。戻り値は、
 <IndexTerm>
 <Primary>ToolTalk関数</Primary>
 <Secondary>tt_free</Secondary>
@@ -2012,8 +2025,18 @@ ToolTalkクライアントに求めます。</Para>
 <IndexTerm>
 <Primary>Get_Geometry要求</Primary>
 </IndexTerm>Get_Geometry要求はツールAに送信されません。</Para>
+<Para>応答は、使用する前に検査されます。ロケールは、英数字と<Literal>_.@+,=;-</Literal>
+からなる、英字または数字で始まる名前で、パスを表せないものでなければなりません。
+ディレクトリは制御文字を含まない絶対パスでなければなりません。ディスプレイは、ホスト、コロン、
+番号の形式か、ソケットのパス、コロン、番号の形式で、空白やシェルの特殊文字を含んでいてはなりません。
+ウィンドウのサイズや位置は、Xプロトコルの16ビットに収まる必要があります。また、文字列の途中に
+ヌル・バイトがあったり、文字列が極端に長かったりしてはなりません。使用できない応答があった場合、
+ツールAのどの応答も信用されません。ツールBは変更されず、パラメータには何も返されず、関数は
+<Literal>TT_DESKTOP_EPROTO</Literal>(文字列が長すぎる場合は<Literal>TT_DESKTOP_EINVAL</Literal>)
+を返します。ツールAが要求を異常終了させた場合は、このようにはならず、ほかの応答は引き続き使用されます。
+関数が待機をやめた後で届いた応答は、何も変更しません。</Para>
 <Para><Emphasis>app2run</Emphasis>パラメータと<Emphasis>ms_timeout</Emphasis>パラ
-メータは、この関数が送信するGet_Geometry要求への応答をブロックするために、
+メータは、この関数が送信する要求への応答をブロックするために、
 <IndexTerm>
 <Primary>tttk_block_while</Primary>
 </IndexTerm><IndexTerm>
@@ -2040,6 +2063,22 @@ ToolTalkクライアントに求めます。</Para>
 </Row>
 </THead>
 <TBody>
+<Row>
+<Entry><Para><Filename>TT_ERR_NUM</Filename></Para></Entry>
+<Entry><Para><Symbol Role="Variable">imprints</Symbol>パラメータに、上記以外の値が指定されました。何も送信されませんでした。</Para></Entry>
+</Row>
+<Row>
+<Entry><Para><Filename>TT_ERR_POINTER</Filename></Para></Entry>
+<Entry><Para><Symbol Role="Variable">handler</Symbol>と<Symbol Role="Variable">contract</Symbol>の両方がNULLです。何も送信されませんでした。</Para></Entry>
+</Row>
+<Row>
+<Entry><Para><Filename>TT_DESKTOP_EPROTO</Filename></Para></Entry>
+<Entry><Para>応答の文字列の途中にヌル・バイトがあったか、ロケール、ディレクトリ、ディスプレイ、サイズとして使用できない値がありました。</Para></Entry>
+</Row>
+<Row>
+<Entry><Para><Filename>TT_DESKTOP_EINVAL</Filename></Para></Entry>
+<Entry><Para>応答に長すぎる文字列がありました。</Para></Entry>
+</Row>
 <Row>
 <Entry><Para><Command><IndexTerm>
 <Primary>TT_DESKTOP_ETIMEDOUT</Primary>
@@ -2113,7 +2152,8 @@ Tt_pattern * ttdt_session_join( const char *        sessid,
                                 Ttdt_session_cb     cb,
                                 Widget              shell,
                                 void *              clientdata,
-                                int                 join );
+                                int                 join,
+                                Ttdt_session_requests requests );
 </ProgramListing>
 </Example>
 <Para><Filename>ttdt_session_join</Filename>関数は、「デスクトップの良き市民
@@ -2142,7 +2182,7 @@ Tt_pattern * ttdt_session_join( const char *        sessid,
 <IndexTerm>
 <Primary>Set_Environment要求</Primary>
 </IndexTerm>Set_Environment</Para></Entry>
-<Entry><Para>これらのメッセージは透過的に処理されます。</Para></Entry>
+<Entry><Para><Symbol Role="Variable">requests</Symbol>パラメータで指定されている場合、これらのメッセージは透過的に処理されます。指定されていない場合は異常終了します。</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><IndexTerm>
@@ -2151,7 +2191,7 @@ Tt_pattern * ttdt_session_join( const char *        sessid,
 <IndexTerm>
 <Primary>Set_Locale要求</Primary>
 </IndexTerm>Set_Locale</Para></Entry>
-<Entry><Para>これらのメッセージは透過的に処理されます。</Para></Entry>
+<Entry><Para><Symbol Role="Variable">requests</Symbol>パラメータで指定されている場合、これらのメッセージは透過的に処理されます。指定されていない場合は異常終了します。</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><IndexTerm>
@@ -2160,19 +2200,19 @@ Tt_pattern * ttdt_session_join( const char *        sessid,
 <IndexTerm>
 <Primary>Set_Situation要求</Primary>
 </IndexTerm>Set_Situation</Para></Entry>
-<Entry><Para>これらのメッセージは透過的に処理されます。</Para></Entry>
+<Entry><Para><Symbol Role="Variable">requests</Symbol>パラメータで指定されている場合、これらのメッセージは透過的に処理されます。指定されていない場合は異常終了します。</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><IndexTerm>
 <Primary>Signal要求</Primary>
 </IndexTerm>Signal</Para></Entry>
-<Entry><Para>このメッセージは透過的に処理されます。</Para></Entry>
+<Entry><Para><Symbol Role="Variable">requests</Symbol>パラメータで指定されている場合、このメッセージは透過的に処理されます。指定されていない場合は異常終了します。</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><IndexTerm>
 <Primary>Get_Sysinfo要求</Primary>
 </IndexTerm>Get_Sysinfo</Para></Entry>
-<Entry><Para>このメッセージは透過的に処理されます。</Para></Entry>
+<Entry><Para><Symbol Role="Variable">requests</Symbol>パラメータで指定されている場合、このメッセージは透過的に処理されます。指定されていない場合は異常終了します。</Para></Entry>
 </Row>
 <Row>
 <Entry><Para><IndexTerm>
@@ -2353,8 +2393,10 @@ Tt_pattern * ttdt_session_join( const char *        sessid,
 <Entry><Para><Filename><IndexTerm>
 <Primary>Do_Command要求</Primary>
 </IndexTerm>Do_Command</Filename></Para></Entry>
-<Entry><Para><Emphasis>cb</Emphasis>パラメータがNULLでない場合、このメッセージはコ
-ールバックに渡されます。<Emphasis>cb</Emphasis>パラメータがNULLの場合は、エラー
+<Entry><Para><Symbol Role="Variable">requests</Symbol>パラメータで指定されている場合
+(<Literal>TTDT_SESSION_DO_COMMAND</Literal>。<Emphasis>cb</Emphasis>パラメータが
+NULLでないことが必要です)、このメッセージはコールバックに渡されます。指定されて
+いない場合は、エラー
 <SystemItem Class="Constant"><IndexTerm>
 <Primary>TT_DESKTOP_ENOTSUP</Primary>
 </IndexTerm><IndexTerm>
@@ -2369,6 +2411,25 @@ Tt_pattern * ttdt_session_join( const char *        sessid,
 参加します。</Para>
 <Para><Emphasis>join</Emphasis>パラメータが設定されている場合、指定のセッションに
 参加します。</Para>
+<Para><Symbol Role="Variable">requests</Symbol>パラメータには、プロセス全体に代わってプロセスが応答する要求を指定します。0か、
+<Literal>TTDT_SESSION_GET_LOCALE</Literal>、<Literal>TTDT_SESSION_SET_LOCALE</Literal>、
+<Literal>TTDT_SESSION_GET_ENVIRONMENT</Literal>、<Literal>TTDT_SESSION_SET_ENVIRONMENT</Literal>、
+<Literal>TTDT_SESSION_GET_SITUATION</Literal>、<Literal>TTDT_SESSION_SET_SITUATION</Literal>、
+<Literal>TTDT_SESSION_SIGNAL</Literal>、<Literal>TTDT_SESSION_GET_SYSINFO</Literal>、
+<Literal>TTDT_SESSION_DO_COMMAND</Literal>のビット単位のORを指定します。指定しなかった要求に
+対しては登録が行われないため、その要求は異常終了します。セッション内のどのプロセスでも
+これらの要求を送信できるので、プロセスが必要とする要求だけを指定してください。</Para>
+<Para>これらの要求が運ぶ値は、何かが変更される前に検査されます。値が不正な要求は異常終了し、
+何も変更しません。<Literal>Set_Environment</Literal>の変数にはシェル変数の名前を指定する必要が
+あり、値は32768バイト以内でなければなりません。また、メッセージで設定してはならない変数は
+指定できません。<Literal>PATH</Literal>、<Literal>HOME</Literal>、<Literal>LD_*</Literal>、
+<Literal>DYLD_*</Literal>、<Literal>TT_*</Literal>など、プロセスが読み込んで実行するコード、
+プロセスが自分を何者と見なすか、認証情報やリソースの検索先を変更する変数(<Filename>ttsession</Filename>
+が起動するプログラムに渡さない変数)は、<Literal>TT_DESKTOP_EACCES</Literal>とともに異常終了します。
+<Literal>Set_Locale</Literal>のロケールにはパスを表せない名前、<Literal>Set_Situation</Literal>の
+ディレクトリには絶対パス、<Literal>Signal</Literal>にはシステムのシグナルを指定する必要があります。
+文字列の途中にヌル・バイトがある場合は<Literal>TT_DESKTOP_EPROTO</Literal>とともに、それ以外の形式や
+サイズが不正な値は<Literal>TT_DESKTOP_EINVAL</Literal>とともに異常終了します。</Para>
 <Para>
 <IndexTerm>
 <Primary>ttdt_contract_cb</Primary>
@@ -3396,7 +3457,8 @@ ToolTalk関数
 <Primary>ツールキット・メッセージ</Primary>
 <Secondary>tttk_block_while</Secondary>
 </IndexTerm>tttk_block_while</Title>
-<ProgramListing>Tt_status    tttk_block_while( const int *  blocked,
+<ProgramListing>Tt_status    tttk_block_while( XtAppContext app2run,
+                               const int *  blocked,
                                int          ms_timeout );
 </ProgramListing>
 </Example>

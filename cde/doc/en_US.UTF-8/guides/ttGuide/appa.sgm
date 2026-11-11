@@ -3309,7 +3309,8 @@ an integer when a character string is needed.</Para></Entry>
 <Primary>toolkit messages</Primary>
 <Secondary>tttk_block_while</Secondary>
 </IndexTerm>tttk_block_while</Title>
-<ProgramListing>Tt_status    tttk_block_while( const int *  blocked,
+<ProgramListing>Tt_status    tttk_block_while( XtAppContext app2run,
+                               const int *  blocked,
                                int          ms_timeout );
 </ProgramListing>
 </Example>

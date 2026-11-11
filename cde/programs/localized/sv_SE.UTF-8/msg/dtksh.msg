@@ -101,7 +101,7 @@ $set 5
 101 Argumentet source måste vara ett heltal: %s
 102 Argumentet id måste vara ett hexadecimalt tal: %s
 103 Syntax: ttdt_close status procId newProcId sendStopped
-104 Syntax: ttdt_session_join variable status sessId shellWidgetHandle join
+104 Syntax: ttdt_session_join variable status sessId shellWidgetHandle join [request ...]
 105 Syntax: ttdt_session_quit status sessId sessPatterns quit
 106 Argumentet sessPatterns är ogiltigt: %s
 107 Syntax: ttdt_file_event status op patterns send

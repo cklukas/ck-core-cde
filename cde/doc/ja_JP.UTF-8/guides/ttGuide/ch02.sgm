@@ -451,7 +451,8 @@ ToolTalk型ファイルの名前です。この関数は、新しい型を追加
             Ttdt_contract_cb  cb,
             Widget            shell,
             void              *client_data,
-            int               join)
+            int               join,
+            Ttdt_session_requests requests)
 </programlisting>
 <para>ptypeがアプリケーションにインストールされていた場合、
 <function>ttdt_session_join</function>が呼ばれる前に、通常<function>ttmedia_ptype_

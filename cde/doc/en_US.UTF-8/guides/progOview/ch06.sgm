@@ -175,9 +175,14 @@ Desktop</para>
 <para>Handling desktop requests is the most basic level of messaging integration.
 Any application that sends ToolTalk messages, either through calling
 <filename>tt_message_send()</filename> or <filename>DtActionInvoke()</filename>, should
-handle the desktop requests. This enables other applications to set or query
-things such as your application's current directory, iconic state, and
-<filename>$DISPLAY</filename>. For further information, see the man pages for
+handle the desktop requests for its windows. This enables other applications to
+set or query things such as your application's iconic state and window geometry.
+The requests that act on the whole process (its current directory, environment,
+locale and signals, and <filename>Do_Command</filename>) are answered only if the
+application asks for them in the <emphasis>requests</emphasis> argument of
+<filename>ttdt_session_join()</filename>, because any application in the session
+can send them; ask for the ones the application needs and no others. For further
+information, see the man pages for
 <filename>ttdt_open()</filename>, <filename>ttdt_session_join()</filename>,
 <filename>ttdt_session_quit()</filename>, and <filename>ttdt_close()</filename>.</para>
 </listitem><listitem><para id="RDMAP.recin.mkr.5">Send Desktop</para>
@@ -191,10 +196,12 @@ or in a particular directory context.</para>
 <para>Using desktop requests, a handling application can inherit from the
 sender attributes that might otherwise be inherited through command-line
 invocation. Use the desktop message set in this way to reset the handler's
-locale, current working directory, and even <filename>$DISPLAY</filename>.
+locale, current working directory, and even <filename>$DISPLAY</filename>, as the
+<emphasis>imprints</emphasis> argument of <filename>ttdt_sender_imprint_on()</filename>
+names them; nothing is changed that it does not name.
 This enables a carefully coded receiving application to come up on the same
 X11 screen as the sender. A request handler can also find out the request
-sender's current directory and window geometry. Knowing the window geometry
+sender's window geometry. Knowing the window geometry
 enables the request handler's window to avoid obscuring the request sender's
 window, if possible. For more information, see the <filename>ttdt_sender_imprint_on()</filename> man page.</para>
 </listitem><listitem><para id="RDMAP.recin.mkr.6">Handle Media</para>

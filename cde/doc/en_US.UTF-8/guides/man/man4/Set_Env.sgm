@@ -54,9 +54,9 @@ an error for the variable not to have existed in the first place.
 <RefSect1>
 <Title>APPLICATION USAGE</Title>
 <Para>The
-&cdeman.ttdt.session.join;, function can be used to register for,
-and transparently process, the
-<Symbol Role="Message">Set_Environment</Symbol> request.
+&cdeman.ttdt.session.join; function registers for, and transparently processes, the
+<Symbol Role="Message">Set_Environment</Symbol> request only if the process asks for it with
+<SystemItem Class="Constant">TTDT_SESSION_SET_ENVIRONMENT</SystemItem> in its <Emphasis>requests</Emphasis> argument; otherwise the request fails.
 </Para>
 </RefSect1>
 <RefSect1>

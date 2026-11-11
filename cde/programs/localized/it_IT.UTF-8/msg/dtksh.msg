@@ -101,7 +101,7 @@ $set 5
 101 Il parametro origine deve essere un numero intero: %s
 102 Il parametro Id deve essere un numero esadecimale: %s
 103 Sintassi: ttdt_close stato Id_proc nuovo_id_proc sendStopped
-104 Sintassi: ttdt_session_join variabile stato Id_sess handle_widget_shell join
+104 Sintassi: ttdt_session_join variabile stato Id_sess handle_widget_shell join [richiesta ...]
 105 Sintassi: ttdt_session_quit stato Id_sess pattern_sess quit
 106 Il parametro pattern_sess non è valido: %s
 107 Sintassi: ttdt_file_event stato op pattern send

@@ -56,9 +56,9 @@ handler's environment, but had a null value.
 <RefSect1>
 <Title>APPLICATION USAGE</Title>
 <Para>The
-&cdeman.ttdt.session.join;, function can be used to register for,
-and transparently process, the
-<Symbol Role="Message">Get_Environment</Symbol> request.
+&cdeman.ttdt.session.join; function registers for, and transparently processes, the
+<Symbol Role="Message">Get_Environment</Symbol> request only if the process asks for it with
+<SystemItem Class="Constant">TTDT_SESSION_GET_ENVIRONMENT</SystemItem> in its <Emphasis>requests</Emphasis> argument; otherwise the request fails.
 </Para>
 </RefSect1>
 <RefSect1>

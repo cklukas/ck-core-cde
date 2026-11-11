@@ -198,9 +198,14 @@ role="SecTitleAndPageNum" linkend="RDMAP.recin.mkr.6">を参照してくださ�
 <para>デスクトップ要求の処理は、メッセージング統合の中で最も基本的なものです。
 ToolTalkメッセージを送信するアプリケーションは、<filename>tt_message_send()
 </filename>または、<filename>DtActionInvoke()</filename>のいずれを呼び出す場合
-も、デスクトップ要求を処理します。これによって、アプリケーションの現在の
-ディレクトリ、アイコンの状態、<filename>$DISPLAY</filename>などを、他の
-アプリケーションが設定または照会できます。詳細については、
+も、ウィンドウに関するデスクトップ要求を処理します。これによって、アプリケーションの
+アイコンの状態やウィンドウのジオメトリなどを、他のアプリケーションが設定または
+照会できます。プロセス全体に作用する要求(現在のディレクトリ、環境、ロケール、
+シグナル、および<filename>Do_Command</filename>)は、アプリケーションが
+<filename>ttdt_session_join()</filename>の<emphasis>requests</emphasis>引き数で
+指定した場合にだけ応答されます。これらの要求はセッション内のどのアプリケーション
+からでも送信できるため、アプリケーションが必要とする要求だけを指定してください。
+詳細については、
 <filename>ttdt_open()</filename>、<filename>ttdt_session_join()</filename>、
 <filename>ttdt_session_quit()</filename>、<filename>ttdt_close()</filename>
 のマニュアル・ページを参照してください。</para>
@@ -215,10 +220,11 @@ ToolTalkメッセージを送信するアプリケーションは、<filename>tt
 <para>デスクトップ要求を使用すると、アプリケーションの処理は、デスクトップ以外
 でコマンド行の起動で継承される送信者の属性から継承できます。 このようにデスク
 トップ・メッセージ・セットを使用し、ハンドラのロケール、現在の作業ディレクトリ、
-<filename>$DISPLAY</filename>をリセットしてください。これにより、入念にコード化
+<filename>$DISPLAY</filename>をリセットしてください。このとき変更されるのは、
+<filename>ttdt_sender_imprint_on()</filename>の<emphasis>imprints</emphasis>引き数
+に指定した項目だけです。これにより、入念にコード化
 された受信アプリケーションが、送信者として同じX11画面に表示されます。要求ハンドラ
-は、要求送信者の現在のディレクトリとウィンドウのジオメトリを見つけることもでき
-ます。ウィンドウのジオメトリを知っていると、要求ハンドラのウィンドウが要求送信
+は、要求送信者のウィンドウのジオメトリを見つけることもできます。ウィンドウのジオメトリを知っていると、要求ハンドラのウィンドウが要求送信
 者のウィンドウをできる限り隠さないようにすることができます。詳細については、
 <filename>ttdt_sender_imprint_on()</filename>のマニュアル・ページを参照して
 ください。</para>
