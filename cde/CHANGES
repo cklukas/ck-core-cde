@@ -1,4 +1,16 @@
 2026-11-12
+- DtSvc: eight growths of libc `realloc()` lists in place of their own pointer
+  leaked the list and then wrote through NULL when the allocation failed:
+  the pid list of `spc-exec.c`, the logfile list of `noio.c`, the file and name
+  lists of `MMDb.c`, and the entry table of `addToRes.c`. Each growth now goes
+  through a temporary, keeps the old list when it fails, and checks its size
+  multiplication for overflow. A child's pid slot is reserved before `fork()`
+  (value -2 until the pid is stored; a failed fork records -1, the dead value).
+  Tests: `DtEncap/tests/check-spc-list-alloc.py`, `tests/check-mmdb-alloc.py`,
+  `tests/check-addtores-alloc.py`. The two `_DtAppendToBuffer` sites are
+  unchanged: that function cannot report a failure.
+- dtspcd and DtEncap: the environment file paths are allocated for each path
+  and checked (`tests/check-env-file-alloc.py`, `DtEncap/tests/check-spc-env-alloc.py`).
 - DtSvc and dtspcd: the default environment files were built with `realloc()`
   of a pointer whose result was not checked and was then written through, and
   the first buffer was not checked either (`lib/DtSvc/DtEncap/spc-env.c`,
