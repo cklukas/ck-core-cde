@@ -339,6 +339,8 @@ void mgr_launch_pdm( XpPdmServiceRec *rec )
     FILE      *existing_file;
     Xauth     *entry;
     char      *envstr;
+    int       len;
+    int       auth_fd;
 
 
     /*
@@ -363,8 +365,26 @@ void mgr_launch_pdm( XpPdmServiceRec *rec )
 	 * Create new .Xauthority file.
 	 */
 	original_umask = umask (0077);      /* disallow non-owner access */
-	tmpnam( rec->auth_filename );
-	rec->auth_file = fopen( rec->auth_filename, "w" );
+	rec->auth_file = NULL;
+	rec->auth_filename[0] = '\0';
+	/*
+	 * mkstemp creates the file, so no other user can have planted a file
+	 * or a symbolic link at the name; the descriptor is kept for writing.
+	 */
+	len = snprintf( rec->auth_filename, sizeof(rec->auth_filename),
+			"%s/pdmXXXXXX", P_tmpdir );
+	if ( len > 0 && (size_t) len < sizeof(rec->auth_filename) ) {
+	    auth_fd = mkstemp( rec->auth_filename );
+	    if ( auth_fd != -1 ) {
+		rec->auth_file = fdopen( auth_fd, "w" );
+		if ( !rec->auth_file ) {
+		    close( auth_fd );
+		    unlink( rec->auth_filename );
+		}
+	    }
+	}
+	if ( !rec->auth_file )
+	    rec->auth_filename[0] = '\0';
 
 	if (rec->auth_file) {
 	    /*

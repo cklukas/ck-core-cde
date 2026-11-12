@@ -1,5 +1,10 @@
 MAINTAINERCLEANFILES = Makefile.in
 
+EXTRA_DIST = tests/check-auth-file.py tests/check-auth-file.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-auth-file.py
+
 bin_PROGRAMS = dtpdmd
 
 dtpdmd_CFLAGS = -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\"

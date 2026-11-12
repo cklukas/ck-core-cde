@@ -20,11 +20,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <dirent.h>
+#include <limits.h>
+#include <unistd.h>
 
 typedef char *XeString;
 typedef struct { char *logfile; } SPC_Channel, *SPC_Channel_Ptr;
 #define SPC_ERROR 0
 #define SPC_Out_Of_Memory 100
+#define SPC_Cannot_Open_Log 149
 #define SPCIO_USE_LOGFILE 1
 #define IS_SPCIO_USE_LOGFILE(a) ((a) & SPCIO_USE_LOGFILE)
 #define SPCD_DEAD_PROCESS (-1)
@@ -34,10 +38,12 @@ typedef struct { char *logfile; } SPC_Channel, *SPC_Channel_Ptr;
 
 char **SPC_logfile_list = NULL;
 pid_t *SPC_pid_list = NULL;
-static char *SPCD_Authentication_Dir = "/nonexistent-spc-dir";
+/* The directory of the logfiles: a real one, as the files are created. */
+static char ck_dir[PATH_MAX];
+static char *SPCD_Authentication_Dir = ck_dir;
 static int last_error;
 static void SPC_Error(int code, ...) { last_error = code; }
-static char *get_tmp_dir(void) { return strdup("/nonexistent-spc-dir"); }
+static char *get_tmp_dir(void) { return strdup(ck_dir); }
 
 static int alloc_calls;
 static int alloc_fail_at;	/* 1-based call number that fails; 0 = never */
@@ -175,8 +181,26 @@ static void test_pid_list(void)
 }
 #endif
 
-int main(void)
+static void remove_dir(void)
 {
+    DIR *d = opendir(ck_dir);
+    struct dirent *e;
+    char path[PATH_MAX];
+
+    while (d && (e = readdir(d))) {
+        snprintf(path, sizeof path, "%s/%s", ck_dir, e->d_name);
+        unlink(path);
+    }
+    if (d)
+        closedir(d);
+    rmdir(ck_dir);
+}
+
+int main(int argc, char **argv)
+{
+    assert(argc == 2);
+    snprintf(ck_dir, sizeof ck_dir, "%s/list-XXXXXX", argv[1]);
+    assert(mkdtemp(ck_dir));
     test_logfile_list();
     test_logfile_list_first_block();
     puts("SPC logfile list: allocation failures leave the list valid");
@@ -184,5 +208,6 @@ int main(void)
     test_pid_list();
     puts("SPC pid list: allocation failures leave the list valid");
 #endif
+    remove_dir();
     return 0;
 }

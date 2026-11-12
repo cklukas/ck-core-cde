@@ -42,6 +42,8 @@
 #endif
 
 #include <sys/stat.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <Dt/WsmP.h>
@@ -220,12 +222,24 @@ getSessionPath(
       * No saveFile name was provided, so generate a new one.
       */
       int len = strlen(tmpPath);
+      int fd;
 
+     /*
+      * Create the file with mkstemp(), so that no other user can have
+      * planted a file or a symbolic link at the name.  The application
+      * opens the existing file (mode 0600) by the returned path.
+      */
       (void)strcat(tmpPath, "dtXXXXXX");
-      (void)mktemp(tmpPath);
+      fd = mkstemp(tmpPath);
+      if (fd == -1) goto abort;
+      (void)close(fd);
 
       *saveFile = (char *) XtMalloc(15 * sizeof(char));
-      if(*saveFile == NULL) goto abort;
+      if(*saveFile == NULL)
+      {
+          (void)unlink(tmpPath);
+          goto abort;
+      }
 
       (void)strcpy(*saveFile, tmpPath+len);
     }

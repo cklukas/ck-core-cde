@@ -1,4 +1,15 @@
 2026-11-12
+- DtSvc, dtwm and dtpdmd: five places made a temporary file name with
+  `tempnam()`, `mktemp()` or `tmpnam()` and opened it later, so a local user
+  could plant a file or symbolic link at the name first. The logfile of the
+  noio channel (`DtEncap/noio.c`), the log file of `spc-error.c`, the session
+  save path (`DtUtil1/SmUtil.c`), the cpp output of the dtwm configuration
+  (`WmResParse.c`) and the authorization file of dtpdmd (`manager.c`) now create
+  the file with `mkstemp()` (mode 0600), and a failed creation is reported
+  instead of falling back to the predictable name. Tests:
+  `check-spc-logfile-create.py`, `check-spc-log-create.py`,
+  `check-session-save-path.py`, `check-config-temp-file.py`,
+  `check-auth-file.py`, each of which plants a link at the old name.
 - DtHelp and DtTerm: twenty-two libc `realloc()` calls stored their result in
   the pointer they grew, so a failed growth leaked the block and the next use
   wrote through NULL. They now grow through a temporary and keep the old block

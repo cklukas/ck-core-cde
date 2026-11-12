@@ -54,8 +54,13 @@ def extract(text, label, start_anchor, end_anchor="\n}\n", keep_start=0):
 
 
 label = args.source_revision or "working tree"
-noio = extract(source("cde/lib/DtSvc/DtEncap/noio.c"), "noio.c",
-               "\nSPC_Channel_Ptr open_noio_channel_object(", keep_start=1)
+noio_text = source("cde/lib/DtSvc/DtEncap/noio.c")
+# The logfile is created by make_logfile() in a revision that has it.
+noio = ""
+if "static char * make_logfile (" in noio_text:
+    noio = extract(noio_text, "noio.c", "static char * make_logfile (") + "\n"
+noio += extract(noio_text, "noio.c",
+                "\nSPC_Channel_Ptr open_noio_channel_object(", keep_start=1)
 pid_part = ""
 defines = []
 if not args.source_revision:
@@ -79,7 +84,7 @@ subprocess.run(shlex.split(os.environ.get("CC", "cc")) + defines +
 
 env = dict(os.environ, ASAN_OPTIONS="halt_on_error=1:abort_on_error=0:detect_leaks=0",
            UBSAN_OPTIONS="halt_on_error=1:print_stacktrace=1")
-run = subprocess.run([str(binary)], env=env, capture_output=True, text=True)
+run = subprocess.run([str(binary), str(scratch)], env=env, capture_output=True, text=True)
 sys.stdout.write(run.stdout)
 if args.source_revision:
     tail = "\n".join(run.stderr.strip().splitlines()[:6])

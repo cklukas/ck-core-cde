@@ -51,7 +51,7 @@
  * Log file information (routines near bottom of file)
  */
 
-#define TEMPLATE_EXTENSION	  (XeString)".XXXXXX" /* For mktemp(3c) */
+#define TEMPLATE_EXTENSION	  (XeString)".XXXXXX" /* For mkstemp(3) */
 
 XeChar spc_logfile[MAXPATHLEN+1];
 XeChar spc_logging = FALSE;
@@ -251,7 +251,6 @@ SPC_Make_Log_Filename(XeString name,
 /*----------------------------------------------------------------------+*/
 {
   /* Make a log filename based on the passed name (and perhaps process id) */
-  XeString cp;
   XeString log_file_path = NULL;
 
   _DtSvcProcessLock();
@@ -269,14 +268,31 @@ SPC_Make_Log_Filename(XeString name,
   }
 
   if (unique) {
-    /* Add the extension.  No strlen checking is done */
+    int fd;
+
+    /*
+     * Add the extension and create the file with mkstemp(3), so that the
+     * name is unique and no other user can have planted a file or a symbolic
+     * link at it.  SPC_Open_Log() opens the existing file for appending.
+     * There is no fallback to the name without the extension: it is
+     * predictable.
+     */
+    if (strlen(spc_logfile) + strlen(TEMPLATE_EXTENSION) > MAXPATHLEN) {
+      spc_logfile[0] = '\0';
+      if (log_file_path) XeFree(log_file_path);
+      _DtSvcProcessUnlock();
+      return FALSE;
+    }
     strcat(spc_logfile, TEMPLATE_EXTENSION);
 
-    cp = (XeString) mktemp(spc_logfile);
-    if (!cp || !*cp) {
-      /* Sorry, but this is the best we can do */
-      strcpy(spc_logfile, (log_file_path) ? log_file_path : name);
+    fd = mkstemp(spc_logfile);
+    if (fd == -1) {
+      spc_logfile[0] = '\0';
+      if (log_file_path) XeFree(log_file_path);
+      _DtSvcProcessUnlock();
+      return FALSE;
     }
+    (void) close(fd);
   }
 
   /* free the strings allocated for the path */
@@ -294,7 +310,8 @@ SPC_Open_Log(XeString filename,
   /* Open the SPC log file */
 
   /* Use the filename if one was passed to make a log filename */
-  SPC_Make_Log_Filename(filename, unique);
+  if (!SPC_Make_Log_Filename(filename, unique))
+    return(SPC_ERROR);
 
   /* Open the logfile */
   _DtSvcProcessLock();

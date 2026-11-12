@@ -67,6 +67,8 @@
 #include <locale.h>
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <stdint.h>
 
 #include <Xm/XmP.h>             /* for XmeGetHomeDirName */
@@ -5973,18 +5975,34 @@ Boolean ParseWmFuncActionArg (unsigned char **linePP,
 static void
 PreprocessConfigFile (void)
 {
-#define CPP_NAME_SIZE	((L_tmpnam)+1)
+#define CPP_NAME_TEMPLATE	"/dwmXXXXXX"
     char pchCmd[MAXWMPATH+1];
 
     if (wmGD.cppCommand && *wmGD.cppCommand)
     {
 	/*
-	 * Generate a temp file name.
+	 * Create the temp file for the converter's output.  mkstemp()
+	 * creates it (mode 0600), so no other user can have planted a file
+	 * or a symbolic link at the name before the converter opens it.
 	 */
-	pConfigStackTop->cppName = XtMalloc (CPP_NAME_SIZE * sizeof(char));
+	pConfigStackTop->cppName =
+	    XtMalloc ((strlen (P_tmpdir) + sizeof (CPP_NAME_TEMPLATE)) *
+		      sizeof(char));
 	if (pConfigStackTop->cppName)
 	{
-	    (void) tmpnam (pConfigStackTop->cppName);
+	    int fd;
+
+	    strcpy (pConfigStackTop->cppName, P_tmpdir);
+	    strcat (pConfigStackTop->cppName, CPP_NAME_TEMPLATE);
+	    fd = mkstemp (pConfigStackTop->cppName);
+	    if (fd == -1)
+	    {
+		/* No preprocessed file: the original file is read as is. */
+		XtFree ((char *) pConfigStackTop->cppName);
+		pConfigStackTop->cppName = NULL;
+		return;
+	    }
+	    (void) close (fd);
 
 	    /*
 	     * Build up the command line.

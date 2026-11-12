@@ -203,6 +203,41 @@ static char * get_tmp_dir (
 }
 
 /*
+ * Create the empty logfile "<dir>/SPCXXXXXX" with mkstemp(3) and return its
+ * name in malloc'ed storage, or NULL if the name or the file cannot be made.
+ * The file exists (mode 0600, owned by the caller) when this returns, so no
+ * other user can plant a file or symbolic link at the name before it is
+ * opened.  A NULL or empty dir selects $TMPDIR or the system default.
+ */
+static char * make_logfile (
+	const char *dir)
+{
+   char		path[PATH_MAX];
+   char		*name;
+   int		len, fd;
+
+   if (dir == NULL || *dir == '\0') {
+      dir = getenv ("TMPDIR");
+      if (dir == NULL || *dir == '\0')
+	 dir = P_tmpdir;
+   }
+
+   len = snprintf (path, sizeof (path), "%s/SPCXXXXXX", dir);
+   if (len < 0 || (size_t) len >= sizeof (path))
+      return (NULL);
+
+   fd = mkstemp (path);
+   if (fd == -1)
+      return (NULL);
+   (void) close (fd);
+
+   name = strdup (path);
+   if (name == NULL)
+      (void) unlink (path);
+   return (name);
+}
+
+/*
  ***
  *** Method definitions for noio channel objects
  ***
@@ -222,6 +257,7 @@ SPC_Channel_Ptr open_noio_channel_object(SPC_Channel_Ptr channel,
   SPC_Channel_Ptr result;
   XeString temp_dir_name = NULL;
   char **new_list;
+  int create_failed = 0;
   
   call_parent_method(channel, open, (channel, iomode, hostname), result);
 
@@ -231,14 +267,18 @@ SPC_Channel_Ptr open_noio_channel_object(SPC_Channel_Ptr channel,
   if(IS_SPCIO_USE_LOGFILE(iomode)) {
 
     _DtSvcProcessLock();
-    /* Storage from tempnam() freed in remove_logfile_local_channel_object */
+    /*
+     * The logfile is created here.  Its storage is freed in
+     * remove_logfile_local_channel_object.
+     */
     if (SPCD_Authentication_Dir != NULL)
-      channel->logfile=tempnam(SPCD_Authentication_Dir,"SPC");
+      channel->logfile=make_logfile(SPCD_Authentication_Dir);
     else {
       temp_dir_name = get_tmp_dir ();
-      channel->logfile=tempnam(temp_dir_name,"SPC");
+      channel->logfile=make_logfile(temp_dir_name);
       free(temp_dir_name);
     }
+    create_failed = (channel->logfile == NULL);
 
     /*
      * Save the name of the logfile so it can removed by the
@@ -266,6 +306,8 @@ SPC_Channel_Ptr open_noio_channel_object(SPC_Channel_Ptr channel,
        * logfile name could not be removed by the daemon, so give the name
        * up and report the failure below.
        */
+      if (channel->logfile != NULL)
+	(void) unlink (channel->logfile);
       free (channel->logfile);
       channel->logfile = NULL;
     }
@@ -280,7 +322,10 @@ SPC_Channel_Ptr open_noio_channel_object(SPC_Channel_Ptr channel,
     _DtSvcProcessUnlock();
 
     if(!channel->logfile) {
-      SPC_Error(SPC_Out_Of_Memory);
+      if (create_failed)
+	SPC_Error(SPC_Cannot_Open_Log, "SPC logfile");
+      else
+	SPC_Error(SPC_Out_Of_Memory);
       return(SPC_ERROR);
     }
   }

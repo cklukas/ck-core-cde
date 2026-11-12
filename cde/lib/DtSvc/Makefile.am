@@ -8,6 +8,9 @@ EXTRA_DIST = tests/check-dts-buffers.py tests/dts-buffers.c tests/check-dts-mm.p
              DtEncap/tests/check-spc-exec-realloc.py DtEncap/tests/check-spc-exec-realloc.c \
              DtEncap/tests/check-spc-env-alloc.py DtEncap/tests/check-spc-env-alloc.c \
              DtEncap/tests/check-spc-list-alloc.py DtEncap/tests/check-spc-list-alloc.c \
+             DtEncap/tests/check-spc-logfile-create.py DtEncap/tests/check-spc-logfile-create.c \
+             DtEncap/tests/check-spc-log-create.py DtEncap/tests/check-spc-log-create.c \
+             tests/check-session-save-path.py tests/check-session-save-path.c \
              tests/check-mmdb-alloc.py tests/mmdb-alloc-test.c \
              tests/check-addtores-alloc.py tests/addtores-alloc-test.c
 
@@ -18,6 +21,9 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/DtEncap/tests/check-spc-exec-realloc.py
 	CC="$(CC)" python3 $(srcdir)/DtEncap/tests/check-spc-env-alloc.py
 	CC="$(CC)" python3 $(srcdir)/DtEncap/tests/check-spc-list-alloc.py
+	CC="$(CC)" python3 $(srcdir)/DtEncap/tests/check-spc-logfile-create.py
+	CC="$(CC)" python3 $(srcdir)/DtEncap/tests/check-spc-log-create.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-session-save-path.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-mmdb-alloc.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-addtores-alloc.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dbreader.py
