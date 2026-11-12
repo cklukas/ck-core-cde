@@ -1650,6 +1650,7 @@ write_rcfile(enum menu_type mtype, int exists, int cfno, char *val, char *commen
   int rcexists ;                /* Set to 1, if .dtcalcrc file exists. */
   FILE *rcfd ;                  /* File descriptor for .dtcalcrc file. */
   FILE *tmpfd ;                 /* File descriptor for new temp .dtcalcrc. */
+  int tmpfd_number ;            /* The same file, as a descriptor. */
   struct passwd *entry ;        /* The user's /etc/passwd entry. */
 
   rcexists = 0 ;
@@ -1666,8 +1667,13 @@ write_rcfile(enum menu_type mtype, int exists, int cfno, char *val, char *commen
       if (access(rcname, F_OK) == 0) rcexists = 1 ;
     }
   strcpy(tmp_filename, "/tmp/.dtcalcrcXXXXXX") ;
-  mktemp(tmp_filename) ;
-  if ((tmpfd = fopen(tmp_filename, "w+")) == NULL) return ;
+  tmpfd_number = mkstemp(tmp_filename) ;
+  if (tmpfd_number < 0) return ;
+  if ((tmpfd = fdopen(tmpfd_number, "w+")) == NULL) {
+    close(tmpfd_number) ;
+    unlink(tmp_filename) ;
+    return ;
+  }
 
   if (rcexists)
     {

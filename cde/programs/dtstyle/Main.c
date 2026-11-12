@@ -497,8 +497,14 @@ malloc_trace(0);
     style.execName   = argv[0];
     style.errDialog  = NULL;
     style.tmpXmStr   = NULL;
-    style.home = (char *) XtMalloc(strlen((char *) getenv("HOME")) + 1);
-    strcpy(style.home, (char *) getenv("HOME"));
+    {
+        const char *home = getenv("HOME");
+
+        if (home == NULL)
+            home = "";
+        style.home = (char *) XtMalloc(strlen(home) + 1);
+        strcpy(style.home, home);
+    }
     style.colorDialog = NULL;
     style.backdropDialog = NULL;
     style.fontDialog = NULL;

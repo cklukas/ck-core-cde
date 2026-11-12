@@ -201,7 +201,7 @@ SessionRestoreData (void)
 	 
       for (i = 0; i < subpanel_posted_count; i++)
       {
-         fscanf (fd, "%s%d%d%d", 
+         fscanf (fd, "%255s%d%d%d", 
                  name_buffer1, &subpanel_x, &subpanel_y, &subpanel_torn);
 	    
          for (j = 0; j < subpanel_count; j++)
@@ -267,7 +267,7 @@ SessionRestoreData (void)
 
       for (i = 0; i < subpanel_default_count; i++)
       {
-         fscanf (fd, "%s%s", name_buffer1, name_buffer2);
+         fscanf (fd, "%255s%255s", name_buffer1, name_buffer2);
 	    
          for (j = 0; j < subpanel_count; j++)
          {
@@ -320,7 +320,7 @@ SessionRestoreData (void)
       
       for (i = 0; i < panel.dynamic_data_count; i++)
       {
-         fscanf(fd, "%s%s%d%s%d%d", name_buffer1, name_buffer2, &component_type,
+         fscanf(fd, "%255s%255s%d%255s%d%d", name_buffer1, name_buffer2, &component_type,
 	        name_buffer3, &parent_component_type, &delete_value);
 
 

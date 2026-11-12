@@ -991,7 +991,14 @@ resolve_variable_reference(
       /*
        * Now put 'buf' into 'string'.
        */
-      *string = realloc (*string, strlen (buf) + 1);
+      {
+	 char *grown = realloc (*string, strlen (buf) + 1);
+
+	 if (grown == NULL)
+	    /* Keep the value as it was: *string has not been changed. */
+	    break;
+	 *string = grown;
+      }
       (void) strcpy (*string, buf);
       pch = *string + len;
       pbeg = pch;

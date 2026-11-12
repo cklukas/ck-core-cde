@@ -440,22 +440,25 @@ int SPCD_Initialize(void)
    */
   sys_env_file = (XeString) malloc (strlen(SPCD_ENV_INSTALL_DIRECTORY) +
 				    strlen(SPCD_ENV_FILE) + 3);
-  (void) sprintf (sys_env_file, "%s/%s", 
-		  SPCD_ENV_INSTALL_DIRECTORY, 
-		  SPCD_ENV_FILE);
-  default_environment=SPC_Add_Env_File(sys_env_file,default_environment);
+  if (sys_env_file != NULL) {
+    (void) sprintf (sys_env_file, "%s/%s",
+		    SPCD_ENV_INSTALL_DIRECTORY,
+		    SPCD_ENV_FILE);
+    default_environment=SPC_Add_Env_File(sys_env_file,default_environment);
+  }
 
   /*
    * Now add the configured environment file.
    */
-  sys_env_file = (XeString) realloc (sys_env_file,
-				     strlen(SPCD_ENV_CONFIG_DIRECTORY) +
-				     strlen(SPCD_ENV_FILE) + 3);
-  (void) sprintf (sys_env_file, "%s/%s", 
-		  SPCD_ENV_CONFIG_DIRECTORY, 
-		  SPCD_ENV_FILE);
-
-  default_environment=SPC_Add_Env_File(sys_env_file,default_environment);
+  free (sys_env_file);
+  sys_env_file = (XeString) malloc (strlen(SPCD_ENV_CONFIG_DIRECTORY) +
+				    strlen(SPCD_ENV_FILE) + 3);
+  if (sys_env_file != NULL) {
+    (void) sprintf (sys_env_file, "%s/%s",
+		    SPCD_ENV_CONFIG_DIRECTORY,
+		    SPCD_ENV_FILE);
+    default_environment=SPC_Add_Env_File(sys_env_file,default_environment);
+  }
 
   free (sys_env_file);
 

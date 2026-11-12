@@ -1,4 +1,21 @@
 2026-11-12
+- DtSvc and dtspcd: the default environment files were built with `realloc()`
+  of a pointer whose result was not checked and was then written through, and
+  the first buffer was not checked either (`lib/DtSvc/DtEncap/spc-env.c`,
+  `programs/dtspcd/main.c`). Each buffer is now allocated for its own path and
+  skipped if the allocation fails. Expanding a variable reference in a
+  subprocess environment kept the result of a failed `realloc()` as the new
+  string, so a failure wrote through NULL; a failed `realloc()` now keeps the
+  unexpanded value (`lib/DtSvc/DtEncap/spc-exec.c`, tested by
+  `lib/DtSvc/DtEncap/tests/check-spc-exec-realloc.py`).
+- dtstyle: an unset `HOME` was dereferenced; it is now treated as empty
+  (`programs/dtstyle/Main.c`).
+- dtwm: the panel and subpanel session file readers stored a word of any length
+  in 256-byte buffers; the words are now read with a width of 255
+  (`programs/dtwm/Session.c`).
+- dtcalc: the temporary `.dtcalcrc` name came from `mktemp()` and was then
+  opened separately; it is now created with `mkstemp()` and opened from its
+  descriptor (`programs/dtcalc/calctool.c`).
 - dtpad: the Save As dialog built its starting directory in a 1024-byte buffer
   and copied text into it without a length check. A file name typed with a
   directory longer than that buffer, or a directory that the dialog reports
