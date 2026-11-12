@@ -53,6 +53,10 @@
 **********************************<+>*************************************/
 #include "dtpad.h"
 #include <Xm/TextP.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <Xm/TextF.h>
@@ -249,38 +253,28 @@ LoadFile(
 
 
 /************************************************************************
- * GetTempFile - generates a file name for a temporary file that can be
- *	used for writing.
+ * GetTempFile - creates an empty temporary file and returns its name in
+ *	XtMalloc'ed storage, or NULL if the file cannot be created.  The
+ *	file is made with mkstemp(3) (mode 0600, owned by the caller), so no
+ *	other user can have planted a file or a symbolic link at the name;
+ *	the caller writes to it by name and removes it when done.
  ************************************************************************/
 char *
 GetTempFile(void)
 {
-    char *tempname = (char *)XtMalloc(L_tmpnam); /* Temporary file name. */
-    FILE *tfp;
+    static const char nameTemplate[] = "/dtpXXXXXX";
+    char *tempname = (char *)XtMalloc(strlen(P_tmpdir) + sizeof(nameTemplate));
+    int fd;
 
-    (void)tmpnam(tempname);
-    if ((tfp = fopen(tempname, "w")) == NULL)
+    strcpy(tempname, P_tmpdir);
+    strcat(tempname, nameTemplate);
+    fd = mkstemp(tempname);
+    if (fd == -1)
     {
-        pid_t pid;
-        /*
-         * If tmpnam fails, then try to create our own temp name.
-         * Try a couple of different names if necessary.
-         */
         XtFree(tempname);
-        tempname = XtMalloc(256);
-        pid = getpid();
-        sprintf(tempname, "/usr/tmp/editor%ld", (long)pid);
-        if ((tfp = fopen(tempname, "w")) == NULL)
-        {
-            sprintf(tempname, "/tmp/editor%ld", (long)pid);
-            if ((tfp = fopen(tempname, "w")) == NULL)
-            {
-                XtFree(tempname);
-                return (char *)NULL;
-            }
-        }
+        return (char *)NULL;
     }
-    fclose(tfp);
+    close(fd);
     return tempname;
 }
 

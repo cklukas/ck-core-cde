@@ -2,6 +2,11 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dticon
 
+EXTRA_DIST = tests/check-start-file-create.py tests/check-start-file-create.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-start-file-create.py
+
 dticon_CFLAGS = -D__TOOLTALK
 
 dticon_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB)

@@ -152,11 +152,6 @@ handle_animate_cb(
 			 * Save data to a file so we can pass it to drag_load_proc().
 			 */
 
-#ifdef NOT
-			strcpy(filename, "/tmp/cmXXXXXX");
-			mktemp(filename);
-#endif
-
 			if (!dnd_filename[0]){
 				return;
 			}
@@ -199,6 +194,7 @@ handle_drop_cb(
 	char		*data;
 	int		size;
 	FILE		*fp;
+	int		fd;
 	int		i;
 #if defined(FNS) && defined(FNS_DEMO)
 	char		buf[256];
@@ -240,10 +236,22 @@ handle_drop_cb(
 			/*
 			 * Save data to a file so we can pass it to drag_load_proc().
 			 */
+			/*
+			 * mkstemp creates the file (mode 0600), so no other
+			 * user can have planted a file or a symbolic link at
+			 * the name.
+			 */
 			strcpy(dnd_filename, "/tmp/cmXXXXXX");
-			mktemp(dnd_filename);
-	
-			if ((fp = fopen(dnd_filename, "w")) == 0) {
+			fd = mkstemp(dnd_filename);
+			if (fd == -1) {
+				dnd_filename[0] = '\0';
+				transfer_info->status = DtDND_FAILURE;
+				return;
+			}
+			if ((fp = fdopen(fd, "w")) == 0) {
+				close(fd);
+				unlink(dnd_filename);
+				dnd_filename[0] = '\0';
 				transfer_info->status = DtDND_FAILURE;
 				return;
 			}

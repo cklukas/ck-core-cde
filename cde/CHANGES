@@ -1,4 +1,18 @@
 2026-11-12
+- DtWidget, DtHelp, dtcm, dtstyle, dticon, dtpad, dtcreate and dtudcfonted:
+  twelve more places made a temporary file name with `tmpnam()`, `tempnam()`
+  or `mktemp()` and opened it later. They now create the file with `mkstemp()`
+  (mode 0600) and report a failed creation instead of using the predictable
+  name. The uncompress and interpreter temporary files of DtHelp
+  (`Access.c`, `CanvasOs.c`), the editor files of DtWidget, the palette file
+  of dtstyle (`mkstemps()`, the name carries the palette suffix), the start
+  file of dticon, the editor file of dtpad and the icon files of dtcreate are
+  covered; dtpad no longer falls back to a predictable name under `/usr/tmp`.
+  The predictable-name block under `#ifdef NOT` in `dtcm/dnd.c` was removed.
+  Tests plant a symbolic link at the old name and fail on the previous code.
+- DtHelp: the interpreter buffer in `CanvasOs.c` was allocated with
+  `sizeof(interp)` of a pointer, which a long name overflowed; it is sized from
+  the string now.
 - DtSvc, dtwm and dtpdmd: five places made a temporary file name with
   `tempnam()`, `mktemp()` or `tmpnam()` and opened it later, so a local user
   could plant a file or symbolic link at the name first. The logfile of the

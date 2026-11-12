@@ -44,6 +44,8 @@
 
 #include <locale.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <errno.h>
 #include <X11/Intrinsic.h>
 #include <X11/Xlib.h>
@@ -68,6 +70,7 @@
 #include <Dt/DialogBox.h>
 #include <Dt/Icon.h>
 #include <Dt/TitleBox.h>
+#include <Dt/UserMsg.h>
 
 #include <Dt/HourGlass.h>
 #include <Dt/Wsm.h>
@@ -1128,6 +1131,44 @@ addCancelCB(
         XtUnmanageChild(addDialog);
 }
 
+/*
+ * Create the empty palette file "<directory>dtXXXXXX<PALETTE_SUFFIX>" with
+ * mkstemps(3) and return its name without the suffix in XtMalloc'ed storage,
+ * or NULL if the file cannot be made.  The file exists (mode 0600, owned by
+ * the caller) when this returns, so no other user can plant a file or a
+ * symbolic link at the name before WriteOutPalette() opens it.
+ */
+static char *
+CreatePaletteFile(
+        const char *directory )
+{
+  const char *base = "dtXXXXXX";
+  size_t dirlen = strlen(directory);
+  size_t baselen = strlen(base);
+  size_t suffixlen = strlen(PALETTE_SUFFIX);
+  char *path, *name;
+  int fd;
+
+  path = (char *)XtMalloc(dirlen + baselen + suffixlen + 1);
+  strcpy(path, directory);
+  strcat(path, base);
+  strcat(path, PALETTE_SUFFIX);
+
+  fd = mkstemps(path, (int)suffixlen);
+  if (fd == -1)
+    {
+      XtFree(path);
+      return NULL;
+    }
+  close(fd);
+
+  name = (char *)XtMalloc(baselen + 1);
+  memcpy(name, path + dirlen, baselen);
+  name[baselen] = '\0';
+  XtFree(path);
+  return name;
+}
+
 static void 
 addOkCB(
         Widget w,
@@ -1137,11 +1178,10 @@ addOkCB(
   int     n, i;
   Arg              args[6];
   XmString         string;
-  char             *name, *filename, *tmpstr;
+  char             *name, *filename;
   palette         *tmpPalette, *newPalette;
   int              count;
   int              ii, length;
-  int              len;
 
   /* Get the text from the promp dialog */
   name = XmTextFieldGetString( XmSelectionBoxGetChild(addDialog, XmDIALOG_TEXT));
@@ -1210,17 +1250,22 @@ addOkCB(
   strcpy(newPalette->directory, style.home);
   strcat(newPalette->directory, DT_PAL_DIR);
   
-  /* makeup a new name for the palette */
-  tmpstr = (char *)XtMalloc(strlen(style.home) + strlen(DT_PAL_DIR) + 
-			    strlen("dtXXXXXX") + 1);
-  strcpy(tmpstr, newPalette->directory);
-  len = strlen(tmpstr);
-  strcat(tmpstr, "dtXXXXXX");
-  mktemp(tmpstr);
+  /* makeup a new name for the palette and create its file */
+  newPalette->name = CreatePaletteFile(newPalette->directory);
+  if (newPalette->name == NULL)
+    {
+      _DtSimpleErrnoError(progName, DtWarning, NULL,
+			  (char *)GETMESSAGE(16, 20, "Could not open %s."),
+			  newPalette->directory);
 
-  newPalette->name = (char *) XtMalloc(15 * sizeof(char));
-  strcpy(newPalette->name, tmpstr + len);
-  XtFree(tmpstr);
+      /*  remove palette from list */
+      tmpPalette->next = NULL;
+      XtFree(newPalette->directory);
+      XtFree(newPalette->desc);
+      XtFree((char *)newPalette);
+      XtFree(name);
+      return;
+    }
 
   /* the new palette is the next palette .. increase NumOfPalettes by one */
   newPalette->item_position = NumOfPalettes + 1;

@@ -34,6 +34,9 @@
  * (c) Copyright 1996 Hitachi.
  */
 #include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include "PdmXp.h"
 
@@ -488,10 +491,20 @@ void
 PdmXpUpdateAttributes(PdmXp* me)
 {
 #if 0 && defined(PRINTING_SUPPORTED)
-    char fname[L_tmpnam];
+    char fname[PATH_MAX];
+    int fname_fd;
+    int fname_len;
     
-    if(tmpnam(fname))
+    /*
+     * mkstemp creates the file (mode 0600), so no other user can have
+     * planted a file or a symbolic link at the name; the pool is written
+     * to it by name below.
+     */
+    fname_len = snprintf(fname, sizeof(fname), "%s/pdmXXXXXX", P_tmpdir);
+    if(fname_len >= 0 && fname_len < (int)sizeof(fname) &&
+       (fname_fd = mkstemp(fname)) != -1)
     {
+	close(fname_fd);
 	int i;
 	XrmDatabase pool;
 	XPAttributes type;
@@ -537,7 +550,6 @@ PdmXpUpdateAttributes(PdmXp* me)
 		    }
 		    retlen = read(fileno(fp), data, stbuf.st_size);
 		    fclose(fp);
-		    unlink(fname);
 		    data[retlen] = '\0';
 		    /*
 		     * convert to compund text
@@ -562,6 +574,11 @@ PdmXpUpdateAttributes(PdmXp* me)
 
 	}
 	XtFree(data);
+	/*
+	 * The file is kept for all pools, so that its name stays ours, and
+	 * removed here.
+	 */
+	unlink(fname);
     }
 #endif /* PRINTING_SUPPORTED */
 }

@@ -55,7 +55,9 @@
 #endif
 
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #if defined(sun)
 # if (_XOPEN_VERSION==3)
@@ -6951,6 +6953,43 @@ AdjustAllCB(
 } /* AdjustAllCB */
 
 
+/*
+ * Create the file "<dir>/dtXXXXXX" with mkstemp(3), where <dir> is $TMPDIR or
+ * the system default, and open it for writing.  The file exists (mode 0600,
+ * owned by the caller) when this returns, so no other user can plant a file or
+ * symbolic link at the name.  The name is returned in 'name' (of 'size'
+ * bytes).  Returns NULL, with nothing left behind, if the file cannot be made.
+ */
+static FILE *
+CreateTempFile(
+	char *name,
+	size_t size)
+{
+    char *dir = getenv("TMPDIR");
+    FILE *fp;
+    int len;
+    int fd;
+
+    if (dir == NULL || *dir == '\0')
+       dir = P_tmpdir;
+
+    len = snprintf(name, size, "%s/dtXXXXXX", dir);
+    if (len < 0 || (size_t) len >= size)
+       return (FILE *) NULL;
+
+    fd = mkstemp(name);
+    if (fd == -1)
+       return (FILE *) NULL;
+
+    fp = fdopen(fd, "w");
+    if (fp == (FILE *) NULL)
+    {
+       close(fd);
+       unlink(name);
+    }
+    return fp;
+}
+
 /*********
  *
  * DoAdjust - given left & right margin values & an alignment style, formats
@@ -6975,7 +7014,7 @@ DoAdjust(
         XmTextPosition	start,
         XmTextPosition	end)
 {
-    char tempName1[L_tmpnam], tempName2[L_tmpnam];
+    char tempName1[PATH_MAX], tempName2[PATH_MAX];
     DtEditorErrorCode returnVal;
     AdjRec adjRec;
 
@@ -7063,15 +7102,15 @@ DoAdjust(
        /*
         * Create the two temp files
         */
-       (void)tmpnam(tempName1);
-       (void)tmpnam(tempName2);
-       if ((adjRec.infp = fopen(tempName1, "w")) != (FILE *)NULL) {
+       if ((adjRec.infp = CreateTempFile(tempName1, sizeof(tempName1)))
+	   != (FILE *)NULL) {
 
          /* 
           * Successfully opened the first temporary file 
           */
 
-         if((adjRec.outfp = fopen(tempName2, "w")) != (FILE *)NULL) {
+         if((adjRec.outfp = CreateTempFile(tempName2, sizeof(tempName2)))
+	    != (FILE *)NULL) {
 
             /* 
 	     * Successfully opened the second temporary file, so do the

@@ -882,11 +882,11 @@ char *
 GetTmpPath( char *path )
 {
 	char	*p=NULL, *sp, *buf ;
-	int	len ;
+	int	len, fd ;
 	struct	stat	statbuf ;
 
 	/* Get directory of temporary file */
-	if( !(p = (char *)getenv( "TMPDIR" )) ){
+	if( !(p = (char *)getenv( "TMPDIR" )) || *p == '\0' ){
 	    p = DEFAULT_TMPPATH ;
 	}
 	/* Get memory for temporary file name */
@@ -905,8 +905,17 @@ GetTmpPath( char *path )
 	sp = buf + strlen(buf) -1 ;
 	if( *sp == '/' )	*sp-- = '\0' ;
 	sprintf( sp+1, "/%s", TEMPFILEKEY ) ;
-	/* Get temporary file name */
-	return mktemp( buf );
+	/*
+	 * Create the temporary file.  mkstemp makes it (mode 0600), so no
+	 * other user can have planted a file or a symbolic link at the name:
+	 * callers open the name that exists already.
+	 */
+	if ((fd = mkstemp( buf )) == -1) {
+	    free( buf ) ;
+	    return NULL ;
+	}
+	close( fd ) ;
+	return buf ;
 }
 
 

@@ -886,6 +886,7 @@ load_cb(
 	char	*p;
 	DTCM_editor	*de;
 	FILE		*fp;
+	int		fd;
 	char		filename[20];
 	CmDataList		*list = NULL;
 	Dtcm_appointment	*appt;
@@ -948,9 +949,20 @@ load_cb(
 				 * Save data to a file so we can pass it to parse_appt_from_file
 				 */
 				
+				/*
+				 * mkstemp creates the file (mode 0600), so no
+				 * other user can have planted a file or a
+				 * symbolic link at the name.
+				 */
 				strcpy(filename, "/tmp/cmXXXXXX");
-				mktemp(filename);
-				if ((fp = fopen(filename, "w")) == 0) {
+				fd = mkstemp(filename);
+				if (fd == -1) {
+					tttk_message_fail( msg, TT_DESKTOP_ENODATA, 0, 1 );
+					return 0;
+				}
+				if ((fp = fdopen(fd, "w")) == 0) {
+					close(fd);
+					unlink(filename);
 					tttk_message_fail( msg, TT_DESKTOP_ENODATA, 0, 1 );
 					return 0;
 				}
@@ -1014,6 +1026,7 @@ handle_drop_cb(
 	int		size;
 	FILE		*fp;
 	int		i;
+	int		fd;
 
 	de = (DTCM_editor *)client_data;
 
@@ -1034,9 +1047,14 @@ handle_drop_cb(
 			 * Save data to a file so we can pass it to drag_load_proc().
 			 */
 			strcpy(filename, "/tmp/cmXXXXXX");
-			mktemp(filename);
-	
-			if ((fp = fopen(filename, "w")) == 0) {
+			fd = mkstemp(filename);
+			if (fd == -1) {
+				transfer_info->status = DtDND_FAILURE;
+				return;
+			}
+			if ((fp = fdopen(fd, "w")) == 0) {
+				close(fd);
+				unlink(filename);
 				transfer_info->status = DtDND_FAILURE;
 				return;
 			}

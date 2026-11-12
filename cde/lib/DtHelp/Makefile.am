@@ -10,10 +10,14 @@ lib_LTLIBRARIES = libDtHelp.la
 
 EXTRA_DIST = tests/check-help-strings.py tests/help-strings.c \
 	     tests/check-realloc-failures.py tests/check-realloc-failures.c \
-	     tests/realloc-inject.h
+	     tests/realloc-inject.h \
+	     tests/check-access-uncompress-temp.py tests/check-access-uncompress-temp.c \
+	     tests/check-canvas-interp-temp.py tests/check-canvas-interp-temp.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-help-strings.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-access-uncompress-temp.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-canvas-interp-temp.py
 	CC="$(CC)" LDFLAGS="$(LDFLAGS)" python3 $(srcdir)/tests/check-realloc-failures.py \
 	    --library-dir .libs --library-dir ../DtSearch/.libs \
 	    --library-dir ../DtSvc/.libs --library-dir ../tt/lib/.libs \

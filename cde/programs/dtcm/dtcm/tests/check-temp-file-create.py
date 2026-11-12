@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+"""Check how dtcm makes the temp files for a dropped or received appointment.
+
+The part of load_cb() that stores a message buffer, and handle_drop_cb() of
+dtcm_editor.c, and handle_drop_cb() of dnd.c are extracted verbatim from the
+sources (the working tree, or another revision with --source-revision REV) and
+compiled together with check-temp-file-create.c under AddressSanitizer and
+UndefinedBehaviorSanitizer with halt on error.  The only change to the text is
+that the directory /tmp of the file names becomes the test's own directory.
+mkstemp and mktemp are replaced by stand-ins that return the same predictable
+first name, where the test plants a symbolic link to a file it must not see
+changed.  The handlers' consumers (the appointment parser) are stand-ins that
+record the state of the file they are given.
+
+Default: the test must pass.
+With --source-revision REV: negative control; REV must FAIL the same test
+(exit status 0 means the failure was observed).
+"""
+import argparse
+import os
+from pathlib import Path
+import shlex
+import subprocess
+import sys
+import tempfile
+
+here = Path(__file__).resolve().parent
+root = here.parents[4]
+TEST = "check-temp-file-create.c"
+TAG = "dtcm-temp-file"
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--source-revision", help="git revision of the sources to use as a negative control")
+ap.add_argument("--worktree", type=Path, default=root)
+ap.add_argument("--scratch", type=Path, default=None)
+args = ap.parse_args()
+
+label = args.source_revision or "working tree"
+
+
+def source(relative):
+    """Text of a source file: the working tree, or the revision of the control."""
+    if args.source_revision:
+        return subprocess.run(["git", "-C", str(args.worktree), "show",
+                               f"{args.source_revision}:{relative}"],
+                              check=True, capture_output=True, text=True).stdout
+    return (args.worktree / relative).read_text()
+
+
+def extract(text, relative, start_anchor, end_anchor, required=True):
+    """Return the text from start_anchor through end_anchor; start must be unique."""
+    n = text.count(start_anchor)
+    if n != 1:
+        if n == 0 and not required:
+            return ""
+        sys.exit(f"anchor {start_anchor.strip()!r} found {n} times in {relative}, expected 1")
+    start = text.index(start_anchor)
+    end = text.index(end_anchor, start) + len(end_anchor)
+    return text[start:end] + "\n"
+
+
+def retarget(text, old, new, count):
+    """Point a hard-coded temp directory at the test's directory."""
+    if text.count(old) != count:
+        sys.exit(f"{old!r} found {text.count(old)} times, expected {count}")
+    return text.replace(old, new)
+
+
+EDITOR = "cde/programs/dtcm/dtcm/dtcm_editor.c"
+DND = "cde/programs/dtcm/dtcm/dnd.c"
+DROP = ("\nstatic void\nhandle_drop_cb(\n", "\n}\n")
+
+
+def build():
+    editor = source(EDITOR)
+    dnd = source(DND)
+    load = extract(editor, EDITOR, "\t\t\tif (file == NULL)\n\t\t\t{",
+                   "de->init = file_tt;\n\t\t\t}")
+    edit_drop = extract(editor, EDITOR, *DROP)
+    dnd_decl = extract(dnd, DND, "static char\tdnd_filename[20];", ";")
+    dnd_drop = extract(dnd, DND, *DROP)
+    # load_cb and the drop handler of the editor each name one file.
+    load = retarget(load, '"/tmp/cmXXXXXX"', 'CK_TMP_LITERAL', 1)
+    edit_drop = retarget(edit_drop, '"/tmp/cmXXXXXX"', 'CK_TMP_LITERAL', 1)
+    dnd_drop = retarget(dnd_drop, '"/tmp/cmXXXXXX"', 'CK_TMP_LITERAL', 1)
+    return {"LOAD_BLOCK": load, "EDITOR_DROP": edit_drop,
+            "DND_DECL": dnd_decl, "DND_DROP": dnd_drop}
+
+
+def main(scratch):
+    parts = (here / TEST).read_text()
+    template = parts.split("/* @@PROLOGUE@@ */")[1]
+    for key, value in build().items():
+        template = template.replace(f"/* @@{key}@@ */", value)
+    tag = TAG + ("-control" if args.source_revision else "-fixed")
+    c, binary = scratch / f"{tag}.c", scratch / tag
+    c.write_text(template)
+    subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
+                   ["-std=gnu99", "-Wall", "-Wno-unused-function", "-Wno-unused-variable",
+                    "-Wno-deprecated-declarations", "-Wno-unused-value",
+                    "-Wno-unused-but-set-variable", "-Wno-format-security",
+                    "-Wno-unused-parameter",
+                    "-fsanitize=address,undefined", "-fno-sanitize-recover=all",
+                    "-fno-omit-frame-pointer", "-g", str(c), "-o", str(binary)], check=True)
+    env = dict(os.environ, ASAN_OPTIONS="halt_on_error=1:abort_on_error=0:detect_leaks=0",
+               UBSAN_OPTIONS="halt_on_error=1:print_stacktrace=1")
+    return subprocess.run([str(binary), str(scratch)], env=env, capture_output=True, text=True)
+
+
+if args.scratch:
+    args.scratch.mkdir(parents=True, exist_ok=True)
+    run = main(args.scratch.resolve())
+else:
+    with tempfile.TemporaryDirectory(prefix=TAG + "-") as tmp:
+        run = main(Path(tmp))
+sys.stdout.write(run.stdout)
+if args.source_revision:
+    tail = "\n".join(run.stderr.strip().splitlines()[:6])
+    if run.returncode == 0:
+        print(f"NEGATIVE CONTROL FAILED: {label} passed the test", file=sys.stderr)
+        sys.exit(1)
+    print(f"negative control ({label}): fails as expected, exit {run.returncode}\n{tail}")
+else:
+    if run.returncode:
+        sys.stderr.write(run.stderr)
+        print(f"FAIL ({label}): exit {run.returncode}", file=sys.stderr)
+        sys.exit(1)
+    print(f"PASS ({label})")

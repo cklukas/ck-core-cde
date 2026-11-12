@@ -40,6 +40,9 @@
 #include <fcntl.h>
 #include <locale.h>
 #include <sys/param.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include <X11/Intrinsic.h>
 #include <Xm/Protocols.h>
@@ -426,6 +429,30 @@ DieFromToolTalkError(Widget parent, char *errfmt, Tt_status status)
 }
 
 
+/*
+ * Create the file start_file ("<P_tmpdir>/dtiXXXXXX") that receives the icon
+ * data of a ToolTalk request with mkstemp(3), and return its open descriptor
+ * (mode 0600), or -1 if the name or the file cannot be made.  The file exists
+ * when this returns, so no other user can plant a file or a symbolic link at
+ * the name.  Room is left for the "_m" suffix of the mask file.
+ */
+static int create_start_file(void)
+{
+    int len;
+    int fd;
+
+    len = snprintf(start_file, MAX_FNAME - 3, "%s/dtiXXXXXX", P_tmpdir);
+    if (len < 0 || len >= MAX_FNAME - 3)
+    {
+        start_file[0] = '\0';
+        return -1;
+    }
+    fd = mkstemp(start_file);
+    if (fd == -1)
+        start_file[0] = '\0';
+    return fd;
+}
+
 static Tt_message ProcessToolTalkMediaMessage( Tt_message      msg,
                                         void*           cdata,
                                         Tttk_op         op,
@@ -509,17 +536,18 @@ if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
                 tt_message_fail(msg);
                 edit_notifier(NULL, 0, 1);
              }
+             else if ((tt_tmpfile_fd = create_start_file()) == -1)
+             {
+                tt_message_fail(msg);
+                edit_notifier(NULL, 0, 1);
+             }
              else
              {
-                (void) tmpnam(start_file);
+                /* tt_tmpfile_fd is the open start_file, created above. */
                 if( (buf) && (!strncmp((char *)buf, "/* XPM */", 9)) )
                 {
                    /* Format XPM */
-                   tt_tmpfile_fd =
-                           open(start_file,
-                                O_CREAT | O_WRONLY | O_NDELAY,
-                                0666);
-                   if (tt_tmpfile_fd && (wlen =
+                   if ((wlen =
                                  write(tt_tmpfile_fd,
                                        buf, blen)) == blen)
                    {
@@ -542,12 +570,7 @@ if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
 
                      /* read XBM file first*/
                      /* Grab the first buffer. */
-                     tt_tmpfile_fd =
-                             open(start_file,
-                                  O_CREAT | O_WRONLY | O_NDELAY,
-                                  0666);
-
-                     if (tt_tmpfile_fd && (wlen =
+                     if ((wlen =
                                    write(tt_tmpfile_fd,
                                          buf, tmplen)) == tmplen)
                      {

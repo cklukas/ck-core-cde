@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <locale.h>
 #include <sys/stat.h>
@@ -787,6 +789,31 @@ Tt_message ProcessToolTalkMessage(Tt_message msg,
 }
 
 /*****************************************************************************/
+/* NAME:        CreateIconTempFile                                           */
+/* DESCRIPTION: Creates the empty temporary file "<P_tmpdir>/dtcXXXXXX" with */
+/*              mkstemp(3) (mode 0600), so that no other user can have       */
+/*              planted a file or a symbolic link at the name, and stores    */
+/*              its name in name, which holds MAXPATHLEN characters.         */
+/* RETURN:      The open descriptor, or -1 with name set to the empty        */
+/*              string if the file cannot be created.                        */
+/*****************************************************************************/
+static int CreateIconTempFile( char *name )
+{
+  int fd;
+  int len = snprintf(name, MAXPATHLEN, "%s/dtcXXXXXX", P_tmpdir);
+
+  if (len < 0 || len >= MAXPATHLEN) {
+     name[0] = '\0';
+     return -1;
+  }
+  fd = mkstemp(name);
+  if (fd == -1) {
+     name[0] = '\0';
+  }
+  return fd;
+}
+
+/*****************************************************************************/
 /* NAME:        IconEdit_tt_handler                                          */
 /* DESCRIPTION: Handler for Tooltalk conversation about editing icon.        */
 /* PARAMETERS:                                                               */
@@ -806,6 +833,7 @@ Tt_callback_action IconEdit_tt_handler( Tt_message m, Tt_pattern p )
   char*           ttbuf;
   char*           op;
   char            *tmpIconFile;
+  const char      *failName;
   char            *msgID;
   IconData        *pIconData;
   Boolean         bIsNewFile = False;
@@ -874,7 +902,8 @@ Tt_callback_action IconEdit_tt_handler( Tt_message m, Tt_pattern p )
            if (pIconData->pmDirtyBit) {
               tmpIconFile = pIconData->pmFileName;
            } else {
-              tmpnam(pIconData->pmFileName);
+              /* The new file is created, and kept open, here. */
+              tmpfd = CreateIconTempFile(pIconData->pmFileName);
               bIsNewFile = True;
               tmpIconFile = pIconData->pmFileName;
            }
@@ -882,22 +911,22 @@ Tt_callback_action IconEdit_tt_handler( Tt_message m, Tt_pattern p )
            if (pIconData->bmDirtyBit) {
               tmpIconFile = pIconData->bmFileName;
            } else {
-              tmpnam(pIconData->bmFileName);
+              tmpfd = CreateIconTempFile(pIconData->bmFileName);
               bIsNewFile = True;
               tmpIconFile = pIconData->bmFileName;
            }
         }
-        if (bIsNewFile) {
-            tmpfd = open(tmpIconFile, O_CREAT | O_WRONLY | O_NDELAY, 0666);
-        } else {
+        if (!bIsNewFile) {
            tmpfd = open(tmpIconFile, O_TRUNC | O_WRONLY | O_NDELAY, 0666);
         }
         if (tmpfd == -1) {
 	   msgPtr = GETMESSAGE(5, 60, "Could not open the following file:");
 	   fmtPtr = "%s\n   %s";
+	   /* A new file has no name when it could not be created. */
+	   failName = (*tmpIconFile == '\0') ? P_tmpdir : tmpIconFile;
 	   errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-			      strlen(tmpIconFile) + 1) * sizeof(char));
-	   sprintf(errPtr, fmtPtr, msgPtr, tmpIconFile);
+			      strlen(failName) + 1) * sizeof(char));
+	   sprintf(errPtr, fmtPtr, msgPtr, failName);
 	   display_error_message(XtParent(pIconData->wid), errPtr);
 	   XtFree(errPtr);
            tt_release( ttMark );

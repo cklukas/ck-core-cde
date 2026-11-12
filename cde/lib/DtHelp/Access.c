@@ -554,6 +554,45 @@ GetTopicTitleAndAbbrev (
 }
 
 /*****************************************************************************
+ * Function: static int CreateTempFileName (char *name, size_t size)
+ *
+ * Parameters:
+ *		name		Returns the name of the new file.
+ *		size		Specifies the size of 'name'.
+ *
+ * Returns:	0 if successful, -1 if the file could not be created.
+ *
+ * Purpose:	Create the empty file "<dir>/dthXXXXXX" with mkstemp(3), where
+ *		<dir> is $TMPDIR or the system default.  The file exists (mode
+ *		0600, owned by the caller) when this returns, so no other user
+ *		can plant a file or symbolic link at the name before the
+ *		uncompressed data is written to it by name.
+ *****************************************************************************/
+static int
+CreateTempFileName (
+    char	*name,
+    size_t	 size )
+{
+    char *dir = getenv ("TMPDIR");
+    int   len;
+    int   fd;
+
+    if (dir == NULL || *dir == '\0')
+	dir = P_tmpdir;
+
+    len = snprintf (name, size, "%s/dthXXXXXX", dir);
+    if (len < 0 || (size_t) len >= size)
+	return -1;
+
+    fd = mkstemp (name);
+    if (fd == -1)
+	return -1;
+
+    close (fd);
+    return 0;
+}
+
+/*****************************************************************************
  * Function: static int FileOpenRtnFd (char *name, int *ret_fd)
  *
  * Parameters:	name		Specifies the file to open.
@@ -588,9 +627,13 @@ FileOpenRtnFd (
     if (*ret_fd == -1)
       {
 	/*
-	 * get a temporary name
+	 * create the temporary file
 	 */
-	(void) tmpnam (tmpName);
+	if (CreateTempFileName (tmpName, sizeof (tmpName)) != 0)
+	  {
+	    errno = EACCES;
+	    return -1;
+	  }
 
 	/*
 	 * malloc memory for the dot Z file name.
@@ -612,6 +655,7 @@ FileOpenRtnFd (
 
 	    if (result != 0)
 	      {
+		unlink (tmpName);
 		errno = ENOENT;
 		return -1;
 	      }
@@ -620,13 +664,13 @@ FileOpenRtnFd (
 	     * now open the uncompressed file
 	     */
 	    *ret_fd = open(tmpName, O_RDONLY);
+	    unlink(tmpName);
 	    if (*ret_fd == -1)
 		result = -1;
-	    else
-		unlink(tmpName);
 	  }
 	else
 	  {
+	    unlink (tmpName);
 	    errno = CEErrorMalloc;
 	    return -1;
 	  }
@@ -1087,9 +1131,13 @@ _DtHelpCeGetUncompressedFileName (
     if (access (name, F_OK) == -1)
       {
 	/*
-	 * get a temporary name
+	 * create the temporary file
 	 */
-	(void) tmpnam (tmpName);
+	if (CreateTempFileName (tmpName, sizeof (tmpName)) != 0)
+	  {
+	    errno = EACCES;
+	    return -1;
+	  }
 
 	/*
 	 * malloc memory for the dot Z file name.
@@ -1111,6 +1159,7 @@ _DtHelpCeGetUncompressedFileName (
 
 	    if (result != 0)
 	      {
+		unlink (tmpName);
 		errno = ENOENT;
 		return -1;
 	      }
@@ -1118,12 +1167,14 @@ _DtHelpCeGetUncompressedFileName (
 	    *ret_name = strdup (tmpName);
 	    if (*ret_name == NULL)
 	      {
+		unlink (tmpName);
 		errno = CEErrorMalloc;
 		return -1;
 	      }
 	  }
 	else
 	  {
+	    unlink (tmpName);
 	    errno = CEErrorMalloc;
 	    return -1;
 	  }

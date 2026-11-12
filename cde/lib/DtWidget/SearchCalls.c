@@ -51,6 +51,9 @@
 #include <Xm/List.h>
 #include <ctype.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <Dt/DtMsgsP.h>
 #include <Dt/HourGlass.h>
 #include "DtWidgetI.h"
@@ -91,12 +94,49 @@ static void DestroyThisWidgetCB(
 	XtPointer call);
 
 
+/*
+ * Create the file "<dir>/dtXXXXXX" with mkstemp(3), where <dir> is $TMPDIR or
+ * the system default, and open it for writing.  The file exists (mode 0600,
+ * owned by the caller) when this returns, so no other user can plant a file or
+ * symbolic link at the name.  The name is returned in 'name' (of 'size'
+ * bytes).  Returns NULL, with nothing left behind, if the file cannot be made.
+ */
+static FILE *
+CreateTempFile(
+	char *name,
+	size_t size)
+{
+    char *dir = getenv("TMPDIR");
+    FILE *fp;
+    int len;
+    int fd;
+
+    if (dir == NULL || *dir == '\0')
+       dir = P_tmpdir;
+
+    len = snprintf(name, size, "%s/dtXXXXXX", dir);
+    if (len < 0 || (size_t) len >= size)
+       return (FILE *) NULL;
+
+    fd = mkstemp(name);
+    if (fd == -1)
+       return (FILE *) NULL;
+
+    fp = fdopen(fd, "w");
+    if (fp == (FILE *) NULL)
+    {
+       close(fd);
+       unlink(name);
+    }
+    return fp;
+}
+
 DtEditorErrorCode
 DtEditorInvokeSpellDialog(
 	Widget widget)
 {
     DtEditorWidget pPriv = (DtEditorWidget) widget;
-    char fileName[L_tmpnam], com[L_tmpnam + 7], *string, newline[1];
+    char fileName[PATH_MAX], *com, *string, newline[1];
     char *line;
     FILE *fp;           /* pipe to read words from */
     int len = 0;        /* length of line read in */
@@ -119,8 +159,7 @@ DtEditorInvokeSpellDialog(
        /* 
         * Write out to a tmp file, getting the name back
         */
-       (void)tmpnam(fileName);
-       if((fp = fopen(fileName, "w")) != (FILE *)NULL) 
+       if((fp = CreateTempFile(fileName, sizeof(fileName))) != (FILE *)NULL) 
        {
           /* 
 	   * Temporary file created sucessfully so write out contents of
@@ -138,8 +177,10 @@ DtEditorInvokeSpellDialog(
           fclose(fp);
 
           /* start spell command */
+          com = XtMalloc(strlen(M_spellFilter(pPriv)) + strlen(fileName) + 2);
           sprintf(com, "%s %s", M_spellFilter(pPriv), fileName);
           fp = popen(com, "r");
+          XtFree(com);
 
           if ( fp == (FILE *)NULL )
             error = DtEDITOR_SPELL_FILTER_FAILED;

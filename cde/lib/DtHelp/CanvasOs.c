@@ -45,6 +45,7 @@
  */
 #include <unistd.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -88,6 +89,46 @@
  * Private Functions
  *
  *****************************************************************************/
+/*
+ * Create the file "<dir>/dtXXXXXX" with mkstemp(3), where <dir> is $TMPDIR or
+ * the system default.  The file exists (mode 0600, owned by the caller) when
+ * this returns, so no other user can plant a file or symbolic link at the
+ * name.  Returns the open descriptor and the name in malloc'ed storage, or -1
+ * with nothing created.
+ */
+static int
+CreateTempFile (
+    char	**ret_name)
+{
+    char	 path[PATH_MAX];
+    char	*dir = getenv("TMPDIR");
+    char	*name;
+    int		 len;
+    int		 fd;
+
+    if (dir == NULL || *dir == '\0')
+	dir = P_tmpdir;
+
+    len = snprintf(path, sizeof(path), "%s/dtXXXXXX", dir);
+    if (len < 0 || (size_t) len >= sizeof(path))
+	return -1;
+
+    fd = mkstemp(path);
+    if (fd == -1)
+	return -1;
+
+    name = strdup(path);
+    if (name == NULL)
+      {
+	close(fd);
+	unlink(path);
+	return -1;
+      }
+
+    *ret_name = name;
+    return fd;
+}
+
 /******************************************************************************
  *
  * Semi Public Functions
@@ -127,10 +168,10 @@ _DtCvRunInterp(
 	return -1;
 
     /*
-     * open a temporary file to write the data to.
+     * create a temporary file to write the data to.
      */
-    fileName = tempnam(NULL, NULL);
-    if (fileName == NULL)
+    myFd = CreateTempFile(&fileName);
+    if (myFd == -1)
       {
 	if (newData != data)
 	    free(newData);
@@ -140,33 +181,21 @@ _DtCvRunInterp(
     /*
      * write the data to file.
      */
-    result = -1;
-#if defined(__linux__)
-    myFd   = open(fileName, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO);
-#else
-    myFd   = open(fileName, O_WRONLY | O_CREAT | O_TRUNC);
-#endif
-    if (myFd != -1)
+    result = write(myFd, newData, strlen(newData));
+
+    if (result != -1)
       {
 	/*
-	 * write the data to the file
+	 * change the access permissions so the file is read-only for
+	 * the interpreter, which runs as this user.
 	 */
-        result = write(myFd, newData, strlen(newData));
-
-	if (result != -1)
-	  {
-	    /*
-	     * change the access permissions so the interpreter can read
-	     * the file.
-	     */
-	    result = fchmod(myFd, S_IRUSR | S_IRGRP | S_IROTH);
-	  }
-
-        /*
-         * close the file.
-         */
-        close(myFd);
+	result = fchmod(myFd, S_IRUSR);
       }
+
+    /*
+     * close the file.
+     */
+    close(myFd);
 
     if (newData != data)
 	free(newData);
@@ -181,7 +210,7 @@ _DtCvRunInterp(
     /*
      * create the system command string with its parameters
      */
-    ptr = (char *) malloc(sizeof(interp) + strlen(fileName) + 1);
+    ptr = (char *) malloc(strlen(interp) + strlen(fileName) + 2);
     if (!ptr)
       {
 	unlink(fileName);
