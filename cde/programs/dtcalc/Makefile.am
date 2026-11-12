@@ -2,6 +2,11 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtcalc
 
+EXTRA_DIST = tests/check-rcfile-tempfile.py tests/check-rcfile-tempfile.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-rcfile-tempfile.py
+
 dtcalc_CPPFLAGS = -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\"
 
 dtcalc_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB)

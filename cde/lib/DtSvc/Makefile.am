@@ -4,12 +4,14 @@ lib_LTLIBRARIES = libDtSvc.la
 
 EXTRA_DIST = tests/check-dts-buffers.py tests/dts-buffers.c tests/check-dts-mm.py \
              tests/check-svc-pam.py tests/check-dbreader.py tests/dbreader-test.c \
-             tests/check-spc-termio.py tests/spc-termio-test.c
+             tests/check-spc-termio.py tests/spc-termio-test.c \
+             DtEncap/tests/check-spc-exec-realloc.py DtEncap/tests/check-spc-exec-realloc.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-dts-buffers.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dts-mm.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-svc-pam.py
+	CC="$(CC)" python3 $(srcdir)/DtEncap/tests/check-spc-exec-realloc.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dbreader.py
 	DTSVC_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(libDtSvc_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
 	DTSVC_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \

@@ -3,11 +3,12 @@ MAINTAINERCLEANFILES = Makefile.in
 bin_PROGRAMS = dtwm dtfplist
 
 EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
-             tests/check-desktop-requests.py
+             tests/check-desktop-requests.py tests/check-session-word-width.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-property-readers.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-desktop-requests.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-session-word-width.py
 
 configdir = $(CDE_INSTALLATION_TOP)/config/C
 dist_config_DATA = sys.dtwmrc

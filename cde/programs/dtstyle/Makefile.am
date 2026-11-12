@@ -2,6 +2,11 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtstyle
 
+EXTRA_DIST = tests/check-home-environment.py tests/check-home-environment.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-home-environment.py
+
 dtstyle_CPPFLAGS = -DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\"	\
 	-DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\" -I../dthelp	\
 	$(DT_INCDIR)
