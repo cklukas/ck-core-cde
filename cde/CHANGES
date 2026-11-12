@@ -1,3 +1,18 @@
+2026-11-12
+- dtpad: the Save As dialog built its starting directory in a 1024-byte buffer
+  and copied text into it without a length check. A file name typed with a
+  directory longer than that buffer, or a directory that the dialog reports
+  long, overflowed the stack, and the directory mask could overflow the same
+  buffer. The text read from `XmStringGetLtoR()` was written to a pointer that
+  the call then replaced, so its buffer leaked, and the call's result was not
+  checked. The directory is now stored only when it fits with the mask
+  (`programs/dtpad/dirselect.c`, which uses no Motif or Xt type and is tested
+  under the sanitizers by `tests/check-dirselect.py`). A directory that does not
+  fit is replaced by the current directory of the process, and a dialog that
+  reports no directory now starts in that directory too, not in a relative one.
+  The fault was a stack overflow that a user could trigger by typing a long
+  name, so it is in the defect list of the security-first audit.
+
 2026-11-11
 - libtt, dtcm: review of what a program that gives the library a shell widget
   is answered for without asking (the window requests, `Quit`, `Pause`,

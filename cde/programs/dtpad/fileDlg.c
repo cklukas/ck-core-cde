@@ -51,6 +51,7 @@
 **************************************************************************
 **********************************<+>*************************************/
 #include "dtpad.h"
+#include "dirselect.h"
 #include <Xm/DialogS.h>
 #include <Xm/Form.h>
 #include <Xm/FileSB.h>
@@ -177,13 +178,14 @@ PostAlreadyExistsDlg(
 void
 SetSaveAsDirAndFile(Editor *pPad)
 {
-    char dirbuf[MAX_DIR_PATH_LEN], *currentVal, *directoryVal,
-	 *lastSlash, *pColon;
+    char dirbuf[MAX_DIR_PATH_LEN], *currentVal, *lastSlash;
     int firstSelect = -1, lastSelect = -1;
     Widget textField;
     Arg args[5];
     int n;
     XmString dirString;
+    int stored = 0;
+
     dirbuf[0] = (char) '\0';
 
     /* -----> Get the file name field from the previous SaveAs FSB.
@@ -197,45 +199,45 @@ SetSaveAsDirAndFile(Editor *pPad)
      *        use its values. */
     if (currentVal != (char *)NULL && *currentVal != (char)'\0') {
 	/* -----> If the file name begins with '/', it has a pathname and we
-	 *	  can use it for the initial directory */
+	 *	  can use it for the initial directory: everything up to and
+	 *	  including its last slash. */
 	if ( currentVal[0] == '/' ) {
-	    strcpy(dirbuf, currentVal);
-	    /* Trim off everything behind the last slash */
-	    if ((lastSlash = MbStrrchr(dirbuf, '/')) != (char *)NULL) {
-		*(lastSlash + 1) = (char)'\0';
-	    }
+	    lastSlash = MbStrrchr(currentVal, '/');
+	    stored = DirSelectStore(dirbuf, sizeof(dirbuf), currentVal,
+				    (size_t)(lastSlash - currentVal) + 1);
 	} else {
 	    /* -----> The filename does not have a directory, so use the value
-	     *        from the directory field. */
-	    n=0;
+	     *        from the directory field.  XmStringGetLtoR() sets the
+	     *        string only when it succeeds, and the caller frees it. */
+	    char *directoryVal = NULL;
+
+	    n = 0;
 	    XtSetArg( args[n], XmNdirectory, &dirString ); n++;
 	    XtGetValues(pPad->fileStuff.fileWidgets.saveAs.saveAs_form, args, n);
-	    directoryVal = (char *) XtMalloc( sizeof(char) *
-					 (MAX_DIR_PATH_LEN + 1) );
-	    XmStringGetLtoR( dirString, XmFONTLIST_DEFAULT_TAG, &directoryVal );
-	    strcpy(dirbuf, directoryVal);
+	    if (XmStringGetLtoR(dirString, XmFONTLIST_DEFAULT_TAG,
+				&directoryVal)) {
+		stored = DirSelectStore(dirbuf, sizeof(dirbuf), directoryVal,
+					strlen(directoryVal));
+		XtFree(directoryVal);
+	    }
 	    XmStringFree(dirString);
-	    XtFree( directoryVal );
 	}
-	XtFree (currentVal);
-    /* -----> No file name was not previously entered via a SaveAs FSB so use
-     *        other defaults. */
-    } else {
-	if (pPad->fileStuff.pathDir[0] != (char)'\0')
-	    strcpy(dirbuf, pPad->fileStuff.pathDir);
-	/* -----> make sure dir ends in '/' */
-	if (dirbuf[0] != (char )'\0') {
-	    if (strlen(dirbuf) && dirbuf[strlen(dirbuf) - 1] != (char)'/')
-		  strcat(dirbuf, "/");
-	} else {
-	    getcwd(dirbuf, MAX_DIR_PATH_LEN - 16);
-	    strcat(dirbuf, "/");
-	}
+    } else if (pPad->fileStuff.pathDir[0] != (char)'\0') {
+	/* -----> No file name was entered via the SaveAs FSB, so use the
+	 *        directory of the previous file operation. */
+	stored = DirSelectStore(dirbuf, sizeof(dirbuf),
+				pPad->fileStuff.pathDir,
+				strlen(pPad->fileStuff.pathDir));
     }
+    if (currentVal != (char *)NULL)
+	XtFree(currentVal);
+
+    /* -----> Otherwise use the current directory of this process. */
+    if (!stored)
+	DirSelectDefault(dirbuf, sizeof(dirbuf));
 
     /* -----> set the SaveAs FSB directory mask */
-    firstSelect = strlen(dirbuf);
-    strcat(dirbuf, "[^.]*");
+    firstSelect = (int) DirSelectAppendMask(dirbuf, sizeof(dirbuf));
     dirString = XmStringCreateLocalized(dirbuf);
     n = 0;
     XtSetArg(args[n], XmNdirMask, dirString); n++;
