@@ -28,6 +28,7 @@
  */
 
 #include <ctype.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -49,6 +50,7 @@ static int parseLine(char **bufPtr, line *line);
 static int parseRectangle(char **bufPtr, rect *rectangle);
 static void order(char *p1, char *p2, signed char *offset1, signed char *offset2);
 static char *vis(char val);
+static void *growList(void *list, int count, size_t size);
 
 int
 main(int argc, char **argv)
@@ -149,8 +151,8 @@ main(int argc, char **argv)
 	    /* grow the glyph list if necessary... */
 	    if (glyphListMax + 1 > glyphListSize) {
 		glyphListSize += 10;
-		glyphList = (GlyphInfo) realloc(glyphList,
-			glyphListSize * sizeof(GlyphInfoRec));
+		glyphList = (GlyphInfo) growList(glyphList, glyphListSize,
+			sizeof(GlyphInfoRec));
 	    }
 	    /* bump count.  We need to remember that this is one high
 	     * when we use it as an index...
@@ -172,8 +174,8 @@ main(int argc, char **argv)
 		 */
 		if (charListMax + 2 > charListSize) {
 		    charListSize += 10;
-		    charList = (charType *) realloc(charList,
-			    charListSize * sizeof(charType));
+		    charList = (charType *) growList(charList, charListSize,
+			sizeof(charType));
 		}
 
 		if (0 == (charList[charListMax++] = ParseChar(&bufPtr))) {
@@ -208,8 +210,8 @@ main(int argc, char **argv)
 	} else if (!strcmp(c, "rect")) {
 	    if (rectListMax + 1 > rectListSize) {
 		rectListSize += 10;
-		rectList = (rect *) realloc(rectList,
-			rectListSize * sizeof(rect));
+		rectList = (rect *) growList(rectList, rectListSize,
+			sizeof(rect));
 	    }
 		
 	    if (parseRectangle(&bufPtr, &rectList[rectListMax])) {
@@ -228,8 +230,8 @@ main(int argc, char **argv)
 	} else if (!strcmp(c, "line")) {
 	    if (lineListMax + 1 > lineListSize) {
 		lineListSize += 10;
-		lineList = (line *) realloc(lineList,
-			lineListSize * sizeof(line));
+		lineList = (line *) growList(lineList, lineListSize,
+			sizeof(line));
 	    }
 
 	    /* did we error?... */
@@ -249,8 +251,8 @@ main(int argc, char **argv)
 	} else if (!strcmp(c, "stipple")) {
 	    if (stippleListMax + 1 > stippleListSize) {
 		stippleListSize += 10;
-		stippleList = (line *) realloc(stippleList,
-			stippleListSize * sizeof(line));
+		stippleList = (line *) growList(stippleList, stippleListSize,
+			sizeof(line));
 	    }
 		
 	    if (parseLine(&bufPtr, &stippleList[stippleListMax])) {
@@ -286,6 +288,27 @@ main(int argc, char **argv)
     (void) DumpGlyphs(stdout, prefix, glyphList, glyphListMax);
 
     (void) exit(0);
+}
+
+/* Enlarge LIST to hold COUNT elements of SIZE bytes.  A generator that
+ * cannot grow its tables has nothing useful to emit, so a failed or
+ * overflowing allocation ends the program; the old list is released by
+ * the exit.
+ */
+static void *
+growList(void *list, int count, size_t size)
+{
+    void *newList = NULL;
+
+    if (count > 0 && (size_t) count <= SIZE_MAX / size)
+	newList = realloc(list, (size_t) count * size);
+
+    if (NULL == newList) {
+	(void) fprintf(stderr, "lineToData: out of memory\n");
+	(void) exit(1);
+    }
+
+    return newList;
 }
 
 int

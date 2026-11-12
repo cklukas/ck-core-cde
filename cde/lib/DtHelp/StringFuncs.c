@@ -830,7 +830,11 @@ success:
  *                not set.
  *              ret_toStr receives the pointer to the buf, which may
  *                be different from toStrBuf if memory was allocated
- *                or NULL if an error occurred.  If toStrBuf is
+ *                or NULL if an error occurred.  If the buffer cannot
+ *                be grown, the memory allocated by this routine is
+ *                freed and ret_toStr is NULL; the buffer given in
+ *                toStrBuf, when there is one, is still valid, is
+ *                returned in ret_toStr, and is not freed.  If toStrBuf is
  *                not NULL and memory must be allocated, a realloc()
  *                call is used, possibly invalidating the toStrBuf ptr.
  *              ret_toStrLen receives the length of the buffer if
@@ -857,6 +861,7 @@ int _DtHelpCeIconvStr(
    char *           outChar;      /* ptr into tostr  */
    size_t           outBytesLeft; /* bytes left in the output str */
    int              err;          /* error code of function */
+   int              memFailed = 0; /* the buffer could not be grown */
 
 #define BAD (-1)
 #define MEM_INC 20
@@ -881,7 +886,17 @@ int _DtHelpCeIconvStr(
       {
          int len = strlen(fromStr) + 1;
          if (len > toStrBufLen)
-            *ret_toStr = realloc(toStrBuf,len);
+         {
+            char * newBuf = realloc(toStrBuf,len);
+
+            if (NULL == newBuf)
+            {
+               /* the caller's buffer is still valid and still theirs */
+               *ret_toStr = toStrBuf;
+               return -3;                       /* RETURN error */
+            }
+            *ret_toStr = newBuf;
+         }
          else 
          {
             *ret_toStr = toStrBuf;
@@ -895,9 +910,23 @@ int _DtHelpCeIconvStr(
    }
 
 
-   /* init ptrs */
-   toStr = toStrBuf;
-   toStrSize = (NULL == toStrBuf ? 0 : toStrBufLen);
+   /* init ptrs: without a caller buffer, the first block is allocated now,
+      so that iconv() never receives a NULL output buffer */
+   if (NULL == toStrBuf)
+   {
+      toStr = malloc(MEM_INC);
+      if (NULL == toStr)
+      {
+         *ret_toStr = NULL;
+         return -3;                       /* RETURN error */
+      }
+      toStrSize = MEM_INC;
+   }
+   else
+   {
+      toStr = toStrBuf;
+      toStrSize = toStrBufLen;
+   }
    inChar = fromStr;
    inBytesLeft = strlen(fromStr);
    outChar = toStr;
@@ -928,16 +957,21 @@ int _DtHelpCeIconvStr(
             if (outBytesLeft < sizeof(wchar_t))
             {
                size_t offset = outChar - (char *) toStr;
-   
-               outBytesLeft += MEM_INC;
-               toStrSize += MEM_INC;
-               toStr = realloc(toStr,toStrSize * sizeof(char));
-               if (NULL == toStr)
+               char * newStr = NULL;
+
+               if (toStrSize <= INT_MAX - MEM_INC)
+                  newStr = realloc(toStr,(size_t) toStrSize + MEM_INC);
+               if (NULL == newStr)
                {
+                  /* toStr is still valid and keeps its size */
                   inBytesLeft = 0;       /* end the translation */
                   err = -3;
+                  memFailed = 1;
                   break;                 /* BREAK */
                }
+               outBytesLeft += MEM_INC;
+               toStrSize += MEM_INC;
+               toStr = newStr;
                outChar = (char *) (toStr + offset); /* recalc ptr */
             }
             break;
@@ -947,6 +981,22 @@ int _DtHelpCeIconvStr(
          }  /* switch on convertsion result */
       } /* if an error */
    } /* while chars left to translate */
+
+   /* a failed growth releases the block this routine allocated, and
+      hands the caller's own buffer back, as an empty string */
+   if (memFailed)
+   {
+      if (NULL == toStrBuf)
+      {
+         free(toStr);
+         toStr = NULL;
+      }
+      else if (toStrSize > 0)
+         toStr[0] = EOS;
+      *ret_toStr = toStr;
+      if (toStrBuf) *ret_toStrLen = toStrSize;
+      return -3;                         /* RETURN error */
+   }
 
    /* set the EOS */
    if(outChar) *outChar = EOS;

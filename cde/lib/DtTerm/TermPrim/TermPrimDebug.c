@@ -428,6 +428,7 @@ enumToName
     int 		  i1;
     char		  buffer[BUFSIZ];
     static char		 *retBuffer = NULL;
+    char		 *newBuffer;
 
     for (i1 = 0; list[i1].string; i1++) {
 	if (list[i1].value == value) {
@@ -435,7 +436,14 @@ enumToName
 	}
     }
     snprintf(buffer, BUFSIZ, "Unknown Value %d", value);
-    retBuffer = realloc(retBuffer, strlen(buffer) + 1);
+    newBuffer = realloc(retBuffer, strlen(buffer) + 1);
+    if (NULL == newBuffer) {
+	/* retBuffer, if any, is still valid; this is a debugging aid, so
+	 * name the value without its number
+	 */
+	return("Unknown Value");
+    }
+    retBuffer = newBuffer;
     (void) strcpy(retBuffer, buffer);
     return(retBuffer);
 }

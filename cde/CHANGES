@@ -1,4 +1,18 @@
 2026-11-12
+- DtHelp and DtTerm: twenty-two libc `realloc()` calls stored their result in
+  the pointer they grew, so a failed growth leaked the block and the next use
+  wrote through NULL. They now grow through a temporary and keep the old block
+  (`CanvasOs.c`, `LinkMgr.c`, `UtilSDL.c`, `FormatSDL.c`, `Font.c`,
+  `AccessSDL.c`, `StringFuncs.c`, `CvString.c` in DtHelp; `lineToData.c`,
+  `TermPrimDebug.c` and `TermPrimGetPty-bsd.c` in DtTerm), with the size
+  multiplications checked. `CreateAsciiString()` now returns whether the
+  growth succeeded. The growth in `lineToData.c` ends the program with a
+  message, as the other allocation failures of that tool do.
+- DtHelp: `_DtHelpCeIconvStr()` called `iconv()` with a NULL output buffer when
+  the caller gave no buffer, which aborts inside current glibc. The first
+  output block is now allocated before the conversion. Tests:
+  `lib/DtHelp/tests/check-realloc-failures.py` (linked against the built
+  libraries) and `lib/DtTerm/tests/check-realloc-failures.py`.
 - DtSvc: eight growths of libc `realloc()` lists in place of their own pointer
   leaked the list and then wrote through NULL when the allocation failed:
   the pid list of `spc-exec.c`, the logfile list of `noio.c`, the file and name

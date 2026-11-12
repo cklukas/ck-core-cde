@@ -8,10 +8,16 @@ dist_cfg_DATA = CDE.lcx
 
 lib_LTLIBRARIES = libDtHelp.la
 
-EXTRA_DIST = tests/check-help-strings.py tests/help-strings.c
+EXTRA_DIST = tests/check-help-strings.py tests/help-strings.c \
+	     tests/check-realloc-failures.py tests/check-realloc-failures.c \
+	     tests/realloc-inject.h
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-help-strings.py
+	CC="$(CC)" LDFLAGS="$(LDFLAGS)" python3 $(srcdir)/tests/check-realloc-failures.py \
+	    --library-dir .libs --library-dir ../DtSearch/.libs \
+	    --library-dir ../DtSvc/.libs --library-dir ../tt/lib/.libs \
+	    --library-dir ../DtXinerama/.libs
 
 libDtHelp_la_CFLAGS = -I./il -I$(srcdir)/il -I./jpeg -I$(srcdir)/jpeg \
 	-I../DtSvc/DtUtil2 -DDTLIB \

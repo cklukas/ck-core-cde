@@ -215,12 +215,23 @@ GetPty(char **ptySlave, char **ptyMaster)
 
     for (pty_dirs_ptr = pty_dirs;
 	    pty_dirs_ptr->pty_dir && pty_dirs_ptr->ptym_dir; pty_dirs_ptr++) {
-	ttyDev = realloc(ttyDev,
+	char *newTtyDev = realloc(ttyDev,
 		(unsigned) (strlen(pty_dirs_ptr->pty_dir) + 8));
-	ptyDev = realloc(ptyDev,
+	char *newPtyDev;
+
+	/* a failed realloc() leaves the old block valid; keep each
+	 * pointer that was grown so that the error path frees it...
+	 */
+	if (newTtyDev)
+	    ttyDev = newTtyDev;
+	newPtyDev = realloc(ptyDev,
 		(unsigned) (strlen(pty_dirs_ptr->ptym_dir) + 8));
-	if (!ttyDev || !ptyDev) {
+	if (newPtyDev)
+	    ptyDev = newPtyDev;
+	if (!newTtyDev || !newPtyDev) {
 	    (void) perror("malloc");
+	    free(ttyDev);
+	    free(ptyDev);
 	    return(-1);
 	}
 
@@ -265,8 +276,15 @@ GetPty(char **ptySlave, char **ptyMaster)
 #else
 			    if (c1 = _XTtyname(ttyFd)) {
 #endif
-				ttyDev = realloc(ttyDev, strlen(c1) + 1);
-				(void) strcpy(ttyDev, c1);
+				/* if the name cannot be stored, keep the
+				 * name that was opened, which is valid...
+				 */
+				char *newTtyDev = realloc(ttyDev, strlen(c1) + 1);
+
+				if (newTtyDev) {
+				    ttyDev = newTtyDev;
+				    (void) strcpy(ttyDev, c1);
+				}
 			    }
 
 			    /* change the ownership and mode of the pty.

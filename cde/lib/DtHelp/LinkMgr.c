@@ -49,6 +49,7 @@
  */
 #include <errno.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -234,16 +235,24 @@ GetNextEntry (
 
     if (i >= link_db->max)
       {
-	link_db->max += GROW_SIZE;
-	if (link_db->list != NULL)
-	    link_db->list = (_DtCvLinkEntry *) realloc(link_db->list,
-				(sizeof (_DtCvLinkEntry) * link_db->max));
-	else
-	    link_db->list = (_DtCvLinkEntry *) malloc(
-				sizeof (_DtCvLinkEntry) * link_db->max);
+	_DtCvLinkEntry	*newList;
+	int		 newMax = link_db->max + GROW_SIZE;
 
-	if (link_db->list == NULL)
+	if ((size_t) newMax > SIZE_MAX / sizeof (_DtCvLinkEntry))
 	    return -1;
+
+	if (link_db->list != NULL)
+	    newList = (_DtCvLinkEntry *) realloc(link_db->list,
+				(sizeof (_DtCvLinkEntry) * newMax));
+	else
+	    newList = (_DtCvLinkEntry *) malloc(
+				sizeof (_DtCvLinkEntry) * newMax);
+
+	if (newList == NULL)
+	    return -1;
+
+	link_db->list = newList;
+	link_db->max  = newMax;
 
 	while (i < link_db->max)
 	  {

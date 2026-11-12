@@ -391,7 +391,17 @@ AsciiKeyword (
 
 	      }
 	    else if (*str_size < len) /* does this have to grow? */
-		goodStr = (char *) realloc (goodStr, len);
+	      {
+		char *newStr = (char *) realloc (goodStr, len);
+
+		/*
+		 * the caller only sees NULL on failure, so the string
+		 * built so far is released here, as for a failed wcstombs.
+		 */
+		if (newStr == NULL)
+		    free(goodStr);
+		goodStr = newStr;
+	      }
 
 	    if (goodStr == NULL)
 		return NULL;

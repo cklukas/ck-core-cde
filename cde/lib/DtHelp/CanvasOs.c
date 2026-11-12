@@ -234,20 +234,23 @@ _DtCvRunInterp(
 
         if (result > 0)
           {
+            char *newBuf;
+
             size = strlen(readBuf);
             if (writeBuf == NULL)
-                writeBuf = (char *) malloc (size + 1);
+                newBuf = (char *) malloc (size + 1);
             else
-                writeBuf = (char *) realloc (writeBuf, writeBufSize + size + 1);
+                newBuf = (char *) realloc (writeBuf, writeBufSize + size + 1);
 
-            if (writeBuf != NULL)
+            if (newBuf != NULL)
               {
+                writeBuf = newBuf;
                 writeBuf[writeBufSize] = '\0';
                 strcat(writeBuf, readBuf);
                 writeBufSize += size;
               }
             else
-                result = -1;
+                result = -1;	/* writeBuf, if any, is freed below */
           }
     } while (result != -1 && !feof(FileStream(myBufFile)));
 

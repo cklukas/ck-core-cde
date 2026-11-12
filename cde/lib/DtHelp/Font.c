@@ -37,6 +37,7 @@
 /*
  * system includes
  */
+#include <stdint.h>
 #include <stdlib.h>
 #include <X11/Xlib.h>
 #include <X11/Xlibint.h>
@@ -1045,21 +1046,46 @@ _DtHelpGetExactFontIndex (
 	if (NULL != xlfd_spec)
 	  {
 	    /*
+	     * make room in the index list first, so that it never ends up
+	     * shorter than the name list.
+	     */
+	    int *newIdx = fontInfo->exact_idx;
+
+	    if (NULL == newIdx)
+		newIdx = (int *) malloc(sizeof(int)*REALLOC_INCR);
+	    else if ((i + 1) % REALLOC_INCR == 0)
+	      {
+		if ((size_t) i + 1 + REALLOC_INCR > SIZE_MAX / sizeof(int))
+		    newIdx = NULL;
+		else
+		    newIdx = (int *) realloc(fontInfo->exact_idx,
+				    sizeof(int) * (i + 1 + REALLOC_INCR));
+	      }
+
+	    if (NULL != newIdx)
+		fontInfo->exact_idx = newIdx;
+	    else
+	      {
+		free(xlfd_spec);
+		xlfd_spec = NULL;
+	      }
+
+	    /*
 	     * now save it away for later tests.
 	     */
-	    fontInfo->exact_fonts = (char **) _DtHelpCeAddPtrToArray(
+	    if (NULL != xlfd_spec)
+	      {
+		fontInfo->exact_fonts = (char **) _DtHelpCeAddPtrToArray(
 					    (void **)fontInfo->exact_fonts,
 					    (void *) xlfd_spec);
-	    if (NULL != fontInfo->exact_fonts)
-	      {
-		if (NULL == fontInfo->exact_idx)
-		    fontInfo->exact_idx = (int *) malloc(
-						    sizeof(int)*REALLOC_INCR);
-		else if ((i + 1) % REALLOC_INCR == 0)
-		    fontInfo->exact_idx = (int *) realloc(fontInfo->exact_idx,
-				    sizeof(int) * (i + 1 + REALLOC_INCR));
-    
-		if (NULL != fontInfo->exact_idx)
+		if (NULL == fontInfo->exact_fonts)
+		  {
+		    free(xlfd_spec);
+		    xlfd_spec = NULL;
+		  }
+	      }
+
+	    if (NULL != xlfd_spec)
 		  {
 		    char       buffer[10];
 		    XrmValue   retValue;
@@ -1092,7 +1118,6 @@ _DtHelpGetExactFontIndex (
 				    ((XrmBindingList) FontBindings),
 				    xrmList, _DtHelpXrmQuark, &retValue);
 		  }
-	      }
 	  }
       }
 

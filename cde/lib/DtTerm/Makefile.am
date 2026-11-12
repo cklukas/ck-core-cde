@@ -4,11 +4,14 @@ SUBDIRS = util TermPrim Term TermView
 
 lib_LTLIBRARIES = libDtTerm.la
 
-EXTRA_DIST = tests/check-terminal-parser.py tests/check-suid-root.py
+EXTRA_DIST = tests/check-terminal-parser.py tests/check-suid-root.py \
+	     tests/check-realloc-failures.py tests/check-realloc-failures.c \
+	     tests/realloc-inject.h
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-terminal-parser.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-suid-root.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-realloc-failures.py
 
 libDtTerm_la_SOURCES =
 

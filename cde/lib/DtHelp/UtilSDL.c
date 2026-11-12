@@ -863,7 +863,14 @@ _DtHelpCeGetSdlAttributeCdata (
 		if (strSize == 0)
 		    myStr = (char *) malloc (sizeof(char) * 65);
 		else
-		    myStr = (char *) realloc (myStr,(sizeof(char)*(strMax+1)));
+		  {
+		    char *newStr = (char *) realloc (myStr,
+						(sizeof(char)*(strMax+1)));
+
+		    if (newStr == NULL)
+			free(myStr);
+		    myStr = newStr;
+		  }
 
 		if (myStr == NULL)
 		    return -1;

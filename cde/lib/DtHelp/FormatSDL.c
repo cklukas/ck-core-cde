@@ -46,6 +46,7 @@
  */
 #include <ctype.h>
 #include <limits.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -4539,10 +4540,12 @@ MoveString(
       {
         if (strlen(src) == myLen)
           {
-	    src = (char *) realloc (src, myLen + 2);
-	    if (src == NULL)
-	        return -1;
+	    char *newSrc = (char *) realloc (src, myLen + 2);
 
+	    if (newSrc == NULL)
+	        return -1;	/* *string is still the valid old block */
+
+	    src = newSrc;
 	    myLen++;
             *string  = src;
             *max_len = myLen;
@@ -7109,11 +7112,21 @@ Cdata(
 			     * lengthen the string so that it can contain
 			     * the information
 			     */
-			    myLen  += ESC_STRING_LEN;
-			    string  = (char *) realloc(string,
-						sizeof(char) * (myLen + 1));
-			    if (string == NULL)
+			    char *newString = (char *) realloc(string,
+				sizeof(char) * (myLen + ESC_STRING_LEN + 1));
+
+			    if (newString == NULL)
+			      {
+				/*
+				 * 'string' is still valid; hand it back
+				 * so the clean up frees the right block.
+				 */
+				my_struct->remember = string;
 				return -1;
+			      }
+
+			    myLen  += ESC_STRING_LEN;
+			    string  = newString;
 			  }
 
 			/*
@@ -7270,10 +7283,20 @@ Cdata(
 		 * must finish up the character
 		 */
 		int len = 0;
-		myLen = strlen(string);
+		char *newString;
 
-		string = (char *) realloc(string, myLen + multiLen + 1);
-		if (string == NULL) return -1;
+		myLen = strlen(string);
+		newString = (char *) realloc(string, myLen + multiLen + 1);
+		if (newString == NULL)
+		  {
+		    /*
+		     * 'string' is still valid; hand it back so the
+		     * clean up frees the right block.
+		     */
+		    my_struct->remember = string;
+		    return -1;
+		  }
+		string = newString;
 
 		while (curLen < 0 && len < multiLen) {
 		    string[myLen] = BufFileGet(my_struct->my_file);
@@ -8764,16 +8787,17 @@ SetGhostLink(
 } /* End SetGhostLink */
 
 /******************************************************************************
- * Function:    void CreateAsciiString ()
+ * Function:    int CreateAsciiString ()
  *
  * Parameters:
  *
- * Returns:
+ * Returns:     0 if successful, -1 if the string could not grow. In that
+ *		case *ret_string is the valid, shorter string built so far.
  *
  * Purpose:
  *
  ******************************************************************************/
-static	void
+static	int
 CreateAsciiString(
     _DtCvSegment	 *p_seg,
     _DtCvSegment	 *snb,
@@ -8782,6 +8806,7 @@ CreateAsciiString(
 {
     int		 newLen;
     int		 len;
+    char	*newString;
 
     while (p_seg != NULL)
       {
@@ -8804,15 +8829,27 @@ CreateAsciiString(
 
 	    len += newLen;
 
+	    /*
+	     * When the string cannot grow, stop here: *ret_string stays
+	     * the valid, shorter string built so far (or NULL).
+	     */
 	    if (*ret_string == NULL)
 	      {
-		*ret_string  = (char *) malloc (len);
+		newString = (char *) malloc (len);
+		if (newString == NULL)
+		    return -1;
+
+		*ret_string = newString;
 		**ret_string = '\0';
 	      }
 	    else
 	      {
 		len += strlen(*ret_string);
-		*ret_string = (char *) realloc (*ret_string, len);
+		newString = (char *) realloc (*ret_string, len);
+		if (newString == NULL)
+		    return -1;
+
+		*ret_string = newString;
 	      }
 
 	    if (*nl_flag == True)
@@ -8839,11 +8876,16 @@ CreateAsciiString(
 		*nl_flag = True;
 	  }
 	else if (_DtCvIsSegContainer(p_seg) && !(_DtCvIsSegController(p_seg)))
-	    CreateAsciiString(_DtCvContainerListOfSeg(p_seg),
-					snb, nl_flag, ret_string);
+	  {
+	    if (CreateAsciiString(_DtCvContainerListOfSeg(p_seg),
+					snb, nl_flag, ret_string) != 0)
+		return -1;
+	  }
 
 	p_seg = _DtCvNextSeg(p_seg);
       }
+
+    return 0;
 }
 
 /******************************************************************************
@@ -9339,6 +9381,41 @@ ExpandToc(
 } /* ExpandToc */
 
 /******************************************************************************
+ * Function:    int GrowChunks ()
+ *
+ * Parameters:
+ *		chunks		The chunk list, or a NULL list to allocate.
+ *		count		The number of entries the list must hold.
+ *
+ * Returns:     0 if successful, -1 if the list could not be allocated.
+ *		In that case *chunks is unchanged and still valid.
+ *
+ * Purpose:     Allocate or enlarge a chunk list.
+ *
+ ******************************************************************************/
+static	int
+GrowChunks(
+    void	***chunks,
+    int		  count)
+{
+    void	**newChunks;
+
+    if (count < 1 || (size_t) count > SIZE_MAX / sizeof(void *))
+	return -1;
+
+    if (*chunks == NULL)
+	newChunks = (void **) malloc (sizeof(void *) * count);
+    else
+	newChunks = (void **) realloc (*chunks, sizeof(void *) * count);
+
+    if (newChunks == NULL)
+	return -1;
+
+    *chunks = newChunks;
+    return 0;
+}
+
+/******************************************************************************
  * Function:    void CreateTitleChunks ()
  *
  * Parameters:
@@ -9363,6 +9440,7 @@ CreateTitleChunks(
 {
     long	 type;
     int		 cnt;
+    int		 savedCnt;
     int		 result = 0;
     const char	*myLang;
     const char	*mySet;
@@ -9374,6 +9452,7 @@ CreateTitleChunks(
 	myLang = lang;
 	mySet  = char_set;
 	cnt = *ret_cnt;
+	savedCnt = *ret_cnt;
 	if (_DtCvIsSegString(p_seg))
 	  {
 	    if (*ret_cnt == 0)
@@ -9382,13 +9461,16 @@ CreateTitleChunks(
 		cnt--;
 
 	    *ret_cnt = *ret_cnt + 3;
-	    if (*ret_chunks == NULL)
-		*ret_chunks = (void **) malloc (sizeof(void *) * (*ret_cnt));
-	    else
-		*ret_chunks = (void **) realloc (*ret_chunks,
-						sizeof(void *) * (*ret_cnt));
-	    if (*ret_chunks == NULL)
+
+	    /*
+	     * on failure the list built so far stays valid, with its
+	     * old count.
+	     */
+	    if (GrowChunks(ret_chunks, *ret_cnt) != 0)
+	      {
+		*ret_cnt = savedCnt;
 		return -1;
+	      }
 
 	    type = DT_HELP_CE_FONT_PTR | DT_HELP_CE_STRING;
 	    ptr  = _DtCvFontOfStringSeg(p_seg);
@@ -9459,13 +9541,11 @@ CreateTitleChunks(
 		    cnt--;
 
 	        *ret_cnt = *ret_cnt + 2;
-	        if (*ret_chunks == NULL)
-		    *ret_chunks = (void **) malloc (sizeof(void *) * *ret_cnt);
-	        else
-		    *ret_chunks = (void **) realloc (*ret_chunks,
-						sizeof(void *) * *ret_cnt);
-	        if (*ret_chunks == NULL)
+	        if (GrowChunks(ret_chunks, *ret_cnt) != 0)
+	          {
+		    *ret_cnt = savedCnt;
 		    return -1;
+		  }
 
 	        type = DT_HELP_CE_SPC;
 	        if (p_seg->next_disp == NULL || _DtCvIsSegNewLine(p_seg))

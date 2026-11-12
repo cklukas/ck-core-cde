@@ -48,6 +48,7 @@
 /*
  * system includes
  */
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -396,12 +397,19 @@ _DtCvAddPtrToArray (
            another chunk.  Also remember to move 'nextP' because the array
            will probably move in memory. */
         if ((numElements + 1) % REALLOC_INCR == 0) {
-            array = (void **) realloc (array,
+            void **newArray = NULL;
+
+            if ((size_t) numElements + 1 + REALLOC_INCR <=
+                                                SIZE_MAX / sizeof (void *))
+                newArray = (void **) realloc (array,
                         (numElements + 1 + REALLOC_INCR) * sizeof (void *));
-            if (array)
-                nextP = array + numElements;
-            else
-                nextP = NULL;
+            /* On failure the array is left unchanged, 'ptr' is not added,
+               and NULL is returned. */
+            if (newArray == NULL)
+                return NULL;
+
+            array = newArray;
+            nextP = array + numElements;
         }
     }
 
