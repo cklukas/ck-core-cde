@@ -76,6 +76,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xos.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -233,7 +234,20 @@ _DtAddEntry(
     }
 
     if (e->used == e->room) {
-        e->entry = (Entry *)realloc(e->entry, 2*e->room*(sizeof(Entry)));
+        Entry *grown;
+
+        if (e->room > INT_MAX / 2 ||
+            (size_t)e->room > SIZE_MAX / (2 * sizeof(Entry)))
+            grown = NULL;
+        else
+            grown = (Entry *)realloc(e->entry, 2*e->room*(sizeof(Entry)));
+        if (grown == NULL) {
+            /* the table keeps its old, valid block; the entry is dropped */
+            free(entry.tag);
+            free(entry.value);
+            return;
+        }
+        e->entry = grown;
         e->room *= 2;
     }
     entry.usable = True;

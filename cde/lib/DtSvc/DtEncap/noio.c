@@ -39,6 +39,7 @@
 #define XOS_USE_XT_LOCKING
 #include <X11/Xos_r.h>
 #include <limits.h>
+#include <stdint.h>
 
 #include <SPC/spcP.h>
 #include "DtSvcLock.h"
@@ -220,6 +221,7 @@ SPC_Channel_Ptr open_noio_channel_object(SPC_Channel_Ptr channel,
   int i=0;
   SPC_Channel_Ptr result;
   XeString temp_dir_name = NULL;
+  char **new_list;
   
   call_parent_method(channel, open, (channel, iomode, hostname), result);
 
@@ -246,20 +248,35 @@ SPC_Channel_Ptr open_noio_channel_object(SPC_Channel_Ptr channel,
       /*
        * Create the first block plus the NULL terminator.
        */
-      SPC_logfile_list = (char **) malloc (2 * sizeof (char *));
+      new_list = (char **) malloc (2 * sizeof (char *));
     else {
       /*
        * Need to add this file to the end of the list.
        */
       for (i = 0; SPC_logfile_list[i] != NULL; i++);
-      SPC_logfile_list = (char **) realloc (SPC_logfile_list, 
-					    (i+2) * sizeof (char *));
+      if ((size_t) i > SIZE_MAX / sizeof (char *) - 2)
+	new_list = NULL;
+      else
+	new_list = (char **) realloc (SPC_logfile_list,
+				      (i+2) * sizeof (char *));
     }
-    if (channel->logfile != NULL)
-       SPC_logfile_list[i] = strdup (channel->logfile);
-    else
-       SPC_logfile_list[i] = (char *) NULL;
-    SPC_logfile_list[i+1] = (char *) NULL;
+    if (new_list == NULL) {
+      /*
+       * The list keeps its old, valid block.  Without an entry in it the
+       * logfile name could not be removed by the daemon, so give the name
+       * up and report the failure below.
+       */
+      free (channel->logfile);
+      channel->logfile = NULL;
+    }
+    else {
+      SPC_logfile_list = new_list;
+      if (channel->logfile != NULL)
+	SPC_logfile_list[i] = strdup (channel->logfile);
+      else
+	SPC_logfile_list[i] = (char *) NULL;
+      SPC_logfile_list[i+1] = (char *) NULL;
+    }
     _DtSvcProcessUnlock();
 
     if(!channel->logfile) {

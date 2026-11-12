@@ -61,8 +61,8 @@
 #include "myassertP.h"
 #include "DtSvcLock.h"
 
-static void build_file_list(DtShmProtoIntList, DtDirPaths *,
-			    DtDtsMMHeader *, const char *);
+static int build_file_list(DtShmProtoIntList, DtDirPaths *,
+			   DtDtsMMHeader *, const char *);
 extern	int	cde_dc_field_compare(const void *, const void *);
 extern	int	cde_dc_compare(const void *, const void *);
 static void	_DtMMSortDataTypes(DtShmProtoStrtab str_handle);
@@ -97,7 +97,11 @@ _MMWriteDb(DtDirPaths *dirs, int num_db, DtDtsDbDatabase **db_list,
 	int_handle = _DtShmProtoInitIntLst(50000);
 	shm_handle = _DtShmProtoInitStrtab(10000);
 
-	build_file_list(int_handle, dirs, &header, suffix);
+	if (!build_file_list(int_handle, dirs, &header, suffix))
+	{
+		returnCode = 0;
+		goto done;
+	}
 
 	_DtMMSortDataTypes(shm_handle);
 	db = (DtDtsDbDatabase	*) _DtDtsDbGet(DtDTS_DA_NAME);
@@ -108,7 +112,11 @@ _MMWriteDb(DtDirPaths *dirs, int num_db, DtDtsDbDatabase **db_list,
 	header.db_offset = build_new_db(shm_handle, int_handle, num_db,
 db_list);
 	db = (DtDtsDbDatabase	*) _DtDtsDbGet("DATA_CRITERIA");
-	build_name_list(db, int_handle, &header);
+	if (build_name_list(db, int_handle, &header) < 0)
+	{
+		returnCode = 0;
+		goto done;
+	}
 
 	tbl_size = _DtShmProtoSizeStrtab(shm_handle);
 	tbl_data = (void *) _DtShmProtoAddIntLst(int_handle,
@@ -122,19 +130,65 @@ db_list);
 	tbl_data = (void *)_DtShmProtoCopyIntLst(int_handle, tbl_data);
 
 	returnCode = write_db(&header, tbl_data, tbl_size, CacheFile);
+	free(tbl_data);
+
+done:
 	_DtShmProtoDestroyStrtab(shm_handle);
 	_DtShmProtoDestroyIntLst(int_handle);
 	_DtSvcProcessUnlock();
-	free(tbl_data);
 
 	return returnCode;
 }
 
-static void
+/*
+ * Make room for COUNT entries in both lists of the file scan.  A list keeps
+ * its old, valid block when the larger one cannot be allocated.
+ */
+static int
+grow_file_lists(DtShmBoson **boson_list, time_t **mtime_list, int count)
+{
+	DtShmBoson	*new_bosons;
+	time_t		*new_mtimes;
+
+	if (count < 1 ||
+	    (size_t)count > SIZE_MAX / sizeof(DtShmBoson) ||
+	    (size_t)count > SIZE_MAX / sizeof(time_t))
+		return 0;
+	new_bosons = (DtShmBoson *)realloc(*boson_list,
+					   count*sizeof(DtShmBoson));
+	if (new_bosons == NULL)
+		return 0;
+	*boson_list = new_bosons;
+	new_mtimes = (time_t *)realloc(*mtime_list, count*sizeof(time_t));
+	if (new_mtimes == NULL)
+		return 0;
+	*mtime_list = new_mtimes;
+	return 1;
+}
+
+/*
+ * Make room for COUNT record numbers in LIST.
+ */
+static int
+grow_record_list(int **list, int count)
+{
+	int	*new_list;
+
+	if (count < 1 || (size_t)count > SIZE_MAX / sizeof(int))
+		return 0;
+	new_list = (int *)realloc(*list, count*sizeof(int));
+	if (new_list == NULL)
+		return 0;
+	*list = new_list;
+	return 1;
+}
+
+/* Returns 1 on success and 0, with nothing left allocated, on failure. */
+static int
 build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 		DtDtsMMHeader *header, const char *suffix)
 {
-	DIR 			*dirp;
+	DIR 			*dirp = NULL;
 	struct dirent		*dp = NULL;
 	struct stat		buf;
 	char			cur_path[MAXPATHLEN+1];
@@ -160,8 +214,8 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 		chdir(dirs->paths[i]);
 		stat(".", &buf);
 		count++;
-		boson_list = (int *)realloc(boson_list, count*sizeof(int));
-		mtime_list = (time_t *)realloc(mtime_list, count*sizeof(time_t));
+		if (!grow_file_lists(&boson_list, &mtime_list, count))
+			goto fail;
 
 		mtime_list[count-1] = buf.st_mtime;
 		boson_list[count-1] = _DtShmProtoAddStrtab(shm_handle, dirs->paths[i], &isnew);
@@ -175,8 +229,11 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 				sprintf(pathname, "%s/%s", dirs->paths[i], result->d_name);
 				stat(result->d_name, &buf);
 				count++;
-				boson_list = (int *)realloc(boson_list, count*sizeof(int));
-				mtime_list = (time_t *)realloc(mtime_list, count*sizeof(time_t));
+				if (!grow_file_lists(&boson_list, &mtime_list, count))
+				{
+					free(pathname);
+					goto fail;
+				}
 				mtime_list[count-1] = buf.st_mtime;
 				boson_list[count-1] = _DtShmProtoAddStrtab(shm_handle,
 					pathname, &isnew);
@@ -185,6 +242,7 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 			}
 		}
 		(void)closedir( dirp );
+		dirp = NULL;
 	}
 	chdir(cur_path);
 	data = _DtShmProtoAddIntLst(int_handle, count, &header->files_offset);
@@ -194,7 +252,15 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 	header->files_count = count;
 	free(boson_list);
 	free(mtime_list);
-	return;
+	return 1;
+
+fail:
+	if (dirp)
+		(void)closedir(dirp);
+	chdir(cur_path);
+	free(boson_list);
+	free(mtime_list);
+	return 0;
 }
 
 static int
@@ -597,8 +663,9 @@ printf("head->buffer_start_index = %d\n", head->buffer_start_index);
 		if(i != next && (last_boson == -1 || name_index[i].boson == last_boson))
 		{
 			/* this a new list of records or an addition to one */
-			list_of_recs = (int *)realloc(list_of_recs, 
-					++list_count*sizeof(int));
+			if (!grow_record_list(&list_of_recs, list_count + 1))
+				goto fail;
+			list_count++;
 			last_boson = name_index[i].boson;
 			list_of_recs[list_count-1] = name_index[i].rec;
 		}
@@ -628,9 +695,11 @@ printf("head->buffer_start_index = %d\n", head->buffer_start_index);
 				   so that we know it is a list */
 				_DtShmProtoAddInttab(indexList,
 						last_boson, -index);
-				list_count = 0;
-				list_of_recs = (int *)realloc(list_of_recs, 
-						++list_count*sizeof(int));
+				/* only one record is kept from here on; if
+				   the block cannot shrink, the larger one
+				   stays valid */
+				list_count = 1;
+				(void)grow_record_list(&list_of_recs, 1);
 			}
 			if ( i != next )
 			{
@@ -670,6 +739,14 @@ printf("head->buffer_start_index = %d\n", head->buffer_start_index);
 	free(list_of_recs);
 	free(other);
 	return(index);
+
+fail:
+	if (indexList)
+		_DtShmProtoDestroyInttab(indexList);
+	free(name_index);
+	free(list_of_recs);
+	free(other);
+	return(-1);
 }
 
 static int

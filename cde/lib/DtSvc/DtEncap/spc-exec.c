@@ -39,6 +39,7 @@
 #include <sys/wait.h>
 #include <sys/param.h>
 #include <limits.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <locale.h>
 
@@ -367,6 +368,59 @@ static Boolean executable_predicate(XeString path, XeString dir, XeString file)
   return(access(path, X_OK | F_OK) == 0);
 }
 
+/*
+ * Entry of SPC_pid_list that is claimed for a sub-process which is about to
+ * be started, until its pid is known.
+ */
+#define SPC_PID_RESERVED	(-2)
+
+/*
+ * Claim an entry of SPC_pid_list for a new sub-process: a dead entry if
+ * there is one, otherwise a new entry at the end.  The caller holds the
+ * process lock.  Returns 0, with SPC_pid_list still valid and unchanged,
+ * if the list cannot grow.  Otherwise returns 1 and the index of the
+ * claimed entry in *SLOT.
+ */
+static int
+reserve_pid_slot(int *slot)
+{
+  pid_t *list;
+  int i = 0;
+
+  if (SPC_pid_list == NULL) {
+    /*
+     * Create the first block plus the NULL terminator.
+     */
+    list = (pid_t *) malloc (2 * sizeof (pid_t));
+    if (list == NULL)
+      return 0;
+    list[1] = 0;
+  }
+  else {
+    /*
+     * If a dead pid entry exists, reuse it; otherwise, must create
+     * room for the new pid.
+     */
+    for (i = 0; SPC_pid_list[i] != 0; i++)
+      if (SPC_pid_list[i] == SPCD_DEAD_PROCESS)
+	break;
+    if (SPC_pid_list[i] == 0) {
+      if ((size_t) i > SIZE_MAX / sizeof (pid_t) - 2)
+	return 0;
+      list = (pid_t *) realloc (SPC_pid_list, (i+2) * sizeof (pid_t));
+      if (list == NULL)
+	return 0;
+      list[i+1] = 0;
+    }
+    else
+      list = SPC_pid_list;
+  }
+  list[i] = SPC_PID_RESERVED;
+  SPC_pid_list = list;
+  *slot = i;
+  return 1;
+}
+
 /*----------------------------------------------------------------------+*/
 int exec_proc_local_channel_object(SPC_Channel_Ptr channel)
 /*----------------------------------------------------------------------+*/
@@ -377,7 +431,7 @@ int exec_proc_local_channel_object(SPC_Channel_Ptr channel)
     XeString *envp;
     XeString dir = XeString_NULL;
     int retval;
-    int i, reuse_pid = 0;
+    int slot;
     
     call_parent_method(channel, exec_proc, (channel), result);
     
@@ -465,39 +519,27 @@ int exec_proc_local_channel_object(SPC_Channel_Ptr channel)
         return(SPC_ERROR);
     }
 
-    pid = channel->pid = fork();
-    
     /*
-     * Must save this pid so that when the daemon's timer goes off,
-     * if there has been no activity and there are no sub-processes
-     * running, the daemon can exit.
+     * Must save the pid of the new process so that when the daemon's
+     * timer goes off, if there has been no activity and there are no
+     * sub-processes running, the daemon can exit.  Claim the place for it
+     * before forking, so that a failure to make room does not leave a
+     * running process the daemon does not know about.
      */
-    i = 0;
     _DtSvcProcessLock();
-    if (SPC_pid_list == NULL)
-      /*
-       * Create the first block plus the NULL terminator.
-       */
-      SPC_pid_list = (pid_t *) malloc (2 * sizeof (pid_t));
-    else {
-      /*
-       * If a dead pid entry exists, reuse it; otherwise, must create 
-       * room for the new pid.
-       */
-      for (i = 0; SPC_pid_list[i] != 0; i++)
-        if (SPC_pid_list[i] == SPCD_DEAD_PROCESS) {
-	  SPC_pid_list[i] = pid;
-	  reuse_pid = 1;
-	  break;
-	}
-      if (!reuse_pid)
-	SPC_pid_list = (pid_t *) realloc (SPC_pid_list, 
-					   (i+2) * sizeof (pid_t));
+    if (!reserve_pid_slot(&slot)) {
+      _DtSvcProcessUnlock();
+      SPC_Error(SPC_Out_Of_Memory);
+      XeFree(dir);
+      sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)NULL);
+      return(SPC_ERROR);
     }
-    if (!reuse_pid) {
-      SPC_pid_list[i] = pid;
-      SPC_pid_list[i+1] = 0;
-    }
+    _DtSvcProcessUnlock();
+
+    pid = channel->pid = fork();
+
+    _DtSvcProcessLock();
+    SPC_pid_list[slot] = pid;
     _DtSvcProcessUnlock();
 
     if (pid) {
