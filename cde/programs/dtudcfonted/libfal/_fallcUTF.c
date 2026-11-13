@@ -522,7 +522,7 @@ init_jis0208tab(long *tbl, long fb_default)
     char	filename[BUFSIZE];
     char	*p, *q;
 
-    if((tabkuten = (long *)Xmalloc(KUTENMAX * sizeof(long))) == nullptr) {
+    if((tabkuten = (long *)Xcalloc(KUTENMAX, sizeof(long))) == nullptr) {
 	return;
     }
     _fallcResolveI18NPath(dirname);
@@ -558,7 +558,7 @@ init_ksc5601tab(long *tbl, long fb_default)
     char	filename[BUFSIZE];
     char	*p, *q;
 
-    if((tabksc5601 = (long *)Xmalloc(KSCMAX * sizeof(long))) == nullptr) {
+    if((tabksc5601 = (long *)Xcalloc(KSCMAX, sizeof(long))) == nullptr) {
 	return;
     }
     _fallcResolveI18NPath(dirname);
@@ -594,7 +594,7 @@ init_gb2312tab(long *tbl, long fb_default)
     char	filename[BUFSIZE];
     char	*p, *q;
 
-    if((tabgb = (long *)Xmalloc(GBMAX * sizeof(long))) == nullptr) {
+    if((tabgb = (long *)Xcalloc(GBMAX, sizeof(long))) == nullptr) {
 	return;
     }
     _fallcResolveI18NPath(dirname);
@@ -662,7 +662,7 @@ _XlcInitUTFInfo(XLCd lcd)
 			continue;
 		    } else {
 			pdata->initialize = default_utf_data[j].initialize;
-			pdata->fromtbl = (long *)Xmalloc(NRUNE * sizeof(long));
+			pdata->fromtbl = (long *)Xcalloc(NRUNE, sizeof(long));
 			(*pdata->initialize)(pdata->fromtbl, default_utf_data[j].fallback_value);
 			pdata->already_init = True;
 			pdata->charset = charset;

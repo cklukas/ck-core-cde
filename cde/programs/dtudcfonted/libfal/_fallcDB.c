@@ -454,11 +454,11 @@ append_value_list(void)
     }
 
     if(value_list == (char **)nullptr){
-	value_list = (char **)Xmalloc(sizeof(char *) * 2);
+	value_list = (char **)Xcalloc(2, sizeof(char *));
 	*value_list = nullptr;
     }else{
 	value_list = (char **)
-	    Xrealloc(value_list, sizeof(char *) * (value_num + 2));
+	    reallocarray(value_list, value_num + 2, sizeof(char *));
     }
     if(value_list == (char **)nullptr){
 	goto err;
@@ -1149,7 +1149,7 @@ _fallcCreateLocaleDataBase(XLCd lcd)
 	return (XPointer)NULL;
     }
     n = CountDatabase(database);
-    lc_db = (XlcDatabase)Xmalloc(sizeof(XlcDatabaseRec) * (n + 1));
+    lc_db = (XlcDatabase)Xcalloc((n + 1), sizeof(XlcDatabaseRec));
     if(lc_db == (XlcDatabase)NULL){
 	DestroyDatabase(database);
 	if(lc_db != (XlcDatabase)NULL){

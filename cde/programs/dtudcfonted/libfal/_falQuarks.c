@@ -210,15 +210,14 @@ ExpandQuarkTable(void)
 	newmask = (oldmask << 1) + 1;
     else {
 	if (!stringTable) {
-	    stringTable = (XrmString **)Xmalloc(sizeof(XrmString *) *
-						CHUNKPER);
+	    stringTable = (XrmString **)Xcalloc(CHUNKPER, sizeof(XrmString *));
 	    if (!stringTable)
 		return False;
 	    stringTable[0] = (XrmString *)nullptr;
 	}
 #ifdef PERMQ
 	if (!permTable)
-	    permTable = (Bits **)Xmalloc(sizeof(Bits *) * CHUNKPER);
+	    permTable = (Bits **)Xcalloc(CHUNKPER, sizeof(Bits *));
 	if (!permTable)
 	    return False;
 #endif
@@ -230,7 +229,7 @@ ExpandQuarkTable(void)
 #endif
 	newmask = 0x1ff;
     }
-    entries = (Entry *)Xmalloc(sizeof(Entry) * (newmask + 1));
+    entries = (Entry *)Xcalloc((newmask + 1), sizeof(Entry));
     if (!entries)
 	return False;
     memset((char *)entries, 0, sizeof(Entry) * (newmask + 1));
@@ -324,17 +323,17 @@ XrmQuark _falrmInternalStringToQuark(
     q = nextQuark;
     if (!(q & QUANTUMMASK)) {
 	if (!(q & CHUNKMASK)) {
-	    if (!(new = Xrealloc((char *)stringTable,
-				 sizeof(XrmString *) *
-				 ((q >> QUANTUMSHIFT) + CHUNKPER)))){
+	    if (!(new = reallocarray((char *)stringTable,
+				 (q >> QUANTUMSHIFT) + CHUNKPER,
+				 sizeof(XrmString *)))){
 		_XUnlockMutex(_Xglobal_lock);
 		return NULLQUARK;
 	    }
 	    stringTable = (XrmString **)new;
 #ifdef PERMQ
-	    if (!(new = Xrealloc((char *)permTable,
-				 sizeof(Bits *) *
-				 ((q >> QUANTUMSHIFT) + CHUNKPER)))){
+	    if (!(new = reallocarray((char *)permTable,
+				 (q >> QUANTUMSHIFT) + CHUNKPER,
+				 sizeof(Bits *)))){
 		_XUnlockMutex(_Xglobal_lock);
 		return NULLQUARK;
 	    }

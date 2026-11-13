@@ -550,7 +550,7 @@ static void GrowTable(NTable *prev)
 	ltable = (LTable)table;
 	/* cons up a copy to make MoveValues look symmetric */
 	otable = *ltable;
-	ltable->buckets = (VEntry *)Xmalloc(i * sizeof(VEntry));
+	ltable->buckets = (VEntry *)Xcalloc(i, sizeof(VEntry));
 	if (!ltable->buckets) {
 	    ltable->buckets = otable.buckets;
 	    return;
@@ -1053,7 +1053,7 @@ static void GetDatabase(
     if (!db)
 	return;
 
-    if (!(value_str = Xmalloc(sizeof(char) * alloc_chars)))
+    if (!(value_str = Xcalloc(alloc_chars, sizeof(char))))
 	return;
 
     (*db->methods->mbinit)(db->mbstate);
@@ -1389,7 +1389,7 @@ static void GetDatabase(
 		char * temp_str;
 
 		alloc_chars += BUFSIZ/10;
-		temp_str = Xrealloc(value_str, sizeof(char) * alloc_chars);
+		temp_str = reallocarray(value_str, alloc_chars, sizeof(char));
 
 		if (!temp_str) {
 		    Xfree(value_str);

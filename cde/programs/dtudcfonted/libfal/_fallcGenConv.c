@@ -1263,7 +1263,7 @@ mbstocts(
     XPointer *args,
     int num_args)
 {
-    XPointer buf = Xmalloc((*from_left) * sizeof(wchar_t));
+    XPointer buf = Xcalloc((*from_left), sizeof(wchar_t));
     XPointer buf_ptr1 = buf;
     int buf_left1 = (*from_left);
     XPointer buf_ptr2 = buf_ptr1;
@@ -1854,7 +1854,7 @@ ctstombs(
     XPointer *args,
     int num_args)
 {
-    XPointer buf = Xmalloc((*from_left) * sizeof(wchar_t));
+    XPointer buf = Xcalloc((*from_left), sizeof(wchar_t));
     XPointer buf_ptr1 = buf;
     int buf_left1 = (*from_left);
     XPointer buf_ptr2 = buf_ptr1;

@@ -317,7 +317,7 @@ CreateMenuButtons( Widget owner, Button *buttons, int buttons_cnt )
 #define NMNIC(x)	(buttons->items[(x)].mnemonic)
 #define SENS(x) 	(buttons->items[(x)].sensitive)
 
-    buttons->w = (Widget *) malloc(sizeof(Widget)*buttons_cnt);
+    buttons->w = (Widget *) calloc(buttons_cnt, sizeof(Widget));
 
     if (buttons->w) {
 	for (i=0; i<buttons_cnt; i++) {

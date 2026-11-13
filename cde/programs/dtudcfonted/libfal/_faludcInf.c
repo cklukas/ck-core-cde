@@ -255,7 +255,7 @@ int  *num_gr)
         sprintf(buf, "fs%d.charset.udc_area", codeset-1);
         _fallcGetLocaleDataBase(lcd, "XLC_FONTSET", buf, &value, &count);
         if(count > 0){
-            udc = (FalGlyphRegion *)Xmalloc(count * sizeof(FalGlyphRegion));
+            udc = (FalGlyphRegion *)Xcalloc(count, sizeof(FalGlyphRegion));
             if(udc == nullptr){
 		fal_utyerrno = 0x03 ;
 		fal_utyerrno |= (0x0b<<8) ;
@@ -491,7 +491,7 @@ int  *num_cr)
 	return(ret);
     }
 
-    crr = (FalCodeRegion *)Xmalloc(num_gr*sizeof(FalCodeRegion));
+    crr = (FalCodeRegion *)Xcalloc(num_gr, sizeof(FalCodeRegion));
     if(crr == nullptr){
 	Xfree(gr);
 	fal_utyerrno = 0x03 ;

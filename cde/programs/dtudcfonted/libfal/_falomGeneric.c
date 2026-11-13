@@ -101,7 +101,7 @@ init_fontdata(FontData font_data, int font_data_count)
     FontData	fd;
     int		i;
 
-    fd = (FontData)Xmalloc(sizeof(FontDataRec) * font_data_count);
+    fd = (FontData)Xcalloc(font_data_count, sizeof(FontDataRec));
     if(fd == (FontData) NULL)
 	return False;
 
@@ -126,7 +126,7 @@ init_vrotate(
     if(type == VROTATE_NONE)
 	return (VRotate)NULL;
 
-    vrotate = (VRotate)Xmalloc(sizeof(VRotateRec) * font_data_count);
+    vrotate = (VRotate)Xcalloc(font_data_count, sizeof(VRotateRec));
     if(vrotate == (VRotate) NULL)
 	return False;
 
@@ -155,7 +155,7 @@ init_fontset(XOC oc)
     count = XOM_GENERIC(oc->core.om)->data_num;
     data = XOM_GENERIC(oc->core.om)->data;
 
-    font_set = (FontSet) Xmalloc(sizeof(FontSetRec) * count);
+    font_set = (FontSet) Xcalloc(count, sizeof(FontSetRec));
     if (font_set == nullptr)
 	return False;
     memset((char *) font_set, 0x00, sizeof(FontSetRec) * count);
@@ -524,11 +524,11 @@ init_core_part(XOC oc)
     if (count == 0)
         return False;
 
-    font_struct_list = (XFontStruct **) Xmalloc(sizeof(XFontStruct *) * count);
+    font_struct_list = (XFontStruct **) Xcalloc(count, sizeof(XFontStruct *));
     if (font_struct_list == nullptr)
 	return False;
 
-    font_name_list = (char **) Xmalloc(sizeof(char *) * count);
+    font_name_list = (char **) Xcalloc(count, sizeof(char *));
     if (font_name_list == nullptr){
 	    if (font_name_list)
 		Xfree(font_name_list);
@@ -892,8 +892,8 @@ parse_vw(XOC oc, FontSet font_set, char	**name_list, int count)
 	    Xfree(vrotate);
 
 	    if(sub_num > 0) {
-		vrotate = font_set->vrotate = (VRotate)Xmalloc
-						(sizeof(VRotateRec) * sub_num);
+		vrotate = font_set->vrotate = (VRotate)Xcalloc
+						(sub_num, sizeof(VRotateRec));
 		if(font_set->vrotate == (VRotate)NULL)
 		    return (-1);
 
@@ -1096,7 +1096,7 @@ set_missing_list(XOC oc)
     if (count < 1)
 	return True;
 
-    charset_list = (char **) Xmalloc(sizeof(char *) * count);
+    charset_list = (char **) Xcalloc(count, sizeof(char *));
     if (charset_list == nullptr)
 	return False;
 
@@ -1621,7 +1621,7 @@ falread_EncodingInfo(int count, char **value)
     FontScope scope;
     int len;
     extern FontScope falparse_scopemaps(char *str, int *size);
-    font_data = (FontData) Xmalloc(sizeof(FontDataRec) * count);
+    font_data = (FontData) Xcalloc(count, sizeof(FontDataRec));
     if (font_data == nullptr)
         return nullptr;
     memset((char *) font_data, 0, sizeof(FontDataRec) * count);
@@ -1746,7 +1746,7 @@ init_om(XOM om)
 	if (data == nullptr)
 	    return False;
 
-	charset_list = (XlcCharSet *) Xmalloc(sizeof(XlcCharSet) * count);
+	charset_list = (XlcCharSet *) Xcalloc(count, sizeof(XlcCharSet));
 	if (charset_list == nullptr)
 	    return False;
 	data->charset_list = charset_list;
@@ -1760,7 +1760,7 @@ init_om(XOM om)
         if( count > 0){
             UDCArea udc;
             int i,flag = 0;
-            udc = (UDCArea)Xmalloc(count * sizeof(UDCAreaRec));
+            udc = (UDCArea)Xcalloc(count, sizeof(UDCAreaRec));
 	    if (udc == nullptr)
 	        return False;
             for(i=0;i<count;i++){
@@ -1819,7 +1819,7 @@ init_om(XOM om)
     }
 
     /* required charset list */
-    required_list = (char **) Xmalloc(sizeof(char *) * gen->data_num);
+    required_list = (char **) Xcalloc(gen->data_num, sizeof(char *));
     if (required_list == nullptr)
 	return False;
 
@@ -1842,7 +1842,7 @@ init_om(XOM om)
     }
 
     /* orientation list */
-    orientation = (XOrientation *) Xmalloc(sizeof(XOrientation) * 2);
+    orientation = (XOrientation *) Xcalloc(2, sizeof(XOrientation));
     if (orientation == nullptr)
 	return False;
 

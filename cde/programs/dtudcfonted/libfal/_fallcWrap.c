@@ -487,7 +487,7 @@ _fallcVaToArgList(va_list var, int count, XlcArgList *args_ret)
 {
     XlcArgList args;
 
-    *args_ret = args = (XlcArgList) Xmalloc(sizeof(XlcArg) * count);
+    *args_ret = args = (XlcArgList) Xcalloc(count, sizeof(XlcArg));
     if (args == (XlcArgList) NULL)
 	return;
 

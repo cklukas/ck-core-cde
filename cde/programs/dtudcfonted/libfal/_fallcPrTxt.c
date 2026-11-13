@@ -58,11 +58,11 @@ alloc_list(Bool is_wide_char, int count, int nitems)
     if (is_wide_char) {
 	wchar_t **wstr_list;
 
-	wstr_list = (wchar_t **) Xmalloc(count * sizeof(wchar_t *));
+	wstr_list = (wchar_t **) Xcalloc(count, sizeof(wchar_t *));
 	if (wstr_list == nullptr)
 	    return (XPointer *) nullptr;
 
-	*wstr_list = (wchar_t *) Xmalloc(nitems * sizeof(wchar_t));
+	*wstr_list = (wchar_t *) Xcalloc(nitems, sizeof(wchar_t));
 	if (*wstr_list == nullptr) {
 	    Xfree(wstr_list);
 	    return (XPointer *) nullptr;
@@ -72,7 +72,7 @@ alloc_list(Bool is_wide_char, int count, int nitems)
     } else {
 	char **str_list;
 
-	str_list = (char **) Xmalloc(count * sizeof(char *));
+	str_list = (char **) Xcalloc(count, sizeof(char *));
 	if (str_list == nullptr)
 	    return (XPointer *) nullptr;
 
@@ -162,7 +162,7 @@ _XTextPropertyToTextList(
 
     if (is_wide_char) {
 	buf_len = text_prop->nitems + 1;
-	buf = (XPointer) Xmalloc(buf_len * sizeof(wchar_t));
+	buf = (XPointer) Xcalloc(buf_len, sizeof(wchar_t));
     } else {
 	buf_len = text_prop->nitems * XLC_PUBLIC(lcd, mb_cur_max) + 1;
 	buf = (XPointer) Xmalloc(buf_len);
