@@ -2,10 +2,12 @@ MAINTAINERCLEANFILES = Makefile.in
 
 include ../dtdocbook.am
 
-EXTRA_DIST = tests/check-posix-error-msg.py tests/check-posix-error-msg.cc
+EXTRA_DIST = tests/check-posix-error-msg.py tests/check-posix-error-msg.cc \
+	tests/check-sgmlname-growth.py tests/check-sgmlname-growth.cc
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-posix-error-msg.py
+	CXX="$(CXX)" python3 $(srcdir)/tests/check-sgmlname-growth.py --scratch check-sgmlname-growth.tmp
 
 infolibdir = $(dtdocbooklibexecdir)/infolib
 
