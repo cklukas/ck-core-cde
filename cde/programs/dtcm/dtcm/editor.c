@@ -429,7 +429,7 @@ form_to_appt(Editor *e) {
 		return nullptr;
 	}
 	a->type->value->item.sint32_value = CSA_TYPE_EVENT;
-	a->subtype->value->item.string_value = strdup(CSA_SUBTYPE_APPOINTMENT);
+	a->subtype->value->item.string_value = XtNewString(CSA_SUBTYPE_APPOINTMENT);
 	a->state->value->item.sint32_value = CSA_X_DT_STATUS_ACTIVE;
 
 	return a;

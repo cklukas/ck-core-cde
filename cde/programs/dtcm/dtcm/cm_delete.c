@@ -167,11 +167,9 @@ int main(int argc, char **argv)
 	stat = csa_logon(nullptr, &csa_user, nullptr, nullptr, nullptr, &c_handle, nullptr);
 
 	if (stat != CSA_SUCCESS) {
-		char *format = strdup(CATGETS(DT_catd, 1, 188,
-					   "\nCould not open calendar %s\n"));
-		fprintf(stderr, format,
+		fprintf(stderr, CATGETS(DT_catd, 1, 188,
+					"\nCould not open calendar %s\n"),
 			target ? target : CATGETS(DT_catd, 1, 189, "UNKNOWN"));
-		free(format);
 		free(uname);
 		free(loc);
 		exit(1);

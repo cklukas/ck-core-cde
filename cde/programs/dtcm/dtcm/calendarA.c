@@ -261,9 +261,13 @@ allocate_paint_cache(CSA_entry_handle *list, int num_entries, Paint_cache **retu
 	Dtcm_appointment 	*appt;
         Calendar 		*c=calendar;
 	CSA_return_code 	stat = CSA_SUCCESS;
-	Paint_cache	*cache = (Paint_cache *) calloc(sizeof(Paint_cache), num_entries);
+	Paint_cache	*cache = (Paint_cache *) calloc(num_entries, sizeof(Paint_cache));
 	int 			i;
 
+	if (cache == nullptr && num_entries > 0) {
+		*return_cache = nullptr;
+		return(CSA_E_INSUFFICIENT_MEMORY);
+	}
 
 	appt = allocate_appt_struct(appt_read,
 				    c->general->version,
@@ -295,6 +299,12 @@ allocate_paint_cache(CSA_entry_handle *list, int num_entries, Paint_cache **retu
 			cache[i].end_time = 0;
 
 		cache[i].summary = strdup(appt->what->value->item.string_value);
+		if (cache[i].summary == nullptr) {
+			destroy_paint_cache(cache, i);
+			*return_cache = nullptr;
+			free_appt_struct(&appt);
+			return(CSA_E_INSUFFICIENT_MEMORY);
+		}
 		cache[i].show_time = showtime_set(appt);
 	}
 
@@ -2502,12 +2512,12 @@ get_user_calendar(void)
 	uname = cm_get_uname();
 	if ((loc = get_char_prop((Props *)calendar->properties, CP_CALLOC)) &&
 	    *loc != '\0') {
-		loc = strdup(loc);
+		loc = XtNewString(loc);
 		needfree = True;
 	} else
 		loc = cm_get_local_host();
 
-	name = malloc(strlen(uname) + strlen(loc) + 2);
+	name = XtMalloc(strlen(uname) + strlen(loc) + 2);
 	sprintf(name, "%s@%s", uname, loc);
 
 	if (needfree) free(loc);
@@ -2983,31 +2993,31 @@ init_strings(void)
 {
 	char *display_lang="C";
 
-	months[1] = strdup(CATGETS(calendar->DT_catd, 1, 114, "January"));
-	months[2] = strdup(CATGETS(calendar->DT_catd, 1, 115, "February"));
-	months[3] = strdup(CATGETS(calendar->DT_catd, 1, 116, "March"));
-	months[4] = strdup(CATGETS(calendar->DT_catd, 1, 117, "April"));
-	months[5] = strdup(CATGETS(calendar->DT_catd, 1, 118, "May"));
-	months[6] = strdup(CATGETS(calendar->DT_catd, 1, 119, "June"));
-	months[7] = strdup(CATGETS(calendar->DT_catd, 1, 120, "July"));
-	months[8] = strdup(CATGETS(calendar->DT_catd, 1, 121, "August"));
-	months[9] = strdup(CATGETS(calendar->DT_catd, 1, 122, "September"));
-	months[10] = strdup(CATGETS(calendar->DT_catd, 1, 123, "October"));
-	months[11] = strdup(CATGETS(calendar->DT_catd, 1, 124, "November"));
-	months[12] = strdup(CATGETS(calendar->DT_catd, 1, 125, "December"));
+	months[1] = ckstrdup(CATGETS(calendar->DT_catd, 1, 114, "January"));
+	months[2] = ckstrdup(CATGETS(calendar->DT_catd, 1, 115, "February"));
+	months[3] = ckstrdup(CATGETS(calendar->DT_catd, 1, 116, "March"));
+	months[4] = ckstrdup(CATGETS(calendar->DT_catd, 1, 117, "April"));
+	months[5] = ckstrdup(CATGETS(calendar->DT_catd, 1, 118, "May"));
+	months[6] = ckstrdup(CATGETS(calendar->DT_catd, 1, 119, "June"));
+	months[7] = ckstrdup(CATGETS(calendar->DT_catd, 1, 120, "July"));
+	months[8] = ckstrdup(CATGETS(calendar->DT_catd, 1, 121, "August"));
+	months[9] = ckstrdup(CATGETS(calendar->DT_catd, 1, 122, "September"));
+	months[10] = ckstrdup(CATGETS(calendar->DT_catd, 1, 123, "October"));
+	months[11] = ckstrdup(CATGETS(calendar->DT_catd, 1, 124, "November"));
+	months[12] = ckstrdup(CATGETS(calendar->DT_catd, 1, 125, "December"));
 
-	months2[1] = strdup(CATGETS(calendar->DT_catd, 1, 126, "Jan"));
-	months2[2] = strdup(CATGETS(calendar->DT_catd, 1, 127, "Feb"));
-	months2[3] = strdup(CATGETS(calendar->DT_catd, 1, 128, "Mar"));
-	months2[4] = strdup(CATGETS(calendar->DT_catd, 1, 129, "Apr"));
-	months2[5] = strdup(CATGETS(calendar->DT_catd, 1, 130, "May"));
-	months2[6] = strdup(CATGETS(calendar->DT_catd, 1, 131, "Jun"));
-	months2[7] = strdup(CATGETS(calendar->DT_catd, 1, 132, "Jul"));
-	months2[8] = strdup(CATGETS(calendar->DT_catd, 1, 133, "Aug"));
-	months2[9] = strdup(CATGETS(calendar->DT_catd, 1, 134, "Sep"));
-	months2[10] = strdup(CATGETS(calendar->DT_catd, 1, 135, "Oct"));
-	months2[11] = strdup(CATGETS(calendar->DT_catd, 1, 136, "Nov"));
-	months2[12] = strdup(CATGETS(calendar->DT_catd, 1, 137, "Dec"));
+	months2[1] = ckstrdup(CATGETS(calendar->DT_catd, 1, 126, "Jan"));
+	months2[2] = ckstrdup(CATGETS(calendar->DT_catd, 1, 127, "Feb"));
+	months2[3] = ckstrdup(CATGETS(calendar->DT_catd, 1, 128, "Mar"));
+	months2[4] = ckstrdup(CATGETS(calendar->DT_catd, 1, 129, "Apr"));
+	months2[5] = ckstrdup(CATGETS(calendar->DT_catd, 1, 130, "May"));
+	months2[6] = ckstrdup(CATGETS(calendar->DT_catd, 1, 131, "Jun"));
+	months2[7] = ckstrdup(CATGETS(calendar->DT_catd, 1, 132, "Jul"));
+	months2[8] = ckstrdup(CATGETS(calendar->DT_catd, 1, 133, "Aug"));
+	months2[9] = ckstrdup(CATGETS(calendar->DT_catd, 1, 134, "Sep"));
+	months2[10] = ckstrdup(CATGETS(calendar->DT_catd, 1, 135, "Oct"));
+	months2[11] = ckstrdup(CATGETS(calendar->DT_catd, 1, 136, "Nov"));
+	months2[12] = ckstrdup(CATGETS(calendar->DT_catd, 1, 137, "Dec"));
 	
 	/* NL_COMMENT
 	   Attention Translator:
@@ -3025,23 +3035,23 @@ init_strings(void)
 		Sun --> Sunday
 
 	*/
-	days[0] = strdup(CATGETS(calendar->DT_catd, 1, 138, "Sun"));
-	days[1] = strdup(CATGETS(calendar->DT_catd, 1, 139, "Mon"));
-	days[2] = strdup(CATGETS(calendar->DT_catd, 1, 140, "Tue"));
-	days[3] = strdup(CATGETS(calendar->DT_catd, 1, 141, "Wed"));
-	days[4] = strdup(CATGETS(calendar->DT_catd, 1, 142, "Thu"));
-	days[5] = strdup(CATGETS(calendar->DT_catd, 1, 143, "Fri"));
-	days[6] = strdup(CATGETS(calendar->DT_catd, 1, 144, "Sat"));
-	days[7] = strdup(CATGETS(calendar->DT_catd, 1, 138, "Sun"));
+	days[0] = ckstrdup(CATGETS(calendar->DT_catd, 1, 138, "Sun"));
+	days[1] = ckstrdup(CATGETS(calendar->DT_catd, 1, 139, "Mon"));
+	days[2] = ckstrdup(CATGETS(calendar->DT_catd, 1, 140, "Tue"));
+	days[3] = ckstrdup(CATGETS(calendar->DT_catd, 1, 141, "Wed"));
+	days[4] = ckstrdup(CATGETS(calendar->DT_catd, 1, 142, "Thu"));
+	days[5] = ckstrdup(CATGETS(calendar->DT_catd, 1, 143, "Fri"));
+	days[6] = ckstrdup(CATGETS(calendar->DT_catd, 1, 144, "Sat"));
+	days[7] = ckstrdup(CATGETS(calendar->DT_catd, 1, 138, "Sun"));
 
-	days2[0] = strdup(CATGETS(calendar->DT_catd, 1, 146, "Sunday"));
-	days2[1] = strdup(CATGETS(calendar->DT_catd, 1, 147, "Monday"));
-	days2[2] = strdup(CATGETS(calendar->DT_catd, 1, 148, "Tuesday"));
-	days2[3] = strdup(CATGETS(calendar->DT_catd, 1, 149, "Wednesday"));
-	days2[4] = strdup(CATGETS(calendar->DT_catd, 1, 150, "Thursday"));
-	days2[5] = strdup(CATGETS(calendar->DT_catd, 1, 151, "Friday"));
-	days2[6] = strdup(CATGETS(calendar->DT_catd, 1, 152, "Saturday"));
-	days2[7] = strdup(CATGETS(calendar->DT_catd, 1, 146, "Sunday"));
+	days2[0] = ckstrdup(CATGETS(calendar->DT_catd, 1, 146, "Sunday"));
+	days2[1] = ckstrdup(CATGETS(calendar->DT_catd, 1, 147, "Monday"));
+	days2[2] = ckstrdup(CATGETS(calendar->DT_catd, 1, 148, "Tuesday"));
+	days2[3] = ckstrdup(CATGETS(calendar->DT_catd, 1, 149, "Wednesday"));
+	days2[4] = ckstrdup(CATGETS(calendar->DT_catd, 1, 150, "Thursday"));
+	days2[5] = ckstrdup(CATGETS(calendar->DT_catd, 1, 151, "Friday"));
+	days2[6] = ckstrdup(CATGETS(calendar->DT_catd, 1, 152, "Saturday"));
+	days2[7] = ckstrdup(CATGETS(calendar->DT_catd, 1, 146, "Sunday"));
 
 	/* NL_COMMENT
 	   Attention Translator:
@@ -3058,14 +3068,14 @@ init_strings(void)
 		S --> Saturday (message 160)
 
 	*/
-	days3[0] = strdup(CATGETS(calendar->DT_catd, 1, 154, "S"));
-	days3[1] = strdup(CATGETS(calendar->DT_catd, 1, 155, "M"));
-	days3[2] = strdup(CATGETS(calendar->DT_catd, 1, 156, "T"));
-	days3[3] = strdup(CATGETS(calendar->DT_catd, 1, 157, "W"));
-	days3[4] = strdup(CATGETS(calendar->DT_catd, 1, 158, "T"));
-	days3[5] = strdup(CATGETS(calendar->DT_catd, 1, 159, "F"));
-	days3[6] = strdup(CATGETS(calendar->DT_catd, 1, 160, "S"));
-	days3[7] = strdup(CATGETS(calendar->DT_catd, 1, 154, "S"));
+	days3[0] = ckstrdup(CATGETS(calendar->DT_catd, 1, 154, "S"));
+	days3[1] = ckstrdup(CATGETS(calendar->DT_catd, 1, 155, "M"));
+	days3[2] = ckstrdup(CATGETS(calendar->DT_catd, 1, 156, "T"));
+	days3[3] = ckstrdup(CATGETS(calendar->DT_catd, 1, 157, "W"));
+	days3[4] = ckstrdup(CATGETS(calendar->DT_catd, 1, 158, "T"));
+	days3[5] = ckstrdup(CATGETS(calendar->DT_catd, 1, 159, "F"));
+	days3[6] = ckstrdup(CATGETS(calendar->DT_catd, 1, 160, "S"));
+	days3[7] = ckstrdup(CATGETS(calendar->DT_catd, 1, 154, "S"));
 
 	/* NL_COMMENT
 	   Attention Translator:
@@ -3082,14 +3092,14 @@ init_strings(void)
 		SAT --> Saturday
 
 	*/
-	days4[0] = strdup(CATGETS(calendar->DT_catd, 1, 170, "SUN"));
-	days4[1] = strdup(CATGETS(calendar->DT_catd, 1, 171, "MON"));
-	days4[2] = strdup(CATGETS(calendar->DT_catd, 1, 172, "TUE"));
-	days4[3] = strdup(CATGETS(calendar->DT_catd, 1, 173, "WED"));
-	days4[4] = strdup(CATGETS(calendar->DT_catd, 1, 174, "THU"));
-	days4[5] = strdup(CATGETS(calendar->DT_catd, 1, 175, "FRI"));
-	days4[6] = strdup(CATGETS(calendar->DT_catd, 1, 176, "SAT"));
-	days4[7] = strdup(CATGETS(calendar->DT_catd, 1, 170, "SUN"));
+	days4[0] = ckstrdup(CATGETS(calendar->DT_catd, 1, 170, "SUN"));
+	days4[1] = ckstrdup(CATGETS(calendar->DT_catd, 1, 171, "MON"));
+	days4[2] = ckstrdup(CATGETS(calendar->DT_catd, 1, 172, "TUE"));
+	days4[3] = ckstrdup(CATGETS(calendar->DT_catd, 1, 173, "WED"));
+	days4[4] = ckstrdup(CATGETS(calendar->DT_catd, 1, 174, "THU"));
+	days4[5] = ckstrdup(CATGETS(calendar->DT_catd, 1, 175, "FRI"));
+	days4[6] = ckstrdup(CATGETS(calendar->DT_catd, 1, 176, "SAT"));
+	days4[7] = ckstrdup(CATGETS(calendar->DT_catd, 1, 170, "SUN"));
 }
 
 

@@ -61,6 +61,17 @@
 #include "rerule.h"			/* FALSE */
 
 
+static void
+freeAddrs(char ** addrs)
+{
+    char ** ad;
+
+    for (ad = addrs; *ad; ad++) {
+	free(*ad);
+    }
+    free(addrs);
+}
+
 static char **
 arpaPhrase(const char * name)
 {
@@ -99,8 +110,15 @@ arpaPhrase(const char * name)
 
     cur_addr = 0;
     addrs = (char **)calloc((n_addrs + 1), sizeof(char *));
+    if (addrs == nullptr) {
+	return(nullptr);
+    }
 
     cp2 = (char *)malloc(biggest);
+    if (cp2 == nullptr) {
+	freeAddrs(addrs);
+	return(nullptr);
+    }
     addrs[cur_addr++] = cp2;
 
     gotlt = 0;
@@ -174,6 +192,10 @@ arpaPhrase(const char * name)
 	    *cp2 = 0;
 
 	    cp2 = (char *)malloc(biggest);
+	    if (cp2 == nullptr) {
+		freeAddrs(addrs);
+		return(nullptr);
+	    }
 	    addrs[cur_addr++] = cp2;
 
 	    lastsp = 1;
@@ -258,6 +280,9 @@ formatMessage(char ** addrs, const char * subject, const char * body)
     size += 1024;
 
     msg = (char *)malloc(size);
+    if (msg == nullptr) {
+	return(nullptr);
+    }
 
     strcpy(msg, "To: ");
     line = 4;
@@ -369,6 +394,9 @@ deliver(char ** addrs, char * msg)
     }
 
     argv = (char **)calloc((n_addrs + 2), sizeof(char *));
+    if (argv == nullptr) {
+	return(-1);
+    }
     argv[0] = "/usr/lib/sendmail";
 
     for (cp = 0; addrs[cp]; cp++) {
@@ -383,6 +411,7 @@ deliver(char ** addrs, char * msg)
 
     c_pid = fork();
     if (c_pid < 0) {
+	free(argv);
 	return(c_pid);
     }
 
@@ -393,6 +422,7 @@ deliver(char ** addrs, char * msg)
 	_exit(1); /* This had better never happen! */
     }
     else { /* The parent. */
+	free(argv);
 	if(-1 == write(fd[1], msg, strlen(msg))) {
 	    fprintf(stderr, "write() failed %d '%s'\n", errno, strerror(errno));
 	    exit(EXIT_FAILURE);    
@@ -412,7 +442,6 @@ submit_mail(const char * to,
 	    const char * body)
 {
     char ** 	addrs;
-    char **	ad;
     char *	msg;
     int		status;
 
@@ -421,15 +450,19 @@ submit_mail(const char * to,
       for the user to see in the message.
       */
     addrs = arpaPhrase(to);
+    if (addrs == nullptr) {
+	return(-1);
+    }
 
     msg = formatMessage(addrs, subject, body);
+    if (msg == nullptr) {
+	freeAddrs(addrs);
+	return(-1);
+    }
 
     status = deliver(addrs, msg);
 
-    for (ad = addrs; *ad; ad++) {
-	free(*ad);
-    }
-    free(addrs);
+    freeAddrs(addrs);
 
     free(msg);
 

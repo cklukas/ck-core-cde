@@ -610,7 +610,8 @@ cm_mbstrlen(char *s) {
 /*
 **  I18N related routine
 **  Parameter:  A pointer to a multibyte string or a pointer to NULL.
-**  Return Value:  Returns a pointer to the next multibyte character.
+**  Return Value:  Returns a pointer to the next multibyte character, or
+**                 NULL at the end of the string or when memory is exhausted.
 **  Usage:  If the actual argument is non NULL then a pointer to the first
 **          multibyte character is returned.  If the actual argument is NULL
 **          then a pointer to the next multibyte character is returned.  The
@@ -647,9 +648,11 @@ cm_mbchar(char *str) {
           num_byte = mblen(string, MB_LEN_MAX);
           if(num_byte > 0) {
                buf = (char *)malloc(num_byte+1);
-               strncpy(buf, string, num_byte);
-               buf[num_byte] = '\0';
-               string += num_byte;
+               if (buf != nullptr) {
+                    strncpy(buf, string, num_byte);
+                    buf[num_byte] = '\0';
+                    string += num_byte;
+               }
           }
      }
 

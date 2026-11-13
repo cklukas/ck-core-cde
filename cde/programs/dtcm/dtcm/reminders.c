@@ -728,7 +728,7 @@ reminders_form_to_appt(Reminders *r, Dtcm_appointment *appt, char *name) {
 		free(appt->beep->value);
 		appt->beep->value = nullptr;
 	} else {
-		appt->beep->value->item.reminder_value->lead_time = (char *) malloc(BUFSIZ);
+		appt->beep->value->item.reminder_value->lead_time = (char *) XtMalloc(BUFSIZ);
 		_csa_duration_to_iso8601(r->beep_val.scope_val, appt->beep->value->item.reminder_value->lead_time);
 		appt->beep->value->item.reminder_value->reminder_data.data = nullptr;
 		appt->beep->value->item.reminder_value->reminder_data.size = 0;
@@ -738,7 +738,7 @@ reminders_form_to_appt(Reminders *r, Dtcm_appointment *appt, char *name) {
 		free(appt->flash->value);
 		appt->flash->value = nullptr;
 	} else { 
-		appt->flash->value->item.reminder_value->lead_time = (char *) malloc(BUFSIZ);
+		appt->flash->value->item.reminder_value->lead_time = (char *) XtMalloc(BUFSIZ);
 		_csa_duration_to_iso8601(r->flash_val.scope_val, appt->flash->value->item.reminder_value->lead_time);
 		appt->flash->value->item.reminder_value->reminder_data.data = nullptr;
 		appt->flash->value->item.reminder_value->reminder_data.size = 0;
@@ -748,7 +748,7 @@ reminders_form_to_appt(Reminders *r, Dtcm_appointment *appt, char *name) {
 		free(appt->popup->value);
 		appt->popup->value = nullptr;
 	} else {
-		appt->popup->value->item.reminder_value->lead_time = (char *) malloc(BUFSIZ);
+		appt->popup->value->item.reminder_value->lead_time = (char *) XtMalloc(BUFSIZ);
 		_csa_duration_to_iso8601(r->popup_val.scope_val, appt->popup->value->item.reminder_value->lead_time);
 		appt->popup->value->item.reminder_value->reminder_data.data = nullptr;
 		appt->popup->value->item.reminder_value->reminder_data.size = 0;
@@ -758,7 +758,7 @@ reminders_form_to_appt(Reminders *r, Dtcm_appointment *appt, char *name) {
 		free(appt->mail->value);
 		appt->mail->value = nullptr;
 	} else {
-		appt->mail->value->item.reminder_value->lead_time = (char *) malloc(BUFSIZ);
+		appt->mail->value->item.reminder_value->lead_time = (char *) XtMalloc(BUFSIZ);
 		_csa_duration_to_iso8601(r->mail_val.scope_val, appt->mail->value->item.reminder_value->lead_time);
 		appt->mail->value->item.reminder_value->reminder_data.data = (CSA_uint8 *) cm_strdup(r->mailto_val);
 		appt->mail->value->item.reminder_value->reminder_data.size = strlen(r->mailto_val);

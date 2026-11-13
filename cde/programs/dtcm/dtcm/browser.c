@@ -884,7 +884,7 @@ get_mail_address_list(Calendar *c) {
 			address_len += strlen(bd->name) + 1;
 	}
 
-	address = calloc(address_len+1, 1);
+	address = XtCalloc(address_len+1, 1);
 	address[0] = '\0';
 
 	for (i = 0; i < pos_cnt; i++) {
@@ -932,9 +932,9 @@ nt */
 	appt = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, nullptr);
 	load_appt_defaults(appt, p);
 
-	appt->time->value->item.date_time_value = malloc(BUFSIZ);
+	appt->time->value->item.date_time_value = XtMalloc(BUFSIZ);
 	_csa_tick_to_iso8601(b->begin_hr_tick, appt->time->value->item.date_time_value);
-	appt->end_time->value->item.date_time_value = malloc(BUFSIZ);
+	appt->end_time->value->item.date_time_value = XtMalloc(BUFSIZ);
 	_csa_tick_to_iso8601(b->end_hr_tick, appt->end_time->value->item.date_time_value);
 
 	/* set up the start time from the dialog */
@@ -1627,7 +1627,7 @@ browser_reset_list(Calendar *c) {
 		XmNselectedItems,	&list_selected_items,
 		nullptr);
 
-	selected_items = (XmStringTable)calloc(selected_items_count, 
+	selected_items = (XmStringTable)XtCalloc(selected_items_count, 
 							sizeof(XmStringTable));
 	for (i = 0; i < selected_items_count; i++)
 		selected_items[i] = XmStringCopy(list_selected_items[i]);

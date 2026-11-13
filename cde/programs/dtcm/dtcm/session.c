@@ -241,6 +241,6 @@ GetSessionInfo(
     if (XrmQGetResource(c->view->sessiondb, xrm_name, xrm_name, 
 			&rep_type, &value)) {
 	if (value.addr)
-		c->app_data->default_view = strdup(value.addr);
+		c->app_data->default_view = XtNewString(value.addr);
     }
 }

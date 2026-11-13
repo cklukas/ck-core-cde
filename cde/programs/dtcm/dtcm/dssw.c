@@ -609,7 +609,7 @@ dssw_form_flags_to_appt(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t, int
 		return False;
 	}
 
-	a->time->value->item.date_time_value = (char *) malloc(BUFSIZ);
+	a->time->value->item.date_time_value = (char *) XtMalloc(BUFSIZ);
 	_csa_tick_to_iso8601(start_tick, a->time->value->item.date_time_value);
 	a->what->value->item.string_value = (char *)cm_strdup(dssw->what_val);
 	a->show_time->value->item.sint32_value = True;
@@ -667,10 +667,10 @@ dssw_form_flags_to_appt(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t, int
 		    }
 		}
 
-		a->end_time->value->item.date_time_value = (char *) malloc(BUFSIZ);
+		a->end_time->value->item.date_time_value = (char *) XtMalloc(BUFSIZ);
 		_csa_tick_to_iso8601(stop_tick, a->end_time->value->item.date_time_value);
 	} else if (blank_buf(dssw->start_val.val)) {
-		a->end_time->value->item.date_time_value = (char *) malloc(BUFSIZ);
+		a->end_time->value->item.date_time_value = (char *) XtMalloc(BUFSIZ);
 		_csa_tick_to_iso8601(start_tick + minsec, a->end_time->value->item.date_time_value);
 		a->show_time->value->item.sint32_value = False;
 	} else {
@@ -738,7 +738,7 @@ dssw_form_to_todo(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t)
 		return False;
 	}
 
-	a->time->value->item.date_time_value = (char *) malloc(BUFSIZ);
+	a->time->value->item.date_time_value = (char *) XtMalloc(BUFSIZ);
 	_csa_tick_to_iso8601(start_tick, a->time->value->item.date_time_value);
 	a->what->value->item.string_value = (char *)cm_strdup(dssw->what_val);
 	a->show_time->value->item.sint32_value = True;

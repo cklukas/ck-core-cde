@@ -986,7 +986,7 @@ change_to_last_week(
 		memset(duration_buf, 0, 10);
 
 		/* The new rule uses a little more memory than the old */
-		new_rule = (char *)calloc(1, 
+		new_rule = (char *)XtCalloc(1, 
 		      strlen(a->recurrence_rule->value->item.string_value) + 8);
 
 		/* Free the old rule */
@@ -1269,5 +1269,5 @@ rfp_init(
 	rfp->for_val = 0;
 	rfp->privacy_val = convert_privacy_str(get_char_prop(p, CP_PRIVACY));
 	rfp->repeat_type = CSA_X_DT_REPEAT_ONETIME;
-	rfp->recurrence_rule = strdup("D1 #1");
+	rfp->recurrence_rule = XtNewString("D1 #1");
 }

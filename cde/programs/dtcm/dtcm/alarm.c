@@ -222,7 +222,7 @@ mail_it(XtPointer client_data, XtIntervalId *interval_id, CSA_reminder_reference
 				"dtcm: empty recipient in mail reminder\n"));
 		to = appt->author->value->item.calendar_user_value->user_name;
 	} else {
-		addr_data = calloc(appt->mail->value->item.reminder_value->reminder_data.size + 1, 1);
+		addr_data = XtCalloc(appt->mail->value->item.reminder_value->reminder_data.size + 1, 1);
 		strncpy(addr_data, (char *) appt->mail->value->item.reminder_value->reminder_data.data, appt->mail->value->item.reminder_value->reminder_data.size);
 		to = addr_data;
 	}

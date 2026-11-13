@@ -175,7 +175,7 @@ merge_old_values(Dtcm_appointment *original, Dtcm_appointment *new) {
 	/* realloc the attrs array to be large enough to accommodate the new
 	   attibutes */
 
-	new->attrs = (CSA_attribute *) realloc(new->attrs, (dest_attr_num + new_attrs) * sizeof(CSA_attribute));
+	new->attrs = (CSA_attribute *) ckreallocarray(new->attrs, dest_attr_num + new_attrs, sizeof(CSA_attribute));
 
 	/* Copy in the new attribute values */
 	for (source_count = 0; source_count < original->count; source_count++) {
@@ -338,7 +338,7 @@ StandaloneApptDragStart(
  
         Display        *display 	= XtDisplay(widget);
         int             itemCount, selectedPos;
-        DragContext     *context = calloc(sizeof(DragContext), 1);
+        DragContext     *context = (DragContext *)XtCalloc(1, sizeof(DragContext));
 	Calendar	*c = de->c;
 	Dtcm_appointment        *appt;
 	int		old_attr_count;
@@ -894,7 +894,7 @@ load_cb(
 
 	de = (DTCM_editor *)clientdata;
 
-	de->vtype = strdup(tt_message_arg_type(msg, 0));
+	de->vtype = ckstrdup(tt_message_arg_type(msg, 0));
 
 	if (diagnosis != TT_OK) {
 		if (tt_message_status(msg) == TT_WRN_START_MESSAGE) {
@@ -977,7 +977,7 @@ load_cb(
 			}
 			else
 			{
-				de->file = strdup(file);
+				de->file = XtNewString(file);
 				parse_appt_from_file(de->c->DT_catd, de->file, 
 						list, de->p, query_user, 
 						de->c, DATAVER_ARCHIVE);
@@ -1038,7 +1038,7 @@ handle_drop_cb(
 			/* REMIND -- handle multiple filenames */
 			data = transfer_info->dropData->data.files[0];
 	
-			de->file = strdup(data);
+			de->file = XtNewString(data);
 			load_from_file(de);
 			break;
 		case DtDND_BUFFER_TRANSFER:
@@ -1064,7 +1064,7 @@ handle_drop_cb(
 			fwrite(data, 1, size, fp);
 			fclose(fp);
 	
-			de->file = strdup(filename);
+			de->file = XtNewString(filename);
 			load_from_file(de);
 	
 			unlink(filename);

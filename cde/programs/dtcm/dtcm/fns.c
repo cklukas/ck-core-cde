@@ -109,6 +109,12 @@ cm_register_calendar(const char *username, const char *location)
 
 	data->username = strdup(username);
 	data->location = strdup(location);
+	if (data->username == nullptr || data->location == nullptr) {
+		free(data->username);
+		free(data->location);
+		free(data);
+		return -1;
+	}
 
 	error = thr_create(nullptr, 0, registration_thr, data, THR_DETACHED, nullptr);
 

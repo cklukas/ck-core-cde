@@ -738,7 +738,7 @@ TranslationDragStart(
                                                     {nullptr, nullptr} };
  
         Display        *display 	= XtDisplay(widget);
-        DragContext     *context = calloc(sizeof(DragContext), 1);
+        DragContext     *context = (DragContext *)XtCalloc(1, sizeof(DragContext));
         Editor          *e = (Editor *) calendar->editor;
 	CSA_entry_handle	entry;
 	char		*apptstr;
@@ -824,7 +824,7 @@ ApptDragStart(
                                                     {nullptr, nullptr} };
  
         Display        *display 	= XtDisplay(widget);
-        DragContext     *context = calloc(sizeof(DragContext), 1);
+        DragContext     *context = (DragContext *)XtCalloc(1, sizeof(DragContext));
 	Editor		*e = (Editor *) calendar->editor;
 	GEditor		*ge = (GEditor *) calendar->geditor;
 	ToDo		*t = (ToDo *) calendar->todo;

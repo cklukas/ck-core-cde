@@ -313,7 +313,7 @@ get_mail_address_list(Calendar *c) {
 			address_len += strlen(ad->name) + 1;
 	}
 
-	address = calloc(address_len+1, 1);
+	address = XtCalloc(address_len+1, 1);
 
 	for (i = 0; i < pos_cnt; i++) {
 		ad = (Access_data *)CmDataListGetData(ge->access_data,
@@ -642,25 +642,25 @@ form_to_appt(GEditor *ge, Boolean no_reminders, int version) {
 					 CSA_ENTRY_ATTR_RECURRENCE_RULE_I,
 					 nullptr);
 
-		a->beep->value->item.reminder_value->lead_time = malloc(BUFSIZ);
+		a->beep->value->item.reminder_value->lead_time = XtMalloc(BUFSIZ);
 		_csa_duration_to_iso8601(ge_reminder_val(p, CP_BEEPUNIT, CP_BEEPADV), 
 				     a->beep->value->item.reminder_value->lead_time);
 		a->beep->value->item.reminder_value->reminder_data.data = nullptr;
 		a->beep->value->item.reminder_value->reminder_data.size = 0;
 
-		a->flash->value->item.reminder_value->lead_time = malloc(BUFSIZ);
+		a->flash->value->item.reminder_value->lead_time = XtMalloc(BUFSIZ);
 		_csa_duration_to_iso8601(ge_reminder_val(p, CP_FLASHUNIT, CP_BEEPADV), 
 				     a->flash->value->item.reminder_value->lead_time);
 		a->flash->value->item.reminder_value->reminder_data.data = nullptr;
 		a->flash->value->item.reminder_value->reminder_data.size = 0;
 
-		a->popup->value->item.reminder_value->lead_time = malloc(BUFSIZ);
+		a->popup->value->item.reminder_value->lead_time = XtMalloc(BUFSIZ);
 		_csa_duration_to_iso8601(ge_reminder_val(p, CP_OPENUNIT, CP_BEEPADV), 
 				     a->popup->value->item.reminder_value->lead_time);
 		a->popup->value->item.reminder_value->reminder_data.data = nullptr;
 		a->popup->value->item.reminder_value->reminder_data.size = 0;
 
-		a->mail->value->item.reminder_value->lead_time = malloc(BUFSIZ);
+		a->mail->value->item.reminder_value->lead_time = XtMalloc(BUFSIZ);
 		_csa_duration_to_iso8601(ge_reminder_val(p, CP_MAILUNIT, CP_BEEPADV), 
 				     a->mail->value->item.reminder_value->lead_time);
 		a->mail->value->item.reminder_value->reminder_data.data =
@@ -681,7 +681,7 @@ form_to_appt(GEditor *ge, Boolean no_reminders, int version) {
 	}
 
 	a->type->value->item.sint32_value = CSA_TYPE_EVENT;
-	a->subtype->value->item.string_value = strdup(CSA_SUBTYPE_APPOINTMENT);
+	a->subtype->value->item.string_value = XtNewString(CSA_SUBTYPE_APPOINTMENT);
 	a->state->value->item.sint32_value = CSA_X_DT_STATUS_ACTIVE;
 	a->private->value->item.sint32_value = CSA_CLASS_PUBLIC;
 
