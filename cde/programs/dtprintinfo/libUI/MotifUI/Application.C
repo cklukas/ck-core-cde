@@ -261,7 +261,7 @@ void Application::SaveMe(boolean save_as_session)
     {
       name = SessionFile();
       char *path1 = SessionPath();
-      path = new char[strlen(path1) + strlen(name) + 2];
+      path = XtMalloc(strlen(path1) + strlen(name) + 2);
       sprintf(path, "%s/%s", path1, name);
       name = NULL;
     }
