@@ -47,5 +47,5 @@ BTCollectable::BTCollectable(
 BTCollectable::~BTCollectable()
 {
   free(f_name);
-  delete value;
+  free(value);
 }

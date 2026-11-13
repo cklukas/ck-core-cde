@@ -33,6 +33,7 @@ using namespace std;
 #include <assert.h>
 #include <assert.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include "Dispatch.h"
 #include "Token.h"
 #include "LcfTask.h"
@@ -94,6 +95,7 @@ NodeTask::NodeTask(BookTask *book, NodeTask *parent)
 
 NodeTask::~NodeTask()
 {
+  free(section_element_name);
   KILLSUBTASK(f_title);
   KILLSUBTASK(f_shortTitle);
   KILLSUBTASK(f_locator);
@@ -371,7 +373,8 @@ void NodeTask::write_record()
 void NodeTask::reset()
 {
   f_base = -1;
-  delete section_element_name;
+  free(section_element_name);
+  section_element_name = NULL;
   ord++;
 
   KILLSUBTASK(f_title);
