@@ -29,6 +29,7 @@
  */
 
 #include "Button.h"
+#include <stdlib.h>
 
 #include <Xm/PushB.h>
 #include <Xm/ToggleB.h>
@@ -57,12 +58,12 @@ Button::Button(char *category, MotifUI *parent, char *name,
 
 Button::~Button()
 {
-   delete _iconFile;
+   free(_iconFile);
 }
 
 void Button::IconFile(char *iconFile)
 {
-   delete _iconFile;
+   free(_iconFile);
    _iconFile = STRDUP(iconFile);
    if (_iconFile)
     {

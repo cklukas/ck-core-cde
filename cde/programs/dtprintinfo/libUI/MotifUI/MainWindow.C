@@ -29,6 +29,7 @@
  */
 
 #include "MainWindow.h"
+#include <stdlib.h>
 #include "Menu.h"
 #include "IconObj.h"
 #include "Button.h"
@@ -99,8 +100,8 @@ void MainWindow::CreateMainWindow(MotifUI *parent, char * /*name*/,
 
 MainWindow::~MainWindow()
 {
-   delete icon;
-   delete icon_name;
+   free(icon);
+   free(icon_name);
 }
 
 void MainWindow::IconFile(char *_icon)
@@ -109,7 +110,7 @@ void MainWindow::IconFile(char *_icon)
     {
       Pixmap pixmap, mask;
       GetPixmaps(_w, _icon, &pixmap, &mask);
-      delete icon;
+      free(icon);
       if (pixmap != XmUNSPECIFIED_PIXMAP)
        {
          if (depth == 1)
@@ -126,7 +127,7 @@ void MainWindow::IconFile(char *_icon)
 
 void MainWindow::IconName(char *_icon_name)
 {
-   delete icon_name;
+   free(icon_name);
    if (!_icon_name)
       icon_name = STRDUP(Name());
    else

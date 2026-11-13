@@ -88,7 +88,7 @@ int main(int argc, char **argv)
       Invoke *_thread = new Invoke(cmd, &output);
       printf(MESSAGE(CommandLineHelpL), output);
       printf("\n");
-      delete output;
+      free(output);
       delete [] cmd;
       delete _thread;
       return 0;

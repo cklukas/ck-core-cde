@@ -330,7 +330,7 @@ void LocalPrintJobs(char *printer, char **job_list, int *n_jobs)
    RestoreUserEuid();
 
    delete [] cmd;
-   delete output;
+   free(output);
    delete _thread;
 }
 #endif

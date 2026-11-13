@@ -158,7 +158,7 @@ DtDND::~DtDND()
    if (mask && mask != XmUNSPECIFIED_PIXMAP)
       XFreePixmap(icon->display, mask);
    free(name);
-   delete iconFile;
+   delete [] iconFile;
    XmStringFree(string);
    if (sourceIcon)
     {
@@ -177,7 +177,7 @@ void DtDND::GetDragPixmaps()
    IconObj *icon = (IconObj *)obj;
    Pixmap tmp_pixmap, tmp_mask;
 
-   delete iconFile;
+   delete [] iconFile;
    free(name);
    XmStringFree(string);
    if (pixmap && pixmap != XmUNSPECIFIED_PIXMAP)
@@ -563,8 +563,8 @@ void DtDND::TransferCB(Widget /*widget*/, XtPointer client_data,
 	 MotifUI *tmp = (MotifUI *)obj->obj;
 	 DtActionInvoke(tmp->topLevel, value, aap, numItems, NULL, NULL, NULL,
 			1, NULL, NULL);
-	 delete aap;
-	 delete value;
+	 delete [] aap;
+	 delete [] value;
        }
       break;
    default:
@@ -736,5 +736,5 @@ void DtDND::DropOnRootCB(Widget /*dragContext*/, XtPointer client_data,
       y += 20;
       x += 20;
     }
-   delete value;
+   delete [] value;
 }

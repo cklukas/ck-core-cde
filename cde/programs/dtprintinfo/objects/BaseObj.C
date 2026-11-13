@@ -78,35 +78,35 @@ BaseObj::~BaseObj()
 
    for (i = 0; i < _numAttributes; i++)
     {
-      delete _attributes[i]->ReferenceName;
-      delete _attributes[i]->Value;
-      delete _attributes[i]->DisplayName;
-      delete _attributes[i]->DisplayValue;
-      delete _attributes[i]->DefaultValue;
-      delete _attributes[i]->DisplayDefaultValue;
-      delete _attributes[i]->Help;
-      delete _attributes[i]->ContextualHelp;
-      delete _attributes[i]->Listing;
-      delete _attributes[i]->Dependancies;
+      free(_attributes[i]->ReferenceName);
+      free(_attributes[i]->Value);
+      free(_attributes[i]->DisplayName);
+      free(_attributes[i]->DisplayValue);
+      free(_attributes[i]->DefaultValue);
+      free(_attributes[i]->DisplayDefaultValue);
+      free(_attributes[i]->Help);
+      free(_attributes[i]->ContextualHelp);
+      free(_attributes[i]->Listing);
+      free(_attributes[i]->Dependancies);
       delete _attributes[i];
     }
    delete []_attributes;
    for (i = 0; i < _numActions; i++)
     {
-      delete _actions[i]->ReferenceName;
-      delete _actions[i]->DisplayName;
-      delete _actions[i]->Nmemonic;
-      delete _actions[i]->AcceleratorText;
-      delete _actions[i]->Accelerator;
-      delete _actions[i]->Help;
-      delete _actions[i]->ContextualHelp;
-      delete _actions[i]->Dependancies;
+      free(_actions[i]->ReferenceName);
+      free(_actions[i]->DisplayName);
+      free(_actions[i]->Nmemonic);
+      free(_actions[i]->AcceleratorText);
+      free(_actions[i]->Accelerator);
+      free(_actions[i]->Help);
+      free(_actions[i]->ContextualHelp);
+      free(_actions[i]->Dependancies);
       delete _actions[i];
     }
    delete []_actions;
    delete []_children;
    free(_lastActionName);
-   delete [] _lastActionOutput;
+   free(_lastActionOutput);
    free(_details);
    free(_displayName);
    free(_name);
@@ -192,14 +192,14 @@ void BaseObj::DeleteAction(const char *name)
    for (i = 0; i < _numActions; i++)
       if (_actions[i] != action)
          new_actions[index++] = _actions[i];
-   delete action->ReferenceName;
-   delete action->DisplayName;
-   delete action->Nmemonic;
-   delete action->AcceleratorText;
-   delete action->Accelerator;
-   delete action->Help;
-   delete action->ContextualHelp;
-   delete action->Dependancies;
+   free(action->ReferenceName);
+   free(action->DisplayName);
+   free(action->Nmemonic);
+   free(action->AcceleratorText);
+   free(action->Accelerator);
+   free(action->Help);
+   free(action->ContextualHelp);
+   free(action->Dependancies);
    delete action;
 
    delete []_actions;
@@ -223,16 +223,16 @@ void BaseObj::DeleteAttribute(const char *name)
    for (i = 0; i < _numAttributes; i++)
       if (_attributes[i] != attribute)
          new_attributes[index++] = _attributes[i];
-   delete attribute->ReferenceName;
-   delete attribute->Value;
-   delete attribute->DisplayName;
-   delete attribute->DisplayValue;
-   delete attribute->DefaultValue;
-   delete attribute->DisplayDefaultValue;
-   delete attribute->Help;
-   delete attribute->ContextualHelp;
-   delete attribute->Listing;
-   delete attribute->Dependancies;
+   free(attribute->ReferenceName);
+   free(attribute->Value);
+   free(attribute->DisplayName);
+   free(attribute->DisplayValue);
+   free(attribute->DefaultValue);
+   free(attribute->DisplayDefaultValue);
+   free(attribute->Help);
+   free(attribute->ContextualHelp);
+   free(attribute->Listing);
+   free(attribute->Dependancies);
    delete attribute;
 
    delete []_attributes;
@@ -405,13 +405,13 @@ void BaseObj::RecordUnknownAction(const char *actionName)
 {
    char *name = strdup(actionName);	// actionName may alias _lastActionName
 
-   delete [] _lastActionOutput;
+   free(_lastActionOutput);
    free(_lastActionName);
    _lastActionName = name;
    _lastActionStatus = -1;
    int len = strlen("'%s' is not an action of %s") +
 	     strlen(actionName) + strlen(ObjectClassName()) + 1;
-   _lastActionOutput = new char [len];
+   _lastActionOutput = (char *)malloc(len);
    snprintf(_lastActionOutput, len, "'%s' is not an action of %s",
 	    actionName, ObjectClassName());
 }
@@ -425,7 +425,7 @@ boolean BaseObj::SendAction(Action *action,
       return false;
     }
 
-   delete [] _lastActionOutput;
+   free(_lastActionOutput);
    free(_lastActionName);
    _lastActionOutput = NULL;
    _lastActionName = strdup(action->ReferenceName);

@@ -100,7 +100,7 @@ ComboBoxObj::ComboBoxObj(MotifUI *parent, ComboBoxCallback callback,
       int i;
       for (i = 0; i < n_items; i++)
          StringFree(items_list[i]);
-      delete items_list;
+      delete [] items_list;
     }
 }
 

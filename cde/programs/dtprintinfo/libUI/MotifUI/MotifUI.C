@@ -83,7 +83,7 @@ MotifUI::~MotifUI()
    if (_w)
       XtRemoveCallback(_w, XmNdestroyCallback, &MotifUI::WidgetDestroyCB, 
 		       (XtPointer) this);
-   delete _widgetName;
+   free(_widgetName);
 }
 
 void MotifUI::ThreadCB(MotifThread *_thread, BaseUI *obj, ThreadCallback cb)
@@ -233,7 +233,7 @@ void MotifUI::WidgetDestroyCB(Widget,
 void MotifUI::WidgetDestroyed()
 {
    _w = NULL;
-   delete _widgetName;
+   free(_widgetName);
 }
 
 void MotifUI::DoRefresh()

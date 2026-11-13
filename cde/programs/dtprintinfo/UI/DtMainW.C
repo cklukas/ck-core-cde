@@ -113,10 +113,10 @@ DtMainW::~DtMainW()
    int i;
    for (i = 0; i < n_action_data; i++)
     {
-      delete action_data[i]->actionReferenceName;
-      delete action_data[i];
+      free(action_data[i]->actionReferenceName);
+      free(action_data[i]);
     }
-   delete action_data;
+   free(action_data);
 }
 
 void DtMainW::DisplayHelp(char *location_id, char *volume)

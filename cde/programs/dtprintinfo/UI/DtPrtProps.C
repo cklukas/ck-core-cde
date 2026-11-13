@@ -175,7 +175,7 @@ DtPrtProps::DtPrtProps(DtMainW *parent, char *name, DtPrinterIcon *_printer)
 
 DtPrtProps::~DtPrtProps()
 {
-   delete _iconFile;
+   free(_iconFile);
 }
 
 boolean DtPrtProps::SetVisiblity(boolean flag)
@@ -307,7 +307,7 @@ boolean DtPrtProps::HandleHelpRequest()
 
 void DtPrtProps::SetActionIcons(const char *icon)
 {
-   delete _iconFile;
+   free(_iconFile);
    _iconFile = STRDUP(icon);
    largeIcon->IconFile((char*)icon);
    mediumIcon->IconFile((char*)icon);
@@ -317,7 +317,7 @@ void DtPrtProps::SetActionIcons(const char *icon)
 void DtPrtProps::CallerCB(BaseUI *caller, char *iconFile)
 {
    DtPrtProps *obj = (DtPrtProps *)caller;
-   delete obj->_iconFile;
+   free(obj->_iconFile);
    obj->_iconFile = STRDUP(iconFile);
    obj->smallIcon->IconFile(iconFile);
    obj->mediumIcon->IconFile(iconFile);

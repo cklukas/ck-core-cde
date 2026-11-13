@@ -729,7 +729,7 @@ BaseUI *BaseUI::_FindBy(char *pattern, int depth, int *n_matches,
           }
          new_pattern[i] = '\0';
          reg_expr = regcmp(new_pattern, (char *)NULL);
-	 delete new_pattern;
+	 delete [] new_pattern;
        }
       else
 	 reg_expr = regcmp(pattern, (char *)NULL);

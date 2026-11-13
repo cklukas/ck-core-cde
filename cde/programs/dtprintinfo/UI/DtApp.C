@@ -825,7 +825,7 @@ void DtApp::ActionCB(BaseUI *obj, char *actionReferenceName)
 	 confirm->Visible(true);
 	 boolean answer = confirm->Answer();
 	 delete confirm;
-	 delete title;
+	 delete [] title;
 	 delete [] message;
 	 if (answer == false)
 	    return;
@@ -1282,7 +1282,7 @@ void DtApp::RestoreApp()
 	  }
        }
       UpdateStatusLine();
-      delete attribute;
+      delete [] attribute;
     }
    else
     {
@@ -1369,7 +1369,7 @@ void DtApp::UpdateQueues()
 	       break;
 	     }
 	 delete _thread;
-	 delete output;
+	 free(output);
        }
       if (found == -1)
        {

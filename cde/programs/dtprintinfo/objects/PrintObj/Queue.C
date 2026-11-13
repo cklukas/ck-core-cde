@@ -127,11 +127,11 @@ Queue::~Queue()
 #ifdef aix
    int i;
    for (i = 0; i < n_devices; i++)
-      delete local_devices[i];
-   delete local_devices;
+      delete [] local_devices[i];
+   delete [] local_devices;
 #endif
-   delete remote_server;
-   delete remote_printer;
+   free(remote_server);
+   free(remote_printer);
 }
 
 void Queue::LoadAttributes(int /*n_attrs*/, Attribute **attrs)
@@ -230,7 +230,7 @@ void Queue::LoadAttributes(int /*n_attrs*/, Attribute **attrs)
        }
       _loaded_attributes = true;
     }
-   delete output;
+   free(output);
 }
 
 #ifdef aix

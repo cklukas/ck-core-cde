@@ -204,10 +204,10 @@ Application::~Application()
 {
    if (userFont)
       XmFontListFree(userFont);
-   delete session_info;
-   delete attributes;
-   delete values;
-   delete new_display;
+   delete [] session_info;
+   delete [] attributes;
+   delete [] values;
+   delete [] new_display;
 }
 
 boolean Application::SetName(char *name)
@@ -375,7 +375,10 @@ char *Application::Restore(char *attribute)
 	  }
        }
       if (!session_info)
-	 session_info = strdup("");
+       {
+	 session_info = new char[1];
+	 session_info[0] = '\0';
+       }
     }
    int i;
    for (i = 0; i < n_attrs; i++)

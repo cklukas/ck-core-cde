@@ -32,6 +32,7 @@
 #include "Queue.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 #ifdef aix
 const char *LIST_QUEUES = "lsallq | grep -v '^bsh$' | sort";
@@ -76,5 +77,5 @@ void PrintSubSystem::InitChildren()
          queue = strtok(NULL, " \n");
        }
     }
-   delete std_out;
+   free(std_out);
 }
