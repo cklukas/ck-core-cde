@@ -143,6 +143,15 @@ int    shutdownPhaseG;		/* shutdown progress state variable */
 int    ttfdG;			/* tooltalk fildes */
 int    errorpipeG[2];		/* dtexec <--< child   stderr pipe */
 static char *actionCommandG = nullptr;
+
+/*
+ * The SIGINT handler may only record the request and wake the select()
+ * loop; the shutdown itself (Tooltalk, unlink) runs from the loop.
+ * panicPipeG is a self-pipe watched by select(); without it (pipe() failed)
+ * the loop polls panicRequestedG with the short select() timeout.
+ */
+static volatile sig_atomic_t panicRequestedG = 0;
+static int panicPipeG[2] = { -1, -1 };
 static Boolean actionIconCacheNotified = False;
 static struct timeval actionIconCacheDeadlineG;
 static Boolean actionIconCacheDeadlineSet = False;
@@ -323,16 +332,13 @@ Help(
 
 /******************************************************************************
  *
- * PanicSignal - see InitializeSignalHandling()
+ * PanicShutdown - the former body of the SIGINT handler; it runs from the
+ * select() loop, never from a signal handler, and does not return.
  *
  *****************************************************************************/
 
 static void
-#if defined(__aix) || defined(CSRG_BASED) || defined(__linux__)
-PanicSignal(int s)
-#else
-PanicSignal(void)
-#endif /* __aix */
+PanicShutdown(void)
 {
     int i;
 
@@ -355,6 +361,36 @@ PanicSignal(void)
     }
 
     _exit(0);
+}
+
+
+/******************************************************************************
+ *
+ * PanicSignal - see InitializeSignalHandling()
+ *
+ * Only async-signal-safe work happens here: the request is recorded and one
+ * byte wakes select().  A second SIGINT while the shutdown is pending leaves
+ * at once.  The handler is installed before the loop runs; the pending flag
+ * and byte are picked up when the loop starts.
+ *
+ *****************************************************************************/
+
+static void
+PanicSignal(int s)
+{
+    int savedErrno = errno;
+    ssize_t written;
+    char byte = 1;
+
+    (void) s;
+    if (panicRequestedG)
+	_exit(0);
+    panicRequestedG = 1;
+    if (panicPipeG[1] != -1) {
+	written = write(panicPipeG[1], &byte, 1);
+	(void) written;
+    }
+    errno = savedErrno;
 }
 
 
@@ -1638,6 +1674,21 @@ main (
     rediscoverSigCldG = 0;		/* boolean and counter */
     rediscoverUrgentSigG = 0;		/* boolean and counter */
 
+    /*
+     * The self-pipe of the SIGINT handler must exist before the handler.
+     */
+    if (pipe(panicPipeG) == -1) {
+	panicPipeG[0] = -1;
+	panicPipeG[1] = -1;
+    }
+    else {
+	for (i = 0; i < 2; i++) {
+	    (void) fcntl(panicPipeG[i], F_SETFD, FD_CLOEXEC);
+	    (void) fcntl(panicPipeG[i], F_SETFL,
+			 fcntl(panicPipeG[i], F_GETFL) | O_NONBLOCK);
+	}
+    }
+
     InitializeSignalHandling ();
 
     /*
@@ -1713,6 +1764,12 @@ main (
 	BITSET(allactivefdsG, ttfdG);          /* add Tooltalk */
 
     /*
+     * Add the self-pipe of the SIGINT handler
+     */
+    if ( panicPipeG[0] != -1 )
+	BITSET(allactivefdsG, panicPipeG[0]);
+
+    /*
      * Add Error Log
      */
     if ( errorpipeG[0] != -1 )
@@ -1746,13 +1803,20 @@ main (
 #endif
 
 
-	if (rediscoverSigCldG || rediscoverUrgentSigG) {
+	if (rediscoverSigCldG || rediscoverUrgentSigG || panicRequestedG) {
 	    nfound =select(MAXSOCKS, FD_SET_CAST(&readfds), FD_SET_CAST(nullptr),
 				FD_SET_CAST(&exceptfds), &timeoutShort);
  	}
 	else {
 	    nfound =select(MAXSOCKS, FD_SET_CAST(&readfds), FD_SET_CAST(nullptr),
 				FD_SET_CAST(&exceptfds), &timeoutLong);
+	}
+
+	if (panicRequestedG) {
+	    /*
+	     * SIGINT: the handler only woke us; shut down here.
+	     */
+	    PanicShutdown();
 	}
 
 	if (nfound == -1) {
@@ -1978,11 +2042,7 @@ main (
 		 * a SIGCLD, give up and exit.
 		 */
 		if (rediscoverUrgentSigG > ((1000/SHORT_SELECT_TIMEOUT)*5) ) {
-#if defined(__aix) || defined(CSRG_BASED) || defined(__linux__)
-		    PanicSignal(0);
-#else
-		    PanicSignal();
-#endif
+		    PanicShutdown();
 		}
 	    }
 

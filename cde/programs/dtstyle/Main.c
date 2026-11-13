@@ -50,6 +50,8 @@
 /*+++++++++++++++++++++++++++++++++++++++*/
 
 #include "signal.h"
+#include <errno.h>
+#include <unistd.h>
 #include <sys/wait.h>
 #ifdef TIME
 # include <time.h>
@@ -144,6 +146,9 @@ static Boolean NewBottomColor( XtPointer shell) ;
 static Boolean NewCreateButtons( XtPointer shell) ;
 
 static void ExitSignalHandler(int signal_number);
+static void ExitSignalProc(XtPointer clientData, XtSignalId *id);
+static XtSignalId exitSignalId = 0;
+static volatile sig_atomic_t exitRequested = 0;
 static void WaitChildDeath(int signal_number);
 
 /*++++++++++++++++++++++++++++++++++++++*/
@@ -478,6 +483,11 @@ malloc_trace(0);
     /* Initialize the toolkit and open the display */
     style.shell = 
         XtInitialize(argv[0], XMCLASS, option_list, 1, (int *)&argc, argv);
+
+    /* Registered before the INT and TERM handlers are installed, so the
+     * handlers can always defer the exit to the event loop. */
+    exitSignalId = XtAppAddSignal(XtWidgetToApplicationContext(style.shell),
+                                  ExitSignalProc, nullptr);
 
     /* Allow all WS manipulation functions except resize and maximize */
     mwmFunc = MWM_FUNC_ALL ^ (MWM_FUNC_RESIZE | MWM_FUNC_MAXIMIZE); 
@@ -1083,11 +1093,28 @@ NewCreateButtons(
  *  --------
  * 
  *************************************<->***********************************/
+/* Runs from the event loop after ExitSignalHandler() called
+ * XtNoticeSignal(), so the Motif exit callback is not run in signal context. */
+static void
+ExitSignalProc(XtPointer clientData, XtSignalId *id)
+{
+  (void) clientData;
+  (void) id;
+  activateCB_exitBtn(nullptr, nullptr, nullptr);
+}
+
+/* The signal handler may call only async-signal-safe functions. */
 static void
 ExitSignalHandler(int signal_number)
 {
+  int savedErrno = errno;
+
   (void) signal_number;
-  activateCB_exitBtn(nullptr, nullptr, nullptr);
+  if (exitRequested)
+    _exit(0);
+  exitRequested = 1;
+  XtNoticeSignal(exitSignalId);
+  errno = savedErrno;
 }
 
 static void

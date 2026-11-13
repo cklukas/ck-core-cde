@@ -24,9 +24,11 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/directory-control-packets.c \
              tests/check-file-dialog-safety.py tests/file-dialog-safety.c \
              tests/check-sync-controller.py tests/sync-controller.c \
-             tests/check-sync-retry-ui.py SyncFeature.h.in
+             tests/check-sync-retry-ui.py SyncFeature.h.in \
+             tests/check-stop-signal.py tests/check-stop-signal.c
 
 check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-stop-signal.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-writer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-metadata.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-info.py

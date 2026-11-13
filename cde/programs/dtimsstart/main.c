@@ -38,7 +38,9 @@ char	*ProgramRevision = "dtimsstart $Revision: /main/10 $";
 #include	"xims.h"
 #undef	_EXTERN_DEFINE_
 
+#include <errno.h>
 #include <signal.h>
+#include <unistd.h>
 #include <locale.h>
 #include <Dt/MsgCatP.h>
 
@@ -63,7 +65,8 @@ static XimsBool	optname_match(char *name, char *str, int minlen);
 static int	parse_options(int argc, char **argv);
 static void	usage(int force);
 
-static int	exitSignalNumber = 0;
+/* Set by the termination handler; acted on by ximsHandleDeferredSignals() */
+static volatile sig_atomic_t	exitSignalNumber = 0;
 static XimsBool	do_usage = False;
 
 
@@ -104,6 +107,7 @@ int main (int argc, char **argv)
     signal(SIGTERM, sigExit);
     signal(SIGHUP, sigExit);
     signal(SIGQUIT, sigExit);
+    ximsHandleDeferredSignals();	/* one that came in before */
 
 	/* create $HOME/.xims if needed */
     if (OpMode == MODE_START
@@ -139,12 +143,35 @@ int main (int argc, char **argv)
 }
 
 
+/*
+ * The termination handler may only record the signal and wake the event
+ * loop; Exit() reports the error, notifies the caller and calls exit(), none
+ * of which is safe in a signal handler.  The exit follows from
+ * ximsHandleDeferredSignals(), which the Xt signal procedure, the polling
+ * loop of ximsWait() and ximsMain() call.  A termination signal that comes
+ * in before the first of those runs is acted on at the next call, and a
+ * second one while the exit is pending leaves at once with _exit().
+ */
 void	sigExit(int sig)
 {
-    DPR(("sigExit:  %s (%d)\n", sig_name(sig), sig));
-    signal(sig, SIG_IGN);
+    int		savedErrno = errno;
+
+    if (exitSignalNumber != 0)
+	_exit(1);
     exitSignalNumber = sig;
-    Exit(ErrSignaled);
+    ximsWakeEventLoop();
+    errno = savedErrno;
+}
+
+/* Runs in normal context: the work the signal handlers deferred. */
+void	ximsHandleDeferredSignals(void)
+{
+    if (exitSignalNumber != 0) {
+	DPR(("ximsHandleDeferredSignals:  %s (%d)\n",
+				sig_name(exitSignalNumber), exitSignalNumber));
+	Exit(ErrSignaled);
+    }
+    ximsHandleChildExit();
 }
 
 void	Exit(int err_code)
@@ -298,6 +325,8 @@ void	ximsMain(void)
 
     DPR(("\nximsMain(call_cnt=%d): OpState=%s  OpErrCode=%s[%d]\n",
 		call_cnt, StateName(), error_name(OpErrCode), OpErrCode));
+
+    ximsHandleDeferredSignals();
 
 #ifdef	DEBUG
     pr_brk("ximsMain");

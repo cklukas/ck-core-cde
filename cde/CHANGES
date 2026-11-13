@@ -1,4 +1,37 @@
 2026-11-13
+- dtexec, dtimsstart, dtpad: three programs ran non-async-signal-safe code
+  from signal handlers. dtexec called ToolTalk (`tt_message_send()` and
+  more) from the SIGINT handler: the handler now sets a flag and writes one
+  byte to a self-pipe that the `select()` loop watches, and the loop runs the
+  shutdown. dtimsstart ran `Exit()` (messages, `exit()`) from the termination
+  handler and `put_xims_log()` and the whole wait cleanup (X calls) from the
+  SIGCHLD handler: the handlers now record the signal, or reap the child and
+  record its status, and wake the Xt loop with `XtNoticeSignal()`; the
+  polling loop of the wait checks the records after every sleep. dtpad saved
+  the edit sessions from the handler for every signal: the termination
+  signals (HUP, INT, QUIT, PIPE, TERM) now run the save from the event loop
+  through `XtAppAddSignal()`, while the fatal signals (ILL, ABRT, FPE, BUS,
+  SEGV, SYS) keep a best-effort save in the handler that resets its own
+  disposition, and a fault inside the save ends the process with `_exit()`
+  instead of recursing. In all three, a second signal while the first is
+  pending exits at once with `_exit()`. Tests:
+  `programs/dtexec/tests/check-panic-signal.py`,
+  `programs/dtimsstart/tests/check-signal-deferral.py` and
+  `programs/dtpad/tests/check-panic-signal.py`.
+
+2026-11-13
+- dtfile, dtstyle, dtcm: the SIGINT handler of dtfile (ToolTalk shutdown), the
+  INT and TERM handler of dtstyle (the Motif exit callback) and the SIGINT
+  handler of the calendar (RPC logoffs) ran toolkit, RPC and allocator code in
+  signal context. Each handler now calls only `XtNoticeSignal()`, an
+  `XtAppAddSignal()` procedure registered once the application context exists
+  runs the former body from the event loop, and a second signal exits at once
+  with `_exit()`. dtfile keeps the old sequence for the short window before the
+  toolkit exists. Tests: `programs/dtfile/tests/check-stop-signal.py`,
+  `programs/dtstyle/tests/check-exit-signal.py`,
+  `programs/dtcm/dtcm/tests/check-sigint-signal.py`.
+
+2026-11-13
 - dtlogin: the greeter ran its whole shutdown (closing the message catalog,
   restoring the bell, unsecuring the display, `XSync()`, closing the display)
   inside the SIGTERM handler, which can interrupt an X request in flight and

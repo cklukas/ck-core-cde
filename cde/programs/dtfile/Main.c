@@ -115,6 +115,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include <unistd.h>
 
 #if defined(CSRG_BASED)
 #include <sys/wait.h>
@@ -298,6 +299,9 @@ static void Usage(
 static void RestrictModeUsage(
                         char **argv) ;
 static void Stop( int signal_number ) ;
+static void StopSignalProc( XtPointer client_data, XtSignalId *id ) ;
+static XtSignalId stopSignalId = 0;
+static volatile sig_atomic_t stopRequested = 0;
 static void RestoreSettingsFile( void ) ;
 static void MoveDefaultSettings(
                         int mode) ;
@@ -1093,6 +1097,10 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    toplevel = XtInitialize (argv[0], DTFILE_CLASS_NAME,
                             option_list, XtNumber(option_list),
                             (int *)&argc, argv);
+
+   /* From now on the SIGINT handler defers the shutdown to the event loop. */
+   stopSignalId = XtAppAddSignal (XtWidgetToApplicationContext (toplevel),
+                                  StopSignalProc, nullptr);
 
 #ifdef DT_PERFORMANCE
    gettimeofday(&update_time_f, nullptr);
@@ -2004,10 +2012,37 @@ RestrictModeUsage(
  *
  ************************************************************************/
 
+/* Runs from the event loop after Stop() called XtNoticeSignal(); it is not
+ * in signal context, so ToolTalk and exit() are safe here.
+ */
+static void
+StopSignalProc( XtPointer client_data, XtSignalId *id )
+{
+  (void)client_data;
+  (void)id;
+  FinalizeToolTalkSession( );
+  exit(0);
+}
+
+/* The signal handler may call only async-signal-safe functions. */
 static void
 Stop( int signal_number )
 {
+  int saved_errno = errno;
+
   (void)signal_number;
+  if (stopSignalId != 0)
+  {
+    if (stopRequested)
+      _exit(0);
+    stopRequested = 1;
+    XtNoticeSignal(stopSignalId);
+    errno = saved_errno;
+    return;
+  }
+  /* The early window before the toolkit exists: nothing else runs yet, so
+   * the shutdown runs here as it always did.
+   */
   FinalizeToolTalkSession( );
   exit(0);
 }

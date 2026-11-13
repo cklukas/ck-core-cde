@@ -53,6 +53,7 @@
 **********************************<+>*************************************/
 #include "dtpad.h"
 #include <Xm/TextP.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -320,16 +321,28 @@ AddPound(
 
 
 /************************************************************************
- * PanicSave - immediately saves the text for each edit session handled
- *	by the text editor to #[#]<filename>.
+ * PanicSaveEditSessions - immediately saves the text for each edit session
+ *	handled by the text editor to #[#]<filename>, and returns.
+ *
+ *	This is a best-effort emergency save and is not async-signal-safe;
+ *	the only signal handler that may call it is the one for the fatal
+ *	signals (see panicFatalHandler() in main.c), where the process cannot
+ *	continue anyway.  A second call while the first is running, which is a
+ *	fault inside the save, leaves at once with _exit().
  ************************************************************************/
+static volatile sig_atomic_t panicSaving = 0;
+
 void 
-PanicSave(void)
+PanicSaveEditSessions(void)
 {
     Editor *pPad;
     struct stat statbuf;        /* Information on a file. */
     Boolean addNewLines;
     DtEditorErrorCode errorCode;
+
+    if (panicSaving)
+	_exit(1);
+    panicSaving = 1;
 
     for (pPad = pPadList; pPad != (Editor *)nullptr; pPad = pPad->pNextPad) {
 	char *fileName = pPad->fileStuff.fileName;
@@ -360,6 +373,17 @@ PanicSave(void)
 	/* don't really care about errorCode since we're in a hurry and
 	 * can't do anything about it anyway */
     }
+}
+
+
+/************************************************************************
+ * PanicSave - saves the edit sessions and exits.  For callers in normal
+ *	context (the X error handlers, the termination signal procedure).
+ ************************************************************************/
+void 
+PanicSave(void)
+{
+    PanicSaveEditSessions();
     exit(1);
 }
 

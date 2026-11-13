@@ -2,10 +2,12 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtcm dtcm_delete dtcm_insert dtcm_lookup dtcm_editor
 
-EXTRA_DIST = tests/check-temp-file-create.py tests/check-temp-file-create.c
+EXTRA_DIST = tests/check-temp-file-create.py tests/check-temp-file-create.c \
+             tests/check-sigint-signal.py tests/check-sigint-signal.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-temp-file-create.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-sigint-signal.py
 
 AM_CFLAGS = $(DT_INCDIR) $(CSA_INCDIR) -I$(top_srcdir)/lib/csa	\
 -I$(top_srcdir)/programs/dtcm/libDtCmP

@@ -69,6 +69,7 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include <sys/time.h>
 #include <sys/signal.h>
 #include <signal.h>
+#include <unistd.h>
 #include <rpc/rpc.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
@@ -161,6 +162,7 @@ extern void xtcallback(XtPointer, int *, XtInputId *);
 extern int getfdset(fd_set);
 extern void quit_handler(Widget, XtPointer, XtPointer);
 static void sig_int_handler(int sig);
+static void sig_int_proc(XtPointer client_data, XtSignalId *id);
 extern void find_cb(Widget, XtPointer, XtPointer);
 extern void goto_cb(Widget, XtPointer, XtPointer);
 extern void timezone_cb(Widget, XtPointer, XtPointer);
@@ -207,6 +209,8 @@ char		**gargv;
 
 Display *dpy;
 XtAppContext    app;
+static XtSignalId sig_int_id = 0;
+static volatile sig_atomic_t sig_int_requested = 0;
 
 extern void
 destroy_paint_cache(Paint_cache *cache, int num_entries) {
@@ -1969,10 +1973,18 @@ quit_handler(Widget w, XtPointer cdata, XtPointer cbs) {
 	exit(0);
 }
 
+/*
+ * Runs from the event loop after sig_int_handler() called XtNoticeSignal(),
+ * so the RPC logoffs and exit() do not run in signal context.
+ */
 static void
-sig_int_handler(
-	int	sig)
+sig_int_proc(
+	XtPointer	client_data,
+	XtSignalId	*id)
 {
+	(void) client_data;
+	(void) id;
+
 	if (!calendar) exit(1);
 
 	if (calendar->cal_handle != calendar->my_cal_handle)
@@ -1982,6 +1994,24 @@ sig_int_handler(
 		csa_logoff(calendar->my_cal_handle, nullptr);
 
 	exit(0);
+}
+
+/*
+ * The signal handler may call only async-signal-safe functions.  It is
+ * installed after the application context and sig_int_id exist.
+ */
+static void
+sig_int_handler(
+	int	sig)
+{
+	int	saved_errno = errno;
+
+	(void) sig;
+	if (sig_int_requested)
+		_exit(0);
+	sig_int_requested = 1;
+	XtNoticeSignal(sig_int_id);
+	errno = saved_errno;
 }
 
 static int myabort(Display *dpy, XErrorEvent  *event)
@@ -2595,6 +2625,9 @@ init_calendar(int argc, char **argv)
 				XmNwidth, 650, XmNheight, 730, 
 				XmNmappedWhenManaged, False,
 				nullptr);
+
+	/* the SIGINT handler defers the logoff and exit to the event loop */
+	sig_int_id = XtAppAddSignal(app, sig_int_proc, nullptr);
 
 	if (argc > 1)
 		cm_usage();

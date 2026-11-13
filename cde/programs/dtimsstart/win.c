@@ -210,6 +210,23 @@ int	window_env_ok(void)
     return winEnv.status != WIN_ST_NONE ? True : False;
 }
 
+/* The signal handlers call only XtNoticeSignal(), through
+ * ximsWakeEventLoop(); the procedure runs from the Xt event loop. */
+static XtSignalId volatile	deferredSignalId = (XtSignalId) 0;
+
+void	ximsWakeEventLoop(void)
+{
+    if (deferredSignalId)
+	XtNoticeSignal(deferredSignalId);
+}
+
+static void	deferred_signal_proc(XtPointer client_data, XtSignalId *id)
+{
+    (void) client_data;
+    (void) id;
+    ximsHandleDeferredSignals();
+}
+
 int	init_window_env(void)
 {
     enum { XA_DTIMS_ATOM_MAIN, XA_DTIMS_ATOM_STATUS, XA_DTIMS_ATOM_DATA, 
@@ -265,6 +282,8 @@ int	init_window_env(void)
 #endif
 
     Dpy = dpy; TopW = topW; appC = app;	/* @@@ */
+    deferredSignalId = XtAppAddSignal(app, deferred_signal_proc, nullptr);
+    ximsHandleDeferredSignals();	/* one that came in before */
 
     XInternAtoms(dpy, atom_names, XtNumber(atom_names), False, atoms);
 
@@ -302,6 +321,7 @@ void	end_window_env(void)
 
 	/* XtUnmapWidget(TopW); */
 	XtDestroyWidget(TopW);
+	deferredSignalId = (XtSignalId) 0;	/* goes with the context */
 	XtDestroyApplicationContext(appC);
     } else if (Dpy)
 	close_display();

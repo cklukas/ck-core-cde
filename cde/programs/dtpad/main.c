@@ -96,6 +96,9 @@
 #include "stdlib.h"
 #include "messageParam.h"
 #include "signal.h"
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
 #include <locale.h>
 #include <sys/wait.h>
 #include <Xm/MwmUtil.h>
@@ -1034,7 +1037,7 @@ InitEditSessionAndFirstPad(
     pPad->fileStuff.lastIncludeName = (char *)nullptr;
     RealizeNewPad(pPad);	/* display first pPad Editor window */
 
-    setPanicConditions();	/* Set up emergency calls to PanicSave */
+    setPanicConditions(pPad->app_context);	/* Set up emergency calls to PanicSave */
 
     /*
      * Set up a handler for SIGCLD so that the command invoker library
@@ -1227,40 +1230,99 @@ exitCB(Widget w, XtPointer callData, XtPointer clientData)
 }
 
 /************************************************************************
- * setPanicConditions - 
+ * setPanicConditions - emergency saves on signals.
+ *
+ * The signals fall into two groups.
+ *
+ * Termination signals (HUP, INT, QUIT, PIPE, TERM): the process is healthy.
+ * The handler calls only XtNoticeSignal(); the save and the exit run from
+ * the event loop (panicSignalProc), so they cannot interrupt the toolkit or
+ * the editor widget half way.  A second signal while the first is pending
+ * leaves at once with _exit().  The handlers are installed after the signal
+ * procedure is registered, so there is no window without the deferral.
+ *
+ * Fatal signals (ILL, ABRT, FPE, BUS, SEGV, SYS, EMT): the process state is
+ * already damaged and an event loop may never run again, so the save cannot
+ * be deferred.  It is kept as a best effort in the handler and followed by
+ * _exit().  To limit the risk the disposition is reset to the default on
+ * entry (SA_RESETHAND), so a fault in the handler ends the process with the
+ * default action instead of recursing, the signal is not blocked (SA_NODEFER)
+ * so that such a fault is delivered rather than killing the process from
+ * the kernel while blocked, and PanicSaveEditSessions() leaves with _exit()
+ * when it is entered a second time.
  ************************************************************************/
+static XtSignalId panicSignalId = 0;
+static volatile sig_atomic_t panicRequested = 0;
+
+/* Runs from the event loop after the handler called XtNoticeSignal(). */
 static void
-panicSignalHandler(int signalNumber)
+panicSignalProc(XtPointer clientData, XtSignalId *id)
 {
-    (void)signalNumber;
+    (void)clientData;
+    (void)id;
     PanicSave();
 }
 
-void
-setPanicConditions(void)
+static void
+panicTerminateHandler(int signalNumber)
 {
-    struct sigaction act;
+    int savedErrno = errno;
 
-    sigfillset(&act.sa_mask);
-    act.sa_flags = 0;
-    act.sa_handler = panicSignalHandler;
-    sigaction(SIGHUP, &act, (struct sigaction *)nullptr);
-    sigaction(SIGINT, &act, (struct sigaction *)nullptr);
-    sigaction(SIGQUIT, &act, (struct sigaction *)nullptr);
-    sigaction(SIGILL, &act, (struct sigaction *)nullptr);
-    sigaction(SIGABRT, &act, (struct sigaction *)nullptr);
-    sigaction(SIGIOT, &act, (struct sigaction *)nullptr);
+    (void)signalNumber;
+    if (panicRequested)
+	_exit(1);
+    panicRequested = 1;
+    XtNoticeSignal(panicSignalId);
+    errno = savedErrno;
+}
+
+static void
+panicFatalHandler(int signalNumber)
+{
+    (void)signalNumber;
+    PanicSaveEditSessions();
+    _exit(1);
+}
+
+static const int fatalSignals[] = {
+    SIGILL, SIGABRT, SIGFPE, SIGBUS, SIGSEGV,
 #ifdef SIGEMT
-    sigaction(SIGEMT, &act, (struct sigaction *)nullptr);
+    SIGEMT,
 #endif
-    sigaction(SIGFPE, &act, (struct sigaction *)nullptr);
-    sigaction(SIGBUS, &act, (struct sigaction *)nullptr);
-    sigaction(SIGSEGV, &act, (struct sigaction *)nullptr);
 #ifdef SIGSYS
-    sigaction(SIGSYS, &act, (struct sigaction *)nullptr);
+    SIGSYS,
 #endif
-    sigaction(SIGPIPE, &act, (struct sigaction *)nullptr);
-    sigaction(SIGTERM, &act, (struct sigaction *)nullptr);
+};
+
+void
+setPanicConditions(XtAppContext appContext)
+{
+    struct sigaction terminate;
+    struct sigaction fatal;
+    size_t i;
+
+    panicSignalId = XtAppAddSignal(appContext, panicSignalProc, nullptr);
+
+    memset(&terminate, 0, sizeof terminate);
+    sigfillset(&terminate.sa_mask);
+    terminate.sa_flags = 0;
+    terminate.sa_handler = panicTerminateHandler;
+    sigaction(SIGHUP, &terminate, (struct sigaction *)nullptr);
+    sigaction(SIGINT, &terminate, (struct sigaction *)nullptr);
+    sigaction(SIGQUIT, &terminate, (struct sigaction *)nullptr);
+    sigaction(SIGPIPE, &terminate, (struct sigaction *)nullptr);
+    sigaction(SIGTERM, &terminate, (struct sigaction *)nullptr);
+
+    /* Every other signal stays blocked while the save runs, the fatal ones
+     * do not, so that a fault in the save is delivered. */
+    memset(&fatal, 0, sizeof fatal);
+    sigfillset(&fatal.sa_mask);
+    for (i = 0; i < sizeof fatalSignals / sizeof fatalSignals[0]; i++)
+	sigdelset(&fatal.sa_mask, fatalSignals[i]);
+    fatal.sa_flags = SA_RESETHAND | SA_NODEFER;
+    fatal.sa_handler = panicFatalHandler;
+    for (i = 0; i < sizeof fatalSignals / sizeof fatalSignals[0]; i++)
+	sigaction(fatalSignals[i], &fatal, (struct sigaction *)nullptr);
 
     XSetErrorHandler(dtpadXErrorHandler);
     XSetIOErrorHandler(dtpadXIOErrorHandler);

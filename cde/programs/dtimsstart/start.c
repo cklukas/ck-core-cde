@@ -43,6 +43,12 @@ static int	build_run_env(UserSelection *sel);
 static int	run_ims(UserSelection *sel);
 static int	invoke_ims(UserSelection *sel);
 static void	on_sig_chld(int sig);
+
+/* The SIGCHLD handler reaps and records the end of the child that is being
+ * waited for; ximsHandleChildExit() acts on it in normal context. */
+static volatile sig_atomic_t	childExitPending = 0;
+static volatile pid_t	childExitPid = 0;
+static volatile int	childExitStatus = 0;
 static XimsBool	is_ims_running(RunEnv *renv, ImsConf *ims);
 static int	settle_ims(UserSelection *sel);
 static Window	property_owner(Atom *prop_atom, char *prop_str);
@@ -129,6 +135,8 @@ void	ximsWait(void)
 	return;
     }
 
+    ximsHandleDeferredSignals();
+
     if (!is_waiting() || (OpFlag & FLAG_NOWAIT)) {
 	ximsWaitDone();
     }
@@ -147,6 +155,7 @@ void	ximsWait(void)
 
 	while (is_waiting()) {
 	    select(0, 0, 0, 0, &interval);		/* usleep */
+	    ximsHandleDeferredSignals();	/* a signal ends the sleep */
 	    lapse = (int) time(nullptr) - start_tm;
 
 	    if (im_mod_available(sel->renv) != 0 || lapse >= Opt.Timeout) {
@@ -600,58 +609,62 @@ static int	invoke_ims(UserSelection *sel)
 
 static void	on_sig_chld(int sig)
 {
-    int		wait_status = 0;
+    int		savedErrno = errno;
+    int		wait_status;
     pid_t	pid;
-    int		cause;
     RunEnv	*renv = userSel.renv;
 
-    errno = 0;
-    do {
-#ifdef	_XPG4_EXTENDED
-	pid = wait3(&wait_status, WNOHANG, (struct rusage *)nullptr);
-#else
+    (void) sig;
+    for (;;) {
+	wait_status = 0;
 	pid = waitpid((pid_t) -1, &wait_status, WNOHANG);
-#endif	/* _XPG4_EXTENDED */
-    } while (pid == -1 && errno == EINTR);
-
-    DPR(("\ton_sig_chld(): pid=%d  errno=%d\n", pid, errno));
-
-    if (pid == -1)
-	return;
-
-    _DtSignal(SIGCHLD, on_sig_chld);
-
-    if (WIFEXITED(wait_status)) {
-	cause = ErrImsAborted;
-    } else if (WIFSIGNALED(wait_status)) {
-	cause = ErrImsAborted;
-    } else {	/* WIFSTOPPED(wait_status) */
-	return;
+	if (pid == -1 && errno == EINTR)
+	    continue;
+	if (pid <= 0)
+	    break;
+	if (WIFSTOPPED(wait_status))
+	    continue;
+	if (renv && renv->pid == pid) {
+	    childExitPid = pid;
+	    childExitStatus = wait_status;
+	    childExitPending = 1;
+	}
     }
+    if (childExitPending)
+	ximsWakeEventLoop();
+    errno = savedErrno;
+}
 
-    if (renv->pid == pid) {
-	if (renv->status == ErrImsWaiting || renv->status == ErrImsConnecting) {
-	    renv->status = cause;
-	    renv->wait_status = wait_status;
-	    DPR(("on_sig_chld(): '%s' aborts (wait_status=%#x)\n",
+/* Runs in normal context: what the SIGCHLD handler recorded. */
+void	ximsHandleChildExit(void)
+{
+    sigset_t	chld, old;
+    pid_t	pid;
+    int		wait_status;
+    RunEnv	*renv = userSel.renv;
+
+    if (!childExitPending)
+	return;
+
+    sigemptyset(&chld);
+    sigaddset(&chld, SIGCHLD);
+    sigprocmask(SIG_BLOCK, &chld, &old);
+    pid = childExitPid;
+    wait_status = childExitStatus;
+    childExitPending = 0;
+    sigprocmask(SIG_SETMASK, &old, nullptr);
+
+    DPR(("\tximsHandleChildExit(): pid=%d\n", pid));
+
+    if (renv && renv->pid == pid
+	&& (renv->status == ErrImsWaiting || renv->status == ErrImsConnecting)) {
+	renv->status = ErrImsAborted;
+	renv->wait_status = wait_status;
+	DPR(("ximsHandleChildExit(): '%s' aborts (wait_status=%#x)\n",
 					    userSel.name, wait_status));
-	    put_xims_log("'%s' aborted.", userSel.name, 0, 0);
-	    ximsWaitDone();
-	}
-#ifdef	DEBUG
-	else {
-	    DPR(("\tsig_chld: renv->state=%s is not ErrImsWaiting\n",
-				    error_name(renv->status)));
-	}
-#endif
+	put_xims_log("'%s' aborted.", userSel.name, 0, 0);
+	ximsWaitDone();
     }
-#ifdef	DEBUG
-    else {
-	DPR(("\tsig_chld: pid=%d != renv->pid=%d\n", pid, renv->pid));
-    }
-#endif
-
-    return;
 }
 
 static XimsBool	is_ims_running(RunEnv *renv, ImsConf *ims)

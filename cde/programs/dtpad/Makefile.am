@@ -18,10 +18,12 @@ dtpad_SOURCES = dtpad.c         editCB.c        fileCB.c \
 		ttSaveSupport.c dirselect.c dirselect.h
 
 EXTRA_DIST = tests/check-dirselect.py tests/dirselect-test.c \
-             tests/check-temp-file-create.py tests/check-temp-file-create.c
+             tests/check-temp-file-create.py tests/check-temp-file-create.c \
+             tests/check-panic-signal.py tests/check-panic-signal.c
 
 # dirselect.c does not depend on Motif or Xt, so its check builds it on its
 # own with the sanitizers and runs the test against that code.
 check-local:
 	DIRSELECT_CC='$(CC)' python3 $(srcdir)/tests/check-dirselect.py $(srcdir)
 	CC="$(CC)" python3 $(srcdir)/tests/check-temp-file-create.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-panic-signal.py

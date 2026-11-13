@@ -730,7 +730,7 @@ extern void exitCB(
 	Widget w,
 	XtPointer callData,
 	XtPointer clientData);
-extern void setPanicConditions(void);
+extern void setPanicConditions(XtAppContext appContext);
 extern void SetWindowSize(
 	Editor *pPad);
 extern void SetAppShellResizeHints(
@@ -830,6 +830,8 @@ extern void LoadFile(
         Editor *pPad,
         char *include);
 extern char * GetTempFile(
+	void);
+extern void PanicSaveEditSessions(
 	void);
 extern void PanicSave(
 	void);

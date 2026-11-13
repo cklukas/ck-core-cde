@@ -14,6 +14,11 @@ dtimsstart_SOURCES = action.c env.c file.c main.c remote.c select.c	\
 		     start.c util.c win.c ximserr.h ximsfunc.h xims.h	\
 		     ximspath.h
 
+EXTRA_DIST = tests/check-signal-deferral.py tests/check-signal-deferral.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-signal-deferral.py
+
 BUILT_SOURCES = 0020.dtims
 CLEANFILE = $(BUILT_SOURCES)
 

@@ -30,6 +30,7 @@
 
 	/* main.c */
 extern void sigExit(int sig);
+extern void ximsHandleDeferredSignals(void);
 extern void Exit(int err_code);
 extern int NotifyErrCode(int err_code);
 extern int ErrFilePathNeeded(ximsError error);
@@ -58,6 +59,7 @@ extern int get_ims_list(ImsList **listp, char *locale, int fill_ent);
 extern void ximsStart(void);
 extern void ximsWait(void);
 extern void ximsWaitDone(void);
+extern void ximsHandleChildExit(void);
 extern int is_waiting(void);
 extern void set_sig_chld(int enable);
 extern int im_mod_available(RunEnv *renv);
@@ -106,6 +108,7 @@ extern int open_display(void);
 extern void close_display(void);
 extern int window_env_ok(void);
 extern int init_window_env(void);
+extern void ximsWakeEventLoop(void);
 extern void end_window_env(void);
 extern int clear_cmd_property(Window win);
 extern int save_RM(void);
