@@ -81,7 +81,7 @@ SGMLName::intern(const char *name, int upcase)
     size_t nlen = strlen(name);
     
     if(buflen < nlen + 1){
-      delete buf;
+      delete [] buf;
       buf = new char[buflen = nlen * 3 / 2 + 10];
     }
 
@@ -151,7 +151,7 @@ void StringToInt::grow(size_t needed)
     
     if(used){
       memcpy(born, items, sizeof(Item) * used);
-      delete items;
+      delete [] items;
     }
 
     items = born;

@@ -86,7 +86,9 @@ _Tt_string_buf(const _Tt_string_buf& s)
 {
 	content = (char *)malloc(s.length+1);
 	length = s.length;
-	memcpy(content,s.content,length+1);
+	if (content != (char *)0 && s.content != (char *)0) {
+		memcpy(content,s.content,length+1);
+	}
 }
 
 //

@@ -129,8 +129,9 @@ class _Tt_string : public _Tt_string_buf_ptr {
 	}
 	int operator==(const _Tt_string& s) const {
 		return((*this)->length==s->length &&
-		       0==memcmp((*this)->content, s->content,
-				 (*this)->length));
+		       ((*this)->length==0 ||
+			0==memcmp((*this)->content, s->content,
+				  (*this)->length)));
 	}
 	int operator==(const char *s) const {return 0==cmp(s);}
 	int operator<(const _Tt_string& s) const
