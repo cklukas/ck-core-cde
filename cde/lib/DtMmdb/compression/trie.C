@@ -83,7 +83,7 @@ trie_node::~trie_node()
    for (int i=0; i<LANG_ALPHABET_SZ+1; i++ )
       delete children[i];
 
-   delete children;
+   delete [] children;
 #else
    children[LANG_ALPHABET_SZ].child = 0;
 #endif
@@ -150,7 +150,7 @@ trie::~trie()
    for ( unsigned int i=0; i<alphabet_sz; i++ )
       delete alphabet[i];
 
-   delete alphabet;
+   delete [] alphabet;
 }
 
 void trie::extend_alphabet()
