@@ -56,6 +56,7 @@
 #include "Prelude.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 // /////////////////////////////////////////////////////////////////
 // class constructor
@@ -76,7 +77,7 @@ Tab::Tab (const char *name, const ObjectId &locator)
 
 Tab::~Tab()
 {
-  delete [] f_name;
+  free (f_name);
   delete f_locator;
 }
 

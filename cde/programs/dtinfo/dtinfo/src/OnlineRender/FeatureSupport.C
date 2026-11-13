@@ -48,6 +48,7 @@
 #include <Prelude.h>
 
 #include <limits.h>
+#include <stdlib.h>
 #include "StyleSheet/Feature.h"
 #include "StyleSheet/FeatureValue.h"
 #include "StyleSheet/StyleSheetExceptions.h"
@@ -101,7 +102,7 @@ CanvasRenderer::dofont(PartialElementFeatures	&return_features,
     if (xlfd)
     {
 	return_features.set_font (xlfd);
-	delete[] xlfd;
+	free(xlfd);
 	xlfd = NULL;
     }
 #ifndef NDEBUG
