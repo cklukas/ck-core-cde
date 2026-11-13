@@ -258,17 +258,17 @@ info_lib::~info_lib()
 
    if ( f_bad_info_base_paths ) {
       for (int i=0; i<f_bad_base_array_size; i++) {
-        delete f_bad_info_base_paths[i];
+        free(f_bad_info_base_paths[i]);
       }
-      delete f_bad_info_base_paths;
+      delete [] f_bad_info_base_paths;
    }
 
 
    if ( f_bad_info_base_names ) {
       for (int i=0; i<f_bad_base_array_size; i++) {
-        delete f_bad_info_base_names[i];
+        free(f_bad_info_base_names[i]);
       }
-      delete f_bad_info_base_names;
+      delete [] f_bad_info_base_names;
    }
 
    delete f_obj_dict;

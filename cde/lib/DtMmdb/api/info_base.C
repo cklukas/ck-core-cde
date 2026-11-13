@@ -131,8 +131,8 @@ debug(cerr, base_ds);
 
 info_base::~info_base()
 {
-   delete info_base_list_ptrs;
-   delete info_base_set_ptrs;
+   delete [] info_base_list_ptrs;
+   delete [] info_base_set_ptrs;
 }
 
 int info_base::get_set_pos(const char* set_nm)
