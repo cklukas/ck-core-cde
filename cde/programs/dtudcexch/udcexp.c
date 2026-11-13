@@ -206,6 +206,9 @@ setselectedcode(ListData *ld)
 
     ld->ed->code_num = position_count;
     ld->ed->gpf_code_list = (int *) calloc(position_count, sizeof(int));
+    if (ld->ed->gpf_code_list == nullptr && position_count > 0) {
+	excerror(ld->ed, EXCERRMALLOC, "setselectedcode", "exit");
+    }
     codep = ld->ed->gpf_code_list;
 
     for (i = 0; i < position_count; i++) {

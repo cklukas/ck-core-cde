@@ -189,6 +189,9 @@ void setallcode(ListData *ld)
     }
 
     ld->allcode = (int *) calloc(codenum, sizeof(int));
+    if (ld->allcode == nullptr && codenum > 0) {
+	excerror(ld->ed, EXCERRMALLOC, "setallcode", "exit");
+    }
     ld->allcode_num = codenum;
     codep = ld->allcode;
     for (i = 0; i < num_gr; i++) {
@@ -236,6 +239,9 @@ void makelist(ListData *ld)
     int		i;
 
     ld->existcode = (int *) calloc(ld->allcode_num, sizeof(int));
+    if (ld->existcode == nullptr && ld->allcode_num > 0) {
+	excerror(ld->ed, EXCERRMALLOC, "makelist", "exit");
+    }
     existcodep = ld->existcode ;
     allcodep = ld->allcode;
     existcode_num = 0;
@@ -297,7 +303,7 @@ char *i2s(int code)
 	tmp = tmp / 16;
     }
     len = strlen(buf);
-    number = (char *) calloc(len+3, sizeof(char));
+    number = (char *) XtCalloc(len+3, sizeof(char));
     cp = number;
     memcpy(cp, "0x", 2);
     cp += 2;
@@ -320,6 +326,9 @@ void setexistcode_c(ListData *ld)
     }
 
     ld->existcode_c = (char **) calloc(ld->existcode_num, sizeof(char *));
+    if (ld->existcode_c == nullptr) {
+	excerror(ld->ed, EXCERRMALLOC, "setexistcode_c", "exit");
+    }
     code_cp = ld->existcode_c;
     codep = ld->existcode;
     for (i = 0; i < ld->existcode_num; i++) {

@@ -186,6 +186,7 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 	    case 2 :	/* style	*/
 		tmp_cnt  = StyleList->num ;
 		tmp_dlist = (char **)calloc(tmp_cnt, sizeof(char *)) ;
+		if( tmp_dlist == nullptr ) 	return(-1) ;
 		for( i=0; i<tmp_cnt; i++ ){
 		    if( (tmp_dlist[i] = strdup( StyleList->list[i] )) == nullptr ){
 			return(-1) ;
@@ -195,6 +196,7 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 	    case 3 :	/* size		*/
 		tmp_cnt = SizeList->num ;
 		tmp_dlist = (char **)calloc(tmp_cnt, sizeof(char *)) ;
+		if( tmp_dlist == nullptr ) 	return(-1) ;
 		for( i=0; i<tmp_cnt; i++ ){
 		    sprintf( string, "%d ", SizeList->list[i] ) ;
 		    if( (tmp_dlist[i] = strdup( string )) == nullptr ){

@@ -173,7 +173,7 @@ filesbokCB(Widget widget, XtPointer client_data, XtPointer call_data)
 	freeStrings(dir, file);
 	return;
     }
-    ed->bdffile = (char *) malloc(strlen(file) + 1);
+    ed->bdffile = XtMalloc(strlen(file) + 1);
     strcpy(ed->bdffile, file);
     freeStrings(dir, file);
     XtUnmanageChild(widget);

@@ -171,6 +171,8 @@ char * renge2num(char * renge)
     char * num;
 
     num = (char *) calloc(7, sizeof(char));
+    if (num == nullptr)
+	return nullptr;
 
     strncpy(num,renge,6);
 
@@ -243,7 +245,7 @@ void freeExcdata(Exc_data *ed)
 	free(ed->udcrenge);
 
     if (ed->gpf_code_list != nullptr)
-	free(ed->gpf_code_list);
+	XtFree((char *) ed->gpf_code_list);
 
     if (ed->bdf_code_list != nullptr)
 	free(ed->bdf_code_list);
@@ -308,17 +310,17 @@ void freeld(ListData *ld)
 
     if (ld != nullptr) {
 	if (ld->allcode != nullptr)
-	    free(ld->allcode);
+	    XtFree((char *) ld->allcode);
 	if (ld->existcode != nullptr)
-	    free(ld->existcode);
+	    XtFree((char *) ld->existcode);
 	if (ld->existcode_c != nullptr) {
 	    cp = ld->existcode_c;
 	    for (i = 0; i < ld->existcode_num; i++) {
 		if (*cp != nullptr)
-		    free(*cp);
+		    XtFree(*cp);
 		cp++;
 	    }
-	    free(ld->existcode_c);
+	    XtFree((char *) ld->existcode_c);
 	}
 	free(ld);
     }
