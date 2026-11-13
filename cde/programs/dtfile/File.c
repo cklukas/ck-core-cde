@@ -1313,7 +1313,7 @@ FlattenTree(
     *file_count += file_mgr_data->directory_set[i]->file_count;
 
   *file_view_data =
-    (FileViewData **) XtMalloc (*file_count * sizeof(FileViewData *));
+    (FileViewData **) XtCalloc (*file_count, sizeof(FileViewData *));
   i = 0;
   CopyOrderedEntries(file_mgr_data->tree_root, *file_view_data, &i);
 }
@@ -5556,7 +5556,7 @@ void UnmanageFileIcons(
    order_list = ((IconLayoutData *)file_mgr_data->layout_data)->order_list;
    order_count = ((IconLayoutData *)file_mgr_data->layout_data)->order_count;
 
-   unmanage = (Widget *)XtMalloc(2*order_count*sizeof(Widget));
+   unmanage = (Widget *)XtCalloc(2 * order_count, sizeof(Widget));
    n = 0;
    for (i = 0; i < order_count; i++)
    {
@@ -5674,8 +5674,8 @@ MakeReuseList(
    Widget w;
 
    /* allocate widget arrays */
-   *reuse_icons = (Widget *)XtMalloc((num_children + 1)*sizeof(Widget));
-   *reuse_btns = (Widget *)XtMalloc((num_children + 1)*sizeof(Widget));
+   *reuse_icons = (Widget *)XtCalloc((num_children + 1), sizeof(Widget));
+   *reuse_btns = (Widget *)XtCalloc((num_children + 1), sizeof(Widget));
    icon_count = btn_count = 0;
 
    /* only figure things out if we already have children */
@@ -6418,7 +6418,7 @@ _UpdateFileIcons(
    layout_data->next_icon_to_use = layout_data->reuse_icons;
    layout_data->next_btn_to_use = layout_data->reuse_btns;
 
-   layout_data->manage = (Widget *)XtMalloc(2*order_count*sizeof(Widget));
+   layout_data->manage = (Widget *)XtCalloc(2 * order_count, sizeof(Widget));
    layout_data->manage_count = 0;
 
    layout_data->i_do_next_vis = 0;

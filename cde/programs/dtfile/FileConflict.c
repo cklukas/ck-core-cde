@@ -145,7 +145,7 @@ DtfileConflictBatchValidate(const DtfileConflictBatch *batch)
         batch->selected_count < batch->count || batch->selected_count > INT_MAX ||
         batch->native_bytes > DTFILE_CONFLICT_BYTES_LIMIT)
     { errno = EINVAL; return -1; }
-    indices = malloc(batch->count * sizeof(*indices));
+    indices = calloc(batch->count, sizeof(*indices));
     if (indices == nullptr) return -1;
     for (i = 0; i < batch->count; ++i)
     {

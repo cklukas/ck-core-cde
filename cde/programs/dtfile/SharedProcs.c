@@ -590,7 +590,7 @@ _DtLoadSubdialogArray (
    nameList[nameCount + 1] = nullptr;
 
    /* Get text annotation dialogs */
-   *dialogArray = (DialogData **) XtMalloc(sizeof(DialogData *) * dialogCount);
+   *dialogArray = (DialogData **) XtCalloc(dialogCount, sizeof(DialogData *));
 
    for (i = 0; i < dialogCount; i++)
    {
@@ -1805,8 +1805,8 @@ _DtSetDroppedFileInfo(
 
    numFiles = drop_parameters->dropData->numItems;
 
-   *file_set = (char **)XtMalloc(sizeof(char *) * numFiles);
-   *host_set = (char **)XtMalloc(sizeof(char *) * numFiles);
+   *file_set = (char **)XtCalloc(numFiles, sizeof(char *));
+   *host_set = (char **)XtCalloc(numFiles, sizeof(char *));
    for(i = 0; i < numFiles; i++)
    {
       (*file_set)[i] = XtNewString(drop_parameters->dropData->data.files[i]);
@@ -1832,8 +1832,8 @@ _DtCopyDroppedFileInfo(
 {
    int i;
 
-   *new_file_set = (char **)XtMalloc(sizeof(char *) * num_files);
-   *new_host_set = (char **)XtMalloc(sizeof(char *) * num_files);
+   *new_file_set = (char **)XtCalloc(num_files, sizeof(char *));
+   *new_host_set = (char **)XtCalloc(num_files, sizeof(char *));
    for(i = 0; i < num_files; i++)
    {
       (*new_file_set)[i] = XtNewString(orig_file_set[i]);
