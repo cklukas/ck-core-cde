@@ -1741,8 +1741,8 @@ getString
     **
     ** NOTE: end - begin could result in a truncated long.
     */
-    buffer = XtMalloc(((int)(end - begin) + 1 + numRows) * sizeof(char)
-                                      * BYTES_PER_CHAR(tpd->termBuffer));
+    buffer = XtCalloc((int)(end - begin) + 1 + numRows,
+                      BYTES_PER_CHAR(tpd->termBuffer));
 
     /* 
     ** return a null string if there is nothing to do
@@ -1960,7 +1960,7 @@ _DtTermPrimSelectConvert
 
     if (*target == TARGETS)
     {
-        Atom *targets = (Atom *)XtMalloc((unsigned)(maxTargets * sizeof(Atom)));
+        Atom *targets = (Atom *)XtCalloc(maxTargets, sizeof(Atom));
 
         /* 
         ** Xt should take care of TIME_STAMP for us.

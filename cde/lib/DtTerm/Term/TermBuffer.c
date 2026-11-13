@@ -292,7 +292,7 @@ _DtTermBufferResize
 	    */
 	    if (DT_ENH(lines[i]))
 	    {
-		enh = (DtEnh) malloc(*newCols * sizeof(DtTermEnhPart));
+		enh = (DtEnh) calloc(*newCols, sizeof(DtTermEnhPart));
 
 		if (enh)
 		{
@@ -318,8 +318,7 @@ _DtTermBufferResize
 		    break;
 		}
 	    }
-	    newLineBuffer = (termChar *) malloc((unsigned) 
-					*newCols * BYTES_PER_CHAR(tb));
+	    newLineBuffer = (termChar *) calloc(*newCols, BYTES_PER_CHAR(tb));
 	    
 	    if (newLineBuffer == nullptr)
 	    {
@@ -349,7 +348,7 @@ _DtTermBufferResize
 	/*
 	** the number of rows is increasing
 	*/
-	lines = (DtLine *) malloc((unsigned) *newRows * sizeof(DtLine));
+	lines = (DtLine *) calloc(*newRows, sizeof(DtLine));
 	if (lines != nullptr)
 	{
 	    /*
@@ -373,8 +372,7 @@ _DtTermBufferResize
 		if (lines[i])
 		{
 		    DT_ENH(lines[i])    = nullptr;
-		    BUFFER(lines[i]) = (termChar *) malloc((unsigned) COLS(tb) *
-							   BYTES_PER_CHAR(tb));
+		    BUFFER(lines[i]) = (termChar *) calloc(COLS(tb), BYTES_PER_CHAR(tb));
 		    if (BUFFER(lines[i]))
 		    {
 			LENGTH(lines[i])  = 0;
@@ -668,7 +666,7 @@ _DtTermBufferCreateEnhancement
         /*
         ** Otherwise, allocate and initialize a row of enhancement blocks.
         */
-        *enh = (DtEnh) malloc(MAX_COLS(tb) * sizeof(DtTermEnhPart));
+        *enh = (DtEnh) calloc(MAX_COLS(tb), sizeof(DtTermEnhPart));
         if (*enh == nullptr)
         {
             return(False);

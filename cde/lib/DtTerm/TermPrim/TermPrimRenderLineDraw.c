@@ -73,7 +73,7 @@ LineDrawRenderFunction(
 	/* we will need to convert 2 column characters to 2 spaces in
 	 * order to preserve character positions...
 	 */
-	string = (unsigned char *) XtMalloc(2 * len);
+	string = (unsigned char *) XtCalloc(len, 2);
 	for (ptr = string, wPtr = (wchar_t *) rawString, i1 = 0; i1 < len;
 		i1++, wPtr++) {
 	    switch (wcwidth(*wPtr)) {

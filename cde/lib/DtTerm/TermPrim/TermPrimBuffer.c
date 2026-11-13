@@ -131,8 +131,7 @@ _DtTermPrimBufferCreateBuffer
         if (newTL[i])
         {
             BUFFER(newTL[i]) = (termChar *) 
-                                      malloc((unsigned) 
-                                             cols * BYTES_PER_CHAR(newTB));
+                                      calloc(cols, BYTES_PER_CHAR(newTB));
 
             if (BUFFER(newTL[i]) == nullptr)
             {
@@ -275,7 +274,7 @@ _DtTermPrimBufferResizeBuffer
     */
     if (*newCols > MAX_COLS(*oldTB)) 
     {
-	tabs = (Boolean *) malloc((unsigned) *newCols * sizeof(Boolean));
+	tabs = (Boolean *) calloc(*newCols, sizeof(Boolean));
 	if (tabs)
 	{
 	    /* copy over the tab stops... */
@@ -387,8 +386,7 @@ _DtTermPrimBufferResizeBuffer
 	    newTL = LINES(*oldTB);
 	    for (i = 0; i < MAX_ROWS(*oldTB); i++)
 	    {
-		newLineBuffer = (termChar *) malloc((unsigned) 
-						    *newCols * BYTES_PER_CHAR(*oldTB));
+		newLineBuffer = (termChar *) calloc(*newCols, BYTES_PER_CHAR(*oldTB));
 		
 		if (newLineBuffer == nullptr)
 		{
@@ -417,8 +415,7 @@ _DtTermPrimBufferResizeBuffer
 	    /*
 	    ** the number of rows is increasing
 	    */
-	    newTL = (TermLine *) malloc((unsigned) *newRows * 
-					sizeof(TermLine));
+	    newTL = (TermLine *) calloc(*newRows, sizeof(TermLine));
 	    if (newTL != nullptr)
 	    {
 		/*
@@ -439,8 +436,7 @@ _DtTermPrimBufferResizeBuffer
 		    if (newTL[i])
 		    {
 			BUFFER(newTL[i]) = (termChar *) 
-			    malloc((unsigned) COLS(*oldTB) * 
-				   BYTES_PER_CHAR(*oldTB));
+			    calloc(COLS(*oldTB), BYTES_PER_CHAR(*oldTB));
 			if (BUFFER(newTL[i]) == nullptr)
 			{
 			    /*
@@ -583,7 +579,7 @@ RememberTermBuffer
     int i2;
 
     *referenceLineCount = ROWS(tb);
-    *referenceLines = (TermLine *) XtMalloc(ROWS(tb) * sizeof(TermLine));
+    *referenceLines = (TermLine *) XtCalloc(ROWS(tb), sizeof(TermLine));
 
     /* copy over the lines...
      */
