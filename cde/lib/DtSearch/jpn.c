@@ -122,6 +122,7 @@
  */
 #include "SearchP.h"
 #include <limits.h>
+#include <stdckdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -807,6 +808,8 @@ FILL_ANOTHER_SUBSTRING:
 	while (last_jstate == jstate) {
 	    if (endsubstrbuf - substrp < 8) {
 		size_t	curlen = substrp - substrbuf;
+		size_t	newbufsz;
+		UCHAR	*grown;
 		if (debugging_jpn) {
 		    fprintf (aa_stderr,
 			"jpnparser: curr substr len %lu, "
@@ -814,8 +817,12 @@ FILL_ANOTHER_SUBSTRING:
 			(unsigned long) curlen, (unsigned long) substrbufsz<<1);
 		    fflush (aa_stderr);
 		}
-		substrbufsz <<= 1;	/* double its size */
-		substrbuf = realloc (substrbuf, substrbufsz);
+		/* double its size; the old buffer stays valid on failure */
+		if (ckd_mul (&newbufsz, substrbufsz, (size_t) 2) ||
+		    (grown = realloc (substrbuf, newbufsz)) == nullptr)
+		    return nullptr;
+		substrbuf = grown;
+		substrbufsz = newbufsz;
 		endsubstrbuf = substrbuf + substrbufsz;
 		substrp = substrbuf + curlen;
 	    }
