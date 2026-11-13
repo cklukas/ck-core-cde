@@ -3001,7 +3001,17 @@ create_bil_file_list(
 	name_len = name_len + strlen(file) + 2;	/* for \0 and blank */
 
 	if (name_len > MAXPATHLEN)
-	    bil_list = (STRING) realloc(bil_list, name_len);
+	{
+	    STRING grown = (STRING) realloc(bil_list, name_len);
+
+	    if (grown == nullptr)
+	    {
+		util_free(bil_list);
+		trav_close(&trav);
+		return nullptr;
+	    }
+	    bil_list = grown;
+	}
 
 	if (first)
 	{
