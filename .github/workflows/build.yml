@@ -185,3 +185,159 @@ jobs:
             env CC='${{ matrix.cc }}' python3 "$GITHUB_WORKSPACE/cde-source/cde/programs/dtfile/tests/check-sync-retry-ui.py" \
               --fs-prefix "$fs_prefix" --motif-prefix "$prefix" \
               --work-dir "$private_fixture/retry-ui"
+
+  sanitizers:
+    name: Sanitizers ASan+UBSan (${{ matrix.compiler }})
+    runs-on: ubuntu-24.04-arm
+    env:
+      # The generators run during the build; leak reports there are not findings.
+      ASAN_OPTIONS: detect_leaks=0
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: GCC
+            cc: gcc-14
+            cxx: g++-14
+          - compiler: Clang
+            cc: clang-19
+            cxx: clang++-19
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: cde-source
+      - name: Read the batch Motif revision
+        id: motif
+        shell: bash
+        run: |
+          set -eu
+          revision="$(cat cde-source/.ckgit/motif-revision)"
+          [[ "$revision" =~ ^[0-9a-f]{40}$ ]]
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+      - name: Check out the batch CK Core Motif revision
+        uses: actions/checkout@v5
+        with:
+          repository: cklukas/ck-core-motif
+          ref: ${{ steps.motif.outputs.revision }}
+          path: motif-source
+          persist-credentials: false
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            autoconf automake bison build-essential clang-19 cmake fakeroot flex gcc-14 g++-14 ksh libatspi2.0-dev \
+            libclang-rt-19-dev libdbus-1-dev libharfbuzz-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
+            librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
+            libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
+            llvm-19 m4 ncompress opensp pkg-config python3 rpcsvc-proto tcl-dev x11-xserver-utils \
+            xbitmaps xfonts-utils curl patch xvfb xauth
+      - name: Configure the sanitizer runtime
+        run: |
+          set -eu
+          # The suite calls Xt callbacks through casted function pointers by
+          # design (clang -fsanitize=function reports every one of them, as
+          # -Wcast-function-type-strict does at compile time in the build
+          # job above); the other undefined-behavior checks stay fully on.
+          printf '%s\n' 'function:*' > "$RUNNER_TEMP/ubsan.supp"
+          {
+            echo "UBSAN_OPTIONS=print_stacktrace=1:suppressions=$RUNNER_TEMP/ubsan.supp"
+            echo "ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-19/bin/llvm-symbolizer"
+          } >> "$GITHUB_ENV"
+      - name: Build CK Core Motif ABI 9 with sanitizers
+        run: |
+          set -eu
+          motif_revision="$(git -C motif-source rev-parse HEAD)"
+          echo "CK Core Motif revision: $motif_revision"
+          echo "CK Core Motif revision: \`$motif_revision\`" >> "$GITHUB_STEP_SUMMARY"
+          prefix="$RUNNER_TEMP/motif"
+          logs="$RUNNER_TEMP/sanitizer-logs"
+          mkdir "$RUNNER_TEMP/motif-build" "$logs"
+          (cd motif-source && autoreconf -fi)
+          cd "$RUNNER_TEMP/motif-build"
+          # A sanitized toolkit needs a sanitized consumer: Motif and CDE are
+          # built with the same switch and list.
+          "$GITHUB_WORKSPACE/motif-source/configure" --prefix="$prefix" \
+            CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
+            --disable-demos --disable-static --enable-xft --enable-unicode-text \
+            --enable-atspi --enable-svg --enable-sanitizers \
+            CFLAGS='-O1 -g -std=c23' CXXFLAGS='-O1 -g' > "$logs/motif-configure.log" 2>&1
+          for component in bindings bitmaps config localized lib include tools/wml clients/uil; do
+            make -j6 -C "$component" >> "$logs/motif-make.log" 2>&1
+            make -j1 -C "$component" install >> "$logs/motif-install.log" 2>&1
+          done
+          test -e "$prefix/lib/libXm.so.9"
+          test -x "$prefix/bin/uil"
+      - name: Build and test CDE with sanitizers
+        run: |
+          set -eu
+          logs="$RUNNER_TEMP/sanitizer-logs"
+          mkdir "$RUNNER_TEMP/cde-tests"
+          export TMPDIR="$RUNNER_TEMP/cde-tests"
+          prefix="$RUNNER_TEMP/motif"
+          export PATH="$prefix/bin:$PATH"
+          export CPPFLAGS="-I$prefix/include $(pkg-config --cflags xft)"
+          export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
+          export LD_LIBRARY_PATH="$prefix/lib"
+          (cd cde-source/cde && ./autogen.sh) > "$logs/cde-autogen.log" 2>&1
+          cde_build="$RUNNER_TEMP/cde-build-${{ matrix.cc }}"
+          mkdir "$cde_build"
+          cd "$cde_build"
+          if ! "$GITHUB_WORKSPACE/cde-source/cde/configure" --enable-sanitizers \
+            CC='${{ matrix.cc }}' CXX='${{ matrix.cxx }}' \
+            CFLAGS='-O1 -g' CXXFLAGS='-O1 -g' > "$logs/cde-configure.log" 2>&1; then
+            tail -n 200 config.log
+            exit 1
+          fi
+          make -j1 -C programs/dtksh prepare-ksh > "$logs/cde-prepare-ksh.log" 2>&1
+          if ! make --output-sync=target -j6 > "$logs/cde-make.log" 2>&1; then
+            tail -n 400 "$logs/cde-make.log"
+            exit 1
+          fi
+          make -j6 check 2>&1 | tee "$logs/cde-check.log"
+      - name: Collect the failure logs
+        if: failure()
+        shell: bash
+        run: |
+          set -u
+          logs="$RUNNER_TEMP/sanitizer-logs"
+          mkdir -p "$logs/tree"
+          cde_build="$RUNNER_TEMP/cde-build-${{ matrix.cc }}"
+          for root in "$RUNNER_TEMP/motif-build" "$cde_build"; do
+            test -d "$root" || continue
+            (cd "$root" && find . \( -name config.log -o -name test-suite.log -o -name '*.trs' \) \
+              -size -5M -print0 | cpio --null -pdm "$logs/tree/$(basename "$root")" 2>/dev/null) || true
+          done
+      - name: Upload the failure logs
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: sanitizer-logs-${{ matrix.cc }}
+          path: ${{ runner.temp }}/sanitizer-logs
+          if-no-files-found: warn
+          retention-days: 14
+
+  fuzz-replay:
+    name: Fuzz corpus replay
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install clang with libFuzzer support
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang-19 libclang-rt-19-dev llvm-19 libx11-dev libxau-dev libxdmcp-dev libxt-dev pkg-config python3
+      - name: Replay every fuzz corpus
+        env:
+          CLANG: clang-19
+          ASAN_SYMBOLIZER_PATH: /usr/lib/llvm-19/bin/llvm-symbolizer
+        run: |
+          set -eu
+          python3 cde/fuzz/run-fuzz.py --all --replay --scratch "$RUNNER_TEMP/fuzz-replay"
+      - name: Upload the replay logs
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: fuzz-replay-logs
+          path: ${{ runner.temp }}/fuzz-replay/logs
+          if-no-files-found: warn
+          retention-days: 14

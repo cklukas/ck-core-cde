@@ -3,6 +3,7 @@
 
 run-fuzz.py --list
 run-fuzz.py --target NAME --seconds N --scratch DIR [--worktree DIR]
+run-fuzz.py --all --replay [--scratch DIR] [--worktree DIR]
 
 Every target fuzzes production parser code without the X11, Motif and
 daemon environment it normally runs in.  Like the regression tests under
@@ -12,13 +13,22 @@ header under DIR/build/NAME/, and compiles that header together with the
 fuzz-NAME.c harness, which holds the small stand-ins for the surroundings.
 The production files are only read, never changed.
 
-The target is built with the Homebrew clang (environment variable CLANG,
-default /opt/homebrew/opt/llvm/bin/clang) and
--fsanitize=fuzzer,address,undefined.  Undefined behaviour stops the run like
+The target is built with the clang of the environment variable CLANG (default:
+the Homebrew clang, /opt/homebrew/opt/llvm/bin/clang, on macOS; the first
+`clang` in PATH elsewhere) and -fsanitize=fuzzer,address,undefined.  Undefined behaviour stops the run like
 an address error does (-fno-sanitize-recover=undefined).  The corpus starts
 from cde/fuzz/corpus/NAME/; the grown corpus, the logs and the crash inputs
 stay below DIR.  The exit status is 1 when a crash, a timeout or an
 out-of-memory input was found.
+
+--replay runs each target once over every file of its corpus directory
+(libFuzzer -runs=0: no mutation, no corpus growth) and prints one result line
+per target; the exit status is 1 when any input crashes or a target does not
+build.  The corpora hold the regression input of every fixed defect, so a replay
+is the fast check that no fixed defect has come back.  --all applies the action
+(a fuzzing run of --seconds, or --replay) to every target.  A target whose
+prerequisites are missing on the host (see TARGET_LIBS) is reported as skipped
+with the reason; it is not a failure.
 
 Only the first process of libFuzzer runs, on one CPU.
 """
@@ -30,12 +40,63 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 
 HERE = Path(__file__).resolve().parent
-DEFAULT_CLANG = "/opt/homebrew/opt/llvm/bin/clang"
-# Headers of XQuartz: Xlib, Xt, Xdmcp.  No Motif is needed by any target.
-DEFAULT_XINCLUDE = "/opt/X11/include"
-DEFAULT_XLIB = "/opt/X11/lib"
+IS_MACOS = sys.platform == "darwin"
+MACOS_CLANG = "/opt/homebrew/opt/llvm/bin/clang"
+# Headers of XQuartz: Xlib, Xt, Xdmcp.  No Motif is needed by any target.  Other
+# hosts use the system paths (pkg-config, then the compiler's default
+# directories).  The environment variables XINCLUDE and XLIB override both.
+MACOS_XINCLUDE = "/opt/X11/include"
+MACOS_XLIB = "/opt/X11/lib"
+# pkg-config modules that a target needs besides Xlib and Xt; a host without
+# them skips the target.
+TARGET_LIBS = {
+    "dtlogin-xdmcp": ("xdmcp", "xau"),
+    "dtlogin-xaccess": ("xdmcp", "xau"),
+}
+
+
+def find_clang():
+    """The compiler: $CLANG, else the Homebrew clang on macOS, else clang in PATH."""
+    wanted = os.environ.get("CLANG") or (MACOS_CLANG if IS_MACOS else "clang")
+    found = shutil.which(wanted)
+    if not found:
+        sys.exit(f"clang not found: {wanted} (set CLANG)")
+    return found
+
+
+def pkg_config(*args):
+    """The words pkg-config prints, or None when it is missing or refuses."""
+    try:
+        r = subprocess.run(["pkg-config", *args], capture_output=True, text=True)
+    except OSError:
+        return None
+    return shlex.split(r.stdout) if r.returncode == 0 else None
+
+
+def x_include_flags():
+    given = os.environ.get("XINCLUDE")
+    if given:
+        return ["-I", given]
+    if IS_MACOS:
+        return ["-I", MACOS_XINCLUDE]
+    return pkg_config("--cflags", "x11", "xt") or []
+
+
+def x_link_flags(libs):
+    xlib = os.environ.get("XLIB") or (MACOS_XLIB if IS_MACOS else "")
+    flags = ["-L" + xlib, "-Wl,-rpath," + xlib] if xlib else []
+    return flags + ["-l" + lib for lib in libs]
+
+
+def unavailable_reason(name):
+    """Why the target cannot be built on this host, or None."""
+    if IS_MACOS or name not in TARGET_LIBS or os.environ.get("XINCLUDE"):
+        return None
+    missing = [m for m in TARGET_LIBS[name] if pkg_config("--exists", m) is None]
+    return ("pkg-config module(s) not installed: " + ", ".join(missing)) if missing else None
 
 
 # ---- extraction helpers ------------------------------------------------------
@@ -241,8 +302,7 @@ def build_dtlogin_xdmcp(wt):
     return {"types.h": "", "production.h": prod}, {
         "define": ["UNIXCONN", "TCPCONN", "XDMCP", "HASXDMAUTH", "ANSICPP", "NeedWidePrototypes=0"],
         "include": [str(root), str(wt / "cde/include")],
-        "link": ["-L" + os.environ.get("XLIB", DEFAULT_XLIB), "-lXdmcp", "-lXau",
-                 "-Wl,-rpath," + os.environ.get("XLIB", DEFAULT_XLIB)]}
+        "link": x_link_flags(["Xdmcp", "Xau"])}
 
 
 def build_dtwm_property(wt):
@@ -352,8 +412,7 @@ def build_dtlogin_xaccess(wt):
     return {"types.h": "", "production.h": prod}, {
         "define": ["UNIXCONN", "TCPCONN", "XDMCP", "HASXDMAUTH", "ANSICPP", "NeedWidePrototypes=0"],
         "include": [str(root), str(wt / "cde/include")],
-        "link": ["-L" + os.environ.get("XLIB", DEFAULT_XLIB), "-lXdmcp", "-lXau",
-                 "-Wl,-rpath," + os.environ.get("XLIB", DEFAULT_XLIB)]}
+        "link": x_link_flags(["Xdmcp", "Xau"])}
 
 
 TARGETS = {
@@ -394,13 +453,12 @@ def build(name, wt, scratch, clang, recover_ub=False):
     for fname, content in gen.items():
         (gendir / fname).write_text(content)
     binary = gendir / (f"fuzz-{name}-recover" if recover_ub else f"fuzz-{name}")
-    xinclude = os.environ.get("XINCLUDE", DEFAULT_XINCLUDE)
     cmd = [clang, "-fsanitize=fuzzer,address,undefined",
            "-fsanitize-recover=undefined" if recover_ub else "-fno-sanitize-recover=undefined",
            "-fno-omit-frame-pointer", "-g", "-O1", "-std=gnu23", "-w",
            "-D_DEFAULT_SOURCE", "-D_DARWIN_C_SOURCE",
            f'-DFUZZ_TYPES_H="{gendir / "types.h"}"', f'-DFUZZ_PRODUCTION_H="{gendir / "production.h"}"',
-           "-I", str(gendir), "-I", xinclude]
+           "-I", str(gendir), *x_include_flags()]
     for d in extra.get("define", []):
         cmd += ["-D" + d]
     for inc in extra.get("include", []):
@@ -467,10 +525,65 @@ def run(name, seconds, scratch, wt, clang, work_limit=0, recover_ub=False):
     return 0
 
 
+def replay(name, scratch, wt, clang):
+    """Run the target once over every file of its corpus directory, without
+    mutation (libFuzzer -runs=0).  Prints one result line; returns 1 on a crash."""
+    binary = build(name, wt, scratch, clang)
+    seeds = HERE / "corpus" / name
+    inputs = [p for p in seeds.rglob("*") if p.is_file()]
+    if not inputs:
+        print(f"{name}: replay FAILED: no corpus files in {seeds}")
+        return 1
+    crashes = scratch / "crashes" / name
+    logs = scratch / "logs"
+    tmp = scratch / "tmp"
+    for d in (crashes, logs, tmp):
+        d.mkdir(parents=True, exist_ok=True)
+    env = dict(os.environ, TMPDIR=str(tmp),
+               ASAN_OPTIONS="detect_leaks=0:abort_on_error=0:symbolize=1",
+               UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1")
+    # an input longer than -max_len would be cut, so the cap follows the largest file
+    max_len = max(4096, max(p.stat().st_size for p in inputs))
+    cmd = [str(binary), "-runs=0", f"-max_len={max_len}", "-rss_limit_mb=2048", "-timeout=5",
+           f"-artifact_prefix={crashes}/", str(seeds)]
+    print("+ " + " ".join(shlex.quote(c) for c in cmd), flush=True)
+    log = logs / f"{name}-replay.log"
+    with open(log, "w") as out:
+        proc = subprocess.run(cmd, env=env, stdout=out, stderr=subprocess.STDOUT, cwd=scratch)
+    if proc.returncode:
+        text = log.read_text(errors="replace")
+        sys.stdout.write("\n".join(text.splitlines()[-40:]) + "\n")
+        print(f"{name}: replay FAILED: libFuzzer exit status {proc.returncode} over {len(inputs)} input(s), "
+              f"log {log}")
+        return 1
+    print(f"{name}: replay ok, {len(inputs)} input(s)")
+    return 0
+
+
+def run_target(args, name, scratch, wt, clang):
+    """Run one target for --all or --target; a missing prerequisite skips it, a
+    failed build or extraction is a failure of that target only."""
+    reason = unavailable_reason(name)
+    if reason:
+        print(f"{name}: skipped: {reason}")
+        return 0
+    try:
+        if args.replay:
+            return replay(name, scratch, wt, clang)
+        return run(name, args.seconds, scratch, wt, clang, args.work_limit, args.recover_ub)
+    except SystemExit as e:
+        print(f"{name}: {'replay ' if args.replay else ''}FAILED: {e.code}")
+        return 1
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--list", action="store_true", help="list the targets")
     ap.add_argument("--target", choices=sorted(TARGETS))
+    ap.add_argument("--all", action="store_true", help="apply the action to every target")
+    ap.add_argument("--replay", action="store_true",
+                    help="run each target once over every file of its corpus directory (libFuzzer -runs=0, no "
+                         "mutation) and exit 1 if any input crashes; --scratch defaults to a temporary directory")
     ap.add_argument("--seconds", type=int, default=60)
     ap.add_argument("--scratch", type=Path, help="directory for the build, corpus, logs and crashes")
     ap.add_argument("--recover-ub", action="store_true",
@@ -484,14 +597,26 @@ def main():
         for name, (description, _) in sorted(TARGETS.items()):
             print(f"{name:20} {description}")
         return 0
-    if not args.target or not args.scratch:
-        ap.error("--target and --scratch are required")
-    clang = os.environ.get("CLANG", DEFAULT_CLANG)
-    if not Path(clang).exists():
-        sys.exit(f"clang not found: {clang} (set CLANG)")
-    scratch = args.scratch.resolve()
-    scratch.mkdir(parents=True, exist_ok=True)
-    return run(args.target, args.seconds, scratch, find_worktree(args.worktree), clang, args.work_limit, args.recover_ub)
+    if bool(args.target) == args.all:
+        ap.error("exactly one of --target and --all is required")
+    if not args.scratch and not args.replay:
+        ap.error("--scratch is required")
+    clang = find_clang()
+    own_scratch = None
+    if args.scratch:
+        scratch = args.scratch.resolve()
+        scratch.mkdir(parents=True, exist_ok=True)
+    else:
+        own_scratch = scratch = Path(tempfile.mkdtemp(prefix="ck-fuzz-replay-")).resolve()
+    wt = find_worktree(args.worktree)
+    try:
+        status = 0
+        for name in ([args.target] if args.target else sorted(TARGETS)):
+            status |= run_target(args, name, scratch, wt, clang)
+        return status
+    finally:
+        if own_scratch:
+            shutil.rmtree(own_scratch, ignore_errors=True)
 
 
 if __name__ == "__main__":

@@ -34,6 +34,30 @@ Documentation builds use published ckdocs `master` revision
 
 Pull requests build the same documentation without deploying it.
 
+## Sanitizers and fuzz corpus replay
+
+Two further GitHub jobs run next to the compiler lanes.
+
+The `sanitizers` job builds the batch CK Core Motif revision and CDE with
+`--enable-sanitizers` (AddressSanitizer and UndefinedBehaviorSanitizer) using
+GCC 14 and Clang 19, with at most six parallel jobs, and runs `make check`. A
+sanitized toolkit needs a sanitized consumer, so Motif and CDE use the same
+switch and list. `ASAN_OPTIONS=detect_leaks=0` keeps the build-time generators
+from reporting leaks as findings, and `UBSAN_OPTIONS=print_stacktrace=1` prints
+the stack of each undefined-behavior report. Clang's `-fsanitize=function`
+check is suppressed with `function:*`, because Xt and Motif call callbacks
+through cast function pointers by design; every other check stays on. A failed
+run uploads the configure, build and test logs as the artifact
+`sanitizer-logs-<compiler>`.
+
+The `fuzz-replay` job runs `python3 cde/fuzz/run-fuzz.py --all --replay` with
+Clang 19 and libFuzzer. Each target runs once over every file of its corpus
+directory, without mutation. The corpora hold the regression input of every
+fixed defect, so a failure means a fixed defect has returned. The same job runs
+on rpi4. Run it locally the same way; see `cde/fuzz/README` for the host
+requirements. On Linux a target whose libraries are missing is skipped with a
+message instead of failing.
+
 ## Topic integration
 
 Group related fixes into cohesive topic commits, including their regression

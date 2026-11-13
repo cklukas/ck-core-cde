@@ -39,5 +39,14 @@ jobs:
         script: |
           export GIT_CONFIG_NOSYSTEM=1
           scripts/run-rpi4-c23-lane.sh clang-19 clang++-19 clang19
+  - name: fuzz-replay
+    steps:
+      - name: replay-fuzz-corpora
+        script: |
+          export GIT_CONFIG_NOSYSTEM=1
+          test -n "$TMPDIR"
+          run_id="$(git rev-parse HEAD)"
+          CLANG=clang-19 python3 cde/fuzz/run-fuzz.py --all --replay \
+            --scratch "$TMPDIR/cde-fuzz-replay-$run_id"
 pages:
   path: public

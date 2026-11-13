@@ -21,11 +21,17 @@ stops with a message that names the function.
 
 Requirements on the host:
 
-  - the Homebrew clang, /opt/homebrew/opt/llvm/bin/clang (environment
-    variable CLANG overrides the path); it must accept -fsanitize=fuzzer
-  - the XQuartz headers in /opt/X11/include (XINCLUDE overrides), used by
+  - clang with libFuzzer: the Homebrew clang, /opt/homebrew/opt/llvm/bin/clang,
+    on macOS, the first `clang` in PATH on Linux (environment variable CLANG
+    overrides both, for example CLANG=clang-19); it must accept
+    -fsanitize=fuzzer (Debian and Ubuntu: clang-19 and libclang-rt-19-dev)
+  - the X headers: XQuartz in /opt/X11/include on macOS (XINCLUDE overrides),
+    `pkg-config --cflags x11 xt` on Linux (libx11-dev, libxt-dev); used by
     dtsession-palette, dtwm-property, dtlogin-xdmcp, dtlogin-xaccess and dthelp-sdl
-  - for dtlogin-xdmcp and dtlogin-xaccess also libXdmcp and libXau in /opt/X11/lib (XLIB overrides)
+  - for dtlogin-xdmcp and dtlogin-xaccess also libXdmcp and libXau: in
+    /opt/X11/lib on macOS (XLIB overrides), the system library path on Linux
+    (libxdmcp-dev, libxau-dev); without them these two targets are skipped
+    with a message on Linux
 
 Running
 -------
@@ -39,6 +45,11 @@ Running
       python3 cde/fuzz/run-fuzz.py --target $t --seconds 60 --scratch DIR
   done
 
+  --all            apply the action to every target
+  --replay         run each target once over every file of its corpus
+                   directory, without mutation (libFuzzer -runs=0), print one
+                   result line per target and exit 1 if any input crashes;
+                   --scratch may be left out (a temporary directory is used)
   --worktree DIR   read the production sources from another checkout
                    (default: the checkout that holds this script)
   --recover-ub     report undefined behaviour and go on, listing the first
@@ -51,6 +62,17 @@ Running
 The build uses -fsanitize=fuzzer,address,undefined -fno-sanitize-recover=undefined
 -g -O1 -std=gnu23.  libFuzzer runs with -max_len=4096 -rss_limit_mb=2048
 -timeout=5 and one process, so it uses one CPU.
+
+Replay
+------
+
+The corpora hold the regression input of every fixed defect, so
+
+  python3 cde/fuzz/run-fuzz.py --all --replay
+
+is the quick check that none of them fails again.  It takes seconds, builds
+each target once and needs no scratch directory.  The GitHub workflow job
+`fuzz-replay` and the rpi4 job of the same name run it on every push.
 
 Output below DIR
 ----------------
