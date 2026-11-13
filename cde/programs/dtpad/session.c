@@ -263,7 +263,7 @@ SaveSessionCB(
     /*  Create the session file  */
     if ((fd = creat (longpath, S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP)) == -1)
     {
-        tmpStr = (char *)malloc(strlen(MSG2) + strlen(longpath)+ 1);
+        tmpStr = (char *)XtMalloc(strlen(MSG2) + strlen(longpath) + 1);
         sprintf(tmpStr, MSG2, longpath);
         /* pPad is null after the loop above; the first pad names the program */
         _DtSimpleErrnoError(pPadList->progname, DtError, MSG1, tmpStr, nullptr);
@@ -456,12 +456,12 @@ RestoreMain(
     /* get the file name */
     xrm_name [1] = XrmStringToQuark ("fileName");
     XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value);
-    pPad->fileStuff.fileName = strdup((char *) value.addr);
+    pPad->fileStuff.fileName = XtNewString((char *) value.addr);
 
     /* get workspace list */
     xrm_name[1] = XrmStringToQuark("workspaceList");
     XrmQGetResource(db, xrm_name, xrm_name, &rep_type, &value);
-    pPad->xrdb.workspaceList = strdup((char *) value.addr);
+    pPad->xrdb.workspaceList = XtNewString((char *) value.addr);
 
 }
 

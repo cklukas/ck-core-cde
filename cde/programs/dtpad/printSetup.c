@@ -242,7 +242,7 @@ PrintSetupCreate(
 
     pSetup = (PrintSetup *) XtMalloc( sizeof(PrintSetup) );
     pSetup->parent = parent;
-    pSetup->docName = strdup(docName);
+    pSetup->docName = XtNewString(docName);
     pSetup->cancelCB = cancelCB;
     pSetup->closeDisplayCB = closeDisplayCB;
     pSetup->printCB = printCB;

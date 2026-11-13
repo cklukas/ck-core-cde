@@ -773,7 +773,7 @@ Warning(
     FileWidgets *pFileWidgets = &pPad->fileStuff.fileWidgets;
     XmString tempStr;
 
-    tmpMess = strdup(mess);
+    tmpMess = XtNewString(mess);
 
     /* create the dialog if it is the first time */
     if (!pFileWidgets->gen_warning)
@@ -847,32 +847,32 @@ PostSaveError(
 		    XmDIALOG_ERROR);
 	    return;
 	case DtEDITOR_UNWRITABLE_FILE:
-	    errorReason = strdup( (char *)
+	    errorReason = XtNewString( (char *)
 		    GETMESSAGE(5, 46, "Either file is unwritable or path to\nfile does not exist."));
 	    break;
 	case DtEDITOR_DIRECTORY:
-	    errorReason = strdup((char *)
+	    errorReason = XtNewString((char *)
 		    GETMESSAGE(5, 35, "File is a directory."));
 	    break;
 	case DtEDITOR_CHAR_SPECIAL_FILE:
-	    errorReason = strdup((char *)
+	    errorReason = XtNewString((char *)
 		    GETMESSAGE(5, 36, "File is a character special device."));
 	    break;
 	case DtEDITOR_BLOCK_MODE_FILE:
-	    errorReason = strdup((char *)
+	    errorReason = XtNewString((char *)
 		    GETMESSAGE(5, 37, "File is a block mode device."));
 	    break;
 	case DtEDITOR_INSUFFICIENT_MEMORY:
-	    errorReason = strdup((char *)
+	    errorReason = XtNewString((char *)
 		    GETMESSAGE(5, 47, "Operation failed due to insufficient memory.\nTry increasing swap space."));
 	    break;
 	case DtEDITOR_INVALID_TYPE:	/* this should never occur */
-	    errorReason = strdup((char *)
+	    errorReason = XtNewString((char *)
 		    GETMESSAGE(5, 38, "Invalid file format."));
 	    break;
 	case DtEDITOR_SAVE_FAILED:	/* this should catch everything else */
 	default:			/* - but just in case */
-	    errorReason = strdup((char *)
+	    errorReason = XtNewString((char *)
 		    GETMESSAGE(5, 39, "Unknown reason - possibly not enough disk space."));
 	    break;
     }
@@ -977,7 +977,7 @@ char*
 DialogTitle(Editor *pPad)
 {
     if (pPad->dialogTitle == nullptr)
-      pPad->dialogTitle = strdup((char *)GETMESSAGE(7, 2, "Text Editor - "));
+      pPad->dialogTitle = XtNewString((char *)GETMESSAGE(7, 2, "Text Editor - "));
     
     return pPad->dialogTitle;
 }

@@ -135,8 +135,8 @@ PrintJobCreate(
 
     pJob->pPad = pPad;
     pJob->parentShell = pPad->app_shell;
-    pJob->documentName = strdup(documentName);
-    pJob->tempFileName = strdup(tempFileName);
+    pJob->documentName = XtNewString(documentName);
+    pJob->tempFileName = XtNewString(tempFileName);
     pJob->silent = silent;
 
     pJob->pOutput = nullptr;
@@ -730,7 +730,7 @@ _pjGetPageHeaderString(PrintJob *pJob, PrintStringTypeEnum type)
     switch (type)
     {
         case PRINT_NONE_STRING_TYPE_ENUM:
-            buf = strdup(" ");
+            buf = XtNewString(" ");
             break;
         case PRINT_DATE_STRING_TYPE_ENUM:
             {
@@ -784,7 +784,7 @@ _pjGetPageHeaderString(PrintJob *pJob, PrintStringTypeEnum type)
             }
             break;
         default:
-            buf = strdup("DEFAULT not impld");
+            buf = XtNewString("DEFAULT not impld");
             break;
     }
     return buf;

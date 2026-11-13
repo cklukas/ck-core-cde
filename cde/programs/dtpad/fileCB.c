@@ -438,11 +438,11 @@ FilePrintCB(
     /* -----> Determine the name the user will see in the Print dialog */
     if (pPad->ttEditReq.contract &&
 		(pPad->ttEditReq.docName && *pPad->ttEditReq.docName)) {
-	user_name = strdup(pPad->ttEditReq.docName);
+	user_name = XtNewString(pPad->ttEditReq.docName);
     } else if (pPad->fileStuff.fileName && *pPad->fileStuff.fileName) {
-	user_name = strdup(pPad->fileStuff.fileName);
+	user_name = XtNewString(pPad->fileStuff.fileName);
     } else {
-	user_name = strdup(UNNAMED_TITLE_P);
+	user_name = XtNewString(UNNAMED_TITLE_P);
     }
 
     /* ----> Setup the action arguments - one for the filename as known by
@@ -538,11 +538,11 @@ static void FileDoXpPrint(Editor *pPad, Boolean silent)
     /* -----> Determine the name the user will see in the Print dialog */
     if (pPad->ttEditReq.contract &&
 		(pPad->ttEditReq.docName && *pPad->ttEditReq.docName)) {
-	user_name = strdup(pPad->ttEditReq.docName);
+	user_name = XtNewString(pPad->ttEditReq.docName);
     } else if (pPad->fileStuff.fileName && *pPad->fileStuff.fileName) {
-	user_name = strdup(pPad->fileStuff.fileName);
+	user_name = XtNewString(pPad->fileStuff.fileName);
     } else {
-	user_name = strdup(UNNAMED_TITLE_P);
+	user_name = XtNewString(UNNAMED_TITLE_P);
     }
 
     /* ----> XPPRINT:  Create and execute a print job. */

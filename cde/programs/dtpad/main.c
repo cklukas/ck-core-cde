@@ -667,7 +667,7 @@ CreateFirstPad(
 
     c_argv_l = (char **) XtMalloc(argc_l * sizeof(char*));
     for (i=0; i<argc_l; i++)
-      c_argv_l[i] = strdup(argv_l[i]);
+      c_argv_l[i] = XtNewString(argv_l[i]);
 
     ac = 0;
     XtSetArg(al[ac], XmNargv, argv_l); ac++;
@@ -687,10 +687,10 @@ CreateFirstPad(
 	initialServerResources.server = False; /* so window will be mapped */ 
 	initialServerGeometry = pPad->geometry;
 	if(pPad->xrdb.workspaceList)
-		pPad->xrdb.workspaceList = strdup(pPad->xrdb.workspaceList);
+		pPad->xrdb.workspaceList = XtNewString(pPad->xrdb.workspaceList);
 	if(pPad->xrdb.session)
-		pPad->xrdb.session = strdup(pPad->xrdb.session);
-	pPad->geometry = strdup(pPad->geometry);
+		pPad->xrdb.session = XtNewString(pPad->xrdb.session);
+	pPad->geometry = XtNewString(pPad->geometry);
     }
 
     /* Set some initial Editor instance values */
@@ -1813,11 +1813,11 @@ RestoreInitialServerResources(
 
     /* -----> duplicate resource strings */
     if (initialServerResources.workspaceList != (char *)nullptr)
-	pPad->xrdb.workspaceList = strdup(initialServerResources.workspaceList);
+	pPad->xrdb.workspaceList = XtNewString(initialServerResources.workspaceList);
     if (initialServerResources.session != (char *)nullptr)
-	pPad->xrdb.session = strdup(initialServerResources.session);
+	pPad->xrdb.session = XtNewString(initialServerResources.session);
     if (initialServerGeometry != (char *)nullptr)
-	pPad->geometry = strdup(initialServerGeometry);
+	pPad->geometry = XtNewString(initialServerGeometry);
 
 }
 

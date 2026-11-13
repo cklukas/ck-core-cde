@@ -108,7 +108,7 @@ TTSaveContractCB(
 		if (pPad->inUse == True && pPad->ttEditReq.msg_id &&
 		  strcmp(pPad->ttEditReq.msg_id, messageID) == 0) {
 		    pPad->ttSaveReq.contract = m;	/* process Save msg */
-		    pPad->ttSaveReq.messageID = strdup(messageID);
+		    pPad->ttSaveReq.messageID = XtNewString(messageID);
 		    FileSaveCB((Widget) NULL, (caddr_t) pPad, (caddr_t) NULL);
 		    tt_release(mark);
 		    return((Tt_message) 0);	/* handling Save */

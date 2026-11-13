@@ -188,7 +188,7 @@ TTdt_message_acceptCB(
 		    status = tt_message_arg_ival(m, 1, &force);
 		    pPad->ttQuitReq.silent = (Boolean) silent;
 		    pPad->ttQuitReq.force = (Boolean) force;
-		    pPad->ttQuitReq.operation2Quit = strdup(operation2Quit);
+		    pPad->ttQuitReq.operation2Quit = XtNewString(operation2Quit);
 		    FileExitCB( (Widget) NULL, (caddr_t) pPad, (caddr_t) NULL);
 		    tt_release(mark);
 		    return((Tt_message) 0);	/* handling Quit */
@@ -322,12 +322,12 @@ TTmedia_ptype_declareCB(
 
       /*----> a session file, want to restore a session */
       if (*(context = tt_message_context_val(m, "SESSION"))) {
-         pPad->xrdb.session = strdup(context);
+         pPad->xrdb.session = XtNewString(context);
       }
       else {
          /* -----> non text editor specific resource  */
          if (*(context = tt_message_context_val(m, "GEOMETRY"))) {
-	   pPad->geometry = strdup(context);
+	   pPad->geometry = XtNewString(context);
          }
    
          /* -----> basic options */
@@ -392,19 +392,19 @@ TTmedia_ptype_declareCB(
          }
    
          if  (context = tt_message_context_val(m, "WORKSPACELIST")) {
-	   pPad->xrdb.workspaceList = strdup(context);
+	   pPad->xrdb.workspaceList = XtNewString(context);
          }
    
          /* -----> client/server control options */
          if (*(context = tt_message_context_val(m, "BLOCKING"))) {
 	   pPad->xrdb.blocking = True;
-	   pPad->blockChannel = strdup(context);
+	   pPad->blockChannel = XtNewString(context);
          }
       }
     }
 
     pPad->ttEditReq.contract = m;
-    pPad->ttEditReq.msg_id = strdup(tt_message_id(m));
+    pPad->ttEditReq.msg_id = XtNewString(tt_message_id(m));
     pPad->ttEditReq.op = op;
 
     if (op == TTME_INSTANTIATE) {
@@ -416,9 +416,9 @@ TTmedia_ptype_declareCB(
 	if (file) {
 	    /* the mediaType of the first arg (contents) applies to either
 	     * contents or a file */
-	    pPad->ttEditReq.vtype = strdup(tt_message_arg_type(m, 0));
+	    pPad->ttEditReq.vtype = XtNewString(tt_message_arg_type(m, 0));
 	    pPad->ttEditReq.contents = False;	/* editing a file */
-	    pPad->ttEditReq.fileName = strdup(localPath); 
+	    pPad->ttEditReq.fileName = XtNewString(localPath); 
 	    pPad->fileStuff.fileName = XtNewString(pPad->ttEditReq.fileName);
 	} else {
 	    pPad->ttEditReq.contents = True;	/* editing a buffer */
@@ -427,7 +427,7 @@ TTmedia_ptype_declareCB(
 	    pPad->ttEditReq.returnBufContents = True;
         }
 	if (docname) {
-	    pPad->ttEditReq.docName = strdup(docname);
+	    pPad->ttEditReq.docName = XtNewString(docname);
 	} else {
 	    pPad->ttEditReq.docName = (char *) nullptr;
 	}

@@ -234,7 +234,7 @@ ChangeMainWindowTitle(
     } else if (pPad->fileStuff.fileName && *pPad->fileStuff.fileName) {
         name = MbBasename(pPad->fileStuff.fileName);
     } else {
-        name = strdup(UNNAMED_TITLE);
+        name = XtNewString(UNNAMED_TITLE);
         freeName = True;
     }
     title = (char *)XtMalloc(strlen(DialogTitle(pPad)) + strlen(name) + 1);
@@ -272,10 +272,10 @@ SetSaveAsLabelAndDialog(
 
     if (pPad->fileStuff.fileWidgets.saveAsBtn) {
 	if (pPad->xrdb.nameChange) {
-	    mnemonic = strdup(((char *)GETMESSAGE(11, 25, "A")));
+	    mnemonic = XtNewString(((char *)GETMESSAGE(11, 25, "A")));
 	    tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 26, "Save As...")));
 	} else {
-	    mnemonic = strdup(((char *)GETMESSAGE(11, 109, "F")));
+	    mnemonic = XtNewString(((char *)GETMESSAGE(11, 109, "F")));
 	    tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 110, "Copy To File...")));
 	}
 	ac = 0;
@@ -333,7 +333,7 @@ CreateHelpMenu(
     help_pane = XmCreatePulldownMenu (pPad->menu_bar, "helpMenu", al, ac);
     XtAddCallback(help_pane, XmNhelpCallback, 
 		  HelpHelpCB, pPad);
-    mnemonic = strdup(((char *)GETMESSAGE(11, 81, "H")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 81, "H")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 82, "Help")));
     ac = 0;
     XtSetArg (al[ac], XmNsubMenuId, help_pane);  ac++;
@@ -350,7 +350,7 @@ CreateHelpMenu(
     XtSetValues (pPad->menu_bar, al, ac);
 
     /* -----> create "Overview" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 83, "v")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 83, "v")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 84, "Overview")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -366,7 +366,7 @@ CreateHelpMenu(
     WidgList[count++] = XmCreateSeparatorGadget (help_pane, "sep1", al, ac);
 
     /* -----> create "Tasks" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 85, "T")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 85, "T")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 86, "Tasks")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -378,7 +378,7 @@ CreateHelpMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Table of Contents" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 87, "C")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 87, "C")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 88, "Table of Contents")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -390,7 +390,7 @@ CreateHelpMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Reference" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 89, "R")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 89, "R")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 90, "Reference")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -402,7 +402,7 @@ CreateHelpMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "On Item" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 91, "O")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 91, "O")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 92, "On Item")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -418,7 +418,7 @@ CreateHelpMenu(
     WidgList[count++] = XmCreateSeparatorGadget (help_pane, "sep2", al, ac);
 
     /* -----> create "Using Help" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 93, "U")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 93, "U")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 94, "Using Help")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -434,7 +434,7 @@ CreateHelpMenu(
     WidgList[count++] = XmCreateSeparatorGadget (help_pane, "sep3", al, ac);
 
     /* -----> create "About Text Editor" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 95, "A")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 95, "A")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 96, "About Text Editor")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -479,7 +479,7 @@ CreateFileMenu(
     file_pane = XmCreatePulldownMenu (pPad->menu_bar, "fileMenu", al, ac);
     XtAddCallback(file_pane, XmNhelpCallback, 
 		  HelpFileCB, pPad);
-    mnemonic = strdup(((char *)GETMESSAGE(11, 15, "F")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 15, "F")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 16, "File")));
     ac = 0;
     XtSetArg (al[ac], XmNsubMenuId, file_pane);  ac++;
@@ -494,7 +494,7 @@ CreateFileMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "New" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 17, "N")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 17, "N")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 18, "New")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -507,7 +507,7 @@ CreateFileMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Open..." push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 19, "O")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 19, "O")));
     tmpStr=XmStringCreateLocalized(((char *)GETMESSAGE(11, 20, "Open...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -520,7 +520,7 @@ CreateFileMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Include..." push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 21, "I")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 21, "I")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 22, "Include...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -537,7 +537,7 @@ CreateFileMenu(
     WidgList[count++] = XmCreateSeparatorGadget (file_pane, "SvSp", al, ac);
 
     /* -----> create "Save" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 23, "S")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 23, "S")));
     /* Note: The "Save" label is set in FileCascadingCB() when the File menu
      *       is displayed based on whether or not there are unsaved changes */
     pPad->fileStuff.saveBtnLabel = 
@@ -562,7 +562,7 @@ CreateFileMenu(
 		   FileSaveAsCB, (XtPointer) pPad);
 
     /* -----> create "Print..." push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 27, "P")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 27, "P")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 28, "Print...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -579,7 +579,7 @@ CreateFileMenu(
     WidgList[count++] = XmCreateSeparatorGadget (file_pane, "ExSp", al, ac);
 
     /* -----> create "Close" (Exit) push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 29, "C")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 29, "C")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 30, "Close")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -629,7 +629,7 @@ CreateEditMenu(
     edit_pane = XmCreatePulldownMenu (pPad->menu_bar, "editMenu", al, ac);
     XtAddCallback(edit_pane, XmNhelpCallback, 
 		  HelpEditCB, pPad);
-    mnemonic = strdup(((char *)GETMESSAGE(11, 31, "E")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 31, "E")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 32, "Edit")));
     ac = 0;
     XtSetArg(al[ac], XmNsubMenuId, edit_pane); ac++;
@@ -642,7 +642,7 @@ CreateEditMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Undo" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 33, "U")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 33, "U")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 34, "Undo")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -659,7 +659,7 @@ CreateEditMenu(
     WidgList[count++] = XmCreateSeparatorGadget(edit_pane, "CtSp", al, ac);
 
     /* -----> create "Cut" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 35, "t")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 35, "t")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 36, "Cut")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -672,7 +672,7 @@ CreateEditMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Copy" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 37, "C")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 37, "C")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 38, "Copy")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -685,7 +685,7 @@ CreateEditMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Paste" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 39, "P")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 39, "P")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 40, "Paste")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -698,7 +698,7 @@ CreateEditMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Clear" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 41, "e")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 41, "e")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 42, "Clear")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -711,7 +711,7 @@ CreateEditMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Delete" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 43, "D")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 43, "D")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 44,"Delete")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -724,7 +724,7 @@ CreateEditMenu(
     XmStringFree(tmpStr);
 
     /* -----> XXX - create "Select All" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 101, "S")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 101, "S")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 102, "Select All")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -741,7 +741,7 @@ CreateEditMenu(
     WidgList[count++] = XmCreateSeparatorGadget (edit_pane, "FSSp", al, ac);
 
     /* -----> create "Find/Change" push button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 103, "F")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 103, "F")));
     tmpStr =XmStringCreateLocalized(((char *)GETMESSAGE(11, 104,"Find/Change...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -755,7 +755,7 @@ CreateEditMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Check Spelling" push button  */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 105, "k")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 105, "k")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 106, "Check Spelling...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -796,7 +796,7 @@ CreateFormatMenu(
     format_pane = XmCreatePulldownMenu (pPad->menu_bar, "formatMenu", al, ac);
     XtAddCallback(format_pane, XmNhelpCallback, 
 		  HelpFormatCB, pPad);
-    mnemonic = strdup(((char *)GETMESSAGE(11, 51, "r")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 51, "r")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 52, "Format")));
     ac = 0;
     XtSetArg (al[ac], XmNsubMenuId, format_pane);  ac++;
@@ -810,7 +810,7 @@ CreateFormatMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Settings..." button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 53, "S")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 53, "S")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 54, "Settings...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -823,7 +823,7 @@ CreateFormatMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Paragraph" button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 55, "P")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 55, "P")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 56, "Paragraph")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -836,7 +836,7 @@ CreateFormatMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "All" button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 57, "l")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 57, "l")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 58, "All")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -877,7 +877,7 @@ CreateOptionsMenu(
     options_pane = XmCreatePulldownMenu (pPad->menu_bar, "optionsMenu", al, ac);
     XtAddCallback(options_pane, XmNhelpCallback, 
 		  HelpOptionsCB, pPad);
-    mnemonic = strdup(((char *)GETMESSAGE(11, 59, "O")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 59, "O")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 60, "Options")));
     ac = 0;
     XtSetArg(al[ac], XmNsubMenuId, options_pane);  ac++;
@@ -891,7 +891,7 @@ CreateOptionsMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Overstrike" toggle button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 61, "O")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 61, "O")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 62, "Overstrike")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -906,7 +906,7 @@ CreateOptionsMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Wrap To Fit" toggle button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 111, "W")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 111, "W")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 112, "Wrap To Fit")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -921,7 +921,7 @@ CreateOptionsMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Status Line" toggle button */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 65, "S")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 65, "S")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 66, "Status Line")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -944,7 +944,7 @@ CreateOptionsMenu(
     dropped_pane = XmCreatePulldownMenu(options_pane, "droppedFilesMenu", al, ac);
     pWidg->droppedFilesMenu = dropped_pane;
 
-    mnemonic = strdup(((char *)GETMESSAGE(11, 114, "D")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 114, "D")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 115, "Dropped Files")));
     ac = 0;
     XtSetArg(al[ac], XmNsubMenuId, dropped_pane);  ac++;
@@ -956,7 +956,7 @@ CreateOptionsMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Dropped Files" radio options */
-    mnemonic = strdup(((char *)GETMESSAGE(11, 116, "A")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 116, "A")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 117, "Automatic")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -970,7 +970,7 @@ CreateOptionsMenu(
     free(mnemonic);
     XmStringFree(tmpStr);
 
-    mnemonic = strdup(((char *)GETMESSAGE(11, 118, "P")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 118, "P")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 119, "Insert Paths")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -984,7 +984,7 @@ CreateOptionsMenu(
     free(mnemonic);
     XmStringFree(tmpStr);
 
-    mnemonic = strdup(((char *)GETMESSAGE(11, 120, "C")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 120, "C")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 121, "Insert Content")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -1135,7 +1135,7 @@ FindOrCreatePad(
 
         c_argv_l = (char **) XtCalloc(argc_l, sizeof(char*));
         for (i=0; i<argc_l; i++)
-          c_argv_l[i] = strdup(argv_l[i]);
+          c_argv_l[i] = XtNewString(argv_l[i]);
 
         ac = 0;
         XtSetArg(al[ac], XmNargv, argv_l); ac++;
@@ -1278,7 +1278,7 @@ CreatePopupMenu( Editor *pPad )
     fileMenu = XmCreatePulldownMenu (pPad->popup, "fileMenu", nullptr, 0);
 
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 16, "File")));
-    mnemonic = strdup(((char *)GETMESSAGE(11, 15, "F")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 15, "F")));
 
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
@@ -1288,7 +1288,7 @@ CreatePopupMenu( Editor *pPad )
     free(mnemonic);
     XmStringFree(tmpStr);
 
-    mnemonic = strdup(((char *)GETMESSAGE(11, 17, "N")));
+    mnemonic = XtNewString(((char *)GETMESSAGE(11, 17, "N")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 18, "New")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
