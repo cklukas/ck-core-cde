@@ -869,7 +869,7 @@ OutlineListView::printConvertCallback(WCallback *wcb)
 	 *  as this is the mechanism the Printer Icon on the 
 	 *  front panel uses to transfer data.
 	 */
-	Atom *targs = (Atom *) XtMalloc(sizeof(Atom) * 1);
+	Atom *targs = (Atom *) XtCalloc(1, sizeof(Atom));
 	if (targs == NULL) {
 	    ccs->status = XmCONVERT_REFUSE;
 	    printf("Refuse.\n");

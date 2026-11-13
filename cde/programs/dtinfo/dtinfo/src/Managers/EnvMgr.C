@@ -841,7 +841,7 @@ EnvMgr::arglist()
     // augment count for any other necessary options here
     if( secondary() )  ++p_argc ;
 
-    f_argv = (char **)XtMalloc( p_argc*sizeof(char *) ) ;
+    f_argv = (char **)XtCalloc(p_argc, sizeof(char *)) ;
 
     int ia = 0 ;
     f_argv[ia++] = XtsNewString( "dtinfo" ) ;

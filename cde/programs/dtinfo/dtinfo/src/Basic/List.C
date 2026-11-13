@@ -64,7 +64,7 @@ List::List (int initial_size, int increment, grow_method_t method,
     f_increment = increment;
   assert (f_increment > 0);
   f_list_element = (FolioObject **)
-    malloc (sizeof (FolioObject *) * initial_size);
+    calloc(initial_size, sizeof (FolioObject *));
 }
 
 

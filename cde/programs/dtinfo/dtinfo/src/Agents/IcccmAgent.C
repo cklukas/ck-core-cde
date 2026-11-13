@@ -329,7 +329,7 @@ IcccmAgent::extract_ascii(const char* mbs)
     if (mbs == NULL)
         return NULL;
     unsigned char* asciis = (unsigned char*)
-                                XtMalloc((strlen(mbs) + 1) * sizeof(char));
+                                XtCalloc(strlen(mbs) + 1, sizeof(char));
 
     const unsigned char* src = (const unsigned char*)mbs;
     unsigned char* dest = asciis;
@@ -435,7 +435,7 @@ extract_latin1(const char* mbs)
 {
     if (mbs == NULL)
         return NULL;
-    char* latin1s = XtMalloc((strlen(mbs) + 1) * sizeof(char));
+    char* latin1s = XtCalloc(strlen(mbs) + 1, sizeof(char));
 
     const char* src = mbs;
     char* dest = latin1s;
@@ -474,7 +474,7 @@ IcccmAgent::convert_handler(Widget w, Atom selection, Atom target,
     // put our targets in the list
 #define OLIAS_SUPPORT_TARGETS	4
     length_return = xmu_length + OLIAS_SUPPORT_TARGETS;
-    target_list = (Atom*)XtMalloc(sizeof(Atom) * length_return);
+    target_list = (Atom*)XtCalloc(length_return, sizeof(Atom));
     target_list[0] = XA_COMPOUND_TEXT(XtDisplay(w));
     target_list[1] = XA_STRING;
     target_list[2] = XA_TEXT(XtDisplay(w));

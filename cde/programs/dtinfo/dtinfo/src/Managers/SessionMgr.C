@@ -137,7 +137,7 @@ SessionMgr::setWmCommand()
     int     in_cnt          = env().arglistCount() ;
 
     // insert a -session arg and its value into the arg list
-    wm_command = (char **) XtMalloc((in_cnt+2) * sizeof(char*));
+    wm_command = (char **) XtCalloc(in_cnt+2, sizeof(char*));
     wm_command[0] = XtsNewString( main_argv[0] );
     wm_command[1] = XtsNewString( "-session" );
 

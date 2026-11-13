@@ -145,8 +145,8 @@ PRoot::PRoot (PNode *subexpr)
 : PGroup (NULL, NULL, NULL, subexpr), f_length (0)
 {
   f_space = 16;
-  f_char_of = (char *) malloc (sizeof (char) * (f_space + 1));
-  f_node_of_real = (PNode **) malloc (sizeof (PNode *) * (f_space + 2));
+  f_char_of = (char *) calloc(f_space + 1, sizeof (char));
+  f_node_of_real = (PNode **) calloc(f_space + 2, sizeof (PNode *));
   f_node_of = f_node_of_real + 1;
 }
 

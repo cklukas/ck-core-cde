@@ -512,9 +512,9 @@ case 1:
 	sets_max += BUFFER_INCR_UNIT;
 	if (sets_cnt == 0) {
 	    sets = (std::ostringstream **)
-			malloc(sizeof(std::ostringstream *) * sets_max);
+			calloc(sets_max, sizeof(std::ostringstream *));
 	    set_nums = (int *)
-			malloc(sizeof(int) * sets_max);
+			calloc(sets_max, sizeof(int));
 	}
 	else {
 	    sets = (std::ostringstream **)
@@ -1137,7 +1137,7 @@ int main()
 
     yylex();
 
-    sorted = (int *)malloc(sizeof(int) * sets_cnt);
+    sorted = (int *)calloc(sets_cnt, sizeof(int));
 
     for (i = 0; i < sets_cnt; i++)
 	sorted[i] = i;

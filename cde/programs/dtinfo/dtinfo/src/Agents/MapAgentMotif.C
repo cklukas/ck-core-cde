@@ -475,7 +475,7 @@ MapAgent::create_ui()
 {
   MapButton::f_kids_size = 8;
   MapButton::f_kids = (Widget *)
-                      malloc (sizeof (Widget) * MapButton::f_kids_size);
+                      calloc(MapButton::f_kids_size, sizeof (Widget));
   
   f_shell = new WTopLevelShell (toplevel(), WPopup, "map");
   window_system().register_shell (f_shell);

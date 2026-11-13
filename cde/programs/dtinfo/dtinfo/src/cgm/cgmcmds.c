@@ -25,6 +25,7 @@
 /* optimised for calling XLib commands */
 #include "cgm.h"		/* our defs */
 #include <math.h>	/* math functions */
+#include <stdckdint.h>
 #include <stdio.h>	/* math functions */
 /* everything is in C rather than C++ for portability */
 /* means we must use some file-scope globals */
@@ -639,8 +640,8 @@ static int mfellist(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_ty
 {
   int i;
   cgm_s->mfellist_s = b_gsint(&dat_ptr, cgm_s->intprec);
-  if (!(cgm_s->mfellist = (int *) malloc(sizeof(int) * 2 * 
-					 cgm_s->mfellist_s))) {
+  if (!(cgm_s->mfellist = (int *) calloc(2 * (size_t) cgm_s->mfellist_s,
+					 sizeof(int)))) {
     burp(stderr, "couldn't get memory for MF ellement list\n");
     return(0);
   }
@@ -1368,7 +1369,10 @@ static Pixel *getPixels(unsigned char *dat_ptr, cgm_s_type *cgm_s,
 			int nx, int ny, int localPrec, int repMode)
 {
   Pixel *retPtr;
-  retPtr = (Pixel *) malloc(nx * ny * sizeof(Pixel));
+  size_t pixelCount;
+  if (nx < 0 || ny < 0 || ckd_mul(&pixelCount, (size_t) nx, (size_t) ny))
+    return nullptr;
+  retPtr = (Pixel *) calloc(pixelCount, sizeof(Pixel));
   if (!retPtr) return nullptr;
   /* get the local colour precision */
   if (!localPrec) localPrec =

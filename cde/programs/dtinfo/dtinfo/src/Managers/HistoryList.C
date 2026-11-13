@@ -132,7 +132,7 @@ HistoryList::set_length (int new_size)
 
   /* -------- Allocate new list. -------- */
   FolioObject **new_list =
-   (FolioObject **) malloc (sizeof (FolioObject *) * new_size);
+   (FolioObject **) calloc(new_size, sizeof (FolioObject *));
 
   /* -------- Copy the old list to the new list. -------- */
   int i;

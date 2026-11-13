@@ -217,7 +217,7 @@ ListView::display_list()
 
   // NOTE: There should be a wwl object for string tables!! 6/19/92 djb
   XmStringTable st = (XmStringTable)
-    malloc (sizeof (XmStringTable) * f_the_list->length());
+    calloc(f_the_list->length(), sizeof (XmStringTable));
 
   for (i = 0; i < f_the_list->length(); i++)
     st[i] = display_value((*f_the_list)[i]);

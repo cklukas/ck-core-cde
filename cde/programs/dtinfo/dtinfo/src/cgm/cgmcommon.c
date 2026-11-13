@@ -133,7 +133,7 @@ int cgm_defs(cgm_s_type *cgm_s)
     cgm_s->patsize[i].r	= cgm_s->vdcextent[i].r;
   }
   if (!(cgm_s->coltab = (int *) 
-	malloc(3 * sizeof(int) * (cgm_s->maxcind + 1)))) {
+	calloc(3 * ((size_t) cgm_s->maxcind + 1), sizeof(int)))) {
     burp(stderr, "couldn't get memory for def colour table\n");
     return(0);
   }
@@ -243,16 +243,17 @@ int cgm_assign(cgm_s_type *cgm_1, cgm_s_type *cgm_2)
   }
   if (cgm_2->maxcind < cgm_1->maxcind) {
     if (cgm_2->coltab) {
-      if (!(cgm_2->coltab =
-	    (int *) realloc(cgm_2->coltab,
-			    3 * sizeof(int) * (cgm_1->maxcind + 1)))) {
+      int *grown = (int *) reallocarray(cgm_2->coltab,
+			    3 * ((size_t) cgm_1->maxcind + 1), sizeof(int));
+      if (!grown) {
 	burp(stderr, "couldn't reallocate mem for coltab\n");
 	return(0);
-      } 
+      }
+      cgm_2->coltab = grown;
     } else {
       if (!(cgm_2->coltab =
-	    (int *) malloc(
-			   3 * sizeof(int) * (cgm_1->maxcind + 1)))) {
+	    (int *) calloc(
+			   3 * ((size_t) cgm_1->maxcind + 1), sizeof(int)))) {
 	burp(stderr, "couldn't allocate mem for coltab\n");
 	return(0);
       }

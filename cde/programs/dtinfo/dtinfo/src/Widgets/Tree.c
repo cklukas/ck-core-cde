@@ -70,6 +70,8 @@
  * as well as to support vertical trees.
  */
 
+#include <limits.h>
+#include <stdckdint.h>
 #include <X11/Intrinsic.h>
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
@@ -218,6 +220,7 @@ static void initialize_dimensions (Dimension **listp, int *sizep, int n)
 {
     int i;
     Dimension *l;
+    size_t size;
 
     if (!*listp) {
 	*listp = (Dimension *) XtCalloc ((unsigned int) n,
@@ -226,8 +229,13 @@ static void initialize_dimensions (Dimension **listp, int *sizep, int n)
 	return;
     }
     if (n > *sizep) {
-	*listp = (Dimension *) XtRealloc((char *) *listp,
-					 (unsigned int) (n*sizeof(Dimension)));
+	if (ckd_mul(&size, (size_t) n, sizeof(Dimension)) || size > UINT_MAX) {
+	    XtFree((char *) *listp);
+	    *listp = nullptr;
+	    *sizep = 0;
+	    return;
+	}
+	*listp = (Dimension *) XtRealloc((char *) *listp, (unsigned int) size);
 	if (!*listp) {
 	    *sizep = 0;
 	    return;

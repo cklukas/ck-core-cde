@@ -241,7 +241,7 @@ MarkMgr::create_mark (UAS_Pointer<UAS_Common> &doc_ptr, const Anchor &anchor,
 
   // Trim leading and trailing space and check for an empty name.
 #ifdef UseWideChars
-  wchar_t *new_name = (wchar_t*)malloc((strlen(name) + 1) * sizeof(wchar_t));
+  wchar_t *new_name = (wchar_t*)calloc(strlen(name) + 1, sizeof(wchar_t));
   wchar_t *start = new_name, *end;
   char* trimmed_name;
   int size = strlen(name) + 1;
@@ -259,7 +259,7 @@ MarkMgr::create_mark (UAS_Pointer<UAS_Common> &doc_ptr, const Anchor &anchor,
       end++;
       *end = '\0';
       size = wcslen(start) * 2 + 1;
-      trimmed_name = (char*)malloc(size * sizeof(char));
+      trimmed_name = (char*)calloc(size, sizeof(char));
       n = wcstombs(trimmed_name, start, size);
       assert( n >= 0 );
   }
