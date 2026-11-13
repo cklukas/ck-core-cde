@@ -622,6 +622,13 @@ void            user_args_processor (int argc, char **argv)
 	    case 't':		/* ETX delimiter string */
 		/* Replace any "\n" string with real linefeed */
 		targ = parg.etxdelim = malloc (strlen (argptr + 2) + 4);
+		if (targ == nullptr) {
+		    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_misc, 3,
+			"*** %sOut of Memory at %s asking for %lu bytes! ***\n"),
+			(aa_argv0 != nullptr)? aa_argv0 : "", PROGNAME"400",
+			(unsigned long) strlen (argptr + 2) + 4);
+		    DtSearchExit (2);
+		}
 		src = argptr + 2;
 		while (*src) {
 		    if (src[0] == '\\' && src[1] == 'n') {
@@ -1385,6 +1392,12 @@ main (int argc, char **argv)
     dtsearch_catd = CATOPEN(FNAME_DTSRCAT, 0);
 
     aa_argv0 = strdup (argv[0]);
+    if (aa_argv0 == nullptr) {
+	fprintf (stderr, CATGETS(dtsearch_catd, MS_misc, 3,
+	    "*** %sOut of Memory at %s asking for %lu bytes! ***\n"),
+	    "", PROGNAME"402", (unsigned long) strlen (argv[0]) + 1);
+	DtSearchExit (2);
+    }
     time (&elapsed);
     tmptr = localtime (&elapsed);
     strftime (buf, sizeof(buf),

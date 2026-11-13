@@ -273,6 +273,13 @@ PRINT_USAGE:
 	    case 't':	/* ETX delimiter string */
 		/* Replace any "\n" string with real linefeed */
 		targ = parg.etxdelim = malloc (strlen (argptr + 2) + 4);
+		if (targ == nullptr) {
+		    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_misc, 3,
+			"*** %sOut of Memory at %s asking for %lu bytes! ***\n"),
+			(aa_argv0 != nullptr)? aa_argv0 : "", PROGNAME"401",
+			(unsigned long) strlen (argptr + 2) + 4);
+		    DtSearchExit (2);
+		}
 		src = argptr + 2;
 		while (*src) {
 		    if (src[0] == '\\' && src[1] == 'n') {
