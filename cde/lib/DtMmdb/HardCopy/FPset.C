@@ -47,5 +47,5 @@ FPset::~FPset()
 { 
    for (int i=0; i<count; i++ )
       delete ptrs[i]; 
-   delete ptrs;
+   delete [] ptrs;
 }

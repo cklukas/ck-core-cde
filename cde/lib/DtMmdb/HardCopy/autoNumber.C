@@ -47,9 +47,9 @@ autoNumber::autoNumber(const char* nm, enum autoNumberType t, int delta, const c
 
 autoNumber::~autoNumber()
 {
-   delete f_name;
-   delete f_prefix;
-   delete f_postfix;
+   free(f_name);
+   free(f_prefix);
+   free(f_postfix);
 
    while (f_values.entries())
      f_values.pop();
