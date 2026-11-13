@@ -333,6 +333,7 @@ init_props(void)
     static int		is_inited = 0;
     nl_catd		libdtcm_catd;
     const char		*dflt, *str;
+    char		*translated;
     OrderingType	ordering;
 
     if (is_inited) return;
@@ -344,11 +345,15 @@ init_props(void)
 
     dflt = def_props[CP_DATEORDERING];
     str = CATGETS(libdtcm_catd, 1, 1, dflt);
-    def_props[CP_DATEORDERING] = strdup(str);
+    translated = strdup(str);
+    if (translated != nullptr)
+	def_props[CP_DATEORDERING] = translated;
 
     dflt = def_props[CP_DEFAULTDISP];
     str = CATGETS(libdtcm_catd, 1, 2, dflt);
-    def_props[CP_DEFAULTDISP] = strdup(str);
+    translated = strdup(str);
+    if (translated != nullptr)
+	def_props[CP_DEFAULTDISP] = translated;
 }
 
 extern boolean_t

@@ -494,6 +494,8 @@ dtfns_myorg_name(char *buf, int len)
 
 		/* If no domain for the principal, use the one for the host */
 		myorg_name = strdup(pd ? pd : (host_domain ? host_domain : ""));
+		if (myorg_name == nullptr)
+			return;
 
 		/*
 		 * We want to strip the root domain name off of the
@@ -741,6 +743,8 @@ get_helix_service_name(
 
 	n = strlen(name);
 	tmp_name = strdup(name);
+	if (tmp_name == nullptr)
+		return -1;
 
 	/* Remove trailing : if there is one */
 	if (tmp_name[n - 1] == ':') {

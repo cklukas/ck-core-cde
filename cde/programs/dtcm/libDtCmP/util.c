@@ -111,8 +111,7 @@ cm_def_printer(void)
 #ifdef SVR4
 	tmp = (char*)getenv("LPDEST");
 	if (tmp != nullptr && *tmp != nullptr) {
-		printer_name = (char*)malloc(strlen(tmp)+1);
-		strcpy(printer_name, tmp);
+		printer_name = strdup(tmp);
 	}
 	else {
 	
@@ -127,30 +126,25 @@ cm_def_printer(void)
         	tmp = (char *)_XStrtok(message, ":", strtok_buf);
         	tmp = (char *)_XStrtok((char *)nullptr, "\n", strtok_buf);
 		if (tmp != nullptr && *tmp != nullptr) {
-			printer_name = (char*)malloc(strlen(tmp)+1);
-			strcpy(printer_name, tmp);
+			printer_name = strdup(tmp);
 		}
 		else {
-			printer_name = (char*)malloc(3);
-			strcpy(printer_name, "lp");
+			printer_name = strdup("lp");
 		}
 
 		/* close the process connection */
 		pclose(fp);
 #else
-		printer_name = (char*)malloc(3);
-		strcpy(printer_name, "lp");
+		printer_name = strdup("lp");
 #endif
 	}
 #else
 	tmp = (char*)getenv("PRINTER");
 	if (tmp != nullptr && *tmp != '\0') {
-		printer_name = (char*)malloc(strlen(tmp)+1);
-		strcpy(printer_name, tmp);
+		printer_name = strdup(tmp);
 	}
 	else {
-		printer_name = (char*)malloc(3);
-		strcpy(printer_name, "lw");
+		printer_name = strdup("lw");
 	}
 #endif
 	return printer_name;
@@ -341,6 +335,29 @@ ckalloc(unsigned int size)
 	/* no recovery available */
 	syserr("ckalloc: cannot allocate %d bytes", size, 0, 0);
 	return((char *)nullptr);
+}
+
+/*	Wrapper around reallocarray; ends the program through syserr when
+	memory is exhausted and keeps the old block valid until then.	*/
+extern void *
+ckreallocarray(void *p, size_t nmemb, size_t size)
+{
+	void *q = reallocarray(p, nmemb, size);
+
+	if (q == nullptr)
+		syserr("ckreallocarray: cannot allocate %d elements", (int)nmemb, 0, 0);
+	return q;
+}
+
+/*	Duplicates a string; ends the program through ckalloc when memory is
+	exhausted.							*/
+extern char *
+ckstrdup(const char *s)
+{
+	char *p = ckalloc(strlen(s) + 1);
+
+	strcpy(p, s);
+	return p;
 }
 
 	
@@ -1297,7 +1314,7 @@ Dtcm_appointment *allocate_appt_struct (Allocation_reason reason, int version, .
 	 */
 	for (idx = 0; idx < appt->count; idx++) {
 		api_idx = (int) (intptr_t) CmDataListGetData(api_ids, idx + 1);
-		appt->names[idx] = strdup(_CSA_entry_attribute_names[api_idx]);
+		appt->names[idx] = ckstrdup(_CSA_entry_attribute_names[api_idx]);
 		if (reason == appt_write)
 			initialize_entry_attr(api_idx, &appt->attrs[idx], reason, version);
 	}
@@ -1409,7 +1426,7 @@ allocate_cal_struct(Allocation_reason reason, int version, ...) {
 	 */
 	for (idx = 0; idx < cal->count; idx++) {
 		api_idx = (int) (intptr_t) CmDataListGetData(api_ids, idx + 1);
-		cal->names[idx] = strdup(_CSA_calendar_attribute_names[api_idx]);
+		cal->names[idx] = ckstrdup(_CSA_calendar_attribute_names[api_idx]);
 		if (reason == appt_write)
 			initialize_cal_attr(api_idx, &cal->attrs[idx], reason, version);
 	}
@@ -1670,7 +1687,7 @@ initialize_cal_attr(int id, CSA_attribute *attrs, Allocation_reason reason, int 
 		memset(attrs->value, 0, size);
 		attrs->value->type = cal_ident_index_tag(id);
 		if (attrs->value->type == CSA_VALUE_REMINDER)
-			attrs->value->item.reminder_value = (CSA_reminder *) calloc(sizeof(CSA_reminder), 1);
+			attrs->value->item.reminder_value = (CSA_reminder *) ckalloc(sizeof(CSA_reminder));
 	}
 }
 
@@ -1714,7 +1731,7 @@ initialize_entry_attr(int id, CSA_attribute *attrs, Allocation_reason reason, in
 		memset(attrs->value, 0, size);
 		attrs->value->type = entry_ident_index_tag(id);
 		if (attrs->value->type == CSA_VALUE_REMINDER)
-			attrs->value->item.reminder_value = (CSA_reminder *) calloc(sizeof(CSA_reminder), 1);
+			attrs->value->item.reminder_value = (CSA_reminder *) ckalloc(sizeof(CSA_reminder));
 	}
 }
 
@@ -1909,13 +1926,13 @@ setup_range(CSA_attribute **attrs, CSA_enum **ops, int *count, time_t start,
 	memset(op_ptr, 0, o_size);
 
 	initialize_entry_attr(CSA_ENTRY_ATTR_START_DATE_I, &attr_ptr[0], appt_write, version);
-	attr_ptr[0].value->item.string_value = malloc(BUFSIZ);
+	attr_ptr[0].value->item.string_value = ckalloc(BUFSIZ);
 	_csa_tick_to_iso8601(start, attr_ptr[0].value->item.string_value);
 
 	op_ptr[0] = CSA_MATCH_GREATER_THAN_OR_EQUAL_TO;
 
 	initialize_entry_attr(CSA_ENTRY_ATTR_START_DATE_I, &attr_ptr[1], appt_write, version);
-	attr_ptr[1].value->item.string_value = malloc(BUFSIZ);
+	attr_ptr[1].value->item.string_value = ckalloc(BUFSIZ);
 	_csa_tick_to_iso8601(stop, attr_ptr[1].value->item.string_value);
 	op_ptr[1] = CSA_MATCH_LESS_THAN_OR_EQUAL_TO;
 

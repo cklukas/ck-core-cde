@@ -148,6 +148,8 @@ cmfns_description(
 
 	buf[size - 1] = '\0';
 	tmp_buf = strdup(name);
+	if (tmp_buf == nullptr)
+		return -1;
 	head = tmp_buf;
 	if ((tail = strchr(head, DTFNS_SEPARATOR)) == nullptr) {
 		/*
@@ -284,6 +286,8 @@ cmfns_lookup_calendar(
 	DP(("cmfns_lookup_calendar: Looking up %s\n", name));
 
 	name_buf = strdup(name);
+	if (name_buf == nullptr)
+		return -1;
 
 	strncpy(addr_buf, name, addr_size);
 
@@ -304,6 +308,7 @@ cmfns_lookup_calendar(
 		CMFNS_CALENDAR_TYPE, org, fns_name, sizeof(fns_name));
 
 	if (rcode <= 0) {
+		free(name_buf);
 		return rcode;
 	}
 
@@ -318,6 +323,7 @@ cmfns_lookup_calendar(
 			nullptr, 0);
 
 	if (rcode <= 0) {
+		free(name_buf);
 		return rcode;
 	}
 
@@ -328,7 +334,13 @@ cmfns_lookup_calendar(
 		 * name
 		 */
 		tmp = strdup(addr_buf);
+		if (tmp == nullptr) {
+			free(name_buf);
+			return -1;
+		}
 		if ((p = strstr(fns_name, ":service:")) == nullptr) {
+			free(tmp);
+			free(name_buf);
 			return -1;
 		}
 
@@ -336,6 +348,7 @@ cmfns_lookup_calendar(
 		while (*p != ':')
 			p--;
 		sprintf(addr_buf, "%s@%s", p + 1, tmp);
+		free(tmp);
 	}
 
 	if (org != nullptr) {
@@ -357,6 +370,7 @@ cmfns_lookup_calendar(
 
 	DP(("cmfns_lookup_calendar: FNS Lookup complete. address=%s",
 		addr_buf));
+	free(name_buf);
 	return rcode;
 }
 
@@ -374,6 +388,8 @@ cmfns_register_calendar(const char *username, const char *location)
 	char	*p;
 
 	user = strdup(username);
+	if (user == nullptr)
+		return -1;
 
 	if ((p = strchr(user, '@')) != nullptr) {
 		*p = '\0';

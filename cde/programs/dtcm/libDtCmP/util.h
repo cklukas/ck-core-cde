@@ -246,6 +246,8 @@ extern void		free_range	(CSA_attribute**,
 extern int blank_buf (char*);
 extern int embedded_blank(char*);
 extern char * ckalloc(unsigned int size);
+extern char * ckstrdup(const char *s);
+extern void * ckreallocarray(void *p, size_t nmemb, size_t size);
 extern char * cm_def_printer(void);
 extern char * cm_get_credentials(void);
 extern char * cm_get_local_domain(void);

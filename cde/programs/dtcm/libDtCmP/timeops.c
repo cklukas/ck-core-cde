@@ -1016,9 +1016,11 @@ init_time(void)
 	if (getenv("TZ") == nullptr){
 		char *tzptr;
 		tzptr = malloc(strlen(tzname[0]) + strlen(tzname[1]) + 10);
-		sprintf (tzptr,"TZ=%s%ld%s", tzname[0], timezone/3600, tzname[1]);
-		putenv(tzptr);
-		tzset();
+		if (tzptr != nullptr) {
+			sprintf (tzptr,"TZ=%s%ld%s", tzname[0], timezone/3600, tzname[1]);
+			putenv(tzptr);
+			tzset();
+		}
 	}
 #endif
 

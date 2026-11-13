@@ -511,7 +511,7 @@ cm_tty_insert(nl_catd catd, CSA_session_handle target, int version,
 			} else
 				csa_free((CSA_buffer)new_entry);
 		} else {
-		  	char *msg = strdup(t1);
+		  	char *msg = ckstrdup(t1);
 			fprintf(stderr, "%s%s\n", msg, CATGETS(catd, 1, 1066,
 					"Appointment was not inserted."));
 			free(msg);
@@ -775,7 +775,7 @@ default_repeat_scope_str(
 	Repeat_menu_op  op)
 {
 	if (!default_repeat_scope_strs[DAILY]) {
-		default_repeat_scope_strs[ONE_TIME] = strdup("\0");
+		default_repeat_scope_strs[ONE_TIME] = ckstrdup("\0");
 		default_repeat_scope_strs[DAILY] = 
 				strdup(CATGETS(catd, 1, 994, "days"));
 		default_repeat_scope_strs[WEEKLY] = 
@@ -794,7 +794,7 @@ default_repeat_scope_str(
 				default_repeat_scope_strs[WEEKLY];
 		default_repeat_scope_strs[TUESDAY_THURSDAY] = 
 				default_repeat_scope_strs[WEEKLY];
-		default_repeat_scope_strs[REPEAT_EVERY] = strdup("\0"); 
+		default_repeat_scope_strs[REPEAT_EVERY] = ckstrdup("\0"); 
 	}
 
 	if (op >= ONE_TIME && op <= REPEAT_EVERY)
@@ -840,7 +840,7 @@ extern Parse_key_op
 identify_parse_key(char *str) {
 
 	if (!new_appt_begin_delimiter) {
-		new_appt_begin_delimiter = malloc(strlen(CSA_X_DT_ENTRY_ATTR_ENTRY_DELIMITER) + 14);
+		new_appt_begin_delimiter = ckalloc(strlen(CSA_X_DT_ENTRY_ATTR_ENTRY_DELIMITER) + 14);
 		sprintf(new_appt_begin_delimiter, "%s%s", 
 			CSA_X_DT_ENTRY_ATTR_ENTRY_DELIMITER, 
 			":string:begin");
@@ -881,7 +881,7 @@ identify_parse_key(char *str) {
 extern void
 load_appt_defaults(Dtcm_appointment *a, Props *p) {
 	a->type->value->item.sint32_value = CSA_TYPE_EVENT;
-	a->subtype->value->item.string_value = strdup(CSA_SUBTYPE_APPOINTMENT);
+	a->subtype->value->item.string_value = ckstrdup(CSA_SUBTYPE_APPOINTMENT);
 	a->state->value->item.sint32_value = CSA_X_DT_STATUS_ACTIVE;
 	if (a->repeat_type && a->repeat_type->value)
 		a->repeat_type->value->item.sint32_value = CSA_X_DT_REPEAT_ONETIME;
@@ -896,7 +896,7 @@ load_appt_defaults(Dtcm_appointment *a, Props *p) {
 extern void
 load_reminder_props(Dtcm_appointment *a, Props *p) {
 	if (convert_boolean_str(get_char_prop(p, CP_BEEPON))) {
-		a->beep->value->item.reminder_value->lead_time = malloc(BUFSIZ);
+		a->beep->value->item.reminder_value->lead_time = ckalloc(BUFSIZ);
 		_csa_duration_to_iso8601(get_int_prop(p, CP_BEEPADV) *
 			timescopestring_to_tick(get_char_prop(p, CP_BEEPUNIT)),
 		a->beep->value->item.reminder_value->lead_time);
@@ -904,7 +904,7 @@ load_reminder_props(Dtcm_appointment *a, Props *p) {
 		a->beep->value->item.reminder_value->reminder_data.size = 0;
 	}
 	if (convert_boolean_str(get_char_prop(p, CP_FLASHON))) {
-		a->flash->value->item.reminder_value->lead_time = malloc(BUFSIZ);
+		a->flash->value->item.reminder_value->lead_time = ckalloc(BUFSIZ);
 		_csa_duration_to_iso8601(get_int_prop(p, CP_FLASHADV) *
 			timescopestring_to_tick(get_char_prop(p, CP_FLASHUNIT)),
 		a->flash->value->item.reminder_value->lead_time);
@@ -912,7 +912,7 @@ load_reminder_props(Dtcm_appointment *a, Props *p) {
 		a->flash->value->item.reminder_value->reminder_data.size = 0;
 	}
 	if (convert_boolean_str(get_char_prop(p, CP_OPENON))) {
-		a->popup->value->item.reminder_value->lead_time = malloc(BUFSIZ);
+		a->popup->value->item.reminder_value->lead_time = ckalloc(BUFSIZ);
 		_csa_duration_to_iso8601(get_int_prop(p, CP_OPENADV) *
 			timescopestring_to_tick(get_char_prop(p, CP_OPENUNIT)),
 		a->popup->value->item.reminder_value->lead_time);
@@ -920,11 +920,11 @@ load_reminder_props(Dtcm_appointment *a, Props *p) {
 		a->popup->value->item.reminder_value->reminder_data.size = 0;
 	}
 	if (convert_boolean_str(get_char_prop(p, CP_MAILON))) {
-		a->mail->value->item.reminder_value->lead_time = malloc(BUFSIZ);
+		a->mail->value->item.reminder_value->lead_time = ckalloc(BUFSIZ);
 		_csa_duration_to_iso8601(get_int_prop(p, CP_MAILADV) *
 			timescopestring_to_tick(get_char_prop(p, CP_MAILUNIT)),
 		a->mail->value->item.reminder_value->lead_time);
-		a->mail->value->item.reminder_value->reminder_data.data = (CSA_uint8 *) strdup(get_char_prop(p, CP_MAILTO));
+		a->mail->value->item.reminder_value->reminder_data.data = (CSA_uint8 *) ckstrdup(get_char_prop(p, CP_MAILTO));
 		a->mail->value->item.reminder_value->reminder_data.size = strlen(get_char_prop(p, CP_MAILTO)) + 1;
 	}
 }
@@ -940,7 +940,7 @@ void
 build_new_attrval(CSA_attribute *attrval, char *name, char *tag, char *value)
 
 {
-	CSA_attribute_value *vptr = calloc(sizeof(CSA_attribute_value), 1);
+	CSA_attribute_value *vptr = (CSA_attribute_value *)ckalloc(sizeof(CSA_attribute_value));
 	char	*s_ptr, *b_ptr;
 	CSA_access_list l_ptr;
 	boolean_t	done = B_FALSE;
@@ -963,7 +963,7 @@ build_new_attrval(CSA_attribute *attrval, char *name, char *tag, char *value)
 		vptr->type = CSA_VALUE_CALENDAR_USER;
 		s_ptr = strchr(value, ':');
 		*s_ptr = '\0';
-		vptr->item.calendar_user_value = calloc(sizeof(CSA_calendar_user), 1);
+		vptr->item.calendar_user_value = (CSA_calendar_user *)ckalloc(sizeof(CSA_calendar_user));
 		vptr->item.calendar_user_value->user_name = cm_strdup(s_ptr + 1);
 		vptr->item.calendar_user_value->user_type = atoi(value);
 	}
@@ -983,11 +983,11 @@ build_new_attrval(CSA_attribute *attrval, char *name, char *tag, char *value)
 		s_ptr = strchr(value, ':');
 		*s_ptr = '\0';
 		
-		vptr->item.reminder_value = calloc(sizeof(CSA_reminder), 1);
+		vptr->item.reminder_value = (CSA_reminder *)ckalloc(sizeof(CSA_reminder));
 		
-		vptr->item.reminder_value->lead_time = malloc(BUFSIZ);
+		vptr->item.reminder_value->lead_time = ckalloc(BUFSIZ);
 		_csa_duration_to_iso8601(atoi(value), vptr->item.reminder_value->lead_time);
-		vptr->item.reminder_value->reminder_data.data = (CSA_uint8 *) strdup(s_ptr + 1);
+		vptr->item.reminder_value->reminder_data.data = (CSA_uint8 *) ckstrdup(s_ptr + 1);
 		vptr->item.reminder_value->reminder_data.size = strlen(s_ptr + 1) + 1;
 	}
 
@@ -1007,7 +1007,7 @@ build_new_attrval(CSA_attribute *attrval, char *name, char *tag, char *value)
 			/* we have an initial value. */
 
 			while (!done) {
-				l_ptr = calloc(sizeof(CSA_access_rights), 1);
+				l_ptr = (CSA_access_list)ckalloc(sizeof(CSA_access_rights));
 
 				s_ptr = strchr(b_ptr, ':');
 				*s_ptr = '\0';
@@ -1044,7 +1044,7 @@ read_new_appt(FILE *fp, Dtcm_appointment **appt, Props *p, int version)
 	Dtcm_appointment	*avlist;
 
 	if (!new_appt_end_delimiter) {
-		new_appt_end_delimiter = malloc(strlen(CSA_X_DT_ENTRY_ATTR_ENTRY_DELIMITER) + 14);
+		new_appt_end_delimiter = ckalloc(strlen(CSA_X_DT_ENTRY_ATTR_ENTRY_DELIMITER) + 14);
 		sprintf(new_appt_end_delimiter, "%s%s", 
 			CSA_X_DT_ENTRY_ATTR_ENTRY_DELIMITER, 
 			":string:end");
@@ -1105,7 +1105,7 @@ read_new_appt(FILE *fp, Dtcm_appointment **appt, Props *p, int version)
 			if (!*b_ptr)
 				b_ptr = "\n";
 
-			a_value = realloc(a_value, strlen(a_value) +
+			a_value = ckreallocarray(a_value, 1, strlen(a_value) +
 					  strlen(b_ptr) + 2);
 			strcat(a_value, "\n");
 			strcat(a_value, b_ptr);
@@ -1137,7 +1137,7 @@ read_new_appt(FILE *fp, Dtcm_appointment **appt, Props *p, int version)
 			if (ident_name_ro(a_name, DATAVER_ARCHIVE) == B_FALSE) {
 				if ((attrs_written) == attrs_allocated) {
 					attrs_allocated += 10;
-					avlist->attrs = reallocarray(avlist->attrs, attrs_allocated, sizeof(CSA_attribute));
+					avlist->attrs = ckreallocarray(avlist->attrs, attrs_allocated, sizeof(CSA_attribute));
 				}
 
 				build_new_attrval(&avlist->attrs[attrs_written],
@@ -1200,7 +1200,7 @@ read_new_appt(FILE *fp, Dtcm_appointment **appt, Props *p, int version)
 		if (ident_name_ro(a_name, DATAVER_ARCHIVE) == B_FALSE) {
 			if ((attrs_written) == attrs_allocated) {
 				attrs_allocated += 10;
-				avlist->attrs = reallocarray(avlist->attrs, attrs_allocated, sizeof(CSA_attribute));
+				avlist->attrs = ckreallocarray(avlist->attrs, attrs_allocated, sizeof(CSA_attribute));
 			}
 
 			build_new_attrval(&avlist->attrs[attrs_written],
@@ -1344,7 +1344,7 @@ generate_recurrence_rule(Dtcm_appointment *appt, int version) {
 	
 		strcat (rule_buf1, rule_buf2);
 
-		appt->attrs = reallocarray(appt->attrs, (appt->count + 1), sizeof(CSA_attribute));
+		appt->attrs = ckreallocarray(appt->attrs, (appt->count + 1), sizeof(CSA_attribute));
 
 		build_new_attrval(&appt->attrs[appt->count],
                                   CSA_ENTRY_ATTR_RECURRENCE_RULE, 
@@ -1641,7 +1641,7 @@ parse_appt_from_file(nl_catd catd, char *file, CmDataList *list, Props *p,
 void
 growcat(char **source, char *new)
 {
-	*source = (char *) realloc(*source, strlen(*source) + strlen(new) + 2);
+	*source = (char *) ckreallocarray(*source, 1, strlen(*source) + strlen(new) + 2);
 	strcat(*source, new);
 }
 
@@ -1655,7 +1655,7 @@ cat_indented_string(char **catbuf, char *string)
 
 	nl_count = count_newlines(string);
 
-	b_ptr = buf = malloc(strlen(string) + nl_count + 1);
+	b_ptr = buf = ckalloc(strlen(string) + nl_count + 1);
 
 	while (*p_str) {
 		*b_ptr++ = *p_str;
@@ -1675,7 +1675,7 @@ attrs_to_string(CSA_attribute * attrs, int num_attrs)
 {
 	int i;
 	CSA_access_list  a_ptr;
-	char		*buffer = malloc(1);
+	char		*buffer = ckalloc(1);
 	char		tmp_buf[MAXNAMELEN];
 	time_t		advance_time;
 
@@ -1932,7 +1932,7 @@ parse_attrs_to_string(Dtcm_appointment *appt, Props *p, char *attr_string) {
 	 * Put it all together
 	 */
 
-	b_ptr = malloc(cm_strlen(d_buf) + 
+	b_ptr = ckalloc(cm_strlen(d_buf) + 
 			(2 * cm_strlen(CSA_X_DT_ENTRY_ATTR_ENTRY_DELIMITER)) +
 			cm_strlen(s_buf) +
 			cm_strlen(e_buf) +
@@ -2044,7 +2044,7 @@ create_rfc_message(char *address_list,
 		buffer_size += strlen(appointment_objects[i]);
 
 	/* extra byte is added for null char */
-	return_buffer = (char *)calloc(buffer_size + 1, 1);
+	return_buffer = (char *)ckalloc(buffer_size + 1);
 
 	sprintf(return_buffer, "%s%s\n%s%s\n%s%s\n\n", 
 			address_header, 
@@ -2309,9 +2309,9 @@ init_repeat_strs(
 	nl_catd		catd,
 	char	      **repeat_strs)
 {
-	repeat_strs[ONE_TIME] = strdup(CATGETS(catd, 1, 852, "One Time"));
-	repeat_strs[DAILY] = strdup(CATGETS(catd, 1, 853, "Daily"));
-	repeat_strs[WEEKLY] = strdup(CATGETS(catd, 1, 854, "Weekly"));
+	repeat_strs[ONE_TIME] = ckstrdup(CATGETS(catd, 1, 852, "One Time"));
+	repeat_strs[DAILY] = ckstrdup(CATGETS(catd, 1, 853, "Daily"));
+	repeat_strs[WEEKLY] = ckstrdup(CATGETS(catd, 1, 854, "Weekly"));
 	repeat_strs[EVERY_TWO_WEEKS] = 
 			strdup(CATGETS(catd, 1, 855, "Every Two Weeks"));
 	repeat_strs[MONTHLY_BY_DATE] = 
@@ -2505,7 +2505,7 @@ validate_dssw(Dtcm_appointment *a, char *s_buf, char *e_buf, char *d_buf,
 	if (blank_buf(d_buf))
 		return MISSING_DATE;
 
-	a->time->value->item.date_time_value = malloc(BUFSIZ);
+	a->time->value->item.date_time_value = ckalloc(BUFSIZ);
 	_csa_tick_to_iso8601(0, a->time->value->item.date_time_value);
 
 	a->show_time->value->item.sint32_value = B_TRUE;
@@ -2534,7 +2534,7 @@ validate_dssw(Dtcm_appointment *a, char *s_buf, char *e_buf, char *d_buf,
 			 * Duration is specified - add duration to start time
 			 */
 			end_tick = appt_time + dur;
-			a->end_time->value->item.date_time_value = malloc(BUFSIZ);
+			a->end_time->value->item.date_time_value = ckalloc(BUFSIZ);
 			_csa_tick_to_iso8601(end_tick, a->end_time->value->item.date_time_value);
 		} else if (!blank_buf(e_buf)) {
 			/*
@@ -2544,7 +2544,7 @@ validate_dssw(Dtcm_appointment *a, char *s_buf, char *e_buf, char *d_buf,
 			sprintf(buf, "%s %s", d_buf, e_buf);
 			if ((end_tick = cm_getdate(buf, nullptr)) < 0)
 				return INVALID_STOP;
-			a->end_time->value->item.date_time_value = malloc(BUFSIZ);
+			a->end_time->value->item.date_time_value = ckalloc(BUFSIZ);
 			_csa_tick_to_iso8601(end_tick, a->end_time->value->item.date_time_value);
 		} else {
 			/*
@@ -2572,12 +2572,12 @@ validate_dssw(Dtcm_appointment *a, char *s_buf, char *e_buf, char *d_buf,
 		if ((appt_time = cm_getdate(buf, nullptr)) < 0)
 			return INVALID_DATE;
 
-                a->time->value->item.date_time_value = malloc(BUFSIZ);
+                a->time->value->item.date_time_value = ckalloc(BUFSIZ);
 		_csa_tick_to_iso8601(appt_time, a->time->value->item.date_time_value);
 
 		end_tick = appt_time + minsec;
 
-                a->end_time->value->item.date_time_value = malloc(BUFSIZ);
+                a->end_time->value->item.date_time_value = ckalloc(BUFSIZ);
 		_csa_tick_to_iso8601(end_tick, a->end_time->value->item.date_time_value);
 
 		a->show_time->value->item.sint32_value = B_FALSE;
@@ -2773,7 +2773,7 @@ validate_rfp(
 
 		strcat(rule_buf, buf);
 	}
-	a->recurrence_rule->value->item.string_value = strdup(rule_buf);
+	a->recurrence_rule->value->item.string_value = ckstrdup(rule_buf);
 
 	return VALID_APPT;
 }
