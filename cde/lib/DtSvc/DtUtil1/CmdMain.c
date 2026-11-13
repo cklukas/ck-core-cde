@@ -490,7 +490,7 @@ ExecuteQueuedRequest (
    if (pNode == nullptr)
       return;
 
-   errorMessage = XtMalloc (MAX_BUF_SIZE * sizeof (char));
+   errorMessage = XtCalloc(MAX_BUF_SIZE, sizeof (char));
 
    /*
     *  Reopen SPC Channel
@@ -751,7 +751,7 @@ _DtCmdCommandInvokerExecute (
     * Break the command into something execvp or SPCSpawn can handle
     * and then free "theCommand" if this is a termianl-based request.
     */
-   commandArray = (char **) XtMalloc (MAX_EXEC_ARGS * sizeof (char *));
+   commandArray = (char **) XtCalloc(MAX_EXEC_ARGS, sizeof (char *));
    _DtCmdStringToArrayOfStrings (theCommand, commandArray);
 
    XtFree (theCommand);

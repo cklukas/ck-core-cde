@@ -1526,7 +1526,7 @@ char * _DtHPrCreateTmpFile(
 
 #define FILENAMELEN 25
    /* generate the new tmp file */
-   newtmpfile=malloc((strlen(dirname) + FILENAMELEN + 2) * sizeof(char));
+   newtmpfile=calloc((strlen(dirname) + FILENAMELEN + 2), sizeof(char));
    if (nullptr == newtmpfile)
    {
       fprintf(stderr, "%s", _DTGETMESSAGE(INSET,45,

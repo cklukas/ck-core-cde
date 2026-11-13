@@ -3264,7 +3264,7 @@ ProcessWmColors (WmScreenData *pSD)
     short active, inactive, primary, secondary;
 
     if ((pSD->pPixelData = (XmPixelSet *) 
-	    XtMalloc (XmCO_NUM_COLORS * sizeof(XmPixelSet)))) 
+	    XtCalloc(XmCO_NUM_COLORS, sizeof(XmPixelSet)))) 
     {
         /*
 	 *
@@ -5006,7 +5006,7 @@ ProcessWorkspaceList (WmScreenData *pSD)
 	 * Parse out array of workspace names
 	 */
 	wsNamesAlloced = WS_ALLOC_AMOUNT;
-	ppchWsNames = (char **) XtMalloc (wsNamesAlloced * sizeof (char *));
+	ppchWsNames = (char **) XtCalloc(wsNamesAlloced, sizeof (char *));
 	if (pSD->workspaceList)
 	{
 	    lineP = (unsigned char *) pSD->workspaceList;
@@ -5059,7 +5059,7 @@ ProcessWorkspaceList (WmScreenData *pSD)
     pSD->numWsDataAllocated = (pSD->numWorkspaces + WS_ALLOC_AMOUNT);
     pSD->numWsDataAllocated -= pSD->numWsDataAllocated % WS_ALLOC_AMOUNT;
     if (!(pSD->pWS = (WmWorkspaceData *) 
-	    XtMalloc (pSD->numWsDataAllocated * sizeof(WmWorkspaceData))))
+	    XtCalloc(pSD->numWsDataAllocated, sizeof(WmWorkspaceData))))
     {
 	ExitWM (WM_ERROR_EXIT_VALUE);
     }

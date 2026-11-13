@@ -765,7 +765,7 @@ static void SaveSessionCb(Widget w, XtPointer cd, XtPointer cb)
 	    ++argcount;
     }
 
-    command = (char **)XtMalloc(argcount*sizeof(char*));
+    command = (char **)XtCalloc(argcount, sizeof(char*));
     command[0] = argv0;
     i = 1;
     for (wd = windowList; wd != nullptr; wd = wd->next) {

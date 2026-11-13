@@ -2118,8 +2118,7 @@ log_add_entry(GenLog log, STRING file_name, time_t mod_time, BOOL merged)
     new_entries_size = log->entries_size;
     new_num_entries = log->num_entries + 1;
     new_entries_size = util_max(new_num_entries, new_entries_size);
-    new_entries = (GenLogEntry) realloc(log->entries,
-				 new_entries_size * sizeof(GenLogEntryRec));
+    new_entries = (GenLogEntry) reallocarray(log->entries, new_entries_size, sizeof(GenLogEntryRec));
 
     if (new_entries == nullptr)
     {

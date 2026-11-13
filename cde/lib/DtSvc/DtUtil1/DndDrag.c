@@ -284,7 +284,7 @@ DtDndDragStart(
 	 */
 
 #define NUM_DRAG_ARGS	30
-	args = (Arg *) XtMalloc(sizeof(Arg) * (NUM_DRAG_ARGS + argCount));
+	args = (Arg *) XtCalloc((NUM_DRAG_ARGS + argCount), sizeof(Arg));
 #undef  NUM_DRAG_ARGS
 
 	/*
@@ -571,7 +571,7 @@ dndConvertProc(
 				&availTargets, &numAvailTargets);
 
 		numAllTargets = numAvailTargets + LIBRARY_TARGETS;
-		allTargets    = (Atom *)XtMalloc(sizeof(Atom) * numAllTargets);
+		allTargets    = (Atom *)XtCalloc(numAllTargets, sizeof(Atom));
 
 		for (ii = 0; ii < numAvailTargets; ii++) {
 			allTargets[ii] = availTargets[ii];

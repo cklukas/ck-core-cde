@@ -1855,7 +1855,7 @@ StoreResourceInfo(	DtSpinBoxPart *spin_p,
 	/*
 	 * Loop through all the items, copy them into our space.
 	 */
-	table = (XmStringTable)XtMalloc(sizeof(XmString) * spin_p->item_count);
+	table = (XmStringTable)XtCalloc(spin_p->item_count, sizeof(XmString));
 	for (i = 0; i < spin_p->item_count; i++) {
 	    table[i] = XmStringCopy(spin_p->items[i]);
 	}

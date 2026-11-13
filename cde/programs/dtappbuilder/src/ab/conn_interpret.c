@@ -1705,7 +1705,7 @@ get_menu_item_refs(
 	return(nullptr);
 
     num_refs = 0; list_size = 1;
-    item_ref_list = (ABObj *) XtMalloc(sizeof(ABObj) * (list_size + 1));
+    item_ref_list = (ABObj *) XtCalloc((list_size + 1), sizeof(ABObj));
 
     /* Traverse module for all menu-references pointing to this menu */
     for (trav_open(&trav, this_module, AB_TRAV_ALL);

@@ -772,7 +772,7 @@ build_item_image(
     /*
      * Create a new blank image.
      */
-    new_image_data = (char *)XtMalloc((w_rect.width * w_rect.height) * sizeof(char));
+    new_image_data = (char *)XtCalloc((w_rect.width * w_rect.height), sizeof(char));
     new_image = XCreateImage(dpy,
                  attr.visual,
                  1,

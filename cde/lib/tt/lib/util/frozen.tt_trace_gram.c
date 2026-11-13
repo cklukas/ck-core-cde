@@ -345,7 +345,7 @@ char * tt_trace_reds[] =
 #define TT_TRACE_COPY(to, from, type) \
 	(type *) memcpy(to, (char *) from, tt_trace_newmax * sizeof(type))
 #define TT_TRACE_ENLARGE( from, type) \
-	(type *) realloc((char *) from, tt_trace_newmax * sizeof(type))
+	(type *) reallocarray((char *) from, tt_trace_newmax, sizeof(type))
 #ifndef TT_TRACE_DEBUG
 #	define TT_TRACE_DEBUG	1	/* make debugging available */
 #endif

@@ -351,21 +351,21 @@ void get_option (int *argc, char *argv[])
         }
         else if(strcmp(argv[i], "-lang") == 0) {
             if(argv[i+1] != nullptr && strlen(argv[i+1]) > 0) {
-                lang = (char *)malloc(sizeof(char) * (strlen(argv[i+1]) + 1));
+                lang = (char *)calloc((strlen(argv[i+1]) + 1), sizeof(char));
                 strcpy(lang, argv[i+1]);
                 i++;
             }
         }
         else if(strcmp(argv[i], "-dfile") == 0) {
             if(argv[i+1] != nullptr && strlen(argv[i+1]) > 0) {
-                dfile = (char *)malloc(sizeof(char) * (strlen(argv[i+1]) + 1));
+                dfile = (char *)calloc((strlen(argv[i+1]) + 1), sizeof(char));
                 strcpy(dfile, argv[i+1]);
                 i++;
             }
         }
         else {
             if(strlen(argv[i]) > 0) {
-                pfile = (char *)malloc(sizeof(char) * (strlen(argv[i]) + 1));
+                pfile = (char *)calloc((strlen(argv[i]) + 1), sizeof(char));
                 strcpy(pfile, argv[i]);
             }
         }

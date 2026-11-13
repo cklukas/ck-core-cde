@@ -614,7 +614,7 @@ DoInsertWc(Widget w, wchar_t *wcBuffer, int wcBufferLen, Boolean *wrapped)
     }
 
     /* insert the text... */
-    returnChars = (wchar_t *) XtMalloc(BUFSIZ * sizeof (wchar_t));
+    returnChars = (wchar_t *) XtCalloc(BUFSIZ, sizeof (wchar_t));
     newWidth = _DtTermPrimBufferInsertWc(tBuffer,       /* TermBuffer	    */
 	    tpd->topRow + tpd->cursorRow,	        /* row		    */
 	    tpd->cursorColumn,			        /* column	    */

@@ -2198,12 +2198,11 @@ DABuildSelectedString (
      * allocate the string
      */
     if (myString == nullptr)
-	myString = (char *) malloc (sizeof(char) * totalLen);
+	myString = (char *) calloc(totalLen, sizeof(char));
     else
       {
 	stringLen = strlen(myString);
-	myString  = (char *) realloc ((void *) myString,
-				(sizeof(char) * (stringLen + totalLen)));
+	myString  = (char *) reallocarray((void *) myString, (stringLen + totalLen), sizeof(char));
       }
 
     if (myString == nullptr)
@@ -2306,12 +2305,11 @@ DABuildSelectedSpc (
     totalLen = totalLen + spaceNum + 1 + (IsEndOfLine(flags) ? 1 : 0);
 
     if (myString == nullptr)
-	myString = (char *) malloc (sizeof(char) * totalLen);
+	myString = (char *) calloc(totalLen, sizeof(char));
     else
       {
 	stringLen = strlen(myString);
-	myString  = (char *) realloc ((void *) myString,
-				(sizeof(char) * (stringLen + totalLen)));
+	myString  = (char *) reallocarray((void *) myString, (stringLen + totalLen), sizeof(char));
       }
 
     if (myString == nullptr)
@@ -2442,12 +2440,9 @@ _DtHelpDAResolveSpc (
 	      {
 		pDAS->max_spc += GROW_SIZE;
 		if (pDAS->cur_spc > 0)
-		    pDAS->spc_chars = (DtHelpSpecialChars *) realloc(
-				(void *)pDAS->spc_chars,
-				(sizeof(DtHelpSpecialChars)*pDAS->max_spc));
+		    pDAS->spc_chars = (DtHelpSpecialChars *) reallocarray((void *)pDAS->spc_chars, pDAS->max_spc, sizeof(DtHelpSpecialChars));
 		else
-		    pDAS->spc_chars = (DtHelpSpecialChars *) malloc(
-				(sizeof(DtHelpSpecialChars)*pDAS->max_spc));
+		    pDAS->spc_chars = (DtHelpSpecialChars *) calloc(pDAS->max_spc, sizeof(DtHelpSpecialChars));
 
 		if (pDAS->spc_chars == nullptr)
 		  {

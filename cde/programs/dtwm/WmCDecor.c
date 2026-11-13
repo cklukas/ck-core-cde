@@ -1631,7 +1631,7 @@ Boolean AllocateGadgetRectangles (ClientData *pcd)
 	if ( pcd->pTitleGadgets == nullptr) {
 	    /* allocate memory for these guys */
 	    pgr = (GadgetRectangle *) 
-		   XtMalloc (num_rects * sizeof(GadgetRectangle));
+		   XtCalloc(num_rects, sizeof(GadgetRectangle));
 	    if (pgr == nullptr)
 	    {
 		/* out of memory! */
@@ -1651,7 +1651,7 @@ Boolean AllocateGadgetRectangles (ClientData *pcd)
 	if ( pcd->pResizeGadgets == nullptr) {
 	    /* allocate memory for these guys */
 	    pgr = (GadgetRectangle *) 
-		  XtMalloc (STRETCH_COUNT * sizeof(GadgetRectangle));
+		  XtCalloc(STRETCH_COUNT, sizeof(GadgetRectangle));
 	    if (pgr == nullptr) 
 	    {
 		/* out of memory! */

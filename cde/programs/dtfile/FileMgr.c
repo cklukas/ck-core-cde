@@ -6108,7 +6108,7 @@ ShelfRebuild(
       if (file_mgr_rec->shelf_popup != nullptr)
          popup_shell = XtParent(file_mgr_rec->shelf_popup);
 
-      children_copy = (Widget *)XtMalloc(sizeof(Widget) * num_children);
+      children_copy = (Widget *)XtCalloc(num_children, sizeof(Widget));
       memcpy(children_copy, children, sizeof(Widget) * num_children);
       ShelfLog("ShelfRebuild: destroying %u children\n",
                (unsigned)num_children);
@@ -7115,7 +7115,7 @@ FileMgrBuildDirectories(
    /*  Allocate the data for one initial directory set  */
 
    file_mgr_data->directory_set = directory_set =
-      ((DirectorySet **) XtMalloc (2 * sizeof(DirectorySet *))) + 1;
+      ((DirectorySet **) XtCalloc(2, sizeof(DirectorySet *))) + 1;
    file_mgr_data->directory_count = 1;
 
    directory_set[-1] = nullptr;
@@ -8073,7 +8073,7 @@ NewDirectorySet(
     ds->file_count++;
   if (ds->file_count != 0)
     ds->file_view_data =
-      (FileViewData **)XtMalloc(ds->file_count*sizeof(FileViewData *));
+      (FileViewData **)XtCalloc(ds->file_count, sizeof(FileViewData *));
   else
     ds->file_view_data = nullptr;
 
@@ -8173,7 +8173,7 @@ ReadTreeDirectory(
 
   /* allocate array of directory set pointers */
   *directory_set =
-    (DirectorySet **) XtMalloc ((*directory_count + 1)*sizeof(DirectorySet *));
+    (DirectorySet **) XtCalloc((*directory_count + 1), sizeof(DirectorySet *));
 
   /* make a fake directory set for the tree root */
   {
@@ -9007,11 +9007,9 @@ InheritPositionInfo (
    }
 
    dest_file_mgr_data->num_objects = src_file_mgr_data->num_objects;
-   dest_file_mgr_data->object_positions = (ObjectPosition **) XtMalloc(
-            sizeof(ObjectPosition *) * dest_file_mgr_data->num_objects);
+   dest_file_mgr_data->object_positions = (ObjectPosition **) XtCalloc(dest_file_mgr_data->num_objects, sizeof(ObjectPosition *));
 
-   temp_stack = (ObjectPosition **) XtMalloc(
-            sizeof(ObjectPosition *) * dest_file_mgr_data->num_objects);
+   temp_stack = (ObjectPosition **) XtCalloc(dest_file_mgr_data->num_objects, sizeof(ObjectPosition *));
 
    for (i = 0; i < dest_file_mgr_data->num_objects; i++)
    {
@@ -9079,7 +9077,7 @@ SavePositionInfo (
    else
    {
       position_info = (PositionInfo *)
-                   XtMalloc(file_mgr_data->num_objects * sizeof(PositionInfo));
+                   XtCalloc(file_mgr_data->num_objects, sizeof(PositionInfo));
       for (i = 0; i < file_mgr_data->num_objects; i++)
       {
          ptr = file_mgr_data->object_positions[i];
@@ -9133,8 +9131,7 @@ LoadPositionInfo (
    if (numObjects > 0)
    {
       /* Proceed with the loading */
-      file_mgr_data->object_positions = (ObjectPosition **)XtMalloc(
-              sizeof(ObjectPosition *) * numObjects);
+      file_mgr_data->object_positions = (ObjectPosition **)XtCalloc(numObjects, sizeof(ObjectPosition *));
 
       for (i = 0; i < numObjects; i++)
       {

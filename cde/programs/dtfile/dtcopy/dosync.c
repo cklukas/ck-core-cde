@@ -195,7 +195,7 @@ SortDir(DirEntry *dP, int (*cmp)(const void*, const void*))
   if (n <= 1024)
     daP = da;
   else
-    daP = (DirEntry **)malloc(n * sizeof(DirEntry *));
+    daP = (DirEntry **)calloc(n, sizeof(DirEntry *));
 
   /* sort pointer array */
   for (eP = dP, i = 0; eP; eP = eP->next, i++)

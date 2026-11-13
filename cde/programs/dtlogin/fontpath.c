@@ -134,8 +134,7 @@ ApplyFontPathMods( struct display *d, Display *dpy )
     numHeads = SeparateParts(&fph);
     numTails = SeparateParts(&fpt);
     if (numHeads || numTails) {
-        newList = (char **) malloc((numHeads+numPaths+numTails)
-            * sizeof(char *));
+        newList = (char **) calloc((numHeads+numPaths+numTails), sizeof(char *));
         if (newList) {
             for (s=fph, i=j=0; j<numHeads; j++) {
                 if (!PathInPList(s,newList,i))

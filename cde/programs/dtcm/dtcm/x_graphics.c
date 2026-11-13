@@ -1018,8 +1018,7 @@ cm_load_font_error(CMGraphicsInfo *gInfo, char *fontPattern)
 
   errFmt = CATGETS(c->DT_catd, 1, 1119,
 		   "Warning - Unable to load font %s.");
-  errText = (char *)XtMalloc((strlen(errFmt) + strlen(fontPattern) + 1) *
-			     sizeof(char));
+  errText = (char *)XtCalloc((strlen(errFmt) + strlen(fontPattern) + 1), sizeof(char));
   sprintf(errText, errFmt, fontPattern);
   label = XtNewString(CATGETS(c->DT_catd, 1, 95, "Continue"));
   title = XtNewString(CATGETS(c->DT_catd, 1, 1118,

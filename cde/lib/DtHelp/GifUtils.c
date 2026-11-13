@@ -187,7 +187,7 @@ _gif_allocarray( int cols, int rows, int size )
     char** its;
     int i;
 
-    its = (char**) malloc( rows * sizeof(char*) );
+    its = (char**) calloc(rows, sizeof(char*));
     if ( its == (char**) 0 )
         _gif_error( "out of memory allocating an array", 0 );
     its[0] = (char*) malloc( rows * cols * size );
@@ -716,7 +716,7 @@ int allocate_colors(GifObj *g)
       if ( !XAllocColor (g->f_dpy, g->f_cmap, &color) ) {
 
 	  /*puts ("FAILED!!!"); */
-         colors = (unsigned long *) malloc (sizeof(unsigned long)  * i);
+         colors = (unsigned long *) calloc(i, sizeof(unsigned long));
          for (j = 0; j < i; j++)
            colors[j] = g->GifCMap[j].pixel;
 
@@ -807,7 +807,7 @@ debug1(cerr, GifCMap[i].grey);
          if ( !XAllocColor (g->f_dpy, g->f_cmap, &color) ) {
 
 	     /*fprintf(stderr, "alloc Grey FAILED!!!");*/
-            colors = (unsigned long *) malloc (sizeof(unsigned long)  * i);
+            colors = (unsigned long *) calloc(i, sizeof(unsigned long));
             for (j = 0; j < i; j++)
               colors[j] = g->GifGMap[j];
 

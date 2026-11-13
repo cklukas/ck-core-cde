@@ -255,7 +255,7 @@ RebuildTable (int size)
 
     if (size)
     {
-	newTable = (char **) malloc (size * sizeof (char *));
+	newTable = (char **) calloc(size, sizeof (char *));
 	if (!newTable)
 	    return;
 	for (names = hostNamedb, i = 0; names; names = names->next, i++)
@@ -273,7 +273,7 @@ RebuildTable (int size)
     /***********************************/
     /** Reload the data in the XmList **/
     /***********************************/
-    newStringTable = (XmStringTable)malloc(size * sizeof(XmString));
+    newStringTable = (XmStringTable)calloc(size, sizeof(XmString));
     if (!newStringTable) {
 	free((char *)newTable);
 	return;
@@ -305,7 +305,7 @@ RebuildTableAdd (int size)
 
     if (size)
     {
-        newTable = (char **) malloc (size * sizeof (char *));
+        newTable = (char **) calloc(size, sizeof (char *));
         if (!newTable)
             return;
         for (names = hostNamedb, i = 0; names; names = names->next, i++)
@@ -937,7 +937,7 @@ main (int argc, char **argv)
     /******************************************/
     amChooser = 1;  /** tell RespondLangCB we are a chooser **/
     orig_argc = argc;
-    orig_argv = (char **)malloc(sizeof(char *) * (orig_argc+1));
+    orig_argv = (char **)calloc((orig_argc+1), sizeof(char *));
     for (i = 0; i < orig_argc; i++) {
 	orig_argv[i] = argv[i];
     }

@@ -305,7 +305,7 @@ MountsRefresh(MountsDialog *dlg)
 
    dlg->entry_count = count;
 
-   items = (XmStringTable)XtMalloc(sizeof(XmString) * count);
+   items = (XmStringTable)XtCalloc(count, sizeof(XmString));
    for (int i = 0; i < count; i++)
       items[i] = XmStringCreateLocalized(dlg->entries[i].mount_point);
 

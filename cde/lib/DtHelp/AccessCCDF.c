@@ -494,7 +494,7 @@ GetNextKeyword (
 	      }
 	  } while (!done);
 
-        token = (char *) malloc ((str - start + 1) * sizeof (char));
+        token = (char *) calloc((str - start + 1), sizeof (char));
 	if (token)
 	  {
             strncpy (token, start, str - start);

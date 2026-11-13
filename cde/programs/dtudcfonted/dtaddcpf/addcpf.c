@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
 	    }
 	} else {
 	    num_gr = 1 ;
-	    if( (gr = (FalGlyphRegion *)malloc( sizeof(FalGlyphRegion) * num_gr )) == nullptr ) {
+	    if( (gr = (FalGlyphRegion *)calloc(num_gr, sizeof(FalGlyphRegion))) == nullptr ) {
 		USAGE1("%s : malloc error. Terminates abnormally.\n", argv[0]);
 		exit( 1 );
 	    }
@@ -606,11 +606,11 @@ char   	      	*buf)
 
 	nchar = r_snf->num_chars + r_gpf->num_chars;
 
-	if ( ( r_snf->code = (int *)malloc( sizeof(int) * nchar ) ) == nullptr ) {
+	if ( ( r_snf->code = (int *)calloc(nchar, sizeof(int)) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
-	if ( ( r_snf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == nullptr ) {
+	if ( ( r_snf->ptn = (char **)calloc(nchar, sizeof(char *)) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
@@ -636,11 +636,11 @@ FalGlyphRegion	*gr)
 
 	nchar = r_snf->num_chars + r_gpf->num_chars;
 
-	if ( ( r_snf->code = (int *)malloc( sizeof(int) * nchar ) ) == nullptr ) {
+	if ( ( r_snf->code = (int *)calloc(nchar, sizeof(int)) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
-	if ( ( r_snf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == nullptr ) {
+	if ( ( r_snf->ptn = (char **)calloc(nchar, sizeof(char *)) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
@@ -663,10 +663,10 @@ char	*buf)
 
 	r_snf->num_chars = 0;
 
-	if ( ( r_snf->code = (int *)malloc( sizeof(int) * r_gpf->num_chars ) ) == nullptr ) {
+	if ( ( r_snf->code = (int *)calloc(r_gpf->num_chars, sizeof(int)) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
-	if ( ( r_snf->ptn = (char **)malloc( sizeof(char *) * r_gpf->num_chars ) ) == nullptr ) {
+	if ( ( r_snf->ptn = (char **)calloc(r_gpf->num_chars, sizeof(char *)) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 	return	0;

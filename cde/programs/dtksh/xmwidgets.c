@@ -379,7 +379,7 @@ toolkit_init_widgets( void )
 static discInfo *
 setArrowDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 4);
+   discInfo * info = (discInfo *)XtCalloc(4, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNactivateCallback);
    info[0].discipline = (void *)&arrowDisc;
@@ -395,7 +395,7 @@ setArrowDisciplines( void )
 static discInfo *
 setComboDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 2);
+   discInfo * info = (discInfo *)XtCalloc(2, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNselectionCallback);
    info[0].discipline = (void *)&comboDisc;
@@ -407,7 +407,7 @@ setComboDisciplines( void )
 static discInfo *
 setCmdDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 3);
+   discInfo * info = (discInfo *)XtCalloc(3, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNcommandChangedCallback);
    info[0].discipline = (void *)&cmdDisc;
@@ -422,7 +422,7 @@ static discInfo *
 setDAreaDisciplines( void )
 
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 4);
+   discInfo * info = (discInfo *)XtCalloc(4, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNexposeCallback);
    info[0].discipline = (void *)&dAreaDisc;
@@ -438,7 +438,7 @@ setDAreaDisciplines( void )
 static discInfo *
 setDBtnDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 6);
+   discInfo * info = (discInfo *)XtCalloc(6, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNactivateCallback);
    info[0].discipline = (void *)&dbtnDisc;
@@ -458,7 +458,7 @@ setDBtnDisciplines( void )
 static discInfo *
 setDtPrintSetupProcDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 2);
+   discInfo * info = (discInfo *)XtCalloc(2, sizeof(discInfo));
 
 	/* Since the same discipline is used for all of DtPrintSetupBox's 
 	 * DtPrintSetupProcs, we can use DtRPrintSetupProc for all of them
@@ -474,7 +474,7 @@ setDtPrintSetupProcDisciplines( void )
 static discInfo *
 setFSelDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 5);
+   discInfo * info = (discInfo *)XtCalloc(5, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNapplyCallback);
    info[0].discipline = (void *)&fselDisc;
@@ -492,7 +492,7 @@ setFSelDisciplines( void )
 static discInfo *
 setListDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 6);
+   discInfo * info = (discInfo *)XtCalloc(6, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNbrowseSelectionCallback);
    info[0].discipline = (void *)&listDisc;
@@ -512,7 +512,7 @@ setListDisciplines( void )
 static discInfo *
 setPBtnDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 4);
+   discInfo * info = (discInfo *)XtCalloc(4, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNactivateCallback);
    info[0].discipline = (void *)&pbtnDisc;
@@ -528,7 +528,7 @@ setPBtnDisciplines( void )
 static discInfo *
 setRCDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 6);
+   discInfo * info = (discInfo *)XtCalloc(6, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNentryCallback);
    info[0].discipline = (void *)&rcDisc;
@@ -548,7 +548,7 @@ setRCDisciplines( void )
 static discInfo *
 setScaleDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 3);
+   discInfo * info = (discInfo *)XtCalloc(3, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNdragCallback);
    info[0].discipline = (void *)&scaleDisc;
@@ -562,7 +562,7 @@ setScaleDisciplines( void )
 static discInfo *
 setSBarDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 9);
+   discInfo * info = (discInfo *)XtCalloc(9, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNdecrementCallback);
    info[0].discipline = (void *)&sbarDisc;
@@ -588,7 +588,7 @@ setSBarDisciplines( void )
 static discInfo *
 setSWinDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 2);
+   discInfo * info = (discInfo *)XtCalloc(2, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNtraverseObscuredCallback);
    info[0].discipline = (void *)&swinDisc;
@@ -600,7 +600,7 @@ setSWinDisciplines( void )
 static discInfo *
 setSBoxDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 5);
+   discInfo * info = (discInfo *)XtCalloc(5, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNapplyCallback);
    info[0].discipline = (void *)&sboxDisc;
@@ -618,7 +618,7 @@ setSBoxDisciplines( void )
 static discInfo *
 setTextDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 10);
+   discInfo * info = (discInfo *)XtCalloc(10, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNactivateCallback);
    info[0].discipline = (void *)&dftDisc;
@@ -646,7 +646,7 @@ setTextDisciplines( void )
 static discInfo *
 setTBtnDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 4);
+   discInfo * info = (discInfo *)XtCalloc(4, sizeof(discInfo));
 
    info[0].callbackName = strdup(XmNarmCallback);
    info[0].discipline = (void *)&tbtnDisc;
@@ -662,7 +662,7 @@ setTBtnDisciplines( void )
 static discInfo *
 setHelpDisciplines( void )
 {
-   discInfo * info = (discInfo *)XtMalloc(sizeof(discInfo) * 3);
+   discInfo * info = (discInfo *)XtCalloc(3, sizeof(discInfo));
 
    info[0].callbackName = strdup(DtNhyperLinkCallback);
    info[0].discipline = (void *)&helpDisc;

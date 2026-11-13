@@ -200,7 +200,7 @@ add_charset(
     if (variant->charsetCount >= variant->charsetCapacity) {
         int newCap = variant->charsetCapacity ? variant->charsetCapacity * 2 : 4;
         VariantCharsetEntry *newEntries =
-            realloc(variant->charsets, sizeof(VariantCharsetEntry) * newCap);
+            reallocarray(variant->charsets, newCap, sizeof(VariantCharsetEntry));
         if (!newEntries)
             return nullptr;
         variant->charsets = newEntries;
@@ -241,7 +241,7 @@ variant_add_size(
     if (charset->sizeCount >= charset->sizeCapacity) {
         int newCap = charset->sizeCapacity ? charset->sizeCapacity * 2 : 8;
         VariantSizeEntry *newSizes =
-            realloc(charset->sizes, sizeof(VariantSizeEntry) * newCap);
+            reallocarray(charset->sizes, newCap, sizeof(VariantSizeEntry));
         if (!newSizes)
             return;
         charset->sizes = newSizes;
@@ -612,7 +612,7 @@ FontFaceCatalogLoad(Display *display)
         }
         if (entry->variantCount >= entry->variantCapacity) {
             int newCap = entry->variantCapacity * 2;
-            VariantEntry **newArr = realloc(entry->variants, sizeof(VariantEntry *) * newCap);
+            VariantEntry **newArr = reallocarray(entry->variants, newCap, sizeof(VariantEntry *));
             if (!newArr)
                 continue;
             entry->variants = newArr;

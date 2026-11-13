@@ -210,8 +210,8 @@ GetRemoteTerminalsResource (
     * place by replacing the ':' and ',' characters with '\0'.
     */
 
-   cmd_Resources.remoteHosts = (char **) XtMalloc (num * sizeof(char *));
-   cmd_Resources.remoteTerminals = (char **) XtMalloc (num * sizeof(char *));
+   cmd_Resources.remoteHosts = (char **) XtCalloc(num, sizeof(char *));
+   cmd_Resources.remoteTerminals = (char **) XtCalloc(num, sizeof(char *));
    
    for (pch=terminals, j=0; j < num && pch != nullptr && *pch != '\0'; j++) 
    {

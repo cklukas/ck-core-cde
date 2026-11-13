@@ -445,7 +445,7 @@ toolkit_initialize(
 
 	init_widgets();
 
-	newargv = (char **)malloc((argc - 3) * sizeof(char *));
+	newargv = (char **)calloc((argc - 3), sizeof(char *));
 
 	/*
 	 * We apparently must alloc a long-lived array of strings for argv.
@@ -766,7 +766,7 @@ _xmcreatefunc(
 	}
 	pargc = 0;
 	if (argc > 0) {
-		pargv = (char **)XtMalloc(sizeof(char *) * argc);
+		pargv = (char **)XtCalloc(argc, sizeof(char *));
 	}
 	else {
 		pargv = 0;
@@ -2861,7 +2861,7 @@ AddOrDeleteWMProtocols(
    if (w == nullptr)
       return(1);
 
-   protocolList = (Atom*)XtMalloc(sizeof(Atom) * (argc - 2));
+   protocolList = (Atom*)XtCalloc((argc - 2), sizeof(Atom));
    for (i = 2; i < argc; i++)
    {
       protocolList[i - 2] = (Atom)strtoul(argv[i], &p, 0);

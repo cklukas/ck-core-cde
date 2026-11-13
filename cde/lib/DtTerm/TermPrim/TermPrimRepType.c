@@ -302,7 +302,7 @@ CvtStringToTerminalSizeList
      }
     sizeList->numSizes = numSizes;
     sizeList->sizes = (DtTermTerminalSize *)
-	    XtMalloc(numSizes * sizeof(DtTermTerminalSize));
+	    XtCalloc(numSizes, sizeof(DtTermTerminalSize));
     (void) memcpy(sizeList->sizes, sizes, numSizes *
 	    sizeof(DtTermTerminalSize));
     (void) XtFree((char *) sizes);

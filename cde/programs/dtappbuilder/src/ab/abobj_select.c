@@ -302,7 +302,7 @@ abobj_get_selected(
     if (sel->count > 0)
     {
         int i = 0;
-	sel->list = (ABObj*)XtMalloc(sel->count * sizeof(ABObj));
+	sel->list = (ABObj*)XtCalloc(sel->count, sizeof(ABObj));
 
         for (trav_open(&trav, obj, AB_TRAV_SALIENT_UI);
 	    (obj = trav_next(&trav)) != nullptr; )

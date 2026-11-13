@@ -397,7 +397,7 @@ Initialize(
 
 	if (M_ButtonCount (new) > 0)
 		M_Button (new) = (Widget *)
-			XtMalloc (sizeof (Widget) * M_ButtonCount (new));
+			XtCalloc(M_ButtonCount (new), sizeof (Widget));
 	else
 		M_Button (new) = nullptr;
 

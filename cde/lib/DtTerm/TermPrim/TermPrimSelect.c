@@ -998,8 +998,7 @@ _DtTermPrimSelectCreate
     selectInfo->scanType      = defaultScanArray[0];
     selectInfo->scanArraySize = XtNumber(defaultScanArray);
     selectInfo->scanArray     = (XmTextScanType *)
-                                XtMalloc(selectInfo->scanArraySize * 
-                                         sizeof(XmTextScanType));
+                                XtCalloc(selectInfo->scanArraySize, sizeof(XmTextScanType));
     selectInfo->cancel        = True;   /* used by scroll selection */
     selectInfo->anchor        = -1;     /* in case extend happens before set*/
     selectInfo->sel_start     = False;
@@ -2521,7 +2520,7 @@ HandleDrop( Widget w, XmDropProcCallbackStruct *cb )
     dropDestroyCBClientData *clientData;
 
     clientData = (dropDestroyCBClientData *) XtMalloc(sizeof(dropDestroyCBClientData));
-    dropDestroyCB = dd_cb = (XtCallbackRec *) XtMalloc(2 * sizeof (XtCallbackRec));
+    dropDestroyCB = dd_cb = (XtCallbackRec *) XtCalloc(2, sizeof (XtCallbackRec));
 
     clientData->dropDestroyCB = dropDestroyCB;
     dd_cb->callback = DropDestroyCB;

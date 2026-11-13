@@ -359,7 +359,7 @@ _DtTermPrimSubprocExec(Widget		  w,
 
     if (!argv) {
 	/* base it on cmd... */
-	argv = (char **) XtMalloc(2 * sizeof(char *));
+	argv = (char **) XtCalloc(2, sizeof(char *));
 	/* if loginShell is set, then pre-pend a '-' to argv[0].  That's
 	 * also why we allocate an extra byte in argv[0]...
 	 */

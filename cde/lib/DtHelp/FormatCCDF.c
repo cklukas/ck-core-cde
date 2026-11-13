@@ -675,14 +675,12 @@ AllocateSegments (
 	/*
 	 * reallocate the segments.
 	 */
-	p_seg = (_DtCvSegment *) realloc ((void *) p_seg,
-					(sizeof(_DtCvSegment) * new_size));
+	p_seg = (_DtCvSegment *) reallocarray((void *) p_seg, new_size, sizeof(_DtCvSegment));
 	/*
 	 * reallocate the private formatting information.
 	 */
         priv = p_seg->client_use;
-	priv = (FrmtPrivateInfo *) realloc ((void *) priv,
-					sizeof(FrmtPrivateInfo) * new_size);
+	priv = (FrmtPrivateInfo *) reallocarray((void *) priv, new_size, sizeof(FrmtPrivateInfo));
 	if (nullptr == priv)
 	  {
 	    free(p_seg);
@@ -862,7 +860,7 @@ SegmentSave (
 	    /*
 	     * malloc the memory
 	     */
-	    pwcs = (wchar_t *) malloc(sizeof(wchar_t) * num_chars);
+	    pwcs = (wchar_t *) calloc(num_chars, sizeof(wchar_t));
 	    if (nullptr != pwcs)
 	      {
 		/* convert */
@@ -2607,7 +2605,7 @@ ProcessParagraph(
 		/*
 		 * create the array for column justification.
 		 */
-		colJ = (_DtCvFrmtOption *) malloc (sizeof(_DtCvFrmtOption) * 2);
+		colJ = (_DtCvFrmtOption *) calloc(2, sizeof(_DtCvFrmtOption));
 		if (nullptr != colJ)
 		  {
 		    colJ[0] = _DtCvJUSTIFY_LEFT;
@@ -4538,9 +4536,7 @@ FormatCCDFTitle(
 			 * need to add a space to one of these strings.
 			 */
 			len += 3;
-			_DtCvStringOfStringSeg(list) = (char *) realloc(
-					(void *) _DtCvStringOfStringSeg(list),
-					sizeof(char *) * len);
+			_DtCvStringOfStringSeg(list) = (char *) reallocarray((void *) _DtCvStringOfStringSeg(list), len, sizeof(char *));
 			if (nullptr == _DtCvStringOfStringSeg(list))
 			    return -1;
 
@@ -5309,7 +5305,7 @@ _DtHelpCeGetCcdfTitleChunks(
 		      {
 		        offset = _DtCvStrLen(_DtCvStringOfStringSeg(pSeg), 1)
 					* MB_CUR_MAX + 1;
-			ptr    = (char *) malloc (sizeof(char) * offset);
+			ptr    = (char *) calloc(offset, sizeof(char));
 			if (nullptr != ptr)
 			    wcstombs(ptr,
 					(wchar_t *)_DtCvStringOfStringSeg(pSeg),

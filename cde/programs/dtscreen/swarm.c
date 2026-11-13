@@ -95,12 +95,12 @@ initswarm(perwindow *pwin)
 
     /* Allocate memory. */
 
-    sp->segs = (XSegment *) malloc(sizeof(XSegment) * sp->beecount);
-    sp->old_segs = (XSegment *) malloc(sizeof(XSegment) * sp->beecount);
+    sp->segs = (XSegment *) calloc(sp->beecount, sizeof(XSegment));
+    sp->old_segs = (XSegment *) calloc(sp->beecount, sizeof(XSegment));
     sp->x = (short *) malloc(sizeof(short) * sp->beecount * TIMES);
     sp->y = (short *) malloc(sizeof(short) * sp->beecount * TIMES);
-    sp->xv = (short *) malloc(sizeof(short) * sp->beecount);
-    sp->yv = (short *) malloc(sizeof(short) * sp->beecount);
+    sp->xv = (short *) calloc(sp->beecount, sizeof(short));
+    sp->yv = (short *) calloc(sp->beecount, sizeof(short));
 
     /* Initialize point positions, velocities, etc. */
 

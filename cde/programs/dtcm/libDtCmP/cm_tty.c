@@ -1135,9 +1135,7 @@ read_new_appt(FILE *fp, Dtcm_appointment **appt, Props *p, int version)
 			if (ident_name_ro(a_name, DATAVER_ARCHIVE) == B_FALSE) {
 				if ((attrs_written) == attrs_allocated) {
 					attrs_allocated += 10;
-					avlist->attrs = realloc(avlist->attrs,
-						sizeof(CSA_attribute) *
-						attrs_allocated);
+					avlist->attrs = reallocarray(avlist->attrs, attrs_allocated, sizeof(CSA_attribute));
 				}
 
 				build_new_attrval(&avlist->attrs[attrs_written],
@@ -1200,9 +1198,7 @@ read_new_appt(FILE *fp, Dtcm_appointment **appt, Props *p, int version)
 		if (ident_name_ro(a_name, DATAVER_ARCHIVE) == B_FALSE) {
 			if ((attrs_written) == attrs_allocated) {
 				attrs_allocated += 10;
-				avlist->attrs = realloc(avlist->attrs,
-					sizeof(CSA_attribute) *
-					attrs_allocated);
+				avlist->attrs = reallocarray(avlist->attrs, attrs_allocated, sizeof(CSA_attribute));
 			}
 
 			build_new_attrval(&avlist->attrs[attrs_written],
@@ -1346,8 +1342,7 @@ generate_recurrence_rule(Dtcm_appointment *appt, int version) {
 	
 		strcat (rule_buf1, rule_buf2);
 
-		appt->attrs = realloc(appt->attrs,
-                                      sizeof(CSA_attribute) * (appt->count + 1));
+		appt->attrs = reallocarray(appt->attrs, (appt->count + 1), sizeof(CSA_attribute));
 
 		build_new_attrval(&appt->attrs[appt->count],
                                   CSA_ENTRY_ATTR_RECURRENCE_RULE, 

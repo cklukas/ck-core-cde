@@ -1575,8 +1575,7 @@ objxmP_merge_arglists(
 	ArgList result, args;
 	Arg     nullarg = {nullptr, 0};
 
-	result = (ArgList)XtMalloc((unsigned) (num_args1 + num_args2 + 1) *
-				sizeof(Arg));
+	result = (ArgList)XtCalloc((unsigned) (num_args1 + num_args2 + 1), sizeof(Arg));
 	for (args = result; num_args1 != 0; num_args1--)
 		*args++ = *args1++;
 	for ( ; num_args2 != 0; num_args2--)

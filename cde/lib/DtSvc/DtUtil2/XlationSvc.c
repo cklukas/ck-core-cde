@@ -275,8 +275,7 @@ char * ExpandPath (
     }
 
     /* make a malloc'd copy of the path with room to grow */
-    pathName = malloc(sizeof(char) * 
-                 (strlen(filespec) + (eos-tmpPath) + 5) ); /* 5: arbitrary */
+    pathName = calloc((strlen(filespec) + (eos-tmpPath) + 5), sizeof(char)); /* 5: arbitrary */
     if (nullptr == pathName) return nullptr;		/* RETURN: error */
 
     /* build the absolute path */

@@ -147,7 +147,7 @@ _DtWsmChangeBackdrop (
 	len += strlen (path) + 1;
 	len += 30;  /* fudge for ascii-ized pixmap id */
 
-	pch = (char *) XtMalloc (len * sizeof(char));
+	pch = (char *) XtCalloc(len, sizeof(char));
 
 	sprintf (pch, "%s %s %lx %d", DTWM_REQ_CHANGE_BACKDROP, path,
 		    pixmap, imageType);

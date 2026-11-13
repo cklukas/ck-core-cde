@@ -422,7 +422,7 @@ DtkshCvtStringToCallback(
       return;
    }
 
-   cb = (XtCallbackList)XtMalloc(sizeof(XtCallbackRec)*2);
+   cb = (XtCallbackList)XtCalloc(2, sizeof(XtCallbackRec));
    cb[0].callback = stdCB;
 
    cdata = GetNewCBData((String)fval->addr, w, DTKSHConversionResource, None);

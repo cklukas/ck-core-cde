@@ -357,7 +357,7 @@ UpdateWorkspacePresenceProperty(
     {
 	/* allocate initial list */
 	if (!(pPresence = (Atom *) 
-		    XtMalloc (pCD->pSD->numWorkspaces * sizeof(Atom))))
+		    XtCalloc(pCD->pSD->numWorkspaces, sizeof(Atom))))
 	{
 	    Warning (((char *)GETMESSAGE(76, 1, "Insufficient memory for workspace presence property")));
 	}
@@ -870,7 +870,7 @@ GetClientWorkspaceInfo(
      * fill with NULL IDs
      */
     if ((pCD->pWsList = (WsClientData *) 
-	    XtMalloc(pCD->pSD->numWorkspaces * sizeof(WsClientData))) == nullptr)
+	    XtCalloc(pCD->pSD->numWorkspaces, sizeof(WsClientData))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(76, 4, "Insufficient memory for client data")));
 	return (False);
@@ -1095,8 +1095,7 @@ ConvertNamesToIDs(
     int numLocalIDs;
     WorkspaceID *pLocalIDs;
 
-    if ((pLocalIDs = (WorkspaceID *) XtMalloc (WS_ALLOC_AMOUNT *
-	sizeof(WorkspaceID))) == nullptr)
+    if ((pLocalIDs = (WorkspaceID *) XtCalloc(WS_ALLOC_AMOUNT, sizeof(WorkspaceID))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(76, 5, "Insufficient Memory (ConvertNamesToIDs)")));
 	ExitWM (WM_ERROR_EXIT_VALUE);
@@ -1851,7 +1850,7 @@ ProcessWorkspaceHints(
 	(GetWorkspaceHints (DISPLAY, pCD->client, 
 			    &pIDs, &numIDs, &bAll) == Success) &&
         (bAll || (numIDs && (pDiff = (WorkspaceID *) 
-	          XtMalloc (sizeof(WorkspaceID) * MAX(numIDs, numOld))))))
+	          XtCalloc(MAX(numIDs, numOld), sizeof(WorkspaceID))))))
     {
 	/*
 	 *  Process request to put window in all workspaces
@@ -2287,8 +2286,7 @@ GetListOfOccupiedWorkspaces(
 
     *numIDs = 0;
 
-    if ((pLocalIDs = (WorkspaceID *) XtMalloc (pCD->numInhabited *
-	sizeof(WorkspaceID))) == nullptr)
+    if ((pLocalIDs = (WorkspaceID *) XtCalloc(pCD->numInhabited, sizeof(WorkspaceID))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(76, 7, "Insufficient memory")));
 	return (nullptr);
@@ -2574,7 +2572,7 @@ AddClientToWsList(
 	if (pWS->sizeClientList == 0)
 	{
 	    pWS->ppClients = (ClientData **) 
-		XtMalloc (WINDOW_ALLOC_AMOUNT * sizeof(ClientData *));
+		XtCalloc(WINDOW_ALLOC_AMOUNT, sizeof(ClientData *));
 	}
 	else
 	{
@@ -3140,8 +3138,7 @@ GetLeaderPresence(
     Boolean rval = False;
     WorkspaceID *pLocalIDs;
 
-    if ((pLocalIDs = (WorkspaceID *) XtMalloc (pCD->pSD->numWorkspaces *
-	sizeof(WorkspaceID))) == nullptr)
+    if ((pLocalIDs = (WorkspaceID *) XtCalloc(pCD->pSD->numWorkspaces, sizeof(WorkspaceID))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(76, 10, "Insufficient Memory (GetLeaderPresence)")));
 	ExitWM (WM_ERROR_EXIT_VALUE);
@@ -3264,7 +3261,7 @@ ReserveIdListSpace(
     if (numResIDs == 0)
     {
 	pResIDs = (WorkspaceID *) 
-		    XtMalloc (numIDs * sizeof (WorkspaceID));
+		    XtCalloc(numIDs, sizeof (WorkspaceID));
 	if (pResIDs)
 	{
 	    numResIDs = numIDs;

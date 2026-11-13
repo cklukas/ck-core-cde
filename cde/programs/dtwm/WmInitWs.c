@@ -1722,7 +1722,7 @@ InsureDefaultBackdropDir(char **ppchBackdropDirs)
     {
       len = strlen (homeDir) + strlen("/.dt/backdrops") + 
 	    strlen (*ppchBackdropDirs) + strlen("/etc/dt/backdrops") + 3;
-      tmpptr = XtMalloc (len * sizeof (char *));
+      tmpptr = XtCalloc(len, sizeof (char *));
       strcpy (tmpptr, homeDir);
       strcat (tmpptr, "/.dt/backdrops");
       strcat (tmpptr, ":");
@@ -1740,7 +1740,7 @@ InsureDefaultBackdropDir(char **ppchBackdropDirs)
       len = strlen (homeDir) + strlen("/.dt/backdrops") + 
 	    strlen (*ppchBackdropDirs) + strlen(pchD) + 
 	    strlen("/etc/dt/backdrops") + 4;
-      tmpptr = XtMalloc (len * sizeof (char *));
+      tmpptr = XtCalloc(len, sizeof (char *));
       strcpy (tmpptr, homeDir);
       strcat (tmpptr, "/.dt/backdrops");
       strcat (tmpptr, ":");
@@ -2113,7 +2113,7 @@ void CopyArgv (int argc, char *argv [])
     int i;
 
 
-    if ((wmGD.argv = (char **)XtMalloc ((argc + 1) * sizeof (char *))) == nullptr)
+    if ((wmGD.argv = (char **)XtCalloc((argc + 1), sizeof (char *))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(40, 10, "Insufficient memory for window manager data")));
 	wmGD.argv = argv;
@@ -2126,7 +2126,7 @@ void CopyArgv (int argc, char *argv [])
 	    wmGD.argv[i] = argv[i];
 	}
 	wmGD.argv[i] = nullptr;
-	if ((dpy2Argv = (char **)XtMalloc((argc + 1) * sizeof(char *))) == nullptr)
+	if ((dpy2Argv = (char **)XtCalloc((argc + 1), sizeof(char *))) == nullptr)
 	{
 	    Warning (((char *)GETMESSAGE(40, 11, "Insufficient memory for window manager data")));
 	    dpy2Argv = argv;
@@ -2172,7 +2172,7 @@ void InitScreenNames (void)
     numScreens = ScreenCount (wmGD.display);
     
     if (!(wmGD.screenNames = 
-	  (unsigned char **) XtMalloc (numScreens * sizeof(char *))))
+	  (unsigned char **) XtCalloc(numScreens, sizeof(char *))))
     {
 	LeaveWaitState();
 	Warning (((char *)GETMESSAGE(40, 12, "Insufficient memory for screen names")));
@@ -2182,7 +2182,7 @@ void InitScreenNames (void)
     for (num=0; num<numScreens; num++)
     {
 	if (!(wmGD.screenNames[num] = 
-	      (unsigned char *) XtMalloc (4*sizeof(char))))
+	      (unsigned char *) XtCalloc(4, sizeof(char))))
 	{
 	    LeaveWaitState();
 	    Warning (((char *)GETMESSAGE(40, 13, "Insufficient memory for screen names")));
@@ -2520,7 +2520,7 @@ VirtKeys4DIN(
       return PropChanged4DIN ;
     }
 
-  prop_atoms = (Atom *) XtMalloc( sizeof( Atom) * num_props) ;
+  prop_atoms = (Atom *) XtCalloc(num_props, sizeof( Atom)) ;
   XInternAtoms(dsp, prop_names, num_props, FALSE, prop_atoms);
 
   prop_existed = FALSE ;

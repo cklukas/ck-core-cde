@@ -236,7 +236,7 @@ _DtPerfChkpntInit(Display      *display,
     dtcp_info.aSelection = XInternAtom(dtcp_info.display, 
 					DT_PERF_CHKPNT_SEL,     False);
     dtcp_info.maxprops   = NUMPROPERTIES;
-    dtcp_info.aProperty  = (Atom *) malloc(dtcp_info.maxprops * sizeof(Atom));
+    dtcp_info.aProperty  = (Atom *) calloc(dtcp_info.maxprops, sizeof(Atom));
     for (i= 0; i < dtcp_info.maxprops; i++) {
 	sprintf(propname, "%s_%x", DT_PERF_CLIENT_CHKPNT_PROP, i);
 	dtcp_info.aProperty[i]  = XInternAtom(dtcp_info.display,

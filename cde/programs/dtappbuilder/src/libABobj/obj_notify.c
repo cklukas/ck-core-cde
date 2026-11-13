@@ -1142,7 +1142,7 @@ add_to_callback_list(NamedCallbackList *ppsList,
     }
     iNumEntries+= 2;
     newList= (NamedCallbackList)
-		realloc(list, iNumEntries * sizeof(NAMED_CALLBACK));
+		reallocarray(list, iNumEntries, sizeof(NAMED_CALLBACK));
     if (newList == nullptr)
     {
 	return ERR_NO_MEMORY;

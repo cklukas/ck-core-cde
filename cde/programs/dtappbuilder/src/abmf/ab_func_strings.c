@@ -173,8 +173,7 @@ main (int argc, char *argv[])
         fprintf(stderr, "Function: %s\n", util_strsafe(funcInfo.funcName));
 
 	++numFuncs;
-	funcs = (FileFuncInfo)realloc(
-			funcs, numFuncs * sizeof(FileFuncInfoRec));
+	funcs = (FileFuncInfo)reallocarray(funcs, numFuncs, sizeof(FileFuncInfoRec));
 	if (funcs == nullptr)
 	{
 	    fprintf(stderr, "Out of memory!\n");

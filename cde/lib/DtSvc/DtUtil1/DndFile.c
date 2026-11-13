@@ -222,7 +222,7 @@ dndFileConvertInit(
 	ConvertState *	cvtState;
 
 	dragData->data.files = (String *)
-		XtMalloc(dragData->numItems * sizeof(String));
+		XtCalloc(dragData->numItems, sizeof(String));
 
 	cvtState = (ConvertState *)XtCalloc(1,sizeof(ConvertState));
 	dtDragInfo->clientData = (XtPointer)cvtState;
@@ -525,7 +525,7 @@ dndFileListToSelectionValue(
 	 * Encode the file list
 	 */
 
-	tmpList = (String *)XtMalloc(numFiles * sizeof(String));
+	tmpList = (String *)XtCalloc(numFiles, sizeof(String));
 
 	for (ii = 0; ii < numFiles; ii++) {
 		tmpList[ii] = dndFileEncode(fileList[ii], doNetFile);
@@ -591,7 +591,7 @@ dndSelectionValueToFileList(
 	 * Decode the file list
 	 */
 
-	fileList = (String *)XtMalloc(numFiles * sizeof(String));
+	fileList = (String *)XtCalloc(numFiles, sizeof(String));
 
 	for (ii = 0; ii < numFiles; ii++) {
 		fileList[ii] = dndFileDecode(tmpList[ii], doNetFile);

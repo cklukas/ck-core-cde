@@ -2235,7 +2235,7 @@ static int SPC_Send_B00_Spawn(SPC_Connection_Ptr connection,
   while(envp && envp[num_envp++])
     num_elts++;
 
-  merged_ptr = (char **)malloc((num_elts+6) * sizeof(char *));
+  merged_ptr = (char **)calloc((num_elts+6), sizeof(char *));
 
   sprintf(argv_buf, "%d", num_argv);
   sprintf(envp_buf, "%d", num_envp);

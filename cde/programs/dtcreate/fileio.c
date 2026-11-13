@@ -424,8 +424,8 @@ ushort WriteDefinitionFile(char *pszFile, ActionData *pAD)
 #endif
     msgPtr = GETMESSAGE(5, 55, "Could not create the following file:");
     fmtPtr = "%s\n   %s";
-    errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-		       strlen(pszFile) + 1) * sizeof(char));
+    errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+		       strlen(pszFile) + 1), sizeof(char));
     sprintf(errPtr, fmtPtr, msgPtr, pszFile);
     display_error_message(CreateActionAppShell, errPtr);
     XtFree(errPtr);
@@ -667,8 +667,8 @@ ushort WriteActionFile(ActionData *pAD)
 #endif
     msgPtr = GETMESSAGE(5, 55, "Could not create the following file:");
     fmtPtr = "%s\n   %s";
-    errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-		       strlen(pszFile) + 1) * sizeof(char));
+    errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+		       strlen(pszFile) + 1), sizeof(char));
     sprintf(errPtr, fmtPtr, msgPtr, pszFile);
     display_error_message(CreateActionAppShell, errPtr);
     XtFree(errPtr);
@@ -764,8 +764,8 @@ int OpenDefinitionFile(char *pszFile, ActionData *pAD)
 #endif
     msgPtr = GETMESSAGE(5, 60, "Could not open the following file:");
     fmtPtr = "%s\n   %s";
-    errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-		       strlen(pszFile) + 1) * sizeof(char));
+    errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+		       strlen(pszFile) + 1), sizeof(char));
     sprintf(errPtr, fmtPtr, msgPtr, pszFile);
     display_error_message(CreateActionAppShell, errPtr);
     XtFree(errPtr);
@@ -790,8 +790,8 @@ int OpenDefinitionFile(char *pszFile, ActionData *pAD)
      if (rc) {
 	msgPtr = GETMESSAGE(5, 90, "Could not parse the following file:");
 	fmtPtr = "%s\n   %s";
-	errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-			   strlen(pszFile) + 1) * sizeof(char));
+	errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+			   strlen(pszFile) + 1), sizeof(char));
 	sprintf(errPtr, fmtPtr, msgPtr, pszFile);
         display_error_message(CreateActionAppShell, errPtr);
 	XtFree(errPtr);
@@ -898,8 +898,8 @@ ushort CopyFile(char *pszSource, char *pszDest)
   if (fdSource == -1) {
      msgPtr = GETMESSAGE(5, 60, "Could not open the following file:");
      fmtPtr = "%s\n   %s";
-     errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-			strlen(pszSource) + 1) * sizeof(char));
+     errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+			strlen(pszSource) + 1), sizeof(char));
      sprintf(errPtr, fmtPtr, msgPtr, pszSource);
      display_error_message(CreateActionAppShell, errPtr);
      XtFree(errPtr);
@@ -921,8 +921,8 @@ ushort CopyFile(char *pszSource, char *pszDest)
         if (fdDest == -1) {
 	   msgPtr = GETMESSAGE(5, 55, "Could not create the following file:");
 	   fmtPtr = "%s\n   %s";
-	   errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-			      strlen(pszDest) + 1) * sizeof(char));
+	   errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+			      strlen(pszDest) + 1), sizeof(char));
            sprintf(errPtr, fmtPtr, msgPtr, pszDest);
            display_error_message(CreateActionAppShell, errPtr);
 	   XtFree(errPtr);

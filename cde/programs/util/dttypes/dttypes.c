@@ -141,7 +141,7 @@ add_rec(int rec, List *l)
 	if(l->rec_total == 0 || l->rec_count >= l->rec_total-2)
 	{
 		l->rec_total += 10;
-		l->rec_list = (int *)realloc(l->rec_list, (l->rec_total)*sizeof(int));
+		l->rec_list = (int *)reallocarray(l->rec_list, (l->rec_total), sizeof(int));
 	}
 	l->rec_list[l->rec_count] = rec;
 	l->rec_count++;

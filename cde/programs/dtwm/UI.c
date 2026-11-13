@@ -563,7 +563,7 @@ Initialize (DtPanelShellWidget panel_shell)
 			  &use_icon_file_cache_return);
 
    panel.pixel_set = (XmPixelSet *) 
-     XtMalloc (sizeof(XmPixelSet) * XmCO_NUM_COLORS);
+     XtCalloc(XmCO_NUM_COLORS, sizeof(XmPixelSet));
 
    if (XmeGetPixelData (XScreenNumberOfScreen (screen), 
 			&color_use, panel.pixel_set, 
@@ -2108,7 +2108,7 @@ SwitchCreate (BoxData * box_data)
       switch_data->switch_count = switch_count;
       
       switch_data->switch_names = 
-         (char **) XtMalloc (sizeof(char *) * switch_count);
+         (char **) XtCalloc(switch_count, sizeof(char *));
 
       for (i = 0; i < switch_count; i++)
       {
@@ -2135,7 +2135,7 @@ SwitchCreate (BoxData * box_data)
    panel.switch_row_count =
       (int) (intptr_t) (switch_data->element_values[SWITCH_NUMBER_OF_ROWS].parsed_value);
    switch_data->buttons = 
-      (Widget *) XtMalloc (sizeof (Widget) * switch_count);
+      (Widget *) XtCalloc(switch_count, sizeof (Widget));
 
    switch_data->popup_data = nullptr;
 
@@ -3289,8 +3289,7 @@ AddSubpanel (ControlData * control_data)
 
       subpanel_data = control_data->subpanel_data;
       
-      element_values = (ElementValue *) XtMalloc (sizeof(ElementValue) *
-                                                  SUBPANEL_KEYWORD_COUNT);
+      element_values = (ElementValue *) XtCalloc(SUBPANEL_KEYWORD_COUNT, sizeof(ElementValue));
       
       for (i = 0; i < SUBPANEL_KEYWORD_COUNT; i++)
       {

@@ -91,7 +91,7 @@ static short Build_Mult_Table(OPERAND *table[INTER_LEVELS])
 
     /* Allocate Memory */
     for (i = 0; i < INTER_LEVELS; i++) {
-        if ((table[i] = (OPERAND *) malloc(511*sizeof(OPERAND)))==nullptr) {
+        if ((table[i] = (OPERAND *) calloc(511, sizeof(OPERAND)))==nullptr) {
             for (j = 0; j < i; j++) {
                 free(table[j]); table[j] = nullptr;
             }

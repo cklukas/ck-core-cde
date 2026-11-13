@@ -881,7 +881,7 @@ InitializeOldButton( void )
           numOfPixels = 2;
 
    /* Allocate enough space to store numOfPixels. */
-     pixels = (unsigned long *)XtMalloc (numOfPixels * sizeof (unsigned long));
+     pixels = (unsigned long *)XtCalloc(numOfPixels, sizeof (unsigned long));
 
    /* Allocate new color cells for the new button */
      status = XAllocColorCells (style.display, style.colormap,

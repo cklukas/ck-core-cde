@@ -376,7 +376,7 @@ createSizeMenu
     /* create the size buttons... */
 #ifdef	WINDOW_SIZE_TOGGLES
     windowSizeToggles = (Widget *)
-	    XtMalloc((1 + tw->termview.sizeList.numSizes) *sizeof(Widget));
+	    XtCalloc((1 + tw->termview.sizeList.numSizes), sizeof(Widget));
 #endif	/* WINDOW_SIZE_TOGGLES */
     for (i1 = 0; i1 < tw->termview.sizeList.numSizes; i1++) {
 	*buffer = '\0';
@@ -498,8 +498,7 @@ createFontMenu
 	}
     }
     /* malloc out an array... */
-    fontArray = (fontArrayType *) XtMalloc(sizeof(fontArrayType) *
-	    i1);
+    fontArray = (fontArrayType *) XtCalloc(i1, sizeof(fontArrayType));
     for (i1 = 0, c1 = tw->termview.userFontList; *c1; ) {
 	/* copy over the userFontList up to the end, or a newline... */
 	for (c2 = buffer; *c1 && (*c1 != '\n'); ) {
@@ -599,7 +598,7 @@ createFontMenu
     *mnemonics = '\0';
 
     /* create the font buttons... */
-    fontSizeToggles = (Widget *) XtMalloc((fontArrayCount + 1) * sizeof(Widget));
+    fontSizeToggles = (Widget *) XtCalloc((fontArrayCount + 1), sizeof(Widget));
 
     for (i1 = 0; i1 < fontArrayCount; i1++) {
 #ifdef NOTDEF
@@ -661,7 +660,7 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 		applicationShellWidgetClass, XtDisplay(parent), arglist, i);
     }
 	
-    newArglist = (Arg *) XtMalloc((menuArgcount + 1) * sizeof(Arg));
+    newArglist = (Arg *) XtCalloc((menuArgcount + 1), sizeof(Arg));
     for (i = 0; i < menuArgcount; i++) {
 	newArglist[i].name = menuArglist[i].name;
 	newArglist[i].value = menuArglist[i].value;

@@ -142,7 +142,7 @@ ExpGpftoBDF(
 
 	num_chars = ((make_all) ? w_bdf.num_chars : code_num) ;
 
-	if( (r_gpf.code = (int *)malloc( sizeof(int) * num_chars)) == nullptr ) {
+	if( (r_gpf.code = (int *)calloc(num_chars, sizeof(int))) == nullptr ) {
 	    fclose(w_bdf.output) ;
 	    fclose(w_bdf.input) ;
 	    return(MALLOC_ERROR);

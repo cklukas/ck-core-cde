@@ -137,7 +137,7 @@ init_widgets( void )
 	 * hold WIDGETALLOC widgets, and will grow in increments
 	 * of WIDGETALLOC as it overflows.
 	 */
-	W = (wtab_t **)XtMalloc(WIDGETALLOC*sizeof(wtab_t *));
+	W = (wtab_t **)XtCalloc(WIDGETALLOC, sizeof(wtab_t *));
 	wentries = (wtab_t *)XtCalloc(WIDGETALLOC, sizeof(wtab_t));
 	for (i = 0; i < WIDGETALLOC; i++)
         {
@@ -517,7 +517,7 @@ get_new_wtab(
 
 			MaxW += WIDGETALLOC;
 			W = (wtab_t **)XtRealloc((char *)W, sizeof(wtab_t *)*MaxW);
-			wentries = (wtab_t *)XtMalloc(sizeof(wtab_t)*WIDGETALLOC);
+			wentries = (wtab_t *)XtCalloc(WIDGETALLOC, sizeof(wtab_t));
 			for (j = 0; j < WIDGETALLOC; j++)
                         {
 				W[oldmax+j] = &wentries[j];

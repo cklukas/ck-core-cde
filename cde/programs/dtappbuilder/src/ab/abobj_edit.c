@@ -443,10 +443,8 @@ verify_clipboard_space(
     /*
      * Realloc space for new count
      */
-    ABClipboard->list = (ABObj *)realloc((void *)ABClipboard->list, 
-					(num_nodes * sizeof(ABObj)));
-    ABClipboard->info_list = (ABClipbInfo)realloc(ABClipboard->info_list,
-					(num_nodes * sizeof(AB_CLIPB_INFO)));
+    ABClipboard->list = (ABObj *)reallocarray((void *)ABClipboard->list, num_nodes, sizeof(ABObj));
+    ABClipboard->info_list = (ABClipbInfo)reallocarray(ABClipboard->info_list, num_nodes, sizeof(AB_CLIPB_INFO));
 
 
     /*
@@ -1485,10 +1483,8 @@ verify_undo_rec_space(
     /*
      * Realloc space for new count
      */
-    undo_rec->list = (ABObj *)realloc((void *)undo_rec->list, 
-					(num_nodes * sizeof(ABObj)));
-    undo_rec->info_list = (ABUndoInfo)realloc(undo_rec->info_list,
-					(num_nodes * sizeof(AB_UNDO_INFO)));
+    undo_rec->list = (ABObj *)reallocarray((void *)undo_rec->list, num_nodes, sizeof(ABObj));
+    undo_rec->info_list = (ABUndoInfo)reallocarray(undo_rec->info_list, num_nodes, sizeof(AB_UNDO_INFO));
 
 
     if (undo_rec->list)
@@ -1549,7 +1545,7 @@ remove_clipboard_descendants(
     /*
      * Make copy of select list
      */
-    buf = (ABObj*)XtMalloc(sel->count * sizeof(ABObj));
+    buf = (ABObj*)XtCalloc(sel->count, sizeof(ABObj));
     memcpy(buf, sel->list, (sel->count * sizeof(ABObj)));
 
     for (i = 0; i < sel->count; ++i)
@@ -1950,7 +1946,7 @@ set_undo_rec(
 	    member_count = trav_count(obj[j], 
 			AB_TRAV_SALIENT_CHILDREN | AB_TRAV_MOD_SAFE);
 	    
-	    member_list = (ABObj *)malloc(member_count * sizeof(ABObj));
+	    member_list = (ABObj *)calloc(member_count, sizeof(ABObj));
 
 	    for (trav_open(&trav, obj[j], AB_TRAV_SALIENT_CHILDREN |
 	                AB_TRAV_MOD_SAFE), member_index = 0;
@@ -2494,10 +2490,10 @@ abobj_paste(
 	    /*
 	     * Allocate buffer to store ptrs to new objects pasted for undo
 	     */
-	    new_list = (ABObj *)malloc(ABClipboard->count * sizeof(ABObj));
+	    new_list = (ABObj *)calloc(ABClipboard->count, sizeof(ABObj));
 
 	    if (ABClipboard->action_count)
-	        new_action_list = (ABObj *)malloc(ABClipboard->action_count * sizeof(ABObj));
+	        new_action_list = (ABObj *)calloc(ABClipboard->action_count, sizeof(ABObj));
 
             abobj_deselect_all(project);
 
@@ -3261,7 +3257,7 @@ undo_cut(
     /*
      * List to remember what new objects were created
      */
-    new_list = (ABObj *)malloc(undo_rec->count * sizeof(ABObj));
+    new_list = (ABObj *)calloc(undo_rec->count, sizeof(ABObj));
 
     if (undo_rec->action_count > 0)
     {
@@ -3271,8 +3267,8 @@ undo_cut(
 	 * traversing the lists yet again to figure out how much we need
 	 * exactly for each list.
 	 */
-        new_from_action_list = (ABObj *)malloc(undo_rec->action_count * sizeof(ABObj));
-        new_to_action_list = (ABObj *)malloc(undo_rec->action_count * sizeof(ABObj));
+        new_from_action_list = (ABObj *)calloc(undo_rec->action_count, sizeof(ABObj));
+        new_to_action_list = (ABObj *)calloc(undo_rec->action_count, sizeof(ABObj));
     }
 
     /*

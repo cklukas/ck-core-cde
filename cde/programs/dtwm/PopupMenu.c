@@ -427,9 +427,8 @@ DeleteControlCB (Widget    w,
        del_msg = FPGETMESSAGE(82,5, "This control cannot be deleted because it is locked.");
        del_msg = XtNewString (del_msg);
 
-       message = XtMalloc (sizeof(char) *
-                           (strlen(del_ctrl) + strlen(ctrl_label) +
-                            strlen(del_msg) + 4));
+       message = XtCalloc((strlen(del_ctrl) + strlen(ctrl_label) +
+                            strlen(del_msg) + 4), sizeof(char));
 
        sprintf(message, "%s %s\n\n%s", del_ctrl, ctrl_label, del_msg);
 
@@ -452,9 +451,8 @@ DeleteControlCB (Widget    w,
 
        del_msg = XtNewString (del_msg);
 
-       message = XtMalloc (sizeof(char) *
-                           (strlen(del_ctrl) + strlen(ctrl_label) +
-                            strlen(del_msg) + 4));
+       message = XtCalloc((strlen(del_ctrl) + strlen(ctrl_label) +
+                            strlen(del_msg) + 4), sizeof(char));
 
        sprintf(message, "%s %s\n\n%s", del_ctrl, ctrl_label, del_msg);
 
@@ -585,9 +583,8 @@ DeleteSubpanelCB (Widget    w,
        del_msg = FPGETMESSAGE(82,7, "This subpanel cannot be deleted because it is locked.");
        del_msg = XtNewString (del_msg);
 
-       message = XtMalloc (sizeof(char) *
-                           (strlen(del_spanel) + strlen(spanel_name) +
-                            strlen(del_msg) + 4));
+       message = XtCalloc((strlen(del_spanel) + strlen(spanel_name) +
+                            strlen(del_msg) + 4), sizeof(char));
 
        sprintf(message, "%s %s\n\n%s", del_spanel, spanel_name, del_msg);
 
@@ -618,9 +615,8 @@ DeleteSubpanelCB (Widget    w,
 
        del_msg = XtNewString (del_msg);
 
-       message = XtMalloc (sizeof(char) *
-                           (strlen(del_spanel) + strlen(spanel_name) +
-                            strlen(del_msg) + 4));
+       message = XtCalloc((strlen(del_spanel) + strlen(spanel_name) +
+                            strlen(del_msg) + 4), sizeof(char));
 
        sprintf(message, "%s %s\n\n%s", del_spanel, spanel_name, del_msg);
 
@@ -1423,7 +1419,7 @@ CreatePopupMenu (Widget w)
    children[child_num++] = XmCreateSeparatorGadget(popup_data->popup,
 						   "sep2", nullptr, 0);
 
-   popup_data->action_item = (Widget *) XtMalloc(sizeof(Widget) * 5);
+   popup_data->action_item = (Widget *) XtCalloc(5, sizeof(Widget));
    popup_data->action_count = 0;
 
    for (i = 0; i < 5; i++)
@@ -1606,7 +1602,7 @@ ShowWorkspaceItems (SwitchData * switch_data,
    ws = strdup (FPGETMESSAGE(82, 21, "Workspace"));
    ws_name = switch_data->switch_names[i];
 
-   control_label = XtMalloc (sizeof(char) * (strlen(ws) + strlen(ws_name) + 4));
+   control_label = XtCalloc((strlen(ws) + strlen(ws_name) + 4), sizeof(char));
 
    sprintf (control_label, format, ws, ws_name);
    free (format);
@@ -1921,7 +1917,7 @@ CreateWorkspacePopupMenu (Widget       w,
    children[child_num++] = XmCreateSeparatorGadget (popup_data->popup, "sep2",
 						    nullptr, 0);
 
-   popup_data->action_item = (Widget *) XtMalloc(sizeof(Widget) * 5);
+   popup_data->action_item = (Widget *) XtCalloc(5, sizeof(Widget));
    popup_data->action_count = 0;
 
    for (i = 0; i < 5; i++)

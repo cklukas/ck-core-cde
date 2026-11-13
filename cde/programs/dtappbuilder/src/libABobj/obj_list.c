@@ -510,12 +510,10 @@ objlistP_shrink_array(ABObjList list, int sizeDiff)
 
     if (new_objs_size > 0)
     {
-        new_objs = (ABObj*) realloc(
-			  list->objs, new_objs_size * sizeof(ABObj));
+        new_objs = (ABObj*) reallocarray(list->objs, new_objs_size, sizeof(ABObj));
 	if (new_user_datas != nullptr)
 	{
-	    new_user_datas = (void **) realloc(
-		  list->user_datas, new_objs_size * sizeof(void*));
+	    new_user_datas = (void **) reallocarray(list->user_datas, new_objs_size, sizeof(void*));
 	}
     }
     else
@@ -557,12 +555,10 @@ objlistP_grow_array(ABObjList list, int sizeDiff)
     int		i = 0;
     BOOL	user_datas_valid = (list->user_datas != nullptr);
 
-    new_objs = (ABObj*)realloc(
-			list->objs, new_objs_size * sizeof(ABObj));
+    new_objs = (ABObj*)reallocarray(list->objs, new_objs_size, sizeof(ABObj));
     if (user_datas_valid)
     {
-        new_user_datas = (void **)realloc(
-			list->user_datas, new_objs_size * sizeof(void *));
+        new_user_datas = (void **)reallocarray(list->user_datas, new_objs_size, sizeof(void *));
     }
     if (   (new_objs == nullptr) 
 	|| (user_datas_valid && (new_user_datas == nullptr)) )

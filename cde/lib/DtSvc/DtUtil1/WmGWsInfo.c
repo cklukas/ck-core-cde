@@ -204,8 +204,7 @@ DtWsmGetWorkspaceInfo(
 			(item + pWsInfo->numBackdropWindows) <= count)
 		{
 		    pWin = (Window *)
-			XtMalloc (pWsInfo->numBackdropWindows *
-				  sizeof (Window));
+			XtCalloc(pWsInfo->numBackdropWindows, sizeof (Window));
 		    for (i=0; i<pWsInfo->numBackdropWindows; i++)
 		    {
 			pWin[i] = (Window) 

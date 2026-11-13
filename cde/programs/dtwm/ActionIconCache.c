@@ -252,8 +252,7 @@ StringListAdd(StringList *list, char *value)
     if (list->count >= list->capacity)
     {
         int newCap = list->capacity ? list->capacity * 2 : 8;
-        char **newItems = (char **)realloc(list->items,
-                                           newCap * sizeof(char *));
+        char **newItems = (char **)reallocarray(list->items, newCap, sizeof(char *));
         if (!newItems)
             return False;
 
@@ -639,8 +638,7 @@ AddOrUpdateActionEntry(const char *command, const char *icon, const char *source
     {
         int newCapacity = actionEntryCapacity ? actionEntryCapacity * 2 : 64;
         ActionIconEntry *newEntries =
-            (ActionIconEntry *)realloc(actionEntries,
-                                       (size_t)newCapacity * sizeof(ActionIconEntry));
+            (ActionIconEntry *)reallocarray(actionEntries, (size_t)newCapacity, sizeof(ActionIconEntry));
         if (!newEntries)
         {
             ActionIconCacheLog("Failed to grow action entry list capacity=%d", newCapacity);
@@ -912,8 +910,7 @@ AddCacheEntryInternal(const char *command, const char *action, Boolean markDirty
         if (newCapacity < cacheEntryCount + 1)
             newCapacity = cacheEntryCount + 1;
 
-        ActionCacheEntry *newEntries = (ActionCacheEntry *)realloc(cacheEntries,
-                                                                  newCapacity * sizeof(ActionCacheEntry));
+        ActionCacheEntry *newEntries = (ActionCacheEntry *)reallocarray(cacheEntries, newCapacity, sizeof(ActionCacheEntry));
         if (!newEntries)
             return False;
 

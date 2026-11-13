@@ -676,7 +676,7 @@ GetWmClientInfo (WmWorkspaceData *pWS,
      * fill with NULL IDs
      */
     if ((pCD->pWsList = (WsClientData *) 
-	    XtMalloc(pCD->pSD->numWorkspaces * sizeof(WsClientData))) == nullptr)
+	    XtCalloc(pCD->pSD->numWorkspaces, sizeof(WsClientData))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(70, 2, "Insufficient memory for client data")));
 	return (nullptr);

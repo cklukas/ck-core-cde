@@ -107,7 +107,7 @@ bilP_get_string(void)
 
 #ifdef BOGUS
     /**** REMIND: strip off quotes, sometimes heap overwrite violation*/
-    tmp = (char *) malloc(length * sizeof(char));
+    tmp = (char *) calloc(length, sizeof(char));
     for (i = 0; i < length - 2; i++)
     {
 	tmp[i] = (istr_string(value1)[i + 1]);

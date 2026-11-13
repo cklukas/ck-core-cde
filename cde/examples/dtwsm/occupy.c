@@ -251,7 +251,7 @@ int main (int argc, char **argv)
     /* 
      * set up initial workspace occupancy info 
      */
-    pbOccupy = (Boolean *) XtMalloc (numWorkspaces * sizeof (Boolean));
+    pbOccupy = (Boolean *) XtCalloc(numWorkspaces, sizeof (Boolean));
     for (i=0; i<numWorkspaces; i++)
     {
 	pbOccupy[i] = False;
@@ -285,7 +285,7 @@ static void SetupWorkspaceButtons (Widget form, Widget top)
     if (DtWsmGetWorkspaceList (XtDisplay(form), root, 
 		    &paWs, (int *)&numWorkspaces) == Success)
     {
-	wWs = (Widget *) XtMalloc (numWorkspaces * sizeof (Widget));
+	wWs = (Widget *) XtCalloc(numWorkspaces, sizeof (Widget));
 	pWid = wWs;
 	for (i=0; i<numWorkspaces; i++, pWid++)
 	{
@@ -424,7 +424,7 @@ static void setCB (Widget w,		/*  widget id		*/
 
     if (!paWsSet)
     {
-	paWsSet = (Atom *) XtMalloc (numWorkspaces * sizeof(Atom));
+	paWsSet = (Atom *) XtCalloc(numWorkspaces, sizeof(Atom));
     }
 
     for (i=0, numSet=0; i<numWorkspaces; i++)

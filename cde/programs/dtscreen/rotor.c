@@ -135,7 +135,7 @@ initrotor(perwindow *pwin)
 	fs->num = batchcount;
 
         if ((fs->elements = (struct elem *)
-              malloc(sizeof(struct elem) * fs->num)) == 0) {
+              calloc(fs->num, sizeof(struct elem))) == 0) {
 		perror("malloc");
 		exit(1);
 	}

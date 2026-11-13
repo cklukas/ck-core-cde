@@ -603,11 +603,11 @@ getProperties(PcfTmp *pcf, caddr_t buf_top, PCFTablePtr tables, int ntables)
 	pcf->nprops = getINT32((unsigned char *)buffer, format);
 	buffer += 4;
 
-	if ( !( pcf->props = ( FontPropPtr )malloc( pcf->nprops * sizeof( FontPropRec ) ) ) ) {
+	if ( !( pcf->props = ( FontPropPtr )calloc(pcf->nprops, sizeof( FontPropRec )) ) ) {
 		return	FALSE;
 	}
 
-	if ( !( pcf->isStringProp = ( char * )malloc(pcf->nprops * sizeof( char ) ) ) ) {
+	if ( !( pcf->isStringProp = ( char * )calloc(pcf->nprops, sizeof( char )) ) ) {
 		return	FALSE;
 	}
 

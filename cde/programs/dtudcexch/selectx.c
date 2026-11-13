@@ -563,7 +563,7 @@ create_xlfd()
 	    }
 	    XtFree((char *)xlf);
 	}
-	xlf = (XmString *)XtMalloc(sizeof(XmString) * fontlist->num);
+	xlf = (XmString *)XtCalloc(fontlist->num, sizeof(XmString));
 	for (i=0, f=fontlist->list; i < fontlist->num; i++, f++) {
 	    xlf[xlf_count++] = XmStringCreateLocalized(f->xlfdname);
 	}
@@ -624,7 +624,7 @@ sty_call(Widget w)
 		      sty_flag = False;
 	      }
 	      else {
-		      sty_val = XtMalloc(sizeof(char) * (strlen(moji) + 1));
+		      sty_val = XtCalloc((strlen(moji) + 1), sizeof(char));
 		      strcpy(sty_val, moji);
 		      sty_flag = True;
 	      }
@@ -929,10 +929,10 @@ font_init() /* dtex change */
 		AskUser(ed->toplevel, ed, err, &ans, "error");
 		return;
 	}
-	udc = (int *)XtMalloc(sizeof(int) * fontlist->num);
-	sty = (char **)XtMalloc(sizeof(char *) * fontlist->num);
-	wls = (int *)XtMalloc(sizeof(int) * fontlist->num);
-	hls = (int *)XtMalloc(sizeof(int) * fontlist->num);
+	udc = (int *)XtCalloc(fontlist->num, sizeof(int));
+	sty = (char **)XtCalloc(fontlist->num, sizeof(char *));
+	wls = (int *)XtCalloc(fontlist->num, sizeof(int));
+	hls = (int *)XtCalloc(fontlist->num, sizeof(int));
 	for (i=0, f=fontlist->list; i < fontlist->num; i++, f++) {
 	    for (j=0,found=False; j<udc_count; j++) {
 		if(udc[j] == f->cd_set) {
@@ -950,7 +950,7 @@ font_init() /* dtex change */
 		}
 	    }
 	    if (found == False) {
-		sty[sty_count] = XtMalloc(sizeof(char) * (strlen(f->style.name) + 1));
+		sty[sty_count] = XtCalloc((strlen(f->style.name) + 1), sizeof(char));
 		strcpy(sty[sty_count++], f->style.name);
 	    }
 	    if (f->size.w != -1) {
@@ -981,16 +981,16 @@ font_init() /* dtex change */
 	data_sort(hls, hls_count);
 
 	if (udc_count > 0) {
-	  button1 = (Widget *) XtMalloc(sizeof(Widget) * udc_count);
+	  button1 = (Widget *) XtCalloc(udc_count, sizeof(Widget));
 	}
 	if (sty_count > 0) {
-	  button2 = (Widget *) XtMalloc(sizeof(Widget) * sty_count);
+	  button2 = (Widget *) XtCalloc(sty_count, sizeof(Widget));
 	}
 	if (wls_count > 0) {
-	  button3 = (Widget *) XtMalloc(sizeof(Widget) * wls_count);
+	  button3 = (Widget *) XtCalloc(wls_count, sizeof(Widget));
 	}
 	if (hls_count > 0) {
-	  button4 = (Widget *) XtMalloc(sizeof(Widget) * hls_count);
+	  button4 = (Widget *) XtCalloc(hls_count, sizeof(Widget));
 	}
 
 	button = XmCreatePushButton(pull1, "*", nullptr, 0);

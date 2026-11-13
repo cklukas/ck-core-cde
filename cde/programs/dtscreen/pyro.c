@@ -162,7 +162,7 @@ initpyro(perwindow *pwin)
 	orig_p_ignite = 1;
     pp->p_ignite = orig_p_ignite;
 
-    pp->rockq = (rocket *) malloc(batchcount * sizeof(rocket));
+    pp->rockq = (rocket *) calloc(batchcount, sizeof(rocket));
 
     pp->nflying = pp->fusilcount = 0;
 

@@ -314,7 +314,7 @@ TermStrDraw (
     length = x + byte_len;
     if (wcStr == nullptr)
       {
-	pTerm->lines[y] = (wchar_t *) malloc (sizeof(wchar_t) * (length + 1));
+	pTerm->lines[y] = (wchar_t *) calloc((length + 1), sizeof(wchar_t));
 	if (pTerm->lines[y] != nullptr)
 	  {
 	    int i;
@@ -336,8 +336,7 @@ TermStrDraw (
       {
         if (length > pTerm->wc_num[y])
           {
-	    pTerm->lines[y] = (wchar_t *) realloc (wcStr,
-					(sizeof(wchar_t) * (length + 1)));
+	    pTerm->lines[y] = (wchar_t *) reallocarray(wcStr, (length + 1), sizeof(wchar_t));
 	    if (pTerm->lines[y] != nullptr)
 	      {
 	        int i;
@@ -625,12 +624,10 @@ AddHyperToArray(
 		num++;
 
 	if (((num + 1) % GROW_SIZE) == 0)
-	    array_ptr = (DtHelpHyperLines *) realloc ((void *) array_ptr,
-			(sizeof (DtHelpHyperLines) * (num + 1 + GROW_SIZE)));
+	    array_ptr = (DtHelpHyperLines *) reallocarray((void *) array_ptr, (num + 1 + GROW_SIZE), sizeof (DtHelpHyperLines));
       }
     else
-	array_ptr = (DtHelpHyperLines *) malloc (
-					sizeof (DtHelpHyperLines) * GROW_SIZE);
+	array_ptr = (DtHelpHyperLines *) calloc(GROW_SIZE, sizeof (DtHelpHyperLines));
 
     if (array_ptr == nullptr)
 	errno = DtErrorMalloc;
@@ -1084,9 +1081,9 @@ _DtHelpTermGetTopicData(
 	    * entries.  Likewise, 'strList' must be 'maxRows+2', because
 	    * it also needs to be NULL terminated.
 	    */
-           termInfo->lines = (wchar_t **)malloc(sizeof(wchar_t *) *(maxRows+1));
-           termInfo->wc_num = (size_t   *)malloc(sizeof(size_t) * (maxRows+1));
-           strList          = (char **)   malloc(sizeof(char *) * (maxRows+2));
+           termInfo->lines = (wchar_t **)calloc((maxRows+1), sizeof(wchar_t *));
+           termInfo->wc_num = (size_t   *)calloc((maxRows+1), sizeof(size_t));
+           strList          = (char **)   calloc((maxRows+2), sizeof(char *));
    	   if (termInfo->lines == nullptr || termInfo->wc_num == nullptr ||
 							strList == nullptr)
            {

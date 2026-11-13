@@ -814,12 +814,9 @@ CheckForPageBreak(
 	  {
 	    canvas->brk_max += GROW_SIZE;
 	    if (nullptr != canvas->pg_breaks)
-	        canvas->pg_breaks = (_DtCvUnit *) realloc (
-					(void *) canvas->pg_breaks,
-					(sizeof(_DtCvUnit) * canvas->brk_max));
+	        canvas->pg_breaks = (_DtCvUnit *) reallocarray((void *) canvas->pg_breaks, canvas->brk_max, sizeof(_DtCvUnit));
 	    else
-	        canvas->pg_breaks = (_DtCvUnit *) malloc (
-					(sizeof(_DtCvUnit) * canvas->brk_max));
+	        canvas->pg_breaks = (_DtCvUnit *) calloc(canvas->brk_max, sizeof(_DtCvUnit));
 	  }
 
 	/*
@@ -1151,12 +1148,9 @@ SaveLine (
       {
 	canvas->line_max += GROW_SIZE;
 	if (canvas->line_lst)
-	    canvas->line_lst = (_DtCvLineSeg *) realloc (
-				(void *) canvas->line_lst,
-				(sizeof(_DtCvLineSeg) * canvas->line_max));
+	    canvas->line_lst = (_DtCvLineSeg *) reallocarray((void *) canvas->line_lst, canvas->line_max, sizeof(_DtCvLineSeg));
 	else
-	    canvas->line_lst = (_DtCvLineSeg *) malloc (
-				(sizeof(_DtCvLineSeg) * canvas->line_max));
+	    canvas->line_lst = (_DtCvLineSeg *) calloc(canvas->line_max, sizeof(_DtCvLineSeg));
 /*
  * NOTE....should this routine return a value?
  * If (re)alloc error occurs, this simply ignores the problem.
@@ -2191,13 +2185,13 @@ ProcessTable(
      */
     if (maxCols != 1)
       {
-        colSpecs = (ColumnSpec *) malloc (sizeof(ColumnSpec) * maxCols);
+        colSpecs = (ColumnSpec *) calloc(maxCols, sizeof(ColumnSpec));
 	if (colSpecs == nullptr)
 	    return;
       }
     if (maxRows != 1)
       {
-        rowSpecs = (RowSpec *) malloc (sizeof(RowSpec) * maxRows);
+        rowSpecs = (RowSpec *) calloc(maxRows, sizeof(RowSpec));
 	if (rowSpecs == nullptr)
 	  {
 	    if (maxCols > 1)

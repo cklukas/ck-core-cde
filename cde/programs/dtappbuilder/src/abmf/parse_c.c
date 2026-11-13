@@ -269,8 +269,7 @@ abmfP_parse_c_file(FILE *cFile, CSegArray *segmentsOutPtr)
 	*/
 
 	++numSegs;
-	segArray->segs = (CSeg)realloc(
-				segArray->segs, numSegs * sizeof(CSegRec));
+	segArray->segs = (CSeg)reallocarray(segArray->segs, numSegs, sizeof(CSegRec));
 	if (segArray->segs == nullptr)
 	{
 	    cseg_array_destroy(segArray);

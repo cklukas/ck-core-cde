@@ -818,7 +818,7 @@ OrderFiles(
 
    if (file_count > 0)
       directory_set->order_list = order_list =
-         (FileViewData **) XtMalloc (sizeof (FileViewData **) * file_count);
+         (FileViewData **) XtCalloc(file_count, sizeof (FileViewData **));
    else
       directory_set->order_list = order_list = nullptr;
 
@@ -3035,8 +3035,7 @@ DeselectAllFiles(
        * any unselected files which are higher on the stacking order.
        */
 
-      repaint_list = (FileViewData **)XtMalloc(sizeof(FileViewData *) *
-                     file_mgr_data->selected_file_count);
+      repaint_list = (FileViewData **)XtCalloc(file_mgr_data->selected_file_count, sizeof(FileViewData *));
 
       /* Order the objects to be unselected */
       for (i = 0; i < file_mgr_data->selected_file_count; i++)
@@ -3139,8 +3138,7 @@ SelectAllFiles(
    if (PositioningEnabledInView(file_mgr_data))
    {
       /* Force selection list order to match stacking order */
-      selection_list = (FileViewData **)XtMalloc(sizeof(FileViewData *) *
-             (file_mgr_data->num_objects));
+      selection_list = (FileViewData **)XtCalloc((file_mgr_data->num_objects), sizeof(FileViewData *));
 
       top = GetTopOfStack(file_mgr_data);
       selection_count = 0;
@@ -3777,8 +3775,7 @@ RestorePositionalData (
          num_objects = 0;
       else
       {
-         file_mgr_data->object_positions = (ObjectPosition **)XtMalloc(
-                             sizeof(ObjectPosition *) * num_objects);
+         file_mgr_data->object_positions = (ObjectPosition **)XtCalloc(num_objects, sizeof(ObjectPosition *));
       }
    }
 
@@ -4328,10 +4325,8 @@ OrderChildrenList (
    int i, j;
 
    file_window = (XmManagerWidget) file_mgr_rec->file_window;
-   managed = (Widget *)XtMalloc(sizeof(Widget *) *
-                        file_window->composite.num_children);
-   unmanaged = (Widget *)XtMalloc(sizeof(Widget *) *
-                        file_window->composite.num_children);
+   managed = (Widget *)XtCalloc(file_window->composite.num_children, sizeof(Widget *));
+   unmanaged = (Widget *)XtCalloc(file_window->composite.num_children, sizeof(Widget *));
    num_managed = num_unmanaged = 0;
 
    top = GetTopOfStack(file_mgr_data);
@@ -5671,12 +5666,12 @@ MakeReuseList(
    /* only figure things out if we already have children */
    if (num_children > 0) {
      /* create a sorted list of children */
-     sorted_chilren = (Widget *)XtMalloc(num_children * sizeof(Widget));
+     sorted_chilren = (Widget *)XtCalloc(num_children, sizeof(Widget));
      memcpy(sorted_chilren, children, num_children * sizeof(Widget));
      qsort(sorted_chilren, num_children, sizeof(Widget), WidgetCmp);
 
      /* create reuse flags; initially assume all children can be reused */
-     reuse = (Boolean *)XtMalloc(num_children * sizeof(Boolean));
+     reuse = (Boolean *)XtCalloc(num_children, sizeof(Boolean));
      for (i = 0; i < num_children; i++)
        reuse[i] = True;
 
@@ -7148,7 +7143,7 @@ DisplaySomeIcons(
    manage = layout_data->manage + layout_data->manage_count;
 
    /* allocate storage for list of changed icons */
-   change = (FileViewData **)XtMalloc(order_count * sizeof(FileViewData *));
+   change = (FileViewData **)XtCalloc(order_count, sizeof(FileViewData *));
 
    /*  Find the maximum values for the icon heights and widths  */
    grid_width = file_mgr_data->grid_width;
@@ -9079,9 +9074,7 @@ BuildObjectPositions(
    FileViewData * file_view_data;
    ObjectPosition * ptr;
 
-   file_mgr_data->object_positions = (ObjectPosition **)XtMalloc(
-               sizeof(ObjectPosition *) *
-               file_mgr_data->directory_set[0]->file_count);
+   file_mgr_data->object_positions = (ObjectPosition **)XtCalloc(file_mgr_data->directory_set[0]->file_count, sizeof(ObjectPosition *));
 
    for (i = 0, j = 0; i < file_mgr_data->directory_set[0]->file_count; i++)
    {

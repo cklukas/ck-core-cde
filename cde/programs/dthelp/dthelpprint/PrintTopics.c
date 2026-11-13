@@ -997,7 +997,7 @@ int DoStrColsWidth(
 
    /* alloc memory for the wchar_t string */
    len = strlen(str);
-   wcstr = malloc(sizeof(wchar_t) * (len+1));
+   wcstr = calloc((len+1), sizeof(wchar_t));
 
    /* convert str to wchar_t and get width in chars */
    mbstowcs(wcstr,str,len+1);
@@ -2098,7 +2098,7 @@ int ProcessToc(
        /* set max length of title and calc num blanks needed */
        lhsWidth = strlen(sectNumStr) + 1;   /* 1=blank after sect num */
        titlelen = strlen(title);
-       wctitle = malloc(sizeof(wchar_t) * (titlelen+1));
+       wctitle = calloc((titlelen+1), sizeof(wchar_t));
        /* truncate the title using wchar_t */
        if(wctitle)
        {
@@ -2461,7 +2461,7 @@ int DoHelpTopicsProcessing(
    *ret_resultsFile = _DtHPrCreateTmpFile(TMPFILE_PREFIX,TMPFILE_SUFFIX);
    if (nullptr == *ret_resultsFile) { ret = -1; goto cleanup; } /* RETURN: error */
 
-   buf = malloc(3000 * sizeof(char));
+   buf = calloc(3000, sizeof(char));
    if (nullptr == buf) { ret = -3; goto cleanup; }      /* RETURN: error */
 
    /* cat together the part files that got created in the array order */
@@ -2647,7 +2647,7 @@ int _DtHPrPrintHelpTopic(
    }
 
    /* Alloc max shell command line len */
-   printCommand = malloc(MAX_COMMAND_LENGTH*sizeof(char));
+   printCommand = calloc(MAX_COMMAND_LENGTH, sizeof(char));
    if (printCommand == nullptr)
    {
          fprintf(stderr, _DTGETMESSAGE(PTSET,4,

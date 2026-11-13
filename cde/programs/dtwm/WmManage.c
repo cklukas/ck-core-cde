@@ -164,7 +164,7 @@ void AdoptInitialClients (WmScreenData *pSD)
      * Generate list of ancillary windows (not to be managed)
      */
     nAncillaries = 2 + pSD->numWorkspaces;
-    pAncillaryWindows = (Window *) XtMalloc (sizeof(Window)*(nAncillaries));
+    pAncillaryWindows = (Window *) XtCalloc((nAncillaries), sizeof(Window));
     if (!pAncillaryWindows)
     {
 	Warning (((char *)GETMESSAGE(46, 1, "Insufficient memory to adopt initial clients")));
@@ -1846,7 +1846,7 @@ ListTransientTree (
      * Initial allocation
      */
     iSize = LTT_INCREMENT;
-    pWins = (Window *) XtMalloc (iSize * sizeof(Window));
+    pWins = (Window *) XtCalloc(iSize, sizeof(Window));
     count = 0;
 
     /*

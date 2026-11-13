@@ -374,7 +374,7 @@ GuiWorkAreaReorderChildren(
       workArea_const = WORKAREA_CONSTRAINT(parent_subnode);
       XtFree((char *)workArea_const->workArea.sub_nodes);
       workArea_const->workArea.sub_nodes =
-         (WidgetList) XtMalloc(sizeof(Widget) * n_subnodes);
+         (WidgetList) XtCalloc(n_subnodes, sizeof(Widget));
       memcpy(workArea_const->workArea.sub_nodes, subnode_list,
          sizeof(Widget) * n_subnodes);
       workArea_const->workArea.n_sub_nodes = n_subnodes;

@@ -1830,7 +1830,7 @@ build_obj_array(ABObj **objArrayPtr, int *objArraySizePtr, ABObj root)
      * Add root obj to list
      */
     ++objArraySize;
-    newObjArray = (ABObj*)realloc(objArray, objArraySize*sizeof(ABObj*));
+    newObjArray = (ABObj*)reallocarray(objArray, objArraySize, sizeof(ABObj*));
     if (newObjArray == nullptr)
     {
 	util_dprintf(1, "Out of memory in build_obj_array\n");

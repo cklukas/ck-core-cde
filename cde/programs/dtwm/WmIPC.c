@@ -856,10 +856,10 @@ RequestMsgCB(Tt_message m, Tt_pattern p)
 		    clientIdLen += strlen(clients[i]->smClientID) + 1;
 
 		if (((clientIds =
-		      (char *)XtMalloc(clientIdLen * sizeof(char)))
+		      (char *)XtCalloc(clientIdLen, sizeof(char)))
 		     == (char *)nullptr) ||
 		    ((clientWorkspaces =
-		      (int *)XtMalloc(nClients * sizeof(int)))
+		      (int *)XtCalloc(nClients, sizeof(int)))
 		     == (int *)nullptr))
 		{
 		    if (clientIds != (char *)nullptr)

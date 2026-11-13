@@ -164,7 +164,7 @@ _DtWsmIsBackdropWindow(
     if ((status == Success) && 
 	(numWorkspaces > 0) &&
 	(pWsInfo = (DtWsmWorkspaceInfo *) 
-	    malloc (numWorkspaces * sizeof(DtWsmWorkspaceInfo))))
+	    calloc(numWorkspaces, sizeof(DtWsmWorkspaceInfo))))
     {
 	for (ix=0;
 		(!rval) && (ix < numWorkspaces) && (status == Success); 

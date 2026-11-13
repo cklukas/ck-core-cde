@@ -800,10 +800,8 @@ wspCreateWorkspaceList(
     /*
      * Create the array of strings that will go into the list.
      */
-    if (((pPres->ItemStrings = (XmStringTable) XtMalloc 
-		(pSD->numWorkspaces * sizeof(XmString *))) == nullptr) ||
-	((pPres->ItemSelected = (Boolean *) XtMalloc 
-		(pSD->numWorkspaces * sizeof(Boolean))) == nullptr))
+    if (((pPres->ItemStrings = (XmStringTable) XtCalloc(pSD->numWorkspaces, sizeof(XmString *))) == nullptr) ||
+	((pPres->ItemSelected = (Boolean *) XtCalloc(pSD->numWorkspaces, sizeof(Boolean))) == nullptr))
     {
 	Warning (((char *)GETMESSAGE(52, 5, "Insufficient memory to create Occupy Workspace dialog.")));
 	return (nullptr);
@@ -948,7 +946,7 @@ wspUpdateWorkspaceList(
      */
     XmListDeselectAllItems (pPres->workspaceListW);
     pxmsSelected = (XmString *) 
-      XtMalloc (pPres->pCDforClient->pSD->numWorkspaces * sizeof (XmString));
+      XtCalloc(pPres->pCDforClient->pSD->numWorkspaces, sizeof (XmString));
     numSelected = 0;
     for (wsnum = 0; wsnum < pPres->pCDforClient->pSD->numWorkspaces; wsnum++)
     {
@@ -1520,7 +1518,7 @@ wspAllWsCB(
 	if (xmTbcs->set)
 	{
 	    pxmsSelected = (XmString *)
-		XtMalloc (pSD->numWorkspaces * sizeof (XmString));
+		XtCalloc(pSD->numWorkspaces, sizeof (XmString));
 
 	    for (wsnum = 0; wsnum < pSD->numWorkspaces; wsnum++)
 	    {

@@ -185,7 +185,7 @@ int *LockKshFileDescriptors(void)
    int i;
    int fd, newfd;
 
-   fdList = (int *)malloc(sizeof(int) * 10);
+   fdList = (int *)calloc(10, sizeof(int));
    for (i = 0; i < 10; i++)
       fdList[i] = -1;
 

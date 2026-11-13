@@ -194,7 +194,7 @@ dndTextConvertInit(
 	DtDndContext *	dragData = dtDragInfo->dragData;
 
 	dragData->data.strings = (XmString *)
-		XtMalloc(dragData->numItems * sizeof(XmString));
+		XtCalloc(dragData->numItems, sizeof(XmString));
 }
 
 /*
@@ -378,7 +378,7 @@ dndTextTransfer(
 	 * Convert the text list into a XmString list
 	 */
 
-	stringList = (XmString *)XtMalloc(textCount * sizeof(XmString));
+	stringList = (XmString *)XtCalloc(textCount, sizeof(XmString));
 
 	for (ii = 0; ii < textCount; ii++) {
 		stringList[ii] = XmStringCreateLocalized(text[ii]);

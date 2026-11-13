@@ -433,8 +433,7 @@ serverRequestProc(
 		    if (i2 < numFields) {
 			/* DKS: somewhere we will need to free this... */
 			commandToExecute = (char **)
-				XtMalloc((numFields - i2 + 1) *
-				sizeof(char *));
+				XtCalloc((numFields - i2 + 1), sizeof(char *));
 			for (i1 = 0; i2 < numFields; i1++, i2++) {
 			    commandToExecute[i1] = messageFields[i2];
 			}

@@ -300,7 +300,7 @@ split_into_words(char *src, int *argcp)
 
     *argcp = 0;
 #define WORDSTOALLOC 4			/* most lines are short */
-    argv = (char **) malloc (WORDSTOALLOC * sizeof (char *));
+    argv = (char **) calloc(WORDSTOALLOC, sizeof (char *));
     if (!argv) return nullptr;
     cur = 0;
     total = WORDSTOALLOC;
@@ -318,7 +318,7 @@ split_into_words(char *src, int *argcp)
 	*src = '\0';
 	if (cur == total) {
 	    total += WORDSTOALLOC;
-	    argv = (char **) realloc (argv, total * sizeof (char *));
+	    argv = (char **) reallocarray(argv, total, sizeof (char *));
 	    if (!argv) return nullptr;
 	}
 	argv[cur++] = jword;

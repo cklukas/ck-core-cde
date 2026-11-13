@@ -278,7 +278,7 @@ main(int argc, char *argv[])
         exit(1);
       }
 
-      Win = (perwindow *)malloc(nitems * sizeof(perwindow));
+      Win = (perwindow *)calloc(nitems, sizeof(perwindow));
       windows = nitems;
       for (window = 0; window < windows; window++)
       {

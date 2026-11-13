@@ -1518,7 +1518,7 @@ _DtWmParseExpandEnvironmentVariables (
 		    {
 			lenReturn = lenOriginal + 1;
 			pchReturn = (unsigned char *) 
-			    XtMalloc (lenReturn * sizeof (unsigned char));
+			    XtCalloc(lenReturn, sizeof (unsigned char));
 			pchReturn[0] = '\0';
 		    }
 		    chSave = *pch;
@@ -1547,7 +1547,7 @@ _DtWmParseExpandEnvironmentVariables (
 		    {
 			lenReturn = lenOriginal + 1;
 			pchReturn = (unsigned char *) 
-			    XtMalloc (lenReturn * sizeof (unsigned char));
+			    XtCalloc(lenReturn, sizeof (unsigned char));
 			pchReturn[0] = '\0';
 			lenSave = 0;
 		    }
@@ -1626,7 +1626,7 @@ _DtWmParseExpandEnvironmentVariables (
 			    lenReturn = lenOriginal + 1 - lenEnvVar +
 						lenEnvValue;
 			    pchReturn = (unsigned char *) 
-				XtMalloc (lenReturn * sizeof (unsigned char));
+				XtCalloc(lenReturn, sizeof (unsigned char));
 			    pchReturn[0] = '\0';
 			}
 			else

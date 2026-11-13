@@ -203,11 +203,11 @@ CnvGPFtoBDF(struct ptobhead *head)
 		head->zoomf = 0;
 	}
 
-	if ( ( head->code = (int *)malloc( sizeof(int) * head->num_chars ) ) == nullptr ) {
+	if ( ( head->code = (int *)calloc(head->num_chars, sizeof(int)) ) == nullptr ) {
 		return	FATAL_ERROR;
 	}
 
-	if ( ( head->ptn = (char **)malloc( sizeof( char * ) * head->num_chars ) ) == nullptr ) {
+	if ( ( head->ptn = (char **)calloc(head->num_chars, sizeof( char * )) ) == nullptr ) {
 		return	FATAL_ERROR;
 	}
 

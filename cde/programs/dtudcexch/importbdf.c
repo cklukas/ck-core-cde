@@ -491,11 +491,11 @@ int		bdf_codenum
 
 	nchar = r_gpf->num_chars + bdf_codenum ;
 
-	if ( ( r_gpf->code = (int *)malloc( sizeof(int) * nchar ) ) == nullptr ) {
+	if ( ( r_gpf->code = (int *)calloc(nchar, sizeof(int)) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
-	if ( ( r_gpf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == nullptr ) {
+	if ( ( r_gpf->ptn = (char **)calloc(nchar, sizeof(char *)) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 

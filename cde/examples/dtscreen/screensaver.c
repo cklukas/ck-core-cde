@@ -83,7 +83,7 @@ int colorRotate = 0;		/* color rotation counter  */
     /******************************************************/
     /** allocate an array to hold per window information **/
     /******************************************************/
-    if ( (perWindow = (WinDataStruct *)malloc(nWindows * sizeof(WinDataStruct)))
+    if ( (perWindow = (WinDataStruct *)calloc(nWindows, sizeof(WinDataStruct)))
 	== nullptr) {
 	fprintf(stderr, "Out of memory.\n");
 	XCloseDisplay(dpy);

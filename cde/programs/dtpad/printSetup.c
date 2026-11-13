@@ -1019,8 +1019,8 @@ _psCreatePrintSetupDialog(Widget parent, Editor *pPad)
      *  Create GUI for the Header/Footer options
      */
     nitems = PS_ARRAY_SIZE(_psHdrFtrValues);
-    strings = (char **) XtMalloc( nitems * sizeof(char*) );
-    data = (void **) XtMalloc( nitems * sizeof(void*) );
+    strings = (char **) XtCalloc(nitems, sizeof(char*));
+    data = (void **) XtCalloc(nitems, sizeof(void*));
     for (i=0; i<nitems; i++)
     {
         data[i] = (void*) _psHdrFtrValues[i].which;

@@ -4109,7 +4109,7 @@ save_state(Widget widget, XtPointer client_data, XtPointer call_data)
    else
    {
      XtFree( (char *)full_path);
-     full_path = (char *) XtMalloc (sizeof (char) * PATH_MAX);
+     full_path = (char *) XtCalloc(PATH_MAX, sizeof (char));
      sprintf( full_path, "%s/%s", dt_path, DTCALC_CLASS_NAME);
      sessionFileName = full_path;
    }
@@ -4130,7 +4130,7 @@ save_state(Widget widget, XtPointer client_data, XtPointer call_data)
    /*  Generate the restart command and add it as the property value */
 
    restart_argc = start_argc + 3;
-   restart_argv = (char **) XtMalloc(restart_argc * sizeof(char *));
+   restart_argv = (char **) XtCalloc(restart_argc, sizeof(char *));
 
    if (restart_argv == nullptr)
        return;

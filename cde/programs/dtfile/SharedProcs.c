@@ -420,7 +420,7 @@ _DtFollowLink (
    /* Used to check for symbolic link loops */
    history_count = 0;
    history_size = 100;
-   history = (char **)XtMalloc(sizeof(char *) * history_size);
+   history = (char **)XtCalloc(history_size, sizeof(char *));
 
    strcpy(file, path);
 

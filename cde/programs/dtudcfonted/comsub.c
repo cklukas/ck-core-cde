@@ -917,7 +917,7 @@ bitDrawRoll(char *ptn, int x, int y, int width, int height)
 	(bitInfo.width < width +x) || (bitInfo.height < height +y) )
 	return( -1 );
 
-    point = (char *)malloc((width * height) * sizeof(int));
+    point = (char *)calloc((width * height), sizeof(int));
 
     for(count=0,yy=0; yy < height; yy++) {
 	for(xx=0; xx < width; xx++ ) {
@@ -1296,7 +1296,7 @@ copySNF(int start, int end, char ***ptn, int *num, char *err)
 	return( -1 );
     }
 
-    _ptn = (char **)malloc(sizeof(char *) * (end - start + 1));
+    _ptn = (char **)calloc((end - start + 1), sizeof(char *));
     if (! CodePoint) {
         for (i = start, count = 0, p = _ptn; i <= end; i++) {
 	    if (i & 0x80) {

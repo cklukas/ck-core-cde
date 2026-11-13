@@ -754,7 +754,7 @@ build_screenDialog(
 	old_selsaverCount = savers.selsaverCount;
 
 	if (savers.selsaverCount) {
-	  savers.selPositions = (int *) XtMalloc(sizeof(int) * savers.selsaverCount);
+	  savers.selPositions = (int *) XtCalloc(savers.selsaverCount, sizeof(int));
 	  for (n=0; n<savers.selsaverCount; n++) {
 	    /* determine if this selected saver matches one in valid saver list */
 	    for (m=0; (m < savers.saverCount) && 
@@ -803,7 +803,7 @@ build_screenDialog(
 	  savers.current_position = 1;
 	}
 	/* save the selected positions for later use */
-	savers.origSelPositions = (int *) XtMalloc(sizeof(int) * savers.selsaverCount);
+	savers.origSelPositions = (int *) XtCalloc(savers.selsaverCount, sizeof(int));
 	for (i=0; i<savers.selsaverCount; i++)
 	    savers.origSelPositions[i] = savers.selPositions[i];
 	savers.orig_selsaverCount = savers.selsaverCount;
@@ -2465,8 +2465,7 @@ ButtonCB(
 
       if (savers.saverCount)
 	{
-	  savers.selsaverActionNames = (char **) XtMalloc(sizeof(char *) * 
-							  savers.selsaverCount); 
+	  savers.selsaverActionNames = (char **) XtCalloc(savers.selsaverCount, sizeof(char *)); 
 	  
 	  for (i=0; i<savers.selsaverCount; i++)
 	    {
@@ -2489,7 +2488,7 @@ ButtonCB(
       savers.orig_selsaverCount = savers.selsaverCount;
       if (savers.origSelPositions != nullptr)
 	XtFree((char *) savers.origSelPositions);      
-      savers.origSelPositions = (int *) XtMalloc(sizeof(int) * savers.orig_selsaverCount);
+      savers.origSelPositions = (int *) XtCalloc(savers.orig_selsaverCount, sizeof(int));
       for (i=0; i<savers.orig_selsaverCount; i++)
 	savers.origSelPositions[i] = savers.selPositions[i];
 
@@ -2587,7 +2586,7 @@ ButtonCB(
       */
 
       XtFree((char *) savers.selPositions);
-      savers.selPositions = (int *) XtMalloc(sizeof(int) * savers.orig_selsaverCount);
+      savers.selPositions = (int *) XtCalloc(savers.orig_selsaverCount, sizeof(int));
 
       for (i=0; i<savers.orig_selsaverCount; i++)
         savers.selPositions[i] = savers.origSelPositions[i];
@@ -2671,8 +2670,7 @@ no_svr_ext_ButtonCB(
 
       if (savers.saverCount)
 	{
-	  savers.selsaverActionNames = (char **) XtMalloc(sizeof(char *) * 
-							  savers.selsaverCount); 
+	  savers.selsaverActionNames = (char **) XtCalloc(savers.selsaverCount, sizeof(char *)); 
 	  
 	  for (i=0; i<savers.selsaverCount; i++)
 	    {
@@ -2695,7 +2693,7 @@ no_svr_ext_ButtonCB(
       savers.orig_selsaverCount = savers.selsaverCount;
       if (savers.origSelPositions != nullptr)
 	XtFree((char *) savers.origSelPositions);      
-      savers.origSelPositions = (int *) XtMalloc(sizeof(int) * savers.orig_selsaverCount);
+      savers.origSelPositions = (int *) XtCalloc(savers.orig_selsaverCount, sizeof(int));
       for (i=0; i<savers.orig_selsaverCount; i++)
 	savers.origSelPositions[i] = savers.selPositions[i];
 
@@ -2825,7 +2823,7 @@ no_svr_ext_ButtonCB(
       XtFree((char *) savers.selPositions);
       if (savers.orig_selsaverCount > 0) {
 	savers.selPositions =
-	  (int *) XtMalloc(sizeof(int) * savers.orig_selsaverCount);
+	  (int *) XtCalloc(savers.orig_selsaverCount, sizeof(int));
 
 	for (i=0; i<savers.orig_selsaverCount; i++)
 	  savers.selPositions[i] = savers.origSelPositions[i];
@@ -2941,7 +2939,7 @@ MakeListStrings( SaverSub * list )
     int   i;
     XmString      *xmList;
     
-    xmList = (XmString *) XtMalloc(savers.saverCount * sizeof(XmString));
+    xmList = (XmString *) XtCalloc(savers.saverCount, sizeof(XmString));
 
     for (i = 0; i < savers.saverCount; i++)
     {
@@ -3011,7 +3009,7 @@ ListCB(
   if (savers.selPositions != nullptr)
     XtFree ((char *) savers.selPositions);
   
-  savers.selPositions = (int *) XtMalloc(sizeof(int) * cb->selected_item_count);
+  savers.selPositions = (int *) XtCalloc(cb->selected_item_count, sizeof(int));
   for (i=0; i< cb->selected_item_count; i++)
     {
       savers.selPositions[i] = cb->selected_item_positions[i];

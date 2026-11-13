@@ -637,7 +637,7 @@ _DtPerfChkpntMsgSend("End   Front panel database read");
    /*  This elimination occurs top down because boxes have to be    */
    /*  removed before controls can be removed...                    */
    
-   name_list = (char **) XtMalloc (sizeof (char **) * 2);
+   name_list = (char **) XtCalloc(2, sizeof (char **));
    name_list[0] = panel.element_values[PANEL_NAME].parsed_value;
    name_list[1] = nullptr;
    EliminateUnused (box_data, &box_count, name_list, BOX_CONTAINER_NAME,
@@ -711,7 +711,7 @@ _DtPerfChkpntMsgSend("End   Front panel database read");
 
    /*  Continue the elimination of unused records  */
 
-   name_list = (char **) XtMalloc (sizeof (char *) * 2);
+   name_list = (char **) XtCalloc(2, sizeof (char *));
    if (switch_count != 0)
       name_list[0] = switch1->element_values[SWITCH_NAME].parsed_value;
    else
@@ -858,7 +858,7 @@ _DtPerfChkpntMsgSend("End   Front panel database read");
    /*  Build hierarchical data structure from record sets, top-down.  */
    /*  Fully parse each record as the structure is built.             */
 
-   panel.box_data = (BoxData **) XtMalloc (sizeof (BoxData *) * box_count);
+   panel.box_data = (BoxData **) XtCalloc(box_count, sizeof (BoxData *));
    panel.box_data_count = box_count;
    
    for (i = 0; i < box_count; i++)
@@ -1133,7 +1133,7 @@ AnimationParseCB (DtDtsDbField  * fields,
    panel.animation_data[count].item_count = field_count;
 
    panel.animation_data[count].items = (AnimationItem *)
-			 XtMalloc(sizeof(AnimationItem) * field_count);
+			 XtCalloc(field_count, sizeof(AnimationItem));
 
    for (i = 0; i < field_count; i++)
    {
@@ -1188,8 +1188,7 @@ ControlSingleParseCB (DtDtsDbField  * fields,
 	return (True);
    }
 
-   control_element_values = (ElementValue *) XtMalloc (sizeof(ElementValue) *
-						       CONTROL_KEYWORD_COUNT);
+   control_element_values = (ElementValue *) XtCalloc(CONTROL_KEYWORD_COUNT, sizeof(ElementValue));
    control_element_value_found = True;
 
    ProcessRecord (fields, control_element_values);
@@ -2364,7 +2363,7 @@ AddControlActionList (ControlData * control_data)
    {
       if (control_data->element_values[CONTROL_PUSH_ACTION].string_value != nullptr)
       {
-         action_list = (char **) XtMalloc(sizeof(char *) * 2);
+         action_list = (char **) XtCalloc(2, sizeof(char *));
 
          action_list[0] = 
             control_data->element_values[CONTROL_PUSH_ACTION].string_value;
@@ -2376,8 +2375,7 @@ AddControlActionList (ControlData * control_data)
    }
    
    control_data->actions = (PanelActionData **)
-				  XtMalloc(sizeof(PanelActionData *) *
-					   (num_actions + 1));
+				  XtCalloc((num_actions + 1), sizeof(PanelActionData *));
 
    for (i = 0, j = 0; j < num_actions; i++, j++)
    {
@@ -3042,8 +3040,8 @@ InitParse (char          * file_name,
    sprintf(tmpDir, "%s:%s", hostName, tmpPath);
 
    dirPath = (DtDirPaths *) XtMalloc(sizeof(DtDirPaths));
-   dirPath->dirs = (char **) XtMalloc(sizeof(char *) * 2);
-   dirPath->paths = (char **) XtMalloc(sizeof(char *) * 2);
+   dirPath->dirs = (char **) XtCalloc(2, sizeof(char *));
+   dirPath->paths = (char **) XtCalloc(2, sizeof(char *));
 
    dirPath->dirs[0] = tmpDir;
    dirPath->dirs[1] = nullptr;

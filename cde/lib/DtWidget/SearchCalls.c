@@ -202,7 +202,7 @@ DtEditorInvokeSpellDialog(
 	     * malloc the buffer
 	     */
 	    maxLen = 50;
-	    line = (char *) XtMalloc (sizeof(char) * (maxLen + 1));
+	    line = (char *) XtCalloc((maxLen + 1), sizeof(char));
 	    len  = 0;
 
             /* 
@@ -249,9 +249,8 @@ DtEditorInvokeSpellDialog(
          char *buf;
 	 Widget dialog;
 
-         buf = XtMalloc((strlen(BAD_FILTER2) +
-                         strlen(M_spellFilter(pPriv)) + 1) *
-                         sizeof(char));
+         buf = XtCalloc((strlen(BAD_FILTER2) +
+                         strlen(M_spellFilter(pPriv)) + 1), sizeof(char));
 
          sprintf(buf, BAD_FILTER2, M_spellFilter(pPriv));
          msg1 = XmStringGenerate(BAD_FILTER,
@@ -1403,9 +1402,9 @@ static Boolean IsValidFilter(DtEditorWidget pPriv)
     pathtmp = XtNewString(pathstr);
     pathtok = _XStrtok(pathtmp, ":", strtok_buf);
     while (pathtok != nullptr) {
-        tmp = (char*)XtMalloc((strlen(pathtok)
+        tmp = (char*)XtCalloc((strlen(pathtok)
                                + strlen(M_spellFilter(pPriv))
-                               + 2) * sizeof(char));
+                               + 2), sizeof(char));
         strcpy(tmp, pathtok);
         strcat(tmp, "/");
         strcat(tmp, M_spellFilter(pPriv));

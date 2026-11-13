@@ -93,8 +93,7 @@ _DtCmdBuildPathList( void )
 	 i += (pend - pbeg) +1;
       }
 
-      cmd_Globals.path_list[n-1] = (char *) XtMalloc (((pend - pbeg) + 1) * 
-						       sizeof(char));
+      cmd_Globals.path_list[n-1] = (char *) XtCalloc(((pend - pbeg) + 1), sizeof(char));
       (void) strncpy (cmd_Globals.path_list[n-1], pbeg, (pend - pbeg));
       /* Strncpy does not put a '\0' at the EOS if s2 >= s1 */
       cmd_Globals.path_list[n-1][pend-pbeg] = '\0';

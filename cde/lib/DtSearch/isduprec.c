@@ -169,7 +169,7 @@ int             is_duprec (char *recid)
 	    duprec_hashsize);
 #endif
 
-	hashtab = malloc ((duprec_hashsize + 2L) * sizeof (HASHNODE *));
+	hashtab = calloc((duprec_hashsize + 2L), sizeof (HASHNODE *));
 	if (hashtab == nullptr)
 	    return OUT_OF_MEM;
 

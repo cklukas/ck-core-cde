@@ -225,7 +225,7 @@ __setupLangSubstitutions(void)
 	    if (ttLen > 0)
 	    {
 		/* free'd in __freeLangSubstitutions() */
-		territoryPart = (char *)XtMalloc((ttLen + 1) * sizeof(char));
+		territoryPart = (char *)XtCalloc((ttLen + 1), sizeof(char));
 		strncpy(territoryPart, ttPtr, ttLen);
 		territoryPart[ttLen] = '\0';
 	    }
@@ -243,7 +243,7 @@ __setupLangSubstitutions(void)
 	if (tlLen > 0)
 	{
 	    /* free'd in __freeLangSubstitutions() */
-	    languagePart = (char *)XtMalloc((tlLen + 1) * sizeof(char));
+	    languagePart = (char *)XtCalloc((tlLen + 1), sizeof(char));
 	    strncpy(languagePart, tlPtr, tlLen);
 	    languagePart[tlLen] = '\0';
 	}
@@ -643,8 +643,8 @@ _DtFindMatchingFiles(
       return(nullptr);
    
    files = (DtDirPaths *) XtMalloc((Cardinal)(sizeof(DtDirPaths)));
-   files->dirs = (char **) XtMalloc(sizeof(char *) * FILE_INCREMENT);
-   files->paths = (char **) XtMalloc(sizeof(char *) * FILE_INCREMENT);
+   files->dirs = (char **) XtCalloc(FILE_INCREMENT, sizeof(char *));
+   files->paths = (char **) XtCalloc(FILE_INCREMENT, sizeof(char *));
    max_files = FILE_INCREMENT;
    num_found = 0;
    nextIndex = 0;

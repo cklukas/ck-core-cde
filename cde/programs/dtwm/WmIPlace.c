@@ -274,7 +274,7 @@ void InitIconPlacement (WmWorkspaceData *pWS)
      */
 
     if ((pWS->IPData.placementRowY =
-	    (int *)XtMalloc ((pWS->IPData.placementRows+2) * sizeof (int)))
+	    (int *)XtCalloc((pWS->IPData.placementRows+2), sizeof (int)))
 	== nullptr)
     {
 	Warning (((char *)GETMESSAGE(34, 1, "Insufficient memory for icon placement")));
@@ -282,7 +282,7 @@ void InitIconPlacement (WmWorkspaceData *pWS)
 	return;
     }
     else if ((pWS->IPData.placementColX =
-		(int *)XtMalloc ((pWS->IPData.placementCols+2) * sizeof (int)))
+		(int *)XtCalloc((pWS->IPData.placementCols+2), sizeof (int)))
 	     == nullptr)
     {
 	XtFree ((char *)pWS->IPData.placementRowY);
@@ -324,7 +324,7 @@ void InitIconPlacement (WmWorkspaceData *pWS)
 	pWS->IPData.placementRows * pWS->IPData.placementCols;
 
     if ((pWS->IPData.placeList =
-	  (IconInfo *)XtMalloc (pWS->IPData.totalPlaces * sizeof (IconInfo)))
+	  (IconInfo *)XtCalloc(pWS->IPData.totalPlaces, sizeof (IconInfo)))
 	== nullptr)
     {
 	Warning (((char *)GETMESSAGE(34, 3, "Insufficient memory for icon placement")));

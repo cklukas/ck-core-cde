@@ -1049,8 +1049,7 @@ _DtActInvRecT *_DtActAllocInvRec(void)
      */
     if (first_time) {
 	_actInvRecArraySize = _START_INVREC_SIZE;
-	_DtActInvRecArray = (_DtActInvRecT **) XtMalloc(sizeof(_DtActInvRecT *)
-							* _actInvRecArraySize);
+	_DtActInvRecArray = (_DtActInvRecT **) XtCalloc(_actInvRecArraySize, sizeof(_DtActInvRecT *));
 
 	/*
 	 * A NULL indicates an available slot.

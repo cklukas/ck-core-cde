@@ -754,7 +754,7 @@ istrP_destroy_impl(
 /* put unused int_array location of the freelist */
         if(free_num == 0)
         {
-            freelist = (long *)malloc(ARRAYSIZE * sizeof(long));
+            freelist = (long *)calloc(ARRAYSIZE, sizeof(long));
             if (freelist == nullptr)
             {
                 fprintf(stderr, "%s",
@@ -773,8 +773,7 @@ istrP_destroy_impl(
         else  /* need more freelist space */
         { 
             free_num++;
-            freelist = (long *)realloc(freelist,
-                (ARRAYSIZE * free_num) * sizeof(long));
+            freelist = (long *)reallocarray(freelist, (ARRAYSIZE * free_num), sizeof(long));
 	    assert(freelist != nullptr);
             if (freelist == nullptr)
             {
@@ -967,8 +966,7 @@ insert_array(
     else  /* need more array space */
     { 
         array_num++;
-        int_array_set((STRN *)realloc(int_array,
-            (ARRAYSIZE * array_num) * sizeof(STRN)));
+        int_array_set((STRN *)reallocarray(int_array, (ARRAYSIZE * array_num), sizeof(STRN)));
 	assert(int_array != nullptr);
         if (int_array == nullptr)
         {

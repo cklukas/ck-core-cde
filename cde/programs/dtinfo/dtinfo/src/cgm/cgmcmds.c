@@ -877,7 +877,7 @@ unsigned int getXPoints(unsigned char *dat_ptr,
   if (noPts < 1) return 0;
   if (noPts > mySize) { /* need more points memory */
     if (myPtr) free(myPtr); /* eliminate old memory */
-    myPtr = (XPoint *) malloc(sizeof(XPoint) * noPts);
+    myPtr = (XPoint *) calloc(noPts, sizeof(XPoint));
     mySize = noPts;
   }
   /* fill it out */
@@ -964,7 +964,7 @@ unsigned int getXSegments(unsigned char *dat_ptr,
   } else return 0;
   if (noSegments < 1) return 0;
   /* make memory for our segments */
-  myPtr = (XSegment *) malloc(sizeof(XSegment) * noSegments);
+  myPtr = (XSegment *) calloc(noSegments, sizeof(XSegment));
   /* and fill it out */
   for (i=0; i<noSegments; ++i) {
     myPtr[i].x1 = getX(&dat_ptr, cgm_s);
@@ -1198,8 +1198,8 @@ static int polyset(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_typ
   default: return 0; /* shouldn't happen */
   }
   /* now make the memory */
-  myPtr = (XPoint *) malloc(sizeof(XPoint) * noPts);
-  vPtr = (int *) malloc(sizeof(int) * noPts);
+  myPtr = (XPoint *) calloc(noPts, sizeof(XPoint));
+  vPtr = (int *) calloc(noPts, sizeof(int));
   /* check we got it */
   if ((noPts < 2) || !myPtr || !vPtr) return 0;
   /* and fill it out */
@@ -1843,7 +1843,7 @@ static int getEllipseXPoints(int x1, int y1, int x2, int y2,
 
   dtheta = delta / nSteps;
   /* make the points memory, always add two so it can be closed */
-  myPtr = (XPoint *) malloc(sizeof(XPoint) * (nSteps + 2));
+  myPtr = (XPoint *) calloc((nSteps + 2), sizeof(XPoint));
   if (myPtr == nullptr)
     return 0;
   /* and fill it out */

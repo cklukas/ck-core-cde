@@ -145,8 +145,8 @@ int myscandir(char *pszDirName, struct dirent ***NameList,
      /* INTERNATIONALIZE */
      msgPtr = "Could not open the following directory:";
      fmtPtr = "%s\n   %s";
-     errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-			strlen(pszDirName) + 1) * sizeof(char));
+     errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+			strlen(pszDirName) + 1), sizeof(char));
      sprintf(errPtr, fmtPtr, msgPtr, pszDirName);
      display_error_message(IconSelector, errPtr);
      XtFree(errPtr);
@@ -158,7 +158,7 @@ int myscandir(char *pszDirName, struct dirent ***NameList,
   *NameList = (struct dirent **)malloc(sizeof(void *) * 1024);
 #endif
 
-  adirent = (struct dirent **)malloc(sizeof(void *) * sizeArray);
+  adirent = (struct dirent **)calloc(sizeArray, sizeof(void *));
   for (dp = readdir(dirptr); dp != nullptr; dp = readdir(dirptr)) {
 
 #if 0
@@ -174,7 +174,7 @@ int myscandir(char *pszDirName, struct dirent ***NameList,
         adirent[count] = dptmp;
         count++;
         if (count == (sizeArray - 1)) {
-           adirent = (struct dirent **)realloc(adirent, (sizeof(void *) * (sizeArray + AINCREMENT)));
+           adirent = (struct dirent **)reallocarray(adirent, (sizeArray + AINCREMENT), sizeof(void *));
            if (adirent) {
               sizeArray += AINCREMENT;
            }
@@ -246,8 +246,8 @@ struct dirent **build_dirent_list (char *filter, int *filecount)
      /* INTERNATIONALIZE */
      msgPtr = "Could not open the following directory:";
      fmtPtr = "%s\n   %s";
-     errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-			strlen(dirname) + 1) * sizeof(char));
+     errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+			strlen(dirname) + 1), sizeof(char));
      sprintf(errPtr, fmtPtr, msgPtr, dirname);
      display_error_message(IconSelector, errPtr);
      XtFree(errPtr);
@@ -740,9 +740,7 @@ void  update_container_contents (char *filter)
   if (count > icon_count) {
      old_count = icon_count;
      icon_count = count;
-     icons_in_container = (DtIconGadget **)realloc
-                                      (icons_in_container,
-                                      (icon_count+1) * sizeof(DtIconGadget *));
+     icons_in_container = (DtIconGadget **)reallocarray(icons_in_container, (icon_count+1), sizeof(DtIconGadget *));
      /*memset(&(icons_in_container[icon_count]), 0, sizeof(DtIconGadget *));*/
      for (lcv = old_count; lcv < icon_count; lcv++) {
         icons_in_container[lcv] =

@@ -428,8 +428,7 @@ int  _DtLcxOpenAllDbs(
       if (end < homePath + MAXPATHLEN - strlen(DtLCX_USER_PATH) - 1)
           strcat(homePath,DtLCX_USER_PATH);
 
-      dbPaths = malloc(sizeof(char) * 
-                (strlen(homePath)+strlen(DtLCX_INSTALL_AND_CONFIG_PATHS)+5));
+      dbPaths = calloc((strlen(homePath)+strlen(DtLCX_INSTALL_AND_CONFIG_PATHS)+5), sizeof(char));
       if (dbPaths) 
          sprintf(dbPaths,"%s:%s",DtLCX_INSTALL_AND_CONFIG_PATHS,homePath);
    }

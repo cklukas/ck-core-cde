@@ -217,8 +217,7 @@ _DtTermBufferCreateBuffer
     
     if (newTB)
     {
-        VALUE_LIST(newTB) = (enhValues) malloc(NUM_ENHANCEMENT_FIELDS *
-					       sizeof(enhValue));
+        VALUE_LIST(newTB) = (enhValues) calloc(NUM_ENHANCEMENT_FIELDS, sizeof(enhValue));
 
 	if (!VALUE_LIST(newTB))
 	{

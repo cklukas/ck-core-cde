@@ -364,7 +364,7 @@ textCreateDragSource(
 		;
         fruitCount = ii;
 
-        fruits = (XmString *) XtMalloc(sizeof(XmString) * fruitCount);
+        fruits = (XmString *) XtCalloc(fruitCount, sizeof(XmString));
 
         for (ii = 0; ii < fruitCount; ii++) {
                 fruits[ii] = XmStringCreate(todaysFruit[ii],

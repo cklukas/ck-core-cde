@@ -174,7 +174,7 @@ _DtPrintCreateHdrFtrFrame(
 
     info = (DtpoHdrFtrFrame *) XtMalloc( sizeof(DtpoHdrFtrFrame) );
     info->nspecs = nspecs;
-    info->specs = (DtpoHdrFtrSpec *) XtMalloc(nspecs*sizeof(DtpoHdrFtrSpec));
+    info->specs = (DtpoHdrFtrSpec *) XtCalloc(nspecs, sizeof(DtpoHdrFtrSpec));
     for (i=0; i<nspecs; i++)
     {
         info->specs[i].string = spec_strings[i];

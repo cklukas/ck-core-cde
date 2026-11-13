@@ -925,12 +925,9 @@ _DtCvSaveInfo (
       {
 	canvas->txt_max += GROW_SIZE;
 	if (canvas->txt_lst)
-	    canvas->txt_lst = (_DtCvDspLine *) realloc (
-				(void *) canvas->txt_lst,
-				(sizeof(_DtCvDspLine) * canvas->txt_max));
+	    canvas->txt_lst = (_DtCvDspLine *) reallocarray((void *) canvas->txt_lst, canvas->txt_max, sizeof(_DtCvDspLine));
 	else
-	    canvas->txt_lst = (_DtCvDspLine *) malloc (
-				(sizeof(_DtCvDspLine) * canvas->txt_max));
+	    canvas->txt_lst = (_DtCvDspLine *) calloc(canvas->txt_max, sizeof(_DtCvDspLine));
 /*
  * NOTE....should this routine return a value?
  * If (re)alloc error occurs, this simply ignores the problem.
@@ -1815,11 +1812,10 @@ _DtCvGetNextSearchEntry(_DtCanvasStruct* canvas)
 
 	if (canvas->searchs)
 	    canvas->searchs = (_DtCvSearchData *)
-			realloc((void*)canvas->searchs,
-				canvas->search_max * sizeof(_DtCvSearchData));
+			reallocarray((void*)canvas->searchs, canvas->search_max, sizeof(_DtCvSearchData));
 	else
 	    canvas->searchs = (_DtCvSearchData *)
-			malloc(canvas->search_max * sizeof(_DtCvSearchData));
+			calloc(canvas->search_max, sizeof(_DtCvSearchData));
     }
 
     canvas->searchs[canvas->search_cnt].idx = -1;
@@ -2353,11 +2349,9 @@ _DtCvAddToMarkList (
 	canvas->mark_max += GROW_SIZE;
 
         if (nullptr == canvas->marks)
-	    canvas->marks = (_DtCvMarkData *) malloc(
-				sizeof(_DtCvMarkData) * canvas->mark_max);
+	    canvas->marks = (_DtCvMarkData *) calloc(canvas->mark_max, sizeof(_DtCvMarkData));
         else
-	    canvas->marks = (_DtCvMarkData *) realloc((void *) canvas->marks,
-				sizeof(_DtCvMarkData) * canvas->mark_max);
+	    canvas->marks = (_DtCvMarkData *) reallocarray((void *) canvas->marks, canvas->mark_max, sizeof(_DtCvMarkData));
 
 	/*
 	 * memory loss - bail

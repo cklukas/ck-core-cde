@@ -100,7 +100,7 @@ inithop(perwindow *pwin)
     hp->i = hp->j = 0.0;
 
     if (!pointBuffer)
-	pointBuffer = (XPoint *) malloc(batchcount * sizeof(XPoint));
+	pointBuffer = (XPoint *) calloc(batchcount, sizeof(XPoint));
 
     XSetForeground(dsp, pwin->gc, BlackPixelOfScreen(pwin->perscreen->screen));
     XFillRectangle(dsp, pwin->w, pwin->gc, 0, 0,

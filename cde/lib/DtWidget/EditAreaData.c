@@ -1418,7 +1418,7 @@ CopySubstring(
 	int *mb_str_loc, total, z, siz;
 	char *bptr;
 
-	mb_str_loc = (int *) XtMalloc(sizeof(int) * ((endPos-startPos)+1));
+	mb_str_loc = (int *) XtCalloc(((endPos-startPos)+1), sizeof(int));
 	if (nullptr == mb_str_loc)
 	{
 	    /* Should figure out some way to pass back an error code. */

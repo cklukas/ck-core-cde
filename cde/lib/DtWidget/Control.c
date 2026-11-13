@@ -2155,7 +2155,7 @@ ReplaceJPDate(char *date, char *jpstr, int wday)
     size_t k;
     _Xstrtokparams strtok_buf;
 
-    s = (char *)malloc((strlen(jpstr) + 1) * sizeof(char));
+    s = (char *)calloc((strlen(jpstr) + 1), sizeof(char));
     strcpy(s, jpstr);
     for(p = _XStrtok(s, ",", strtok_buf), i = 0; 
 	p != nullptr && i < wday ;

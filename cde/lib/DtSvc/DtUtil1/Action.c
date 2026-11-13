@@ -1985,7 +1985,7 @@ LinkToTypeQuark(
    /* Used to check for symbolic link loops */
    history_count = 0;
    history_size = 100;
-   history = (char **)XtMalloc(sizeof(char *) * history_size);
+   history = (char **)XtCalloc(history_size, sizeof(char *));
 
    path = _DtActMapFileName(host, dir, file, nullptr);
    if (path == nullptr)
@@ -2687,8 +2687,7 @@ _DtCloneRequest (
    newRequest->actionName = XtNewString(request->actionName);
 
    if (request->numObjects > 0) {
-     newRequest->objects = (ObjectData *)XtMalloc(sizeof(ObjectData) *
-						  request->numObjects);
+     newRequest->objects = (ObjectData *)XtCalloc(request->numObjects, sizeof(ObjectData));
 
      for (i = 0; i < request->numObjects; i++)
      {
@@ -2737,24 +2736,21 @@ _DtCloneRequest (
 
    newRequest->numPromptInputs = request->numPromptInputs;
    if (request->numPromptInputs > 0) {
-     newRequest->promptInputs = (char **)XtMalloc(sizeof(char *) * 
-						  request->numPromptInputs);
+     newRequest->promptInputs = (char **)XtCalloc(request->numPromptInputs, sizeof(char *));
      for (i = 0; i < request->numPromptInputs; i++)
        newRequest->promptInputs[i] = XtNewString(request->promptInputs[i]);
    }
 
    newRequest->numHostNames = request->numHostNames;
    if (request->numHostNames > 0) {
-     newRequest->hostNames = (char **)XtMalloc(sizeof(char *) * 
-					       request->numHostNames);
+     newRequest->hostNames = (char **)XtCalloc(request->numHostNames, sizeof(char *));
      for (i = 0; i < request->numHostNames; i++)
        newRequest->hostNames[i] = XtNewString(request->hostNames[i]);
    }
 
    newRequest->numDirNames = request->numDirNames;
    if (request->numDirNames > 0) {
-     newRequest->dirNames = (char **)XtMalloc(sizeof(char *) * 
-					      request->numDirNames);
+     newRequest->dirNames = (char **)XtCalloc(request->numDirNames, sizeof(char *));
      for (i = 0; i < request->numDirNames; i++)
        newRequest->dirNames[i] = XtNewString(request->dirNames[i]);
    }
@@ -2862,8 +2858,7 @@ CloneActionDBEntry(
 
    newAction->type_count = action->type_count;
    if (action->type_count > 0) {
-     newAction->arg_types = (DtShmBoson *)XtMalloc(sizeof(DtShmBoson) *
-						   newAction->type_count);
+     newAction->arg_types = (DtShmBoson *)XtCalloc(newAction->type_count, sizeof(DtShmBoson));
      for (i = 0; i < newAction->type_count; i++)
        newAction->arg_types[i] = action->arg_types[i];
    }
@@ -2886,8 +2881,7 @@ CloneActionDBEntry(
       CloneParsedMessage(&(oldCmd->execHosts), &(newCmd->execHosts));
       newCmd->execHostCount = oldCmd->execHostCount;
       if (oldCmd->execHostCount > 0) {
-	newCmd->execHostArray = (char **)XtMalloc(sizeof(char *) *
-						  newCmd->execHostCount);
+	newCmd->execHostArray = (char **)XtCalloc(newCmd->execHostCount, sizeof(char *));
 	for (i = 0; i < newCmd->execHostCount; i++)
 	  newCmd->execHostArray[i] = XtNewString(oldCmd->execHostArray[i]);
       }
@@ -2912,7 +2906,7 @@ CloneActionDBEntry(
       newMsg->mode_count = oldMsg->mode_count;
       if (oldMsg->mode_count > 0) {
 	newMsg->tt_argn_mode =
-	  (int *)XtMalloc(sizeof(int) * newMsg->mode_count);
+	  (int *)XtCalloc(newMsg->mode_count, sizeof(int));
 	for (i = 0; i < newMsg->mode_count; i++)
 	  newMsg->tt_argn_mode[i] = oldMsg->tt_argn_mode[i];
       }
@@ -2930,8 +2924,7 @@ CloneActionDBEntry(
 
       newMsg->rep_type_count = oldMsg->rep_type_count;
       if (oldMsg->rep_type_count > 0) {
-	newMsg->tt_argn_rep_type = (int *)XtMalloc(sizeof(int) * 
-						   newMsg->rep_type_count);
+	newMsg->tt_argn_rep_type = (int *)XtCalloc(newMsg->rep_type_count, sizeof(int));
 	for (i = 0; i < newMsg->rep_type_count; i++)
 	  newMsg->tt_argn_rep_type[i] = oldMsg->tt_argn_rep_type[i];
       }
@@ -3099,7 +3092,7 @@ CloneParsedMessageArray(
    if (count == 0)
       return(nullptr);
 
-   newArray = (parsedMsg *)XtMalloc(sizeof(parsedMsg) * count);
+   newArray = (parsedMsg *)XtCalloc(count, sizeof(parsedMsg));
 
    for (i = 0; i < count; i++)
       CloneParsedMessage(pmsgArray + i, newArray + i);

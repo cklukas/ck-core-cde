@@ -330,8 +330,7 @@ char *_DtEnv_tt_file_netfile(
 	     * Can grow fragList[]
 	     */
 	    fragListAvail += CACHE_FILEFRAG_SIZE_BUMP;
-	    fragList = (cachedFileFrag *) realloc( (char *) fragList,
-					sizeof(cachedFileFrag) * fragListAvail);
+	    fragList = (cachedFileFrag *) reallocarray((char *) fragList, fragListAvail, sizeof(cachedFileFrag));
 	    /*
 	     * Zero out new memory.
 	     */
@@ -555,8 +554,7 @@ char *_DtEnv_tt_host_netfile_file(
 	     * Can grow fragList[]
 	     */
 	    fragListAvail += CACHE_FILEFRAG_SIZE_BUMP;
-	    fragList = (cachedNetfileFrag *) realloc( (char *) fragList,
-					sizeof(cachedNetfileFrag) * fragListAvail);
+	    fragList = (cachedNetfileFrag *) reallocarray((char *) fragList, fragListAvail, sizeof(cachedNetfileFrag));
 	    /*
 	     * Zero out new memory.
 	     */
@@ -698,7 +696,7 @@ static char **_DtEnvGetMapList(
      * Create a block of string pointers - remalloc() as needed.
      */
     availListSize = MALLOC_BUMP_SIZE;
-    mapList = (char **) malloc( sizeof(char *) * (availListSize) );
+    mapList = (char **) calloc((availListSize), sizeof(char *));
 
     /*
      * Break up the colon separated string into an indexable array.
@@ -722,8 +720,7 @@ static char **_DtEnvGetMapList(
 		(*mapListCount)++;
 		if (*mapListCount > availListSize) {
 		    availListSize += MALLOC_BUMP_SIZE;
-		    mapList = (char **) realloc( (char *) mapList,
-					     sizeof(char *) * (availListSize) );
+		    mapList = (char **) reallocarray((char *) mapList, (availListSize), sizeof(char *));
 	        }
 		mapList[*mapListCount-1] = strdup(tmpPtr2);
 	    }
@@ -936,7 +933,7 @@ static void _DtEnvMapIt(
      */
     availPathListSize = MALLOC_BUMP_SIZE;
     pathListCount = 0;
-    pathList = (char **) malloc( sizeof(char *) * availPathListSize );
+    pathList = (char **) calloc(availPathListSize, sizeof(char *));
 
     /*
      * Break up path list into an array of path elements.
@@ -953,8 +950,7 @@ static void _DtEnvMapIt(
 	    pathListCount++;
 	    if (pathListCount > availPathListSize) {
 		availPathListSize += MALLOC_BUMP_SIZE;
-		pathList = (char **) realloc( (char *) pathList,
-					sizeof(char *) * availPathListSize );
+		pathList = (char **) reallocarray((char *) pathList, availPathListSize, sizeof(char *));
 	    }
 	    pathList[pathListCount-1] = strdup( tmpPtr2 );
 	}
@@ -1385,8 +1381,7 @@ void _DtEnvMapForRemote (char *targetHost)
 					&(targetCache->mapListCnt) );
 
 	targetCache->mapListDetails = (cachedEnvVar *)
-					malloc( sizeof(cachedEnvVar) *
-					    targetCache->mapListCnt );
+					calloc(targetCache->mapListCnt, sizeof(cachedEnvVar));
 
 	for ( i = 0; i < targetCache->mapListCnt; i++ ) {
 	    _DtEnvMapIt( targetCache->mapList[i],

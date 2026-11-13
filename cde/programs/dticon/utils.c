@@ -1133,7 +1133,7 @@ Init_Color_Table( void )
    }
 #endif
 
-  colorSymbols = (XpmColorSymbol *) XtMalloc(NUM_PENS * sizeof(XpmColorSymbol));
+  colorSymbols = (XpmColorSymbol *) XtCalloc(NUM_PENS, sizeof(XpmColorSymbol));
   if (!colorSymbols)
     Abort(GETSTR(10,38, "No memory(0)"));
   for (i=0; i<NUM_STATICS; i++) {

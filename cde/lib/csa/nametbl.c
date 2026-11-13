@@ -52,7 +52,7 @@ _DtCm_make_name_table(int size, char **names)
 		return (nullptr);
 	}
 
-	if ((tbl->names = (char **)malloc(sizeof(char *) * (size+1))) == nullptr) {
+	if ((tbl->names = (char **)calloc((size+1), sizeof(char *))) == nullptr) {
 		_DtCm_free_name_table(tbl);
 		return (nullptr);
 	}
@@ -114,8 +114,7 @@ _DtCm_add_name_to_table(_DtCmNameTable *tbl, int index, char *newname)
 		*ptr = index;
 
 	if (index > tbl->size) {
-		if ((newptr = (char **)realloc(tbl->names,
-		    sizeof(char *)*(index + 1))) == nullptr) {
+		if ((newptr = (char **)reallocarray(tbl->names, (index + 1), sizeof(char *))) == nullptr) {
 			*ptr = -1;
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else {
@@ -185,8 +184,7 @@ _DtCmExtendNameTable(
 
 	if (types) {
 		newindex = (index == 0) ? (*tbl)->size+1 : index;
-		if ((newarray = (int *)realloc(*types,
-		    sizeof(int) * (newindex+1))) == nullptr) {
+		if ((newarray = (int *)reallocarray(*types, (newindex+1), sizeof(int))) == nullptr) {
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else {
 			*types = newarray;

@@ -100,7 +100,7 @@ int _DtHPrPrintStringData(
     }
 
    /* Alloc max shell command line len */
-   printCommand = malloc(MAX_COMMAND_LENGTH*sizeof(char));
+   printCommand = calloc(MAX_COMMAND_LENGTH, sizeof(char));
    if (printCommand == nullptr)
    {
          fprintf(stderr, _DTGETMESSAGE(PMSET,5,
@@ -160,7 +160,7 @@ int _DtHPrPrintDynamicStringData(
     }
 
    /* Alloc max shell command line len */
-   printCommand = malloc(MAX_COMMAND_LENGTH*sizeof(char));
+   printCommand = calloc(MAX_COMMAND_LENGTH, sizeof(char));
    if (printCommand == nullptr)
    {
          fprintf(stderr, _DTGETMESSAGE(PMSET,5,
@@ -275,7 +275,7 @@ int _DtHPrPrintHelpFile(
     }
 
    /* Alloc max shell command line len */
-   printCommand = malloc(MAX_COMMAND_LENGTH*sizeof(char));
+   printCommand = calloc(MAX_COMMAND_LENGTH, sizeof(char));
    if (printCommand == nullptr)
    {
          fprintf(stderr, _DTGETMESSAGE(PMSET,5,

@@ -61,8 +61,8 @@ _termSetRenderFont(Widget w, TermFont *termFont)
     /* do initialization... */
     if (!tpd->renderTermFontsNum) {
 	tpd->renderTermFontsNum = 4;
-	tpd->renderTermFonts = (TermFont **) malloc((unsigned)
-		tpd->renderTermFontsNum * sizeof(TermFont *));
+	tpd->renderTermFonts = (TermFont **) calloc((unsigned)
+		tpd->renderTermFontsNum, sizeof(TermFont *));
 	(void) memset(tpd->renderTermFonts, '\0',
 		tpd->renderTermFontsNum * sizeof(TermFont *));
     }
@@ -822,7 +822,7 @@ _DtTermPrimFillScreenGap(Widget w)
 			    short eCount;
 			    enhValue *eValues = (enhValue *)nullptr;
 
-			    overflowChars = (termChar *) XtMalloc(BUFSIZ * sizeof (termChar));
+			    overflowChars = (termChar *) XtCalloc(BUFSIZ, sizeof (termChar));
 			    /* Perpetuate the enhancements. */
 			    for (eCol = 0; eCol < length; eCol += eCount)
 			    {
@@ -957,7 +957,7 @@ DoInsert(Widget w, unsigned char *buffer, int length, Boolean *wrapped)
     }
 
     /* insert the text... */
-    returnChars = (termChar *) XtMalloc(BUFSIZ * sizeof (termChar));
+    returnChars = (termChar *) XtCalloc(BUFSIZ, sizeof (termChar));
     newWidth = _DtTermPrimBufferInsert(tBuffer,	/* TermBuffer		*/
 	    tpd->topRow + tpd->cursorRow,		/* row			*/
 	    tpd->cursorColumn,			/* column		*/
@@ -1051,7 +1051,7 @@ _DtTermPrimInsertText(Widget w, unsigned char *buffer, int length)
         ** we should never need more than length * sizeof(wchar_t)
         ** bytes to store the wide char equivalent of the incoming mb string
         */
-        wcBuffer    = (wchar_t *)XtMalloc(length * sizeof(wchar_t));                                                
+        wcBuffer    = (wchar_t *)XtCalloc(length, sizeof(wchar_t));                                                
         pwc         = wcBuffer;
         wcBufferLen = 0;
         while (i < length)
@@ -1345,7 +1345,7 @@ _DtTermPrimParseInput
     /* initialize the preParseTable if necessary... */
     _DtTermProcessLock();
     if (!preParseTable) {
-	preParseTable = (Boolean *) XtMalloc(256 * sizeof(Boolean));
+	preParseTable = (Boolean *) XtCalloc(256, sizeof(Boolean));
 	(void) memset(preParseTable, '\0', 256 * sizeof(Boolean));
 
 	for (i = 0x00; i <= 0x1f; i++) {

@@ -288,7 +288,7 @@ _DtDndTransferAdd(
 	int		ii, jj;
 
 	transferEntries = (XmDropTransferEntryRec *)
-		XtMalloc(numTransferTargets * sizeof(XmDropTransferEntryRec));
+		XtCalloc(numTransferTargets, sizeof(XmDropTransferEntryRec));
 
 	numTransfers = transferInfo->numTransferTargets + numTransferTargets;
 
@@ -380,7 +380,7 @@ _DtDndCopyCallbackList(
 		count++;
 	}
 
-	cl = (XtCallbackList)XtMalloc(count * sizeof(XtCallbackRec));
+	cl = (XtCallbackList)XtCalloc(count, sizeof(XtCallbackRec));
 
 	for (ii = 0; ii < count; ii++) {
 		cl[ii].callback = callbacks[ii].callback;

@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
 	    }
 	} else {
 	    num_gr = 1 ;
-	    if( (gr = (FalGlyphRegion *)malloc( sizeof(FalGlyphRegion) * num_gr )) == nullptr ) {
+	    if( (gr = (FalGlyphRegion *)calloc(num_gr, sizeof(FalGlyphRegion))) == nullptr ) {
 		USAGE1("%s : malloc error occurred. Terminates abnormally.\n", argv[0]);
 		exit(1) ;
 	    }
@@ -455,11 +455,11 @@ int code_area)
 		head->zoomf = 0;
 	}
 
-	if ((head->code = (int *)malloc(sizeof(int)*head->num_chars)) == nullptr) {
+	if ((head->code = (int *)calloc(head->num_chars, sizeof(int))) == nullptr) {
 		return(MALLOC_ERROR);
 	}
 
-	if ((head->ptn = (char **)malloc(sizeof(char *)*head->num_chars)) == nullptr) {
+	if ((head->ptn = (char **)calloc(head->num_chars, sizeof(char *))) == nullptr) {
 		return(MALLOC_ERROR);
 	}
 

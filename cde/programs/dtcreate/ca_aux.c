@@ -296,8 +296,8 @@ void putCAactionIcons (ActionData *pAD)
        "Could not find the following icon file within the icon\n\
 search path:");
      fmtPtr = "%s\n   %s";
-     errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-			strlen(pAD->pszIcon) + 1) * sizeof(char));
+     errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+			strlen(pAD->pszIcon) + 1), sizeof(char));
      sprintf(errPtr, fmtPtr, msgPtr, pAD->pszIcon);
      display_error_message(CreateActionAppShell, errPtr);
      XtFree(errPtr);
@@ -314,8 +314,8 @@ search path:");
        "Could not find the following icon file within the icon\n\
 search path:");
      fmtPtr = "%s\n   %s";
-     errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-			strlen(pAD->pszIcon) + 1) * sizeof(char));
+     errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+			strlen(pAD->pszIcon) + 1), sizeof(char));
      sprintf(errPtr, fmtPtr, msgPtr, pAD->pszIcon);
      display_error_message(CreateActionAppShell, errPtr);
      XtFree(errPtr);
@@ -332,8 +332,8 @@ search path:");
        "Could not find the following icon file within the icon\n\
 search path:");
      fmtPtr = "%s\n   %s";
-     errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-			strlen(pAD->pszIcon) + 1) * sizeof(char));
+     errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
+			strlen(pAD->pszIcon) + 1), sizeof(char));
      sprintf(errPtr, fmtPtr, msgPtr, pAD->pszIcon);
      display_error_message(CreateActionAppShell, errPtr);
      XtFree(errPtr);
@@ -1222,7 +1222,7 @@ ActionData * copyAD(ActionData *pAD)
      pcopyAD->pszPrompt = copyString(pAD->pszPrompt);
   }
   if (pAD->papFiletypes) {
-     pcopyAD->papFiletypes = (FiletypeData **) XtMalloc(sizeof(FiletypeData *) * (pAD->cFiletypes + 1));
+     pcopyAD->papFiletypes = (FiletypeData **) XtCalloc((pAD->cFiletypes + 1), sizeof(FiletypeData *));
      for (i=0; i < pAD->cFiletypes; i++) {
         pcopyAD->papFiletypes[i] = copyFtD(pAD->papFiletypes[i]);
      }

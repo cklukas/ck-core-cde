@@ -59,7 +59,7 @@ HASH * hash_create(void)
     HASH *table;
     int i,j;
 
-    table = (HASH *)malloc(HASHSIZE*sizeof(HASH)); 
+    table = (HASH *)calloc(HASHSIZE, sizeof(HASH)); 
     if(table == nullptr)
     { 
         fprintf(stderr,"Error in allocating memory\n");

@@ -606,7 +606,7 @@ void UpdateFiletypeDataArray(FiletypeData *pFtD)
   /**************************************************************************/
   /* Add this structure to the filetype array in the ActionData structure.  */
   /**************************************************************************/
-  papArray = (FiletypeData **) XtMalloc(sizeof(FiletypeData *) * (AD.cFiletypes + 1));
+  papArray = (FiletypeData **) XtCalloc((AD.cFiletypes + 1), sizeof(FiletypeData *));
   for (i=0; i < AD.cFiletypes; i++) {
      papArray[i] = AD.papFiletypes[i];
   }

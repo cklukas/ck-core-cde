@@ -442,7 +442,7 @@ GetValues(
    /*  Extract and make local copies of the XmString data.  */
 
    change_dir_data->history_list = (XmStringTable)
-      XtMalloc (sizeof(XmStringTable) * (change_dir_data->list_count + 1));
+      XtCalloc((change_dir_data->list_count + 1), sizeof(XmStringTable));
 
    for (n = 0; n < change_dir_data->list_count; n++)
       change_dir_data->history_list[n] = XmStringCopy (history_list[n]);
@@ -536,8 +536,7 @@ GetResourceValues(
 
    if (change_dir_data->list_count != 0)
    {
-      new_table = (XmStringTable) XtMalloc (sizeof (XmStringTable) *
-                                            (change_dir_data->list_count + 1));
+      new_table = (XmStringTable) XtCalloc((change_dir_data->list_count + 1), sizeof (XmStringTable));
 
       for (i = 0; i < change_dir_data->list_count; i++)
          new_table[i] = change_dir_data->history_list[i];

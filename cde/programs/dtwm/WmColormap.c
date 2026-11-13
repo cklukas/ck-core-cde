@@ -391,7 +391,7 @@ void AddColormapWindowReference (ClientData *pCD, Window window)
             }
         }
         new_cmap_window_data = (ClientData **)
-                                XtMalloc((i + 2 ) * sizeof(ClientData *));
+                                XtCalloc((i + 2 ), sizeof(ClientData *));
         memcpy((void *)new_cmap_window_data,(void *)cmap_window_data,
                         (i + 1) * sizeof(ClientData *));
         XtFree((char *) cmap_window_data);
@@ -401,7 +401,7 @@ void AddColormapWindowReference (ClientData *pCD, Window window)
     {
         i = 0;
         new_cmap_window_data = (ClientData **)
-                                XtMalloc(2 * sizeof(ClientData *));
+                                XtCalloc(2, sizeof(ClientData *));
     }
     new_cmap_window_data[i] = pCD;
     new_cmap_window_data[i + 1] = nullptr;
@@ -447,7 +447,7 @@ void RemoveColormapWindowReference (ClientData *pCD, Window window)
         int     j,idx;
 
             new_cmap_window_data = (ClientData **)
-                                        XtMalloc(i * sizeof(ClientData *));
+                                        XtCalloc(i, sizeof(ClientData *));
             idx = 0;
             for (j = 0; cmap_window_data[j] != nullptr; j++)
             {

@@ -352,7 +352,7 @@ Initialize( Widget rw, Widget nw, ArgList args, Cardinal *num_args )
  * create and cache id's of, column header day names
  */
 	new_w->month_panel.day_labels =
-		(Widget *) XtMalloc( 7 * sizeof(Widget) );
+		(Widget *) XtCalloc(7, sizeof(Widget));
         for (i=0; i < 7; i++) {
            XmString str;
            Widget label;
@@ -375,7 +375,7 @@ Initialize( Widget rw, Widget nw, ArgList args, Cardinal *num_args )
 /*
  * create and cache id's of, 31 buttons for days
  */
-	new_w->month_panel.days = (Widget *) XtMalloc( 31 * sizeof(Widget) );
+	new_w->month_panel.days = (Widget *) XtCalloc(31, sizeof(Widget));
         for (i=0; i < 31; i++) {
            char buf[BUFSIZ];
            XmString str;

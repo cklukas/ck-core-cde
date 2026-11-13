@@ -275,14 +275,14 @@ GetUserFileName(
      * $HOME/.dt/ims/[display-name]/CDE-locale
      */
 
-    path = (char *) XtMalloc((MAXPATHLEN + 1) * sizeof(char));
+    path = (char *) XtCalloc((MAXPATHLEN + 1), sizeof(char));
 
     strcpy(path, env->user_env->homedir);
     strcat(path, DtUSER_IMSFS_DIR);
 
     /* Look if there is a display specific directory */
 
-    tmp_path = (char *) XtMalloc((MAXPATHLEN + 1) * sizeof(char));
+    tmp_path = (char *) XtCalloc((MAXPATHLEN + 1), sizeof(char));
     
     strcpy(tmp_path, path);
     strcat(tmp_path, "/");

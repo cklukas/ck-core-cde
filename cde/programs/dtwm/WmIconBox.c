@@ -227,7 +227,7 @@ Boolean MakeIconBox (WmWorkspaceData *pWS, ClientData *pCD)
 	InitializeClientData (pCD, pIBD);
 
         if (!(pIBD->IPD.placeList = 
-	    (IconInfo *)XtMalloc (pIBD->IPD.totalPlaces * sizeof (IconInfo))))
+	    (IconInfo *)XtCalloc(pIBD->IPD.totalPlaces, sizeof (IconInfo))))
 	{
 	    Warning (((char *)GETMESSAGE(36, 2, "Insufficient memory to create icon box data")));
 	    XtFree ((char *)pIBD);
@@ -2646,7 +2646,7 @@ Boolean ExtendIconList (IconBoxData *pIBD, int incr)
 
     newSize = pIBD->IPD.totalPlaces + incr;
 
-    if ((pTmp = (IconInfo *) XtMalloc (newSize*sizeof(IconInfo))) != nullptr)
+    if ((pTmp = (IconInfo *) XtCalloc(newSize, sizeof(IconInfo))) != nullptr)
     {
 	/* copy data */
 	memcpy (pTmp, pIBD->IPD.placeList, 

@@ -1,4 +1,15 @@
 2026-11-13
+- Allocation sizes: 545 allocations of the form `n * sizeof(T)` in 187 C
+  sources no longer multiply unchecked. `malloc()` and `XtMalloc()` become
+  `calloc()` and `XtCalloc()`, and `realloc()` becomes `reallocarray()`, which
+  fail (or, for the Xt calls, report an error) when the product overflows
+  instead of allocating a short block that the caller then fills. The
+  allocations are now zero-filled. Files that the failure-injection tests
+  extract keep their `malloc()` and `realloc()` calls so the tests still replace
+  them, and the 158 `XtRealloc()` products have no array form in Xt and are
+  still to be done.
+
+2026-11-13
 - C23 null pointer constant: the 1,100 non-generated C sources use `nullptr`
   in place of `NULL` (37,000 uses). Headers keep `NULL` because C++ and
   pre-C23 consumers include them. `NULL` stays where C23 does not allow

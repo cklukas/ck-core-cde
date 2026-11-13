@@ -1435,7 +1435,7 @@ next_component:
 
    /* allocate list of to-be-managed children */
    manage = (Widget *)
-      XtMalloc((2*(ip->iconic_path.num_components - i) + 2)*sizeof(Widget));
+      XtCalloc((2*(ip->iconic_path.num_components - i) + 2), sizeof(Widget));
    nmanage = 0;
 
    /* position & manage the path components */

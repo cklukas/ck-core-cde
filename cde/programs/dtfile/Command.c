@@ -942,9 +942,9 @@ ProcessBufferDropOnFolder (
    num_of_buffers = drop_parameters->dropData->numItems;
 
    /* Allocate memory for file and buffer structures */
-   file_set = (char **)XtMalloc(sizeof(char **) * num_of_buffers );
-   host_set = (char **)XtMalloc(sizeof(char **) * num_of_buffers);
-   buffer_set = (BufferInfo * )XtMalloc (sizeof (BufferInfo) * num_of_buffers);
+   file_set = (char **)XtCalloc(num_of_buffers, sizeof(char **));
+   host_set = (char **)XtCalloc(num_of_buffers, sizeof(char **));
+   buffer_set = (BufferInfo * )XtCalloc(num_of_buffers, sizeof (BufferInfo));
 
 
    _DtSetDroppedBufferInfo(file_set, buffer_set, host_set, drop_parameters);
@@ -1455,7 +1455,7 @@ MoveCopyLinkHandler(
    /* set all the hosts to the home host name since ToolTalk messages pass
     * the filenames in host relative paths (Is this correct?)
     */
-   host_set = (char **)XtMalloc(sizeof(char *) * file_count);
+   host_set = (char **)XtCalloc(file_count, sizeof(char *));
    for(i = 0; i < file_count; i++)
       host_set[i] = home_host_name;
 

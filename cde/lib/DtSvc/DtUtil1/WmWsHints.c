@@ -234,7 +234,7 @@ _DtWsmGetWorkspaceHints(
 	    if (pWsH->flags & DT_WORKSPACE_HINTS_WORKSPACES)
 	    {
 		pWsH->pWorkspaces = (Atom *) 
-		    XtMalloc (pWsH->numWorkspaces * sizeof (Atom));
+		    XtCalloc(pWsH->numWorkspaces, sizeof (Atom));
 		for (i=0; i<pWsH->numWorkspaces; i++)
 		{
 		    pWsH->pWorkspaces[i] = *pP++;

@@ -583,9 +583,7 @@ FileWindowInputCallback(
 
 		        /* now make it the top of the selection list */
                   /* Force selection list order to match stacking order */
-                  selection_list = (FileViewData **)XtMalloc(
-                                    sizeof(FileViewData *) * 
-                                    (file_mgr_data->selected_file_count + 1));
+                  selection_list = (FileViewData **)XtCalloc((file_mgr_data->selected_file_count + 1), sizeof(FileViewData *));
 
                   i = 0;
                   if(top->file_view_data != nullptr)

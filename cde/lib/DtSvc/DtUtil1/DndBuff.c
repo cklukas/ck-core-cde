@@ -677,7 +677,7 @@ dndTextSelectionValueToBuffer(
 		textLen += (*buffers)[ii].size+1;
 	}
 
-	(*returnValue)  = XtMalloc(textLen * sizeof(char));
+	(*returnValue)  = XtCalloc(textLen, sizeof(char));
 	(*returnLength) = textLen;
 
 	bufPtr = (*returnValue);

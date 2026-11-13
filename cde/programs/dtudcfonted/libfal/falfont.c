@@ -1096,7 +1096,7 @@ fal_sort_fontlist(FalFontDataList *lst)
 
 	srt.num  = lst->num;
 
-	if (( srt.list = malloc(sizeof(FalFontData) * srt.num)) == nullptr) {
+	if (( srt.list = calloc(srt.num, sizeof(FalFontData))) == nullptr) {
 		fal_utyerrno = FAL_ERR_MALLOC ;
 		return	FAL_ERROR;
 	}
@@ -1286,7 +1286,7 @@ cpy_default_path(FalFontPath *p)
 	}
 
 	if (
-		(tmp.path = (char **)malloc(sizeof(char *) * (orgn.num) ))
+		(tmp.path = (char **)calloc((orgn.num), sizeof(char *)))
 		== nullptr
 	){
 		fal_utyerror = _FAL_MALOC_ER;
@@ -2008,9 +2008,9 @@ set_font_pathlist(FalFontPath *pathlist, int nodef)
 		    if( font_path ){
 			num = pathlist->num;
 			if (pathlist->path == nullptr) {
-			    tmp_list = (char **)malloc(sizeof(char *)*(num +1));
+			    tmp_list = (char **)calloc((num +1), sizeof(char *));
 			} else {
-			    tmp_list = (char **)realloc(pathlist->path, sizeof(char *)*(num+1));
+			    tmp_list = (char **)reallocarray(pathlist->path, (num+1), sizeof(char *));
 			}
 			if (tmp_list == nullptr) {
 			    fclose( fp );
@@ -2063,9 +2063,9 @@ set_font_pathlist(FalFontPath *pathlist, int nodef)
 	if( font_path ){
 	    num = pathlist->num;
 	    if (pathlist->path == nullptr) {
-		    tmp_list = (char **)malloc(sizeof(char *)*(num +1));
+		    tmp_list = (char **)calloc((num +1), sizeof(char *));
 	    } else {
-		    tmp_list = (char **)realloc(pathlist->path, sizeof(char *)*(num+1));
+		    tmp_list = (char **)reallocarray(pathlist->path, (num+1), sizeof(char *));
 	    }
 	    if (tmp_list == nullptr) {
 		fclose( fp );
@@ -2120,7 +2120,7 @@ make_default_path(FalFontPath *pathlist)
 
 	    /* get path */
 	    *ep = '\0' ;
-	    if ((path = (char *)malloc(sizeof(char) * (strlen(sp)+2))) == nullptr) {
+	    if ((path = (char *)calloc((strlen(sp)+2), sizeof(char))) == nullptr) {
 		fal_clear_font_path( pathlist );
 		fal_utyerror = _FAL_MALOC_ER;
 		fal_utyerrno = FAL_ERR_MALLOC ;
@@ -2146,9 +2146,9 @@ make_default_path(FalFontPath *pathlist)
 	    /* add path to pathlist */
 	    num = pathlist->num;
 	    if (pathlist->path == nullptr) {
-		plist = (char **)malloc(sizeof(char *)*(num +1));
+		plist = (char **)calloc((num +1), sizeof(char *));
 	    } else {
-		plist = (char **)realloc(pathlist->path, sizeof(char *)*(num+1));
+		plist = (char **)reallocarray(pathlist->path, (num+1), sizeof(char *));
 	    }
 	    if (plist == nullptr) {
 		fal_clear_font_path( pathlist );
@@ -2322,7 +2322,7 @@ FalFontData	*fdata)
 	for( i=0; i<wpath.num; i++ ) {
 	    FalFontData	*p_bak ;
 
-	    fonts_list_file = (char *)malloc( sizeof(char) * ( strlen(wpath.path[i]) + strlen(FONTSDIR) + 1 ) ) ;
+	    fonts_list_file = (char *)calloc(( strlen(wpath.path[i]) + strlen(FONTSDIR) + 1 ), sizeof(char)) ;
 	    if( fonts_list_file == (char *)nullptr ) {
 		fal_utyerror = _FAL_MALOC_ER;
 		fal_utyerrno = FAL_ERR_MALLOC ;
@@ -2370,9 +2370,9 @@ FalFontData	*fdata)
 	    /* Get list of font informations */
 	    if( func & MKFONTLIST){
 		if ( fls->list == nullptr ) {
-		    p_bak  = (FalFontData *)malloc(sizeof(FalFontData) * (fls->num + fontnum));
+		    p_bak  = (FalFontData *)calloc((fls->num + fontnum), sizeof(FalFontData));
 		} else {
-		    p_bak  = (FalFontData *)realloc(fls->list, sizeof(FalFontData)*(fls->num + fontnum));
+		    p_bak  = (FalFontData *)reallocarray(fls->list, (fls->num + fontnum), sizeof(FalFontData));
 		}
 		if ( p_bak == nullptr ) {
 		    fal_utyerror = _FAL_MALOC_ER;
@@ -2406,7 +2406,7 @@ FalFontData	*fdata)
 
 		/* get string of font file */
 		if( (func & SRCHFNAME) || (func & FONTOFID) ){
-		    fontFileName = (char *)malloc( sizeof(char) * ( strlen(wpath.path[i]) + strlen(buf) + 1 ) ) ;
+		    fontFileName = (char *)calloc(( strlen(wpath.path[i]) + strlen(buf) + 1 ), sizeof(char)) ;
 		    if( fontFileName == (char *)nullptr ) {
 			fal_utyerror = _FAL_MALOC_ER;
 			fal_utyerrno = FAL_ERR_MALLOC ;
@@ -2607,9 +2607,9 @@ int		fontnum)
     }
 
     if ( fls->list == nullptr ) {
-	p_bak  = malloc(sizeof(FalFontData) * (fls->num + fontnum));
+	p_bak  = calloc((fls->num + fontnum), sizeof(FalFontData));
     } else {
-	p_bak  = realloc(fls->list, sizeof(FalFontData)*(fls->num + fontnum));
+	p_bak  = reallocarray(fls->list, (fls->num + fontnum), sizeof(FalFontData));
     }
     if ( p_bak == nullptr ) {
 	fal_utyerror = _FAL_MALOC_ER;
@@ -2810,8 +2810,7 @@ fal_add_fidinf(FalFontID fid, int dspcode, int cd_set, int islock)
 		}
 	    } else {
 		cnt = mngfid.num ;
-		if( (flist = (FontIDInfo **)realloc(
-			mngfid.finf, sizeof(FontIDInfo *) * (cnt + 1) )) == nullptr )
+		if( (flist = (FontIDInfo **)reallocarray(mngfid.finf, (cnt + 1), sizeof(FontIDInfo *))) == nullptr )
 		{
 			fal_utyerror = _FAL_MALOC_ER ;
 			fal_utyerrno = FAL_ERR_MALLOC ;
@@ -2878,8 +2877,7 @@ fal_del_fidinf(FalFontID fid)
 		mngfid.finf[i] = mngfid.finf[i+1] ;
 	}
 	if( cnt > 0 ) {
-		if( (flist = (FontIDInfo **)realloc(
-			mngfid.finf, sizeof(FontIDInfo *) * cnt )) == nullptr )
+		if( (flist = (FontIDInfo **)reallocarray(mngfid.finf, cnt, sizeof(FontIDInfo *))) == nullptr )
 		{
 			fal_utyerror = _FAL_MALOC_ER ;
 			fal_utyerrno = FAL_ERR_MALLOC ;

@@ -290,7 +290,7 @@ DtDndDropRegister(
 		numImportTargets += dsInfo->numImportTargets;
 	}
 
-	importTargets = (Atom *) XtMalloc(numImportTargets * sizeof(Atom));
+	importTargets = (Atom *) XtCalloc(numImportTargets, sizeof(Atom));
 
 	kk = 0;
 	for (ii = 0; ii < numTransfers; ii++) {
@@ -320,7 +320,7 @@ DtDndDropRegister(
 	 */
 
 #define NUM_DROP_ARGS	5
-        args = (Arg *) XtMalloc(sizeof(Arg) * (NUM_DROP_ARGS + argCount));
+        args = (Arg *) XtCalloc((NUM_DROP_ARGS + argCount), sizeof(Arg));
 #undef  NUM_DROP_ARGS
 
 	/*
@@ -692,7 +692,7 @@ dndTransferStart(
 		Atom		*targets;
 
 		numTargets 	= numTransferTargets + 1;
-		targets 	= (Atom *)XtMalloc(numTargets * sizeof(Atom));
+		targets 	= (Atom *)XtCalloc(numTargets, sizeof(Atom));
 
 		jj = 0;
 		targets[jj++] = XA_SUN_ENUM_COUNT;
@@ -713,7 +713,7 @@ dndTransferStart(
 
 	numTransferEntries = numTransferTargets;
 	transferEntries = (XmDropTransferEntryRec *)
-		XtMalloc(numTransferEntries * sizeof(XmDropTransferEntryRec));
+		XtCalloc(numTransferEntries, sizeof(XmDropTransferEntryRec));
 
 	for (ii = 0; ii < numTransferEntries; ii++) {
 		transferEntries[ii].target	= transferTargets[ii];

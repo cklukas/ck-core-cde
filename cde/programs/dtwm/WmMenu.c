@@ -259,7 +259,7 @@ MenuSpec *MakeMenu (WmScreenData *pSD,
     if (n)
     {
         if ((menuSpec->menuButtons =
-	       (MenuButton *) XtMalloc (n * sizeof(MenuButton))) == nullptr)
+	       (MenuButton *) XtCalloc(n, sizeof(MenuButton))) == nullptr)
         /* insufficent memory */
 	{
             MWarning(((char *)GETMESSAGE(48, 3, "Insufficient memory for menu %s\n")), menuName);
@@ -740,7 +740,7 @@ static Boolean SavePBInfo (MenuSpec *topMenuSpec, MenuItem *menuItem,
     {
         topMenuSpec->menuButtonSize = MENU_BUTTON_INC;
         topMenuSpec->menuButtons =
-	    (MenuButton *) XtMalloc (MENU_BUTTON_INC * sizeof(MenuButton));
+	    (MenuButton *) XtCalloc(MENU_BUTTON_INC, sizeof(MenuButton));
     }
     else if (topMenuSpec->menuButtonCount == topMenuSpec->menuButtonSize)
     /* need larger array */

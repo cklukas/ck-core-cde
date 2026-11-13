@@ -98,7 +98,7 @@ arpaPhrase(const char * name)
     biggest += 2; /* Just in case. */
 
     cur_addr = 0;
-    addrs = (char **)malloc((n_addrs + 1) * sizeof(char *));
+    addrs = (char **)calloc((n_addrs + 1), sizeof(char *));
 
     cp2 = (char *)malloc(biggest);
     addrs[cur_addr++] = cp2;
@@ -368,7 +368,7 @@ deliver(char ** addrs, char * msg)
 	continue;
     }
 
-    argv = (char **)malloc((n_addrs + 2) * sizeof(char *));
+    argv = (char **)calloc((n_addrs + 2), sizeof(char *));
     argv[0] = "/usr/lib/sendmail";
 
     for (cp = 0; addrs[cp]; cp++) {

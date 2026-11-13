@@ -983,7 +983,7 @@ int GetBitmapIndex (WmScreenData *pSD, char *name, Boolean bReportError)
     {
         pSD->bitmapCacheSize = BITMAP_CACHE_INC;
         pSD->bitmapCache =
-	    (BitmapCache *) XtMalloc (BITMAP_CACHE_INC * sizeof (BitmapCache));
+	    (BitmapCache *) XtCalloc(BITMAP_CACHE_INC, sizeof (BitmapCache));
     }
     else if (pSD->bitmapCacheCount == pSD->bitmapCacheSize)
     /* enlarge */

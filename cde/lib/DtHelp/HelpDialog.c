@@ -1079,7 +1079,7 @@ static Boolean SetValues(
 
       str = (char *)_DTGETMESSAGE(2, 70, "Nonexistent Topic Title.");
       len = strlen(str);
-      hw->help_dialog.display.topicTitleStr = XtMalloc(sizeof(char)*(len+10));
+      hw->help_dialog.display.topicTitleStr = XtCalloc((len+10), sizeof(char));
       if (nullptr != hw->help_dialog.display.topicTitleStr)
 	{
           sprintf(hw->help_dialog.display.topicTitleStr, "%s%d", str, 

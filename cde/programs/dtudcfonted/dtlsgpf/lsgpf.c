@@ -255,7 +255,7 @@ int		*errflg)
 	}
 
 	srt_lst.num = lst->num ;
-	srt_lst.list = (FalFontData *)malloc( sizeof(FalFontData) * lst->num ) ;
+	srt_lst.list = (FalFontData *)calloc(lst->num, sizeof(FalFontData)) ;
 	if( srt_lst.list == nullptr ) {
 		USAGE("dtlsgpf : malloc error.\n" ) ;
 		exit(1) ;
@@ -527,7 +527,7 @@ int		*data_cnt)
 	    return ;
 	}
 
-	if( (size_offset_list = (int *)malloc( flist->num * sizeof(int) )) == nullptr )
+	if( (size_offset_list = (int *)calloc(flist->num, sizeof(int))) == nullptr )
 	{
 		USAGE("dtlsgpf: malloc error.\n" );
 		exit(1) ;
@@ -815,7 +815,7 @@ sort_fontlist( FalFontDataList *lst )
 
 	srt.num  = lst->num;
 
-	if (( srt.list = (FalFontData *)malloc(sizeof(FalFontData) * srt.num)) == nullptr) {
+	if (( srt.list = (FalFontData *)calloc(srt.num, sizeof(FalFontData))) == nullptr) {
 		return	FAL_ERROR;
 	}
 	memmove (srt.list, lst->list, sizeof(FalFontData) * srt.num);

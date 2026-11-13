@@ -776,7 +776,7 @@ appendStr(char **str, int *curLen, int *maxLen, char *strToAppend)
     len = strlen(strToAppend);
     while (*curLen + len >= *maxLen)
     {
-	newStr = realloc(*str, (*maxLen + MAXPATHLEN) * sizeof(char));
+	newStr = reallocarray(*str, (*maxLen + MAXPATHLEN), sizeof(char));
 	if (!newStr)
 	    return;
 
@@ -1673,7 +1673,7 @@ editMapFile(char *bookCaseName, char *bookCaseMap)
 	dieRWD(-1, "%s: %s: %s\n", EXEC_NAME, bookCaseMap,
 	       strerror(errno));
 
-    file = malloc((statBuf.st_size + 1) * sizeof(char));
+    file = calloc((statBuf.st_size + 1), sizeof(char));
     ret = fread(file, statBuf.st_size, sizeof(char), fp);
     if(ret == 0) die(-1, "fread failed; exiting...\n");
     if (file[statBuf.st_size - 1] == '\n')
@@ -2020,7 +2020,7 @@ replaceData(char *inData, char *replaceMe, char *replacement)
 	return XtsNewString(inData);
 
     newLen = strlen(inData) + (i * (strlen(replacement) - replaceMeLen));
-    newData = malloc((newLen + 1) * sizeof(char));
+    newData = calloc((newLen + 1), sizeof(char));
     newData[0] = '\0';
     p = inData;
     while ((endP = strstr(p, replaceMe)) != (char *)nullptr)
@@ -2050,8 +2050,7 @@ addTOCEntry(TOCEntry **tocEntries, int *nTOCEntries, int *maxEntries,
 	TOCEntry *newArray;
 
 	newArray =
-	    (TOCEntry *)realloc((char *)*tocEntries,
-				  (*maxEntries + 10) * sizeof(TOCEntry));
+	    (TOCEntry *)reallocarray((char *)*tocEntries, (*maxEntries + 10), sizeof(TOCEntry));
 	if (!newArray)
 	    return;
 

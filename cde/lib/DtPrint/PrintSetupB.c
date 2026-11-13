@@ -1637,7 +1637,7 @@ EstablishPrinter(
 
 		    /* copy argv, modified by XtDisplayInitialize below */
 		    argv_copy =
-			(String *) XtMalloc(sizeof(String) * (argc + 1));
+			(String *) XtCalloc((argc + 1), sizeof(String));
 		    for (i = 0; i < argc; i++) {
 			argv_copy[i] = argv[i];
 		    }			

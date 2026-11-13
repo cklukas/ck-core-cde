@@ -2136,7 +2136,7 @@ AddToShelfMenuCB(
       return;
 
    count = file_mgr_data->selected_file_count;
-   paths = (char **)XtMalloc(sizeof(char *) * count);
+   paths = (char **)XtCalloc(count, sizeof(char *));
 
    for (i = 0; i < count; i++)
       paths[i] = ShelfBuildFullPath(file_mgr_data->selection_list[i]);
@@ -2177,14 +2177,14 @@ AddToShelfPopupCB(
    if (file_mgr_data->selected_file_count > 1)
    {
       count = file_mgr_data->selected_file_count;
-      paths = (char **)XtMalloc(sizeof(char *) * count);
+      paths = (char **)XtCalloc(count, sizeof(char *));
       for (i = 0; i < count; i++)
          paths[i] = ShelfBuildFullPath(file_mgr_data->selection_list[i]);
    }
    else
    {
       count = 1;
-      paths = (char **)XtMalloc(sizeof(char *) * count);
+      paths = (char **)XtCalloc(count, sizeof(char *));
       paths[0] = ShelfBuildFullPath(file_view_data);
    }
 

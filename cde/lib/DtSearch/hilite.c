@@ -146,8 +146,7 @@ long	hilite_cleartext (int parse_type, char *stems, int stemcount)
 	if (hitwcount >= hitwords_size) {
 	    if (hitwords_size == 0) {
 		hitwords_size = 200;
-		hitwords = malloc (
-		    hitwords_size * sizeof(DtSrHitword) + 16);
+		hitwords = calloc(hitwords_size, sizeof(DtSrHitword) + 16);
 	    }
 	    else {
 		hitwords_size += hitwords_size >> 1;	/* 1.5 times */
@@ -155,8 +154,7 @@ long	hilite_cleartext (int parse_type, char *stems, int stemcount)
 		    fprintf (aa_stderr,
 			PROGNAME"098 realloc for %zu hitwords.\n",
 			hitwords_size);
-		hitwords = realloc (hitwords,
-		    hitwords_size * sizeof(DtSrHitword) + 16);
+		hitwords = reallocarray(hitwords, hitwords_size, sizeof(DtSrHitword) + 16);
 	    }
 	}
 	if (!hitwords) {

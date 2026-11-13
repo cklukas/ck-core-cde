@@ -770,7 +770,7 @@ static int HitTopicsDisplay (
 
     if (hit->topicCnt > 0)
     {
-	items = (XmString *) XtMalloc (sizeof (XmString) * hit->topicCnt);
+	items = (XmString *) XtCalloc(hit->topicCnt, sizeof (XmString));
 
         /* put XmString-formatted topic titles into list */
         for (i = 0, pTopicString = hit->topicTitles; nullptr != *pTopicString; 
@@ -2760,7 +2760,7 @@ static void SearchIndex(
     curVol->indexSearchInProgress = True;
 
     /* alloc memory for index processing */
-    indexEntry = XtMalloc(sizeof(char)*(entryLen+1));
+    indexEntry = XtCalloc((entryLen+1), sizeof(char));
     if (nullptr == indexEntry) return;            /* RETURN */
 
     /* get a index entry */

@@ -2553,7 +2553,7 @@ if (formStackTop == formStackMax)
     {
     if (!formStackBase)
 	{
-	formStackBase = (FORMINFO *) malloc(10 * sizeof(FORMINFO));
+	formStackBase = (FORMINFO *) calloc(10, sizeof(FORMINFO));
 	formStackTop  = formStackBase;
 	formStackMax  = formStackBase + 9;
 	}
@@ -2561,7 +2561,7 @@ if (formStackTop == formStackMax)
 	{
 	stackSize = formStackMax - formStackBase + 1;
 	formStackBase =
-	    realloc(formStackBase, (stackSize + 10) * sizeof(FORMINFO));
+	    reallocarray(formStackBase, (stackSize + 10), sizeof(FORMINFO));
 	formStackTop = formStackBase + stackSize;
 	formStackMax = formStackBase + (stackSize + 9);
 	}
@@ -2620,7 +2620,7 @@ if (formStackTop == formStackMax)
     {
     if (!formStackBase)
 	{
-	formStackBase = (FORMINFO *) malloc(10 * sizeof(FORMINFO));
+	formStackBase = (FORMINFO *) calloc(10, sizeof(FORMINFO));
 	formStackTop  = formStackBase;
 	formStackMax  = formStackBase + 9;
 	}
@@ -2628,7 +2628,7 @@ if (formStackTop == formStackMax)
 	{
 	stackSize = formStackMax - formStackBase + 1;
 	formStackBase =
-	    realloc(formStackBase, (stackSize + 10) * sizeof(FORMINFO));
+	    reallocarray(formStackBase, (stackSize + 10), sizeof(FORMINFO));
 	formStackTop = formStackBase + stackSize;
 	formStackMax = formStackBase + (stackSize + 9);
 	}

@@ -462,8 +462,7 @@ char * _DtHelpFileLocate (
 
        /* make a malloc'd copy of the path with room to grow */
        slash = filespec + strlen(filespec);
-       pathName = malloc(sizeof(char) * 
-                    ((eos-tmpPath) + (slash-filespec) + 50) ); /* 50: arbitrary */
+       pathName = calloc(((eos-tmpPath) + (slash-filespec) + 50), sizeof(char)); /* 50: arbitrary */
        if (nullptr == pathName) return nullptr;		/* RETURN: error */
        strcpy(pathName,tmpPath);
 

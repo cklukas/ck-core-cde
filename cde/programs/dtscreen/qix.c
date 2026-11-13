@@ -90,7 +90,7 @@ initqix(perwindow *pwin)
     qp->startTime = seconds();
     qp->nlines = (batchcount + 1) * 2;
 
-    qp->lineq = (point *) malloc(qp->nlines * sizeof(point));
+    qp->lineq = (point *) calloc(qp->nlines, sizeof(point));
     memset(qp->lineq, '\0', qp->nlines * sizeof(point));
 
     XGetWindowAttributes(dsp, pwin->w, &xgwa);

@@ -842,7 +842,7 @@ static void WmDtPopupHelpCB (
 		}
 	    } while (ptr != nullptr);
 
-	    workspace_atoms = (Atom *) XtMalloc(sizeof(Atom) * num_workspaces);
+	    workspace_atoms = (Atom *) XtCalloc(num_workspaces, sizeof(Atom));
 	    XInternAtoms(wmGD.display, atom_names, num_workspaces,
 			 True, workspace_atoms); 
 	    
@@ -1333,7 +1333,7 @@ WmDtDisplayTopic (
     if (argCount)
     {
 	/*argsNew = (ArgList) XtMalloc( sizeof( Arg) * (argCount + 1)) ;*/
-	argsNew = (ArgList) XtMalloc( sizeof( Arg) * (argCount)) ;
+	argsNew = (ArgList) XtCalloc((argCount), sizeof( Arg)) ;
 	memcpy( argsNew, argList, (sizeof( Arg) * argCount)) ;
     }
 

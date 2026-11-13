@@ -397,7 +397,7 @@ int main(int argc, char **argv)
 	    }
 	} else {
 	    num_gr = 1 ;
-	    if( (gr = (FalGlyphRegion *)malloc( sizeof(FalGlyphRegion) * num_gr )) == nullptr ) {
+	    if( (gr = (FalGlyphRegion *)calloc(num_gr, sizeof(FalGlyphRegion))) == nullptr ) {
 		USAGE1("%s : malloc error. Terminates abnormally.\n", com);
 		exit( 1 );
 	    }
@@ -778,11 +778,11 @@ FalGlyphRegion	*gr)
 
 	nchar = i_gpf->num_chars ;
 
-	if ( ( i_gpf->code = (int *)malloc( sizeof(int) * nchar ) ) == nullptr ) {
+	if ( ( i_gpf->code = (int *)calloc(nchar, sizeof(int)) ) == nullptr ) {
 	    return MALLOC_ERROR;
 	}
 
-	if ( ( i_gpf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == nullptr ) {
+	if ( ( i_gpf->ptn = (char **)calloc(nchar, sizeof(char *)) ) == nullptr ) {
 	    return MALLOC_ERROR;
 	}
 

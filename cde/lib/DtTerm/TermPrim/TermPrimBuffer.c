@@ -74,7 +74,7 @@ _DtTermPrimBufferCreateBuffer
      * NULL, we won't confuse a 0 size buffer with a malloc failure and an
      * invalid buffer...
      */
-    newTL  = (TermLine *) malloc((unsigned) MAX(rows, 1) * sizeof(TermLine));
+    newTL  = (TermLine *) calloc((unsigned) MAX(rows, 1), sizeof(TermLine));
 
     if (!newTB || !newTL)
     {
@@ -95,7 +95,7 @@ _DtTermPrimBufferCreateBuffer
     /*
     ** malloc a tabs array...
     */
-    tabs = (Boolean *) malloc((unsigned) cols * sizeof(Boolean));
+    tabs = (Boolean *) calloc((unsigned) cols, sizeof(Boolean));
     if (!tabs)
     {
         free(newTB);
@@ -1550,7 +1550,7 @@ _DtTermPrimBufferMoveLockArea
      * to malloc (and free) storage for the termLineRecs...
      */
     if (cacheSize > (sizeof(lineCache) / sizeof(lineCache[0]))) {
-	holdLines = (TermLine *) XtMalloc(cacheSize * sizeof(TermLine));
+	holdLines = (TermLine *) XtCalloc(cacheSize, sizeof(TermLine));
     }
 
      /*
@@ -1744,7 +1744,7 @@ _DtTermPrimBufferInsertLine
      * to malloc (and free) storage for the termLineRecs...
      */
     if (length > (sizeof(lineCache) / sizeof(lineCache[0]))) {
-	holdLines = (TermLine *) XtMalloc(length * sizeof(TermLine));
+	holdLines = (TermLine *) XtCalloc(length, sizeof(TermLine));
     }
 
     if (dest > src) {
@@ -1914,7 +1914,7 @@ _DtTermPrimBufferDeleteLine
      * to malloc (and free) storage for the termLineRecs...
      */
     if (length > (sizeof(lineCache) / sizeof(lineCache[0]))) {
-	holdLines = (TermLine *) XtMalloc(length * sizeof(TermLine));
+	holdLines = (TermLine *) XtCalloc(length, sizeof(TermLine));
     }
 
     /* clear the deleted lines... */

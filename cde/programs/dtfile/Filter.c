@@ -826,8 +826,7 @@ CopyFilterData(
   CopiedFilterData->filetypesFilteredCount = filter_data->filetypesFilteredCount;
   CopiedFilterData->filetypesFiltered = XtNewString( filter_data->filetypesFiltered );
   CopiedFilterData->count = filter_data->count;
-  CopiedFilterData->user_data = (FTData **) XtMalloc(sizeof(FTData *) *
-                                                       filter_data->count);
+  CopiedFilterData->user_data = (FTData **) XtCalloc(filter_data->count, sizeof(FTData *));
   for( i = 0; i < filter_data->count; ++i )
   {
     CopiedFilterData->user_data[i] = (FTData *)XtMalloc(sizeof(FTData));
@@ -1338,8 +1337,7 @@ GetFilterValues(
    {
       old_filter_data = (FilterData *) dialog_data->data;
       filter_data->count = old_filter_data->count;
-      filter_data->user_data = (FTData **) XtMalloc(sizeof(FTData *) *
-                                                       filter_data->count);
+      filter_data->user_data = (FTData **) XtCalloc(filter_data->count, sizeof(FTData *));
 
       for( i = 0; i < filter_data->count; i++)
       {

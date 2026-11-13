@@ -1086,7 +1086,7 @@ SetValues(
    {
       XtSetArg (args[0], XmNitemCount, find_data->num_matches);
       matches =
-         (XmString *) XtMalloc (sizeof (XmString) * find_data->num_matches);
+         (XmString *) XtCalloc(find_data->num_matches, sizeof (XmString));
 
       for (i = 0; i < find_data->num_matches; i++)
       {
@@ -1291,7 +1291,7 @@ GetFindValues(
    else
    {
       find_data->matches =
-         (String *) XtMalloc (sizeof(String) * find_data->num_matches);
+         (String *) XtCalloc(find_data->num_matches, sizeof(String));
 
       for (i = 0; i < find_data->num_matches; i++)
       {

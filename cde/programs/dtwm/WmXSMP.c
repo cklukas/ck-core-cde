@@ -275,7 +275,7 @@ getClientWorkspaces(ClientData *pCD)
 	    if (pLen == 0)
 	    {
 		pLen = strlen(wsNameP) + 1;  /* 1 for null termination */
-		if ((cwsP = (char *)XtMalloc(pLen * sizeof(char)))
+		if ((cwsP = (char *)XtCalloc(pLen, sizeof(char)))
 		    == (char *)nullptr)
 		    return (char *)nullptr;
 

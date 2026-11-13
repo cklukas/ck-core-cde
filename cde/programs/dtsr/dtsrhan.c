@@ -376,7 +376,7 @@ int             is_time (char *orig)
     char           *s;
     int             i;
     /* copy original string to temp buffer, so we can manipulate */
-    s = (char *) malloc (sizeof (char) * strlen (orig) +5);
+    s = (char *) calloc(strlen (orig) +5, sizeof (char));
     strcpy (s, orig);
     for (i = 0; i < strlen (s); i++)
 	s[i] = tolower (s[i]);
@@ -397,7 +397,7 @@ int             is_count (char *orig)
     char           *s;
     int             i;
     /* copy original string to temp buffer, so we can manipulate */
-    s = (char *) malloc (sizeof(char) * strlen(orig) +5);
+    s = (char *) calloc(strlen(orig) +5, sizeof(char));
     strcpy (s, orig);
     for (i = 0; i < strlen (s); i++)
 	s[i] = tolower (s[i]);
@@ -2269,7 +2269,7 @@ static void	user_arg_processor (int argc, char **argv)
     strcpy(profile,argv[0]);
     profile=argv[0];
 *******/
-	profile = (char *) malloc (sizeof (char) * (strlen (argv[0])) +10);
+	profile = (char *) calloc((strlen (argv[0])) +10, sizeof (char));
 	strcpy (profile, argv[0]);
 	if (strchr (profile, '.') == nullptr)
 	    strcat (profile, EXT_HANDEL);
@@ -2298,7 +2298,7 @@ static void	user_arg_processor (int argc, char **argv)
 		"stdin as input, output filename is required!\n") );
 	    exit (FILE_ERROR);
 	} else {
-	    outfile = (char *) malloc (sizeof (char) * (strlen (infile) + 10));
+	    outfile = (char *) calloc((strlen (infile) + 10), sizeof (char));
 	    strcpy (outfile, infile);
 	    pos = strrchr (outfile, (int) '.');
 	    if (pos == nullptr)

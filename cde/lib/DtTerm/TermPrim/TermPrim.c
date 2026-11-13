@@ -1041,7 +1041,7 @@ GetCapsLockKeyCodes
      * the max)...
      */
     capsLockKeyCodes = (KeyCode *)
-	    XtMalloc(modifierMapping->max_keypermod * sizeof(KeyCode));
+	    XtCalloc(modifierMapping->max_keypermod, sizeof(KeyCode));
 
     /* copy them over...  */
     for (i1 = 0; i1 < modifierMapping->max_keypermod; i1++) {
@@ -1825,7 +1825,7 @@ InitOrResizeTermBuffer(Widget w)
 			(void) _DtTermPrimBufferSetLineWidth(tpd->historyBuffer,
 							     tpd->lastUsedHistoryRow,
 							     0);
-			overflowChars = (termChar *) XtMalloc(BUFSIZ * sizeof (termChar));
+			overflowChars = (termChar *) XtCalloc(BUFSIZ, sizeof (termChar));
 			(void) _DtTermPrimBufferInsert(tpd->historyBuffer,
 						       tpd->lastUsedHistoryRow,
 						       0, c1, length, False,
@@ -1894,8 +1894,7 @@ InitOrResizeTermBuffer(Widget w)
 	if (newBufferRows > tw->term.rows)
 	{
 	    (void) XtFree(tpd->scrollRefreshRows);
-	    tpd->scrollRefreshRows = (Boolean *) XtMalloc(newBufferRows *
-							  sizeof(Boolean));
+	    tpd->scrollRefreshRows = (Boolean *) XtCalloc(newBufferRows, sizeof(Boolean));
 	    (void) memset(tpd->scrollRefreshRows, '\0', newBufferRows *
 			  sizeof(Boolean));
 	}
@@ -1992,8 +1991,7 @@ InitOrResizeTermBuffer(Widget w)
 	}
 
 	/* malloc a set of scrollRefreshRows... */
-	tpd->scrollRefreshRows = (Boolean *) XtMalloc(tw->term.rows *
-		sizeof(Boolean));
+	tpd->scrollRefreshRows = (Boolean *) XtCalloc(tw->term.rows, sizeof(Boolean));
 	(void) memset(tpd->scrollRefreshRows, '\0', tw->term.rows *
 		sizeof(Boolean));
 
@@ -2450,7 +2448,7 @@ _mergeEnv
     ** create and initialize a list of indexs for each of the new strings
     ** (assume they will all be appended (idx == -1) and adjust later)...
     */
-    mergeIdx = (int *) XtMalloc(numMerge * sizeof(int));
+    mergeIdx = (int *) XtCalloc(numMerge, sizeof(int));
     for (i1 = 0; i1 < numMerge; i1++) 
     {
 	mergeIdx[i1] = -1;
@@ -2502,7 +2500,7 @@ _mergeEnv
     ** (i.e. memory that is XtMalloc'd should be either XtFree'd or
     ** XtRealloc'd, not free'd or realloc'd).)
     */
-    newEnv = (char **) malloc((numNew + 1) * sizeof(char *));
+    newEnv = (char **) calloc((numNew + 1), sizeof(char *));
     if (newEnv == nullptr)
     {
 	printf("L10n MALLOC ERROR\n");

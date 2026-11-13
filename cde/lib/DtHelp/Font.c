@@ -302,12 +302,9 @@ SaveFontStruct (
       {
 	font_info->max_structs += GROW_SIZE;
         if (font_info->font_structs != nullptr)
-            font_info->font_structs = (XFontStruct **) realloc (
-			    ((char *) font_info->font_structs),
-			(sizeof (XFontStruct *) * font_info->max_structs));
+            font_info->font_structs = (XFontStruct **) reallocarray(((char *) font_info->font_structs), font_info->max_structs, sizeof (XFontStruct *));
         else
-    	    font_info->font_structs = (XFontStruct **) malloc (
-			sizeof (XFontStruct *) * font_info->max_structs);
+    	    font_info->font_structs = (XFontStruct **) calloc(font_info->max_structs, sizeof (XFontStruct *));
       }
 
     font_info->font_structs[fontIndex] = font_struct;
@@ -332,19 +329,13 @@ SaveFontSet (
 	font_info->max_sets += GROW_SIZE;
         if (font_info->font_sets != nullptr)
           {
-	    font_info->font_sets = (XFontSet *) realloc (
-				((char *) font_info->font_sets),
-				(sizeof (XFontSet) * font_info->max_sets));
-	    font_info->fs_metrics = (DtHelpDAFSMetrics *) realloc (
-				((char *) font_info->fs_metrics),
-			(sizeof (DtHelpDAFSMetrics) * font_info->max_sets));
+	    font_info->font_sets = (XFontSet *) reallocarray(((char *) font_info->font_sets), font_info->max_sets, sizeof (XFontSet));
+	    font_info->fs_metrics = (DtHelpDAFSMetrics *) reallocarray(((char *) font_info->fs_metrics), font_info->max_sets, sizeof (DtHelpDAFSMetrics));
           }
         else
           {
-	    font_info->font_sets = (XFontSet *) malloc (
-				sizeof(XFontSet) * font_info->max_sets);
-	    font_info->fs_metrics = (DtHelpDAFSMetrics *) malloc (
-			sizeof (DtHelpDAFSMetrics) * font_info->max_sets);
+	    font_info->font_sets = (XFontSet *) calloc(font_info->max_sets, sizeof(XFontSet));
+	    font_info->fs_metrics = (DtHelpDAFSMetrics *) calloc(font_info->max_sets, sizeof (DtHelpDAFSMetrics));
           }
       }
 
@@ -1052,14 +1043,13 @@ _DtHelpGetExactFontIndex (
 	    int *newIdx = fontInfo->exact_idx;
 
 	    if (nullptr == newIdx)
-		newIdx = (int *) malloc(sizeof(int)*REALLOC_INCR);
+		newIdx = (int *) calloc(REALLOC_INCR, sizeof(int));
 	    else if ((i + 1) % REALLOC_INCR == 0)
 	      {
 		if ((size_t) i + 1 + REALLOC_INCR > SIZE_MAX / sizeof(int))
 		    newIdx = nullptr;
 		else
-		    newIdx = (int *) realloc(fontInfo->exact_idx,
-				    sizeof(int) * (i + 1 + REALLOC_INCR));
+		    newIdx = (int *) reallocarray(fontInfo->exact_idx, (i + 1 + REALLOC_INCR), sizeof(int));
 	      }
 
 	    if (nullptr != newIdx)

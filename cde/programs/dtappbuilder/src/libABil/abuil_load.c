@@ -1266,7 +1266,7 @@ init_sym_stacks(
 {
     stack_stack_size = STACK_INIT;
     stack_stack = (UilSymStack *)
-		    malloc(sizeof(UilSymStack) * stack_stack_size);
+		    calloc(stack_stack_size, sizeof(UilSymStack));
     if (stack_stack == (UilSymStack *)nullptr)
     {
 	fprintf(stderr, "loaduil: malloc failed.\n");
@@ -1304,7 +1304,7 @@ sym_stack_push(
 
     new_stack->stack_size = STACK_INIT;
     new_stack->stack_entries = (sym_entry_type **)
-		    malloc(sizeof(sym_entry_type *) * new_stack->stack_size);
+		    calloc(new_stack->stack_size, sizeof(sym_entry_type *));
     if (new_stack->stack_entries == (sym_entry_type **)nullptr)
     {
 	fprintf(stderr, "loaduil: malloc failed.\n");
@@ -1320,7 +1320,7 @@ sym_stack_push(
     {
 	stack_stack_size += STACK_INCR;
 	stack_stack = (UilSymStack *)
-	    realloc((void *)stack_stack, sizeof(UilSymStack)*stack_stack_size);
+	    reallocarray((void *)stack_stack, stack_stack_size, sizeof(UilSymStack));
 	if (stack_stack == (UilSymStack *)nullptr)
 	{
 	    fprintf(stderr, "loaduil: realloc failed.\n");
@@ -1355,8 +1355,7 @@ uil_sym_push(
     {
 	cur_stack->stack_size += STACK_INCR;
 	cur_stack->stack_entries = (sym_entry_type **)
-	    realloc((void *)cur_stack->stack_entries,
-		    sizeof(sym_entry_type *) * cur_stack->stack_size);
+	    reallocarray((void *)cur_stack->stack_entries, cur_stack->stack_size, sizeof(sym_entry_type *));
 	if (cur_stack->stack_entries == (sym_entry_type **)nullptr)
 	{
 	    fprintf(stderr, "loaduil: realloc failed.\n");

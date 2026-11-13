@@ -159,8 +159,7 @@ _DtCmGrowAttrArray(uint *num_attrs, cms_attribute **attrs, cms_attribute *attr)
 
 	index = attr->name.num;
 
-	if ((newptr = (cms_attribute *)realloc(*attrs,
-	    sizeof(cms_attribute) * (index + 1))) == nullptr)
+	if ((newptr = (cms_attribute *)reallocarray(*attrs, (index + 1), sizeof(cms_attribute))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	else {
 		*attrs = newptr;

@@ -367,8 +367,7 @@ MsgFile_create(
     new_msg_file->num_msg_sets = 0;
     new_msg_file->alloced_slots = INIT_ALLOCED_SLOTS;
 
-    if ((new_msg_file->msg_sets = (MsgSet *)malloc(sizeof(MsgSet)*
-                                                   new_msg_file->alloced_slots))
+    if ((new_msg_file->msg_sets = (MsgSet *)calloc(new_msg_file->alloced_slots, sizeof(MsgSet)))
         == (MsgSet *)nullptr)
     {
         MsgFile_destroy(new_msg_file);
@@ -765,8 +764,7 @@ msgFile_add_msg_set(
         MsgSet	*new_sets;
         
         that->alloced_slots += INIT_ALLOCED_SLOTS;
-        if ((new_sets = (MsgSet*)realloc((void *)that->msg_sets,
-                                sizeof(MsgSet)*that->alloced_slots))
+        if ((new_sets = (MsgSet*)reallocarray((void *)that->msg_sets, that->alloced_slots, sizeof(MsgSet)))
             == nullptr)
         {
             that->alloced_slots -= INIT_ALLOCED_SLOTS;
@@ -846,8 +844,7 @@ msgSet_create_new(
     else
     {
         new_msg_set->alloced_slots = INIT_ALLOCED_SLOTS;
-        if ((new_msg_set->msgs = (Msg *)malloc(sizeof(Msg)*
-                                               new_msg_set->alloced_slots))
+        if ((new_msg_set->msgs = (Msg *)calloc(new_msg_set->alloced_slots, sizeof(Msg)))
             == (Msg *)nullptr)
         {
             MsgSet_destroy(new_msg_set);
@@ -972,8 +969,7 @@ msgSet_add_msg(
         Msg	*new_msgs;
         
         that->alloced_slots += INIT_ALLOCED_SLOTS;
-        if ((new_msgs = (Msg*)realloc((void *)that->msgs,
-                                sizeof(Msg)*that->alloced_slots))
+        if ((new_msgs = (Msg*)reallocarray((void *)that->msgs, that->alloced_slots, sizeof(Msg)))
             == nullptr)
         {
             that->alloced_slots -= INIT_ALLOCED_SLOTS;

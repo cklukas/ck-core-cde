@@ -938,7 +938,7 @@ Boolean ExtendRList (RList *prl, unsigned int amt)
 
 
     total = prl->allocated + amt;
-    if ( (pNewRect = (XRectangle *) XtMalloc (total * sizeof(XRectangle))) 
+    if ( (pNewRect = (XRectangle *) XtCalloc(total, sizeof(XRectangle))) 
 	 == nullptr)
     {
 	Warning (((char *)GETMESSAGE(28, 1, "Insufficient memory for graphics data")));
@@ -991,7 +991,7 @@ RList *AllocateRList (unsigned int amt)
 
     if ((prl = (RList *) XtMalloc (sizeof (RList))) != nullptr) 
     {
-	if ( (prl->prect = (XRectangle *) XtMalloc (amt * sizeof(XRectangle))) 
+	if ( (prl->prect = (XRectangle *) XtCalloc(amt, sizeof(XRectangle))) 
 	     == nullptr)
 	{
 	    XtFree ((char *)prl);

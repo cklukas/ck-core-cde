@@ -243,7 +243,7 @@ static void UpdateTopicList(
    pTopicList = pHistoryList->pTopicHead;
    
    /* Loop through and build up a new visible topics list */
-   items = (XmString *) XtMalloc(sizeof(XmString) * pHistoryList->totalNodes);
+   items = (XmString *) XtCalloc(pHistoryList->totalNodes, sizeof(XmString));
    for (i = 0; i < pHistoryList->totalNodes; i++)
      {
        items[i]   = pTopicList->topicTitleLbl;

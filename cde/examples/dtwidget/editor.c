@@ -182,7 +182,7 @@ static void OpenFileCb( Widget w, XtPointer cd, XtPointer cb)
    DtEditorErrorCode error;
    XmFileSelectionBoxCallbackStruct *fcb = (XmFileSelectionBoxCallbackStruct *) cb;
    LoadSaveType LoadSaveFlag = (LoadSaveType)cd;
-   char *name = (char *) XtMalloc( sizeof(char) * fcb->length + 1 );
+   char *name = (char *) XtCalloc(fcb->length + 1, sizeof(char));
 
    name[0] ='\0';
 
@@ -275,7 +275,7 @@ static void SaveAsFileCb(Widget w, XtPointer cd, XtPointer cb)
    XmFileSelectionBoxCallbackStruct *fcb = (XmFileSelectionBoxCallbackStruct *)cb;
    LoadSaveType LoadSaveFlag = (LoadSaveType) cd;
 
-   char *name = XtMalloc(sizeof(char) * fcb->length + 1 );
+   char *name = XtCalloc(fcb->length + 1, sizeof(char));
    name[0] ='\0';
    XmStringGetLtoR(fcb->value, XmFONTLIST_DEFAULT_TAG, &name);
 

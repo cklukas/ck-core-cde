@@ -115,7 +115,7 @@ static void CreateSpinBoxes(Widget parent)
     /* Create value compound strings */
 
     numValueStrings = XtNumber(spinValueStrings);
-    valueXmstrings = (XmString *)XtMalloc(numValueStrings * sizeof(XmString*));
+    valueXmstrings = (XmString *)XtCalloc(numValueStrings, sizeof(XmString*));
     for (i = 0; i < numValueStrings; i++) {
 	valueXmstrings[i] = XmStringCreateLocalized(spinValueStrings[i]);
     }
@@ -276,7 +276,7 @@ static void CreateComboBoxes(Widget parent)
     /* Create value compound strings */
 
     numValueStrings = XtNumber(comboValueStrings);
-    valueXmstrings = (XmString *)XtMalloc(numValueStrings * sizeof(XmString*));
+    valueXmstrings = (XmString *)XtCalloc(numValueStrings, sizeof(XmString*));
     for (i = 0; i < numValueStrings; i++) {
 	valueXmstrings[i] = XmStringCreateLocalized(comboValueStrings[i]);
     }
@@ -284,7 +284,7 @@ static void CreateComboBoxes(Widget parent)
     /* Create color compound strings */
 
     numColorStrings = XtNumber(colorStrings);
-    colorXmstrings = (XmString *)XtMalloc(numColorStrings * sizeof(XmString*));
+    colorXmstrings = (XmString *)XtCalloc(numColorStrings, sizeof(XmString*));
     for (i = 0; i < numColorStrings; i++) {
 	colorXmstrings[i] = XmStringCreateLocalized(colorStrings[i]);
     }

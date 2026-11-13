@@ -168,7 +168,7 @@ _DtHelpCeAddOctalToBuf(
 	    dstPtr = (char *) realloc ((void *) dstPtr, *dst_max);
 	else
 	  {
-	    dstPtr = (char *) malloc (sizeof(char) * (*dst_max));
+	    dstPtr = (char *) calloc((*dst_max), sizeof(char));
 	    *dst_size = 0;
 	  }
 	*dst = dstPtr;
@@ -631,7 +631,7 @@ _DtHelpGetNxtToken (
 	/*
 	 * determine the length of the token.
 	 */
-        token = (char *) malloc ((str - start + 1) * sizeof (char));
+        token = (char *) calloc((str - start + 1), sizeof (char));
 	if (token)
 	  {
             strncpy (token, start, str - start);

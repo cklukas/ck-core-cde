@@ -450,7 +450,7 @@ _DtTermPrimLineDrawCreateFont(Widget w, GlyphInfo glyphInfo, int numGlyphs,
     /* malloc the cell position for this font (if necessary)... */
     if (!lineDrawFont->scaledBitmapInfo) {
 	lineDrawFont->scaledBitmapInfo = (ScaledBitmapInfo)
-		XtMalloc(lineDrawFont->numGlyphs * sizeof(ScaledBitmapInfoRec));
+		XtCalloc(lineDrawFont->numGlyphs, sizeof(ScaledBitmapInfoRec));
 	/* initialize it... */
 	(void) memset(lineDrawFont->scaledBitmapInfo, '\0',
 		lineDrawFont->numGlyphs * sizeof(scaledBitmapInfo));
@@ -464,7 +464,7 @@ _DtTermPrimLineDrawCreateFont(Widget w, GlyphInfo glyphInfo, int numGlyphs,
     /* malloc the line, rectangle, stipple storage (if necessary)... */
     if (!lineDrawFont->scaledCharInfo) {
 	lineDrawFont->scaledCharInfo = (ScaledCharInfo)
-		XtMalloc(lineDrawFont->numGlyphs * sizeof(ScaledCharInfoRec));
+		XtCalloc(lineDrawFont->numGlyphs, sizeof(ScaledCharInfoRec));
 	(void) memset(lineDrawFont->scaledCharInfo, '\0',
 		lineDrawFont->numGlyphs * sizeof(ScaledCharInfoRec));
     } else {

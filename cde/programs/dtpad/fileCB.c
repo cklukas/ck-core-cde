@@ -959,7 +959,7 @@ FileOpenOkCB(
     FileStuff 	*pStuff = &pPad->fileStuff;
     XmFileSelectionBoxCallbackStruct *cb = (XmFileSelectionBoxCallbackStruct *)
 					   call_data;
-    char *name = (char *) XtMalloc( sizeof(char) * cb->length + 1 );
+    char *name = (char *) XtCalloc(cb->length + 1, sizeof(char));
     name[0] ='\0';
 
     _DtTurnOnHourGlass(pPad->app_shell);
@@ -1010,7 +1010,7 @@ IncludeFile(
     Editor 	*pPad = (Editor *)client_data;
     XmFileSelectionBoxCallbackStruct *cb = (XmFileSelectionBoxCallbackStruct *)
 					   call_data;
-    char *name = (char *) XtMalloc( sizeof(char) * cb->length + 1 );
+    char *name = (char *) XtCalloc(cb->length + 1, sizeof(char));
     name[0] ='\0';
 
     _DtTurnOnHourGlass(pPad->app_shell);
@@ -1180,7 +1180,7 @@ SaveAsOkCB(
     Boolean overWrite, markSaved;
     XmFileSelectionBoxCallbackStruct *cb = (XmFileSelectionBoxCallbackStruct *)
                                            call_data;
-    char *name = (char *) XtMalloc( sizeof(char) * cb->length + 1 );
+    char *name = (char *) XtCalloc(cb->length + 1, sizeof(char));
     name[0] ='\0';
 
     _DtTurnOnHourGlass(pPad->app_shell);

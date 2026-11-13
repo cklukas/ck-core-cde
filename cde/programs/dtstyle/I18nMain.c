@@ -270,8 +270,7 @@ SetImsToggleList(I18nEnv *env)
     /* create new toggles */
 
     if (env->ims_sel->ims_list_size > 0)
-	im_tog = (Widget*)XtMalloc(sizeof(Widget) 
-				   * env->ims_sel->ims_list_size);
+	im_tog = (Widget*)XtCalloc(env->ims_sel->ims_list_size, sizeof(Widget));
 
 
     for (i=0; i< env->ims_sel->ims_list_size; i++) {
@@ -886,8 +885,7 @@ SystemDefaultCB(
 
     if (!preeditTable) {
 	/* Set the preeditType list to the default in Motif */
-	preeditTable = (XmStringTable) XtMalloc(NUM_PREEDIT * 
-						sizeof( XmString ));
+	preeditTable = (XmStringTable) XtCalloc(NUM_PREEDIT, sizeof( XmString ));
 	for ( i = 0; i < NUM_PREEDIT; i ++ )
 	    preeditTable[i] = XmStringCreate(defaultPreedit[i],
 					     "ISO8859-1");
@@ -1500,7 +1498,7 @@ MoveDownCB(
 static XmStringTable
 CopyST (XmStringTable st, int nst)
 {
-    XmStringTable lst = (XmStringTable) XtMalloc(sizeof(XmString) * nst);
+    XmStringTable lst = (XmStringTable) XtCalloc(nst, sizeof(XmString));
     int i ;
 
     for (i=0; i < nst ; i++) {

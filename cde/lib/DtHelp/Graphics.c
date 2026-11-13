@@ -933,8 +933,8 @@ Do_Direct(
     Pixel *oldPixels;
     Pixel *newPixels;
 
-    oldPixels = (Pixel *) malloc (sizeof (Pixel) * pixMax);
-    newPixels = (Pixel *) malloc (sizeof (Pixel) * pixMax);
+    oldPixels = (Pixel *) calloc(pixMax, sizeof (Pixel));
+    newPixels = (Pixel *) calloc(pixMax, sizeof (Pixel));
 
     if (oldPixels == nullptr || newPixels == nullptr)
       {
@@ -1000,10 +1000,8 @@ Do_Direct(
 		    if (pixI >= pixMax)
 		      {
 			pixMax += 128;
-			oldPixels = (Pixel *) realloc ((void *) oldPixels,
-					(sizeof (Pixel) * pixMax));
-			newPixels = (Pixel *) realloc ((void *) newPixels,
-					(sizeof (Pixel) * pixMax));
+			oldPixels = (Pixel *) reallocarray((void *) oldPixels, pixMax, sizeof (Pixel));
+			newPixels = (Pixel *) reallocarray((void *) newPixels, pixMax, sizeof (Pixel));
 
 			/*
 			 * check the realloc
@@ -1035,8 +1033,7 @@ Do_Direct(
 	result = GR_SUCCESS;
         if (pixI < pixMax)
 	  {
-	    newPixels = (Pixel *) realloc ((void *) newPixels,
-					(sizeof (Pixel) * pixI));
+	    newPixels = (Pixel *) reallocarray((void *) newPixels, pixI, sizeof (Pixel));
 	    if (newPixels == nullptr)
 	        result = GR_ALLOC_ERR;
 	  }
@@ -1163,7 +1160,7 @@ XwdFileToPixmap (
     /* read in the color map buffer */
     ncolors = header.ncolors;
     if (ncolors) {
-	colors = (XColor *)malloc((unsigned) ncolors * sizeof(XColor));
+	colors = (XColor *)calloc((unsigned) ncolors, sizeof(XColor));
 	if (!colors)
           {
 	    return GR_ALLOC_ERR;

@@ -275,7 +275,7 @@ FindRecursively(Display *dpy, Window root, Window win, Window *pwin, void **psit
 	   have SUN_DND_INTEREST advertised */
 	if (GetAtomWindow(dpy, win, ATOM_MOTIF_RECEIVER_INFO)) {
 	    /* got a motif receiver, create a drop site */
-	    CARD32 *data = (CARD32 *) malloc(sizeof(CARD32) * DATA_LEN);
+	    CARD32 *data = (CARD32 *) calloc(DATA_LEN, sizeof(CARD32));
 
 	    data[0] = DRAGDROP_VERSION;
 	    data[1] = 1;	/* site count */

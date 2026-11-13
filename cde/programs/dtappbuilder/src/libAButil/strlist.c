@@ -591,10 +591,8 @@ strlistP_shrink_array(StringList list, int sizeDiff)
 
     if (new_strings_size > 0)
     {
-        new_strings = (ISTRING *) realloc(
-			  list->strings, new_strings_size * sizeof(ISTRING));
-	new_user_datas = (void **) realloc(
-			  list->user_datas, new_strings_size * sizeof(void*));
+        new_strings = (ISTRING *) reallocarray(list->strings, new_strings_size, sizeof(ISTRING));
+	new_user_datas = (void **) reallocarray(list->user_datas, new_strings_size, sizeof(void*));
     }
     else
     {
@@ -634,10 +632,8 @@ strlistP_grow_array(StringList list, int sizeDiff)
     void	**new_user_datas = nullptr;
     int		i = 0;
 
-    new_strings = (ISTRING *)realloc(
-			list->strings, new_strings_size * sizeof(ISTRING));
-    new_user_datas = (void **)realloc(
-			list->user_datas, new_strings_size * sizeof(void *));
+    new_strings = (ISTRING *)reallocarray(list->strings, new_strings_size, sizeof(ISTRING));
+    new_user_datas = (void **)reallocarray(list->user_datas, new_strings_size, sizeof(void *));
     if ((new_strings == nullptr) || (new_user_datas == nullptr))
     {
 	return_value = -1;

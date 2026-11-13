@@ -156,9 +156,7 @@ FontCatalogLoad(
 
         if (current_family->styleCount >= current_family->styleCapacity) {
             current_family->styleCapacity *= 2;
-            FontCatalogEntry **new_array = realloc(
-                    current_family->styles,
-                    sizeof(FontCatalogEntry *) * current_family->styleCapacity);
+            FontCatalogEntry **new_array = reallocarray(current_family->styles, current_family->styleCapacity, sizeof(FontCatalogEntry *));
             if (new_array)
                 current_family->styles = new_array;
         }

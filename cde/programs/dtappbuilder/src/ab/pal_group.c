@@ -1464,7 +1464,7 @@ undo_ungroup(
     if (!undo_rec)
 	return;
 
-    new_list = (ABObj *)malloc(undo_rec->count * sizeof(ABObj));
+    new_list = (ABObj *)calloc(undo_rec->count, sizeof(ABObj));
 
     project = proj_get_project();
 

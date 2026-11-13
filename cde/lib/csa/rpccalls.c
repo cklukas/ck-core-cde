@@ -1220,7 +1220,7 @@ csa2cmsattrs(
 	if ((cmsattrs = calloc(1, sizeof(cms_attribute)*num_attrs)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if (newops && (ops_r = malloc(sizeof(CSA_enum)*num_attrs)) == nullptr) {
+	if (newops && (ops_r = calloc(num_attrs, sizeof(CSA_enum))) == nullptr) {
 		free(cmsattrs);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}

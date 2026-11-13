@@ -722,8 +722,7 @@ connP_get_when_labels(
     {
 	int	i;
 
-	when_label_list = (STRING *)XtMalloc(
-			    sizeof(STRING) * ((int)AB_WHEN_NUM_VALUES - 1));
+	when_label_list = (STRING *)XtCalloc(((int)AB_WHEN_NUM_VALUES - 1), sizeof(STRING));
 
 	for (i = 1; i < (int)AB_WHEN_NUM_VALUES; i++)
 	    when_label_list[i-1] = get_when_label((AB_WHEN)i);
@@ -743,8 +742,7 @@ connP_get_act_labels(
     {
 	int	i;
 
-	stdact_label_list = (STRING *)XtMalloc(
-			sizeof(STRING) * ((int)AB_BUILTIN_ACTION_NUM_VALUES - 1));
+	stdact_label_list = (STRING *)XtCalloc(((int)AB_BUILTIN_ACTION_NUM_VALUES - 1), sizeof(STRING));
 
 	for (i = 1; i < (int)AB_BUILTIN_ACTION_NUM_VALUES; i++)
 	    stdact_label_list[i-1] = get_stdact_label((AB_BUILTIN_ACTION)i);
@@ -1214,7 +1212,7 @@ assign_when_list(
     if (n <= 0)
 	return;
     
-    ConnP_conn_whens = (ConnWhen *)XtMalloc(sizeof(ConnWhen) * n);
+    ConnP_conn_whens = (ConnWhen *)XtCalloc(n, sizeof(ConnWhen));
 
     for (i = 0; i < n; i++)
     {
@@ -1249,7 +1247,7 @@ assign_action_list(
     if (n <= 0)
 	return;
     
-    ConnP_conn_acts = (ConnAct *)XtMalloc(sizeof(ConnAct) * n);
+    ConnP_conn_acts = (ConnAct *)XtCalloc(n, sizeof(ConnAct));
 
     for (i = 0; i < n; i++)
     {

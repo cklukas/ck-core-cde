@@ -166,7 +166,7 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 		break ;
 	    case 1 :	/* code area	*/
 		tmp_cnt = CodeList->num ;
-		tmp_dlist = (char **)malloc( sizeof(char *) * tmp_cnt ) ;
+		tmp_dlist = (char **)calloc(tmp_cnt, sizeof(char *)) ;
 		if( tmp_dlist == nullptr ) 	return(-1) ;
 		for( i=0; i<tmp_cnt; i++ ){
 		    sp = string ;
@@ -185,7 +185,7 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 		break ;
 	    case 2 :	/* style	*/
 		tmp_cnt  = StyleList->num ;
-		tmp_dlist = (char **)malloc( sizeof(char *) * tmp_cnt ) ;
+		tmp_dlist = (char **)calloc(tmp_cnt, sizeof(char *)) ;
 		for( i=0; i<tmp_cnt; i++ ){
 		    if( (tmp_dlist[i] = strdup( StyleList->list[i] )) == nullptr ){
 			return(-1) ;
@@ -194,7 +194,7 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 		break ;
 	    case 3 :	/* size		*/
 		tmp_cnt = SizeList->num ;
-		tmp_dlist = (char **)malloc( sizeof(char *) * tmp_cnt ) ;
+		tmp_dlist = (char **)calloc(tmp_cnt, sizeof(char *)) ;
 		for( i=0; i<tmp_cnt; i++ ){
 		    sprintf( string, "%d ", SizeList->list[i] ) ;
 		    if( (tmp_dlist[i] = strdup( string )) == nullptr ){
@@ -302,8 +302,7 @@ SetKeyBuff( int num, char *str )
 		    if( tmp_list == nullptr ){
 			tmp_list = (FalxUdcArea *)malloc( sizeof(FalxUdcArea) ) ;
 		    }else{
-			tmp_list = (FalxUdcArea *)realloc( KeyBuff.FileData.list,
-					 sizeof(FalxUdcArea) * (num+1) ) ;
+			tmp_list = (FalxUdcArea *)reallocarray(KeyBuff.FileData.list, (num+1), sizeof(FalxUdcArea)) ;
 		    }
 		    if( tmp_list == nullptr )	return(-1) ;
 		    tmp_list[num].udc_start = (int)start ;

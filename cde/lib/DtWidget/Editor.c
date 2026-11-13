@@ -5658,7 +5658,7 @@ FormatText (
  */
 	if((data.wordbuf = malloc(sizeof(wint_t) * LINESIZE * 3)) == (wint_t *)nullptr)
 			return 0;
-	if((data.word  = malloc(sizeof(WORD) * WORDMAX)) == (WORD *)nullptr)
+	if((data.word  = calloc(WORDMAX, sizeof(WORD))) == (WORD *)nullptr)
 	{
 		retVal = 0;
 		goto CleanUp;

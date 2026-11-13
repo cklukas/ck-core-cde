@@ -174,7 +174,7 @@ pal_register_item_info(
 	    PalSubtypeInfo *newsub;
 	
 	    (palitem->num_subinfo)++;
-	    newsub = (PalSubtypeInfo*)XtMalloc(sizeof(PalSubtypeInfo)*palitem->num_subinfo);
+	    newsub = (PalSubtypeInfo*)XtCalloc(palitem->num_subinfo, sizeof(PalSubtypeInfo));
 
 	    for (i=0; i < palitem->num_subinfo- 1; i++)
 		newsub[i] = sub[i];

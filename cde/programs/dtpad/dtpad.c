@@ -1133,7 +1133,7 @@ FindOrCreatePad(
         XtSetArg(al[ac], XmNargc, &argc_l); ac++;
         XtGetValues(topLevelWithWmCommand, al, ac);
 
-        c_argv_l = (char **) XtMalloc(argc_l * sizeof(char*));
+        c_argv_l = (char **) XtCalloc(argc_l, sizeof(char*));
         for (i=0; i<argc_l; i++)
           c_argv_l[i] = strdup(argv_l[i]);
 

@@ -191,12 +191,12 @@ static void  CreateFiles(void)
      fmtPtr = "%s\n\n   %s\n\n%s";
 #endif
 
-     bufPtr = XtMalloc((strlen(msgPtr1) + strlen(msgPtr2) +
+     bufPtr = XtCalloc((strlen(msgPtr1) + strlen(msgPtr2) +
 			strlen(AD.pszName) +
 #ifdef UNDO_CMVC_3571
 			strlen(msgPtr3) + strlen(pszFile) +
 #endif
-			strlen(fmtPtr) + 1) * sizeof(char));
+			strlen(fmtPtr) + 1), sizeof(char));
 
      sprintf(bufPtr, fmtPtr, msgPtr1, AD.pszName, msgPtr2
 #ifdef UNDO_CMVC_3571
@@ -309,8 +309,7 @@ already exists in your home folder.\n\
 The existing file may be an application,\n\
 data file, or an action file.\n\n\
 What do you want to do?";
-	  bufPtr = XtMalloc((strlen(msgPtr) + strlen(newName) + 1) *
-			    sizeof(char));
+	  bufPtr = XtCalloc((strlen(msgPtr) + strlen(newName) + 1), sizeof(char));
           sprintf(bufPtr, msgPtr, newName);
 
 	  /* INTERNATIONALIZE */
@@ -374,7 +373,7 @@ static  void    activateCB_CA_FiletypesDelete( Widget UxWidget,
      /* structure.                                                          */
      /***********************************************************************/
      if ((AD.cFiletypes - poscnt) > 0) {
-        if ( papArray = (FiletypeData **) XtMalloc(sizeof(FiletypeData *) * (AD.cFiletypes - poscnt)) ) {
+        if ( papArray = (FiletypeData **) XtCalloc((AD.cFiletypes - poscnt), sizeof(FiletypeData *)) ) {
            cnt = 0;
            for (i = 0; i < AD.cFiletypes; i++) {
               bFound = FALSE;
