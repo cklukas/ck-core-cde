@@ -70,7 +70,7 @@ int count, lcv;
 
 if (text_strings) {
     count = countItems (text_strings);
-    xmstrings = (XmStringTable) calloc (sizeof(XmString), (count));
+    xmstrings = (XmStringTable)XtCalloc(count, sizeof(XmString));
     for (lcv = 0; lcv < count; lcv++)
         xmstrings[lcv] = (XmString) XmStringCreateSimple (text_strings[lcv]);
 }
@@ -90,20 +90,17 @@ XmStringDirection direction;
 Boolean           separator;
 char              *text_string = nullptr, *temp = nullptr;
 
-text_string = (char *)calloc (1, sizeof (char));
+text_string = (char *)XtCalloc(1, sizeof(char));
 
 if (xmstring) {
     if (!XmStringInitContext (&context, xmstring)) {
       printf("Can't convert compound string.\n");
+      XtFree(text_string);
       return (nullptr);
     }
     while  (XmStringGetNextSegment (context, &temp, &charset,
                                     &direction, &separator)) {
-      text_string = (char *)realloc (text_string, strlen (temp)+1);
-      if (text_string == nullptr) {
-        printf("Can't allocate space for file name.\n");
-        return (nullptr);
-      }
+      text_string = XtRealloc(text_string, strlen(temp)+1);
       text_string = strcpy(text_string, temp);
     }
 

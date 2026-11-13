@@ -186,7 +186,7 @@ char * GetCoreName(char *pszFullName)
   } else {
      name = pszFullName;
   }
-  newName = (char *)malloc(strlen(name) + 1);
+  newName = (char *)XtMalloc(strlen(name) + 1);
   memset(newName, 0, strlen(name) + 1);
   strcpy(newName, name);
   ptr = strrchr(newName, '.');
@@ -219,7 +219,7 @@ void load_icons (Widget wid, XtPointer client_data,
   /* Get icon name and separate into parts */
   /*****************************************/
   full_name = (char *)client_data;
-  path_and_base_name = (char *)malloc(strlen(full_name)+1);
+  path_and_base_name = (char *)XtMalloc(strlen(full_name)+1);
   strcpy(path_and_base_name, full_name);
 
   /*****************************************/
@@ -276,7 +276,7 @@ void load_icons (Widget wid, XtPointer client_data,
            break;
     }
   }
-  free(path_and_base_name);
+  XtFree(path_and_base_name);
   return;
 }
 
@@ -367,7 +367,7 @@ char **GetIconSearchPathList(void)
   /**************************************************************************/
   pszEnvVar = getenv("XMICONSEARCHPATH");
   if ( pszEnvVar && strlen(pszEnvVar) ) {
-     iconpath = (char *)malloc(strlen(pszEnvVar) + 1);
+     iconpath = (char *)XtMalloc(strlen(pszEnvVar) + 1);
      strcpy(iconpath, pszEnvVar);
   }
 
@@ -383,18 +383,18 @@ char **GetIconSearchPathList(void)
         default_list = default_list2;
         count = sizeof(default_list2)/sizeof(void *);
      }
-     pplist = (char **)calloc((count + 1), sizeof(void *));
+     pplist = (char **)XtCalloc((count + 1), sizeof(void *));
      for (i=0; i < count; i++) {
         if (strchr(default_list[i], '~')) {
            if (pszEnvVar && strlen(pszEnvVar)) {
-              pplist[i] = calloc(strlen(default_list[i]) + strlen(pszEnvVar) + 1, sizeof(char));
+              pplist[i] = XtCalloc(strlen(default_list[i]) + strlen(pszEnvVar) + 1, sizeof(char));
               strcpy(pplist[i], pszEnvVar);
            } else {
-              pplist[i] = calloc(strlen(default_list[i]) + 1, sizeof(char));
+              pplist[i] = XtCalloc(strlen(default_list[i]) + 1, sizeof(char));
            }
            strcat(pplist[i], &(default_list[i][1]));
         } else {
-           pplist[i] = calloc(strlen(default_list[i]) + 1,sizeof(char));
+           pplist[i] = XtCalloc(strlen(default_list[i]) + 1,sizeof(char));
            strcpy(pplist[i], default_list[i]);
         }
      }
@@ -446,7 +446,7 @@ char **GetIconSearchPathList(void)
   /**************************************************************************/
   /* Allocate the array of pointers to store the individual path strings.   */
   /**************************************************************************/
-  pplist = (char **)calloc((count+1), sizeof(void *));
+  pplist = (char **)XtCalloc((count+1), sizeof(void *));
 
   /**************************************************************************/
   /* Iterate through again to allocate space for each individual path and   */
@@ -478,9 +478,9 @@ char **GetIconSearchPathList(void)
        /* allocating array for path.                                        */
        /*********************************************************************/
        if (strip = strstr(tmpptr, "%L")) {
-         path = malloc(strlen(tmpptr) + langsize + 1);
+         path = XtMalloc(strlen(tmpptr) + langsize + 1);
        } else {
-         path = malloc(strlen(tmpptr) + 1);
+         path = XtMalloc(strlen(tmpptr) + 1);
        }
        strcpy(path, tmpptr);
 
@@ -533,7 +533,7 @@ char **GetIconSearchPathList(void)
           /* Else, just free resources.                                  */
           /***************************************************************/
           } else {
-             free(path);
+             XtFree(path);
           }
        }
 
@@ -555,7 +555,7 @@ char **GetIconSearchPathList(void)
 #endif
     }
   }
-  free(iconpath);
+  XtFree(iconpath);
   return(pplist);
 }
 
@@ -578,14 +578,14 @@ void FreeIconSearchPathList(char **pplist)
   /* paths within the search path.                                          */
   /**************************************************************************/
   if (pplist) {
-     for (i = 0; pplist[i]; free(pplist[i]), i++);
+     for (i = 0; pplist[i]; XtFree(pplist[i]), i++);
      /*
      i = 0;
      while (pplist[i]) {
-       free(pplist[i]);
+       XtFree(pplist[i]);
      }
      */
-     free(pplist);
+     XtFree((char *)pplist);
   }
 }
 /******************************************************************************/

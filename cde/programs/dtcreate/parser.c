@@ -838,6 +838,10 @@ int  done=FALSE, argfound=FALSE,promptfound=FALSE;
         if (!exec_args) return nullptr;
         /* Allocate buffer for the cmd string */
         exec_args[0] = (char *)calloc(1,strlen(cmd)+1);
+        if (!exec_args[0]) {
+            free(exec_args);
+            return nullptr;
+        }
         exec_args[1] = exec_args[2] = nullptr;
         /* check if any Args present */
         s1=cmd;
@@ -862,6 +866,8 @@ int  done=FALSE, argfound=FALSE,promptfound=FALSE;
                       if(s2)
                       {
                          argbuf = (char *)calloc(1,(s2-s1)+2);
+                         if (!argbuf)
+                             goto fail;
                          strncpy(argbuf,s1,(s2-s1)+1);
                       }
                       else
@@ -928,6 +934,8 @@ int  done=FALSE, argfound=FALSE,promptfound=FALSE;
                           {
                                promptfound=TRUE;
                                exec_args[1] = (char *)calloc(1,(tmp-s3)+1);
+                               if (!exec_args[1])
+                                   goto fail;
                                strncpy(exec_args[1],s3,(tmp-s3));
                                exec_args[1][strlen(exec_args[1])] = '\0';
                           }
@@ -943,6 +951,13 @@ int  done=FALSE, argfound=FALSE,promptfound=FALSE;
          }
          if(argbuf) { free(argbuf); argbuf = nullptr; }
    return exec_args;
+
+fail:
+        free(argbuf);
+        free(exec_args[0]);
+        free(exec_args[1]);
+        free(exec_args);
+        return nullptr;
 }
 
 /*****************************************************************
@@ -980,6 +995,8 @@ char    *s1,*tmp,*s2,buf[10],*cts;
         if(!pFtD->pszContents)
            return (0);
         cts = (char *)calloc(1,strlen(pFtD->pszContents)+1);
+        if (!cts)
+           return (-1);
         strcpy(cts,pFtD->pszContents);
         s1=cts;
         free(pFtD->pszContents);
@@ -1029,10 +1046,13 @@ char    *s1,*tmp,*s2,buf[10],*cts;
         if (*s2)
         {
               pFtD->pszContents =  (char *)calloc(1,strlen(s2)+1);
+              if (!pFtD->pszContents) {
+                  free(cts);
+                  return (-1);
+              }
               strcpy(pFtD->pszContents,s2);
-              free(cts);
-
         }
+        free(cts);
 
 
  return 0;

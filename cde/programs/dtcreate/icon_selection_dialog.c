@@ -158,7 +158,7 @@ int myscandir(char *pszDirName, struct dirent ***NameList,
   *NameList = (struct dirent **)malloc(sizeof(void *) * 1024);
 #endif
 
-  adirent = (struct dirent **)calloc(sizeArray, sizeof(void *));
+  adirent = (struct dirent **)XtCalloc(sizeArray, sizeof(void *));
   for (dp = readdir(dirptr); dp != nullptr; dp = readdir(dirptr)) {
 
 #if 0
@@ -168,16 +168,14 @@ int myscandir(char *pszDirName, struct dirent ***NameList,
 #endif
 
      if (select_entry(dp, pszDirName)) {
-        dptmp = (struct dirent *)malloc(sizeof(struct dirent) + strlen(dp->d_name) + 1);
+        dptmp = (struct dirent *)XtMalloc(sizeof(struct dirent) + strlen(dp->d_name) + 1);
         memcpy(dptmp, dp, sizeof(struct dirent));
         strcpy(dptmp->d_name, dp->d_name);
         adirent[count] = dptmp;
         count++;
         if (count == (sizeArray - 1)) {
-           adirent = (struct dirent **)reallocarray(adirent, (sizeArray + AINCREMENT), sizeof(void *));
-           if (adirent) {
-              sizeArray += AINCREMENT;
-           }
+           adirent = (struct dirent **)XtRealloc((char *)adirent, (size_t)(sizeArray + AINCREMENT) * sizeof(void *));
+           sizeArray += AINCREMENT;
         }
      }
   }
@@ -212,7 +210,7 @@ struct dirent **build_dirent_list (char *filter, int *filecount)
   /********************************************************************/
   /* get length of file filter and create a copy                      */
   /********************************************************************/
-  dirname = (char *)calloc (strlen(filter)+1, sizeof(char));
+  dirname = (char *)XtCalloc(strlen(filter)+1, sizeof(char));
 
 #ifdef DEBUG
   if (!dirname) {
@@ -258,7 +256,7 @@ struct dirent **build_dirent_list (char *filter, int *filecount)
   printf ("Freeing dirname, sizeof: %ld\n", (long)sizeof(dirname));
 #endif
 
-  free (dirname);
+  XtFree(dirname);
   return (namelist);
 }
 
@@ -429,7 +427,7 @@ void load_directories_list (char **dirlist)
   for (i=0; i < stringcount; i++) {
      XmStringFree(xmstringlist[i]);
   }
-  free(xmstringlist);
+  XtFree((char *)xmstringlist);
 
   return;
 }
@@ -470,7 +468,7 @@ char *initialize_filter (char *filter_end)
   /******************************************************************/
   /* allocate space and put string in initial filter                */
   /******************************************************************/
-  initial_filter = (char *)calloc (filter_length + filter_end_length + 1,
+  initial_filter = (char *)XtCalloc(filter_length + filter_end_length + 1,
                                  sizeof(char));
 #ifdef DEBUG
   if (!initial_filter) printf("Error callocing memory in initialize_filter.\n");
@@ -516,7 +514,7 @@ char *update_filter (char *filter)
   /* get new end                                                    */
   /******************************************************************/
   main_end = strrchr (main_filter, '/');
-  filter_end = (char *)calloc(strlen(main_end)+1, sizeof(char));
+  filter_end = (char *)XtCalloc(strlen(main_end)+1, sizeof(char));
 
 #ifdef DEBUG
   if (!filter_end)
@@ -555,7 +553,7 @@ char *update_filter (char *filter)
   /******************************************************************/
   /* allocate space for new filter                                  */
   /******************************************************************/
-  new_filter = (char *)calloc (strlen(filter) +
+  new_filter = (char *)XtCalloc(strlen(filter) +
                              strlen(filter_end) + 1, sizeof(char));
 #ifdef DEBUG
   if (!new_filter)
@@ -577,7 +575,7 @@ char *update_filter (char *filter)
   /******************************************************************/
   /* free resources                                                 */
   /******************************************************************/
-  free(filter_end);
+  XtFree(filter_end);
 
   return (new_filter);
 }
@@ -597,7 +595,7 @@ void apply_filter (char *filter)
   /******************************************************************/
   /* Get length of main file filter and create a copy               */
   /******************************************************************/
-  old_main = (char *)calloc (strlen(main_filter)+1, sizeof(char));
+  old_main = (char *)XtCalloc(strlen(main_filter)+1, sizeof(char));
 
 #ifdef DEBUG
   if (!old_main) printf("Calloc error for old_main, in apply filter.\n");
@@ -649,7 +647,7 @@ void apply_filter (char *filter)
   printf ("Freeing old_main, sizeof: %ld\n", (long)sizeof(old_main));
 #endif
 
-  free (old_main);
+  XtFree(old_main);
   return;
 }
 
@@ -696,7 +694,7 @@ void  update_container_contents (char *filter)
   XtUnmanageChild (icon_scrolled_container);
   /* free_container_contents (); */
 
-  path = (char *)calloc (strlen(filter)+1, sizeof(char));
+  path = (char *)XtCalloc(strlen(filter)+1, sizeof(char));
 
 #ifdef DEBUG
   if (!path) printf("Calloc error for path, in update_container_contents.\n");
@@ -740,7 +738,7 @@ void  update_container_contents (char *filter)
   if (count > icon_count) {
      old_count = icon_count;
      icon_count = count;
-     icons_in_container = (DtIconGadget **)reallocarray(icons_in_container, (icon_count+1), sizeof(DtIconGadget *));
+     icons_in_container = (DtIconGadget **)XtRealloc((char *)icons_in_container, (size_t)(icon_count+1) * sizeof(DtIconGadget *));
      /*memset(&(icons_in_container[icon_count]), 0, sizeof(DtIconGadget *));*/
      for (lcv = old_count; lcv < icon_count; lcv++) {
         icons_in_container[lcv] =
@@ -832,14 +830,14 @@ void  update_container_contents (char *filter)
   /* free dirent list                                               */
   /******************************************************************/
   for (lcv = 0; lcv < namecount; lcv++) {
-     free (filelist[lcv]);
+     XtFree((char *)filelist[lcv]);
   }
   if (namecount) {
-     free (filelist);
+     XtFree((char *)filelist);
   }
 
   XtManageChild (icon_scrolled_container);
-  free(path);
+  XtFree(path);
   return;
 
 }
@@ -876,7 +874,7 @@ void  free_container_contents (void)
        */
        lcv++;
      }  /* end while icons_in_container */
-     free (icons_in_container);
+     XtFree((char *)icons_in_container);
      icons_in_container = nullptr;
   }
 
@@ -903,10 +901,10 @@ void  free_container_contents (void)
 void load_new_filter (char *new_filter)
 {
 /* no longer need old filter */
-free (main_filter);
+XtFree(main_filter);
 
 /* create space for new filter */
-main_filter = (char *)calloc (strlen(new_filter)+3, sizeof (char));
+main_filter = (char *)XtCalloc(strlen(new_filter)+3, sizeof (char));
 #ifdef DEBUG
 if (!main_filter) printf("Calloc error for main_filter, in load_new_filter.\n");
 #endif
@@ -1260,7 +1258,7 @@ static  void    defaultActionCB_dir_scrolled_list( Widget UxWidget,
     filter = (char *)XmStringToText (listcb->item);
     apply_filter (filter);
  /* XtManageChild (icon_scrolled_win);  */
-    free(filter);
+    XtFree(filter);
   }
   UxIcon_selection_dialogContext = UxSaveCtx;
 }
@@ -1286,7 +1284,7 @@ static  void    selectionCB_icon_scrolled_container ( Widget UxWidget,
      XtVaGetValues (UxWidget, XmNstring, &xmbasename, nullptr);
      basename = XmStringToText(xmbasename);
      XmTextFieldSetString (icon_name_text_field, basename);
-     if (basename) free(basename);
+     if (basename) XtFree(basename);
   }
   if (selected_icon_name) {
      if (selected_icon != UxWidget) {
@@ -1360,7 +1358,7 @@ static void focusCB_icon_selection_dialog(Widget UxWidget,
   /******************************************************************/
   /* save file_filter */
   /******************************************************************/
-  file_filter_global = (char *)calloc(strlen((char *)file_filter)+1,
+  file_filter_global = (char *)XtCalloc(strlen((char *)file_filter)+1,
                                       sizeof(char));
 
 #ifdef DEBUG
@@ -1380,7 +1378,7 @@ static void focusCB_icon_selection_dialog(Widget UxWidget,
   /******************************************************************/
   /* save main_filter */
   /******************************************************************/
-  main_filter = (char *)calloc(strlen(initial_filter)+1, sizeof(char));
+  main_filter = (char *)XtCalloc(strlen(initial_filter)+1, sizeof(char));
 
 #ifdef DEBUG
   if (!main_filter)

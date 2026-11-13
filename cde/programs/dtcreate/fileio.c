@@ -469,7 +469,7 @@ ushort WriteDefinitionFile(char *pszFile, ActionData *pAD)
   /***************************************************************************/
   ptr = GetCoreName(pszFile);
   fprintf(fp, "ACTION %s\n", ptr);
-  free(ptr);
+  XtFree(ptr);
   fprintf(fp, "{\n");
   fprintf(fp, "     LABEL         %s\n", pAD->pszName);
   fprintf(fp, "     TYPE          COMMAND\n");
