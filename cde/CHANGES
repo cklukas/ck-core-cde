@@ -1,4 +1,15 @@
 2026-11-13
+- dtterm: two signal handlers did their cleanup inside the signal. The handler
+  of the dtterm server called `XtAppAddTimeOut()`, and the handler of the
+  terminal (a setuid program) ran the pty, utmp and log file cleanups with
+  their locks and stdio and called `exit()`. Both now hand the work to the
+  toolkit: `XtAppAddSignal()` registers the cleanup, the handler calls only
+  `XtNoticeSignal()`, and a second signal exits at once with `_exit()`. The
+  terminal keeps the old sequence for the short time before the application
+  context exists. Tests: `programs/dtterm/tests/check-server-cleanup-signal.py`
+  and `check-main-cleanup-signal.py`.
+
+2026-11-13
 - dtspcd: the SIGCHLD handler of the daemon reaped the children itself. It took
   the process lock, reported errors and called the termination handler of the
   channel from the signal, which can deadlock the daemon when the signal

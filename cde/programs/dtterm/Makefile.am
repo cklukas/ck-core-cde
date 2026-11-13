@@ -31,10 +31,14 @@ CPP_TARGETS = dtterm.ti DtTermFallBackResources.c.src	\
 BUILT_SOURCES = $(CPP_TARGETS)
 
 # A source guard for the first thing main() does; see tests/check-early-drop.py
-EXTRA_DIST = tests/check-early-drop.py
+EXTRA_DIST = tests/check-early-drop.py \
+	tests/check-server-cleanup-signal.py tests/check-server-cleanup-signal.c \
+	tests/check-main-cleanup-signal.py tests/check-main-cleanup-signal.c
 
 check-local:
 	python3 $(srcdir)/tests/check-early-drop.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-server-cleanup-signal.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-main-cleanup-signal.py
 CLEANFILES = $(CPP_TARGETS)
 
 cfgdir = $(CDE_INSTALLATION_TOP)/config

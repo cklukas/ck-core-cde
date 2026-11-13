@@ -40,7 +40,9 @@
 #include <string.h>
 #include <locale.h>
 #include <ctype.h>
+#include <errno.h>
 #include <signal.h>
+#include <unistd.h>
 #include <X11/Xresource.h>
 #include <Dt/DtPStrings.h>
 #include <Xm/Form.h>
@@ -224,6 +226,8 @@ static Atom xa_DTTERM_TEST_PROBE_IDS = None;
 static Atom xa_DTTERM_REMOTE_PROBE_REQUEST = None;
 static Atom xa_WM_SAVE_YOURSELF;
 static XtAppContext appContext;
+static XtSignalId cleanupSignalId = 0;
+static volatile sig_atomic_t cleanupRequested = 0;
 static Widget topLevel;
 static Widget topShell;
 static char *title = nullptr;
@@ -935,11 +939,11 @@ AtExitProc(void)
 #endif	/* BBA */
 }
 
-void
-SignalHandler
-(
-    int			  sig
-)
+/* The cleanup that restores the pty and removes the utmp entry; none of it
+ * may run in a signal handler.
+ */
+static void
+RunCleanupAndExit(void)
 {
     DebugF('s', 10, fprintf(stderr, ">>SignalHandler() starting\n"));
     _DtTermPrimPtyCleanup();
@@ -949,6 +953,46 @@ SignalHandler
     _DtTermPrimLogFileCleanup();
     DebugF('s', 10, fprintf(stderr, ">>SignalHandler() finished\n"));
     (void) exit(0);
+}
+
+/* Registered with the application context once it exists; Xt runs it from
+ * the event loop after the handler called XtNoticeSignal().
+ */
+static void
+CleanupSignalProc
+(
+    XtPointer		  clientData,
+    XtSignalId		 *id
+)
+{
+    (void) clientData;
+    (void) id;
+    RunCleanupAndExit();
+}
+
+void
+SignalHandler
+(
+    int			  sig
+)
+{
+    int			  savedErrno = errno;
+
+    (void) sig;
+    if (cleanupSignalId != 0) {
+	if (cleanupRequested) {
+	    (void) _exit(0);
+	}
+	cleanupRequested = 1;
+	(void) XtNoticeSignal(cleanupSignalId);
+	errno = savedErrno;
+	return;
+    }
+    /* The early window before the application context exists: the program
+     * is single threaded and no event loop shares the cleanup state, so the
+     * cleanup runs here as it always did.
+     */
+    RunCleanupAndExit();
 }
 
 static int signalList[] = {
@@ -1325,6 +1369,9 @@ main(int argc, char **argv)
 	    fallbackResources,
 	    arglist,
 	    i);
+
+    /* from now on the signal handler defers the cleanup to the event loop... */
+    cleanupSignalId = XtAppAddSignal(appContext, CleanupSignalProc, nullptr);
 
 #ifdef SUN_TERMINAL_SERVER
     if (iAmTheServer) {

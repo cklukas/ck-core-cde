@@ -39,6 +39,7 @@
 #endif	/* LOG_USAGE */
 #include <signal.h>
 #include <errno.h>
+#include <unistd.h>
 #include <Dt/Service.h>
 
 /* defines for types of service requests.  Upper case for the requestor
@@ -131,6 +132,17 @@ static void TimeOut(
 static void CleanUp(
     int			  sig
 );
+
+static void CleanUpSignalProc(
+    XtPointer		  clientData,
+    XtSignalId		 *id
+);
+
+/* The termination signal handler may call only XtNoticeSignal(); Xt then
+ * runs CleanUpSignalProc() from the application's event loop.
+ */
+static XtSignalId		  cleanUpSignalId;
+static volatile sig_atomic_t	  cleanUpRequested = 0;
 
 
 static const int trapSignalList[] = {
@@ -250,6 +262,10 @@ Initialize(
 	 */
 	iAmTheServer = True;
 
+	/* register the signal procedure before any handler can run... */
+	cleanUpSignalId = XtAppAddSignal(XtWidgetToApplicationContext(refWidget),
+		CleanUpSignalProc, (XtPointer) refWidget);
+
 	/* set up signal handlers so that we can clean up nicely... */
 	(void) sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
@@ -331,26 +347,36 @@ NiceCleanUp(
     (void) exit(1);
 }
 
+/* Runs in the toolkit's context, not in a signal handler. */
+static void
+CleanUpSignalProc(
+    XtPointer		  clientData,
+    XtSignalId		 *id
+)
+{
+    (void) NiceCleanUp(clientData, nullptr);
+}
+
 static void
 CleanUp(
     int			  sig
 )
 {
-    static Boolean	  firstTime = True;
+    int			  savedErrno = errno;
 
-    if (firstTime) {
-	/* let's try to do this nicely and invoke our cleanup routine
-	 * via the toolkit (i.e., outside of a signal handler)...
-	 */
-	(void) XtAppAddTimeOut(XtWidgetToApplicationContext(refWidget),
-		    0, NiceCleanUp, (XtPointer) refWidget);
-	firstTime = False;
-    } else {
+    (void) sig;
+    if (cleanUpRequested) {
 	/* we have received multiple attempts to kill ourself.  Just
 	 * exit...
 	 */
-	(void) exit(1);
+	(void) _exit(1);
     }
+    cleanUpRequested = 1;
+    /* let's try to do this nicely and invoke our cleanup routine
+     * via the toolkit (i.e., outside of a signal handler)...
+     */
+    (void) XtNoticeSignal(cleanUpSignalId);
+    errno = savedErrno;
 }
 
 
