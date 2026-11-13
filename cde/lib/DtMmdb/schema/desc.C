@@ -66,13 +66,13 @@ desc::desc(int tp, const char* type_str) : v_oid(ground), next_desc(0)
 
 desc::~desc()
 {
-   delete nm; 
-   delete type;
+   free(nm);
+   free(type);
 }
 
 void desc::set_nm(const char* name)
 {
-   delete nm;
+   free(nm);
    nm = strdup(name);
 }
 

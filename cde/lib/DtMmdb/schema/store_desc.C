@@ -103,8 +103,8 @@ store_desc::store_desc(int tp, const char* comment):
 
 store_desc::~store_desc()
 { 
-   delete mode_str; 
-   delete order_str; 
+   free(mode_str);
+   free(order_str);
 
 /*
    store_desc_obj_ct-- ;
@@ -116,7 +116,7 @@ store_desc::~store_desc()
 
 void store_desc::set_mode(const char* str)
 {
-   delete mode_str;
+   free(mode_str);
    mode_str = strdup(str);
 
    get_mode(); // check 
@@ -144,7 +144,7 @@ int store_desc::get_mode()
 
 void store_desc::set_order(const char* str)
 {
-   delete order_str;
+   free(order_str);
    order_str = strdup(str);
 
    get_order(); // check 

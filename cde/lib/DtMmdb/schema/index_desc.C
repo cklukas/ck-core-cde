@@ -65,19 +65,19 @@ index_desc::index_desc(int class_code, const char* comment) :
 
 index_desc::~index_desc()
 {
-   delete inv_nm;
-   delete agent_nm;
+   free(inv_nm);
+   free(agent_nm);
 }
 
 void index_desc::set_inv_nm(const char* str)
 {
-   delete inv_nm;
+   free(inv_nm);
    inv_nm = strdup(str);
 }
 
 void index_desc::set_agent_nm(const char* str)
 {
-   delete agent_nm;
+   free(agent_nm);
    agent_nm = strdup(str);
 }
 
