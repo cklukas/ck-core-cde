@@ -340,9 +340,7 @@ void getexistcode(ListData *ld)
  * callbacks							*
  ***************************************************************/
 
-void quit(w, client_data, call_data) /* dtex */
-Widget	w;
-caddr_t	*client_data, *call_data;
+void quit(Widget w, caddr_t *client_data, caddr_t *call_data) /* dtex */
 {
     excterminate(ed);
 }

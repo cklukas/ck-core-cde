@@ -47,6 +47,7 @@
  *
 */
 
+#include <string.h>
 #include "syncx.h"
 #include <X11/Xresource.h>
 #include "_fallibint.h"
@@ -106,16 +107,16 @@ typedef struct {
     int (*parse_proc)(); /* parsing procedure */
 } TokenTable;
 
-static int f_newline();
-static int f_comment();
-static int f_semicolon();
-static int f_double_quote();
-static int f_left_brace();
-static int f_right_brace();
-static int f_white();
-static int f_backslash();
-static int f_numeric();
-static int f_default();
+static int f_newline(char *str, Token token, Database *db);
+static int f_comment(char *str, Token token, Database *db);
+static int f_semicolon(char *str, Token token, Database *db);
+static int f_double_quote(char *str, Token token, Database *db);
+static int f_left_brace(char *str, Token token, Database *db);
+static int f_right_brace(char *str, Token token, Database *db);
+static int f_white(char *str, Token token, Database *db);
+static int f_backslash(char *str, Token token, Database *db);
+static int f_numeric(char *str, Token token, Database *db);
+static int f_default(char *str, Token token, Database *db);
 
 static TokenTable token_tbl[] = {
     { T_NEWLINE,	"\n",	1,	f_newline },
@@ -169,7 +170,7 @@ static void init_parse_info(void)
     char *ptr;
     int  size;
     if(first == 1){
-	bzero(&parse_info, sizeof(DBParseInfo));
+	memset(&parse_info, 0, sizeof(DBParseInfo));
 	parse_info.buf = (char *)Xmalloc(BUFSIZE);
 	parse_info.bufMaxSize = BUFSIZE;
 	first = 0;
@@ -177,7 +178,7 @@ static void init_parse_info(void)
     }
     ptr = parse_info.buf;
     size = parse_info.bufMaxSize;
-    bzero(&parse_info, sizeof(DBParseInfo));
+    memset(&parse_info, 0, sizeof(DBParseInfo));
     parse_info.buf = ptr;
     parse_info.bufMaxSize = size;
 }
@@ -205,7 +206,7 @@ clear_parse_info(void)
     }
     ptr = parse_info.buf;
     size = parse_info.bufMaxSize;
-    bzero(&parse_info, sizeof(DBParseInfo));
+    memset(&parse_info, 0, sizeof(DBParseInfo));
     parse_info.buf = ptr;
     parse_info.bufMaxSize = size;
 }
@@ -240,7 +241,7 @@ free_line(Line *line)
     if(line->str != NULL){
 	Xfree(line->str);
     }
-    bzero(line, sizeof(Line));
+    memset(line, 0, sizeof(Line));
 }
 
 static int
@@ -255,7 +256,7 @@ realloc_line(Line *line, int size)
     }
     if(str == NULL){
 	/* malloc error */
-	bzero(line, sizeof(Line));
+	memset(line, 0, sizeof(Line));
 	return 0;
     }
     line->str = str;
@@ -548,7 +549,7 @@ store_to_database(Database *db)
 	if(new == (Database)NULL){
 	    break;
 	}
-	bzero(new, sizeof(DatabaseRec));
+	memset(new, 0, sizeof(DatabaseRec));
 
 	new->category = (char *)Xmalloc(strlen(parse_info.category) + 1);
 	if(new->category == NULL){
@@ -961,7 +962,7 @@ CreateDatabase(char *dbfile)
 	return NULL;
     }
 
-    bzero(&line, sizeof(Line));
+    memset(&line, 0, sizeof(Line));
     init_parse_info();
 
     do {
@@ -1156,7 +1157,7 @@ _fallcCreateLocaleDataBase(XLCd lcd)
 	}
 	return (XPointer)NULL;
     }
-    bzero(lc_db, sizeof(XlcDatabaseRec) * (n + 1));
+    memset(lc_db, 0, sizeof(XlcDatabaseRec) * (n + 1));
     for(p = database, i = 0; p && i < n; p = p->next, ++i){
 	lc_db[i].category_q = falrmStringToQuark(p->category);
 	lc_db[i].name_q = falrmStringToQuark(p->name);

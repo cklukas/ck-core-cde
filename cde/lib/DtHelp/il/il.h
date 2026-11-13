@@ -48,6 +48,7 @@
 #define IL_H 
 
 #include <X11/Xos.h>
+#include <string.h>
 #include <X11/Xfuncs.h>
 
 /* include Xmd.h for CARD32 and INT32 definitions */
@@ -229,7 +230,7 @@ typedef struct _ilImageDes {
     } ilImageDes;
 
 #define IL_INIT_IMAGE_DES(_pDes) {                \
-    bzero ((char *)(_pDes), sizeof (ilImageDes)); \
+    memset((char *)(_pDes), 0, sizeof (ilImageDes)); \
     (_pDes)->noLongerUsed = 0x10001;              \
     }
 
@@ -260,7 +261,7 @@ typedef struct {
     } ilImageFormat;
 
 #define IL_INIT_IMAGE_FORMAT(_pFormat) {                \
-    bzero ((char *)(_pFormat), sizeof (ilImageFormat)); \
+    memset((char *)(_pFormat), 0, sizeof (ilImageFormat)); \
     }
 
 extern const ilImageFormat ilBitImageFormat, ilByteImageFormat, 

@@ -86,8 +86,8 @@ typedef unsigned char   Uchar;
 typedef unsigned long   Ulong;
 typedef unsigned int	Uint;
 
-static CodeSet GetCodeSetFromCharSet();
-static CodeSet wc_codeset();
+static CodeSet GetCodeSetFromCharSet(XLCd lcd, XlcCharSet charset);
+static CodeSet wc_codeset(XLCd lcd, wchar_t wch);
 
 #define BADCHAR(min_ch, c)  (BIT8OFF(c) < (char)min_ch && BIT8OFF(c) != 0x0 && \
 			     BIT8OFF(c) != '\t' && BIT8OFF(c) != '\n' && \

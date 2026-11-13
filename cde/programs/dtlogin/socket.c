@@ -85,6 +85,7 @@ from the X Consortium.
  * socket.c - Support for BSD sockets
  */
 
+#include <string.h>
 #include "dm.h"
 #include "vgmsg.h"
 
@@ -131,7 +132,7 @@ CreateWellKnownSockets (void)
     registerHostname (name, strlen (name));
     RegisterCloseOnFork (xdmcpFd);
     /* zero out the entire structure; this avoids 4.4 incompatibilities */
-    bzero ((char *) &sock_addr, sizeof (sock_addr));
+    memset((char *) &sock_addr, 0, sizeof (sock_addr));
 #ifdef BSD44SOCKETS
     sock_addr.sin_len = sizeof(sock_addr);
 #endif
@@ -197,7 +198,7 @@ CreateChooserSocket (void)
 	chooserPath[0] = '\0';
 	return 0;
     }
-    bzero ((char *) &sock_addr, sizeof (sock_addr));
+    memset((char *) &sock_addr, 0, sizeof (sock_addr));
     sock_addr.sun_family = AF_UNIX;
     strcpy (sock_addr.sun_path, chooserPath);
     (void) unlink (chooserPath);

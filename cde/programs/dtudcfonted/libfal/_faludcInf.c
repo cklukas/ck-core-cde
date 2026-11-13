@@ -44,8 +44,8 @@
 /*
    external symbols
 */
-extern FontData falread_EncodingInfo();
-extern int fal_get_codeset();
+extern FontData falread_EncodingInfo(int count, char **value);
+extern int fal_get_codeset(char *locale, char *charset_str, int **codeset, int *num_codeset);
 
 extern int fal_utyderror ;
 extern int fal_utyerror ;

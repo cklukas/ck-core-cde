@@ -128,7 +128,7 @@ extern char *newstradded(char *src1, char *src2, char *src3);
 extern int str_to_int(char *ptr, int *val);
 extern XimsBool str_to_bool(char *ptr, XimsBool def_val);
 extern char *trim_line(char *ptr);
-extern	char	**parse_strlist(register char *ptr, char sep_ch);
+extern	char	**parse_strlist(char *ptr, char sep_ch);
 extern int pack_strlist(char *ptr, char **listp, char sep_ch);
 extern void free_strlist(char **pp);
 extern XimsBool parse_dpy_str(char *display_str, char **host, int *dnum,

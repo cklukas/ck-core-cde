@@ -51,6 +51,7 @@
  * display manager
  */
 
+#include <string.h>
 # include	<sys/types.h>
 # include	<sys/signal.h>
 # include	<sys/stat.h>
@@ -929,7 +930,7 @@ StartDisplay(
 
     Debug ("StartDisplay(): %s\n", d->name);
 
-    bzero(&status, sizeof(waitType));
+    memset(&status, 0, sizeof(waitType));
     if (d->authFile == NULL) 
 	authFile_str = "NULL"; 
     else
@@ -1007,7 +1008,7 @@ StartDisplay(
 	if (! d->gettyLine || strlen(d->gettyLine) == 0 ) {
 	    char *p;
 	    
-	    if ( (p = index(d->name,':')) != NULL &&
+	    if ( (p = strchr(d->name, ':')) != NULL &&
 		 (  strncmp(++p,"0",1) == 0 )) {
 
 		d->gettyLine  = (char *) malloc(8);
@@ -1226,7 +1227,7 @@ StopDisplay( struct display *d )
 {
     waitType      status;
 
-    bzero(&status, sizeof(waitType));
+    memset(&status, 0, sizeof(waitType));
     Debug("StopDisplay(): %s, server pid = %d, manager pid = %d, dt_shutdown = %d\n",
 	  d->name, d->serverPid, d->pid, dt_shutdown);
 	   
@@ -1476,7 +1477,7 @@ StartGetty( struct display *d )
 
     Debug ("StartGetty(): %s\n", d->name);
 
-    bzero(&status, sizeof(waitType));
+    memset(&status, 0, sizeof(waitType));
     /*
      * ensure that server is known dead...
      */

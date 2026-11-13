@@ -34,6 +34,7 @@
 
    ============================================================================================================================= */
 
+#include <string.h>
 #include "ilint.h"
 #include "ilpipelem.h"
 #include "ilerrors.h"
@@ -99,8 +100,7 @@ static ilError ilRotateInit(
    if ( (long) pPrivate->dstMask < 0 ) pPrivate->Lastbit = TRUE; 
    else  pPrivate->Lastbit = FALSE;
 
-   bzero((char *)pdstline,
-	 (pplane->nBytesPerRow * pPrivate->ilRotateDstheight));
+   memset((char *)pdstline, 0, (pplane->nBytesPerRow * pPrivate->ilRotateDstheight));
 
    return IL_OK;
 }

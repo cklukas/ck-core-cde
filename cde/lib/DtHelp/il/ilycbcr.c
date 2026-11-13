@@ -40,6 +40,7 @@
         /*  /ilc/ilycbcr.c : Code for handling IL_YCBCR images, including
             conversions to/from RGB, and subsampling - upsampling is in /ilc/ilupsample.c
         */
+#include <string.h>
 #include <stdlib.h>
 
 #include "ilint.h"
@@ -130,7 +131,7 @@ unsigned int       pixel;
             pSrc = pSrcLine;
             pDst = pDstLine;
             do {
-                bcopy ((char *)pSrc, (char *)pDst, width);
+                memmove((char *)pDst, (char *)pSrc, width);
                 pSrc += srcRowBytes;
                 pDst += dstRowBytes;
                 } while (--nDstLinesM1 >= 0);

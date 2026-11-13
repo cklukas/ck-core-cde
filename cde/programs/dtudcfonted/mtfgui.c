@@ -245,7 +245,7 @@ EHStaT_disp( Widget widget, int i /* widget that have some ivent */ )
  ** ===================================================================
  **/
 
-static void _create_editptn_after();
+static void _create_editptn_after(void);
 
 static Widget FooterMessage;
 static Widget codeLabel;
@@ -384,8 +384,8 @@ CreateEditPtn(Widget owner)
     Widget	baseForm, pop, font_menu, edit_menu, char_menu, info_menu;
     Widget	listBase, listFrame, rc, editFrame, figure_w;
     Widget	imageFrame, imageForm, editPane, image;
-    extern Widget CreateFrame();
-    extern Widget CreatePixButton();
+    extern Widget CreateFrame(Widget owner, String name, int type, int thickness);
+    extern Widget CreatePixButton(Widget owner, String name, RadioButt *data);
 
     Arg arg[1];
 
@@ -587,7 +587,7 @@ _create_editptn_after(void)
 {
     int		slctloc;
     static char	dashPtn[] = {1,1};	/* Editing pane's border pattern */
-    extern void chgEdList();
+    extern void chgEdList(int statloc, int slctloc, char mode);
 
 
     /*

@@ -102,7 +102,7 @@ static void     	fileCreateFile(char*, char*, char*);
 static void		fileCreateFiles(Widget);
 static void		fileDragStart(Widget, XEvent*, IconInfo*, int);
 static char*		fileGetContents(char*);
-static char*		fileGetDemoDirectory();
+static char*		fileGetDemoDirectory(void);
 static char*		fileGetDirectoryName(DragOrDrop);
 static void     	fileRemoveDirectory(char*);
 static void		fileShutdown(Widget, XtPointer, XtPointer);
@@ -675,7 +675,7 @@ fileGetContents(
  * Return the directory where the demo directories reside.
  */
 static char*
-fileGetDemoDirectory()
+fileGetDemoDirectory(void)
 {
         static char     *demoDirectory = NULL;
         char            currentDirectory[MAXPATHLEN];

@@ -42,6 +42,7 @@
                 NOTE: code in this file handles uncompressed images only.
         */
 
+#include <string.h>
 #include "ilint.h"
 #include "ilimage.h"
 #include "ilpipelem.h"
@@ -265,19 +266,15 @@ ilError            returnCode;
                     while (nPlanes-- > 0) {
                         vertShift = _ilSubsampleShift [pSample->subsampleVert];
                         pSample++;
-                        bcopy ((char *)(pPlane->pPixels + 
-                            (pData->srcLine >> vertShift) * pPlane->nBytesPerRow),
-                            (char *)pPlane->pPixels, 
-                            (pPriv->nBufferLines >> vertShift) * pPlane->nBytesPerRow);
+                        memmove((char *)pPlane->pPixels, (char *)(pPlane->pPixels + 
+                            (pData->srcLine >> vertShift) * pPlane->nBytesPerRow), (pPriv->nBufferLines >> vertShift) * pPlane->nBytesPerRow);
                         pPlane++;
                         }
                     }
                 else {
                     while (nPlanes-- > 0) {
-                        bcopy ((char *)(pPlane->pPixels + 
-                            pData->srcLine * pPlane->nBytesPerRow),
-                            (char *)pPlane->pPixels, 
-                            pPriv->nBufferLines * pPlane->nBytesPerRow);
+                        memmove((char *)pPlane->pPixels, (char *)(pPlane->pPixels + 
+                            pData->srcLine * pPlane->nBytesPerRow), pPriv->nBufferLines * pPlane->nBytesPerRow);
                         pPlane++;
                         }
                     }
@@ -373,7 +370,7 @@ long               lineCount;
             continue;                /* no bytes (? perhaps subsampled ?), next plane */
 
         while (lineCount-- > 0) {
-            bcopy ((char *)pSrcLine, (char *)pDstLine, nBytes);
+            memmove((char *)pDstLine, (char *)pSrcLine, nBytes);
             pSrcLine += srcRowBytes;
             pDstLine += dstRowBytes;
             }

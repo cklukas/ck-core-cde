@@ -441,12 +441,12 @@ PText::insert_chars (int where, char *text, int length)
     }
 
   /* -------- make room for new stuff -------- */
-  bcopy (&f_symbol[where],              // from
-	 &f_symbol[where+length],	// to
+  memmove(// from
+	 &f_symbol[where+length], &f_symbol[where], // to
 	 f_symbol_len - where + 1);	// length
 
   /* -------- insert new stuff -------- */
-  bcopy (text, &f_symbol[where], length);
+  memmove(&f_symbol[where], text, length);
   f_symbol_len += length;
 }
 
@@ -454,8 +454,7 @@ void
 PText::remove_chars (int where, int len)
 {
   /* Just copy stuff after hole back over it. */
-  bcopy (&f_symbol[where+len], &f_symbol[where],
-	 f_symbol_len - (where + len) + 1);
+  memmove(&f_symbol[where], &f_symbol[where+len], f_symbol_len - (where + len) + 1);
   f_symbol_len -= len;
   if (f_symbol_len == 2)  // ie: just two quotes
     f_empty = TRUE;

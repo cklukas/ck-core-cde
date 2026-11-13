@@ -238,7 +238,7 @@ void
 LockDisplay( 
   Boolean lockNow) 
 {
-    register int i;
+    int i;
     int	     screenNum;
     Widget   parent = NULL, lockDlg;
     XColor   xcolors[2];
@@ -942,8 +942,8 @@ WipePassword(
 
 static void 
 CheckString(
-        register char *s,
-        register int i )
+        char *s,
+        int i )
 {
   /* seems to be reasonable maximal length */
 #define MAX_PASSWORD_LENGTH 65535

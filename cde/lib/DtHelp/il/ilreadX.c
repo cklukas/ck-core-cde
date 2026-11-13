@@ -38,6 +38,7 @@
 ***-------------------------------------------------------------------*/
 
 
+#include <string.h>
 #include "ilint.h"
 #include "ilcontext.h"
 #include "ilX.h"
@@ -326,10 +327,10 @@ long                        srcRowBytes, dstRowBytes, nBytesToCopy;
             }
         else {
             if (srcRowBytes == dstRowBytes)
-                bcopy ((char *)pSrcLine, (char *)pDstLine, nLines * srcRowBytes);
+                memmove((char *)pDstLine, (char *)pSrcLine, nLines * srcRowBytes);
             else {
                 while (nLines-- > 0) {
-                    bcopy ((char *)pSrcLine, (char *)pDstLine, nBytesToCopy);
+                    memmove((char *)pDstLine, (char *)pSrcLine, nBytesToCopy);
                     pSrcLine += srcRowBytes;
                     pDstLine += dstRowBytes;
                     }
@@ -467,10 +468,10 @@ long                        srcRowBytes, dstRowBytes, nBytesToCopy;
             }
         else {
             if (srcRowBytes == dstRowBytes)
-                bcopy ((char *)pSrcLine, (char *)pDstLine, nLines * srcRowBytes);
+                memmove((char *)pDstLine, (char *)pSrcLine, nLines * srcRowBytes);
             else {
                 while (nLines-- > 0) {
-                    bcopy ((char *)pSrcLine, (char *)pDstLine, nBytesToCopy);
+                    memmove((char *)pDstLine, (char *)pSrcLine, nBytesToCopy);
                     pSrcLine += srcRowBytes;
                     pDstLine += dstRowBytes;
                     }

@@ -49,9 +49,8 @@
 
 #include <stdio.h>
 
-main(argc, argv)
-int argc ;
-char **argv ;
+int
+main(int argc, char **argv)
 {
   int i ;
   for (i = argc ; i > 1 ; i--)

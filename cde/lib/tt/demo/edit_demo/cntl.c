@@ -86,12 +86,10 @@ char		*cntl_objid = (char *)0;
 
 Tt_scope	msg_scope = TT_FILE_IN_SESSION;
 
-void
-main(argc, argv)
-	int		argc;
-	char		**argv;
+int
+main(int argc, char **argv)
 {
-	void		cntl_ui_initialize();
+	void		cntl_ui_initialize(void);
 
 	/*
 	 * Initialize Motif.
@@ -118,17 +116,14 @@ main(argc, argv)
 
 
 int
-is_window_showing(widget)
-	Widget widget;
+is_window_showing(Widget widget)
 {
 	return(XtIsManaged(widget)) ;
 }
 
 
 void
-get_screen_size(widget, width, height)
-	Widget widget;
-	int *width, *height;
+get_screen_size(Widget widget, int *width, int *height)
 {
 	Display *dpy = XtDisplay(widget);
 	int screen   = DefaultScreen(dpy);
@@ -139,9 +134,7 @@ get_screen_size(widget, width, height)
 
 
 void
-force_popup_on_screen(popup, px, py)
-	Widget popup;
-	int *px, *py;
+force_popup_on_screen(Widget popup, int *px, int *py)
 {
 	Dimension popup_width, popup_height;
 	Position left, top;
@@ -186,8 +179,7 @@ force_popup_on_screen(popup, px, py)
 
 
 void
-position_popup(base, popup)
-	Widget base, popup;
+position_popup(Widget base, Widget popup)
 {
 	int bw, bx, by, px, py;
 	int screen_width, screen_height;
@@ -222,8 +214,7 @@ position_popup(base, popup)
 
 
 void
-show_popup(widget)
-	Widget widget;
+show_popup(Widget widget)
 {
 	if (!is_window_showing(widget))
 		position_popup(cntl_ui_base_window, widget) ;
@@ -234,10 +225,7 @@ show_popup(widget)
 
 
 void
-dismiss_popup(widget, client_data, cbs)
-	Widget widget;
-	XtPointer client_data;
-	XmAnyCallbackStruct *cbs;
+dismiss_popup(Widget widget, XtPointer client_data, XmAnyCallbackStruct *cbs)
 {
 	XtUnmapWidget(widget);
 	XtUnmanageChild(widget);
@@ -245,8 +233,7 @@ dismiss_popup(widget, client_data, cbs)
 
 
 void
-add_delete_callback(widget)
-	Widget widget;
+add_delete_callback(Widget widget)
 {
 	Atom WM_DELETE_WINDOW;
 
@@ -258,8 +245,7 @@ add_delete_callback(widget)
 
 
 void
-write_footer(message)
-	char *message;
+write_footer(char *message)
 {
 	XmString label;
 
@@ -277,9 +263,9 @@ cntl_init_tt()
 {
 	char			*procid = tt_open();
 	int			ttfd;
-	void			cntl_receive_tt_message();
+	void			cntl_receive_tt_message(XtPointer, int *, XtInputId *);
 	Tt_pattern		pat;
-	Tt_callback_action	cntl_update_obj_panel_callback();
+	Tt_callback_action	cntl_update_obj_panel_callback(Tt_message, Tt_pattern);
 
 
 	if (tt_pointer_error(procid) != TT_OK) {
@@ -317,10 +303,7 @@ cntl_init_tt()
  * a tt_message_receive.
  */
 void
-cntl_receive_tt_message(client_data, fid, id)
-	XtPointer client_data;
-	int *fid;
-	XtInputId *id;
+cntl_receive_tt_message(XtPointer client_data, int *fid, XtInputId *id)
 {
 	Tt_message		msg;
 
@@ -338,9 +321,7 @@ cntl_receive_tt_message(client_data, fid, id)
  * objects panel if it is up.
  */
 Tt_callback_action
-cntl_update_obj_panel_callback(m, p)
-     Tt_message m;
-     Tt_pattern p;
+cntl_update_obj_panel_callback(Tt_message m, Tt_pattern p)
 {
 	int 	mark;
 
@@ -370,9 +351,7 @@ cntl_update_obj_panel_callback(m, p)
  * Default callback for all the ToolTalk messages we send.
  */
 Tt_callback_action
-cntl_msg_callback(m, p)
-     Tt_message m;
-     Tt_pattern p;
+cntl_msg_callback(Tt_message m, Tt_pattern p)
 {
 	int		mark;
 	char		msg[255];
@@ -422,8 +401,7 @@ cntl_msg_callback(m, p)
  * start an editing session.
  */
 void
-cntl_edit(file)
-     char *file;
+cntl_edit(char *file)
 {
 	Tt_message	msg;
 
@@ -440,8 +418,7 @@ cntl_edit(file)
  * editing this file to save the file.
  */
 void
-cntl_save(file)
-     char *file;
+cntl_save(char *file)
 {
 	Tt_message	msg;
 
@@ -458,8 +435,7 @@ cntl_save(file)
  * Shut down the Sun_EditDemo that is editing this file.
  */
 void
-cntl_close(file)
-     char *file;
+cntl_close(char *file)
 {
 	Tt_message	msg;
 
@@ -476,10 +452,7 @@ cntl_close(file)
  * under a new name.
  */
 void
-cntl_save_as(file, dir, newfile)
-     char *file;
-     char *dir;
-     char *newfile;
+cntl_save_as(char *file, char *dir, char *newfile)
 {
 	Tt_message	msg;
 	char		buf[255];
@@ -509,9 +482,7 @@ cntl_save_as(file, dir, newfile)
  * Handler for `file_menu (Edit)'.
  */
 void
-cntl_ui_edit(widget, client_data, call_data)
-	Widget widget;
-	XtPointer client_data, call_data;
+cntl_ui_edit(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	write_footer("");
 	cntl_edit(XmTextGetString(cntl_ui_file_field));
@@ -521,9 +492,7 @@ cntl_ui_edit(widget, client_data, call_data)
  * Handler for `file_menu (Save)'.
  */
 void
-cntl_ui_save(widget, client_data, call_data)
-	Widget widget;
-	XtPointer client_data, call_data;
+cntl_ui_save(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	write_footer("");
 	cntl_save(XmTextGetString(cntl_ui_file_field));
@@ -532,9 +501,7 @@ cntl_ui_save(widget, client_data, call_data)
 /*
  * Handler for `file_menu (Save as...)'.
  */
-cntl_ui_save_as(widget, client_data, call_data)
-	Widget widget;
-	XtPointer client_data, call_data;
+cntl_ui_save_as(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	write_footer("");
 	show_popup(cntl_ui_saveas_popup);
@@ -543,9 +510,7 @@ cntl_ui_save_as(widget, client_data, call_data)
 /*
  * Handler for `file_menu (Close)'.
  */
-cntl_ui_close(widget, client_data, call_data)
-	Widget widget;
-	XtPointer client_data, call_data;
+cntl_ui_close(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	write_footer("");
 	cntl_close(XmTextGetString(cntl_ui_file_field));
@@ -555,9 +520,7 @@ cntl_ui_close(widget, client_data, call_data)
  * Callback function for `save_as_button'.
  */
 void
-cntl_ui_save_as_button_handler(widget, client_data, call_data)
-	Widget widget;
-	XtPointer  client_data, call_data;
+cntl_ui_save_as_button_handler(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	write_footer("");
 	cntl_save_as(XmTextGetString(cntl_ui_file_field),
@@ -571,10 +534,7 @@ cntl_ui_save_as_button_handler(widget, client_data, call_data)
  * all the ToolTalk objects in a file.
  */
 Tt_filter_action
-cntl_gather_specs(objid, list_count, acc)
-     char *objid;
-     void *list_count;
-     void *acc;
+cntl_gather_specs(char *objid, void *list_count, void *acc)
 {
 	int *i = (int *)list_count;
 	XmString label;
@@ -624,9 +584,7 @@ cntl_update_obj_panel()
  * Callback function for "File objects..." menu item.
  */
 void
-cntl_ui_file_objects(widget, client_data, call_data)
-	Widget widget;
-	XtPointer client_data, call_data;
+cntl_ui_file_objects(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	char *string;
 
@@ -643,10 +601,7 @@ cntl_ui_file_objects(widget, client_data, call_data)
  * Notify callback function for `cntl_ui_olist'.
  */
 void
-cntl_ui_olist_handler(widget, client_data, cbs)
-	Widget widget;
-	XtPointer client_data;
-	XmListCallbackStruct *cbs;
+cntl_ui_olist_handler(Widget widget, XtPointer client_data, XmListCallbackStruct *cbs)
 {
 	char *string;
 
@@ -661,9 +616,7 @@ cntl_ui_olist_handler(widget, client_data, cbs)
  * Notify callback function for `cntl_ui_hilite_button'.
  */
 void
-cntl_ui_hilite_button_handler(widget, client_data, call_data)
-	Widget widget;
-	XtPointer client_data, call_data;
+cntl_ui_hilite_button_handler(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	Tt_message	msg;
 	
@@ -688,8 +641,8 @@ cntl_ui_initialize()
 	int	n;
 	Widget	but;
 	XmString label;
-	void	cntl_ui_saveas_popup_initialize();
-	void	cntl_ui_obj_popup_initialize();
+	void	cntl_ui_saveas_popup_initialize(void);
+	void	cntl_ui_obj_popup_initialize(void);
 
 	cntl_ui_base_window = XtAppCreateShell(0, "base_frame",
                                 applicationShellWidgetClass, dpy, 0, 0 );
@@ -959,9 +912,7 @@ cntl_ui_obj_popup_initialize()
 
 
 int
-cntl_is_same_file(f1, f2)
-     char	*f1;
-     char	*f2;
+cntl_is_same_file(char *f1, char *f2)
 {
 	struct stat	f1_stat;
 	struct stat	f2_stat;

@@ -52,6 +52,7 @@
  * typical unix verification routine.
  */
 
+#include <string.h>
 # include	"dm.h"
 # include	"vgmsg.h"
 # include	"vgproto.h"
@@ -154,7 +155,7 @@ Verify(
 		s = "Greetless login failed; root bypass disallowed\n";
 	    if (s) {
 		Debug(s); LogError((unsigned char *) s);
-		bzero(greet->password, strlen(greet->password));
+		memset(greet->password, 0, strlen(greet->password));
 		return 0;
 	    }
  	}
@@ -168,11 +169,11 @@ Verify(
 	if (strcmp(crypt(greet->password,p->pw_passwd),p->pw_passwd)) {
 #endif /* BYPASSLOGIN */
 	    Debug ("verify failed\n");
-	    bzero(greet->password, strlen(greet->password));
+	    memset(greet->password, 0, strlen(greet->password));
 	    return 0;
 	}
 	Debug ("verify succeeded\n");
-	bzero(greet->password, strlen(greet->password));
+	memset(greet->password, 0, strlen(greet->password));
 #endif
 	Debug ("User information for %s acquired\n", greet->name);
 

@@ -35,6 +35,7 @@
 
    ============================================================================================================================= */
 
+#include <string.h>
 #include "ilint.h"
 #include "ilpipelem.h"
 #include "ilerrors.h"
@@ -80,7 +81,7 @@ static ilError ilMirrorInit(
    pplane   = &pDstImage->plane[0];
    pdstline =  (unsigned char *) (pplane->pPixels);
 
-   bzero((char *)pdstline, (pplane->nBytesPerRow * pPrivate->ilMirrorheight) );
+   memset((char *)pdstline, 0, (pplane->nBytesPerRow * pPrivate->ilMirrorheight));
 
    return IL_OK;
 }

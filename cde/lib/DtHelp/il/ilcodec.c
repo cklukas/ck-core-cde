@@ -37,6 +37,7 @@
 ***
 ***-------------------------------------------------------------------*/
 
+#include <string.h>
 #include <stdlib.h>
 
 #include "ilint.h"
@@ -107,8 +108,7 @@ static ilError ilCopyCompressedExecute (
         }
 
         /*  Copy nBytes from src to dst buffer, using offsets from *pData */
-    bcopy ((char *)(pSrcPlane->pPixels + pData->compressed.srcOffset), 
-           (char *)(pDstPlane->pPixels + dstOffset), nBytes);
+    memmove((char *)(pDstPlane->pPixels + dstOffset), (char *)(pSrcPlane->pPixels + pData->compressed.srcOffset), nBytes);
     *pData->compressed.pNBytesWritten = nBytes;
 
     return IL_OK;

@@ -21,9 +21,9 @@
  * Floor, Boston, MA 02110-1301 USA
  */
 /* $XConsortium: dtaction_main.c /main/3 1995/11/01 10:52:18 rswiston $ */
-dtaction(argc,argv)
-int argc;
-char *argv[];
+extern int main(int argc, char *argv[]);
+
+void dtaction(int argc, char *argv[])
 {
 	main(argc,argv);
 }

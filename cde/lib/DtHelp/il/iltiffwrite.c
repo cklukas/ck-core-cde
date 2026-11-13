@@ -25,6 +25,7 @@
         to write to a TIFF file.  See also /ilc/iltiff.c and /ilc/iltiffread.c .
     */
 
+#include <string.h>
 #include "iltiffint.h"
 #include "ilpipelem.h"
 #include "iljpgencode.h"
@@ -687,7 +688,7 @@ int            tagNumber;
         else switch (tagType) {
           case IL_TAG_BYTE:
           case IL_TAG_ASCII:
-            bcopy ((char *)pTag->pItems, (char *)pWrite, pTag->nItems);
+            memmove((char *)pWrite, (char *)pTag->pItems, pTag->nItems);
             break;
           case IL_TAG_SHORT:
             for (i = 0, pShort = (unsigned short *)pTag->pItems; 
@@ -997,7 +998,7 @@ char                    versionName [VERSION_LENGTH];
         /*  Write the 1st part of the IL version string as the "software" tag, starting 4
             chars into string (past '@(#)') - remember length includes trailing null!
         */
-    bcopy (&_ilVersionString[4], versionName, VERSION_LENGTH - 1);
+    memmove(versionName, &_ilVersionString[4], VERSION_LENGTH - 1);
     versionName [VERSION_LENGTH-1] = 0;
     TW_ADD_TAG (IL_TAG_SOFTWARE, IL_TAG_ASCII, VERSION_LENGTH, versionName)
 

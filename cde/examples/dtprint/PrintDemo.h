@@ -50,7 +50,7 @@ typedef struct _AppPrintData
     Widget ptext, pform;
 } AppPrintData;
 
-extern AppPrintData* AppPrintData_new();
+extern AppPrintData* AppPrintData_new(void);
 
 /*
  * Print module exported functions

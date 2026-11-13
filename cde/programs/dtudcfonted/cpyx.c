@@ -80,7 +80,7 @@ extern	void	InitCpyPtn(void);
 extern	void	_unmap(void);
 extern	void	CpyCB(Widget w, XtPointer cdata);
 extern	void	PopdownCpyPtn(void);
-extern	void	AddPopupProc(Widget w, void(*popupcb)());
+extern	void	AddPopupProc(Widget w, void (*popupcb)(void));
 
 extern FalFontData fullFontData;
 
@@ -541,8 +541,8 @@ font_init(void)
 	char		tmp[16];
 	char		err[128];
 	Widget		button;
-	extern void	data_sort();
-	extern void	Error_message();
+	extern void	data_sort(int *data, int count);
+	extern void	Error_message(Widget widget, char *message);
 
 	xlf_count = udc_count = sty_count = wls_count = hls_count = 0;
 	if (FalGetFontList(NULL, FAL_FONT_MASK_DEFINED |
@@ -694,7 +694,7 @@ code_input(void)
 {
     char	*str;
     XmStringTable	st;
-    extern void	CodeWindow();
+    extern void	CodeWindow(Widget widget, char *font_name, Boolean load_font);
     XtVaGetValues(scrolllist, XmNselectedItems, &st, NULL);
     if( st == NULL ){
 	return ;
@@ -706,7 +706,7 @@ code_input(void)
 static void
 code_input2(void)
 {
-    extern void	CodeWindow();
+    extern void	CodeWindow(Widget widget, char *font_name, Boolean load_font);
     CodeWindow(codeText[2], fullFontData.xlfdname, False);
 }
 

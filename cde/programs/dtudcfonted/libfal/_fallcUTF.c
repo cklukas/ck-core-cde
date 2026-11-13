@@ -48,6 +48,7 @@ OR PERFORMANCE OF THIS SOFTWARE.
   Author: Hiromu Inukai (inukai@Japan.Sun.COM) SunSoft, inc.
 
 ******************************************************************/
+#include <string.h>
 #include "_fallcUTF.h"
 #include <stdlib.h>
 
@@ -164,7 +165,7 @@ set_latin_tab(FILE *fptr, long *table, long fb_default)
     }
 }
 
-extern int _fallcResolveI18NPath();
+extern int _fallcResolveI18NPath(char *path_name);
 #define TBL_DATA_DIR	"tbl_data"
 
 static void
@@ -625,7 +626,7 @@ static UtfData
 make_entry(void)
 {
     UtfData tmp = (UtfData)Xmalloc(sizeof(UtfDataRec));
-    bzero(tmp, sizeof(UtfDataRec));
+    memset(tmp, 0, sizeof(UtfDataRec));
     return tmp;
 }
 

@@ -72,6 +72,7 @@
  *
  ***************************************************************************/
 
+#include <string.h>
 #include	<stdio.h>
 #include	<fcntl.h>
 #include	<stdlib.h>
@@ -483,7 +484,7 @@ WriteBtmp( char *name )
 	struct  utmp	ut;
 
 	if( (fd = open("/etc/security/failedlogin",O_CREAT|O_RDWR,0644)) != -1) {
-		bzero(&ut,sizeof(struct utmp));
+		memset(&ut, 0, sizeof(struct utmp));
 		if(name)
 			strncpy(ut.ut_user, name, sizeof ut.ut_user);
 		ut.ut_type = USER_PROCESS;

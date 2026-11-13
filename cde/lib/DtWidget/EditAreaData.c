@@ -83,8 +83,7 @@ static DtEditorErrorCode LoadFile(
  * which does the trick
  */
 static int
-strcasecmp(s1, s2)
-    char *s1, *s2;
+strcasecmp(char *s1, char *s2)
 {
     int c1, c2;
 

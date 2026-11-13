@@ -47,6 +47,7 @@
  *			   	mopi@osa.ilab.toshiba.co.jp
  */
 
+#include <string.h>
 #include <stdio.h>
 #include "_fallibint.h"
 #include "_fallcPublic.h"
@@ -155,7 +156,7 @@ _fallcCreateDefaultCharSet(char *name, char *ct_sequence)
     charset = (XlcCharSet) Xmalloc(sizeof(XlcCharSetRec));
     if (charset == NULL)
 	return (XlcCharSet) NULL;
-    bzero((char *) charset, sizeof(XlcCharSetRec));
+    memset((char *) charset, 0, sizeof(XlcCharSetRec));
 
     charset->name = (char *) Xmalloc(strlen(name) + strlen(ct_sequence) + 2);
     if (charset->name == NULL) {

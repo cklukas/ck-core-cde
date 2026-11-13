@@ -56,6 +56,7 @@
  * and (potentially) a list of hosts to send ForwardQuery packets to
  */
 
+#include <string.h>
 # include   "dm.h"
 # include   "vgmsg.h"
 
@@ -412,7 +413,7 @@ tryagain:
 	    free ((char *) h);
 	    return NULL;
 	}
-	bcopy (hostent->h_addr, (char *) h->entry.hostAddress.data, hostent->h_length);
+	memmove((char *) h->entry.hostAddress.data, hostent->h_addr, hostent->h_length);
     }
     return h;
 }
@@ -502,7 +503,7 @@ next:
 	    	free ((char *) d);
 	    	return NULL;
 	    }
-	    bcopy (hostent->h_addr, (char *) display->clientAddress.data, hostent->h_length);
+	    memmove((char *) display->clientAddress.data, hostent->h_addr, hostent->h_length);
 	    switch (hostent->h_addrtype)
 	    {
 #ifdef AF_UNIX
@@ -668,7 +669,7 @@ getLocalAddress( void )
 	if (hostent && hostent->h_length > 0 &&
 	    XdmcpAllocARRAY8 (&localAddress, hostent->h_length))
 	{
-	    bcopy (hostent->h_addr, (char *) localAddress.data, hostent->h_length);
+	    memmove((char *) localAddress.data, hostent->h_addr, hostent->h_length);
 	    haveLocalAddress = 1;
 	}
     }
@@ -1061,8 +1062,7 @@ HostnameToNetworkAddress (char *name,
 	if (!hostent) return FALSE;
 	if (!XdmcpAllocARRAY8 (connectionAddress, hostent->h_length))
 	    return FALSE;
-	bcopy (hostent->h_addr, connectionAddress->data,
-	       hostent->h_length);
+	memmove(connectionAddress->data, hostent->h_addr, hostent->h_length);
 	return TRUE;
     }
 #ifdef DNET
@@ -1090,7 +1090,7 @@ NameToNetworkAddress(char        *name,
     CARD16  number;
     CARD16  connectionType;
     
-    colon = index (name, ':');
+    colon = strchr(name, ':');
     if (!colon) return FALSE;
     if (colon != name) {
  	if (colon - name >= sizeof (hostname)) return FALSE;

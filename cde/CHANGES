@@ -1,4 +1,18 @@
 2026-11-13
+- Legacy C syntax: the BSD calls `bcopy()`, `bzero()`, `bcmp()` and `index()` of
+  the C sources are replaced by `memmove()`, `memset()`, `memcmp()` and
+  `strchr()`, and the compatibility declarations and macros for them are
+  removed (`include/bms/sbstdinc.h`, `include/Dt/DtosP.h`, the dtlogin and
+  dtcreate headers). The storage class `register` is removed from the C code.
+  109 K&R function definitions and about 170 declarations with empty
+  parentheses, which C23 reads as `(void)`, now carry full prototypes
+  (`lib/tt` demos, dtcm, dtudcfonted, dtwm, dtlogin, the examples and others);
+  parameters declared `char`, `short` or `float` keep their promoted types. The
+  programs that declared `void main` return `int`. The unbuilt sources of
+  dtudcfonted and the code under `#if 0` were converted with the rest but are
+  not compiled by this tree.
+
+2026-11-13
 - tt, dtinfo, dtmail and the drag and drop example: seven more places made a
   temporary name with `tempnam()` or `mktemp()` and used it later. They now
   create the file with `mkstemp()` (mode 0600) or, where the name stands for a

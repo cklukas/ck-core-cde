@@ -38,6 +38,7 @@
 ***-------------------------------------------------------------------*/
 
 
+#include <string.h>
 #include <math.h>
 #include <stdio.h>       
 #include <stdlib.h>
@@ -299,7 +300,7 @@ long               *pNLines
     Zero the output (dst) buffer.  _ilPutOnes()  writes only ones, and expects 
     that    the dst lines have already been zeroed. 
    ======================================================================== */
-	bzero ((char *)dstImageP, (pDstPlane->nBytesPerRow * *pNLines) );
+	memset((char *)dstImageP, 0, (pDstPlane->nBytesPerRow * *pNLines));
 
    /* this pPriv->maxSrcPos is set to the bits that could be read, to prevent the
        program from reading beyond the compressed bytes; this check is done by

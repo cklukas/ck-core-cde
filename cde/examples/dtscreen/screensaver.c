@@ -45,8 +45,7 @@ typedef struct {
 } WinDataStruct;
 
 int
-usleep(usec)
-    unsigned long usec;
+usleep(unsigned long usec)
 {
     poll((struct poll *) 0, (size_t) 0, usec / 1000);   /* milliseconds */
     return 0;

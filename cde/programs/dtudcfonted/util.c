@@ -223,7 +223,7 @@ focus(Widget w)
 static void
 code_input(void)
 {
-    extern void CodeWindow();
+    extern void CodeWindow(Widget widget, char *font_name, Boolean load_font);
     CodeWindow(focus_widget, fullFontData.xlfdname, False);
 }
 
@@ -828,15 +828,15 @@ AddDeleteProc(Widget w, void (*delcb)())
 }
 
 void
-AddPopupProc(Widget w, void (*popupcb)())
+AddPopupProc(Widget w, void (*popupcb)(void))
 {
-    XtAddCallback(XtParent(w), XmNpopupCallback, popupcb, 0);
+    XtAddCallback(XtParent(w), XmNpopupCallback, (XtCallbackProc) popupcb, 0);
 }
 
 void
-AddDestroyProc(Widget w, void (*destroycb)())
+AddDestroyProc(Widget w, void (*destroycb)(void))
 {
-    XtAddCallback(XtParent(w), XmNdestroyCallback, destroycb, 0);
+    XtAddCallback(XtParent(w), XmNdestroyCallback, (XtCallbackProc) destroycb, 0);
 }
 
 Widget

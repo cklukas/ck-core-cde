@@ -37,6 +37,7 @@
 ***
 ***-------------------------------------------------------------------*/
 
+#include <string.h>
 #include "iljpgencodeint.h"
 
 
@@ -221,7 +222,7 @@ ILJPG_PUBLIC iljpgError iljpgEncodeJIF (
         }
 
         /*  Write DHT and Huffman tables for all non-null tables.
-            The DC tables have ids = index (0..3 - really, 0..1 for baseline)
+            The DC tables have ids = strchr(0..3 - really, 0..1 for baseline)
             while the AC tables have ids = index + 16 (16..17).
             Add "5" to offsets; 5 bytes (marker, length, Th) written before code lengths.
         */

@@ -1820,10 +1820,10 @@ unsigned char *_DtNextToken (unsigned char *pchIn, int *pLen,
         unsigned char **ppchNext)
 {
     unsigned char *pchR = pchIn;
-    register int   i;
+    int   i;
 
 #ifdef MULTIBYTE
-    register int   chlen;
+    int   chlen;
 
     for (i = 0; ((chlen = mblen ((char *)pchIn, MB_CUR_MAX)) > 0); i++)
     /* find end of word: requires singlebyte whitespace terminator */

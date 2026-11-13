@@ -51,6 +51,7 @@
  * policy.c.  Implement site-dependent policy for XDMCP connections
  */
 
+#include <string.h>
 # include "dm.h"
 
 static ARRAY8 noAuthentication = { (CARD16) 0, (CARD8Ptr) 0 };
@@ -178,7 +179,7 @@ Willing(
     if (!status->data)
 	status->length = 0;
     else
-	bcopy (statusBuf, (char *)status->data, status->length);
+	memmove((char *)status->data, statusBuf, status->length);
     return ret;
 }
 

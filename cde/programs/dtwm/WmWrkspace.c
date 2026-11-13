@@ -3844,8 +3844,7 @@ DuplicateWorkspaceName (WmScreenData *pSD, unsigned char *name, int num)
 }
 
 #ifdef DEBUG
-int PrintWorkspaceList (pSD)
-    WmScreenData *pSD;
+int PrintWorkspaceList (WmScreenData *pSD)
 {
     int i, j, k;
     WmWorkspaceData *pWS;

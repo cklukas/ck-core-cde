@@ -150,7 +150,7 @@ char        linebuf[1024],**wordPairs,**execstr;
         }
 
         /* initialize the linebuf with NULL's  */
-        bzero(linebuf,sizeof(linebuf));
+        memset(linebuf, 0, sizeof(linebuf));
         while (fgets (linebuf, sizeof (linebuf)-1, fp))
         {
            /* skip the complete line if it starts with a '{' or a comment ('#')  */
@@ -254,7 +254,7 @@ char        linebuf[1024],**wordPairs,**execstr;
 
               }
               /* reset the linebuf to NULL's */
-              bzero(linebuf,sizeof(linebuf));
+              memset(linebuf, 0, sizeof(linebuf));
           }
         }
 
@@ -329,7 +329,7 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
         nfiletypes=0;
 
         /* Initialize the linebuf */
-        bzero(linebuf,sizeof(linebuf));
+        memset(linebuf, 0, sizeof(linebuf));
         while (fgets (linebuf, sizeof (linebuf)-1, fp))
         {
            /* If begin of a stanza skip and continue */
@@ -621,7 +621,7 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
 
            }
 
-              bzero(linebuf,sizeof(linebuf));
+              memset(linebuf, 0, sizeof(linebuf));
         } /* end of while fgets */
 
         /* Done with retrieving FiletypeData */
@@ -975,7 +975,7 @@ ProcessContents(FiletypeData *pFtD)
 char    *s1,*tmp,*s2,buf[10],*cts;
 
         s1=s2=tmp=cts=NULL;
-        bzero(buf,sizeof(buf));
+        memset(buf, 0, sizeof(buf));
         /* simply return if there is no data in contents field */
         if(!pFtD->pszContents)
            return (0);
@@ -1001,7 +1001,7 @@ char    *s1,*tmp,*s2,buf[10],*cts;
 
         /* Get the fsFlags value if any */
         tmp=s1;
-        bzero(buf,sizeof(buf));
+        memset(buf, 0, sizeof(buf));
 /*
         if ( (tmp = strchr(s1,' ')) )
 */

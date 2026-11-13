@@ -37,6 +37,7 @@
 ***
 ***-------------------------------------------------------------------*/
 
+#include <string.h>
 #include "ilint.h"
 #include "ilpipelem.h"
 #include "ilcompress.h"
@@ -130,8 +131,7 @@ static ilError ilJIFToRawExecute (
     if (pDstPlane->bufferSize < (nBytes + dstOffset))
         if (!_ilReallocCompressedBuffer (pData->pDstImage, 0, (nBytes + dstOffset)))
             return IL_ERROR_MALLOC;
-    bcopy ((char *)streamRec.pData,
-	   (char *)(pDstPlane->pPixels + dstOffset), nBytes);
+    memmove((char *)(pDstPlane->pPixels + dstOffset), (char *)streamRec.pData, nBytes);
     *pData->compressed.pNBytesWritten = nBytes;
 
     return IL_OK;
@@ -279,8 +279,7 @@ static ilError ilRawToJIFExecute (
         if (error = _ilReallocJPEGEncode (&streamRec, nBytes + 2))
             return error;
         }
-    bcopy ((char *)(pImage->plane[0].pPixels + pData->compressed.srcOffset),
-	   (char *)streamRec.pDst, nBytes);
+    memmove((char *)streamRec.pDst, (char *)(pImage->plane[0].pPixels + pData->compressed.srcOffset), nBytes);
     streamRec.pDst += nBytes;                   /* bump past data just copied */
 
         /*  If last strip, write 2 byte EOI marker else write 2 byte restart marker. */

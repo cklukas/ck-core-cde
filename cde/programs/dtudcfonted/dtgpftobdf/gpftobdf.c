@@ -217,7 +217,7 @@ int main( int argc, char *argv[] )
 	PcfTmp	*pcf;
 	PropTmp 	proptmp;
 	char	*tmpfname;
-	extern	char	*GetRealFileName();
+	extern	char	*GetRealFileName(char *name);
 
 
 	if (getarg(argc,argv,fname,&bitorder,&byteorder,&scanunit,&glyphPad,

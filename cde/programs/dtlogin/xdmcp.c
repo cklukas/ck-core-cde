@@ -89,6 +89,7 @@ from the X Consortium.
  * xdmcp.c - Support for XDMCP
  */
 
+#include <string.h>
 # include "dm.h"
 
 # include	<X11/X.h>
@@ -196,7 +197,7 @@ sendForward (CARD16 connectionType, ARRAY8Ptr address, char *closure)
 #ifdef AF_INET
     case FamilyInternet:
 	addr = (struct sockaddr *) &in_addr;
-	bzero ((char *) &in_addr, sizeof (in_addr));
+	memset((char *) &in_addr, 0, sizeof (in_addr));
 #ifdef BSD44SOCKETS
 	in_addr.sin_len = sizeof(in_addr);
 #endif
@@ -341,7 +342,7 @@ ProcessRequestSocket (void)
     int			addrlen = sizeof addr;
 
     Debug ("ProcessRequestSocket\n");
-    bzero ((char *) &addr, sizeof (addr));
+    memset((char *) &addr, 0, sizeof (addr));
     if (!XdmcpFill (xdmcpFd, &buffer, (XdmcpNetaddr)&addr, &addrlen)) {
 	Debug ("XdmcpFill failed\n");
 	return;
@@ -624,7 +625,7 @@ forward_respond (struct sockaddr *from, int fromlen, int length)
 		    {
 			goto badAddress;
 		    }
-		    bzero ((char *) &in_addr, sizeof (in_addr));
+		    memset((char *) &in_addr, 0, sizeof (in_addr));
 #ifdef BSD44SOCKETS
 		    in_addr.sin_len = sizeof(in_addr);
 #endif
@@ -643,7 +644,7 @@ forward_respond (struct sockaddr *from, int fromlen, int length)
 
 		    if (clientAddress.length >= sizeof (un_addr.sun_path))
 			goto badAddress;
-		    bzero ((char *) &un_addr, sizeof (un_addr));
+		    memset((char *) &un_addr, 0, sizeof (un_addr));
 		    un_addr.sun_family = AF_UNIX;
 		    memmove( un_addr.sun_path, clientAddress.data, clientAddress.length);
 		    un_addr.sun_path[clientAddress.length] = '\0';

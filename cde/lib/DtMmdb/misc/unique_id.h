@@ -29,11 +29,7 @@
 extern "C" {
 #endif
 
-#if defined( __STDC__ )
 const char *unique_id(void);
-#else
-char *unique_id();
-#endif
 
 #ifdef __cplusplus
 }

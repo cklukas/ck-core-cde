@@ -60,12 +60,12 @@
 /*  
  * functions defined in this program  
  */
-void main();
-void quitCB(); 
-void updateCB(); 
-void ShowCurrentWorkspaceInfo ();
-DtWsmWsChangeProc wschangecb();
-void InstallXErrorHandler();
+int main (int argc, char **argv);
+void quitCB (Widget w, XtPointer client_data, XtPointer call_data);
+void updateCB (Widget w, XtPointer client_data, XtPointer call_data);
+void ShowCurrentWorkspaceInfo (void);
+void wschangecb (Widget w, Atom atom, XtPointer client_data);
+void InstallXErrorHandler (Display *display);
 
 /*  
  * global variables  
@@ -93,9 +93,7 @@ Widget wChildren [20];
 /*-------------------------------------------------------------
  *	main - main logic for program
  */
-void main (argc,argv)
-int argc;
-char **argv;
+int main (int argc, char **argv)
 {
     Widget	form;
     Widget  top;
@@ -437,7 +435,7 @@ char **argv;
      *       control when the map of the window occurs.
      */
     (void) DtWsmAddCurrentWorkspaceCallback (toplevel,
-		(DtWsmWsChangeProc) wschangecb, NULL);
+		wschangecb, NULL);
 
     DtWsmOccupyAllWorkspaces (XtDisplay(toplevel), XtWindow(toplevel));
 
@@ -535,10 +533,7 @@ void ShowCurrentWorkspaceInfo ()
 /*-------------------------------------------------------------
  *	quitCB - callback for button
  */
-void quitCB (w, client_data, call_data) 
-Widget	w;		/*  widget id		*/
-caddr_t	client_data;	/*  data from application   */
-caddr_t	call_data;	/*  data from widget class  */
+void quitCB (Widget w, XtPointer client_data, XtPointer call_data)
 {
     exit (0);
 }
@@ -547,10 +542,7 @@ caddr_t	call_data;	/*  data from widget class  */
 /*-------------------------------------------------------------
  *	updateCB - callback for show current workspace info
  */
-void updateCB (w, client_data, call_data) 
-Widget	w;		/*  widget id		*/
-caddr_t	client_data;	/*  data from application   */
-caddr_t	call_data;	/*  data from widget class  */
+void updateCB (Widget w, XtPointer client_data, XtPointer call_data)
 {
 
     ShowCurrentWorkspaceInfo ();
@@ -560,11 +552,8 @@ caddr_t	call_data;	/*  data from widget class  */
 /*-------------------------------------------------------------
 **      wschangecb - callback for workspace switch
 */
-DtWsmWsChangeProc
-wschangecb (w, atom, client_data)
-Widget  w;
-Atom    atom;
-XtPointer client_data;
+void
+wschangecb (Widget w, Atom atom, XtPointer client_data)
 {
     ShowCurrentWorkspaceInfo ();
 }
@@ -597,9 +586,7 @@ static char *pchErrorFormat [NUM_E_STRINGS];
 **      HandleXErrors - catch X protocol errors
 */
 static int
-_HandleXErrors (display, errorEvent)
-Display  *display;
-XErrorEvent *errorEvent;
+_HandleXErrors (Display *display, XErrorEvent *errorEvent)
 {
     char buffer[BUFSIZ];
     char message[BUFSIZ];
@@ -629,8 +616,7 @@ XErrorEvent *errorEvent;
 **	Setup the X error handler
 */
 void
-InstallXErrorHandler ( display )
-Display *display;
+InstallXErrorHandler (Display *display)
 {
     char buffer[BUFSIZ];
     int i;

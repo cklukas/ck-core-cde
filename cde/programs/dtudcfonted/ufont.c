@@ -226,8 +226,8 @@ CBmOblB_edit( Widget widget, caddr_t clientData, caddr_t callData )
     char	err[128];
     extern int begin_code;
 
-    extern int ptnGetInfo();
-    extern void PopupEditPtn();
+    extern int ptnGetInfo(int *n, int *width, int *height);
+    extern void PopupEditPtn(Widget owner);
 
     /* open font file and get informations of character to be edited  */
 
@@ -539,8 +539,8 @@ CBeOblB_aEnd( Widget widget, caddr_t clientData, caddr_t callData )
 void
 CBeOblB_rCmd( Widget widget, int proc, caddr_t callData )
 {
-    extern void SelectUnset();
-    extern void UndoSet();
+    extern void SelectUnset(void);
+    extern void UndoSet(void);
     if (!select_x && !select_y && !select_w && !select_h)
 	return;
     em.rsv_f = ON;
@@ -579,9 +579,9 @@ void
 CBeOblB_rCmdp( Widget widget, int proc, caddr_t callData )
 {
     extern Widget wgeBulB_edit;
-    extern void CopySet();
-    extern void UndoSet();
-    extern void SelectUnset();
+    extern void CopySet(void);
+    extern void UndoSet(void);
+    extern void SelectUnset(void);
 
     switch( proc ) {
     case PROC_CPY:
@@ -630,7 +630,7 @@ CBeOblB_rCmdp( Widget widget, int proc, caddr_t callData )
 void
 CBeOblB_rCan( Widget widget, caddr_t clientData, caddr_t callData )
 {
-    extern void UndoUnset();
+    extern void UndoUnset(void);
 
     resetEditMode( RES_MSG | RES_PROC | RES_SLCT );
 
@@ -928,7 +928,7 @@ EHeBulB_eExp( Widget widget, caddr_t clientData, XEvent *e )
 void
 CBeRecB_obj( Widget widget, int obj, XmToggleButtonCallbackStruct *call)
 {
-    extern void SelectUnset();
+    extern void SelectUnset(void);
 
     if (call->set == False)
 	return;
@@ -1063,8 +1063,8 @@ DoAddProc(int s_code, int e_code)
 
 
 
-void PopupDelNotice();
-Widget CreateDelNotice();
+void PopupDelNotice(Widget owner);
+Widget CreateDelNotice(Widget owner);
 
 
 void
@@ -1207,7 +1207,7 @@ BeforeCpyCheck( int proc )
     int		no;
     int		i;
     char	rstr[30];
-    extern void PopupCpyNotice();
+    extern void PopupCpyNotice(String message);
 
     if (copyFontData.xlfdname == NULL) {
 	DispCpyErrorMessage(resource.me_non_srcfile);
@@ -1256,7 +1256,7 @@ BeforeCpyCheck( int proc )
 void
 DoCpyProc(void)
 {
-    extern void PopdownCpyPtn();
+    extern void PopdownCpyPtn(void);
 
     PopdownCpyPtn();
 
@@ -1743,10 +1743,10 @@ chgEdList( int statloc, int slctloc, char mode  )
     char	str[6];
     int         no;
     int		code;
-    extern void ListSetLabelStr();
-    extern void ListSetGlyphImage();
-    extern void ListUnselectItem();
-    extern void ListSelectItem();
+    extern void ListSetLabelStr(int i, String str);
+    extern void ListSetGlyphImage(int i);
+    extern void ListUnselectItem(int i);
+    extern void ListSelectItem(int i);
 
     if((mode == ON) || (edlist.statloc != statloc)){
 	for (i=0, sq=edlist.sqstart+statloc; i < edlist.nlist; sq++){
@@ -1788,7 +1788,7 @@ chgEdList( int statloc, int slctloc, char mode  )
 static void
 chgEdPtn( int code )
 {
-    extern void SetCodeString();
+    extern void SetCodeString(int code);
 
 	if (xl.display == NULL ){
 		return;
@@ -2116,7 +2116,7 @@ musCircle( int evtype, int px, int py )
     int		rx,   ry;
     int		harf_pix_w;
     int		harf_pix_h;
-    extern int	bitDrawCircle();
+    extern int	bitDrawCircle(char *ptn, int x1, int y1, int x2, int y2, int mode);
 
     harf_pix_w = edpane.pix_w / 2;
     harf_pix_h = edpane.pix_h / 2;
@@ -2238,7 +2238,7 @@ musRegionProc( int proc, int evtype, int px, int py )
 {
     int		rx,   ry;
     int		dpx, dpy, dp;
-    extern void	SelectSet();
+    extern void	SelectSet(void);
 
     if( (proc == PROC_ROLL) && (evtype != ButtonPress) ) {
 	dpx = px - em.src1_px;
@@ -2307,9 +2307,9 @@ musPasteProc(Widget w, XtPointer client_data, XEvent *event)
 {
     static int ox=0, oy=0;
     int rc, tx, ty;
-    extern void UndoSet();
+    extern void UndoSet(void);
     extern Widget wgeBulB_edit;
-    extern int	bitDrawPaste();
+    extern int	bitDrawPaste(char *ptn, int dx, int dy);
 
     switch(event->type) {
     case MotionNotify:

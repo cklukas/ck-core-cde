@@ -173,7 +173,7 @@ static void OpenWindowCB(void)
 static void
 OpenCancelCB(Widget widget, caddr_t clientData, caddr_t callData)
 {
-    extern void ForcePopdownDialog();
+    extern void ForcePopdownDialog(Widget w);
     if ( !editPtnW ){
 	exit( 0 );
     }
@@ -560,7 +560,7 @@ font_init(void)
 	char		tmp[16];
 	char		err[128];
 	Widget		button;
-	extern void Error_message();
+	extern void Error_message(Widget widget, char *message);
 
 	xlf_count = udc_count = sty_count = wls_count = hls_count = 0;
 	if (FalGetFontList(NULL, FAL_FONT_MASK_DEFINED |

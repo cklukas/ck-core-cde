@@ -58,14 +58,7 @@
 /* Routines not defined in include files (yet).				*/
 /************************************************************************/
 
-/* BSD has bzero(), bcmp(), and bcopy() defined. */
 #if !defined(__bsd) && !defined(CSRG_BASED)
-
-#if !defined(__linux__) && !defined(_XFUNCS_H_) && !defined(sun)
-extern void bcopy(const void *source, void *destination, size_t length);
-extern int bcmp(const void *b1, const void *b2, size_t length);
-extern void bzero(void *b, size_t length);
-#endif
 
 extern char *mktemp(char *tmplate);
 

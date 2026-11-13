@@ -61,6 +61,3 @@ int GetActionData(FILE *, ActionData *);
 /***************************************************************************/
 /* Platform specifics                                                      */
 /***************************************************************************/
-#ifdef SVR4
-#define bzero(pbuffer, size)  memset(pbuffer, 0, size)
-#endif

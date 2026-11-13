@@ -87,6 +87,7 @@ from the X Consortium.
  * generate authorization data for XDM-AUTHORIZATION-1 as per XDMCP spec
  */
 
+#include <string.h>
 #include "dm.h"
 
 #ifdef HASXDMAUTH
@@ -303,7 +304,7 @@ int XdmGetKey (struct protoDisplay *pdpy, ARRAY8Ptr displayID)
     {
 	if (line[0] == '#' || sscanf (line, "%s %s", id, key) != 2)
 	    continue;
-	bzero(line, sizeof(line));
+	memset(line, 0, sizeof(line));
 	Debug ("Key entry \"%s\" \"%s\"\n", id, key);
 	if (strlen (id) == displayID->length &&
 	    !strncmp (id, (char *)displayID->data, displayID->length))
@@ -316,13 +317,13 @@ int XdmGetKey (struct protoDisplay *pdpy, ARRAY8Ptr displayID)
 		key[keylen++] = '\0';
 	    pdpy->key.data[0] = '\0';
 	    memmove( pdpy->key.data + 1, key, 7);
-	    bzero(key, sizeof(key));
+	    memset(key, 0, sizeof(key));
 	    fclose (keys);
 	    return TRUE;
 	}
     }
-    bzero(line, sizeof(line));
-    bzero(key, sizeof(key));
+    memset(line, 0, sizeof(line));
+    memset(key, 0, sizeof(key));
     fclose (keys);
     return FALSE;
 }

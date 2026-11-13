@@ -61,6 +61,7 @@
 #endif /* _AIX */
 
 
+#include <string.h>
 # include "dm.h"
 # include "vgmsg.h"
 # include <signal.h>
@@ -1235,9 +1236,8 @@ syncTimeout ()
 }
 
 
-SecureDisplay (d, dpy)
-struct display	*d;
-Display		*dpy;
+void
+SecureDisplay (struct display *d, Display *dpy)
 {
     Debug ("SecureDisplay():\n");
     signal (SIGALRM, syncTimeout);
@@ -1270,9 +1270,8 @@ Display		*dpy;
     Debug ("Done secure %s\n", d->name);
 }
 
-UnsecureDisplay (d, dpy)
-struct display	*d;
-Display		*dpy;
+void
+UnsecureDisplay (struct display *d, Display *dpy)
 {
     Debug ("Unsecure display %s\n", d->name);
     if (d->grabServer)
@@ -1700,7 +1699,7 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 	 * clear password...
 	 */
 	if (greet.password)
-	    bzero(greet.password, strlen(greet.password));
+	    memset(greet.password, 0, strlen(greet.password));
 
 	/*
 	 *  exec session...
@@ -3382,7 +3381,7 @@ SetTicketFileName(uid_t uid)
 
     } else {
         if (gethostname(lhost, sizeof(lhost)) != -1) {
-	    if (p = index(lhost, '.')) *p = '\0';
+	    if (p = strchr(lhost, '.')) *p = '\0';
 	    (void)sprintf(krb_ticket_string, "%s%ld.%s", TKT_ROOT, (long)uid, lhost);
         } else {
             /* 32 bits of signed integer will always fit in 11 characters

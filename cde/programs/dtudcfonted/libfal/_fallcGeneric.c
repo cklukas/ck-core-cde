@@ -56,6 +56,7 @@
  *
  */
 
+#include <string.h>
 #include <stdio.h>
 #include "_fallibint.h"
 #include "_fallcGeneric.h"
@@ -86,14 +87,14 @@ create(char *name, XLCdMethods methods)
     lcd = (XLCd) Xmalloc(sizeof(XLCdRec));
     if (lcd == NULL)
         return (XLCd) NULL;
-    bzero((char *) lcd, sizeof(XLCdRec));
+    memset((char *) lcd, 0, sizeof(XLCdRec));
 
     lcd->core = (XLCdCore) Xmalloc(sizeof(XLCdGenericRec));
     if (lcd->core == NULL){
 	Xfree(lcd);
 	return (XLCd) NULL;
     }
-    bzero((char *) lcd->core, sizeof(XLCdGenericRec));
+    memset((char *) lcd->core, 0, sizeof(XLCdGenericRec));
 
     new = (XLCdPublicMethods) Xmalloc(sizeof(XLCdPublicMethodsRec));
     if (new == NULL){
@@ -199,7 +200,7 @@ add_codeset(XLCdGenericPart *gen)
     new = (CodeSet) Xmalloc(sizeof(CodeSetRec));
     if (new == NULL)
         return NULL;
-    bzero((char *) new, sizeof(CodeSetRec));
+    memset((char *) new, 0, sizeof(CodeSetRec));
 
     if (num = gen->codeset_num)
         new_list = (CodeSet *) Xrealloc(gen->codeset_list,
@@ -244,7 +245,7 @@ add_parse_list(
 
 	return False;
     }
-    bzero((char *) new, sizeof(ParseInfoRec));
+    memset((char *) new, 0, sizeof(ParseInfoRec));
 
     if (gen->mb_parse_table == NULL) {
         gen->mb_parse_table = (unsigned char *) Xmalloc(256); /* 2^8 */
@@ -255,7 +256,7 @@ add_parse_list(
 
 	    return False;
 	}
-        bzero((char *) gen->mb_parse_table, 256);
+        memset((char *) gen->mb_parse_table, 0, 256);
     }
 
     if (num = gen->mb_parse_list_num)

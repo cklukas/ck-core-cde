@@ -251,7 +251,7 @@ _falOpenLC(char *name)
     XLCdList cur;
 #if !defined(X_NOT_STDC_ENV) && !defined(X_LOCALE)
     char siname[256];
-    char *_fallcMapOSLocaleName();
+    char *_fallcMapOSLocaleName(char *osname, char *siname);
 #endif
 
     if (name == NULL) {

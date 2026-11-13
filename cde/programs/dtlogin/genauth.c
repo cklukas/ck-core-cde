@@ -91,6 +91,7 @@ from the X Consortium.
  * Author:  Keith Packard, MIT X Consortium
  */
 
+#include <string.h>
 # include   <X11/Xauth.h>
 # include   <X11/Xos.h>
 # include   "dm.h"
@@ -134,7 +135,7 @@ GenerateAuthData (char *auth, int len)
     {
 	LogError((unsigned char *) "Could not read %d bytes from \"%s\"\n",
 		 len, randomFile);
-	bzero (auth, len);
+	memset(auth, 0, len);
 	return 0;
     }
     return 1;

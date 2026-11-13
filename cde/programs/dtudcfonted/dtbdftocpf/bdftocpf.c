@@ -59,7 +59,7 @@ sigint_out(void)
 int main(int argc, char *argv[])
 {
     int	rtn, i;
-    char   *GetTmpPath();
+    char   *GetTmpPath(char *path);
     struct stat	st;
 
     for (i=1; i<argc; i++) {

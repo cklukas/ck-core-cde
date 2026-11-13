@@ -44,23 +44,23 @@
 #define	GLYPHPADOPTIONS	4
 #endif
 
-static	CARD32	getLSB32();
-static	int	getINT32();
-static	int	getINT16();
-static	Bool	seekToType();
-static	void	getMetric();
-static	Bool	getAccel();
-int 	falInitReadPcf();
-static 	void	ByteSwap();
-static	void	repadBits();
-int 	falPcfGlyph();
-void	falGetPcfGSize();
-int	falInitReadPcfProp() ;
-int	falInitReadSnfProp() ;
-int	falReadGpfProp() ;
+static	CARD32	getLSB32(unsigned char *p);
+static	int	getINT32(unsigned char *p, CARD32 format);
+static	int	getINT16(unsigned char *p, CARD32 format);
+static	Bool	seekToType(PCFTablePtr tables, int ntables, CARD32 type, CARD32 *formatp, CARD32 *sizep, CARD32 *offsetp);
+static	void	getMetric(caddr_t buf, CARD32 format, xCharInfo *metric);
+static	Bool	getAccel(FontInfoPtr pFontInfo, xCharInfo *maxink, caddr_t buf_top, PCFTablePtr tables, int ntables, CARD32 type);
+int 	falInitReadPcf(struct pcf_inf *pcfinf, caddr_t buftop);
+static 	void	ByteSwap(char *p, int scan);
+static	void	repadBits(char *src, CARD32 format, int width, int height, char *dest);
+int 	falPcfGlyph(char *glyph, Oak_FontInf *finf, int code);
+void	falGetPcfGSize(struct pcf_inf *pcfinf, unsigned int *widthp, unsigned int *heightp);
+int	falInitReadPcfProp(int updflg, Oak_FontInf *finf, FalFontData *databuff) ;
+int	falInitReadSnfProp(Oak_FontInf *finf, caddr_t buftop, FalFontData *databuff) ;
+int	falReadGpfProp(int updflg, Oak_FontInf *finf, int protect_key_data, FalFontData *databuff) ;
 
-extern	void	BitOrderInvert() ;
-extern	void    set_errfile_str() ;
+extern	void	BitOrderInvert(unsigned char *buf, int nbytes) ;
+extern	void    set_errfile_str(char *obuf, char *ibuf) ;
 
 static CARD32
 getLSB32(unsigned char *p)
@@ -439,8 +439,8 @@ unsigned int   *heightp)
 
 #include <X11/fonts/fontstruct.h>
 
-static	char	*getPcfFontProp();
-static	char	*getSnfFontProp();
+static	char	*getPcfFontProp(caddr_t buftop, PCFTablePtr tables, int ntables, char *propname);
+static	char	*getSnfFontProp(caddr_t buftop, int nprops, char *propname);
 /*
 * read properties and get font style and
 * letter size

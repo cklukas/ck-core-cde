@@ -1545,7 +1545,7 @@ LockDialogUp(
         XtPointer call_data )
 {
 
-    register int	i;
+    int	i;
     Dimension	width, height;	/* size values returned by XtGetValues	   */
     Dimension	shadowThickness;/* size values returned by XtGetValues	   */
     unsigned int dpwidth, dpheight, xorg, yorg; /* JET - xinerama */

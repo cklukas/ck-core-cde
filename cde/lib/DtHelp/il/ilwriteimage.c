@@ -37,6 +37,7 @@
 ***
 ***-------------------------------------------------------------------*/
 
+#include <string.h>
 #include "ilint.h"
 #include "ilpipelem.h"
 #include "ilimage.h"
@@ -156,8 +157,7 @@ ilImagePtr     pImage;
         */
     if (pData->srcLine <= 0) {
         if (pPriv->pPalette)
-            bcopy ((char *)pPriv->pPalette, (char *)pPriv->pImage->i.pPalette, 
-                   sizeof (unsigned short) * (3 * 256));
+            memmove((char *)pPriv->pImage->i.pPalette, (char *)pPriv->pPalette, sizeof (unsigned short) * (3 * 256));
         if (pPriv->pCompData) {
             _ilJPEGFreeTables ((ilJPEGData *)pPriv->pImage->i.pCompData);
             if (!_ilJPEGCopyData ((ilJPEGData *)pPriv->pCompData, 
@@ -303,8 +303,7 @@ static ilError ilWriteImageExecute (
 
         /*  If first strip, copy pipe palette (pPriv->pPalette) to the image palette. */
     if ((pData->srcLine <= 0) && pPriv->pPalette) {
-        bcopy ((char *)pPriv->pPalette, (char *)pPriv->pImage->i.pPalette, 
-               sizeof (unsigned short) * (3 * 256));
+        memmove((char *)pPriv->pImage->i.pPalette, (char *)pPriv->pPalette, sizeof (unsigned short) * (3 * 256));
         }
 
         /*  Bump srcLine (index to next line); if > # lines in image, error */

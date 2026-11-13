@@ -37,6 +37,7 @@
 ***
 ***-------------------------------------------------------------------*/
 
+#include <string.h>
 #include <stdlib.h>
 
 #include "ilint.h"
@@ -197,7 +198,7 @@ static ilPtr _ilJPEGCopyHuffmanTable (
         nBytes += pSrc[i];
     if (!(pDst = (ilPtr)IL_MALLOC (nBytes)))
         return (ilPtr)NULL;
-    bcopy ((char *)pSrc, (char *)pDst, nBytes);
+    memmove((char *)pDst, (char *)pSrc, nBytes);
     return pDst;
 }
 
@@ -214,7 +215,7 @@ IL_PRIVATE ilBool _ilJPEGCopyData (
     int            i;
 
         /*  Zero table ptrs in *pDst in case of error; copy index info */
-    bzero ((char *)pDst, sizeof (ilJPEGData));
+    memset((char *)pDst, 0, sizeof (ilJPEGData));
     for (i = 0; i < IL_MAX_SAMPLES; i++)
         pDst->sample[i] = pSrc->sample[i];
 
@@ -223,7 +224,7 @@ IL_PRIVATE ilBool _ilJPEGCopyData (
         if (pSrc->QTables[i]) {
             if (!(pDst->QTables[i] = (ilPtr)IL_MALLOC (64)))
                 goto cdMallocError;
-            bcopy ((char *)pSrc->QTables[i], (char *)pDst->QTables[i], 64);
+            memmove((char *)pDst->QTables[i], (char *)pSrc->QTables[i], 64);
             }
         if (pSrc->DCTables[i])
             if (!(pDst->DCTables[i] = _ilJPEGCopyHuffmanTable (pSrc->DCTables[i])))

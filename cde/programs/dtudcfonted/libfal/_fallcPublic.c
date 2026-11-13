@@ -47,16 +47,17 @@
  *			   	mopi@osa.ilab.toshiba.co.jp
  */
 
+#include <string.h>
 #include <stdio.h>
 #include "_fallibint.h"
 #include "_fallcPubI.h"
 
-static char *default_string();
+static char *default_string(XLCd lcd);
 
-static XLCd create();
-static Bool initialize();
-static void destroy();
-static char *get_values();
+static XLCd create(char *name, XLCdMethods methods);
+static Bool initialize(XLCd lcd);
+static void destroy(XLCd lcd);
+static char *get_values(XLCd lcd, XlcArgList args, int num_args);
 
 static XLCdPublicMethodsRec publicMethods = {
     {
@@ -101,14 +102,14 @@ create(char *name, XLCdMethods methods)
     lcd = (XLCd) Xmalloc(sizeof(XLCdRec));
     if (lcd == NULL)
         return (XLCd) NULL;
-    bzero((char *) lcd, sizeof(XLCdRec));
+    memset((char *) lcd, 0, sizeof(XLCdRec));
 
     lcd->core = (XLCdCore) Xmalloc(sizeof(XLCdPublicRec));
     if (lcd->core == NULL){
 	Xfree(lcd);
         return (XLCd) NULL;
 	}
-    bzero((char *) lcd->core, sizeof(XLCdPublicRec));
+    memset((char *) lcd->core, 0, sizeof(XLCdPublicRec));
 
     new = (XLCdPublicMethods) Xmalloc(sizeof(XLCdPublicMethodsRec));
     if (new == NULL){
@@ -194,7 +195,7 @@ initialize_core(XLCd lcd)
     return True;
 }
 
-extern Bool _fallcInitCTInfo();
+extern Bool _fallcInitCTInfo(void);
 
 static Bool
 initialize(XLCd lcd)
@@ -206,7 +207,7 @@ initialize(XLCd lcd)
     char *name;
 #if !defined(X_NOT_STDC_ENV) && !defined(X_LOCALE)
     char siname[256];
-    char *_fallcMapOSLocaleName();
+    char *_fallcMapOSLocaleName(char *osname, char *siname);
 #endif
 
     _fallcInitCTInfo();

@@ -47,6 +47,7 @@
  *			   	mopi@osa.ilab.toshiba.co.jp
  */
 
+#include <string.h>
 #include "_fallibint.h"
 #include "_fallcPubI.h"
 #include <X11/Xos.h>
@@ -171,7 +172,7 @@ _XlcParseCT(CTParse parse, char **text, int *length)
     unsigned char ch;
     unsigned char *str = (unsigned char *) *text;
 
-    bzero((char *) parse, sizeof(CTParseRec));
+    memset((char *) parse, 0, sizeof(CTParseRec));
 
     switch (ch = *str++) {
 	case XctESC:
@@ -419,7 +420,7 @@ _fallcParseCharSet(XlcCharSet charset)
     return True;
 }
 
-static void init_converter();
+static void init_converter(void);
 
 Bool
 _fallcInitCTInfo(void)

@@ -46,6 +46,7 @@
 **	Include Files
 */
 
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -3564,7 +3565,7 @@ GetIconClassResBase(
 	cp = (char *) widgetSecdataPtr;
 
 #ifndef SVR4
-        bcopy ( (char *) ( Icon_Cache(widget)), (char *) cp, icon_cache_size);
+        memmove((char *) cp, (char *) ( Icon_Cache(widget)), icon_cache_size);
 #else
         memmove ( (char *)cp , (char *) ( Icon_Cache(widget)), icon_cache_size);
 #endif
@@ -4028,7 +4029,7 @@ _DtDuplicateIcon(
    /* Copy the master into the duplicate */
 
 #ifndef       SVR4
-   bcopy((char *)gadget, (char *)new, (int)size);
+   memmove((char *)new, (char *)gadget, (int)size);
 #else
    memmove((char *)new, (char *)gadget, (int)size);
 #endif

@@ -57,7 +57,7 @@ sigint_out(void)
 int main( int argc, char *argv[])
 {
 	int 	rtn, i;
-	char	*GetTmpPath();
+	char	*GetTmpPath(char *path);
 	char	*spacing ;
 	char	*xlfdname ;
 

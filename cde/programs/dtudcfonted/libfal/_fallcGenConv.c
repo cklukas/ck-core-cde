@@ -57,6 +57,7 @@
  */
 
 
+#include <string.h>
 #include "_fallibint.h"
 #include "_fallcGeneric.h"
 #include <stdio.h>
@@ -2081,7 +2082,7 @@ create_conv(XLCd lcd, XlcConvMethods methods)
 	close_converter(conv);
         return (XlcConv) NULL;
     }
-    bzero((char *) conv->state, sizeof(StateRec));
+    memset((char *) conv->state, 0, sizeof(StateRec));
 
     state = (State) conv->state;
     state->lcd = lcd;

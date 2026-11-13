@@ -69,17 +69,27 @@
 #define	POINT_SIZE_FIELD	 8
 #define	CHARSET_ENCODING_FIELD	14
 
-extern int _falmbDefaultTextEscapement(), _falwcDefaultTextEscapement();
-extern int _falmbDefaultTextExtents(), _falwcDefaultTextExtents();
-extern Status _falmbDefaultTextPerCharExtents(), _falwcDefaultTextPerCharExtents();
-extern int _falmbDefaultDrawString(), _falwcDefaultDrawString();
-extern void _falmbDefaultDrawImageString(), _falwcDefaultDrawImageString();
+extern int _falmbDefaultTextEscapement(XFontSet font_set, const char *text, int text_len);
+extern int _falwcDefaultTextEscapement(XFontSet font_set, const wchar_t *text, int text_len);
+extern int _falmbDefaultTextExtents(XFontSet font_set, const char *text, int text_len, XRectangle *overall_ink_extents, XRectangle *overall_logical_extents);
+extern int _falwcDefaultTextExtents(XFontSet font_set, const wchar_t *text, int text_len, XRectangle *overall_ink_extents, XRectangle *overall_logical_extents);
+extern Status _falmbDefaultTextPerCharExtents(XFontSet font_set, const char *text, int text_len, XRectangle *ink_extents_buffer, XRectangle *logical_extents_buffer, int buffer_size, int *num_chars, XRectangle *max_ink_extents, XRectangle *max_logical_extents);
+extern Status _falwcDefaultTextPerCharExtents(XFontSet font_set, const wchar_t *text, int text_len, XRectangle *ink_extents_buffer, XRectangle *logical_extents_buffer, int buffer_size, int *num_chars, XRectangle *max_ink_extents, XRectangle *max_logical_extents);
+extern int _falmbDefaultDrawString(Display *display, Drawable drawable, XFontSet font_set, GC gc, int x, int y, const char *text, int text_len);
+extern int _falwcDefaultDrawString(Display *display, Drawable drawable, XFontSet font_set, GC gc, int x, int y, const wchar_t *text, int text_len);
+extern void _falmbDefaultDrawImageString(Display *display, Drawable drawable, XFontSet font_set, GC gc, int x, int y, const char *text, int text_len);
+extern void _falwcDefaultDrawImageString(Display *display, Drawable drawable, XFontSet font_set, GC gc, int x, int y, const wchar_t *text, int text_len);
 
-extern int _falmbGenericTextEscapement(), _falwcGenericTextEscapement();
-extern int _falmbGenericTextExtents(), _falwcGenericTextExtents();
-extern Status _falmbGenericTextPerCharExtents(), _falwcGenericTextPerCharExtents();
-extern int _falmbGenericDrawString(), _falwcGenericDrawString();
-extern void _falmbGenericDrawImageString(), _falwcGenericDrawImageString();
+extern int _falmbGenericTextEscapement(XFontSet font_set, const char *text, int text_len);
+extern int _falwcGenericTextEscapement(XFontSet font_set, const wchar_t *text, int text_len);
+extern int _falmbGenericTextExtents(XFontSet font_set, const char *text, int text_len, XRectangle *overall_ink_extents, XRectangle *overall_logical_extents);
+extern int _falwcGenericTextExtents(XFontSet font_set, const wchar_t *text, int text_len, XRectangle *overall_ink_extents, XRectangle *overall_logical_extents);
+extern Status _falmbGenericTextPerCharExtents(XFontSet font_set, const char *text, int text_len, XRectangle *ink_extents_buffer, XRectangle *logical_extents_buffer, int buffer_size, int *num_chars, XRectangle *max_ink_extents, XRectangle *max_logical_extents);
+extern Status _falwcGenericTextPerCharExtents(XFontSet font_set, const wchar_t *text, int text_len, XRectangle *ink_extents_buffer, XRectangle *logical_extents_buffer, int buffer_size, int *num_chars, XRectangle *max_ink_extents, XRectangle *max_logical_extents);
+extern int _falmbGenericDrawString(Display *display, Drawable drawable, XFontSet font_set, GC gc, int x, int y, const char *text, int text_len);
+extern int _falwcGenericDrawString(Display *display, Drawable drawable, XFontSet font_set, GC gc, int x, int y, const wchar_t *text, int text_len);
+extern void _falmbGenericDrawImageString(Display *display, Drawable drawable, XFontSet font_set, GC gc, int x, int y, const char *text, int text_len);
+extern void _falwcGenericDrawImageString(Display *display, Drawable drawable, XFontSet font_set, GC gc, int x, int y, const wchar_t *text, int text_len);
 
 extern void dbg_printValue(char *str, char **value, int num);
 
@@ -1366,7 +1376,7 @@ create_oc(XOM om, XlcArgList args, int num_args)
     oc = (XOC) Xmalloc(sizeof(XOCGenericRec));
     if (oc == NULL)
 	return (XOC) NULL;
-    bzero((char *) oc, sizeof(XOCGenericRec));
+    memset((char *) oc, 0, sizeof(XOCGenericRec));
 
     oc->core.om = om;
 
@@ -1546,7 +1556,7 @@ create_om(
     om = (XOM) Xmalloc(sizeof(XOMGenericRec));
     if (om == NULL)
 	return (XOM) NULL;
-    bzero((char *) om, sizeof(XOMGenericRec));
+    memset((char *) om, 0, sizeof(XOMGenericRec));
 
     om->methods = &methods;
     om->core.lcd = lcd;
@@ -1597,7 +1607,7 @@ add_data(XOM om)
     gen->data = new;
 
     new += num;
-    bzero((char *) new, sizeof(OMDataRec));
+    memset((char *) new, 0, sizeof(OMDataRec));
 
     return new;
 }
@@ -1610,11 +1620,11 @@ falread_EncodingInfo(int count, char **value)
     char *buf, *bufptr,*scp;
     FontScope scope;
     int len;
-    extern FontScope falparse_scopemaps();
+    extern FontScope falparse_scopemaps(char *str, int *size);
     font_data = (FontData) Xmalloc(sizeof(FontDataRec) * count);
     if (font_data == NULL)
         return NULL;
-    bzero((char *) font_data, sizeof(FontDataRec) * count);
+    memset((char *) font_data, 0, sizeof(FontDataRec) * count);
 
     ret = font_data;
     for ( ; count-- > 0; font_data++) {
@@ -1656,7 +1666,7 @@ int *vrotate_num)
     FontData font_data,ret;
     char *buf, *bufptr,*scp;
     CodeRange   range;
-    extern FontScope falparse_scopemaps();
+    extern FontScope falparse_scopemaps(char *str, int *size);
     if(!strcmp(value[0],"all")){
 	*type 	     = VROTATE_ALL ;
 	*vrotate_num = 0 ;

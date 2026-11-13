@@ -75,6 +75,7 @@ from the X Consortium.
 
 */
 
+#include <string.h>
 #include	<stdio.h>
 #include	<ctype.h>
 #include	"_fallibint.h"
@@ -333,8 +334,7 @@ void falrmInitialize(void)
     XrmQANY = falrmPermStringToQuark("?");
 }
 
-XrmDatabase falrmGetDatabase(display)
-    Display *display;
+XrmDatabase falrmGetDatabase(Display *display)
 {
     XrmDatabase retval;
     LockDisplay(display);
@@ -556,7 +556,7 @@ static void GrowTable(NTable *prev)
 	    return;
 	}
 	ltable->table.mask = i - 1;
-	bzero((char *)ltable->buckets, i * sizeof(VEntry));
+	memset((char *)ltable->buckets, 0, i * sizeof(VEntry));
 	MoveValues(&otable, ltable);
     } else {
 	NTable ntable;
@@ -566,7 +566,7 @@ static void GrowTable(NTable *prev)
 	    return;
 	*ntable = *table;
 	ntable->mask = i - 1;
-	bzero((char *)NodeBuckets(ntable), i * sizeof(NTable));
+	memset((char *)NodeBuckets(ntable), 0, i * sizeof(NTable));
 	*prev = ntable;
 	MoveTables(table, ntable);
     }
@@ -948,7 +948,7 @@ static void PutEntry(
 	else
 	    resourceQuarks = (unsigned char *)Xmalloc(size);
 	if (resourceQuarks) {
-	    bzero((char *)&resourceQuarks[oldsize], size - oldsize);
+	    memset((char *)&resourceQuarks[oldsize], 0, size - oldsize);
 	    maxResourceQuark = (size << 3) - 1;
 	} else {
 	    maxResourceQuark = -1;
@@ -1025,7 +1025,7 @@ void falrmQPutStringResource(
 #define LIST_SIZE 101
 #define BUFFER_SIZE 100
 
-static void GetIncludeFile();
+static void GetIncludeFile(XrmDatabase db, char *base, char *fname, int fnamelen);
 
 static void GetDatabase(
     XrmDatabase db,

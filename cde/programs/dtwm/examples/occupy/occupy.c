@@ -61,15 +61,14 @@
 /*  
  * functions defined in this program  
  */
-void main();
-void quitCB(); 
-void setCB(); 
-void showCB(); 
-void wsCB(); 
-void allWsCB(); 
-void SetupWorkspaceButtons ();
-void ShowWorkspaceOccupancy();
-void SetWorkspaceOccupancy();
+int main (int argc, char **argv);
+void quitCB (Widget w, XtPointer client_data, XtPointer call_data);
+void setCB (Widget w, XtPointer client_data, XtPointer call_data);
+void showCB (Widget w, XtPointer client_data, XtPointer call_data);
+void wsCB (Widget w, XtPointer client_data, XtPointer call_data);
+void allWsCB (Widget w, XtPointer client_data, XtPointer call_data);
+void SetupWorkspaceButtons (Widget form, Widget top);
+void ShowWorkspaceOccupancy(void);
 
 
 /*  
@@ -97,9 +96,7 @@ Atom *paWs;
 /*-------------------------------------------------------------
  *	main - main logic for program
  */
-void main (argc,argv)
-int argc;
-char **argv;
+int main (int argc, char **argv)
 {
     Widget	form;
     Widget  top;
@@ -267,9 +264,7 @@ char **argv;
 /*-------------------------------------------------------------
  *	Create a set of buttons for the current set of workspaces
  */
-void SetupWorkspaceButtons (form, top)
-Widget form;
-Widget top;
+void SetupWorkspaceButtons (Widget form, Widget top)
 {
     Window root;
     Arg	args[10]; /*  arg list		*/
@@ -392,10 +387,7 @@ void ShowWorkspaceOccupancy ()
 /*-------------------------------------------------------------
  *	quitCB - callback for button
  */
-void quitCB (w, client_data, call_data) 
-Widget	w;		/*  widget id		*/
-caddr_t	client_data;	/*  data from application   */
-caddr_t	call_data;	/*  data from widget class  */
+void quitCB (Widget w, XtPointer client_data, XtPointer call_data)
 {
     exit (0);
 }
@@ -404,10 +396,7 @@ caddr_t	call_data;	/*  data from widget class  */
 /*-------------------------------------------------------------
  *	showCB - callback for show occupancy button
  */
-void showCB (w, client_data, call_data) 
-Widget	w;		/*  widget id		*/
-caddr_t	client_data;	/*  data from application   */
-caddr_t	call_data;	/*  data from widget class  */
+void showCB (Widget w, XtPointer client_data, XtPointer call_data)
 {
 
     ShowWorkspaceOccupancy();
@@ -417,10 +406,7 @@ caddr_t	call_data;	/*  data from widget class  */
 /*-------------------------------------------------------------
  *	setCB - callback for set occupancy button
  */
-void setCB (w, client_data, call_data) 
-Widget	w;		/*  widget id		*/
-caddr_t	client_data;	/*  data from application   */
-caddr_t	call_data;	/*  data from widget class  */
+void setCB (Widget w, XtPointer client_data, XtPointer call_data)
 {
     int numSet;
     int i;
@@ -446,10 +432,7 @@ caddr_t	call_data;	/*  data from widget class  */
 /*-------------------------------------------------------------
  *	wsCB - callback for set occupancy button
  */
-void wsCB (w, client_data, call_data) 
-Widget	w;		/*  widget id		*/
-caddr_t	client_data;	/*  data from application   */
-caddr_t	call_data;	/*  data from widget class  */
+void wsCB (Widget w, XtPointer client_data, XtPointer call_data)
 {
     int i = (Atom) client_data; /* ws array index */
     XmToggleButtonCallbackStruct *ptb = 
@@ -471,10 +454,7 @@ caddr_t	call_data;	/*  data from widget class  */
 /*-------------------------------------------------------------
  *	allWsCB - callback for occupy all button
  */
-void allWsCB (w, client_data, call_data) 
-Widget	w;		/*  widget id		*/
-caddr_t	client_data;	/*  data from application   */
-caddr_t	call_data;	/*  data from widget class  */
+void allWsCB (Widget w, XtPointer client_data, XtPointer call_data)
 {
     DtWsmOccupyAllWorkspaces (XtDisplay(toplevel), XtWindow(toplevel));
 }

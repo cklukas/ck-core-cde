@@ -99,57 +99,57 @@ static	int	codeset_list_num = 0 ;
 /* declaration of inner functions */
 char *fal_get_base_name(char *str);
 
-static	FILE	*open_fonts_list() ;
-static	int	falGetGlyph() ;
-static	int	falGetCharIndex() ;
-static	int	falZoom() ;
-static	int	exline() ;
-static	char	falGetMask() ;
-static	int	chk_key_str() ;
-static	int	fal_make_fontlist() ;
-static	int	fal_sort_fontlist() ;
-static	int	set_default_path() ;
-static	int	cpy_default_path() ;
-static	int	comp_default_path() ;
-static	int	fal_clear_font_path() ;
-static	int	set_font_pathlist() ;
+static	FILE	*open_fonts_list(void) ;
+static	int	falGetGlyph(char *glyph, Oak_FontInf *finf, int code) ;
+static	int	falGetCharIndex(Oak_FontInf *finf, int code) ;
+static	int	falZoom(char *dmem, char *smem, int sw, int sh, int dw, int dh, char *dbuf) ;
+static	int	exline(char *sp, char *dbuf, int sw, int dw) ;
+static	char	falGetMask(int width) ;
+static	int	chk_key_str(FalFontData *key, int mask) ;
+static	int	fal_make_fontlist(FalFontDataList *fls, FalFontData *key, int mask) ;
+static	int	fal_sort_fontlist(FalFontDataList *lst) ;
+static	int	set_default_path(void) ;
+static	int	cpy_default_path(FalFontPath *p) ;
+static	int	comp_default_path(FalFontPath *p) ;
+static	int	fal_clear_font_path(FalFontPath *ls) ;
+static	int	set_font_pathlist(FalFontPath *pathlist, int nodef) ;
 
-static	int	fal_split_data() ;
-static	int	fal_clear_data() ;
-static	int	CR_to_NULL() ;
-static	int	fal_cmp_data() ;
-static	int	new_target() ;
+static	int	fal_split_data(char *buf, int elm_num, char *elm[]) ;
+static	int	fal_clear_data(FalFontData *tmp) ;
+static	int	CR_to_NULL(char *buf) ;
+static	int	fal_cmp_data(FalFontData *op1, FalFontData *key, int mask) ;
+static	int	new_target(FalFontData *target, FalFontData *choose) ;
 
 int set_struct(FalFontData *tmp_data, char *elm[]);
 int fal_eq_data(FalFontData data, FalFontData tmp_data);
 
 void set_errfile_str(char *obuf, char *ibuf);
 
-static	int	fal_init() ;
-static	int	fal_add_fidinf() ;
-static	int	fal_read_fidinf() ;
-static	int	fal_del_fidinf() ;
-static	int	fal_conv_code_to_glyph() ;
-static	int	fal_conv_glyph_to_code() ;
-static	int	falReadFontInfoLists() ;
-static	int	fal_get_def_fontdata() ;
-static	int	falgetfontlist() ;
-static	int	fal_get_undef_fontdata() ;
-static	void	clear_charset_info() ;
-static	int	make_default_path() ;
-static	int	file_lock() ;
-static	int	file_unlock() ;
-static	int	is_lock() ;
+static	int	fal_init(void) ;
+static	int	fal_add_fidinf(FalFontID fid, int dspcode, int cd_set, int islock) ;
+static	int	fal_read_fidinf(FalFontID fid, FontIDInfo *fontid_inf) ;
+static	int	fal_del_fidinf(FalFontID fid) ;
+static	int	fal_conv_code_to_glyph(FalFontID fid, unsigned int code, unsigned int *glidx) ;
+static	int	fal_conv_glyph_to_code(Oak_FontInf *finf, int dspcode, int cd_set, unsigned int glidx, unsigned int *code) ;
+static	int	falReadFontInfoLists(int func, FalFontData *lstkey, int mask, FalFontDataList *fls, FalFontData fnkey, char *fullpath, FalFontID fid, FalFontData *fdata) ;
+static	int	fal_get_def_fontdata(int func, char *pname, char *buf, char **elm, FalFontData *tmp_data, char *key_fname) ;
+static	int	falgetfontlist(FalFontData *tmp_data, FalFontData *key, int mask, FalFontDataList *fls, int fontnum) ;
+static	int	fal_get_undef_fontdata(int func, char *full_path, char *xlfd, FalFontData *tmp_data, char *key_fname, int *codeset_num, int **codeset_list) ;
+static	void	clear_charset_info(void) ;
+static	int	make_default_path(FalFontPath *pathlist) ;
+static	int	file_lock(int fd) ;
+static	int	file_unlock(int fd) ;
+static	int	is_lock(int fd) ;
 
-extern	int	falReadFontProp() ;
-extern	int	falReadGpfProp() ;
-extern	int	falInitReadPcfProp() ;
-extern	int	fal_get_codeset() ;
-extern	int	falInitReadPcf() ;
-extern	void	falGetPcfGSize() ;
-extern	int	falPcfGlyph() ;
-extern	int	fal_code_to_glyph() ;
-extern	int	fal_glyph_to_code() ;
+extern	int	falReadFontProp(char *file, int protect_key_data, FalFontData *databuff, int islock) ;
+extern	int	falReadGpfProp(int updflg, Oak_FontInf *finf, int protect_key_data, FalFontData *databuff) ;
+extern	int	falInitReadPcfProp(int updflg, Oak_FontInf *finf, FalFontData *databuff) ;
+extern	int	fal_get_codeset(char *locale, char *charset_str, int **codeset, int *num_codeset) ;
+extern	int	falInitReadPcf(struct pcf_inf *pcfinf, caddr_t buftop) ;
+extern	void	falGetPcfGSize(struct pcf_inf *pcfinf, unsigned int *widthp, unsigned int *heightp) ;
+extern	int	falPcfGlyph(char *glyph, Oak_FontInf *finf, int code) ;
+extern	int	fal_code_to_glyph(char *locale, unsigned long codepoint, FalGIInf **gi, int *num_gi) ;
+extern	int	fal_glyph_to_code(char *locale, char *charset_str, int codeset, unsigned long glyph_index, unsigned long *codepoint) ;
 
 
 
@@ -194,7 +194,7 @@ set_errfile_str(char *obuf, char *ibuf)
 FalFontID
 FalOpenFont(char *file, int protect_key_data, int codeset)
 {
-	FalFontID	__FalOpenFont();
+	FalFontID	__FalOpenFont(char *file, int protect_key_data, int codeset, int lockflag);
 
 	return	__FalOpenFont( file, protect_key_data, codeset, 0 );
 }
@@ -456,7 +456,7 @@ __FalOpenFont(char *file, int protect_key_data, int codeset, int lockflag)
 
 FalCloseFont(FalFontID fid)
 {
-	int	__FalCloseFont();
+	int	__FalCloseFont(FalFontID fid, int lockflag);
 	FontIDInfo	fontid_inf ;
 
 	if( fal_read_fidinf( fid, &fontid_inf ) == FAL_ERROR ) {

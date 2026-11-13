@@ -46,6 +46,7 @@
  * Author:  Keith Packard, MIT X Consortium
  */
 
+#include <string.h>
 # include	<sys/types.h>
 # include	<sys/socket.h>
 # include	<sys/signal.h>
@@ -329,7 +330,7 @@ GetRemoteAddress( struct display *d, int fd )
 	d->peer = malloc (len);
 	if (d->peer)
 	{
-	    bcopy (buf, (char *) d->peer, len);
+	    memmove((char *) d->peer, buf, len);
 	    d->peerlen = len;
 	}
     }

@@ -29,8 +29,7 @@ Copyright 1988, 1989 Hewlett-Packard Co.
 #include "globdec.h"
 
 /* Process signon message text */
-void m_signmsg(p)
-M_WCHAR *p ;
+void m_signmsg(M_WCHAR *p)
 {
 char mb_p;
 

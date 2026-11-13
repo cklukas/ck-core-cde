@@ -55,6 +55,7 @@
  *
  ***************************************************************************/
 
+#include <string.h>
 #include	<stdio.h>
 #include        <setjmp.h>
 #include	<stdlib.h>
@@ -2158,7 +2159,7 @@ DebugWidgetResources(Widget w)
     int i;
 
     i = 0;
-    bzero((char *) &values, sizeof(values));
+    memset((char *) &values, 0, sizeof(values));
     XtSetArg(argt[i], XmNheight,	&values.height); i++;
     XtSetArg(argt[i], XmNwidth,		&values.width); i++;
     XtSetArg(argt[i], XmNx,		&values.x); i++;

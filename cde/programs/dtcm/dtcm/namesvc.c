@@ -79,10 +79,7 @@ get_userscontext()
 
 
 static int
-get_principal(table, ent, udata)
-char *table;
-nis_object *ent;
-void *udata;
+get_principal(char *table, nis_object *ent, void *udata)
 {
 	char **principal = (char **)udata;
 	entry_col *ec = ent->EN_data.en_cols.en_cols_val;
@@ -95,10 +92,7 @@ void *udata;
 }
 
 extern Lookup_stat
-cm_get_nis_location(name, calname, host)
-char *name;
-char *calname;
-char **host;
+cm_get_nis_location(char *name, char *calname, char **host)
 {
 	nis_result *tres, *eres;
 	char cmtbl[NIS_MAXNAMELEN];
@@ -162,8 +156,7 @@ char **host;
 }
 
 extern char *
-netname2principal(netname)
-char *netname;
+netname2principal(char *netname)
 {
 	nis_result *eres;
 	char indexname[NIS_MAXNAMELEN];
@@ -186,8 +179,7 @@ char *netname;
 }
 
 Lookup_stat
-test_cm_get_target(name, name2)
-	char *name, **name2;
+test_cm_get_target(char *name, char **name2)
 {
 	FILE *f;
 	char    *b, *tmp, *uname, *ptr, buffer[BUFSIZ];
@@ -228,23 +220,19 @@ test_cm_get_target(name, name2)
 
 /* principal.domain -> principal */
 extern char *
-principal_to_user(principal)
-char *principal;
+principal_to_user(char *principal)
 {
 	return(get_head(principal, '.'));
 }
 
 /* principal.domain -> domain */
 extern char *
-principal_to_domain(principal)
-char *principal;
+principal_to_domain(char *principal)
 {
 	return(get_tail(principal, '.'));
 }
 static void
-new_entryobj(nobj, loc)
-	nis_object *nobj;
-	char 	*loc;
+new_entryobj(nis_object *nobj, char *loc)
 {
 	entry_col *ec;
 	entry_obj *eo;
@@ -277,10 +265,7 @@ new_nisobj()
 }
 
 extern Lookup_stat
-cm_set_nis_location(name, calname, loc)
-char *name;
-char *calname;
-char *loc;
+cm_set_nis_location(char *name, char *calname, char *loc)
 {
 	nis_result *eres, *mres, *ares;
 	char cmtbl[NIS_MAXNAMELEN];
@@ -375,9 +360,7 @@ char *loc;
  */
 
 extern void
-cm_get_target(name, target)
-char *name;
-char **target;
+cm_get_target(char *name, char **target)
 {
         char *user, *domain;
         int status=0;
@@ -433,8 +416,7 @@ char **target;
 #define YP_SUCCESS 0
 
 extern int
-cm_get_yptarget(name, name2)
-	char *name, **name2;
+cm_get_yptarget(char *name, char **name2)
 {
 	char *domain;
 	int outlen, inlen, status=0;

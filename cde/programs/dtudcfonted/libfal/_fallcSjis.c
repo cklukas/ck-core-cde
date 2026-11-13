@@ -110,9 +110,9 @@ typedef unsigned int	Uint;
 #define BIT8ON(c)	((c) | GR)
 
 
-static void jis_to_sjis();
-static void sjis_to_jis();
-static CodeSet wc_codeset();
+static void jis_to_sjis(Uchar *p1, Uchar *p2);
+static void sjis_to_jis(Uchar *p1, Uchar *p2);
+static CodeSet wc_codeset(XLCd lcd, wchar_t wch);
 
 
 /*

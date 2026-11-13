@@ -41,6 +41,7 @@
         those exposed in /ilc/iltiffint.h to other /ilc/iltiff*.c code.
     */
 
+#include <string.h>
 #include <stdlib.h>
 
 #include "iltiffint.h"
@@ -290,7 +291,7 @@ ilBool         bigEndian;
                   case IL_TAG_BYTE:
                   case IL_TAG_ASCII:
                     if (nItems <= 4)
-                        bcopy (pFileTag->data.chars, (char *)pTagData, nItems);
+                        memmove((char *)pTagData, pFileTag->data.chars, nItems);
                     else {
                         IL_FLIP_LONG (bigEndian, pFileTag->data.chars, offset)
                         if (!IL_SEEK (pFile, offset) 

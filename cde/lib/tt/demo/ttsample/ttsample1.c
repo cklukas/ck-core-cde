@@ -46,15 +46,13 @@
 Widget toplevel, base_frame, controls, slider, gauge, button;
 char *my_procid;
 
-void	broadcast_value();
-void	receive_tt_message();
-void	create_ui_components();
+void	broadcast_value(Widget, XtPointer, XtPointer);
+void	receive_tt_message(XtPointer, int *, XtInputId *);
+void	create_ui_components(void);
 
 
-void
-main(argc, argv)
-	int		argc;
-	char		**argv;
+int
+main(int argc, char **argv)
 {
 	int ttfd;
 	Tt_pattern pat;
@@ -121,9 +119,7 @@ main(argc, argv)
  * When the button is pressed, broadcast the new slider value.
  */
 void
-broadcast_value(widget, client_data, call_data)
-	Widget widget;
-	XtPointer client_data, call_data;
+broadcast_value(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	int slider_value;
 	Tt_message msg_out;
@@ -152,10 +148,7 @@ broadcast_value(widget, client_data, call_data)
  * ttsample1_value message, update the gauge with the new value.
  */
 void
-receive_tt_message(client_data, fid, id)
-XtPointer client_data;
-int *fid;
-XtInputId *id;
+receive_tt_message(XtPointer client_data, int *fid, XtInputId *id)
 {
 	Tt_message msg_in;
 	int mark;

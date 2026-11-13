@@ -38,6 +38,7 @@
 ***-------------------------------------------------------------------*/
 
 
+#include <string.h>
 #include <math.h>
 #include <stdio.h>       
 #include <stdlib.h>
@@ -532,7 +533,7 @@ long               *pNLines
     Zero the output (dst) buffer.  _ilPutOnes()  writes only ones, and expects 
     that    the dst lines have already been zeroed. 
     ======================================================================== */
-	bzero ((char *)dstImageP, (pDstPlane->nBytesPerRow * *pNLines) );
+	memset((char *)dstImageP, 0, (pDstPlane->nBytesPerRow * *pNLines));
 
 	/* Allocate space for the Reference line and set to zero Or 1's         */
 

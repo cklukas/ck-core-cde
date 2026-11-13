@@ -102,12 +102,8 @@ static char SCCSID[] = "OSF/Motif: @(#)_DtosP.h	4.16 91/09/12";
 #ifndef __DtosP_h
 #define __DtosP_h
 
-#ifndef NO_MEMMOVE
-# ifndef X_NOT_STDC_ENV
-#  include <stdlib.h> /* Needed for MB_CUR_MAX, mbtowc, mbstowcs and mblen */
-# endif
-#else
-# define memmove( p1, p2, p3 )   bcopy( p2, p1, p3 )
+#ifndef X_NOT_STDC_ENV
+# include <stdlib.h> /* Needed for MB_CUR_MAX, mbtowc, mbstowcs and mblen */
 #endif
 
 #ifdef BOGUS_MB_MAX  /* some systems don't properly set MB_[CUR|LEN]_MAX */
@@ -165,7 +161,7 @@ static char SCCSID[] = "OSF/Motif: @(#)_DtosP.h	4.16 91/09/12";
  * Some System V boxes extract alloca.o from /lib/libPW.a; if you
  * decide that you don't want to use alloca, you might want to fix it here.
  */
-char *alloca();
+void *alloca(size_t);
 #   define ALLOCATE_LOCAL(size) alloca((int)(size))
 #   define DEALLOCATE_LOCAL(ptr)  /* as nothing */
 #  endif /* who does alloca */

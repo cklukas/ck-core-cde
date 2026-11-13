@@ -53,6 +53,7 @@
  *
  ***************************************************************************/
 
+#include <string.h>
 #include	<stdio.h>
 #include	<unistd.h>
 #include	<setjmp.h>
@@ -1584,7 +1585,7 @@ RespondChallengeCB(
    /*
     * Clean password memory to foil snoopers.
     */
-    bzero(textdata->noechobuf, strlen(textdata->noechobuf));
+    memset(textdata->noechobuf, 0, strlen(textdata->noechobuf));
   }
 
   TellRequester(buf, (size_t) r->hdr.length);

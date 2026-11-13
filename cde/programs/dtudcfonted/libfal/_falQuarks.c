@@ -75,6 +75,7 @@ from the X Consortium.
 
 */
 
+#include <string.h>
 #include "_fallibint.h"
 #include <X11/Xresource.h>
 
@@ -158,7 +159,7 @@ typedef struct {char a; double b;} TestType1;
 typedef struct {char a; unsigned long b;} TestType2;
 
 #ifdef XTHREADS
-static char *_falpermalloc();
+static char *_falpermalloc(unsigned int length);
 
 char *falpermalloc(unsigned int length)
 {
@@ -232,7 +233,7 @@ ExpandQuarkTable(void)
     entries = (Entry *)Xmalloc(sizeof(Entry) * (newmask + 1));
     if (!entries)
 	return False;
-    bzero((char *)entries, sizeof(Entry) * (newmask + 1));
+    memset((char *)entries, 0, sizeof(Entry) * (newmask + 1));
     quarkTable = entries;
     quarkMask = newmask;
     quarkRehash = quarkMask - 2;

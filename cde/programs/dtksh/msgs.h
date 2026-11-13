@@ -63,7 +63,7 @@ char * GetSharedMsg(
  * something else (like scratch), and that can garble the pointer.
  */
 # ifdef _NO_PROTO
-extern char *_DtGetMessage();
+extern char *_DtGetMessage(char *filename, char *s);
 # else  /* _NO_PROTO */
 extern char *_DtGetMessage(char *filename, char *s );
 # endif /* _NO_PROTO */

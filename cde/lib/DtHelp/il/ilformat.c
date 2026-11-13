@@ -41,6 +41,7 @@
             Contains pipe functions and an ilFormatRec, which points to the functions
             and defines how the formatter should be added by ilConvert().
         */
+#include <string.h>
 #include "ilint.h"
 #include "ilpipelem.h"
 #include "ilconvert.h"
@@ -82,7 +83,7 @@ ilPtr              pSrc, pDst;
     nLinesM1--;
 
     do {
-        bcopy ((char *)pSrc, (char *)pDst, nBytes);
+        memmove((char *)pDst, (char *)pSrc, nBytes);
         pSrc += srcRowBytes;
         pDst += dstRowBytes;
         } while (--nLinesM1 >= 0);

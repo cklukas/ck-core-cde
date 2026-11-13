@@ -65,10 +65,8 @@ Widget	edit_ui_obj_button;
 Widget	edit_ui_message;
 
 
-void
-main(argc, argv)
-	int		argc;
-	char		**argv;
+int
+main(int argc, char **argv)
 {
 	char	*dfile;
 
@@ -104,8 +102,7 @@ main(argc, argv)
 
 
 void
-write_footer(message)
-	char *message;
+write_footer(char *message)
 {
 	XmString label;
 
@@ -116,9 +113,7 @@ write_footer(message)
 
 
 Tt_status
-read_file(widget, file)
-	Widget widget;
-	char    *file;
+read_file(Widget widget, char *file)
 {
 	char buf[BUFSIZ], *text;
 	struct stat statb;
@@ -165,9 +160,7 @@ read_file(widget, file)
 /* Write the contents of a text widget to a file. */
 
 Tt_status
-write_file(widget, file)
-	Widget  widget;
-	char    *file;
+write_file(Widget widget, char *file)
 {
 	char *text;
 	int len;
@@ -205,7 +198,7 @@ edit_init_tt()
 	int	mark;
 	char	*procid = tt_open();
 	int	ttfd;
-	void	edit_receive_tt_message();
+	void	edit_receive_tt_message(XtPointer, int *, XtInputId *);
 
 	mark = tt_mark();
 
@@ -238,10 +231,7 @@ edit_init_tt()
  * Handle any incoming ToolTalk messages.
  */
 void
-edit_receive_tt_message(client_data, fid, id)
-	XtPointer client_data;
-	int *fid;
-	XtInputId *id;
+edit_receive_tt_message(XtPointer client_data, int *fid, XtInputId *id)
 {
 	Tt_message		msg_in;
 	int			opnum;
@@ -290,8 +280,7 @@ edit_receive_tt_message(client_data, fid, id)
  * Handle the "edit" op.
  */
 int
-edit_edit(msg)
-     Tt_message msg;
+edit_edit(Tt_message msg)
 {
 	int	mark = tt_mark();
 	char	*file = tt_message_file(msg);
@@ -325,8 +314,7 @@ edit_edit(msg)
  * Handle the "save" op.
  */
 int
-edit_save(msg)
-     Tt_message msg;
+edit_save(Tt_message msg)
 {
 	int		mark = tt_mark();
 	char		*new_file;
@@ -369,8 +357,7 @@ edit_save(msg)
  * Handle the "close" op.
  */
 int
-edit_close(msg)
-     Tt_message msg;
+edit_close(Tt_message msg)
 {
 	Atom wmchs;
 	Window w;
@@ -403,8 +390,7 @@ edit_close(msg)
  * Handle the "hilite_obj" op.
  */
 int
-edit_hilite_obj(msg)
-     Tt_message msg;
+edit_hilite_obj(Tt_message msg)
 {
 	int	mark = tt_mark();
 	char	*objid = tt_message_arg_val(msg, 0);
@@ -447,9 +433,7 @@ edit_hilite_obj(msg)
  * a notification that an object has been created in this file.
  */
 void
-edit_ui_make_object(widget, client_data, call_data)
-	Widget widget;
-	XtPointer  client_data, call_data;
+edit_ui_make_object(Widget widget, XtPointer client_data, XtPointer call_data)
 {
 	int		mark = tt_mark();
 	char		*objid;
@@ -517,10 +501,7 @@ edit_ui_make_object(widget, client_data, call_data)
  * in textsw.
  */
 int
-get_selection(widget, selection, first_ptr, last_ptr)
-	Widget		widget;
-	char		**selection;
-	XmTextPosition	*first_ptr, *last_ptr;
+get_selection(Widget widget, char **selection, XmTextPosition *first_ptr, XmTextPosition *last_ptr)
 {
 	char			*ptr;
 
@@ -539,8 +520,7 @@ get_selection(widget, selection, first_ptr, last_ptr)
 
 
 void
-reverse_str(str)
-	char *str;
+reverse_str(char *str)
 {
 	char c;
 	int i, n;
@@ -555,11 +535,7 @@ reverse_str(str)
 
 
 int
-text_find_bytes(widget, first, last, str, reverse)
-	Widget widget;
-	XmTextPosition *first, *last;
-	int reverse;
-	char *str;
+text_find_bytes(Widget widget, XmTextPosition *first, XmTextPosition *last, char *str, int reverse)
 {
 	char *ptr, *text;
 	int n;
@@ -588,10 +564,7 @@ text_find_bytes(widget, first, last, str, reverse)
  * successful. 
  */
 int
-select_region(widget, begin, end)
-     Widget		widget;
-     char		*begin;
-     char		*end;
+select_region(Widget widget, char *begin, char *end)
 {
 	XmTextPosition		bfirst, blast, efirst, elast;
 	XmTextPosition		inspoint;
@@ -640,10 +613,7 @@ select_region(widget, begin, end)
  * supplied. Returns 1 if successful.
  */
 int
-wrap_selection(widget, begin, end)
-     Widget		widget;
-     char		*begin;
-     char		*end;
+wrap_selection(Widget widget, char *begin, char *end)
 {
 	char			*buf;
 	char			*sel;
@@ -673,10 +643,7 @@ wrap_selection(widget, begin, end)
  *  called once, when the text is initially loaded, so the flag is initially
  *  -1, to counter this.
  */
-text_modify(widget, client_data, cbs)
-	Widget widget;
-	XtPointer client_data;
-	XmTextVerifyCallbackStruct *cbs;
+text_modify(Widget widget, XtPointer client_data, XmTextVerifyCallbackStruct *cbs)
 {
 	text_modified++;
 }

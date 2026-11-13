@@ -82,5 +82,5 @@ void		IconDelete(Widget, IconInfo*);
 void		IconDraw(Widget, IconInfo*);
 void		IconInitialize(Widget, IconInfo*, short, short, void*, int, 
 			char*, IconTyping);
-IconInfo	*IconNew();
+IconInfo	*IconNew(void);
 

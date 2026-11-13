@@ -43,6 +43,7 @@
                             image rotation code
    ============================================================================================================================= */
 
+#include <string.h>
 #include "ilint.h"
 #include "ilpipelem.h"
 #include "ilerrors.h"
@@ -158,11 +159,11 @@ ilRotatePrivptr   pPriv;
    nlines = *pNLines;
    nlinesout = 0;
    for (nlines = *pNLines; nlines > 0; nlines--){
-      bcopy  ((char *) psrcline, (char *) pPriv->data_in, (int) srcnbytes);
+      memmove((char *) pPriv->data_in, (char *) psrcline, (int) srcnbytes);
       for (nrows = _il_Rotate_Send_Row(&pPriv->data_in); 
            nrows > 0; --nrows) { 
          _il_Rotate_Get_Row(pPriv->buf);
-         bcopy  ((char *) pPriv->buf, (char *) pdstline, (int) dstnbytes);
+         memmove((char *) pdstline, (char *) pPriv->buf, (int) dstnbytes);
          pdstline += dstnbytes;
          nlinesout++;
       }

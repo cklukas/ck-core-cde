@@ -6911,9 +6911,8 @@ postEkinBekinProc(FormatData *data,
 
 #ifdef DEBUG
 
-static
-prnword(pword)
-WORD	*pword;
+static void
+prnword(WORD *pword)
 {
    int i = 0;
 

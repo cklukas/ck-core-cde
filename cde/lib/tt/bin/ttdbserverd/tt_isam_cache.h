@@ -68,6 +68,6 @@ int  cached_isopen(const char *filepath, int mode);
 int  cached_isclose(int isfd);
 
 // Close every file of the table and compress it (delete the empty records).
-void isgarbage_collect();
+void isgarbage_collect(void);
 
 #endif /* _TT_ISAM_CACHE_H */

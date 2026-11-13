@@ -223,8 +223,8 @@ static void CvtStringToShadowPixmaps(
                         XrmValue *from_val,
                         XrmValue *to_val) ;
 static Boolean _DtWmStringsAreEqual(
-                        register char *in_str,
-                        register char *test_str) ;
+                        char *in_str,
+                        char *test_str) ;
 static void SetDefaults(
                         Display *dpy,
                         int screen_number) ;
@@ -1392,12 +1392,12 @@ CvtStringToShadowPixmaps(
  ************************************************************************/
 static Boolean
 _DtWmStringsAreEqual(
-        register char *in_str,
-        register char *test_str )
+        char *in_str,
+        char *test_str )
 
 {
-   register int i;
-   register int j;
+   int i;
+   int j;
    i = *in_str;
 
    for (;;)

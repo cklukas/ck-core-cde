@@ -69,7 +69,7 @@
 # include       <pwd.h>                 /* for passwd structure            */
 # include	<stdio.h>
 # include	<stdlib.h>		/* for exit(), malloc(), abort()   */
-# include	<string.h>		/* for string functions, bcopy()   */
+# include	<string.h>		/* for the string functions       */
 # include	<sys/param.h>		/* for NGROUPS			   */
 # include	<sys/types.h>   	/* for fd_set			   */
 # include	<netinet/in.h>		/* for Internet socket stuff	   */
@@ -83,9 +83,6 @@
 # include	<X11/Xmd.h>
 # include	<X11/Xauth.h>
 # include	<X11/Xdmcp.h>
-#ifdef SVR4 /*** needed for bcopy bcmp ***/
-#include    <X11/Xlibint.h>
-#endif      /* SVR4 */
 
 # include <X11/Xresource.h>
 
@@ -172,18 +169,6 @@
 #  define GID_NO_CHANGE  ((gid_t) -1)  /* for chown(2) and setresgid(2) */
 #endif
 
-#ifndef _BSD
- #ifdef bzero
-  #undef bzero
- #endif
-
- #ifdef SVR4
-  #define bzero(x,y)	memset((void *)(x),0,(y))/* use ANSI C version	   */
- #else
-  #define bzero(x,y)	memset((x),0,(y))	/* use ANSI C version	   */
- #endif
-#endif
-
 #define IsVerifyName(n) ((d->verifyName && (strcmp(d->verifyName,(n)) == 0 )) \
 			  ? TRUE : FALSE)
 
@@ -239,7 +224,7 @@ typedef union wait	waitType;
 
 #ifndef FD_ZERO
 typedef	struct	my_fd_set { int fds_bits[1]; } my_fd_set;
-# define FD_ZERO(fdp)	bzero ((fdp), sizeof (*(fdp)))
+# define FD_ZERO(fdp)	memset ((fdp), 0, sizeof (*(fdp)))
 # define FD_SET(f,fdp)	((fdp)->fds_bits[(f) / (sizeof (int) * 8)] |=  (1 << ((f) % (sizeof (int) * 8))))
 # define FD_CLR(f,fdp)	((fdp)->fds_bits[(f) / (sizeof (int) * 8)] &= ~(1 << ((f) % (sizeof (int) * 8))))
 # define FD_ISSET(f,fdp)	((fdp)->fds_bits[(f) / (sizeof (int) * 8)] & (1 << ((f) % (sizeof (int) * 8))))

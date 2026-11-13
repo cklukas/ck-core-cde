@@ -59,6 +59,7 @@
  * started.
  */
 
+#include <string.h>
 #include "dm.h"
 
 struct protoDisplay	*protoDisplays;
@@ -115,7 +116,7 @@ NewProtoDisplay( struct sockaddr *address, int addrlen,
     if (!pdpy)
 	return NULL;
     /* authentication data and key are filled in only by the XDM handshake */
-    bzero ((char *) pdpy, sizeof *pdpy);
+    memset((char *) pdpy, 0, sizeof *pdpy);
     pdpy->address = (struct sockaddr *) malloc (addrlen);
     if (!pdpy->address)
     {
@@ -123,7 +124,7 @@ NewProtoDisplay( struct sockaddr *address, int addrlen,
 	return NULL;
     }
     pdpy->addrlen = addrlen;
-    bcopy ((char *)address, (char *)pdpy->address, addrlen);
+    memmove((char *)pdpy->address, (char *)address, addrlen);
     pdpy->displayNumber = displayNumber;
     pdpy->connectionType = connectionType;
     pdpy->date = date;

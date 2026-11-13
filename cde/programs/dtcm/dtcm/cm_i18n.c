@@ -312,7 +312,7 @@ euc_to_octal(char *srcStr)
 #ifdef SVR4
 	memset(dstStr, 0, sizeof(dstStr));
 #else
-	bzero(dstStr, sizeof(dstStr));
+	memset(dstStr, 0, sizeof(dstStr));
 #endif /* SVR4 */
 	for (i = 0; i < len; i++) {
 		if (inKanji) {

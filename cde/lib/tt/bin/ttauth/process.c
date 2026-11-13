@@ -527,7 +527,7 @@ auth_initialize(char *authfilename)
 
     register_signals ();
 
-    bzero ((char *) hexvalues, sizeof hexvalues);
+    memset((char *) hexvalues, 0, sizeof hexvalues);
     hexvalues['0'] = 0;
     hexvalues['1'] = 1;
     hexvalues['2'] = 2;

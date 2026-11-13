@@ -477,7 +477,7 @@ char                        extension [IL_EFS_MAX_EXTENSION_CHARS];
             nChars = strlen (pExtension);
             if (nChars > (IL_EFS_MAX_EXTENSION_CHARS - 1))
                 nChars = IL_EFS_MAX_EXTENSION_CHARS - 1;
-            bcopy (pExtension, extension, nChars);      /* extract "extension" */
+            memmove(extension, pExtension, nChars);      /* extract "extension" */
             extension [nChars] = 0;
 
                 /* Search list for extension match until pFileType found or list done */

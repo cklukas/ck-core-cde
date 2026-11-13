@@ -40,6 +40,7 @@
         /*  /ilc/ilupsample.c : Code for doing upsampling, or scaling
             by 1, 2, 4x of planar images; each plane independent.
         */
+#include <string.h>
 #include "ilint.h"
 #include "ilpipelem.h"
 #include "ilconvert.h"
@@ -211,7 +212,7 @@ int                left, leftBelow, right, rightBelow;
         if ((nSrcLines <= 0) || (nSrcBytes <= 0)) {
             long i = nLines;
             while (i-- > 0) {
-                bzero ((char *)pDstLine, width);
+                memset((char *)pDstLine, 0, width);
                 pDstLine += dstRowBytes;
                 }
             }
@@ -223,9 +224,9 @@ int                left, leftBelow, right, rightBelow;
                 pSrc = pSrcLine;
                 pDst = pDstLine;
                 if (srcRowBytes == dstRowBytes)
-                    bcopy ((char *)pSrc, (char *)pDst, nSrcBytes * nSrcLines);
+                    memmove((char *)pDst, (char *)pSrc, nSrcBytes * nSrcLines);
                 else while (nSrcLines-- > 0) {
-                    bcopy ((char *)pSrc, (char *)pDst, nSrcBytes);
+                    memmove((char *)pDst, (char *)pSrc, nSrcBytes);
                     pSrc += srcRowBytes;                
                     pDst += dstRowBytes;
                     }
@@ -446,7 +447,7 @@ ilByte             pixel, prevPixel;
         pSrc = pSrcLine;
         pDst = pDstLine;
         while (nLines-- > 0) {
-            bcopy ((char *)pSrc, (char *)pDst, width);
+            memmove((char *)pDst, (char *)pSrc, width);
             pSrc += srcRowBytes;                
             pDst += dstRowInc;
             }
@@ -592,7 +593,7 @@ long               nPixelsM1;
         pDst = pLine;
         while (nLines-- > 0) {
             pDst += rowBytes;
-            bcopy ((char *)pLine, (char *)(pDst), width);
+            memmove((char *)(pDst), (char *)pLine, width);
             }
         break;
         }   /* END doubling */
@@ -632,7 +633,7 @@ long               nPixelsM1;
         pDst = pLine;
         while (nLines-- > 0) {
             pDst += rowBytes;
-            bcopy ((char *)pLine, (char *)(pDst), width);
+            memmove((char *)(pDst), (char *)pLine, width);
             }
         break;
         }   /* END quadrupling */
@@ -691,7 +692,7 @@ ilUpsampleShiftPtr          pShift;
         if ((nLines <= 0) || ((width >> pShift->horiz) <= 0)) {
             long i = height;
             while (i-- > 0) {
-                bzero ((char *)pDstLine, width);
+                memset((char *)pDstLine, 0, width);
                 pDstLine += dstRowBytes;
                 }
             }

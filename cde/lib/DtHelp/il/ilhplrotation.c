@@ -84,8 +84,7 @@ typedef enum {Q_FIRST, Q_SECOND, Q_THIRD, Q_FOURTH, Q_0_180, Q_90_270}
  *     0 <= i < INTER_LEVELS, -255 <= j <= 255.
  * Return 0 if successful, -1 if memory can't be allocated.
  */
-static short Build_Mult_Table(table)
-OPERAND *table[INTER_LEVELS];
+static short Build_Mult_Table(OPERAND *table[INTER_LEVELS])
 {
     short i, j;
     OPERAND value, *p;
@@ -120,8 +119,7 @@ OPERAND *table[INTER_LEVELS];
  * Free_Mult_Table
  * Free space of Multiplication Table.
  */
-static void Free_Mult_Table(table)
-OPERAND *table[INTER_LEVELS];
+static void Free_Mult_Table(OPERAND *table[INTER_LEVELS])
 {
     short i;
 
@@ -177,8 +175,7 @@ static OPERAND First_Mark()
 }
 
 
-static OPERAND First_Pixel(row_num)
-OPERAND row_num;
+static OPERAND First_Pixel(OPERAND row_num)
 {
     if ((r_angle ==   0.0) || (r_angle ==  90.0) ||
         (r_angle == 180.0) || (r_angle == 270.0)) {
@@ -213,8 +210,7 @@ static OPERAND Last_Mark()
 }
 
 
-static OPERAND Last_Pixel(row_num)
-OPERAND row_num;
+static OPERAND Last_Pixel(OPERAND row_num)
 {
     if ((r_angle == 0.0) || (r_angle == 180.0)) {
         return(r_input_w);
@@ -393,8 +389,7 @@ DATA_IN_PTR *input_data
 /*
  * IR_Rotate_Get_Row_Mode0
  */
-static void _il_Rotate_Get_Row_Mode0(out)
-DATA_OUT_PTR out;
+static void _il_Rotate_Get_Row_Mode0(DATA_OUT_PTR out)
 {
     OPERAND first_pix, last_pix, col;
     float Y, x, y;
@@ -485,8 +480,7 @@ DATA_OUT_PTR out;
 /*
  * IR_Rotate_Get_Row_Mode1
  */
-static void _il_Rotate_Get_Row_Mode1(out)
-DATA_OUT_PTR out;
+static void _il_Rotate_Get_Row_Mode1(DATA_OUT_PTR out)
 {
     OPERAND first_pix, last_pix, col;
     float Y, x, y;
