@@ -641,7 +641,7 @@ void BaseUI::_Find(void *pattern, int depth, int *n_matches,
        {
          int j;
 	 if (*n_matches == 0)
-	    *matches = (BaseUI **)malloc(sizeof(BaseUI **) * tmp);
+	    *matches = (BaseUI **)calloc(tmp, sizeof(BaseUI **));
 	 else
 	    *matches = (BaseUI **)realloc(*matches, sizeof(BaseUI **) *
 					  (*n_matches + tmp));
