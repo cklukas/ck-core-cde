@@ -29,6 +29,7 @@
  */
 
 #include <EUSCompat.h>
+#include <stdckdint.h>
 #include <stdlib.h>
 #include "csa.h"
 #include "free.h"
@@ -52,116 +53,76 @@ static void _DtCm_free_calendar_users(uint num_elem, void *vptr);
  * extern functions used in the library
  *****************************************************************************/
 
+/*
+ * Allocate a zeroed block of num_elem elements of elem_size bytes each,
+ * preceded by a memory header.  Returns a pointer to the first element.
+ */
+static void *
+alloc_counted(uint num_elem, size_t elem_size, _DtCmFreeProc fproc)
+{
+	size_t		size;
+	char		*ptr;
+	_DtCmMemHeader	*hptr;
+
+	if (ckd_mul(&size, (size_t)num_elem, elem_size) ||
+	    ckd_add(&size, size, sizeof(_DtCmMemHeader)) ||
+	    (ptr = calloc(1, size)) == nullptr)
+		return (nullptr);
+
+	hptr = (_DtCmMemHeader *)ptr;
+	hptr->mark = _DtCM_OUR_MEMORY;
+	hptr->num_elem = num_elem;
+	hptr->fproc = fproc;
+	return (ptr + sizeof(_DtCmMemHeader));
+}
+
 extern CSA_calendar_user *
 _DtCm_alloc_calendar_users(uint num_elem)
 {
-	char *ptr;
-	_DtCmMemHeader	*hptr;
-
-	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) +
-	    sizeof(CSA_calendar_user) * num_elem)) == nullptr)
-		return (nullptr);
-	else {
-		hptr = (_DtCmMemHeader *)ptr;
-		hptr->mark = _DtCM_OUR_MEMORY;
-		hptr->num_elem = num_elem;
-		hptr->fproc = _DtCm_free_calendar_users;
-		return ((CSA_calendar_user *)(ptr + sizeof(_DtCmMemHeader)));
-	}
+	return (alloc_counted(num_elem, sizeof(CSA_calendar_user),
+	    _DtCm_free_calendar_users));
 }
 
 extern char **
 _DtCm_alloc_character_pointers(uint num_elem)
 {
-	char *ptr;
-	_DtCmMemHeader	*hptr;
-
-	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) +
-	    sizeof(char *) * num_elem)) == nullptr)
-		return (nullptr);
-	else {
-		hptr = (_DtCmMemHeader *)ptr;
-		hptr->mark = _DtCM_OUR_MEMORY;
-		hptr->num_elem = num_elem;
-		hptr->fproc = _DtCm_free_character_pointers;
-		return ((char **)(ptr + sizeof(_DtCmMemHeader)));
-	}
+	return (alloc_counted(num_elem, sizeof(char *),
+	    _DtCm_free_character_pointers));
 }
 
 extern CSA_attribute *
 _DtCm_alloc_attributes(uint num_elem)
 {
-	char *ptr;
-	_DtCmMemHeader	*hptr;
 	extern void _DtCm_free_attributes(uint size, void *attrs);
 
-	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) +
-	    sizeof(CSA_attribute) * num_elem)) == nullptr)
-		return (nullptr);
-	else {
-		hptr = (_DtCmMemHeader *)ptr;
-		hptr->mark = _DtCM_OUR_MEMORY;
-		hptr->num_elem = num_elem;
-		hptr->fproc = _DtCm_free_attributes;
-		return ((CSA_attribute *)(ptr + sizeof(_DtCmMemHeader)));
-	}
+	return (alloc_counted(num_elem, sizeof(CSA_attribute),
+	    _DtCm_free_attributes));
 }
 
 extern CSA_entry_handle *
 _DtCm_alloc_entry_handles(uint num_elem)
 {
-	char *ptr;
-	_DtCmMemHeader	*hptr;
 	extern void _DtCm_free_entry_handles(uint num_entries, void *entries);
 
-	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) +
-	    sizeof(CSA_entry_handle) * num_elem)) == nullptr)
-		return (nullptr);
-	else {
-		hptr = (_DtCmMemHeader *)ptr;
-		hptr->mark = _DtCM_OUR_MEMORY;
-		hptr->num_elem = num_elem;
-		hptr->fproc = _DtCm_free_entry_handles;
-		return ((CSA_entry_handle *)(ptr + sizeof(_DtCmMemHeader)));
-	}
+	return (alloc_counted(num_elem, sizeof(CSA_entry_handle),
+	    _DtCm_free_entry_handles));
 }
 
 extern void *
 _DtCm_alloc_entry(uint size)
 {
-	char *ptr;
-	_DtCmMemHeader	*hptr;
 	extern void _DtCm_free_entry_content(uint dummy, void *entry);
 
-	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) + size)) == nullptr)
-		return (nullptr);
-	else {
-		hptr = (_DtCmMemHeader *)ptr;
-		hptr->mark = _DtCM_OUR_MEMORY;
-		hptr->num_elem = 1;
-		hptr->fproc = _DtCm_free_entry_content;
-		return ((void *)(ptr + sizeof(_DtCmMemHeader)));
-	}
+	return (alloc_counted(1, size, _DtCm_free_entry_content));
 }
 
 extern CSA_reminder_reference *
 _DtCm_alloc_reminder_references(uint num_elem)
 {
-	char *ptr;
-	_DtCmMemHeader	*hptr;
 	extern void _DtCm_free_reminder_references(uint num_rems, void *rems);
 
-	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) +
-	    sizeof(CSA_reminder_reference) * num_elem)) == nullptr)
-		return (nullptr);
-	else {
-		hptr = (_DtCmMemHeader *)ptr;
-		hptr->mark = _DtCM_OUR_MEMORY;
-		hptr->num_elem = num_elem;
-		hptr->fproc = _DtCm_free_reminder_references;
-		return ((CSA_reminder_reference *)(ptr +
-			sizeof(_DtCmMemHeader)));
-	}
+	return (alloc_counted(num_elem, sizeof(CSA_reminder_reference),
+	    _DtCm_free_reminder_references));
 }
 
 extern CSA_return_code

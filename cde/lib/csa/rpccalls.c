@@ -1217,7 +1217,7 @@ csa2cmsattrs(
 	if (num_attrs == 0)
 		return CSA_SUCCESS;
 
-	if ((cmsattrs = calloc(1, sizeof(cms_attribute)*num_attrs)) == nullptr)
+	if ((cmsattrs = calloc(num_attrs, sizeof(cms_attribute))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if (newops && (ops_r = calloc(num_attrs, sizeof(CSA_enum))) == nullptr) {
@@ -1362,7 +1362,7 @@ csa2cmsnames(
 	if (num_names == 0)
 		return (CSA_SUCCESS);
 
-	if ((cmsnames = calloc(1, sizeof(cms_attr_name)*num_names)) == nullptr)
+	if ((cmsnames = calloc(num_names, sizeof(cms_attr_name))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (i = 0, j = 0; i < num_names; i++) {

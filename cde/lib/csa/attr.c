@@ -447,7 +447,7 @@ _DtCm_copy_cms_attributes(
 	if (srcsize == 0)
 		return (CSA_SUCCESS);
 
-	if ((attrs = calloc(1, sizeof(cms_attribute) * (srcsize + 1))) == nullptr)
+	if ((attrs = calloc((size_t)srcsize + 1, sizeof(cms_attribute))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* firstr element is not used */

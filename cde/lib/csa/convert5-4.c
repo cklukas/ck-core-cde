@@ -811,7 +811,7 @@ _DtCm_add_reminder(char *rem, CSA_reminder * val, Appt_4 *appt)
 	}
 
 	if (val->reminder_data.size > 0) {
-		if ((newattr->clientdata = malloc(val->reminder_data.size + 1))
+		if ((newattr->clientdata = malloc((size_t)val->reminder_data.size + 1))
 		    == nullptr) {
 			_DtCm_free_attr4(newattr);
 			return (CSA_E_INSUFFICIENT_MEMORY);

@@ -690,7 +690,7 @@ _CopyAttributeNames(uint fnum, char **fnames, CSA_uint32 *tnum, char ***tnames)
 		return (CSA_SUCCESS);
 	}
 
-	if ((nnames = calloc(1, sizeof(char *) * fnum)) == nullptr)
+	if ((nnames = calloc(fnum, sizeof(char *))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (i = 0; i < fnum; i++) {
