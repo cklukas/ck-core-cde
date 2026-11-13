@@ -287,58 +287,83 @@ static	DtHelpDAFontInfo   DefFontInfo    = { nullptr, nullptr, nullptr, nullptr,
  *
  *****************************************************************************/
 /******************************************************************************
- * Function: SaveFontStruct (font_struct)
+ * Function: SaveFontStruct (font_struct, font_info, ret_index)
+ *
+ * Returns 0 and the index of the saved font, or -1 when memory is exhausted.
  *
  *****************************************************************************/
 static int
 SaveFontStruct (
     XFontStruct		*font_struct,
-    DtHelpDAFontInfo	*font_info)
+    DtHelpDAFontInfo	*font_info,
+    long		*ret_index)
 {
-    int	fontIndex;
+    int	fontIndex = font_info->struct_cnt;
 
-    fontIndex = font_info->struct_cnt++;
-    if (font_info->struct_cnt >= font_info->max_structs)
+    if (fontIndex + 1 >= font_info->max_structs)
       {
-	font_info->max_structs += GROW_SIZE;
+	int		newMax = font_info->max_structs + GROW_SIZE;
+	XFontStruct   **grown;
+
         if (font_info->font_structs != nullptr)
-            font_info->font_structs = (XFontStruct **) reallocarray(((char *) font_info->font_structs), font_info->max_structs, sizeof (XFontStruct *));
+            grown = (XFontStruct **) reallocarray(font_info->font_structs, newMax, sizeof (XFontStruct *));
         else
-    	    font_info->font_structs = (XFontStruct **) calloc(font_info->max_structs, sizeof (XFontStruct *));
+    	    grown = (XFontStruct **) calloc(newMax, sizeof (XFontStruct *));
+	if (grown == nullptr)
+	    return -1;
+
+	font_info->font_structs = grown;
+	font_info->max_structs  = newMax;
       }
 
+    font_info->struct_cnt++;
     font_info->font_structs[fontIndex] = font_struct;
 
-    return (fontIndex);
+    *ret_index = fontIndex;
+    return 0;
 }
 
 /******************************************************************************
- * Function: SaveFontSet (font_set)
+ * Function: SaveFontSet (font_set, font_info, ret_index)
+ *
+ * Returns 0 and the index of the saved font set, or -1 when memory is
+ * exhausted.
  *
  *****************************************************************************/
 static int
 SaveFontSet (
     XFontSet		 font_set,
-    DtHelpDAFontInfo	*font_info)
+    DtHelpDAFontInfo	*font_info,
+    long		*ret_index)
 {
-    int		 fontIndex = 0;
+    int		 fontIndex = font_info->set_cnt;
 
-    fontIndex = font_info->set_cnt++;
-    if (font_info->set_cnt >= font_info->max_sets)
+    if (fontIndex + 1 >= font_info->max_sets)
       {
-	font_info->max_sets += GROW_SIZE;
+	int			newMax = font_info->max_sets + GROW_SIZE;
+	XFontSet	       *sets;
+	DtHelpDAFSMetrics      *metrics;
+
         if (font_info->font_sets != nullptr)
-          {
-	    font_info->font_sets = (XFontSet *) reallocarray(((char *) font_info->font_sets), font_info->max_sets, sizeof (XFontSet));
-	    font_info->fs_metrics = (DtHelpDAFSMetrics *) reallocarray(((char *) font_info->fs_metrics), font_info->max_sets, sizeof (DtHelpDAFSMetrics));
-          }
+	    sets = (XFontSet *) reallocarray(font_info->font_sets, newMax, sizeof (XFontSet));
         else
-          {
-	    font_info->font_sets = (XFontSet *) calloc(font_info->max_sets, sizeof(XFontSet));
-	    font_info->fs_metrics = (DtHelpDAFSMetrics *) calloc(font_info->max_sets, sizeof (DtHelpDAFSMetrics));
-          }
+	    sets = (XFontSet *) calloc(newMax, sizeof(XFontSet));
+	if (sets == nullptr)
+	    return -1;
+	font_info->font_sets = sets;
+
+        if (font_info->fs_metrics != nullptr)
+	    metrics = (DtHelpDAFSMetrics *) reallocarray(font_info->fs_metrics, newMax, sizeof (DtHelpDAFSMetrics));
+        else
+	    metrics = (DtHelpDAFSMetrics *) calloc(newMax, sizeof (DtHelpDAFSMetrics));
+	if (metrics == nullptr)
+	    return -1;
+	font_info->fs_metrics = metrics;
+
+	font_info->max_sets = newMax;
       }
 
+    font_info->set_cnt++;
     font_info->font_sets[fontIndex] = font_set;
     font_info->fs_metrics[fontIndex]   = DefaultMetrics;
 
@@ -346,8 +371,8 @@ SaveFontSet (
      * want the font sets to go from -1 to -n because negative numbers
      * indicate a font set.
      */
-    fontIndex++;
-    return (-fontIndex);
+    *ret_index = -(fontIndex + 1);
+    return 0;
 }
 
 /******************************************************************************
@@ -422,8 +447,10 @@ LoadFont (
 	fontStruct = XLoadQueryFont (dpy, font_string);
 	if (fontStruct != nullptr)
 	  {
-	    *ret_index =  SaveFontStruct (fontStruct, font_info);
-	    found      = True;
+	    if (SaveFontStruct (fontStruct, font_info, ret_index) == 0)
+		found = True;
+	    else
+		XFreeFont (dpy, fontStruct);
 	  }
       }
     else
@@ -437,8 +464,10 @@ LoadFont (
 	     * want the font sets to go from -1 to -n because 0 is
 	     * the default font.
 	     */
-	    *ret_index = SaveFontSet (fontSet, font_info);
-	    found      = True;
+	    if (SaveFontSet (fontSet, font_info, ret_index) == 0)
+		found = True;
+	    else
+		XFreeFontSet (dpy, fontSet);
 	  }
 
 	if (len)
@@ -723,7 +752,8 @@ __DtHelpFontDatabaseInit (
     XFontStruct		 *user_font)
 {
     int     n;
-    int     strIdx;
+    int     strIdx = 0;
+    long    savedIdx = 0;
     int     found = FALSE;
 
     Display		*dpy = XtDisplay(pDAS->dispWid);
@@ -781,9 +811,15 @@ __DtHelpFontDatabaseInit (
      * save the string font in the lists
      */
     if (type == XmFONT_IS_FONTSET)
-        strIdx = SaveFontSet ((XFontSet) string_font, fontInfo);
+        n = SaveFontSet ((XFontSet) string_font, fontInfo, &savedIdx);
     else
-        strIdx = SaveFontStruct ((XFontStruct *) string_font, fontInfo);
+        n = SaveFontStruct ((XFontStruct *) string_font, fontInfo, &savedIdx);
+
+    /*
+     * the default font index stands in when the font cannot be saved.
+     */
+    if (n == 0)
+        strIdx = (int) savedIdx;
 
     /*
      * Save this idx font for ascii files and strings.

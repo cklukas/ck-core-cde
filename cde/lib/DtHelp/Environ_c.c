@@ -99,6 +99,8 @@ char * _DtCliSrvGetDtUserSession(void)
       }
       else {
 	display = malloc(strlen(localDisplayVar) + 1);
+	if (display == nullptr)
+	  return nullptr;
 	needsfree = 1;
 	strcpy(display, localDisplayVar);
       }

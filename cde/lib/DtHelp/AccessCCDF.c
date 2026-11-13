@@ -245,16 +245,25 @@ GetTopicMap (
 	    if (result != -1)
 	      {
 		(*ret_ids)[result] = strdup (idParent);
+		if ((*ret_ids)[result] == nullptr)
+		  {
+		    int i;
+
+		    for (i = 0; i < result; i++)
+			free ((*ret_ids)[i]);
+		    free (*ret_ids);
+		    *ret_ids = nullptr;
+		    return -1;
+		  }
 		result++;
 	      }
 	  }
 	else
 	  {
-	    *ret_ids = (char **) malloc (sizeof(char *) * (level + 2));
+	    *ret_ids = (char **) calloc ((size_t) level + 2, sizeof(char *));
 	    if ((*ret_ids) == nullptr)
 		return -1;
 
-	    (*ret_ids)[level + 1] = nullptr;
 	    result = 0;
 	  }
       }
@@ -1345,6 +1354,11 @@ _DtHelpCeGetCcdfVolLocale (
       }
 
     mResStr = strdup(resStr);
+    if (mResStr == nullptr)
+      {
+	locale = nullptr;
+	goto done;
+      }
 
     if (_DtHelpCeStrchr(mResStr, ".", 1, &ptr) == 0)
       {

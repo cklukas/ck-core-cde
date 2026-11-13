@@ -440,7 +440,7 @@ CreateMarker (
 }
 
 /******************************************************************************
- * Function:	void GetMbLen (
+ * Function:	int GetMbLen (
  *
  * Parameters:
  *              cur_vars        Specifies the current setting of
@@ -453,14 +453,15 @@ CreateMarker (
  *              set_ptr         Returns the code set of the language.
  *				The caller owns this memory.
  *
- * Returns:	Nothing
+ * Returns:	0 if successful, -1 if memory is exhausted.  Nothing is
+ *		returned in 'lang_ptr', 'set_ptr' and 'cur_vars' in that case.
  *
  * Purpose:	1) To decompose the font_string into a language and code set
  *		   portions.
  *		2) To set the mb_cur_len variable in cur_vars.
  *
  *****************************************************************************/
-static	void
+static	int
 GetMbLen (
     FormatVariables	 *cur_vars,
     char		 *font_str,
@@ -503,6 +504,9 @@ GetMbLen (
     if (font_str == nullptr || *font_str == '\0') codePart = strdup("UTF-8");
     else codePart = strdup(font_str);
 
+    if (codePart == nullptr)
+	goto done;
+
     mLang = _DtHelpGetLocale();
 
     if (_DtHelpCeStrrchr(mLang, Period, MB_CUR_MAX, &ptr) == 0)
@@ -519,6 +523,15 @@ GetMbLen (
     langPart = strdup("C");
 
 done:
+    free(mLang);
+
+    if (langPart == nullptr || codePart == nullptr)
+      {
+	free(langPart);
+	free(codePart);
+	return -1;
+      }
+
     cur_vars->cur_mb_max = MB_CUR_MAX;
 
     /*
@@ -534,7 +547,7 @@ done:
     else
 	free(codePart);
 
-    free(mLang);
+    return 0;
 }
 
 /******************************************************************************
@@ -671,20 +684,28 @@ AllocateSegments (
     if (nullptr != p_seg)
       {
 	int count = 0;
+	FrmtPrivateInfo *oldPriv = p_seg->client_use;
+	_DtCvSegment *newSeg;
 
 	/*
-	 * reallocate the segments.
+	 * reallocate the segments.  The lists are released when this fails.
 	 */
-	p_seg = (_DtCvSegment *) reallocarray((void *) p_seg, new_size, sizeof(_DtCvSegment));
+	newSeg = (_DtCvSegment *) reallocarray((void *) p_seg, new_size, sizeof(_DtCvSegment));
+	if (nullptr == newSeg)
+	  {
+	    free(oldPriv);
+	    free(p_seg);
+	    return nullptr;
+	  }
+	p_seg = newSeg;
 	/*
 	 * reallocate the private formatting information.
 	 */
-        priv = p_seg->client_use;
-	priv = (FrmtPrivateInfo *) reallocarray((void *) priv, new_size, sizeof(FrmtPrivateInfo));
+	priv = (FrmtPrivateInfo *) reallocarray((void *) oldPriv, new_size, sizeof(FrmtPrivateInfo));
 	if (nullptr == priv)
 	  {
+	    free(oldPriv);
 	    free(p_seg);
-	    p_seg = nullptr;
 	    return nullptr;
 	  }
 
@@ -1631,9 +1652,13 @@ ChangeFont(
 			/*
 			 * Change to the correct mb_len.
 			 */
-			GetMbLen(cur_vars, fontString,
+			if (GetMbLen(cur_vars, fontString,
 					&(_DtHelpFontHintsLang(*font_attr)),
-					&(_DtHelpFontHintsCharSet(*font_attr)));
+					&(_DtHelpFontHintsCharSet(*font_attr))) == -1)
+			  {
+				free (fontString);
+				return -1;
+			  }
 			break;
           }
       }
@@ -4122,9 +4147,13 @@ Format(
      * Assume that the charset is 'UTF-8' if not specified.
      */
     cur_vars->cur_mb_max = 1;
-    if (nullptr != charSet)
+    if (nullptr != charSet &&
 	GetMbLen(cur_vars, charSet, &(_DtHelpFontHintsLang(fontAttrs)),
-					&(_DtHelpFontHintsCharSet(fontAttrs)));
+					&(_DtHelpFontHintsCharSet(fontAttrs))) == -1)
+      {
+	free(charSet);
+	return -1;
+      }
 
     /*
      * Remember the topic code set and MB_CUR_MAX.
@@ -4232,6 +4261,17 @@ Format(
       }
 
     /*
+     * Keep the id with the topic.
+     */
+    topicHandle->id_str = nullptr;
+    if (result != -1 && id_string != nullptr)
+      {
+	topicHandle->id_str = strdup(id_string);
+	if (nullptr == topicHandle->id_str)
+	    result = -1;
+      }
+
+    /*
      * If we had errors, deallocate the memory.
      */
     if (result == -1)
@@ -4254,11 +4294,6 @@ Format(
     /*
      * return the values, even if they are null and zero.
      */
-
-    if (id_string == nullptr)
-        topicHandle->id_str = id_string;
-    else
-        topicHandle->id_str = strdup(id_string);
 
     topicHandle->seg_list  = myList.list;
     topicHandle->mark_list = nullptr;
@@ -4356,9 +4391,14 @@ FormatCCDFTitle(
      * Assume that the charset is 'UTF-8' if not specified.
      */
     cur_vars->cur_mb_max = 1;
-    if (nullptr != charSet)
+    if (nullptr != charSet &&
 	GetMbLen(cur_vars, charSet, &(_DtHelpFontHintsLang(fontAttrs)),
-					&(_DtHelpFontHintsCharSet(fontAttrs)));
+					&(_DtHelpFontHintsCharSet(fontAttrs))) == -1)
+      {
+	free(charSet);
+	_DtHelpCeBufFileClose (cur_vars->my_file, True);
+	return -1;
+      }
 
     /*
      * Remember the topic code set and MB_CUR_MAX.
@@ -4675,13 +4715,15 @@ FormatEntryInToc(
 		tocLen = strlen (loc_id) + 9;
 		if (tocLen > cur_vars->fmt_buf_max)
 		  {
-		    if (nullptr == cur_vars->fmt_buf)
-			cur_vars->fmt_buf = (char *) malloc (tocLen);
-		    else
-			cur_vars->fmt_buf = (char *) realloc(
-					    cur_vars->fmt_buf,
-					    tocLen);
-		    cur_vars->fmt_buf_max = tocLen;
+			char *grown = (char *) realloc(cur_vars->fmt_buf, tocLen);
+
+			if (nullptr == grown)
+			  {
+			    result = -1;
+			    goto done;
+			  }
+			cur_vars->fmt_buf     = grown;
+			cur_vars->fmt_buf_max = tocLen;
 		  }
     
 		cur_vars->fmt_size = tocLen - 1;
@@ -4711,6 +4753,7 @@ FormatEntryInToc(
 	  }
       }
 
+done:
    if (nullptr != strPtr)
        free(strPtr);
 
@@ -4808,6 +4851,8 @@ __DtHelpCeSetUpVars(
     FormatVariables    *newVars;
 
     newVars = (FormatVariables *) malloc (sizeof(FormatVariables));
+    if (nullptr == newVars)
+	return nullptr;
     *newVars = DefVars;
     newVars->ui_info = ui_info;
 
@@ -5442,18 +5487,30 @@ _DtHelpCeGetCcdfVolTitleChunks(
     charSet = _DtHelpCeGetCcdfVolLocale(volume);
     if (charSet == nullptr)
 	charSet = strdup("C.UTF-8");
+    if (charSet == nullptr)
+	return -1;
 
     titleStr = _DtHelpCeGetCcdfVolTitle(volume);
     if (titleStr != nullptr)
       {
-        *ret_chunks = (void **) malloc(sizeof(void *) * 4);
-        if (*ret_chunks == nullptr)
+	*ret_chunks = (void **) calloc(4, sizeof(void *));
+	if (*ret_chunks == nullptr)
+	  {
+	    free(charSet);
 	    return -1;
+	  }
 
-        (*ret_chunks)[0] = (void *) (DT_HELP_CE_CHARSET | DT_HELP_CE_STRING);
-        (*ret_chunks)[1] = (void *) strdup(charSet);
-        (*ret_chunks)[2] = (void *) strdup(titleStr);
-        (*ret_chunks)[3] = (void *) DT_HELP_CE_END;
+	(*ret_chunks)[0] = (void *) (DT_HELP_CE_CHARSET | DT_HELP_CE_STRING);
+	(*ret_chunks)[1] = (void *) charSet;
+	(*ret_chunks)[2] = (void *) strdup(titleStr);
+	(*ret_chunks)[3] = (void *) DT_HELP_CE_END;
+	if ((*ret_chunks)[2] == nullptr)
+	  {
+	    free(charSet);
+	    free(*ret_chunks);
+	    *ret_chunks = nullptr;
+	    return -1;
+	  }
       }
     else 
       {

@@ -702,7 +702,6 @@ int allocate_colors(GifObj *g)
     /*return allocate_greys(); // use this to test grey-scale */
 
    XColor color;
-   unsigned long* colors;
 
    color.flags = DoRed | DoGreen | DoBlue;
 
@@ -716,14 +715,9 @@ int allocate_colors(GifObj *g)
       if ( !XAllocColor (g->f_dpy, g->f_cmap, &color) ) {
 
 	  /*puts ("FAILED!!!"); */
-         colors = (unsigned long *) calloc(i, sizeof(unsigned long));
-         for (j = 0; j < i; j++)
-           colors[j] = g->GifCMap[j].pixel;
-
          /*cerr << "Xfree in allocate_colors(): " << i << "\n"; */
-         XFreeColors (g->f_dpy, g->f_cmap, colors, i, 0);
-
-         free(colors);
+         for (j = 0; j < i; j++)
+           XFreeColors (g->f_dpy, g->f_cmap, &g->GifCMap[j].pixel, 1, 0);
 
          /* fallback to greys */
          if (g->f_allow_reduced_colors)
@@ -751,7 +745,6 @@ int allocate_greys(GifObj *g)
 {
    XColor color;
    int i, j;
-   unsigned long* colors;
 
    color.flags = DoRed | DoGreen | DoBlue;
 
@@ -807,14 +800,9 @@ debug1(cerr, GifCMap[i].grey);
          if ( !XAllocColor (g->f_dpy, g->f_cmap, &color) ) {
 
 	     /*fprintf(stderr, "alloc Grey FAILED!!!");*/
-            colors = (unsigned long *) calloc(i, sizeof(unsigned long));
-            for (j = 0; j < i; j++)
-              colors[j] = g->GifGMap[j];
-
             /*cerr << "Xfree in allocate_greys()\n"; */
-            XFreeColors (g->f_dpy, g->f_cmap, colors, i, 0);
-
-            free(colors);
+            for (j = 0; j < i; j++)
+              XFreeColors (g->f_dpy, g->f_cmap, &g->GifGMap[j], 1, 0);
      
             break;
          }

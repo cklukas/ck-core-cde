@@ -172,6 +172,11 @@ String _DtHelpGetUserSearchPath(void)
 
        path = calloc(1, 3*strlen(session) + 6*strlen(homedir) +
                         strlen(DtDEFAULT_USER_PATH_FORMAT));
+       if (path == nullptr)
+       {
+           free(session);
+           return(nullptr);
+       }
        sprintf(path, DtDEFAULT_USER_PATH_FORMAT, 
                      homedir, session, homedir, session, homedir, session,
                      homedir, homedir, homedir);
@@ -251,21 +256,21 @@ String _DtHelpGetSystemSearchPath(void)
 void DtHelpSetCatalogName(
         char* catFile)
 {
-  int len;
+  char *name;
 
   _DtHelpProcessLock();
   /* Setup our Message Catalog file names */
   if (catFile == nullptr)
     {
       /* Setup the short and long versions */
-      CatFileName = strdup("DtHelp");
+      name = strdup("DtHelp");
     }
   else
     {
 
       /* If we have a full path, just use it */
       if (*catFile == '/')
-        CatFileName = strdup(catFile);
+        name = strdup(catFile);
       else
         {
           /* hp-ux os does not work with the ".cat" extention, so
@@ -273,17 +278,18 @@ void DtHelpSetCatalogName(
            */
 
            if (strcmp(&catFile[strlen(catFile) -4], ".cat") != 0)
-            CatFileName = strdup(catFile);
+            name = strdup(catFile);
           else
             {
               /* Create our CatFileName with out the extention */
-              len = strlen(catFile) -4;
-              CatFileName = malloc(len +1);
-              strncpy (CatFileName, catFile, len);
-              CatFileName[len]= '\0';
+              name = strndup(catFile, strlen(catFile) -4);
             }
         }
     }
+
+  /* the previous name stays in effect when memory is exhausted */
+  if (name != nullptr)
+    CatFileName = name;
   _DtHelpProcessUnlock();
 }
 
@@ -325,7 +331,7 @@ char *_DtHelpGetMessage(
        }
 
      loc = _DtHelpGetLocale();
-     if (!loc || !(strcmp (loc, "C")))
+     if (!loc || !(strcmp (loc, "C")) || CatFileName == nullptr)
 	/*
 	 * If LANG is not set or if LANG=C, then there
 	 * is no need to open the message catalog - just
@@ -334,6 +340,7 @@ char *_DtHelpGetMessage(
 	nlmsg_fd = (nl_catd) -1;
      else
 	nlmsg_fd = CATOPEN(CatFileName, NL_CAT_LOCALE);
+     free(loc);
 
      first = 0;
    }

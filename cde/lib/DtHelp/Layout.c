@@ -812,21 +812,28 @@ CheckForPageBreak(
 	 */
 	if (canvas->brk_cnt >= canvas->brk_max)
 	  {
-	    canvas->brk_max += GROW_SIZE;
-	    if (nullptr != canvas->pg_breaks)
-	        canvas->pg_breaks = (_DtCvUnit *) reallocarray((void *) canvas->pg_breaks, canvas->brk_max, sizeof(_DtCvUnit));
-	    else
-	        canvas->pg_breaks = (_DtCvUnit *) calloc(canvas->brk_max, sizeof(_DtCvUnit));
-	  }
+	    int		newMax = canvas->brk_max + GROW_SIZE;
+	    _DtCvUnit  *grown;
 
-	/*
-	 * failed to allocate memory, abort.
-	 */
-	if (nullptr == canvas->pg_breaks)
-	  {
-	    canvas->brk_max = 0;
-	    canvas->brk_cnt = 0;
-	    return 1;
+	    if (nullptr != canvas->pg_breaks)
+		grown = (_DtCvUnit *) reallocarray((void *) canvas->pg_breaks, newMax, sizeof(_DtCvUnit));
+	    else
+		grown = (_DtCvUnit *) calloc(newMax, sizeof(_DtCvUnit));
+
+	    /*
+	     * failed to allocate memory, abort.
+	     */
+	    if (nullptr == grown)
+	      {
+		free(canvas->pg_breaks);
+		canvas->pg_breaks = nullptr;
+		canvas->brk_max = 0;
+		canvas->brk_cnt = 0;
+		return 1;
+	      }
+
+	    canvas->pg_breaks = grown;
+	    canvas->brk_max   = newMax;
 	  }
 
 	/*
@@ -1146,21 +1153,27 @@ SaveLine (
 
     if (i >= canvas->line_max)
       {
-	canvas->line_max += GROW_SIZE;
+	int	    newMax = canvas->line_max + GROW_SIZE;
+	_DtCvLineSeg *grown;
+
 	if (canvas->line_lst)
-	    canvas->line_lst = (_DtCvLineSeg *) reallocarray((void *) canvas->line_lst, canvas->line_max, sizeof(_DtCvLineSeg));
+	    grown = (_DtCvLineSeg *) reallocarray((void *) canvas->line_lst, newMax, sizeof(_DtCvLineSeg));
 	else
-	    canvas->line_lst = (_DtCvLineSeg *) calloc(canvas->line_max, sizeof(_DtCvLineSeg));
+	    grown = (_DtCvLineSeg *) calloc(newMax, sizeof(_DtCvLineSeg));
 /*
  * NOTE....should this routine return a value?
  * If (re)alloc error occurs, this simply ignores the problem.
  */
-	if (canvas->line_lst == nullptr)
+	if (grown == nullptr)
 	  {
+	    free(canvas->line_lst);
+	    canvas->line_lst = nullptr;
 	    canvas->line_max = 0;
 	    canvas->line_cnt = 0;
 	    return;
 	  }
+	canvas->line_lst = grown;
+	canvas->line_max = newMax;
       }
 
     /*

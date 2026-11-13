@@ -923,21 +923,27 @@ _DtCvSaveInfo (
 
     if (txtCnt >= canvas->txt_max)
       {
-	canvas->txt_max += GROW_SIZE;
+	int	     newMax = canvas->txt_max + GROW_SIZE;
+	_DtCvDspLine *grown;
+
 	if (canvas->txt_lst)
-	    canvas->txt_lst = (_DtCvDspLine *) reallocarray((void *) canvas->txt_lst, canvas->txt_max, sizeof(_DtCvDspLine));
+	    grown = (_DtCvDspLine *) reallocarray((void *) canvas->txt_lst, newMax, sizeof(_DtCvDspLine));
 	else
-	    canvas->txt_lst = (_DtCvDspLine *) calloc(canvas->txt_max, sizeof(_DtCvDspLine));
+	    grown = (_DtCvDspLine *) calloc(newMax, sizeof(_DtCvDspLine));
 /*
  * NOTE....should this routine return a value?
  * If (re)alloc error occurs, this simply ignores the problem.
  */
-	if (canvas->txt_lst == nullptr)
+	if (grown == nullptr)
 	  {
+	    free(canvas->txt_lst);
+	    canvas->txt_lst = nullptr;
 	    canvas->txt_max = 0;
 	    canvas->txt_cnt = 0;
 	    return;
 	  }
+	canvas->txt_lst = grown;
+	canvas->txt_max = newMax;
       }
 
     while (pSeg != nullptr && count > 0)
@@ -1738,28 +1744,34 @@ _DtCvGetNextTravEntry (
 	/*
 	 * grow by a set amount
 	 */
-	canvas->trav_max += GROW_SIZE;
+	int	             newMax = canvas->trav_max + GROW_SIZE;
+	_DtCvTraversalInfo  *grown;
 
 	/*
-	 * realloc or malloc?
+	 * realloc or calloc?
 	 */
 	if (nullptr != canvas->trav_lst)
-	    canvas->trav_lst = (_DtCvTraversalInfo *) realloc (
-			(char *) canvas->trav_lst,
-			((sizeof(_DtCvTraversalInfo)) * canvas->trav_max));
+	    grown = (_DtCvTraversalInfo *) reallocarray (
+			(void *) canvas->trav_lst,
+			newMax, sizeof(_DtCvTraversalInfo));
 	else
-	    canvas->trav_lst = (_DtCvTraversalInfo *) malloc (
-			((sizeof(_DtCvTraversalInfo)) * canvas->trav_max));
+	    grown = (_DtCvTraversalInfo *) calloc (
+			newMax, sizeof(_DtCvTraversalInfo));
 
 	/*
 	 * did the memory allocation work? if not return error code.
 	 */
-	if (nullptr == canvas->trav_lst)
+	if (nullptr == grown)
 	  {
+	    free(canvas->trav_lst);
+	    canvas->trav_lst = nullptr;
 	    canvas->trav_max = 0;
 	    canvas->trav_cnt = 0;
-	    nxtEntry = -1;
-          }
+	    return -1;
+	  }
+
+	canvas->trav_lst = grown;
+	canvas->trav_max = newMax;
       }
 
     canvas->trav_lst[nxtEntry] = DefTravData;
@@ -1808,14 +1820,20 @@ int
 _DtCvGetNextSearchEntry(_DtCanvasStruct* canvas)
 {
     if (canvas->search_cnt >= canvas->search_max) {
-	canvas->search_max += GROW_SIZE;
+    int newMax = canvas->search_max + GROW_SIZE;
+    _DtCvSearchData *grown;
 
-	if (canvas->searchs)
-	    canvas->searchs = (_DtCvSearchData *)
-			reallocarray((void*)canvas->searchs, canvas->search_max, sizeof(_DtCvSearchData));
-	else
-	    canvas->searchs = (_DtCvSearchData *)
-			calloc(canvas->search_max, sizeof(_DtCvSearchData));
+    if (canvas->searchs)
+	grown = (_DtCvSearchData *)
+		    reallocarray((void*)canvas->searchs, newMax, sizeof(_DtCvSearchData));
+    else
+	grown = (_DtCvSearchData *)
+		    calloc(newMax, sizeof(_DtCvSearchData));
+    if (grown == nullptr)
+	return -1;
+
+    canvas->searchs     = grown;
+    canvas->search_max  = newMax;
     }
 
     canvas->searchs[canvas->search_cnt].idx = -1;
@@ -1831,8 +1849,9 @@ _DtCvSetSearchEntryInfo(_DtCanvasStruct* canvas, int line_idx)
     /* get a next available slot for search */
     search_idx = _DtCvGetNextSearchEntry(canvas);
 
-    /* save information (i.e. line_idx) */
-    canvas->searchs[search_idx].idx = line_idx;
+    /* save information (i.e. line_idx); the entry is dropped if memory is exhausted */
+    if (search_idx != -1)
+	canvas->searchs[search_idx].idx = line_idx;
 }
 
 /******************************************************************************
@@ -2346,18 +2365,22 @@ _DtCvAddToMarkList (
      */
     if (canvas->mark_cnt >= canvas->mark_max)
       {
-	canvas->mark_max += GROW_SIZE;
+	int		 newMax = canvas->mark_max + GROW_SIZE;
+	_DtCvMarkData	*grown;
 
-        if (nullptr == canvas->marks)
-	    canvas->marks = (_DtCvMarkData *) calloc(canvas->mark_max, sizeof(_DtCvMarkData));
-        else
-	    canvas->marks = (_DtCvMarkData *) reallocarray((void *) canvas->marks, canvas->mark_max, sizeof(_DtCvMarkData));
+	if (nullptr == canvas->marks)
+	    grown = (_DtCvMarkData *) calloc(newMax, sizeof(_DtCvMarkData));
+	else
+	    grown = (_DtCvMarkData *) reallocarray((void *) canvas->marks, newMax, sizeof(_DtCvMarkData));
 
 	/*
-	 * memory loss - bail
+	 * memory loss - bail; the old list stays valid
 	 */
-	if (nullptr == canvas->marks)
+	if (nullptr == grown)
 	    return -1;
+
+	canvas->marks    = grown;
+	canvas->mark_max = newMax;
       }
 
     /*

@@ -586,6 +586,8 @@ TermStrWidth (
  * Begin other private functions
  ******************************************************************************/
 
+static	void DeallocateHyperArray(DtHelpHyperLines *array_ptr);
+
 /******************************************************************************
  * Function: DtHelpHyperLines *AddHyperToArray (DtHelpHyperLines *array_ptr,
  *				int value, char *link_spec, char *title)
@@ -595,10 +597,12 @@ TermStrWidth (
  *				DtHelpHyperLines or NULL.
  *		value		Specifies the link type.
  *		link_spec	Specifies the link specification.
- *		title		Specifies the title of the link.
+ *		title		Specifies the title of the link.  The
+ *				array owns it from here on.
  *
  * Returns:	A ptr to the new DtHelpHyperLines if successful,
- *		NULL if errors.
+ *		NULL if errors.  The array and the title are released
+ *		in that case.
  *
  * errno Values:
  *		DtErrorMalloc
@@ -615,6 +619,8 @@ AddHyperToArray(
 	char		*title )
 {
     DtHelpHyperLines *next;
+    DtHelpHyperLines *grown;
+    char	     *spec;
     int            num = 0;
 
 
@@ -624,28 +630,42 @@ AddHyperToArray(
 		num++;
 
 	if (((num + 1) % GROW_SIZE) == 0)
-	    array_ptr = (DtHelpHyperLines *) reallocarray((void *) array_ptr, (num + 1 + GROW_SIZE), sizeof (DtHelpHyperLines));
+	  {
+	    grown = (DtHelpHyperLines *) reallocarray((void *) array_ptr, (num + 1 + GROW_SIZE), sizeof (DtHelpHyperLines));
+	    if (grown == nullptr)
+		goto fail;
+	    array_ptr = grown;
+	  }
       }
-    else
-	array_ptr = (DtHelpHyperLines *) calloc(GROW_SIZE, sizeof (DtHelpHyperLines));
-
-    if (array_ptr == nullptr)
-	errno = DtErrorMalloc;
     else
       {
-	next = array_ptr + num;
-
-        next->hyper_type    = value;
-        next->win_hint      = win_hint;
-        next->specification = strdup(link_spec);
-        next->title         = title;
-        next++;
-
-        next->specification = nullptr;
-        next->title         = nullptr;
+	array_ptr = (DtHelpHyperLines *) calloc(GROW_SIZE, sizeof (DtHelpHyperLines));
+	if (array_ptr == nullptr)
+	    goto fail;
       }
 
+    spec = strdup(link_spec);
+    if (spec == nullptr)
+	goto fail;
+
+    next = array_ptr + num;
+
+    next->hyper_type    = value;
+    next->win_hint      = win_hint;
+    next->specification = spec;
+    next->title         = title;
+    next++;
+
+    next->specification = nullptr;
+    next->title         = nullptr;
+
     return array_ptr;
+
+fail:
+    errno = DtErrorMalloc;
+    free(title);
+    DeallocateHyperArray(array_ptr);
+    return nullptr;
 }
 
 /******************************************************************************
@@ -782,23 +802,23 @@ AddHyperToList(
 			break;
 
 	        case _DtCvLinkType_Execute:
-			title = (char *) malloc(strlen(id) + 11);
-			sprintf(title, "Execute \"%s\"", id);
+			if (asprintf(&title, "Execute \"%s\"", id) < 0)
+				title = nullptr;
 			break;
 
 	        case _DtCvLinkType_ManPage:
-			title = (char *) malloc(strlen(id) + 13);
-			sprintf(title, "Man Page \"%s\"", id);
+			if (asprintf(&title, "Man Page \"%s\"", id) < 0)
+				title = nullptr;
 			break;
 
 	        case _DtCvLinkType_AppDefine:
-			title = (char *) malloc(strlen(id) + 26);
-		        sprintf(title, "Application Link Type \"%s\"", id);
+			if (asprintf(&title, "Application Link Type \"%s\"", id) < 0)
+				title = nullptr;
 			break;
 
 	        case _DtCvLinkType_TextFile:
-			title = (char *) malloc(strlen(id) + 12);
-		        sprintf(title, "Text File \"%s\"", id);
+			if (asprintf(&title, "Text File \"%s\"", id) < 0)
+				title = nullptr;
 			break;
 	        default:
 			title = strdup ("Unkown link type");
@@ -810,13 +830,31 @@ AddHyperToList(
 	  {
 	    title = strdup (hyperInfo.description);
 	  }
+
+	/*
+	 * every entry needs a title; none means memory was exhausted.
+	 */
+	if (result >= 0 && title == nullptr)
+	  {
+	    errno  = DtErrorMalloc;
+	    result = -1;
       }
+  }
 
     if (result == -2)
+      {
+	char *invalid = strdup("Invalid Link");
+
+	if (invalid == nullptr)
+	  {
+	    errno = DtErrorMalloc;
+	    return -1;
+	  }
 	*ret_list = AddHyperToArray (*ret_list, -(hyperInfo.hyper_type + 1),
 				hyperInfo.win_hint,
 				hyperInfo.specification,
-				strdup("Invalid Link"));
+				invalid);
+      }
     else if (result >= 0)
 	*ret_list = AddHyperToArray (*ret_list, hyperInfo.hyper_type,
 				hyperInfo.win_hint,

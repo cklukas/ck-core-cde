@@ -146,6 +146,8 @@ _DtHelpCeAddOctalToBuf(
 {
     char     tmp;
     char    *dstPtr;
+    char    *grown;
+    int      newMax;
     unsigned long value;
 
     if (src == nullptr ||
@@ -160,18 +162,25 @@ _DtHelpCeAddOctalToBuf(
     if ((*dst_size + 2) >= *dst_max)
       {
 	if (grow_size > *dst_size + 3 - *dst_max)
-	    *dst_max = *dst_max + grow_size;
+	    newMax = *dst_max + grow_size;
 	else
-	    *dst_max = *dst_size + 3;
+	    newMax = *dst_size + 3;
 
 	if (dstPtr)
-	    dstPtr = (char *) realloc ((void *) dstPtr, *dst_max);
+	    grown = (char *) realloc ((void *) dstPtr, newMax);
 	else
 	  {
-	    dstPtr = (char *) calloc((*dst_max), sizeof(char));
+	    grown = (char *) calloc(newMax, sizeof(char));
 	    *dst_size = 0;
 	  }
-	*dst = dstPtr;
+	if (!grown)
+	  {
+	    errno = CEErrorMalloc;
+	    return -1;
+	  }
+	dstPtr   = grown;
+	*dst     = dstPtr;
+	*dst_max = newMax;
       }
 
     /*
@@ -257,6 +266,8 @@ _DtHelpCeAddCharToBuf(
 {
     char    *srcPtr;
     char    *dstPtr;
+    char    *grown;
+    int      newMax;
 
     if (src == nullptr || *src == nullptr ||
 		dst == nullptr || dst_size == nullptr || dst_max == nullptr ||
@@ -271,27 +282,25 @@ _DtHelpCeAddCharToBuf(
     if ((*dst_size + 2) >= *dst_max)
       {
 	if (grow_size > *dst_size + 3 - *dst_max)
-	    *dst_max = *dst_max + grow_size;
+	    newMax = *dst_max + grow_size;
 	else
-	    *dst_max = *dst_size + 3;
+	    newMax = *dst_size + 3;
 
 	if (dstPtr)
-	    dstPtr = (char *) realloc ((void *) dstPtr, *dst_max);
+	    grown = (char *) realloc ((void *) dstPtr, newMax);
 	else
 	  {
-	    dstPtr = (char *) malloc (*dst_max);
+	    grown = (char *) malloc (newMax);
 	    *dst_size = 0;
 	  }
-	*dst = dstPtr;
-      }
-
-    /*
-     * check to see if we have good memory
-     */
-    if (!dstPtr)
-      {
-	errno = CEErrorMalloc;
-	return -1;
+	if (!grown)
+	  {
+	    errno = CEErrorMalloc;
+	    return -1;
+	  }
+	dstPtr   = grown;
+	*dst     = dstPtr;
+	*dst_max = newMax;
       }
 
     /*
@@ -360,6 +369,8 @@ _DtHelpCeAddStrToBuf (
 {
     char *srcPtr;
     char *dstPtr;
+    char *grown;
+    int   newMax;
 
     /*
      * check the input
@@ -378,24 +389,25 @@ _DtHelpCeAddStrToBuf (
     if ((*dst_size + copy_size + 1) >= *dst_max)
       {
 	if (grow_size > (*dst_size + copy_size + 2 - *dst_max))
-	    *dst_max = *dst_max + grow_size;
+	    newMax = *dst_max + grow_size;
 	else
-	    *dst_max = *dst_size + copy_size + 2;
+	    newMax = *dst_size + copy_size + 2;
 
 	if (dstPtr)
-	    dstPtr = (char *) realloc ((void *) dstPtr, *dst_max);
+	    grown = (char *) realloc ((void *) dstPtr, newMax);
 	else
 	  {
-	    dstPtr = (char *) malloc (*dst_max);
+	    grown = (char *) malloc (newMax);
 	    *dst_size = 0;
 	  }
-	*dst = dstPtr;
-      }
-
-    if (!dstPtr)
-      {
-	errno = CEErrorMalloc;
-	return -1;
+	if (!grown)
+	  {
+	    errno = CEErrorMalloc;
+	    return -1;
+	  }
+	dstPtr   = grown;
+	*dst     = dstPtr;
+	*dst_max = newMax;
       }
 
     /*
@@ -582,10 +594,15 @@ _DtHelpGetNxtToken (
 
     /* Str is pointing at the start of the next token.  Depending on the
        type of token, malloc the memory and copy the token value. */
-    if (*str == '\0')
+    if (*str == '\0') {
         token = strdup(str);
+        if (token == nullptr)
+	    errno = CEErrorMalloc;
+    }
     else if (*str == '\n') {
         token = strdup(str);
+        if (token == nullptr)
+	    errno = CEErrorMalloc;
         str++;
     }
     else {

@@ -2503,6 +2503,12 @@ static Boolean OpenVolForSearch(
           }
 
           curVol->iconv3Codeset = strdup(ptr ? ptr : "UTF-8");
+	  if (nullptr == curVol->iconv3Codeset)
+	  {
+	     _DtHelpCloseVolume(curVol->volHandle);
+	     curVol->volHandle = nullptr;
+	     return False;                            /* RETURN */
+	  }
           curVol->gotLocale = True;
        }
        openedVolume = True;

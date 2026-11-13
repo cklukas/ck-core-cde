@@ -1018,25 +1018,45 @@ DtHelpOverrideFindVariantBase(
     char **names = XListFonts(dpy, pattern, 2048, &count);
     char *best = nullptr;
     int bestScore = 999;
+    int exhausted = 0;
     if (names && count > 0) {
         for (int i = 0; i < count; i++) {
             int score = DtHelpOverrideScoreScalability(names[i]);
             if (score < bestScore) {
+		char *copy = strdup(names[i]);
+
+		if (!copy) {
+		    exhausted = 1;
+		    break;
+		}
                 bestScore = score;
                 free(best);
-                best = strdup(names[i]);
-                if (bestScore == 0)
-                    break;
-            }
-        }
+		best = copy;
+		if (bestScore == 0)
+		    break;
+	    }
+	}
     }
     if (names)
-        XFreeFontNames(names);
+	XFreeFontNames(names);
+
+    if (exhausted) {
+	free(best);
+	return nullptr;
+    }
 
     if (cacheCount < (sizeof(cache) / sizeof(cache[0]))) {
-        cache[cacheCount].key = strdup(key);
-        cache[cacheCount].xlfd = best ? strdup(best) : nullptr;
-        cacheCount++;
+	char *cacheKey = strdup(key);
+	char *cacheXlfd = best ? strdup(best) : nullptr;
+
+	if (cacheKey && (cacheXlfd || !best)) {
+	    cache[cacheCount].key = cacheKey;
+	    cache[cacheCount].xlfd = cacheXlfd;
+	    cacheCount++;
+	} else {
+	    free(cacheKey);
+	    free(cacheXlfd);
+	}
     }
 
     return best;
@@ -2201,8 +2221,13 @@ DABuildSelectedString (
 	myString = (char *) calloc(totalLen, sizeof(char));
     else
       {
+	char *grown;
+
 	stringLen = strlen(myString);
-	myString  = (char *) reallocarray((void *) myString, (stringLen + totalLen), sizeof(char));
+	grown = (char *) reallocarray((void *) myString, (stringLen + totalLen), sizeof(char));
+	if (grown == nullptr)
+	    return _DtCvSTATUS_BAD;
+	myString = grown;
       }
 
     if (myString == nullptr)
@@ -2308,8 +2333,13 @@ DABuildSelectedSpc (
 	myString = (char *) calloc(totalLen, sizeof(char));
     else
       {
+	char *grown;
+
 	stringLen = strlen(myString);
-	myString  = (char *) reallocarray((void *) myString, (stringLen + totalLen), sizeof(char));
+	grown = (char *) reallocarray((void *) myString, (stringLen + totalLen), sizeof(char));
+	if (grown == nullptr)
+	    return _DtCvSTATUS_BAD;
+	myString = grown;
       }
 
     if (myString == nullptr)
@@ -2438,17 +2468,21 @@ _DtHelpDAResolveSpc (
 	  {
 	    if (pDAS->cur_spc >= pDAS->max_spc)
 	      {
-		pDAS->max_spc += GROW_SIZE;
-		if (pDAS->cur_spc > 0)
-		    pDAS->spc_chars = (DtHelpSpecialChars *) reallocarray((void *)pDAS->spc_chars, pDAS->max_spc, sizeof(DtHelpSpecialChars));
-		else
-		    pDAS->spc_chars = (DtHelpSpecialChars *) calloc(pDAS->max_spc, sizeof(DtHelpSpecialChars));
+		int		   newMax = pDAS->max_spc + GROW_SIZE;
+		DtHelpSpecialChars *grown;
 
-		if (pDAS->spc_chars == nullptr)
+		if (pDAS->cur_spc > 0)
+		    grown = (DtHelpSpecialChars *) reallocarray((void *)pDAS->spc_chars, newMax, sizeof(DtHelpSpecialChars));
+		else
+		    grown = (DtHelpSpecialChars *) calloc(newMax, sizeof(DtHelpSpecialChars));
+
+		if (grown == nullptr)
 		  {
 		    free(pReg);
 		    return -1;
 		  }
+		pDAS->spc_chars = grown;
+		pDAS->max_spc   = newMax;
 
 		for (i = pDAS->cur_spc; i < pDAS->max_spc; i++)
 		    pDAS->spc_chars[i].spc_idx = -1;
@@ -2599,6 +2633,7 @@ _DtHelpDALoadGraphic (
 	if (fileName == nullptr)
 	  {
 	    free(pGS);
+	    free(pReg);
 	    return -1;
 	  }
 
