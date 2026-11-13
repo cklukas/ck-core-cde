@@ -87,7 +87,7 @@ DtMmdbTocGetChildIds(
       int count = (*y) -> count();
 //fprintf(stderr, "count=%d\n", count);
 
-      DtMmdbHandle** z = (DtMmdbHandle**)malloc(sizeof(DtMmdbHandle*) * (count+1));
+      DtMmdbHandle** z = (DtMmdbHandle**)calloc(count+1, sizeof(DtMmdbHandle*));
 
 //fprintf(stderr, "z=%x\n", (void*)z);
       if ( z == 0 ) return 0;

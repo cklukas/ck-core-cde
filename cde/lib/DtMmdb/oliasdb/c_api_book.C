@@ -175,7 +175,7 @@ DtMmdbHandle** DtMmdbBookGetTabList(DtMmdbInfoRequest* request, unsigned int* le
 
       int count = (*z) -> count();
 
-      DtMmdbHandle** u = (DtMmdbHandle**)malloc(sizeof(DtMmdbHandle*)* (count+1));
+      DtMmdbHandle** u = (DtMmdbHandle**)calloc(count+1, sizeof(DtMmdbHandle*));
 
       if ( u == 0 ) return 0;
          

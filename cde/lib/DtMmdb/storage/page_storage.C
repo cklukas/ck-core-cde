@@ -1066,11 +1066,13 @@ page_storage::get_str_locs(mmdb_pos_t str_loc,
    while ( str_loc > 0 ) {
 
       if ( num_pieces >= vector_sz ) {
+         str_index_record_tPtr* grown =
+                        new str_index_record_tPtr[vector_sz * 2];
+         for ( int i = 0; i < num_pieces; i++ )
+            grown[i] = vector[i];
+         delete [] vector;
+         vector = grown;
          vector_sz *= 2;
-         vector = (str_index_record_tPtr*)realloc(
-                        (char*)vector, 
-                        vector_sz*sizeof(str_index_record_tPtr)
-                  );
       }
 
       vector[num_pieces++] = 

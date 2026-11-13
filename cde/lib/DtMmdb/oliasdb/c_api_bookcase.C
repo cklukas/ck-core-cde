@@ -134,7 +134,7 @@ DtMmdbGetBookCaseByLocs(int infolib_descriptor, const char** locators,
       while ( bases[count] )
          count++;
 
-      int* ds = (int*) malloc(sizeof(int)*(count+1));
+      int* ds = (int*) calloc(count+1, sizeof(int));
 
       for ( int i=0; i<count; i++ )
          ds[i] = bases[i] -> index_id();
