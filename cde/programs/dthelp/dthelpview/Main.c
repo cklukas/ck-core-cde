@@ -236,7 +236,7 @@ int main(
 
   /* Copy our argv values into a new array for use in DisplayTopic... */
    newArgc = argc;
-   newArgv = (char **) XtMalloc (sizeof(char *) * (argc +1));
+   newArgv = (char **) XtCalloc ((argc +1), sizeof(char *));
 
    for (counter=0;counter < argc; counter++)
      {
