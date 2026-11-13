@@ -36,7 +36,7 @@ OL_Expression::~OL_Expression()
   }
   else if ( data_type == LITERAL ) {
     char *vlist = (char *)value_list;
-    delete vlist;
+    delete [] vlist;
   }
 
 }
