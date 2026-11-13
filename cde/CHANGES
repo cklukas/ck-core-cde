@@ -1,4 +1,12 @@
 2026-11-13
+- Fuzzing: `cde/fuzz` holds libFuzzer targets for six parsers: the dtspcd
+  protocol requests (`spc-proto.c`), the XDMCP request handlers of dtlogin, the
+  session file readers of dtwm and dtsession, the palette reader of dtsession
+  and the property readers of dtwm. Each target extracts the production parser
+  from its source file and builds it with the sanitizers, as the unit tests do;
+  `fuzz/run-fuzz.py --target NAME --seconds N` runs one. See `fuzz/README`.
+
+2026-11-13
 - dtterm: two signal handlers did their cleanup inside the signal. The handler
   of the dtterm server called `XtAppAddTimeOut()`, and the handler of the
   terminal (a setuid program) ran the pty, utmp and log file cleanups with

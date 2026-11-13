@@ -1,0 +1,105 @@
+libFuzzer targets for the parsers of CK Core CDE
+================================================
+
+This directory holds fuzz targets for parsers that read data an attacker or a
+damaged file can control: the dtspcd request layer, the dtlogin XDMCP request
+handlers, and the session, palette and window property readers of dtsession
+and dtwm.  No production source is changed.
+
+How a target works
+------------------
+
+The host is macOS without Motif and without the daemons' environment.  So, like
+the regression tests under programs/*/tests, each target reads the production
+source text, cuts the parser functions out of it, and compiles them against
+small stand-ins for everything around them (sockets, widgets, Xlib replies,
+the display list).  run-fuzz.py does the extraction and writes the result to
+DIR/build/NAME/types.h and production.h.  The harness fuzz-NAME.c includes both.
+The top comment of every harness says what is stubbed and how the input is laid
+out.  If a function is renamed or moved in the production source, the extraction
+stops with a message that names the function.
+
+Requirements on the host:
+
+  - the Homebrew clang, /opt/homebrew/opt/llvm/bin/clang (environment
+    variable CLANG overrides the path); it must accept -fsanitize=fuzzer
+  - the XQuartz headers in /opt/X11/include (XINCLUDE overrides), used by
+    dtsession-palette, dtwm-property and dtlogin-xdmcp
+  - for dtlogin-xdmcp also libXdmcp and libXau in /opt/X11/lib (XLIB overrides)
+
+Running
+-------
+
+  python3 cde/fuzz/run-fuzz.py --list
+
+  python3 cde/fuzz/run-fuzz.py --target spc-proto --seconds 60 \
+      --scratch /Volumes/S8T/tmp/ck-core-cde/phase1-20261112/tests-scratch/fuzz
+
+  for t in $(python3 cde/fuzz/run-fuzz.py --list | cut -d' ' -f1); do
+      python3 cde/fuzz/run-fuzz.py --target $t --seconds 60 --scratch DIR
+  done
+
+  --worktree DIR   read the production sources from another checkout
+                   (default: the checkout that holds this script)
+  --recover-ub     report undefined behaviour and go on, listing the first
+                   report of each location at the end; address errors, timeouts
+                   and out-of-memory inputs still stop the run
+  --work-limit N   dtwm-session only: drop an input after N fscanf calls, so
+                   that the run can go on after the unbounded record counts
+                   of that reader have been reported
+
+The build uses -fsanitize=fuzzer,address,undefined -fno-sanitize-recover=undefined
+-g -O1 -std=gnu23.  libFuzzer runs with -max_len=4096 -rss_limit_mb=2048
+-timeout=5 and one process, so it uses one CPU.
+
+Output below DIR
+----------------
+
+  build/NAME/        generated headers and the fuzzer binary
+  corpus/NAME/       the corpus as it grew; the seeds in cde/fuzz/corpus/NAME
+                     are read but never written
+  crashes/NAME/      crash-*, timeout-* and oom-* inputs as libFuzzer wrote
+                     them, and min-* the minimized versions
+  logs/NAME.log      the complete libFuzzer output with the sanitizer reports
+  tmp/               TMPDIR of the run
+
+The exit status is 1 when a crash, a timeout or an out-of-memory input was
+found.  To look at a finding again:
+
+  DIR/build/NAME/fuzz-NAME DIR/crashes/NAME/min-crash-HASH
+
+Seeds
+-----
+
+cde/fuzz/corpus/NAME/ holds two to five small valid inputs per target in the
+layout of the harness.  make-seeds.py writes them again.
+
+Targets
+-------
+
+  spc-proto          dtspcd request wire layer (DtEncap/spc-proto.c): header
+                     decode, request read with its length limit, multi-packet
+                     string lists, the counted-string decoders for application,
+                     device, logfile and register requests, the termios request
+  dtlogin-xdmcp      dtlogin XDMCP request handlers (xdmcp.c): query, indirect
+                     query, forward query, request, manage and keep-alive, with
+                     policy.c, protodpy.c, xdmauth.c, auth.c and netaddr.c
+                     compiled in; packets are decoded by libXdmcp
+  dtwm-session       dtwm front panel session file (Session.c:
+                     SessionRestoreData)
+  dtsession-client   dtsession CDE 1.0 client file (SmRestore.c:
+                     ParseClientFile, the quoting parser GetSmartString)
+  dtsession-palette  dtsession color server palette file and palette directory
+                     list (SrvFile_io.c)
+  dtwm-property      dtwm window property readers (WmProperty.c): normal hints,
+                     WM_STATE, motif hints and info, UTF8 strings, colormap
+                     windows, WM_PROTOCOLS and _MWM_MESSAGES
+
+What a finding means
+--------------------
+
+A stand-in that is too loose reports errors that cannot happen in the real
+program.  Every report must be read against the production code at the lines
+the stack names before it is called a bug.  The harnesses keep the stand-ins to
+the promises of the real interface (for example the Xlib stand-in never returns
+more items than were asked for).
