@@ -36,6 +36,7 @@
 #include	"name.h"
 #include	"stdio.h"
 #include	"msgs.h"
+#include	<X11/Intrinsic.h>
 
 
 void
@@ -85,7 +86,7 @@ env_set_var(
 	char *set = &tmp[0];
 
 	if ((len = strlen(var) + strlen(val?val:"") + 2) > sizeof(tmp)) /* 11/06 CHANGED */
-		set = malloc(len);
+		set = XtMalloc(len);
 	strcpy(set, var);
 	strcat(set, "=");
 	strcat(set, val?val:""); 			/* 11/06 CHANGED */
@@ -185,7 +186,7 @@ int *LockKshFileDescriptors(void)
    int i;
    int fd, newfd;
 
-   fdList = (int *)calloc(10, sizeof(int));
+   fdList = (int *)XtCalloc(10, sizeof(int));
    for (i = 0; i < 10; i++)
       fdList[i] = -1;
 

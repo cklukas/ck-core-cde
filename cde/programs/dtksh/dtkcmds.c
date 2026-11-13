@@ -2879,7 +2879,7 @@ invokeXDrawFunction(
    argv += 3;
    if (parse == PARSE_POINTLIST) 
    {
-      XPoint *points = (XPoint *)malloc(sizeof(XPoint )*(argc/2+1));
+      XPoint *points = (XPoint *)XtCalloc(argc/2+1, sizeof(XPoint));
       int npoints = 0;
 
       for (i = 0; i < argc-1; i += 2, npoints++) 
@@ -2918,7 +2918,7 @@ invokeXDrawFunction(
       XSegment *segments;
       int nsegments = 0;
 
-      segments = (XSegment *)malloc(sizeof(XSegment )*(argc/4+1));
+      segments = (XSegment *)XtCalloc(argc/4+1, sizeof(XSegment));
 
       for (i = 0; i < argc-1; i += 4, nsegments++) 
       {

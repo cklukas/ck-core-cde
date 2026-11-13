@@ -445,7 +445,7 @@ toolkit_initialize(
 
 	init_widgets();
 
-	newargv = (char **)calloc((argc - 3), sizeof(char *));
+	newargv = (char **)XtCalloc(argc - 3, sizeof(char *));
 
 	/*
 	 * We apparently must alloc a long-lived array of strings for argv.
@@ -460,8 +460,7 @@ toolkit_initialize(
 	 */
 	for(i = 0, newargc = argc - 4; i < newargc; i++)
 	{
-		newargv[i] = (char *)malloc(strlen(argv[i + 4]) + 1);
-		strcpy(newargv[i], argv[i + 4]);
+		newargv[i] = DtkStrDup(argv[i + 4]);
 	}
 	newargv[i] = (char *)nullptr;
 
