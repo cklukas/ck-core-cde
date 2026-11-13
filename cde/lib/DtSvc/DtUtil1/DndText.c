@@ -141,7 +141,7 @@ dndTextGetTargets(
 
 	*numTargets = 3;
 
-	*targets = (Atom *)XtMalloc(*numTargets * sizeof(Atom));
+	*targets = (Atom *)XtCalloc(*numTargets, sizeof(Atom));
 
 	(*targets)[ii++] = XA_COMPOUND_TEXT;
 	(*targets)[ii++] = XA_TEXT;
@@ -316,7 +316,7 @@ dndTextTransferTargets(
  
 	*numTransferTargets = 1;
 
-	*transferTargets = (Atom *)XtMalloc(*numTransferTargets * sizeof(Atom));
+	*transferTargets = (Atom *)XtCalloc(*numTransferTargets, sizeof(Atom));
 
 	(*transferTargets)[0] = target;
 }

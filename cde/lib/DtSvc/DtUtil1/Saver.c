@@ -395,7 +395,7 @@ DtSaverGetWindows(
  /*
   * Allocate memory for window array.
   */
-  *window = (Window *)malloc((envcount)*sizeof(Window *));
+  *window = (Window *)calloc(envcount, sizeof(Window *));
   if (!*window)
   {
     free(p);

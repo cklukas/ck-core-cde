@@ -108,7 +108,8 @@ XeString *SPC_Putenv(XeString val,
 /*----------------------------------------------------------------------+*/
 
 {
-  int len, newsize;
+  int len;
+  XeString *grown;
   XeString *envptr;
   char *pch;
   int remove_command = 0;
@@ -173,20 +174,16 @@ XeString *SPC_Putenv(XeString val,
   
   len=envptr-envp;
   
-  /* calculate new size needed:
-     len=ptr to null element
-     newsize=len+2 (one for NULL, one for new element)
-     */
+  /* Expand envp to hold len+2 elements: the existing ones, a NULL
+     terminator and the new element.  This is a potentially expensive
+     operation, if the realloc routine is not smart. */
   
-  newsize=(len+2)*sizeof(XeString *);
-  
-  /* Expand envp.  This is a potentially expensive operation, if the
-     realloc routine is not smart. */
-  
-  if(!(envp=(XeString *)realloc((char *)envp, newsize))) {
+  grown=(XeString *)reallocarray((char *)envp, len+2, sizeof(XeString *));
+  if(grown == nullptr) {
     SPC_Error(SPC_Out_Of_Memory);
     exit(1);
   }
+  envp=grown;
   
   /* Okay.  We got the new memory.  Stash the new variable into it &
      return the new envp.*/

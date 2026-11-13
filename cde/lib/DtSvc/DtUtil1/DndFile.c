@@ -158,7 +158,7 @@ dndFileGetTargets(
 
         *numTargets = 2 + (doHost ? 1 : 0) + (owCompat ? 4 : 0);
 
-	*targets = (Atom *)XtMalloc(*numTargets * sizeof(Atom));
+	*targets = (Atom *)XtCalloc(*numTargets, sizeof(Atom));
 
 	(*targets)[ii++] = XA_DT_NETFILE;
 	(*targets)[ii++] = XA_FILE_NAME;
@@ -379,7 +379,7 @@ dndFileTransferTargets(
  
 	*numTransferTargets = 1;
 
-	*transferTargets = (Atom *)XtMalloc(*numTransferTargets * sizeof(Atom));
+	*transferTargets = (Atom *)XtCalloc(*numTransferTargets, sizeof(Atom));
 
 	(*transferTargets)[0] = target;
 }

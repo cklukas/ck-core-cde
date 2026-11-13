@@ -58,6 +58,7 @@
 #define XOS_USE_XT_LOCKING
 #include <X11/Xos_r.h>
 
+#include <stdckdint.h>
 #include <stdlib.h>
 #include <limits.h>
 
@@ -3021,7 +3022,7 @@ CloneParsedMessage(
    if (old_pmsg->numMsgParts > 0)
    {
       new_pmsg->parsedMessage = (MsgComponent *)
-           XtMalloc((Cardinal)(sizeof(MsgComponent) * old_pmsg->numMsgParts));
+           XtCalloc(old_pmsg->numMsgParts, sizeof(MsgComponent));
 
       for (i = 0; i < old_pmsg->numMsgParts; i++)
       {
@@ -3174,8 +3175,7 @@ _DtCompileMessagePiece(
       *promptDataIndex = 0;
 
       if (request->numObjects > 0) {
-  	 *paramUsed = (Boolean *)XtMalloc((Cardinal)(sizeof(Boolean) *
-						     request->numObjects));
+  	 *paramUsed = (Boolean *)XtCalloc(request->numObjects, sizeof(Boolean));
 	 for (i = 0; i < request->numObjects; i++)
 	   (*paramUsed)[i] = False;
       }
@@ -3748,7 +3748,7 @@ MatchParamsToAction(
     */
    unused = request->numObjects;
    if (unused > 0) {
-     paramUsed = (Boolean *)XtMalloc((Cardinal)(sizeof(Boolean) * unused));
+     paramUsed = (Boolean *)XtCalloc(unused, sizeof(Boolean));
      for (i = 0; i < unused; i++)
        paramUsed[i] = False;
    }
@@ -4052,9 +4052,18 @@ ProcessPromptDialog(
 
          if (dialog->prompts[i].argIndex > dialog->request->numObjects)
          {
+            size_t objectsSize;
+
+            if (ckd_mul(&objectsSize, (size_t)dialog->prompts[i].argIndex,
+                        sizeof(ObjectData)) || objectsSize > UINT_MAX)
+            {
+               XtFree(value);
+               continue;
+            }
+
             dialog->request->objects = (ObjectData *)
                 XtRealloc((char *)dialog->request->objects, 
-                (Cardinal)(sizeof(ObjectData) * (dialog->prompts[i].argIndex)));
+                (Cardinal)objectsSize);
 
             /* Initialize the new array entries */
             for (j = dialog->request->numObjects; 
@@ -4204,8 +4213,7 @@ CreatePromptDialog(
 
    /* Allocate the structures we'll be needing */
    dialog = (PromptDialog *)XtMalloc((Cardinal)sizeof(PromptDialog));
-   promptDes = (DialogPromptEntry *)XtMalloc((Cardinal)
-              (sizeof(DialogPromptEntry) * numPrompts));
+   promptDes = (DialogPromptEntry *)XtCalloc(numPrompts, sizeof(DialogPromptEntry));
 
 
    /*  Create the shell, frame and form used for the dialog.  */
@@ -4638,7 +4646,7 @@ CreateContinueDialog(
    if (prompts)
    {
       dialog->prompts = (PromptEntry *)
-              XtMalloc((Cardinal)(sizeof(PromptEntry) * numPrompts));
+              XtCalloc(numPrompts, sizeof(PromptEntry));
       for (i = 0; i < numPrompts; i++)
       {
          dialog->prompts[i].argIndex = prompts[i].argIndex;

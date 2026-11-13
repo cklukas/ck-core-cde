@@ -166,7 +166,7 @@ dndBuffGetTargets(
 
 	*numTargets = 3 + (includeText ? 2 : 0) + (owCompat ? 1 : 0);
 
-	*targets = (Atom *)XtMalloc(*numTargets * sizeof(Atom));
+	*targets = (Atom *)XtCalloc(*numTargets, sizeof(Atom));
 
 	(*targets)[ii++] 	= XA_DT_BUFFER_DATA;
 	(*targets)[ii++] 	= XA_DT_BUFFER_LENGTHS;
@@ -363,7 +363,7 @@ dndBuffTransferTargets(
 
         *numTransferTargets = 2;        /* max number of transfer targets */
    
-	*transferTargets = (Atom *)XtMalloc(*numTransferTargets * sizeof(Atom));
+	*transferTargets = (Atom *)XtCalloc(*numTransferTargets, sizeof(Atom));
 
 	ii = 0;
 
@@ -575,7 +575,7 @@ dndBufferLengthsToSelectionValue(
 
 	*returnLength = numBuffers;
 
-	*returnValue = (XtPointer) XtMalloc(*returnLength * sizeof(long));
+	*returnValue = (XtPointer) XtCalloc(*returnLength, sizeof(long));
 
 	lengths = (unsigned long *)*returnValue;
  
@@ -668,7 +668,7 @@ dndTextSelectionValueToBuffer(
 
 	*numBuffers = textCount;
 
-	(*buffers) = (DtDndBuffer *)XtMalloc(*numBuffers * sizeof(DtDndBuffer));
+	(*buffers) = (DtDndBuffer *)XtCalloc(*numBuffers, sizeof(DtDndBuffer));
 
 	textLen = 0;
 	for (ii = 0; ii < *numBuffers; ii++) {
@@ -728,7 +728,7 @@ dndSelectionValueToBuffer(
 
 	*numBuffers = lengthsLength;
 
-	(*buffers) = (DtDndBuffer *)XtMalloc(*numBuffers * sizeof(DtDndBuffer));
+	(*buffers) = (DtDndBuffer *)XtCalloc(*numBuffers, sizeof(DtDndBuffer));
 
 	lenList = (unsigned long *)lengthsValue;
 	bufPtr  = dataValue;

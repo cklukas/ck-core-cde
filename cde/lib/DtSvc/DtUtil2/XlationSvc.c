@@ -534,6 +534,7 @@ void ReplaceMatchallSubex(
                  int    strLen;
                  char * oldTmp;
                  char * newTmp;
+                 char * grownStr;
 
                  newOff = nxt - *pStr;
                  oldOff = old - *pStr;
@@ -541,8 +542,9 @@ void ReplaceMatchallSubex(
                  strLen = strlen(*pStr);
 
                  /* expand memory and reset pointers */
-                 *pStr = realloc(*pStr,strLen+repLen+1);
-                 if (nullptr == *pStr) return;           /* RETURN */
+                 grownStr = realloc(*pStr,strLen+repLen+1);
+                 if (nullptr == grownStr) return;        /* RETURN */
+                 *pStr = grownStr;
                  nxt = *pStr + newOff;
                  old = *pStr + oldOff;
 
@@ -638,14 +640,16 @@ void StripMetaAndReplaceEscSubex(
                  int    strLen;
                  char * oldTmp;
                  char * newTmp;
+                 char * grownStr;
 
                  newOff = nxt - *pStr;
                  oldOff = old - *pStr;
                  repLen = strlen(replaceValues[refNum]);
                  strLen = strlen(*pStr);
                  /* expand memory and reset pointers */
-                 *pStr = realloc(*pStr,strlen(*pStr)+repLen+1);
-                 if (nullptr == *pStr) return;           /* RETURN */
+                 grownStr = realloc(*pStr,strLen+repLen+1);
+                 if (nullptr == grownStr) return;        /* RETURN */
+                 *pStr = grownStr;
                  nxt = *pStr + newOff;
                  old = *pStr + oldOff;
 

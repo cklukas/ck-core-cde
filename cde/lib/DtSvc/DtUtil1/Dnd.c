@@ -207,8 +207,7 @@ _DtDndCreateImportTransfers(
 	if (*numTransfers == 0)
 		return (DtDndTransfer *)nullptr;
 	
-	transfers = (DtDndTransfer *)XtMalloc(
-				*numTransfers * sizeof(DtDndTransfer));
+	transfers = (DtDndTransfer *)XtCalloc(*numTransfers, sizeof(DtDndTransfer));
 
 	for (ii = 0, jj = 0; dndProtocolList[ii] != DtDND_NOOP_TRANSFER; ii++) {
 		if (dtDropInfo->protocols & dndProtocolList[ii]) {
@@ -450,7 +449,7 @@ _DtDndArgListFromVarArgs(
 	    return;
 	}
 
-	argList = (ArgList)XtMalloc((unsigned)(maxArgs * sizeof(Arg)));
+	argList = (ArgList)XtCalloc(maxArgs, sizeof(Arg));
 
 	argCount = 0;
 	for (argPtr = va_arg(vaList,String);

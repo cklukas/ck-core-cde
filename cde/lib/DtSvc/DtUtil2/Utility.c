@@ -127,7 +127,7 @@ _DtVectorizeInPlace(
       nextc++;
    }
    
-   vector = (char **) XtMalloc ((Cardinal)(sizeof(char *) * (num_pieces + 1)));
+   vector = (char **) XtCalloc(num_pieces + 1, sizeof(char *));
    
    /* Set the first element of the vector to point to the start of
       the string. */
