@@ -606,6 +606,8 @@ dt_failedlogin(char *name, char *ttyName, char *hostName)
         last_login.ftty = ttyName;
 
         last_login.fhost = (char *) malloc (MAXHOSTNAMELEN);
+        if (last_login.fhost == nullptr)
+            return;		/* no record without the host name */
         if (hostName == nullptr) {
             gethostname (last_login.fhost , MAXHOSTNAMELEN);
         } else {

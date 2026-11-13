@@ -151,7 +151,7 @@ main (int argc, char **argv)
     XtSetLanguageProc( nullptr, nullptr, nullptr );
 
     smGD.smState = IN_PROCESS;
-    smGD.programName = strdup (argv[0]);
+    smGD.programName = XtNewString (argv[0]);
 
     /* JET - By default, we always want to leave when SmExit() is called. */
     smGD.ExitComplete = True;

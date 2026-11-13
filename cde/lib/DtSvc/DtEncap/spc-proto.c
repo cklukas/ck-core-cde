@@ -1023,6 +1023,10 @@ int SPC_Write_Protocol_Request (SPC_Connection_Ptr connection,
 
   case RESET_TERMIOS:
     pdata->len=SPC_Send_Termios(prot_request);
+    if(pdata->len == SPC_ERROR) {
+      SPC_Free_Protocol_Ptr(prot_request);
+      return(SPC_ERROR);
+    }
     prot_name=(XeString)"  <-- RESET_TERMIOS";
     break;
 
@@ -1062,6 +1066,11 @@ int SPC_Write_Protocol_Request (SPC_Connection_Ptr connection,
       va_end(ap);
 
       buffer = SPC_Decode_Termios(termios_ptr);
+      if (buffer == nullptr) {
+	SPC_Error(SPC_Out_Of_Memory);
+	SPC_Free_Protocol_Ptr(prot_request);
+	return(SPC_ERROR);
+      }
       pdata->len=WRITE_TERMIOS(pdata, connector, side, buffer);
       prot_name=(XeString)"  <-- CHANNEL_TERMIOS";
       free(buffer);
@@ -1777,8 +1786,18 @@ sscan_logfile_data(XeString buf,
       *proto_ver = args[1];
       *hostinfo  = args[2];
   }
-  if (*hostinfo == XeString_NULL)
+  if (*hostinfo == XeString_NULL) {
       *hostinfo = strdup(SPC_UNKNOWN_HOSTINFO_STR);
+      if (*hostinfo == XeString_NULL) {
+	  /* Give back nothing: every string handed out so far is freed. */
+	  for(i=0; args[i]; i++)
+	    free(args[i]);
+	  free((char *)args);
+	  *logfile = *proto_ver = XeString_NULL;
+	  SPC_Error(SPC_Out_Of_Memory);
+	  return(SPC_ERROR);
+      }
+  }
 
   for(i=3; args[i]; i++)
     free(args[i]);
@@ -1839,8 +1858,18 @@ sscan_register_data(XeString buf,
       *proto_ver = args[2];
       *hostinfo  = args[3];
   }
-  if (*hostinfo == XeString_NULL)
+  if (*hostinfo == XeString_NULL) {
       *hostinfo = strdup(SPC_UNKNOWN_HOSTINFO_STR);
+      if (*hostinfo == XeString_NULL) {
+	  /* Give back nothing: every string handed out so far is freed. */
+	  for(i=0; args[i]; i++)
+	    free(args[i]);
+	  free((char *)args);
+	  *username = *passwd = *proto_ver = XeString_NULL;
+	  SPC_Error(SPC_Out_Of_Memory);
+	  return(SPC_ERROR);
+      }
+  }
 
   for(i=4; args[i]; i++)
     free(args[i]);
@@ -2124,6 +2153,11 @@ static int SPC_Send_Termios(protocol_request_ptr prot_request)
 
   tio = SPC_Get_Current_Termio();	/* Gets a (malloced) copy */
   s = SPC_Decode_Termios( tio );	/* Get ASCII representation */
+  if (s == nullptr) {
+    XeFree(tio);
+    SPC_Error(SPC_Out_Of_Memory);
+    return(SPC_ERROR);
+  }
   
   retval = WRITE_STRING(prot_request->dataptr, s);
   XeFree(tio);
@@ -2236,6 +2270,10 @@ static int SPC_Send_B00_Spawn(SPC_Connection_Ptr connection,
     num_elts++;
 
   merged_ptr = (char **)calloc((num_elts+6), sizeof(char *));
+  if (merged_ptr == nullptr) {
+    SPC_Error(SPC_Out_Of_Memory);
+    return(SPC_ERROR);
+  }
 
   sprintf(argv_buf, "%d", num_argv);
   sprintf(envp_buf, "%d", num_envp);

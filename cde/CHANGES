@@ -1,4 +1,53 @@
 2026-11-13
+- Unchecked memory allocations in the privileged and network-facing code. A
+  failed `malloc()`, `calloc()` or `strdup()` is now reported through the
+  function's own convention and what was allocated before is released: the
+  register and logfile data of the SPC protocol (`sscan_register_data()`,
+  `sscan_logfile_data()`, the termios strings, the spawn request, the
+  environment reference expansion and `unset`, the logfile name copy in
+  `noio.c`) and the host name copies of DtEncap (`connect.c`, `Symbolic.c`,
+  which end the process on exhaustion like their `XeMalloc()` neighbours);
+  dtspcd (the authentication directory ends the start, the saved mount point
+  is skipped); dtlogin (greeter start, language lists and enumeration,
+  display name, `NLSPATH`, the login line, the chooser restart arguments, the
+  failed-login record, the Solaris path merge); dtsession (`SmNewString()`
+  and the display name end the process on exhaustion like `SM_MALLOC()`, the
+  error strings fall back to the catalog text, the state-change event is
+  skipped); libcsa (hash and name tables, local host, domain and user name
+  buffers are static instead of allocated, appointment and reminder copies,
+  the version 2 and 3 conversion lists, the change and create requests of
+  `table.c`, `CSA_CONFIG_VER_SPEC`); cmsd (red-black tree and list creation
+  and insertion report the new status `rb_nomem`, which maps to
+  `CSA_E_INSUFFICIENT_MEMORY`; the reminder lookup, the repeat-rule setup
+  `FillInRepeatEvent()` now returns a result and the tick functions give 0,
+  the callog string token, the calendar owner, the inetd argument vector).
+  Not changed: the C++ of ttsession, ttdbserverd and libtt (their RPC result
+  codes have no out-of-memory value) and the string copies `buffer4_to_*()`
+  of the version conversion. Tests: `DtEncap/tests/check-spc-proto-alloc.py`,
+  the extended `check-spc-list-alloc.py` and `check-spc-exec-realloc.py`,
+  `lib/csa/tests/check-name-table-alloc.py` and
+  `dtcm/server/tests/check-tree-list-alloc.py`; each fails the old code.
+
+2026-11-13
+- Continuous integration for sanitizers and fuzz corpus replay. The GitHub
+  workflow `build.yml` has a job `sanitizers` that builds CK Core Motif and
+  CK Core CDE with `--enable-sanitizers` (AddressSanitizer and
+  UndefinedBehaviorSanitizer; GCC 14 and Clang 19, at most six parallel jobs)
+  and runs `make check` with `ASAN_OPTIONS=detect_leaks=0` and
+  `UBSAN_OPTIONS=print_stacktrace=1`, and uploads the logs when it fails. Clang
+  `-fsanitize=function` reports for the callbacks that Xt calls through cast
+  function pointers are suppressed (`function:*`); all other checks stay on. A
+  job `fuzz-replay` (also in `.ckgit/ci.yml`) runs
+  `python3 cde/fuzz/run-fuzz.py --all --replay`. The fuzz runner has a new
+  mode `--replay`, which runs every target once over every file of its corpus
+  directory (libFuzzer `-runs=0`: no mutation) and exits 1 when an input
+  crashes, and `--all`, which applies the action to every target. On Linux the
+  compiler comes from `CLANG` (default: `clang` in PATH) and the X11
+  headers and libraries from the system (`pkg-config`) instead of XQuartz; a
+  target whose pkg-config modules are missing is skipped with a message.
+  See `docs/ci.md` and `cde/fuzz/README`.
+
+2026-11-13
 - Compiler warnings of the hardened gcc 14 build, second pass: ignored return
   values (-Wunused-result) and null dereferences (-Wnull-dereference) outside
   dtwm, DtSearch and dtsr. Privilege changes: `SetGidUid()` of dtaction

@@ -246,6 +246,11 @@ int main(int argc, XeString *argv)
 	SPC_Format_Log((XeString)"Authentication directory set to '%s'.", 
 		       argv[i]);
         SPCD_Authentication_Dir = strdup (argv[i]);
+	if (SPCD_Authentication_Dir == nullptr) {
+	  /* Not starting is safer than silently using another directory. */
+	  SPC_Format_Log((XeString)"Cannot start: out of memory for the authentication directory.");
+	  SPCD_Exit(1);
+	}
       }
     }
 
@@ -259,7 +264,10 @@ int main(int argc, XeString *argv)
 	if (putenv (tmp) == 0) {
 	  SPC_Format_Log((XeString)"Mount point set to '%s'.", argv[i]);
 	  SPC_mount_point_env_var = (char *) malloc (strlen (tmp) + 1);
-	  (void) strcpy (SPC_mount_point_env_var, tmp);
+	  if (SPC_mount_point_env_var != nullptr)
+	    (void) strcpy (SPC_mount_point_env_var, tmp);
+	  else
+	    SPC_Format_Log((XeString)"Out of memory: the mount point of the daemon is not saved.");
 	}
 	else
 	  SPC_Format_Log((XeString)"Failed to add the mount point '%s' to the environment.", tmp);
@@ -340,7 +348,10 @@ int main(int argc, XeString *argv)
     if ((pch = getenv (MOUNT_POINT)) != nullptr) {
       SPC_mount_point_env_var = (char *) malloc (strlen (pch) + 
 						 strlen (MOUNT_POINT) + 2);
-      (void) sprintf (SPC_mount_point_env_var, "%s=%s", MOUNT_POINT, pch);
+      if (SPC_mount_point_env_var != nullptr)
+	(void) sprintf (SPC_mount_point_env_var, "%s=%s", MOUNT_POINT, pch);
+      else
+	SPC_Format_Log((XeString)"Out of memory: the mount point of the daemon is not saved.");
     }
 
   XeCall_SbMainLoopUntil(&terminate_flag);

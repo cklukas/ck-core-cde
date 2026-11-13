@@ -67,7 +67,7 @@ static Tick PrevWeekTick(const struct tm *, const struct tm *,
 static Tick PrevMonthTick(const struct tm *, const RepeatEvent *, 
 			  const WeekDayTime *, const MoveIndicator,
 			  RepeatEventState *);
-extern void FillInRepeatEvent(const Tick, RepeatEvent *);
+extern int FillInRepeatEvent(const Tick, RepeatEvent *);
 
 static int
 DurationCheck(
@@ -94,10 +94,8 @@ PrevTick(
 
         if (!re) return (Tick)0;
 
-	if (!start_time)
-        	FillInRepeatEvent(cur_time, re);
-	else
-        	FillInRepeatEvent(start_time, re);
+	if (FillInRepeatEvent(start_time ? start_time : cur_time, re) != 0)
+		return (Tick)0;
  
         if (!DurationCheck(res->res_duration, re->re_duration)) return (Tick)0;
 

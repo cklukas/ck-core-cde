@@ -938,10 +938,13 @@ main (int argc, char **argv)
     amChooser = 1;  /** tell RespondLangCB we are a chooser **/
     orig_argc = argc;
     orig_argv = (char **)calloc((orig_argc+1), sizeof(char *));
-    for (i = 0; i < orig_argc; i++) {
-	orig_argv[i] = argv[i];
+    if (orig_argv != nullptr) {
+	/* Without the copy the language change cannot restart the chooser. */
+	for (i = 0; i < orig_argc; i++) {
+	    orig_argv[i] = argv[i];
+	}
+	orig_argv[orig_argc] = nullptr;
     }
-    orig_argv[orig_argc] = nullptr;
 
     toplevel = XtInitialize (argv[0], "Dtlogin", options, XtNumber(options),
 			     &argc, argv);

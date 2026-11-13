@@ -358,6 +358,11 @@ yyylex(void)
 	    *ptr = 0;
 	    strescapes((char *) parse_buffer); /* process any escape sequences */
 	    externQuotedString = (char *) strdup((char *)parse_buffer);
+	    if (externQuotedString == nullptr) {
+		/* End the input: the parser reports the error. */
+		fprintf(stderr, "%s: out of memory reading callog file\n", pgname);
+		return(0);
+	    }
 	    return(QUOTEDSTRING);
 	  case 0:
 	  case EOFILE:

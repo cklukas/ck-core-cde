@@ -51,7 +51,7 @@ static Tick LastOccurence(const Tick, const WeekDayTime *, const unsigned int);
 static Tick LastTickFromEndDate(const Tick, const RepeatEvent *);
 static int LastDayExists(const struct tm *, const unsigned int, 
 			 const unsigned int *);
-extern void FillInRepeatEvent(const Tick, RepeatEvent *);
+extern int FillInRepeatEvent(const Tick, RepeatEvent *);
 extern Tick ClosestTick(const Tick, const Tick, RepeatEvent *, 
 			RepeatEventState **);
 extern Tick PrevTick(const Tick, const Tick, RepeatEvent *, RepeatEventState *);
@@ -67,7 +67,8 @@ LastTick(
 
 	if (re->re_duration == RE_INFINITY) return EOT;
 
-	FillInRepeatEvent(start_time, re);
+	if (FillInRepeatEvent(start_time, re) != 0)
+		return (Tick)0;
 
 	switch (re->re_type) {
 	case RT_MINUTE:

@@ -123,6 +123,8 @@ new_appct(XtAppContext appct)
 
 	if (newappct == B_TRUE) {
 		lptr = (AppCtList *)calloc(1, sizeof(AppCtList));
+		if (lptr == nullptr)
+			return (B_FALSE);	/* not registered */
 		lptr->appct = appct;
 		lptr->next = registered_appct;
 		registered_appct = lptr;

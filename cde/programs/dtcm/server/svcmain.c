@@ -186,6 +186,10 @@ parse_args(int argc, char **argv)
 		  return;
 		  
 		argv_r = (char **) malloc(argc * sizeof(char *));
+		if (argv_r == nullptr) {
+			fprintf (stderr, "%s: out of memory\n", pgname);
+			exit (-1);
+		}
 
 		argv_r[0] = argv[0];
 		for (i=optind+2, j=1; i<argc; i++,j++)

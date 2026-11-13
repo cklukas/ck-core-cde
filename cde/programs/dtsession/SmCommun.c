@@ -735,6 +735,9 @@ ProcessClientMessage(
     {
       char *newRes = malloc(BUFSIZ);
 
+      if (newRes == nullptr)
+        return;		/* the new values are not applied or saved */
+
      /*
       * Copy selected changes to data areas.
       */

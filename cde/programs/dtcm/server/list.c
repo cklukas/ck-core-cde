@@ -107,8 +107,14 @@ hc_create(_DtCmsGetKeyProc get, _DtCmsCompareProc compare)
 	Hc_list	*list;
 
 	p = (Private *) calloc (1, sizeof (*p));
+	if (p == nullptr)
+		return (nullptr);
 
 	list = (Hc_list *) calloc (1, sizeof (*list));
+	if (list == nullptr) {
+		free (p);
+		return (nullptr);
+	}
 	list->root = nullptr;
 	list->private = (caddr_t) p;
 
@@ -204,6 +210,8 @@ hc_insert(
 	if (hc_list == nullptr)
 		return (rb_notable);
 	p_node = (List_node *) calloc (1, sizeof(*p_node));
+	if (p_node == nullptr)
+		return (rb_nomem);
 	p_node->data = data;
 	p_node->re = re;
 	stat = hc_insert_node (hc_list, p_node, key);

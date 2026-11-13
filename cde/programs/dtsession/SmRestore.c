@@ -2031,7 +2031,9 @@ RestoreClients( void )
     }
     
     linec = 0;
-    displayName = strdup(smGD.display->display_name);
+    /* a display without a name is an empty name, not a null pointer */
+    displayName = XtNewString(smGD.display->display_name != nullptr ?
+			      smGD.display->display_name : "");
     remoteDisplay = (unsigned char *)
       SM_MALLOC(sizeof(unsigned char) * (strlen(displayName) + 101));
 

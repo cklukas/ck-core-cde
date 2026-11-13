@@ -83,7 +83,8 @@ agent.h:
 # AddressSanitizer and UndefinedBehaviorSanitizer; the test compiles the
 # routines it checks, so it runs the code that is shipped.
 EXTRA_DIST = tests/check-xdr.py tests/xdr-test.c cmlimits.h cmxdrlist.h \
-             tests/check-duration-iso8601.py tests/duration-iso8601.c
+             tests/check-duration-iso8601.py tests/duration-iso8601.c \
+             tests/check-name-table-alloc.py tests/check-name-table-alloc.c
 
 check-local:
 	CSA_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcsa_la_CFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
@@ -91,3 +92,4 @@ check-local:
 	CSA_LIBS='$(TIRPCLIB)' \
 	python3 $(srcdir)/tests/check-xdr.py $(srcdir)
 	CC="$(CC)" python3 $(srcdir)/tests/check-duration-iso8601.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-name-table-alloc.py

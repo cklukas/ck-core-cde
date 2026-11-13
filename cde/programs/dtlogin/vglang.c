@@ -146,7 +146,15 @@ _enumLangCmdNext(
 
     *lang = strdup(loclang);
     *desc = strdup(locdesc);
-    rc = True;
+    if (*lang != nullptr && *desc != nullptr)
+      rc = True;
+    else
+    {
+      /* Out of memory: the enumeration ends here. */
+      free(*lang);
+      free(*desc);
+      *lang = *desc = nullptr;
+    }
   }
   return(rc);
 }
@@ -200,7 +208,13 @@ _enumLanglistStart(void)
     else
     {
       state->dupstr = strdup(p);
-      state->tokstr = state->dupstr;
+      if (state->dupstr == nullptr)
+      {
+        free(state);
+        state = nullptr;
+      }
+      else
+        state->tokstr = state->dupstr;
     }
   }
 
@@ -240,7 +254,15 @@ _enumLanglistNext(
     *lang = strdup(loclang);
     *desc = strdup(locdesc);
 
-    rc = True;
+    if (*lang != nullptr && *desc != nullptr)
+      rc = True;
+    else
+    {
+      /* Out of memory: the enumeration ends here. */
+      free(*lang);
+      free(*desc);
+      *lang = *desc = nullptr;
+    }
   }
   return(rc);
 }

@@ -94,6 +94,8 @@ _DtCm_tableres3_to_tableres4(Table_Res_3 *r3)
 	
 	if (r3==nullptr) return((Table_Res_4 *)nullptr);
 	r4 = (Table_Res_4 *)calloc(1, sizeof(Table_Res_4));
+	if (r4 == nullptr)
+		return (nullptr);
         r4->status = _DtCm_accstat3_to_accstat4(r3->status);
         tablereslist3_to_tablereslist4(&(r3->res), &(r4->res));
         return(r4);
@@ -106,6 +108,8 @@ _DtCm_accargs3_to_accargs4(Access_Args_3 *a3)
 
 	if (a3==nullptr) return((Access_Args_4 *)nullptr);
 	a4 = (Access_Args_4 *)calloc(1, sizeof(Access_Args_4));
+	if (a4 == nullptr)
+		return (nullptr);
 	a4->target = buffer3_to_buffer4(a3->target);
 	a4->access_list = acclist3_to_acclist4(a3->access_list);
 	return(a4);
@@ -118,6 +122,8 @@ _DtCm_tableargs3_to_tableargs4(Table_Args_3 *a3)
 
 	if (a3==nullptr) return((Table_Args_4 *)nullptr);
 	a4 = (Table_Args_4 *)calloc(1, sizeof(Table_Args_4));
+	if (a4 == nullptr)
+		return (nullptr);
         a4->target = buffer3_to_buffer4(a3->target);
         args3_to_args4(&(a3->args), &(a4->args));
 	a4->pid = a3->pid;
@@ -133,6 +139,8 @@ _DtCm_tabledelargs3_to_tabledelargs4(Table_Args_3 *a3, Options_4 opt)
 		return((Table_Args_4 *)nullptr);
 
 	a4 = (Table_Args_4 *)calloc(1, sizeof(Table_Args_4));
+	if (a4 == nullptr)
+		return (nullptr);
 	a4->target = buffer3_to_buffer4(a3->target);
 	a4->pid = a3->pid;
 	a4->args.tag = UIDOPT_4;
@@ -165,6 +173,8 @@ _DtCm_reg3_to_reg4(Registration_3 *r3)
 	prev = head = nullptr;
 	while (r3 != nullptr) {
 		r4 = (Registration_4 *)calloc(1, sizeof(Registration_4));
+		if (r4 == nullptr)
+			break;
 		r4->target = buffer3_to_buffer4(r3->target);
 		r4->prognum = r3->prognum;
 		r4->versnum = r3->versnum;
@@ -333,6 +343,8 @@ tag3_to_tag4(Tag_3 *t3)
 	prev = head = nullptr;
 	while (t3 != nullptr) {
 		t4 = (Tag_4 *)calloc(1, sizeof(Tag_4));
+		if (t4 == nullptr)
+			break;
 		assign_tag3to4(t3, t4);
 		t4->showtime = t3->showtime;
 		t4->next = nullptr;
@@ -356,6 +368,8 @@ attr3_to_attr4(Attribute_3 *a3)
 	prev = head = nullptr;
 	while (a3 != nullptr) {
 		a4 = (Attribute_4 *)calloc(1, sizeof(Attribute_4));
+		if (a4 == nullptr)
+			break;
 		a4->next = nullptr;
 		a4->attr = buffer3_to_buffer4(a3->attr);
 		a4->value = buffer3_to_buffer4(a3->value);
@@ -380,6 +394,8 @@ except3_to_except4(Except_3 *e3)
 	prev = head = nullptr;
 	while (e3 != nullptr) {
 		e4  = (Except_4 *)calloc(1, sizeof(Except_4));
+		if (e4 == nullptr)
+			break;
 		e4->ordinal = e3->ordinal;
 		e4->next=nullptr;
 
@@ -410,6 +426,8 @@ uid3_to_uid4(Uid_3 *ui3)
 	prev = head = nullptr;
 	while (ui3 != nullptr) {
         	ui4 = (Uid_4 *)calloc(1, sizeof(Uid_4));
+        	if (ui4 == nullptr)
+        		break;
         	id3_to_id4(&(ui3->appt_id), &(ui4->appt_id));
         	ui4->next = nullptr;
 
@@ -432,6 +450,8 @@ appt3_to_appt4(Appt_3 *a3)
 	prev = head = nullptr;
 	while (a3 != nullptr) {
 		a4  = (Appt_4 *)calloc(1, sizeof(Appt_4));
+		if (a4 == nullptr)
+			break;
 		id3_to_id4(&(a3->appt_id), &(a4->appt_id));
 		a4->tag = tag3_to_tag4(a3->tag);
 		a4->duration = a3->duration;
@@ -465,6 +485,8 @@ abb3_to_abb4(Abb_Appt_3 *a3)
 	prev = head = nullptr;
 	while (a3 != nullptr) {
 		a4 = (Abb_Appt_4 *)calloc(1, sizeof(Abb_Appt_4));
+		if (a4 == nullptr)
+			break;
 		id3_to_id4(&(a3->appt_id), &(a4->appt_id));
 		a4->tag = tag3_to_tag4(a3->tag);
 		a4->what = buffer3_to_buffer4(a3->what);
@@ -507,6 +529,8 @@ reminder3_to_reminder4(Reminder_3 *r3)
 	prev = head = nullptr;
 	while (r3 != nullptr) {
 		r4 = (Reminder_4 *)calloc(1, sizeof(Reminder_4));
+		if (r4 == nullptr)
+			break;
 		id3_to_id4(&(r3->appt_id), &(r4->appt_id));
 		r4->tick = r3->tick;
 		attr4 = attr3_to_attr4(&(r3->attr));
@@ -577,6 +601,8 @@ acclist3_to_acclist4(Access_Entry_3 *l3)
 	prev = head = nullptr;
 	while (l3 != nullptr) {
 		l4 = (Access_Entry_4 *)calloc(1, sizeof(Access_Entry_4));
+		if (l4 == nullptr)
+			break;
 		l4->who = buffer3_to_buffer4(l3->who);
 		l4->access_type = l3->access_type;
 		l4->next = nullptr;
@@ -600,6 +626,8 @@ range3_to_range4(Range_3 *r3)
 	prev = head = nullptr;
 	while (r3 != nullptr) {
 		r4 = (Range_4 *)calloc(1, sizeof(Range_4));
+		if (r4 == nullptr)
+			break;
 		r4->key1 = r3->key1;
 		r4->key2 = r3->key2;
 		r4->next = nullptr;
@@ -623,6 +651,8 @@ keyrange3_to_keyrange4(Keyrange_3 *r3)
 	prev = head = nullptr;
 	while (r3 != nullptr) {
 		r4 = (Keyrange_4 *)calloc(1, sizeof(Keyrange_4));
+		if (r4 == nullptr)
+			break;
 		r4->key = r3->key;
 		r4->tick1 = r3->tick1;
 		r4->tick2 = r3->tick2;
@@ -671,9 +701,10 @@ args3_to_args4(Args_3 *from, Args_4 *to)
                 break;
         case APPTID_3:
 		to->Args_4_u.apptid.oid = (Id_4 *)calloc(1, sizeof(Id_4));
-                apptid3_to_apptid4(
-			&(from->Args_3_u.apptid),
-                        &(to->Args_4_u.apptid));
+		if (to->Args_4_u.apptid.oid != nullptr)
+	                apptid3_to_apptid4(
+				&(from->Args_3_u.apptid),
+	                        &(to->Args_4_u.apptid));
                 break;
         case UID_3:
                 to->Args_4_u.key = uid3_to_uid4(from->Args_3_u.key);
@@ -700,6 +731,8 @@ uid3_to_uidopt(Uid_3 *uid3, Options_4 opt)
 	prev = head = nullptr;
 	while (uid3 != nullptr) {
         	uidopt = (Uidopt_4 *)calloc(1, sizeof(Uidopt_4));
+        	if (uidopt == nullptr)
+        		break;
         	id3_to_id4(&(uid3->appt_id), &(uidopt->appt_id));
 		uidopt->option = opt;
         	uidopt->next = nullptr;

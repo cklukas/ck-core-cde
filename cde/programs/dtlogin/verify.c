@@ -495,7 +495,7 @@ login_defaults(
         int  flags;
         char *ptr;
 	char *Def_path;
-	char *final_path = malloc(MAXPATHLEN);
+	char *final_path;
 	char *element;
  
 
@@ -535,7 +535,10 @@ login_defaults(
 	    else
 		return d->userPath;
 
-		strcpy(final_path,d->userPath);
+	    final_path = malloc(MAXPATHLEN);
+	    if (final_path == nullptr)
+		return d->userPath;
+	    snprintf(final_path, MAXPATHLEN, "%s", d->userPath);
 
 	   while(element) {
 	     if((strstr(d->userPath,element)) == nullptr) {

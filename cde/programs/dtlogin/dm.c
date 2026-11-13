@@ -1011,12 +1011,11 @@ StartDisplay(
 	    if ( (p = strchr(d->name, ':')) != nullptr &&
 		 (  strncmp(++p,"0",1) == 0 )) {
 
-		d->gettyLine  = (char *) malloc(8);
-		strcpy(d->gettyLine,  "console");
+		/* nullptr on failure: the users of the line test for it */
+		d->gettyLine  = strdup("console");
 	    }
 	    else {
-		d->gettyLine  = (char *) malloc(3);
-		strcpy(d->gettyLine,  "??");
+		d->gettyLine  = strdup("??");
 	    }
 	}
 
@@ -1140,7 +1139,7 @@ StartDisplay(
 	 */
 
         {
-            char *line = (d->displayType.location==Local) 
+            char *line = (d->displayType.location==Local && d->gettyLine) 
                 ? d->gettyLine : d->name;
 #ifdef DEF_NETWORK_DEV
             if (d->displayType.location != Local &&
@@ -1578,7 +1577,7 @@ GettyMessage( struct display *d, int msgnum )
     FILE *tf;
     char buf[128];
 
-    if (quiet) return;
+    if (quiet || d->gettyLine == nullptr) return;
 
     snprintf(buf, sizeof(buf), "/dev/%s", d->gettyLine);
     

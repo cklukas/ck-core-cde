@@ -124,9 +124,15 @@ void * _DtCmMakeHash(int size)
   hash * ptr;
 
   ptr        = (hash *) malloc(sizeof(*ptr));
+  if (ptr == nullptr)
+    return(nullptr);
   ptr->size  =   size;
-  ptr->table = (hash_entry **) malloc( (unsigned) (sizeof(hash_entry *) * size) );
-  (void)memset((char *) ptr->table, (char) 0, sizeof(hash_entry *)*size);
+  ptr->table = (hash_entry **) calloc((size_t) size, sizeof(hash_entry *));
+  if (ptr->table == nullptr)
+    {
+      free(ptr);
+      return(nullptr);
+    }
   ptr->start = nullptr;
   ptr->hash_type = String_Key;
   return((void*)ptr);
@@ -164,8 +170,16 @@ void ** _DtCmGetHash(void * t, const unsigned char * key)
     insert new entry into bucket...
     */
 
+  /* nullptr when memory is exhausted: nothing is inserted */
   new = (hash_entry *) malloc(sizeof(*new));
+  if (new == nullptr)
+    return(nullptr);
   new->key = (unsigned char *)((tbl->hash_type == String_Key)?(unsigned char *)strdup((char *)key):key);
+  if (new->key == nullptr)
+    {
+      free(new);
+      return(nullptr);
+    }
   /*
     hook into chain from tbl...
     */

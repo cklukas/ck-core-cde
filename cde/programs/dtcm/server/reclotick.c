@@ -64,7 +64,7 @@ static int MonthDayNumIntervals(struct tm *, struct tm *,
 static int MonthPosNumIntervals(struct tm *, struct tm *,
 				const RepeatEvent *, const WeekDayTime *,
 				const unsigned int, struct tm *);
-void FillInRepeatEvent(const Tick, RepeatEvent *);
+int FillInRepeatEvent(const Tick, RepeatEvent *);
 
 /*
  * Return the closest time following or equal to the target time given a 
@@ -83,7 +83,8 @@ ClosestTick(
 
 	if (!re) return (Tick)0;
 
-	FillInRepeatEvent(start_time, re);
+	if (FillInRepeatEvent(start_time, re) != 0)
+		return (Tick)0;
 
 	if (!(*res = InitRepeatEventState(re)))
 		return (Tick)0;
@@ -1079,7 +1080,12 @@ MonthPosNumIntervals(
 	return (num_intervals);
 }
 
-void
+/*
+ * Fill the lists of a rule that names only the start time: the time of day,
+ * the weekday, the day of the month and so on are taken from it.  Returns 0,
+ * or -1 when memory is exhausted; the rule then has the lists it had.
+ */
+int
 FillInRepeatEvent(
         const Tick		 start_time,
         RepeatEvent		*re)
@@ -1095,79 +1101,122 @@ FillInRepeatEvent(
 		break;
 	case RT_DAILY:
 		if (!RE_DAILY(re)->dd_ntime) {
-			RE_DAILY(re)->dd_time = (Time *)calloc(1, sizeof(Time));
-			RE_DAILY(re)->dd_time[0] = start_tm->tm_hour * 100 + 
-						   start_tm->tm_min;
+			Time *times = (Time *)calloc(1, sizeof(Time));
+
+			if (times == nullptr)
+				return (-1);
+			times[0] = start_tm->tm_hour * 100 + start_tm->tm_min;
+			RE_DAILY(re)->dd_time = times;
 			RE_DAILY(re)->dd_ntime = 1;
 		}
 		break;
 	case RT_WEEKLY:
 		if (!RE_WEEKLY(re)->wd_ndaytime) {
-			RE_WEEKLY(re)->wd_daytime = 
-					  (DayTime *)calloc(1, sizeof(DayTime));
-			RE_WEEKLY(re)->wd_daytime[0].dt_day = start_tm->tm_wday;
-			RE_WEEKLY(re)->wd_daytime[0].dt_ntime = 1;
-			RE_WEEKLY(re)->wd_daytime[0].dt_time =
-					  (Time *)calloc(1, sizeof(Time));
-			RE_WEEKLY(re)->wd_daytime[0].dt_time[0] =
-						start_tm->tm_hour * 100 +
-						start_tm->tm_min;
+			DayTime *daytime = (DayTime *)calloc(1, sizeof(DayTime));
+			Time *times = (Time *)calloc(1, sizeof(Time));
+
+			if (daytime == nullptr || times == nullptr) {
+				free(daytime);
+				free(times);
+				return (-1);
+			}
+			times[0] = start_tm->tm_hour * 100 + start_tm->tm_min;
+			daytime[0].dt_day = start_tm->tm_wday;
+			daytime[0].dt_ntime = 1;
+			daytime[0].dt_time = times;
+			RE_WEEKLY(re)->wd_daytime = daytime;
 			RE_WEEKLY(re)->wd_ndaytime = 1;
 		} else {
-			int i;
+			/* All the missing lists first, then the assignment. */
+			Time **times = (Time **)calloc(RE_WEEKLY(re)->wd_ndaytime,
+						       sizeof(Time *));
+
+			if (times == nullptr)
+				return (-1);
 			for (i = 0; i < RE_WEEKLY(re)->wd_ndaytime; i++) {
-				if (!RE_WEEKLY(re)->wd_daytime[i].dt_ntime) {
-					RE_WEEKLY(re)->wd_daytime[i].dt_ntime =
-									      1;
-					RE_WEEKLY(re)->wd_daytime[i].dt_time =
-					  	(Time *)calloc(1, sizeof(Time));
-					RE_WEEKLY(re)->wd_daytime[i].dt_time[0]=
-						start_tm->tm_hour * 100 +
-						start_tm->tm_min;
+				if (RE_WEEKLY(re)->wd_daytime[i].dt_ntime)
+					continue;
+				times[i] = (Time *)calloc(1, sizeof(Time));
+				if (times[i] == nullptr) {
+					for (i = 0; i < RE_WEEKLY(re)->wd_ndaytime; i++)
+						free(times[i]);
+					free(times);
+					return (-1);
 				}
 			}
+			for (i = 0; i < RE_WEEKLY(re)->wd_ndaytime; i++) {
+				if (times[i] == nullptr)
+					continue;
+				times[i][0] = start_tm->tm_hour * 100 +
+					      start_tm->tm_min;
+				RE_WEEKLY(re)->wd_daytime[i].dt_ntime = 1;
+				RE_WEEKLY(re)->wd_daytime[i].dt_time = times[i];
+			}
+			free(times);
 		}
 		break;
 	case RT_MONTHLY_POSITION:
 		if (!RE_MONTHLY(re)->md_nitems) {
-			RE_MONTHLY(re)->md_weektime =
+			WeekDayTime *weektime =
 				  (WeekDayTime *)calloc(1, sizeof(WeekDayTime));
-			RE_MONTHLY(re)->md_weektime[0].wdt_nday = 1;
-			RE_MONTHLY(re)->md_weektime[0].wdt_day =
-				  	(WeekDay *)calloc(1, sizeof(WeekDay));
-			RE_MONTHLY(re)->md_weektime[0].wdt_day[0] =
-							start_tm->tm_wday;
-			RE_MONTHLY(re)->md_weektime[0].wdt_nweek = 1;
-			RE_MONTHLY(re)->md_weektime[0].wdt_week =
+			WeekDay *day = (WeekDay *)calloc(1, sizeof(WeekDay));
+			WeekNumber *week =
 				  (WeekNumber *)calloc(1, sizeof(WeekNumber));
-			RE_MONTHLY(re)->md_weektime[0].wdt_week[0] =
-						GetWeekNumber(start_time);
+
+			if (weektime == nullptr || day == nullptr ||
+			    week == nullptr) {
+				free(weektime);
+				free(day);
+				free(week);
+				return (-1);
+			}
+			day[0] = start_tm->tm_wday;
+			week[0] = GetWeekNumber(start_time);
+			weektime[0].wdt_nday = 1;
+			weektime[0].wdt_day = day;
+			weektime[0].wdt_nweek = 1;
+			weektime[0].wdt_week = week;
+			RE_MONTHLY(re)->md_weektime = weektime;
 			RE_MONTHLY(re)->md_nitems = 1;
 		}
 		break;
 	case RT_MONTHLY_DAY:
 		if (!RE_MONTHLY(re)->md_nitems) {
-			RE_MONTHLY(re)->md_days = 
+			unsigned int *days =
 				(unsigned int *)calloc(1, sizeof(unsigned int));
-			RE_MONTHLY(re)->md_days[0] = start_tm->tm_mday; 
+
+			if (days == nullptr)
+				return (-1);
+			days[0] = start_tm->tm_mday; 
+			RE_MONTHLY(re)->md_days = days;
 			RE_MONTHLY(re)->md_nitems = 1;
 		}
 		break;
 	case RT_YEARLY_MONTH:
 		if (!RE_YEARLY(re)->yd_nitems) {
-			RE_YEARLY(re)->yd_items = 
+			unsigned int *items =
 				(unsigned int *)calloc(1, sizeof(unsigned int));
-			RE_YEARLY(re)->yd_items[0] = start_tm->tm_mon + 1;
+
+			if (items == nullptr)
+				return (-1);
+			items[0] = start_tm->tm_mon + 1;
+			RE_YEARLY(re)->yd_items = items;
 			RE_YEARLY(re)->yd_nitems = 1;
 		}
 		break;
 	case RT_YEARLY_DAY:
 		if (!RE_YEARLY(re)->yd_nitems) {
-			RE_YEARLY(re)->yd_items = 
+			unsigned int *items =
 				(unsigned int *)calloc(1, sizeof(unsigned int));
-			RE_YEARLY(re)->yd_items[0] = start_tm->tm_yday;
+
+			if (items == nullptr)
+				return (-1);
+			items[0] = start_tm->tm_yday;
+			RE_YEARLY(re)->yd_items = items;
 			RE_YEARLY(re)->yd_nitems = 1;
 		}
 		break;
 	}
+
+	return (0);
 }

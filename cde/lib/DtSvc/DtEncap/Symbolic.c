@@ -219,7 +219,9 @@ make_sym(XeString name)
 {
     XeSymbol sym = Xe_make_struct(_XeSymbol);
     
-    sym->name  = strdup( name );
+    /* XeMalloc ends the process when memory is exhausted, as for the struct. */
+    sym->name  = (XeString) XeMalloc( strlen( name ) + 1 );
+    strcpy( sym->name, name );
     sym->value = (void*)nullptr;
     return sym;
 }

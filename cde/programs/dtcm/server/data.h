@@ -41,7 +41,8 @@ typedef enum {
 	rb_badtable	= 2,
 	rb_notable	= 3,
 	rb_failed	= 4,
-	rb_other	= 5
+	rb_other	= 5,
+	rb_nomem	= 6
 } Rb_Status;
 
 typedef enum {

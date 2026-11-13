@@ -837,6 +837,9 @@ _UpdateReminderQ(_DtCmsRemQueue *remq, int qindex)
 				/* make copy of rptr */
 				nptr = (_DtCmsRemInfo *)calloc(1,
 					sizeof(_DtCmsRemInfo));
+				if (nptr == nullptr)
+					/* No further occurrence is queued. */
+					continue;
 				*nptr = *rptr;
 				rptr = nptr;
 			}

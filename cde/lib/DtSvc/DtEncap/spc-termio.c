@@ -525,7 +525,7 @@ XeString SPC_Decode_Termios(struct termios *tio)
 
     SPC_Decode_CC(tio->c_cc, CC_Array, result);
     
-    all = strdup(result->buffer);
+    all = strdup(result->buffer);	/* nullptr when memory is exhausted */
 
     XeFree(result->buffer);
     XeFree(result);

@@ -551,6 +551,8 @@ csa_query_configuration(
 
 	case CSA_CONFIG_VER_SPEC:
 		*reference = (CSA_buffer)strdup(_DtCM_SPEC_VERSION_SUPPORTED);
+		if (*reference == nullptr)
+			stat = CSA_E_INSUFFICIENT_MEMORY;
 		break;
 
 	case CSA_CONFIG_CHARACTER_SET:

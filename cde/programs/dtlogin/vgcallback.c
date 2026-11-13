@@ -1359,7 +1359,8 @@ RequestCB(
            else
            {
              sprintf(buf, textdata->offGreetingFormat,
-                     textdata->offGreetingUname);
+                     textdata->offGreetingUname ?
+                     textdata->offGreetingUname : "");
              string = XmStringCreate(buf, XmFONTLIST_DEFAULT_TAG);
              XtSetArg(argt[i], XmNlabelString, string    ); i++;
              free(textdata->offGreetingUname);
@@ -1499,7 +1500,8 @@ RespondLangCB( Widget w, XtPointer client, XtPointer call)
 	if (XmToggleButtonGadgetGetState(w)) {
 	    snprintf(buff, sizeof(buff), "LANG=%s", (char *) client);
 	    putenv(buff);
-	    execv(orig_argv[0], orig_argv);
+	    if (orig_argv != nullptr)
+		execv(orig_argv[0], orig_argv);
 	}
   } else {
     char buf[REQUEST_LIM_MAXLEN];
@@ -1556,12 +1558,25 @@ RespondChallengeCB(
   if (textdata->bEcho)
   {
     value = XmTextFieldGetString(login_text);
-    textdata->offGreetingUname = strdup(value);
-    userName = strdup(value);
-    if (strlen(textdata->offGreetingUname) > (size_t) 16)
+    char *greetingName = strdup(value);
+    char *copyName = strdup(value);
+
+    if (greetingName != nullptr && copyName != nullptr)
     {
-      textdata->offGreetingUname[16] = '\0';
-      userName[16] = '\0';
+      textdata->offGreetingUname = greetingName;
+      userName = copyName;
+      if (strlen(textdata->offGreetingUname) > (size_t) 16)
+      {
+        textdata->offGreetingUname[16] = '\0';
+        userName[16] = '\0';
+      }
+    }
+    else
+    {
+      /* Out of memory: the greeting shows no name; the typed text still goes on. */
+      free(greetingName);
+      free(copyName);
+      textdata->offGreetingUname = nullptr;
     }
   }
   else

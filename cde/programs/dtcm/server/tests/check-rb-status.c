@@ -7,13 +7,15 @@
 typedef unsigned int CSA_return_code;
 #define CSA_SUCCESS   ((CSA_return_code)0)
 #define CSA_E_FAILURE ((CSA_return_code)6)
+#define CSA_E_INSUFFICIENT_MEMORY ((CSA_return_code)5)
 typedef enum {
 	rb_ok		= 0,
 	rb_duplicate	= 1,
 	rb_badtable	= 2,
 	rb_notable	= 3,
 	rb_failed	= 4,
-	rb_other	= 5
+	rb_other	= 5,
+	rb_nomem	= 6
 } Rb_Status;
 /* @@BODY@@ */
 int main(void)
@@ -21,6 +23,7 @@ int main(void)
     assert(_DtCmsRbToCsaStat(rb_ok) == CSA_SUCCESS);
     assert(_DtCmsRbToCsaStat(rb_duplicate) == CSA_E_FAILURE);
     assert(_DtCmsRbToCsaStat(rb_other) == CSA_E_FAILURE);
+    assert(_DtCmsRbToCsaStat(rb_nomem) == CSA_E_INSUFFICIENT_MEMORY);
     assert(_DtCmsRbToCsaStat((Rb_Status) 42) == CSA_E_FAILURE);
     puts("rb status ok");
     return 0;

@@ -81,10 +81,12 @@ _DtCmGetPrefix(char *str, char sep)
 extern char *
 _DtCmGetLocalHost(void)
 {
-	static char *host = nullptr;
+	static char host[MAXHOSTNAMELEN+1];
+	static boolean_t known = B_FALSE;
 
-	if (host == nullptr) {
-		host = (char *)malloc(MAXHOSTNAMELEN+1);
+	if (!known) {
+		known = B_TRUE;
+		host[0] = '\0';
 #if defined(sun)
 		(void)sysinfo(SI_HOSTNAME, host, MAXHOSTNAMELEN);
 #else
@@ -145,11 +147,12 @@ _DtCmGetLocalDomain(char *hostname)
 extern char *
 _DtCmGetHostAtDomain(void)
 {
-	static char	*hostname = nullptr;
+	static char	hostname[BUFSIZ];
+	static boolean_t known = B_FALSE;
 	char		*host;
 
-	if (hostname == nullptr) {
-		hostname = malloc(BUFSIZ);
+	if (!known) {
+		known = B_TRUE;
 
 		host = _DtCmGetLocalHost();
 		if (strchr(host, '.') == nullptr)
@@ -166,12 +169,13 @@ _DtCmGetHostAtDomain(void)
 extern char *
 _DtCmGetUserName(void)
 {
-        static char *name = nullptr;
+        static char name[BUFSIZ];
+	static boolean_t known = B_FALSE;
 	_Xgetpwparams	pwd_buf;
 	struct passwd *	pwd_ret;
 
-        if (name == nullptr) {
-	  name = malloc(BUFSIZ);
+        if (!known) {
+	  known = B_TRUE;
 
 	  if ((pwd_ret = _XGetpwuid(geteuid(), pwd_buf)) == nullptr)
 	    strcpy(name, "nobody");

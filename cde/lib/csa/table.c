@@ -96,6 +96,8 @@ _DtCm_table_create(Calendar *cal)
 	case TABLEVERS_4:
                 a4.target = cal->name;
 		a4.new_target = calloc(1, 1);
+		if (a4.new_target == nullptr)
+			return (CSA_E_INSUFFICIENT_MEMORY);
                 res = _DtCm_rtable_create_4(&a4, conn);
 		free(a4.new_target);
                 break;
@@ -845,6 +847,10 @@ _DtCm_table_update(
                 a2.target = cal->name;
                 a2.args.tag = APPTID_2;
 		a2.args.Args_2_u.apptid.oid = (Id_2 *)calloc(1, sizeof(Id_2));
+		if (a2.args.Args_2_u.apptid.oid == nullptr) {
+			_DtCm_free_appt4(appt4);
+			return (CSA_E_INSUFFICIENT_MEMORY);
+		}
                 _DtCm_id4_to_id2(&key, a2.args.Args_2_u.apptid.oid);
 		a2.args.Args_2_u.apptid.new_appt = _DtCm_appt4_to_appt2(appt4);
 
@@ -864,6 +870,10 @@ _DtCm_table_update(
                 a3.target = cal->name;
                 a3.args.tag = APPTID_3;
 		a3.args.Args_3_u.apptid.oid = (Id_3 *)calloc(1, sizeof(Id_3));
+		if (a3.args.Args_3_u.apptid.oid == nullptr) {
+			_DtCm_free_appt4(appt4);
+			return (CSA_E_INSUFFICIENT_MEMORY);
+		}
                 _DtCm_id4_to_id3(&key, a3.args.Args_3_u.apptid.oid);
 		a3.args.Args_3_u.apptid.new_appt = _DtCm_appt4_to_appt3(appt4);
 		a3.pid = getpid();

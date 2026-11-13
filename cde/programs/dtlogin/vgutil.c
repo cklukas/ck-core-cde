@@ -819,15 +819,19 @@ OpenCatalog(void)
     if (nullptr == nlspath || 0 == strlen(nlspath))
     {
         newnlspath = malloc(8 + strlen(NLSPATH_ENV) + 1);
-        sprintf(newnlspath, "NLSPATH=%s", NLSPATH_ENV);
+        if (newnlspath != nullptr)
+            sprintf(newnlspath, "NLSPATH=%s", NLSPATH_ENV);
     }
     else
     {
         newnlspath = malloc(8 + strlen(nlspath) + 1 + strlen(NLSPATH_ENV) + 1);
-        sprintf(newnlspath, "NLSPATH=%s:%s", nlspath, NLSPATH_ENV);
+        if (newnlspath != nullptr)
+            sprintf(newnlspath, "NLSPATH=%s:%s", nlspath, NLSPATH_ENV);
     }
 
-    putenv(newnlspath);
+    /* Out of memory: the message catalog is looked up with the old path. */
+    if (newnlspath != nullptr)
+        putenv(newnlspath);
 
     /*
      * open the message catalog. If the language_specific version cannot

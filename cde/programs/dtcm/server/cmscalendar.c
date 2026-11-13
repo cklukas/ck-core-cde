@@ -400,11 +400,15 @@ _DtCmsLoadCalendar(char *target, _DtCmsCalendar **infoptr)
 
 		cal->alist = _DtCmsCalendarAccessList(cal);
 	} else {
-		if (cal->attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].value)
+		if (cal->attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].value) {
 			cal->owner = strdup(cal->\
 					attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].\
 					value->item.calendar_user_value);
-		else {
+			if (cal->owner == nullptr) {
+				stat = CSA_E_INSUFFICIENT_MEMORY;
+				goto ERROR;
+			}
+		} else {
 			stat = CSA_X_DT_E_BACKING_STORE_PROBLEM;
 	    		fprintf(stderr, "%s: %s\n", pgname,
 				"calendar owner attribute is missing from callog file");
@@ -613,6 +617,8 @@ _DtCmsRbToCsaStat(Rb_Status rb_stat)
 	case rb_failed:
 	case rb_other:
 		return (CSA_E_FAILURE);
+	case rb_nomem:
+		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	return (CSA_E_FAILURE);

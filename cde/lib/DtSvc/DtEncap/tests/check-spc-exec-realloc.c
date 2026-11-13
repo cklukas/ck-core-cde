@@ -36,18 +36,48 @@ static void *ck_realloc(void *p, size_t n)
 }
 #define realloc ck_realloc
 
+static int malloc_calls;
+static int malloc_fail_at;	/* 1-based call number that fails; 0 = never */
+
+static void *ck_malloc(size_t n)
+{
+    ++malloc_calls;
+    if (malloc_fail_at && malloc_calls == malloc_fail_at)
+        return nullptr;
+    return malloc(n);
+}
+#define malloc ck_malloc
+
 /* @@BODY@@ */
 static char *own(const char *s)
 {
-    char *p = malloc(strlen(s) + 1);
+    char *p = strdup(s);
     assert(p);
-    return strcpy(p, s);
+    return p;
 }
 
 static void arm(int fail_at)
 {
     realloc_calls = 0;
     realloc_fail_at = fail_at;
+    malloc_calls = 0;
+    malloc_fail_at = 0;
+}
+
+static void arm_malloc(int fail_at)
+{
+    arm(0);
+    malloc_fail_at = fail_at;
+}
+
+static int in_environ(const char *entry)
+{
+    char **e;
+
+    for (e = environ; *e; e++)
+        if (strcmp(*e, entry) == 0)
+            return 1;
+    return 0;
 }
 
 /*
@@ -93,6 +123,32 @@ int main(void)
     s = own("CKT_D=${CKT_BASE}/bar");
     resolve_variable_reference(&s);
     assert(strcmp(s, "CKT_D=/base/bar") == 0);
+
+    /*
+     * The working buffer cannot be allocated: the line is exported as it is,
+     * unexpanded, and nothing is written through a null pointer.
+     */
+    arm_malloc(1);
+    orig = s = own("CKT_E=$CKT_BASE/foo");
+    resolve_variable_reference(&s);
+    assert(malloc_calls == 1 && realloc_calls == 0);
+    assert(s == orig && strcmp(s, "CKT_E=$CKT_BASE/foo") == 0);
+    assert(strcmp(getenv("CKT_E"), "$CKT_BASE/foo") == 0);
+
+    /* A removal that cannot allocate its pattern leaves the variable alone. */
+    setenv("CKT_F", "keep", 1);
+    arm_malloc(1);
+    s = own("unset CKT_F");
+    resolve_variable_reference(&s);
+    assert(malloc_calls == 1);
+    assert(strcmp(getenv("CKT_F"), "keep") == 0);
+    assert(!in_environ("unset CKT_F"));
+
+    /* Control: the removal works when memory is available. */
+    arm(0);
+    s = own("unset CKT_F");
+    resolve_variable_reference(&s);
+    assert(getenv("CKT_F") == nullptr);
 
     puts("spc-exec realloc: failed growth keeps the caller's string and never writes through NULL");
     return 0;

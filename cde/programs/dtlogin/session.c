@@ -513,6 +513,8 @@ ManageSession( struct display *d )
     if (defaultLanguage == nullptr) {
 	if ( (d->language != nullptr) && (strlen(d->language) > 0) ) {
 	    defaultLanguage = strdup(d->language);
+	    if (defaultLanguage == nullptr)
+		defaultLanguage = "C";
 	} else {
 	    defaultLanguage = "C";
 	}

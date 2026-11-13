@@ -59,7 +59,8 @@
 #define SM_DISPLAY_HOME		"display-home"
 #define SM_DISPLAY_CURRENT	"display-current"
 
-#define SmNewString(str) strdup(str)
+/* Like SM_MALLOC, a copy that ends the process when memory is exhausted. */
+#define SmNewString(str) XtNewString(str)
 
 /* 
  * typedef statements 

@@ -656,6 +656,8 @@ MakeLangList( void )
      */
 
     p = savelist = strdup(languageList);
+    if (savelist == nullptr)
+        return;		/* the list stays as it was scanned, unsorted */
     nlang = 0;
 
     while ( (s = strtok(p, DELIM)) != nullptr ) {

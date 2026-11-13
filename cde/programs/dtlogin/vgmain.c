@@ -134,6 +134,7 @@ static void MyBackspace( Widget w, XEvent *event, char **params,
                         Cardinal *num_params) ;
 static int  ErrorHandler( Display *dpy, XErrorEvent *event) ;
 static void xtErrorHandler( String msg ) _X_NORETURN;
+static void NoMemoryRestart( void ) _X_NORETURN;
 static void xtWarningHandler( String msg ) ;
 static void MakeOptionsProc( XtPointer data, XtIntervalId *id) ;
 static SIGVAL Terminate( int arg ) ;
@@ -406,8 +407,9 @@ main( int argc, char **argv )
 	if ( strcmp(*p, "-display") == 0) {
 	    p++;
             i--;
-	    dpyinfo.name = malloc(strlen(*p) + 1);
-	    strcpy(dpyinfo.name, *p);
+	    dpyinfo.name = strdup(*p);
+	    if (dpyinfo.name == nullptr)
+		NoMemoryRestart();
 	    continue;
 	}
 
@@ -861,9 +863,7 @@ char 	    *temp_p;
     if(appInfo.altDts > 0) { 
       if ((alt_dts =
 	    (Widget *) calloc(appInfo.altDts, sizeof (Widget))) == nullptr)
-        LogError(
-		ReadCatalog(MC_ERROR_SET,MC_NO_MEMORY, MC_DEF_NO_MEMORY),
-		dpyinfo.name);
+        NoMemoryRestart();
 
      for(i = 0; i < appInfo.altDts; ++i) {
        int is_default;
@@ -1500,7 +1500,13 @@ MakeGreeting( void )
 	msg =
 	  (const char *)
 	  ReadCatalog(MC_LABEL_SET,MC_PERS_GREET_LABEL,MC_DEF_PERS_GREET_LABEL);
-        greetInfo.persLabelString = strdup(msg);
+        {
+	    char *label = strdup(msg);
+
+	    /* Out of memory: the label stays "default". */
+	    if (label != nullptr)
+		greetInfo.persLabelString = label;
+	}
     }
  
     if ( greetInfo.labelString && 
@@ -1528,6 +1534,8 @@ MakeGreeting( void )
 	else {
 	    greetmsg = strdup(greetInfo.labelString);
 	}
+	if (greetmsg == nullptr)
+	    NoMemoryRestart();
 
 	s = greetmsg;
 	xmstr = (XmString) NULL;
@@ -1693,6 +1701,8 @@ MakeLogin( void )
     XtSetArg(argt[i], XmNmappedWhenManaged,     False                   ); i++;
 
     textdata = malloc(sizeof(LoginText));
+    if (textdata == nullptr)
+	NoMemoryRestart();
     XtSetArg(argt[i], XmNuserData,              textdata                ); i++;
 
     login_text = XmCreateTextField(login_form, "login_text", argt, i);
@@ -2072,6 +2082,16 @@ ErrorHandler( Display *dpy, XErrorEvent *event )
  *
  *  Xt protocol error handler to override the default
  ***************************************************************************/
+
+/* The greeter cannot go on without this memory: log it and have the
+   display restarted, as for an Xt error. */
+static void
+NoMemoryRestart( void )
+{
+    LogError(ReadCatalog(MC_ERROR_SET,MC_NO_MEMORY, MC_DEF_NO_MEMORY),
+	     dpyinfo.name);
+    exit(NOTIFY_RESTART);
+}
 
 static void 
 xtErrorHandler( String msg )

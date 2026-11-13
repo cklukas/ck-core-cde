@@ -63,8 +63,18 @@ static void *ck_realloc(void *p, size_t n)
         return nullptr;		/* the old block stays valid, as in libc */
     return realloc(p, n);
 }
+
+static int strdup_fail;		/* n > 0: the nth strdup from now on fails */
+
+static char *ck_strdup(const char *s)
+{
+    if (strdup_fail && --strdup_fail == 0)
+        return nullptr;
+    return strdup(s);
+}
 #define malloc ck_malloc
 #define realloc ck_realloc
+#define strdup ck_strdup
 
 /* @@BODY@@ */
 static void arm(int fail_at)
@@ -116,6 +126,45 @@ static void test_logfile_list(void)
     assert(open_channel(&d) == &d && d.logfile);
     assert(strcmp(SPC_logfile_list[2], d.logfile) == 0);
     assert(SPC_logfile_list[3] == nullptr);
+}
+
+static int count_files(void)
+{
+    DIR *d = opendir(ck_dir);
+    struct dirent *e;
+    int n = 0;
+
+    while (d && (e = readdir(d)))
+        if (e->d_name[0] != '.')
+            n++;
+    if (d)
+        closedir(d);
+    return n;
+}
+
+/*
+ * The copy of the logfile name for the list cannot be made: the channel is
+ * refused, the file is removed again, and the list stays terminated with the
+ * names it had.
+ */
+static void test_logfile_name_copy(void)
+{
+    SPC_Channel e, f;
+    int files;
+
+    arm(0);
+    assert(open_channel(&e) == &e && e.logfile);
+    files = count_files();
+    arm(0);
+    strdup_fail = 2;		/* the first copy is the file name itself */
+    assert(open_channel(&f) == SPC_ERROR);
+    assert(strdup_fail == 0);
+    assert(last_error == SPC_Out_Of_Memory);
+    assert(f.logfile == nullptr);
+    assert(count_files() == files);
+    assert(SPC_logfile_list[0] && SPC_logfile_list[1] && SPC_logfile_list[2]);
+    assert(strcmp(SPC_logfile_list[3], e.logfile) == 0);
+    assert(SPC_logfile_list[4] == nullptr);
 }
 
 static void test_logfile_list_first_block(void)
@@ -202,6 +251,7 @@ int main(int argc, char **argv)
     snprintf(ck_dir, sizeof ck_dir, "%s/list-XXXXXX", argv[1]);
     assert(mkdtemp(ck_dir));
     test_logfile_list();
+    test_logfile_name_copy();
     test_logfile_list_first_block();
     puts("SPC logfile list: allocation failures leave the list valid");
 #ifdef TEST_PID_LIST

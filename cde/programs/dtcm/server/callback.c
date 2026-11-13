@@ -430,7 +430,7 @@ _DtCmsDoUpdateCalAttrsCallback(
 
 	/* set up update info */
 	if (num_attrs > 0 &&
-	    (cdata.names = (char **)calloc(1, sizeof(char *)*num_attrs)))
+	    (cdata.names = (char **)calloc(num_attrs, sizeof(char *))))
 	{
 		for (i = 0; i < num_attrs; i++)
 			cdata.names[i] = attrs[i].name.name;

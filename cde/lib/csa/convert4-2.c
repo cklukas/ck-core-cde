@@ -72,6 +72,8 @@ _DtCm_uid4_to_uid2(Uid_4 *ui4)
 	prev = head = nullptr;
 	while (ui4 != nullptr) {
 		ui2 = (Uid_2 *)calloc(1, sizeof(Uid_2));
+		if (ui2 == nullptr)
+			break;
 		_DtCm_id4_to_id2(&(ui4->appt_id), &(ui2->appt_id));
 		ui2->next = nullptr;
 
@@ -95,6 +97,8 @@ _DtCm_appt4_to_appt2(Appt_4 *a4)
 	prev = head = nullptr;
 	while (a4 != nullptr) {
 		a2  = (Appt_2 *)calloc(1, sizeof(Appt_2));
+		if (a2 == nullptr)
+			break;
 		_DtCm_id4_to_id2(&(a4->appt_id), &(a2->appt_id));
 		a2->tag = tag4_to_tag2(a4->tag);
 		a2->duration = a4->duration;
@@ -162,6 +166,8 @@ _DtCm_tableres4_to_tableres2(Table_Res_4 *r4)
 
 	if (r4==nullptr) return((Table_Res_2 *)nullptr);
 	r2 = (Table_Res_2 *)calloc(1, sizeof(Table_Res_2));
+	if (r2 == nullptr)
+		return (nullptr);
         r2->status = _DtCm_accstat4_to_accstat2(r4->status);
         tablereslist4_to_tablereslist2(&(r4->res), &(r2->res));
         return(r2);
@@ -175,6 +181,8 @@ _DtCm_acclist4_to_acclist2(Access_Entry_4 *l4)
 	prev = head = nullptr;
 	while (l4 != nullptr) {
 		l2 = (Access_Entry_2 *)calloc(1, sizeof(Access_Entry_2));
+		if (l2 == nullptr)
+			break;
 		l2->who = buffer4_to_buffer2(l4->who);
 		l2->access_type = l4->access_type;
 		l2->next = nullptr;
@@ -197,6 +205,8 @@ _DtCm_accargs4_to_accargs2(Access_Args_4 *a4)
 
 	if (a4==nullptr) return((Access_Args_2 *)nullptr);
 	a2 = (Access_Args_2 *)calloc(1, sizeof(Access_Args_2));
+	if (a2 == nullptr)
+		return (nullptr);
         a2->target = buffer4_to_buffer2(a4->target);
         a2->access_list = _DtCm_acclist4_to_acclist2(a4->access_list);
         return(a2);
@@ -210,6 +220,8 @@ _DtCm_range4_to_range2(Range_4 *r4)
 	prev = head = nullptr;
 	while (r4 != nullptr) {
 		r2 = (Range_2 *)calloc(1, sizeof(Range_2));
+		if (r2 == nullptr)
+			break;
 		r2->key1 = r4->key1;
 		r2->key2 = r4->key2;
 		r2->next = nullptr;
@@ -271,6 +283,8 @@ _DtCm_uidopt4_to_uid2(Uidopt_4 *uidopt)
 	prev = head = nullptr;
 	while (uidopt != nullptr) {
         	uid2 = (Uid_2 *)calloc(1, sizeof(Uid_2));
+        	if (uid2 == nullptr)
+        		break;
         	_DtCm_id4_to_id2(&(uidopt->appt_id), &(uid2->appt_id));
         	uid2->next = nullptr;
 
@@ -414,9 +428,17 @@ attr4_to_attr2(Attribute_4 *a4)
 	prev = head = nullptr;
 	while (a4 != nullptr) {
 		a2 = (Attribute_2 *)calloc(1, sizeof(Attribute_2));
+		if (a2 == nullptr)
+			break;
 		a2->next = nullptr;
 		a2->attr = strdup(a4->attr);
 		a2->value = strdup(a4->value);
+		if (a2->attr == nullptr || a2->value == nullptr) {
+			free(a2->attr);
+			free(a2->value);
+			free(a2);
+			break;
+		}
 
 		if (head == nullptr)
 			head = a2;
@@ -437,6 +459,8 @@ except4_to_except2(Except_4 *e4)
 	prev = head = nullptr;
 	while (e4 != nullptr) {
 		e2 = (Except_2 *)calloc(1, sizeof(Except_2));
+		if (e2 == nullptr)
+			break;
 		e2->ordinal = e4->ordinal;
 		e2->next=nullptr;
 
@@ -459,6 +483,8 @@ abb4_to_abb2(Abb_Appt_4 *a4)
 	prev = head = nullptr;
 	while (a4 != nullptr) {
 		a2 = (Abb_Appt_2 *)calloc(1, sizeof(Abb_Appt_2));
+		if (a2 == nullptr)
+			break;
 		_DtCm_id4_to_id2(&(a4->appt_id), &(a2->appt_id));
 		a2->what = buffer4_to_buffer2(a4->what);
 		a2->duration = a4->duration;
@@ -493,6 +519,8 @@ reminder4_to_reminder2(Reminder_4 *r4)
 	prev = head = nullptr;
 	while (r4 != nullptr) {
 		r2 = (Reminder_2 *)calloc(1, sizeof(Reminder_2));
+		if (r2 == nullptr)
+			break;
 		_DtCm_id4_to_id2(&(r4->appt_id), &(r2->appt_id));
 		r2->tick = r4->tick;
 		attr2 = attr4_to_attr2(&(r4->attr));
@@ -584,9 +612,10 @@ args4_to_args2(Args_4 *from, Args_2 *to)
 		break;
 	case APPTID_4:
 		to->Args_2_u.apptid.oid = (Id_2 *)calloc(1, sizeof(Id_2));
-		apptid4_to_apptid2(
-			&(from->Args_4_u.apptid),
-			&(to->Args_2_u.apptid));
+		if (to->Args_2_u.apptid.oid != nullptr)
+			apptid4_to_apptid2(
+				&(from->Args_4_u.apptid),
+				&(to->Args_2_u.apptid));
 		break;
 	case UID_4:
 		to->Args_2_u.key = _DtCm_uid4_to_uid2(from->Args_4_u.key);
@@ -609,6 +638,8 @@ tableargs4_to_tableargs2(Table_Args_4 *a4)
 	
 	if (a4==nullptr) return((Table_Args_2 *)nullptr);
 	a2 = (Table_Args_2 *)calloc(1, sizeof(Table_Args_2));
+	if (a2 == nullptr)
+		return (nullptr);
 	a2->target = buffer4_to_buffer2(a4->target);
 	args4_to_args2(&(a4->args), &(a2->args));
 	return(a2);
@@ -622,6 +653,8 @@ reg4_to_reg2(Registration_4 *r4)
 	prev = head = nullptr;
 	while (r4 != nullptr) {
 		r2 = (Registration_2 *)calloc(1, sizeof(Registration_2));
+		if (r2 == nullptr)
+			break;
 		r2->target = buffer4_to_buffer2(r4->target);
 		r2->prognum = r4->prognum;
 		r2->versnum = r4->versnum;

@@ -75,6 +75,15 @@ _DtCm_make_appt4(boolean_t alloc)
 		a->what = calloc(1, sizeof(1));
 		a->author = calloc(1, sizeof(1));
 		a->client_data = calloc(1, sizeof(1));
+		if (a->what == nullptr || a->author == nullptr ||
+		    a->client_data == nullptr) {
+			free(a->what);
+			free(a->author);
+			free(a->client_data);
+			free(a->tag);
+			free(a);
+			return nullptr;
+		}
 	}
 
 	a->next = nullptr;
@@ -391,6 +400,10 @@ _DtCm_copy_reminder4(Reminder_4 *r4)
 	prev = head = nullptr;
 	while (r4 != nullptr) {
 		rem = (Reminder_4 *)calloc(1, sizeof(Reminder_4));
+		if (rem == nullptr) {
+			_DtCm_free_reminder4(head);
+			return(nullptr);
+		}
 		rem->appt_id = r4->appt_id;
 		rem->tick = r4->tick;
 		rem->attr.next = nullptr;
@@ -398,6 +411,13 @@ _DtCm_copy_reminder4(Reminder_4 *r4)
 		rem->attr.value = strdup(r4->attr.value);
 		rem->attr.clientdata = strdup(r4->attr.clientdata);
 		rem->next = nullptr;
+		if (rem->attr.attr == nullptr || rem->attr.value == nullptr ||
+		    rem->attr.clientdata == nullptr) {
+			/* The copy is given up as a whole. */
+			_DtCm_free_reminder4(rem);
+			_DtCm_free_reminder4(head);
+			return(nullptr);
+		}
 
 		if (head == nullptr)
 			head = rem;

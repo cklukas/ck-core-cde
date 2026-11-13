@@ -43,6 +43,7 @@ _DtCm_make_name_table(int size, char **names)
 {
 	_DtCmNameTable *tbl;
 	int i;
+	int *slot;
 
 	if ((tbl = (_DtCmNameTable *)calloc(1, sizeof(_DtCmNameTable))) == nullptr)
 		return (nullptr);
@@ -64,7 +65,13 @@ _DtCm_make_name_table(int size, char **names)
 			return (nullptr);
 		}
 
-		*(int *)_DtCmGetHash(tbl->tbl, (unsigned char *)names[i]) = i;
+		slot = (int *)_DtCmGetHash(tbl->tbl, (unsigned char *)names[i]);
+		if (slot == nullptr) {
+			tbl->size = i;
+			_DtCm_free_name_table(tbl);
+			return (nullptr);
+		}
+		*slot = i;
 	}
 
 	tbl->size = i - 1;
@@ -110,8 +117,9 @@ _DtCm_add_name_to_table(_DtCmNameTable *tbl, int index, char *newname)
 
 	/* add new name to table */
 	ptr = (int *)_DtCmGetHash(tbl->tbl, (unsigned char *)newname);
-	if (ptr)
-		*ptr = index;
+	if (ptr == nullptr)
+		return (CSA_E_INSUFFICIENT_MEMORY);
+	*ptr = index;
 
 	if (index > tbl->size) {
 		if ((newptr = (char **)reallocarray(tbl->names, (index + 1), sizeof(char *))) == nullptr) {

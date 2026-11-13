@@ -1459,6 +1459,18 @@ MoveDirectory(
  *  --------
  * 
  *************************************<->***********************************/
+/*
+ * A copy of a message that is never freed; the message itself is used when
+ * memory is exhausted, so that no error string is ever nullptr.
+ */
+static char *
+CopyNlsString( char *message )
+{
+    char *copy = strdup (message);
+
+    return (copy != nullptr) ? copy : message;
+}
+
 void 
 InitNlsStrings( void )
 {
@@ -1467,34 +1479,34 @@ InitNlsStrings( void )
     /*
      * Malloc failure error message - THIS MESSAGE MUST BE INITIALIZED FIRST
      */
-    smNLS.cantMallocErrorString = strdup (((char *)GETMESSAGE(4, 5, "Unable to malloc memory for operation.")));
+    smNLS.cantMallocErrorString = CopyNlsString (((char *)GETMESSAGE(4, 5, "Unable to malloc memory for operation.")));
 
     /*
      * Error message when dtsession cant lock the display
      */
-    smNLS.cantLockErrorString = strdup (((char *)GETMESSAGE(4, 6, "Unable to lock display.  Another application may have the pointer or keyboard grabbed.")));
+    smNLS.cantLockErrorString = CopyNlsString (((char *)GETMESSAGE(4, 6, "Unable to lock display.  Another application may have the pointer or keyboard grabbed.")));
 
     /*
      * Error message when dtsession cant open files for reading or writing
      */
-    smNLS.cantOpenFileString = strdup (((char *)GETMESSAGE(4, 7, "Unable to open session file.  No clients will be restarted.")));
+    smNLS.cantOpenFileString = CopyNlsString (((char *)GETMESSAGE(4, 7, "Unable to open session file.  No clients will be restarted.")));
 
     /*
      * Error message when dtsession cant fork client process
      */
-    smNLS.cantForkClientString = strdup (((char *)GETMESSAGE(4, 8, "Unable to fork client process.")));
+    smNLS.cantForkClientString = CopyNlsString (((char *)GETMESSAGE(4, 8, "Unable to fork client process.")));
 
     /*
      * Error message when dtsession cant create dt directories
      */
-    smNLS.cantCreateDirsString = strdup (((char *)GETMESSAGE(4, 9, "Unable to create DT directories.  Check permissions on home directory.")));
+    smNLS.cantCreateDirsString = CopyNlsString (((char *)GETMESSAGE(4, 9, "Unable to create DT directories.  Check permissions on home directory.")));
 
     /*
      * Error message when trying to lock display on trusted system
      */
-    smNLS.noPamErrorString = strdup (((char *)GETMESSAGE(4, 13, "Unable to lock the display: dtsession was built without PAM, which checks the password.")));
-    smNLS.pamServiceErrorString = strdup (((char *)GETMESSAGE(4, 14, "Unable to lock the display: the PAM service file %s is missing or cannot be read.")));
-    smNLS.noAccountErrorString = strdup (((char *)GETMESSAGE(4, 15, "Unable to lock the display: the account of the user who started the session was not found.")));
+    smNLS.noPamErrorString = CopyNlsString (((char *)GETMESSAGE(4, 13, "Unable to lock the display: dtsession was built without PAM, which checks the password.")));
+    smNLS.pamServiceErrorString = CopyNlsString (((char *)GETMESSAGE(4, 14, "Unable to lock the display: the PAM service file %s is missing or cannot be read.")));
+    smNLS.noAccountErrorString = CopyNlsString (((char *)GETMESSAGE(4, 15, "Unable to lock the display: the account of the user who started the session was not found.")));
 }
  
                                       

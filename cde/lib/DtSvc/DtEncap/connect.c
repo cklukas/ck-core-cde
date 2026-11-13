@@ -56,6 +56,20 @@
 static XeString context_host = nullptr;
 
 static XeString FindDomainHost (XeString host_spec);
+
+/*
+ * A copy of a host name.  Like Xe_make_ntype() and XeMalloc() used for the
+ * other host name buffers of this file, it ends the process when memory is
+ * exhausted, so the result is never nullptr.
+ */
+static XeString
+copy_host_name(XeString host_spec)
+{
+   XeString copy = (XeString) XeMalloc(strlen(host_spec) + 1);
+
+   strcpy(copy, host_spec);
+   return copy;
+}
 static void UnParseFileString (XeString host, XeString path);
 static int GetDomainName (XeString buffer, unsigned int bufsize);
 
@@ -115,7 +129,7 @@ XeFindShortHost(XeString host_spec)
    host_spec = Xe_shellexp(host_spec);
    ptr = strstr(host_spec, (XeString)".");
    if (!ptr) /* short name already */
-      host = strdup(host_spec);
+      host = copy_host_name(host_spec);
    else {
       GetDomainName(localhost, MAXHOSTNAMELEN);
       ptr2 = strstr(localhost, (XeString)".");
@@ -125,7 +139,7 @@ XeFindShortHost(XeString host_spec)
          host[ptr-host_spec] = '\0'; /* NULL terminate copy */
       }
       else
-         host = strdup(host_spec);
+         host = copy_host_name(host_spec);
    }
    return host;
 }
@@ -146,7 +160,7 @@ XeFindHost(XeString host_spec)
       host_spec = context_host;
    }
    host_spec = Xe_shellexp(host_spec);
-   return strdup(host_spec);
+   return copy_host_name(host_spec);
 }
 
 
@@ -172,13 +186,13 @@ FindDomainHost(XeString host_spec)
       host_spec = context_host;
    }
    else if (strequal(host_spec, (XeString)"*")) {
-      host_spec = strdup((XeString)"*");
+      host_spec = copy_host_name((XeString)"*");
       return host_spec;
    }
    host_spec = Xe_shellexp(host_spec);
    ptr = strstr(host_spec, (XeString)".");
    if (ptr)
-      host = strdup(host_spec);
+      host = copy_host_name(host_spec);
    else {
       GetDomainName(localhost, MAXHOSTNAMELEN);
       ptr = strstr(localhost, (XeString)"."); /* points to domain name if one exists */
@@ -188,7 +202,7 @@ FindDomainHost(XeString host_spec)
 	 strcat(host, ptr);
       }
       else
-	 host = strdup(host_spec);
+	 host = copy_host_name(host_spec);
    }
    return(host);
 }

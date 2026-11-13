@@ -58,7 +58,7 @@ subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
                 "-fsanitize=address,undefined", "-fno-sanitize-recover=all",
                 "-fno-omit-frame-pointer", "-g", str(c), "-o", str(binary)], check=True)
 
-env = dict(os.environ, ASAN_OPTIONS="halt_on_error=1:abort_on_error=0:detect_leaks=0",
+env = dict(os.environ, ASAN_OPTIONS="halt_on_error=1:abort_on_error=0:detect_leaks=0:symbolize=0",
            UBSAN_OPTIONS="halt_on_error=1:print_stacktrace=1")
 run = subprocess.run([str(binary)], env=env, capture_output=True, text=True)
 sys.stdout.write(run.stdout)

@@ -122,6 +122,8 @@ rb_create (_DtCmsGetKeyProc get, _DtCmsCompareProc compare)
 	Rb_tree *tree;
 
 	p = (Private *) calloc (1, sizeof(Private));
+	if (p == nullptr)
+		return (nullptr);
 	p->size = 0;
 	p->count = 0;
 	p->status = rb_ok;
@@ -131,14 +133,23 @@ rb_create (_DtCmsGetKeyProc get, _DtCmsCompareProc compare)
 	p->d = nullptr;
 	p->y = (Tree_node *) calloc (1, sizeof(Tree_node));
 	p->z = (Tree_node *) calloc (1, sizeof(Tree_node));
+	root = (Tree_node *) calloc (1, sizeof(Tree_node));
+	tree = (Rb_tree *) calloc (1, sizeof(Rb_tree));
+	if (p->y == nullptr || p->z == nullptr || root == nullptr ||
+	    tree == nullptr) {
+		free (p->y);
+		free (p->z);
+		free (root);
+		free (tree);
+		free (p);
+		return (nullptr);
+	}
 	p->get = get;
 	p->enumerate = nullptr;
 	p->compare = compare;
 
-	root = (Tree_node *) calloc (1, sizeof(Tree_node));
 	y = p->y;
 	z = p->z;
-	tree = (Rb_tree *) calloc (1, sizeof(Rb_tree));
 	tree->root = root;
 	tree->private = (caddr_t) p;
 	p->tree = tree;   /* link back so callbacks can access */
@@ -278,6 +289,8 @@ rb_insert(Rb_tree *tree, caddr_t data, caddr_t key)
 
 	if (tree==nullptr) return(rb_notable);
 	node = (Tree_node *)calloc(1, sizeof(Tree_node));
+	if (node == nullptr)
+		return(rb_nomem);
 	node->data = data;
 	return(rb_insert_node(tree, node, key));
 }

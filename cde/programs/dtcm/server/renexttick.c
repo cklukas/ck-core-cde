@@ -68,7 +68,7 @@ static Tick NextWeekTick(const struct tm *, const struct tm *,
 static Tick NextMonthTick(const struct tm *, const RepeatEvent *,
 			  const WeekDayTime *, const MoveIndicator,
 			  RepeatEventState *);
-extern void FillInRepeatEvent(const Tick, RepeatEvent *);
+extern int FillInRepeatEvent(const Tick, RepeatEvent *);
 
 Tick
 NextTick(
@@ -81,7 +81,8 @@ NextTick(
 
 	if (!re) return (Tick)0;
 
-	FillInRepeatEvent(start_time, re);
+	if (FillInRepeatEvent(start_time, re) != 0)
+		return (Tick)0;
 
 	switch (re->re_type) {
 	case RT_MINUTE:

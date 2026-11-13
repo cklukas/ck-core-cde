@@ -1318,11 +1318,24 @@ _DtCmsGetV4Reminders(
 		do
 		{
 			rptr = _DtCmsGetReminderInfoV4(p_node);
+			idptr = nullptr;
+			if (ids_r)
+				idptr = (_DtCmsEntryId *)calloc(1,
+					sizeof(_DtCmsEntryId));
+			if (rptr == nullptr || (ids_r && idptr == nullptr)) {
+				/* Hand out nothing: the two lists go together. */
+				if (rptr != nullptr)
+					_DtCm_free_reminder4(rptr);
+				free(idptr);
+				_DtCm_free_reminder4(v4rem);
+				_DtCmsFreeEntryIds(ids);
+				*rem_r = nullptr;
+				if (ids_r) *ids_r = nullptr;
+				return (CSA_E_INSUFFICIENT_MEMORY);
+			}
 			rptr->next = v4rem;
 			v4rem = rptr;
 			if (ids_r) {
-				idptr = (_DtCmsEntryId *)calloc(1,
-					sizeof(_DtCmsEntryId));
 				idptr->id = p_node->appt->appt_id.key;
 				idptr->next = ids;
 				ids = idptr;

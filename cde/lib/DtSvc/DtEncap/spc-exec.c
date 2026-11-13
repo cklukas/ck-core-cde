@@ -869,6 +869,9 @@ remove_variable(
     * have something else.
     */
    tmp_var = malloc ((strlen (pch) + 2) * sizeof (char));
+   if (tmp_var == nullptr)
+      /* The variable stays in the environment; the line is consumed. */
+      return (0);
    (void) sprintf (tmp_var, "%s=", pch);
    tmp_len = strlen (tmp_var);
 
@@ -954,6 +957,11 @@ resolve_variable_reference(
    pch = pbeg;
    
    buf = malloc(2048);
+   if (buf == nullptr) {
+      /* Without room to rebuild the line, put it in as it is. */
+      (void) putenv (*string);
+      return;
+   }
 
    while (*pbeg) {
 

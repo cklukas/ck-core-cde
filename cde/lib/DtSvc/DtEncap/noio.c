@@ -313,11 +313,19 @@ SPC_Channel_Ptr open_noio_channel_object(SPC_Channel_Ptr channel,
     }
     else {
       SPC_logfile_list = new_list;
+      SPC_logfile_list[i] = (char *) nullptr;
       if (channel->logfile != nullptr)
 	SPC_logfile_list[i] = strdup (channel->logfile);
-      else
-	SPC_logfile_list[i] = (char *) nullptr;
       SPC_logfile_list[i+1] = (char *) nullptr;
+      if (channel->logfile != nullptr && SPC_logfile_list[i] == nullptr) {
+	/*
+	 * No copy of the name for the list (still terminated): the daemon
+	 * could not remove the file, so give it up as above.
+	 */
+	(void) unlink (channel->logfile);
+	free (channel->logfile);
+	channel->logfile = nullptr;
+      }
     }
     _DtSvcProcessUnlock();
 
