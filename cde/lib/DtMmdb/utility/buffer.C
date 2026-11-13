@@ -93,7 +93,7 @@ void buffer::_alloc(const int sz)
 buffer::~buffer()
 {
    if ( v_allocated == 1 ) {
-     free((char*)(v_base-v_align_offset));
+     delete [] (char*)(v_base-v_align_offset);
    }
 }
 
@@ -151,7 +151,7 @@ int buffer::expand_chunk(const int newsz)
    v_eptr -= long(v_base);
 
    //free((char*)(v_base-v_align_offset));
-   delete (char*)(v_base-v_align_offset);
+   delete [] (char*)(v_base-v_align_offset);
    v_align_offset = delta;
 
    v_base = x;
