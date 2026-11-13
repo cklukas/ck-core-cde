@@ -433,6 +433,9 @@ int  _DtLcxOpenAllDbs(
          sprintf(dbPaths,"%s:%s",DtLCX_INSTALL_AND_CONFIG_PATHS,homePath);
    }
 
+   if (nullptr == dbPaths)
+      return -1;          /* RETURN: out of memory */
+
    /* open all dbs of filename found in paths */
    globRet = _DtXlateOpenAllDbs(dbPaths,lcxfile, ret_db);
    if (globRet != 0)
@@ -692,6 +695,8 @@ int _DtLcxXlateStdToOp(
 	else
 	  stdValue = stdValueBuf;
 
+	if (nullptr == stdValue) return -1;   /* RETURN: out of memory */
+
         stdValue[0] = EOS;
         strcpy(stdValue, stdLocale);
     }
@@ -729,6 +734,8 @@ int _DtLcxXlateStdToOp(
 	  stdValue = malloc(bytes_needed);
 	else
 	  stdValue = stdValueBuf;
+
+	if (nullptr == stdValue) return -1;   /* RETURN: out of memory */
 
        /* generate the std value string */
        stdValue[0] = EOS;

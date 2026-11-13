@@ -86,6 +86,12 @@ Dt11GetMessage(
 		    nlmsg_filename = nullptr;
 		}
 		nlmsg_filename = strdup(filename);
+		if (nullptr == nlmsg_filename)
+		{
+		    (void) CATCLOSE(nlmsg_fd);
+		    _DtSvcProcessUnlock();
+		    return (s);
+		}
         }
         msg=CATGETS(nlmsg_fd,set,n,s);
 	_DtSvcProcessUnlock();

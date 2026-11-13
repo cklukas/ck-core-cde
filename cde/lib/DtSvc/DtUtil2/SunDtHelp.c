@@ -79,12 +79,18 @@ int SUNWDtHelpdlopen(void)
 
     _DtSvcProcessLock();
     pmySUNWProcList = (SUNWHelpProcList *)malloc(sizeof(SUNWHelpProcList));
+    if (pmySUNWProcList == nullptr) {
+	_DtSvcProcessUnlock();
+	return(FALSE);
+    }
     libDtHelpHandle = dlopen("libDtHelp.so.2.1", RTLD_LAZY | RTLD_GLOBAL);
     if (libDtHelpHandle == nullptr) {
 	char *my_err_msg;
 
 	my_err_msg = dlerror();
 	printf("%s\n", my_err_msg);
+	free(pmySUNWProcList);
+	pmySUNWProcList = nullptr;
 	_DtSvcProcessUnlock();
 	return(FALSE);
     }

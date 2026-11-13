@@ -111,17 +111,17 @@ typedef struct _Entries {
 
 static Buffer * _DtAllocBuffer(const char **buff);
 static void _DtFreeBuffer(Buffer *b);
-static void _DtAppendToBuffer( 
+static int _DtAppendToBuffer( 
                         Buffer *b,
                         char *str,
                         int len) ;
-static void _DtAppendEntryToBuffer( 
+static int _DtAppendEntryToBuffer( 
                         Buffer *buffer,
                         Entry entry) ;
 
 static Entries * _DtAllocEntries( void) ;
 static  void _DtFreeEntries( Entries *) ;
-static void _DtAddEntry( 
+static int _DtAddEntry( 
                         Entries *e,
                         Entry entry) ;
 static int _DtCompareEntries( 
@@ -130,11 +130,11 @@ static int _DtCompareEntries(
 static char * _DtFindFirst( 
                         char *string,
                         char dest) ;
-static void _DtGetEntries( 
+static int _DtGetEntries( 
                         Entries *entries,
                         Buffer *buff,
                         int dosort) ;
-static void _DtMergeEntries( 
+static int _DtMergeEntries( 
                         Buffer *buffer,
                         Entries new,
                         Entries old) ;
@@ -156,12 +156,22 @@ static void _getWinProp(
 
 static Buffer *
 _DtAllocBuffer(
-        const char **buff )
+	const char **buff )
 {
     Buffer *b = (Buffer *)malloc(sizeof(Buffer));
+
+    if (b == nullptr)
+	return nullptr;
     b->room = INIT_BUFFER_SIZE;
-    b->buff = buff ? (char*) *buff :
-		     (char *)malloc(INIT_BUFFER_SIZE*sizeof(char));
+    if (buff) {
+	b->buff = (char*) *buff;
+    } else {
+	b->buff = (char *)malloc(INIT_BUFFER_SIZE*sizeof(char));
+	if (b->buff == nullptr) {
+	    free(b);
+	    return nullptr;
+	}
+    }
     b->used = buff && *buff ? strlen(*buff) : 0;
     b->freebuff = buff ? False : True;
     return(b);
@@ -169,33 +179,49 @@ _DtAllocBuffer(
 
 static void
 _DtFreeBuffer(
-        Buffer *b)
+	Buffer *b)
 {
+    if (b == nullptr) return;
     if (b->freebuff == True) free(b->buff);
     free(b);
 }
 
-static void 
+static int
 _DtAppendToBuffer(
-        Buffer *b,
-        char *str,
-        int len )
+	Buffer *b,
+	char *str,
+	int len )
 {
     while (b->used + len > b->room) {
-        b->buff = (char *)realloc(b->buff, 2*b->room*(sizeof(char)));
-        b->room *= 2;
+	char *grown;
+
+	if (b->room > INT_MAX / 2)
+	    return -1;
+	grown = (char *)realloc(b->buff, 2*(size_t)b->room);
+	if (grown == nullptr)
+	    return -1;
+	b->buff = grown;
+	b->room *= 2;
     }
     strncpy(b->buff + b->used, str, len);
     b->used += len;
+    return 0;
 }
 
 static Entries *
 _DtAllocEntries( void )
 {
     Entries *e = (Entries *)malloc(sizeof(Entries));
+
+    if (e == nullptr)
+	return nullptr;
     e->room = INIT_ENTRY_SIZE;
     e->used = 0;
-    e->entry = (Entry *)malloc(INIT_ENTRY_SIZE*sizeof(Entry));
+    e->entry = (Entry *)calloc(INIT_ENTRY_SIZE, sizeof(Entry));
+    if (e->entry == nullptr) {
+	free(e);
+	return nullptr;
+    }
     return(e);
 }
 
@@ -205,6 +231,7 @@ _DtFreeEntries(
 {
     int n = 0;
 
+    if (e == nullptr) return;
     while (n < e->used)
     {
 	free(e->entry[n].tag);
@@ -215,43 +242,47 @@ _DtFreeEntries(
     free(e);
 }
 
-static void 
+/*
+ * Adds the entry, which then belongs to the table.  Returns -1 when the
+ * table cannot grow; the entry is released in that case.
+ */
+static int
 _DtAddEntry(
-        Entries *e,
-        Entry entry )
+	Entries *e,
+	Entry entry )
 {
     int n;
 
     for (n = 0; n < e->used; n++)
     {
-        if (strcmp(e->entry[n].tag, entry.tag) == 0)
+	if (strcmp(e->entry[n].tag, entry.tag) == 0)
 	{ /* overwrite old entry  - free its memory first*/
 	    free(e->entry[n].tag);
 	    free(e->entry[n].value);
-            e->entry[n] = entry;
-            return ;  /* ok to leave, now there's only one of each tag in db */
-        }
+	    e->entry[n] = entry;
+	    return 0;  /* ok to leave, now there's only one of each tag in db */
+	}
     }
 
     if (e->used == e->room) {
-        Entry *grown;
+	Entry *grown;
 
-        if (e->room > INT_MAX / 2 ||
-            (size_t)e->room > SIZE_MAX / (2 * sizeof(Entry)))
-            grown = nullptr;
-        else
-            grown = (Entry *)realloc(e->entry, 2*e->room*(sizeof(Entry)));
-        if (grown == nullptr) {
-            /* the table keeps its old, valid block; the entry is dropped */
-            free(entry.tag);
-            free(entry.value);
-            return;
-        }
-        e->entry = grown;
-        e->room *= 2;
+	if (e->room > INT_MAX / 2)
+	    grown = nullptr;
+	else
+	    grown = (Entry *)reallocarray(e->entry, 2*(size_t)e->room, sizeof(Entry));
+	if (grown == nullptr) {
+	    /* the table keeps its old, valid block */
+	    free(entry.tag);
+	    free(entry.value);
+	    return -1;
+	}
+	e->entry = grown;
+	e->room *= 2;
     }
     entry.usable = True;
     e->entry[e->used++] = entry;
+    return 0;
 }
 
 static int 
@@ -264,15 +295,17 @@ _DtCompareEntries(
     return strcmp(e1->tag, e2->tag);
 }
 
-static void 
+static int 
 _DtAppendEntryToBuffer(
-        Buffer *buffer,
-        Entry entry )
+	Buffer *buffer,
+	Entry entry )
 {
-    _DtAppendToBuffer(buffer, entry.tag, strlen(entry.tag));
-    _DtAppendToBuffer(buffer, ":\t", 2);
-    _DtAppendToBuffer(buffer, entry.value, strlen(entry.value));
-    _DtAppendToBuffer(buffer, "\n", 1);
+    if (_DtAppendToBuffer(buffer, entry.tag, strlen(entry.tag)) != 0 ||
+	_DtAppendToBuffer(buffer, ":\t", 2) != 0 ||
+	_DtAppendToBuffer(buffer, entry.value, strlen(entry.value)) != 0 ||
+	_DtAppendToBuffer(buffer, "\n", 1) != 0)
+	return -1;
+    return 0;
 }
 
 static char * 
@@ -299,7 +332,7 @@ _DtFindFirst(
     }
 }
 
-static void 
+static int
 _DtGetEntries(
         Entries *entries,
         Buffer *buff,
@@ -311,7 +344,7 @@ _DtGetEntries(
     int lineno = 0;
 
     str = buff->buff;
-    if (!str) return;
+    if (!str) return 0;
     for (; str < buff->buff + buff->used; str = line + 1)
     {
         line = _DtFindFirst(str, '\n');
@@ -351,6 +384,8 @@ _DtGetEntries(
             temp2++;
         }
         temp = (char *)malloc((length = colon - temp2) + 1);
+	if (temp == nullptr)
+	    return -1;
         strncpy(temp, temp2, length);
         temp[length] = '\0';
         while (temp[length-1] == ' ' || temp[length-1] == '\t')
@@ -364,24 +399,30 @@ _DtGetEntries(
             temp2++;
         }
         temp = (char *)malloc((length = line - temp2) + 1);
+	if (temp == nullptr) {
+	    free(entry.tag);
+	    return -1;
+	}
         strncpy(temp, temp2, length);
         temp[length] = '\0';
         entry.value = temp;
         entry.lineno = lineno;
 
-        _DtAddEntry(entries, entry);
+	if (_DtAddEntry(entries, entry) != 0)
+	    return -1;
     }
-    
+
     if (dosort && (entries->used > 0))
-      qsort(entries->entry, entries->used, sizeof(Entry), 
-	    _DtCompareEntries);
+      qsort(entries->entry, entries->used, sizeof(Entry),
+     _DtCompareEntries);
+    return 0;
 }
 
-static void 
+static int 
 _DtMergeEntries(
-        Buffer *buffer,
-        Entries new,
-        Entries old )
+	Buffer *buffer,
+	Entries new,
+	Entries old )
 {
     int n, o, cmp;
 
@@ -389,35 +430,39 @@ _DtMergeEntries(
     n = o = 0;
     while ((n < new.used) && (o < old.used))
     {
-        cmp = strcmp(new.entry[n].tag, old.entry[o].tag);
-        if (cmp > 0)
+	cmp = strcmp(new.entry[n].tag, old.entry[o].tag);
+	if (cmp > 0)
 	{
-            _DtAppendEntryToBuffer(buffer, old.entry[o]);
+	    if (_DtAppendEntryToBuffer(buffer, old.entry[o]) != 0)
+		return -1;
 	    o++;
 	}
-        else
+	else
 	{
-            _DtAppendEntryToBuffer(buffer, new.entry[n]);
+	    if (_DtAppendEntryToBuffer(buffer, new.entry[n]) != 0)
+		return -1;
 	    n++;
-            if (cmp == 0)
+	    if (cmp == 0)
 	    {
-                o++;
+		o++;
 	    }
-        }
+	}
     }
     
     while (n < new.used)
     {
-        _DtAppendEntryToBuffer(buffer, new.entry[n]);
+	if (_DtAppendEntryToBuffer(buffer, new.entry[n]) != 0)
+	    return -1;
 	n++;
     }
     while (o < old.used)
     {
-        _DtAppendEntryToBuffer(buffer, old.entry[o]);
+	if (_DtAppendEntryToBuffer(buffer, old.entry[o]) != 0)
+	    return -1;
 	o++;
     }
     
-    _DtAppendToBuffer(buffer, "\0", 1);
+    return _DtAppendToBuffer(buffer, "\0", 1);
 }
 
 static void
@@ -454,7 +499,7 @@ _DtAddToResProp(
         Entries db)
 {
     char *xdefs;
-    Buffer *oldBuffer, *newBuffer;
+    Buffer *oldBuffer, *newBuffer = nullptr;
     Entries *oldDB;
     int                 defStatus;
     Atom                actualType;
@@ -490,32 +535,33 @@ _DtAddToResProp(
    /*
     * Allocate oldDB
     */
-    oldDB = _DtAllocEntries();
+    oldDB = oldBuffer ? _DtAllocEntries() : nullptr;
 
    /*
-    * Convert oldBuffer to oldDB.
+    * Convert oldBuffer to oldDB, init empty newBuffer, then populate
+    * by merging db into oldDB.
     */
-    _DtGetEntries(oldDB, oldBuffer, 1);
+    if (oldDB != nullptr && _DtGetEntries(oldDB, oldBuffer, 1) == 0)
+    {
+	newBuffer = _DtAllocBuffer(nullptr);
+	if (newBuffer != nullptr &&
+	    _DtMergeEntries(newBuffer, db, *oldDB) == 0)
+	{
+	   /*
+	    * Finally, store newBuffer into resource database.
+	    */
+	    XChangeProperty (dpy, win, prop,
+			     XA_STRING, 8, PropModeReplace,
+			     (unsigned char *)newBuffer->buff, newBuffer->used);
 
-   /*
-    * Init empty newBuffer, then populate by merging db into oldDB.
-    */
-    newBuffer = _DtAllocBuffer(nullptr);
-    _DtMergeEntries(newBuffer, db, *oldDB);
-
-   /*
-    * Finally, store newBuffer into resource database.
-    */
-    XChangeProperty (dpy, win, prop,
-		     XA_STRING, 8, PropModeReplace,
-		     (unsigned char *)newBuffer->buff, newBuffer->used);
-
-    XSync(dpy, False);
+	    XSync(dpy, False);
+	}
+    }
 
    /*
     * Free buffer memory
     */
-    if (oldBuffer->buff) XFree(oldBuffer->buff);
+    if (xdefs) XFree(xdefs);
     _DtFreeBuffer(oldBuffer);
     _DtFreeBuffer(newBuffer);
     _DtFreeEntries(oldDB);
@@ -589,12 +635,19 @@ _DtAddResString(
     * Init buffer with input data
     */ 
     buffer = _DtAllocBuffer(&data); 
+    if (buffer == nullptr)
+	return;
 
    /*
     * Init, then populate, newDB from buffer
     */
     newDB = _DtAllocEntries();
-    _DtGetEntries(newDB, buffer, 1);
+    if (newDB == nullptr || _DtGetEntries(newDB, buffer, 1) != 0)
+    {
+	_DtFreeBuffer(buffer);
+	_DtFreeEntries(newDB);
+	return;
+    }
 
     if (flags & _DT_ATR_RESMGR)
     {

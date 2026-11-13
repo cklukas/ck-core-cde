@@ -68,7 +68,7 @@ static struct environStruct _preDtEnvironment;
  */
 static unsigned int envBitVector = 0;
 
-static void _EnvAdd (char *, char *, unsigned int);
+static int _EnvAdd (char *, char *, unsigned int);
 
 
 /****************************************************************
@@ -141,6 +141,26 @@ static const char *iconBmSuffixes[] = {
     "%B",
     nullptr
 };
+
+
+/*
+ * Put a private copy of the "name=value" string into the environment.
+ * Returns 0, or -1 when the copy cannot be made or putenv fails.
+ */
+static int
+putenvCopy(const char *setting)
+{
+    char *copy = strdup(setting);
+
+    if (nullptr == copy)
+	return -1;
+    if (0 != putenv(copy))
+    {
+	free(copy);
+	return -1;
+    }
+    return 0;
+}
 
 
 /*
@@ -252,10 +272,10 @@ makeDefaultIconBmPath(void)
  *
  *  Returns:
  *  --------
- *  void
- * 
+ *  0 on success, -1 when memory for the variable cannot be allocated.
+ *
  *****************************<->***********************************/
-void
+static int
 _DtEnvSessionManager(void)
 {
 #define SESSION_MANAGER	"SESSION_MANAGER"
@@ -288,12 +308,24 @@ _DtEnvSessionManager(void)
 			envstr = (char*) malloc(
 						strlen(SESSION_MANAGER) +
 						strlen(session_manager) + 2);
+			if (nullptr == envstr)
+			{
+			    XtFree(session_manager);
+			    XCloseDisplay(display);
+			    return -1;
+			}
 			sprintf(
-				envstr, "%s=%s",
+			envstr, "%s=%s",
 				SESSION_MANAGER,
 				session_manager);
-	                putenv(envstr);
-	                XtFree(session_manager);
+			if (0 != putenv(envstr))
+			{
+			    free(envstr);
+			    XtFree(session_manager);
+			    XCloseDisplay(display);
+			    return -1;
+			}
+			XtFree(session_manager);
 		    }
 	        }
 	    }
@@ -332,6 +364,7 @@ _DtEnvControl(
     char *ptr; /* used for indexing into the $PATH */
     int returnValue = DT_ENV_NO_OP;
     int bytes_needed;
+    int failed = 0;
 
     _DtSvcProcessLock();
     switch (mode) {
@@ -342,7 +375,7 @@ _DtEnvControl(
 		/*
 		 * Make sure the SESSION_MANAGER variable is set.
 		 */
-		_DtEnvSessionManager();
+		failed |= _DtEnvSessionManager();
 
 		/*
 		 * Set up DT environment in the application 
@@ -515,7 +548,7 @@ _DtEnvControl(
 			}
 		    }
 
-		    _EnvAdd (BIN_PATH_ENVIRON, 
+		    failed |= _EnvAdd (BIN_PATH_ENVIRON, 
 			       _postDtEnvironment.binPath, 
 			       BV_BINPATH);
 		}
@@ -537,7 +570,7 @@ _DtEnvControl(
 		{
 		    /* it doesn't exist, so generate a default value */
 		    _postDtEnvironment.pmPath = makeDefaultIconPmPath();
-		    _EnvAdd(PM_PATH_ENVIRON, _postDtEnvironment.pmPath,
+		    failed |= _EnvAdd(PM_PATH_ENVIRON, _postDtEnvironment.pmPath,
 			BV_PMPATH);
 		}
 
@@ -558,7 +591,7 @@ _DtEnvControl(
 		{
 		    /* it doesn't exist, so generate a default value */
 		    _postDtEnvironment.bmPath = makeDefaultIconBmPath();
-		    _EnvAdd(BM_PATH_ENVIRON, _postDtEnvironment.bmPath,
+		    failed |= _EnvAdd(BM_PATH_ENVIRON, _postDtEnvironment.bmPath,
 			BV_BMPATH);
 		}
 
@@ -607,7 +640,7 @@ _DtEnvControl(
 			NLS_PATH_STRING);
 		}
 
-		_EnvAdd(NLS_PATH_ENVIRON, _postDtEnvironment.nlsPath,
+		failed |= _EnvAdd(NLS_PATH_ENVIRON, _postDtEnvironment.nlsPath,
 			   BV_NLSPATH);
 
 
@@ -648,12 +681,12 @@ _DtEnvControl(
 			SYSTEM_APPL_PATH_STRING);
 		}
 
-		_EnvAdd (SYSTEM_APPL_PATH_ENVIRON,
+		failed |= _EnvAdd (SYSTEM_APPL_PATH_ENVIRON,
 			   _postDtEnvironment.sysApplPath,
 			   BV_SYSAPPLPATH);
 
 		environSetup = 1;
-	        returnValue = DT_ENV_SET;
+	        returnValue = failed ? DT_ENV_NO_OP : DT_ENV_SET;
 	    }
 	    else /* we've already been here -- do nothing */
 	    {
@@ -665,7 +698,7 @@ _DtEnvControl(
        	    if (environSetup) 
             {
 		if (_preDtEnvironment.nlsPath) {
-		    _EnvAdd (NLS_PATH_ENVIRON, 
+		    failed |= _EnvAdd (NLS_PATH_ENVIRON, 
 			       _preDtEnvironment.nlsPath,
 			       BV_NLSPATH);
 		}
@@ -675,7 +708,7 @@ _DtEnvControl(
 		}
 
 		if (_preDtEnvironment.sysApplPath) {
-		    _EnvAdd (SYSTEM_APPL_PATH_ENVIRON, 
+		    failed |= _EnvAdd (SYSTEM_APPL_PATH_ENVIRON, 
 			       _preDtEnvironment.sysApplPath,
 			       BV_SYSAPPLPATH);
 		}
@@ -685,7 +718,7 @@ _DtEnvControl(
 		}
 
 		if (_preDtEnvironment.pmPath) {
-		    _EnvAdd (PM_PATH_ENVIRON,
+		    failed |= _EnvAdd (PM_PATH_ENVIRON,
 			       _preDtEnvironment.pmPath,
 			       BV_PMPATH);
 		}
@@ -695,7 +728,7 @@ _DtEnvControl(
 		}
 
 		if (_preDtEnvironment.bmPath) {
-		    _EnvAdd (BM_PATH_ENVIRON,
+		    failed |= _EnvAdd (BM_PATH_ENVIRON,
 			       _preDtEnvironment.bmPath,
 			       BV_BMPATH);
 		}
@@ -704,7 +737,7 @@ _DtEnvControl(
 		    envBitVector &= ~BV_BMPATH;
 		}
 
-	        returnValue = DT_ENV_RESTORE_PRE_DT;
+	        returnValue = failed ? DT_ENV_NO_OP : DT_ENV_RESTORE_PRE_DT;
             }
             else
 	    {
@@ -717,30 +750,30 @@ _DtEnvControl(
             {
 
 		if (_postDtEnvironment.nlsPath) {
-		    _EnvAdd (NLS_PATH_ENVIRON, 
+		    failed |= _EnvAdd (NLS_PATH_ENVIRON, 
 			       _postDtEnvironment.nlsPath,
 			       BV_NLSPATH);
 		}
 
 		if (_postDtEnvironment.pmPath) {
-		    _EnvAdd (PM_PATH_ENVIRON,
+		    failed |= _EnvAdd (PM_PATH_ENVIRON,
 			       _postDtEnvironment.pmPath,
 			       BV_PMPATH);
 		}
 
 		if (_postDtEnvironment.bmPath) {
-		    _EnvAdd (BM_PATH_ENVIRON,
+		    failed |= _EnvAdd (BM_PATH_ENVIRON,
 			       _postDtEnvironment.bmPath,
 			       BV_BMPATH);
 		}
 
 		if (_postDtEnvironment.sysApplPath) {
-		    _EnvAdd (SYSTEM_APPL_PATH_ENVIRON, 
+		    failed |= _EnvAdd (SYSTEM_APPL_PATH_ENVIRON, 
 			       _postDtEnvironment.sysApplPath,
 			       BV_SYSAPPLPATH);
 		}
 
-	        returnValue = DT_ENV_RESTORE_POST_DT;
+	        returnValue = failed ? DT_ENV_NO_OP : DT_ENV_RESTORE_POST_DT;
 	    }
             else
 	    {
@@ -814,7 +847,7 @@ _DtEnvControl(
  *                  is being set.
  * 
  *****************************<->***********************************/
-static void _EnvAdd
+static int _EnvAdd
   (
    char * envVar,
    char * envVarSetting,
@@ -824,7 +857,10 @@ static void _EnvAdd
   _DtSvcProcessLock();
   if (envBitVector & bv_flag) {
 #if defined(CSRG_BASED) || defined(__linux__)
-      setenv(envVar, envVarSetting + strlen(envVar) + 1, 1);
+if (0 != setenv(envVar, envVarSetting + strlen(envVar) + 1, 1)) {
+    _DtSvcProcessUnlock();
+    return -1;
+}
 #else
 
       int i;
@@ -850,24 +886,37 @@ static void _EnvAdd
     
     if ( envPtr )
     {
-            XtFree(envPtr);
-            envPtr = strdup(envVarSetting);
-	    strcpy(envPtr,envVarSetting);
-	    environ[i] = envPtr;
+	char *envCopy = strdup(envVarSetting);
+
+	if ( nullptr == envCopy )
+	{
+	    _DtSvcProcessUnlock();
+	    return -1;
+	}
+	XtFree(envPtr);
+	environ[i] = envCopy;
     }
     else
     {
-            /* This should never happen */
-	    putenv(strdup(envVarSetting));
+	    /* This should never happen */
+	if ( 0 != putenvCopy(envVarSetting) )
+	{
+	    _DtSvcProcessUnlock();
+	    return -1;
+	}
     }
-#endif /* linux || CSRG_BASED */
-  }
-  else
-    putenv(strdup(envVarSetting));
+    #endif /* linux || CSRG_BASED */
+    }
+    else if ( 0 != putenvCopy(envVarSetting) )
+    {
+	_DtSvcProcessUnlock();
+	return -1;
+    }
 
-  envBitVector |= bv_flag;
-  _DtSvcProcessUnlock();
-}
+    envBitVector |= bv_flag;
+    _DtSvcProcessUnlock();
+    return 0;
+    }
 
 /*****************************<->*************************************
  *
@@ -1101,7 +1150,11 @@ _DtWsmSetBackdropSearchPath (
 
 	/* make a copy that we can modify locally */
 	sBackDirs = strdup(backdropPath);
-	strcpy (sBackDirs, backdropPath);
+	if (nullptr == sBackDirs)
+	{
+	    _DtSvcProcessUnlock();
+	    return (DT_ENV_NO_OP);
+	}
 
 	/*
 	 * Initialize path string
@@ -1157,7 +1210,11 @@ _DtWsmSetBackdropSearchPath (
 
 	/* make a copy that we can modify locally */
 	sBackDirs = strdup(backdropPath);
-	strcpy (sBackDirs, backdropPath);
+	if (nullptr == sBackDirs)
+	{
+	    _DtSvcProcessUnlock();
+	    return (DT_ENV_NO_OP);
+	}
 
 	/*
 	 * Initialize path environment string
@@ -1199,7 +1256,11 @@ _DtWsmSetBackdropSearchPath (
 	XtFree (sBackDirs);
     }
 
-    putenv(strdup(_postDtEnvironment.pmPath));
+    if (0 != putenvCopy(_postDtEnvironment.pmPath))
+    {
+	_DtSvcProcessUnlock();
+	return (DT_ENV_NO_OP);
+    }
     envBitVector |= BV_PMPATH;
 
 
@@ -1217,7 +1278,11 @@ _DtWsmSetBackdropSearchPath (
 
 	/* make a copy that we can modify locally */
 	sBackDirs = strdup(backdropPath);
-	strcpy (sBackDirs, backdropPath);
+	if (nullptr == sBackDirs)
+	{
+	    _DtSvcProcessUnlock();
+	    return (DT_ENV_NO_OP);
+	}
 
 	/*
 	 * Initialize path string
@@ -1267,7 +1332,11 @@ _DtWsmSetBackdropSearchPath (
 
 	/* make a copy that we can modify locally */
 	sBackDirs = strdup(backdropPath);
-	strcpy (sBackDirs, backdropPath);
+	if (nullptr == sBackDirs)
+	{
+	    _DtSvcProcessUnlock();
+	    return (DT_ENV_NO_OP);
+	}
 
 	/*
 	 * Initialize path environment string
@@ -1306,7 +1375,11 @@ _DtWsmSetBackdropSearchPath (
 	XtFree (sBackDirs);
     }
 
-    putenv(strdup(_postDtEnvironment.bmPath));
+    if (0 != putenvCopy(_postDtEnvironment.bmPath))
+    {
+	_DtSvcProcessUnlock();
+	return (DT_ENV_NO_OP);
+    }
     envBitVector |= BV_BMPATH;
 
     _DtSvcProcessUnlock();

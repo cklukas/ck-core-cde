@@ -1931,6 +1931,7 @@ int _DtXlateStdToOpValue(
        
        /* alloc the string to return */
        opValue = strdup(srchData.opValue);
+       if (nullptr == opValue) return -1;       /* RETURN: out of memory */
 
        if (db->debugMode) fprintf(stderr,"raw opval:%s\n",opValue);
 
@@ -2056,6 +2057,7 @@ int _DtXlateOpToStdValue(
 
       /* do quote and escape removal and ref replacement in the stdValue */
       stdValue = strdup(lhs);        /* reset stdValue ptr */
+      if (nullptr == stdValue) return -1;       /* RETURN: out of memory */
       if ( srchData.bestTransType == __DtXLATE_TYPE_REGEX )
           ReplaceMatchallSubex(&stdValue,srchData.bestSubEx,srchData.opValue);
 

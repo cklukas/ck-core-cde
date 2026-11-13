@@ -104,6 +104,7 @@ _DtPrintDefaultErrorSafe(
         fp = fpBuf;
       else
         fp = malloc(strlen(mesg) + 10);
+      if (!fp) return (event->error_code);
 
       (void) sprintf(fp, mesg, event->request_code);
 
@@ -147,6 +148,7 @@ _DtPrintDefaultErrorSafe(
             fp = fpBuf;
           else
             fp = malloc(strlen(mesg) + 10);
+          if (!fp) return (event->error_code);
 
           (void) sprintf(fp, mesg, event->minor_code);
          
@@ -160,6 +162,7 @@ _DtPrintDefaultErrorSafe(
                 fp = fpBuf;
               else
                 fp = malloc(strlen(ext->name) + 10);
+              if (!fp) return (event->error_code);
 
               sprintf(fp, "%s.%d", ext->name, event->minor_code);
 
@@ -203,6 +206,7 @@ _DtPrintDefaultErrorSafe(
               fp = fpBuf;
             else
               fp = malloc(strlen(mesg) + 10);
+            if (!fp) return (event->error_code);
 
             (void) sprintf(fp, mesg, event->resourceid);
 
@@ -237,6 +241,7 @@ _DtPrintDefaultErrorSafe(
           fp = fpBuf;
         else
           fp = malloc(strlen(mesg) + 10);
+        if (!fp) return (event->error_code);
 
         (void) sprintf(fp, mesg, event->resourceid);
 
@@ -254,6 +259,7 @@ _DtPrintDefaultErrorSafe(
           fp = fpBuf;
         else
           fp = malloc(strlen(mesg) + 10);
+        if (!fp) return (event->error_code);
 
         (void) sprintf(fp, mesg, event->serial);
 
@@ -271,6 +277,7 @@ _DtPrintDefaultErrorSafe(
           fp = fpBuf;
         else
           fp = malloc(strlen(mesg) + 10);
+        if (!fp) return (event->error_code);
 
         (void) sprintf(fp, mesg, dpy->request);
 

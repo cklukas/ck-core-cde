@@ -241,7 +241,6 @@ typedef struct {
 char *_DtEnv_tt_file_netfile(
     const char *filename)
 {
-    static int             first_time  = 1;
     static int             fragListAvail = CACHE_FILEFRAG_SIZE_START;
     static int             fragListCnt = 0;
     static cachedFileFrag *fragList;
@@ -256,18 +255,24 @@ char *_DtEnv_tt_file_netfile(
 
     _DtSvcProcessLock();
 
-    if (first_time) {
-	fragList = (cachedFileFrag *) calloc( fragListAvail,
-						sizeof(cachedFileFrag) );
-	first_time = 0;
-    }
-
     /*
      * Take care of the obvious.
      */
     if (!filename) {
 	_DtSvcProcessUnlock();
 	return( (char *) nullptr );
+    }
+
+    if (!fragList) {
+	fragList = (cachedFileFrag *) calloc( fragListAvail,
+						sizeof(cachedFileFrag) );
+	if (!fragList) {
+	    /*
+	     * No cache available: map without caching.
+	     */
+	    _DtSvcProcessUnlock();
+	    return( tt_file_netfile( filename ) );
+	}
     }
 
     /*
@@ -329,8 +334,18 @@ char *_DtEnv_tt_file_netfile(
 	    /*
 	     * Can grow fragList[]
 	     */
+	    cachedFileFrag *grown = (cachedFileFrag *) reallocarray(
+		fragList, fragListAvail + CACHE_FILEFRAG_SIZE_BUMP,
+		sizeof(cachedFileFrag) );
+	    if (!grown) {
+		/*
+		 * Cannot grow the cache: map without caching.
+		 */
+		_DtSvcProcessUnlock();
+		return( tt_file_netfile( filename ) );
+	    }
+	    fragList = grown;
 	    fragListAvail += CACHE_FILEFRAG_SIZE_BUMP;
-	    fragList = (cachedFileFrag *) reallocarray((char *) fragList, fragListAvail, sizeof(cachedFileFrag));
 	    /*
 	     * Zero out new memory.
 	     */
@@ -372,6 +387,10 @@ char *_DtEnv_tt_file_netfile(
 
 #ifdef _DTENV_SUPPORT_MAPERROR_CACHING
 	fragList[hitIdx].pathFragOrig = strdup( filename );
+	if ( !fragList[hitIdx].pathFragOrig ) {
+	    _DtSvcProcessUnlock();
+	    return( netpath );
+	}
 	fragList[hitIdx].cacheHit = 1;
 	fragList[hitIdx].pathFragMapped = netpath;
 
@@ -379,6 +398,13 @@ char *_DtEnv_tt_file_netfile(
 #else
 	if ( tt_ptr_error(netpath) == TT_OK ) {
 	    fragList[hitIdx].pathFragOrig = strdup( filename );
+	    if ( !fragList[hitIdx].pathFragOrig ) {
+		/*
+		 * Cannot cache the answer: return it uncached.
+		 */
+		_DtSvcProcessUnlock();
+		return( netpath );
+	    }
 	    fragList[hitIdx].cacheHit = 1;
 	    fragList[hitIdx].pathFragMapped = netpath;
  
@@ -449,7 +475,6 @@ char *_DtEnv_tt_host_netfile_file(
     const char *host,
     const char *filename)
 {
-    static int             first_time  = 1;
     static int             fragListAvail = CACHE_FILEFRAG_SIZE_START;
     static int             fragListCnt = 0;
     static cachedNetfileFrag *fragList;
@@ -463,11 +488,6 @@ char *_DtEnv_tt_host_netfile_file(
     int            newCount = fragListCnt;
 
     _DtSvcProcessLock();
-    if (first_time) {
-	fragList = (cachedNetfileFrag *) calloc( fragListAvail,
-						sizeof(cachedNetfileFrag) );
-	first_time = 0;
-    }
 
     /*
      * Take care of the obvious.
@@ -486,6 +506,18 @@ char *_DtEnv_tt_host_netfile_file(
 
 	_DtSvcProcessUnlock();
 	return(tmpStr);
+    }
+
+    if (!fragList) {
+	fragList = (cachedNetfileFrag *) calloc( fragListAvail,
+						sizeof(cachedNetfileFrag) );
+	if (!fragList) {
+	    /*
+	     * No cache available: map without caching.
+	     */
+	    _DtSvcProcessUnlock();
+	    return( tt_host_netfile_file( host, filename ) );
+	}
     }
 
     /*
@@ -553,8 +585,18 @@ char *_DtEnv_tt_host_netfile_file(
 	    /*
 	     * Can grow fragList[]
 	     */
+	    cachedNetfileFrag *grown = (cachedNetfileFrag *) reallocarray(
+		fragList, fragListAvail + CACHE_FILEFRAG_SIZE_BUMP,
+		sizeof(cachedNetfileFrag) );
+	    if (!grown) {
+		/*
+		 * Cannot grow the cache: map without caching.
+		 */
+		_DtSvcProcessUnlock();
+		return( tt_host_netfile_file( host, filename ) );
+	    }
+	    fragList = grown;
 	    fragListAvail += CACHE_FILEFRAG_SIZE_BUMP;
-	    fragList = (cachedNetfileFrag *) reallocarray((char *) fragList, fragListAvail, sizeof(cachedNetfileFrag));
 	    /*
 	     * Zero out new memory.
 	     */
@@ -598,6 +640,12 @@ char *_DtEnv_tt_host_netfile_file(
 #ifdef _DTENV_SUPPORT_MAPERROR_CACHING
 	fragList[hitIdx].targetHost = strdup ( host );
 	fragList[hitIdx].pathFragOrig = strdup( filename );
+	if ( !fragList[hitIdx].targetHost || !fragList[hitIdx].pathFragOrig ) {
+	    freeAndNull( fragList[hitIdx].targetHost );
+	    freeAndNull( fragList[hitIdx].pathFragOrig );
+	    _DtSvcProcessUnlock();
+	    return( newfile );
+	}
 	fragList[hitIdx].cacheHit = 1;
 	fragList[hitIdx].pathFragMapped = newfile;
 
@@ -606,6 +654,15 @@ char *_DtEnv_tt_host_netfile_file(
 	if ( tt_ptr_error(newfile) == TT_OK ) {
 	    fragList[hitIdx].targetHost = strdup ( host );
 	    fragList[hitIdx].pathFragOrig = strdup( filename );
+	    if ( !fragList[hitIdx].targetHost || !fragList[hitIdx].pathFragOrig ) {
+		/*
+		 * Cannot cache the answer: return it uncached.
+		 */
+		freeAndNull( fragList[hitIdx].targetHost );
+		freeAndNull( fragList[hitIdx].pathFragOrig );
+		_DtSvcProcessUnlock();
+		return( newfile );
+	    }
 	    fragList[hitIdx].cacheHit = 1;
 	    fragList[hitIdx].pathFragMapped = newfile;
             /*
@@ -674,11 +731,29 @@ char *_DtEnv_tt_host_netfile_file(
  * of environment variable names who's values need to be mapped.   Then
  * break down the list into an indexable array.
  */
-static char **_DtEnvGetMapList(
+static void _DtEnvFreeStringList(
+    char **list,
+    int    count)
+{
+    int i;
+
+    for ( i = 0; i < count; i++ ) {
+	free( list[i] );
+    }
+    free( list );
+}
+
+/*
+ * Returns 0 and the list (nullptr when mapListStr is nullptr), or -1 when
+ * memory is exhausted.
+ */
+static int _DtEnvGetMapList(
     char  *mapListStr,
+    char ***mapListOut,
     int   *mapListCount)
 {
     char **mapList;		/* decomposition of above */
+    char **grown;
     char  *tmpPtr, *tmpPtr2;
     int    availListSize;
     int    firstTime;
@@ -687,9 +762,10 @@ static char **_DtEnvGetMapList(
     /*
      * Handle NULL mapListStr.
      */
+    *mapListOut = (char **) nullptr;
     *mapListCount = 0;
     if ( !mapListStr ) {
-	return( (char **) nullptr );
+	return( 0 );
     }
 
     /*
@@ -697,11 +773,18 @@ static char **_DtEnvGetMapList(
      */
     availListSize = MALLOC_BUMP_SIZE;
     mapList = (char **) calloc((availListSize), sizeof(char *));
+    if ( !mapList ) {
+	return( -1 );
+    }
 
     /*
      * Break up the colon separated string into an indexable array.
      */
     tmpPtr = strdup(mapListStr);		/* work copy for strtok */
+    if ( !tmpPtr ) {
+	free( mapList );
+	return( -1 );
+    }
 
     firstTime = 1;
     while (1) {
@@ -717,12 +800,27 @@ static char **_DtEnvGetMapList(
 	     * Have possible env var name to map - make sure it exists.
 	     */
 	    if ( getenv(tmpPtr2) ) {
-		(*mapListCount)++;
-		if (*mapListCount > availListSize) {
+		if (*mapListCount >= availListSize) {
+		    grown = (char **) reallocarray( mapList,
+				availListSize + MALLOC_BUMP_SIZE,
+				sizeof(char *) );
+		    if ( !grown ) {
+			_DtEnvFreeStringList( mapList, *mapListCount );
+			free( tmpPtr );
+			*mapListCount = 0;
+			return( -1 );
+		    }
+		    mapList = grown;
 		    availListSize += MALLOC_BUMP_SIZE;
-		    mapList = (char **) reallocarray((char *) mapList, (availListSize), sizeof(char *));
-	        }
-		mapList[*mapListCount-1] = strdup(tmpPtr2);
+		}
+		mapList[*mapListCount] = strdup(tmpPtr2);
+		if ( !mapList[*mapListCount] ) {
+		    _DtEnvFreeStringList( mapList, *mapListCount );
+		    free( tmpPtr );
+		    *mapListCount = 0;
+		    return( -1 );
+		}
+		(*mapListCount)++;
 	    }
 	}
 	else {
@@ -732,7 +830,8 @@ static char **_DtEnvGetMapList(
 
     free(tmpPtr);
 
-    return( (char **) mapList );
+    *mapListOut = mapList;
+    return( 0 );
 }
 
 
@@ -760,6 +859,7 @@ static void _DtEnvCleanCacheSlot( cacheForTargetHost *targetCache )
 	/* do not free .localEnvVarPtr - belongs to environ */
     }
     freeAndNull( targetCache->mapList );
+    freeAndNull( targetCache->mapListDetails );
     targetCache->mapListCnt = 0;
 }
 
@@ -845,7 +945,11 @@ static cacheForTargetHost *_DtEnvGetTargetCache(
 	     * Cache was in use, clean first.
 	     */
 	    _DtEnvCleanCacheSlot( &cachePoolG[hitidx] );
-	    cachePoolG[hitidx].remoteHost = strdup( targetHost );
+    cachePoolG[hitidx].remoteHost = strdup( targetHost );
+    if ( !cachePoolG[hitidx].remoteHost ) {
+	_DtSvcProcessUnlock();
+	return( (cacheForTargetHost *) nullptr );
+    }
 
 	    /*
 	     * Since all the slots are full, occasionally reset everyones
@@ -871,17 +975,19 @@ static cacheForTargetHost *_DtEnvGetTargetCache(
  *
  * Fill out a map cache for a single environment variable.
  */
-static void _DtEnvMapIt(
+static int _DtEnvMapIt(
     char *envVar,
     cachedEnvVar *envVarCache,
     char *targetHost)
 {
     char  *separator, *tmpPtr, *tmpPtr2, swapout, *netpath;
-    char  *prePend, *postPend, *newPrePend;
+    char  *prePend, *postPend = (char *) nullptr, *newPrePend = (char *) nullptr;
 
-    char **pathList;
+    char **pathList = (char **) nullptr;
+    char **grownList;
+    char  *grownStr;
 
-    int    availPathListSize, pathListCount, availEnvStrSize, len, tmpi, i;
+int    availPathListSize, pathListCount = 0, availEnvStrSize, len, tmpi, i;
     int    considerMapping;
     _Xstrtokparams	strtok_buf;
 
@@ -893,7 +999,11 @@ static void _DtEnvMapIt(
      *    mappedEnvVarPtr = mapped "PATH=/nfs/.../users/foo:/nfs/.../users/bar"
      */
     if ( (envVarCache->localEnvVarPtr = getenv( envVar )) ) {
-	envVarCache->localEnvVarCopy = strdup( envVarCache->localEnvVarPtr );
+envVarCache->localEnvVarCopy = strdup( envVarCache->localEnvVarPtr );
+if ( !envVarCache->localEnvVarCopy ) {
+    envVarCache->localEnvVarPtr = (char *) nullptr;
+    return( -1 );
+}
 
 	/* sneak back past "NAME=" portion. */
 	envVarCache->localEnvVarPtr -= strlen( envVar ) + 1;
@@ -903,9 +1013,9 @@ static void _DtEnvMapIt(
 	 * Nothing to map.   Punt.
 	 */
 	envVarCache->localEnvVarCopy = (char *) nullptr;
-	envVarCache->localEnvVarPtr  = (char *) nullptr;
-	return;
-    }
+    envVarCache->localEnvVarPtr  = (char *) nullptr;
+    return( 0 );
+}
 
 #ifdef _DTENV_SUPPORT_COMMA_SEPARATED
     /*
@@ -934,11 +1044,17 @@ static void _DtEnvMapIt(
     availPathListSize = MALLOC_BUMP_SIZE;
     pathListCount = 0;
     pathList = (char **) calloc(availPathListSize, sizeof(char *));
+    if ( !pathList ) {
+	goto fail;
+    }
 
     /*
      * Break up path list into an array of path elements.
      */
     tmpPtr = strdup( envVarCache->localEnvVarCopy );		/* work copy */
+    if ( !tmpPtr ) {
+	goto fail;
+    }
 
     while (1) {
 	if (!pathListCount)
@@ -947,12 +1063,23 @@ static void _DtEnvMapIt(
 	    tmpPtr2 = _XStrtok( (char *) nullptr, separator, strtok_buf );
 
 	if (tmpPtr2) {
-	    pathListCount++;
-	    if (pathListCount > availPathListSize) {
+	    if (pathListCount >= availPathListSize) {
+		grownList = (char **) reallocarray( pathList,
+				availPathListSize + MALLOC_BUMP_SIZE,
+				sizeof(char *) );
+		if ( !grownList ) {
+		    free( tmpPtr );
+		    goto fail;
+		}
+		pathList = grownList;
 		availPathListSize += MALLOC_BUMP_SIZE;
-		pathList = (char **) reallocarray((char *) pathList, availPathListSize, sizeof(char *));
 	    }
-	    pathList[pathListCount-1] = strdup( tmpPtr2 );
+	    pathList[pathListCount] = strdup( tmpPtr2 );
+	    if ( !pathList[pathListCount] ) {
+		free( tmpPtr );
+		goto fail;
+	    }
+	    pathListCount++;
 	}
 	else {
 	    break;
@@ -965,6 +1092,9 @@ static void _DtEnvMapIt(
      */
     availEnvStrSize = strlen( envVar ) + 64;
     envVarCache->mappedEnvVarPtr = (char *) calloc( availEnvStrSize, sizeof(char) );
+    if ( !envVarCache->mappedEnvVarPtr ) {
+	goto fail;
+    }
     strcpy( envVarCache->mappedEnvVarPtr, envVar );
     strcat( envVarCache->mappedEnvVarPtr, "=" );
 
@@ -1021,6 +1151,9 @@ static void _DtEnvMapIt(
 		     * Will have "<prePath>/" and "/<postPath>".
 		     */
 		    postPend = strdup( tmpPtr2 );
+		    if ( !postPend ) {
+			goto fail;
+		    }
 		    *(tmpPtr2 + mblen(tmpPtr2, MB_CUR_MAX)) = '\0';
 		}
 	    }
@@ -1116,10 +1249,13 @@ static void _DtEnvMapIt(
 	    /*
 	     * Grow new mappedEnvVar space.
 	     */
+	    grownStr = (char *) realloc( envVarCache->mappedEnvVarPtr,
+					 tmpi + 64 );
+	    if ( !grownStr ) {
+		goto fail;
+	    }
+	    envVarCache->mappedEnvVarPtr = grownStr;
 	    availEnvStrSize = tmpi + 64;
-	    envVarCache->mappedEnvVarPtr = (char *) realloc(
-				(char *) envVarCache->mappedEnvVarPtr,
-				availEnvStrSize );
 	}
 
 	/*
@@ -1136,11 +1272,23 @@ static void _DtEnvMapIt(
 	if (postPend)
 	    strcat( envVarCache->mappedEnvVarPtr, postPend );
 
-	freeAndNull( prePend );		/* aka pathList[i] */
+	freeAndNull( pathList[i] );		/* aka prePend */
 	ttfreeAndNull( newPrePend );
 	freeAndNull( postPend );
     }
     freeAndNull( pathList );
+    return( 0 );
+
+fail:
+    ttfreeAndNull( newPrePend );
+    freeAndNull( postPend );
+    if ( pathList ) {
+	_DtEnvFreeStringList( pathList, pathListCount );
+    }
+    freeAndNull( envVarCache->localEnvVarCopy );
+    freeAndNull( envVarCache->mappedEnvVarPtr );
+    envVarCache->localEnvVarPtr = (char *) nullptr;
+    return( -1 );
 }
 
 /******************************************************************************
@@ -1312,12 +1460,21 @@ void _DtEnvMapForRemote (char *targetHost)
      * stashing data away.
      */
     mostRecentRemoteHostG = strdup( targetHost );
+    if (!mostRecentRemoteHostG) {
+	_DtSvcProcessUnlock();
+	XtFree(mapListStr);
+	return;
+    }
     _DtSvcProcessUnlock();
 
     /*
      * Find or allocate a cache entry.
      */
     targetCache = _DtEnvGetTargetCache( targetHost, 1 );
+    if (!targetCache) {
+	XtFree(mapListStr);
+	return;
+    }
 
     /*
      * See if cache information for targetHost is available, and
@@ -1377,16 +1534,32 @@ void _DtEnvMapForRemote (char *targetHost)
 	 */
 	targetCache->remoteHost = strdup( targetHost );
 	targetCache->mapListStr = strdup( mapListStr );
-	targetCache->mapList = _DtEnvGetMapList( mapListStr,
-					&(targetCache->mapListCnt) );
+	if ( !targetCache->remoteHost || !targetCache->mapListStr ||
+	     _DtEnvGetMapList( mapListStr, &(targetCache->mapList),
+			       &(targetCache->mapListCnt) ) != 0 ) {
+	    _DtEnvCleanCacheSlot(targetCache);
+	    XtFree(mapListStr);
+	    return;
+	}
 
-	targetCache->mapListDetails = (cachedEnvVar *)
-					calloc(targetCache->mapListCnt, sizeof(cachedEnvVar));
+	if ( targetCache->mapListCnt > 0 ) {
+	    targetCache->mapListDetails = (cachedEnvVar *)
+		    calloc(targetCache->mapListCnt, sizeof(cachedEnvVar));
+	    if ( !targetCache->mapListDetails ) {
+		_DtEnvCleanCacheSlot(targetCache);
+		XtFree(mapListStr);
+		return;
+	    }
+	}
 
 	for ( i = 0; i < targetCache->mapListCnt; i++ ) {
-	    _DtEnvMapIt( targetCache->mapList[i],
-			 &(targetCache->mapListDetails[i]),
-			 targetHost );
+	    if ( _DtEnvMapIt( targetCache->mapList[i],
+			      &(targetCache->mapListDetails[i]),
+			      targetHost ) != 0 ) {
+		_DtEnvCleanCacheSlot(targetCache);
+		XtFree(mapListStr);
+		return;
+	    }
 	}
     }
     else {

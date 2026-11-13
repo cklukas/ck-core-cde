@@ -237,6 +237,11 @@ _DtPerfChkpntInit(Display      *display,
 					DT_PERF_CHKPNT_SEL,     False);
     dtcp_info.maxprops   = NUMPROPERTIES;
     dtcp_info.aProperty  = (Atom *) calloc(dtcp_info.maxprops, sizeof(Atom));
+    if (!dtcp_info.aProperty) {
+	dtcp_info.bChkpnt = False;
+	_DtSvcProcessUnlock();
+	return(0);
+    }
     for (i= 0; i < dtcp_info.maxprops; i++) {
 	sprintf(propname, "%s_%x", DT_PERF_CLIENT_CHKPNT_PROP, i);
 	dtcp_info.aProperty[i]  = XInternAtom(dtcp_info.display,
@@ -269,13 +274,16 @@ _DtPerfChkpntInit(Display      *display,
 	XTextProperty text_prop;
 
 	buffer = malloc(strlen(prog_name) + 8);
-	sprintf(buffer, "DtPerf %s", prog_name);
-	array[0] = buffer;
-	array[1] = "";
-	XStringListToTextProperty(array, 1, &text_prop);
-	XSetWMName(tmpdisplay, dtcp_info.window, &text_prop);
-	XFree(text_prop.value);
-	free(buffer);
+	if (buffer) {
+	    sprintf(buffer, "DtPerf %s", prog_name);
+	    array[0] = buffer;
+	    array[1] = "";
+	    if (XStringListToTextProperty(array, 1, &text_prop)) {
+		XSetWMName(tmpdisplay, dtcp_info.window, &text_prop);
+		XFree(text_prop.value);
+	    }
+	    free(buffer);
+	}
     }
 
     XCloseDisplay(tmpdisplay);

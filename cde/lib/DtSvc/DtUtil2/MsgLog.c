@@ -66,12 +66,12 @@
 /* 
  * Static variables
  */
-static char 		* information_string = nullptr;
-static char 		* stderr_string = nullptr;
-static char 		* debug_string = nullptr;
-static char 		* warning_string = nullptr;
-static char 		* error_string = nullptr;
-static char 		* unknown_string = nullptr;
+static const char 	* information_string = nullptr;
+static const char 	* stderr_string = nullptr;
+static const char 	* debug_string = nullptr;
+static const char 	* warning_string = nullptr;
+static const char 	* error_string = nullptr;
+static const char 	* unknown_string = nullptr;
 #ifndef MSGLOG_CLIENT_ONLY
 static DtMsgLogHandler 	saved_msglog_handler 	= nullptr;
 #endif /* MSGLOG_CLIENT_ONLY */
@@ -112,6 +112,19 @@ static void DtMsgLogDefaultHandler (
 
 
 /*
+ * copy_message_string - returns a private copy of the message, or
+ *    the untranslated fallback text when memory is exhausted
+ */
+static const char * copy_message_string (
+	const char	* message,
+	const char	* fallback)
+{
+	char		* copy = strdup (message);
+
+	return copy ? copy : fallback;
+}
+
+/*
  * initialize_message_string - 
  *
  * Modified: initializes the static message string variables
@@ -119,12 +132,12 @@ static void DtMsgLogDefaultHandler (
  */
 static void initialize_message_strings (void)
 {
-      information_string = strdup (Dt11GETMESSAGE (SET_NUM, 1, "INFORMATION"));
-      stderr_string      = strdup (Dt11GETMESSAGE (SET_NUM, 2, "STDERR"));
-      debug_string       = strdup (Dt11GETMESSAGE (SET_NUM, 3, "DEBUG"));
-      warning_string     = strdup (Dt11GETMESSAGE (SET_NUM, 4, "WARNING"));
-      error_string       = strdup (Dt11GETMESSAGE (SET_NUM, 5, "ERROR"));
-      unknown_string     = strdup (Dt11GETMESSAGE (SET_NUM, 6, "UNKNOWN"));
+      stderr_string      = copy_message_string (Dt11GETMESSAGE (SET_NUM, 2, "STDERR"), "STDERR");
+      debug_string       = copy_message_string (Dt11GETMESSAGE (SET_NUM, 3, "DEBUG"), "DEBUG");
+      warning_string     = copy_message_string (Dt11GETMESSAGE (SET_NUM, 4, "WARNING"), "WARNING");
+      error_string       = copy_message_string (Dt11GETMESSAGE (SET_NUM, 5, "ERROR"), "ERROR");
+      unknown_string     = copy_message_string (Dt11GETMESSAGE (SET_NUM, 6, "UNKNOWN"), "UNKNOWN");
+      information_string = copy_message_string (Dt11GETMESSAGE (SET_NUM, 1, "INFORMATION"), "INFORMATION");
 }
 
 
@@ -265,7 +278,7 @@ static void DtMsgLogDefaultHandler (
 	FILE 			* fp = nullptr;
 	char			* file = nullptr;
 	time_t 			now;
-	char			* msg_string;  /* temp msg type string */
+	const char		* msg_string;  /* temp msg type string */
 	int			num_bytes;
 	char 			buf[MAX_DATE_TIME_STRING];
 #ifdef NLS16
@@ -358,7 +371,7 @@ static void DtMsgLogDefaultHandler (
 #endif
 
 #ifdef NLS16
-	num_bytes += vfprintf (fp, tmp_format, args);
+	num_bytes += vfprintf (fp, tmp_format ? tmp_format : format, args);
 	free (tmp_format);
 #else
 	num_bytes += vfprintf (fp, format, args);
