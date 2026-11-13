@@ -24,6 +24,7 @@
 #ifndef OL_DATA_H
 #define OL_DATA_H
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "ContentType.h"
@@ -63,7 +64,7 @@ public:
   /* no action takes place by default */
 
 
-  ~OL_Data() { delete f_name; }
+  ~OL_Data() { free(f_name); }
   
 public:
   void markup( const Token & );

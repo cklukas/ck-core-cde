@@ -21,6 +21,7 @@
  * Floor, Boston, MA 02110-1301 USA
  */
 /* $XConsortium: BTCollectable.cc /main/2 1996/07/18 16:09:37 drk $ */
+#include <stdlib.h>
 #include <string.h>
 
 // exported interfaces 
@@ -45,6 +46,6 @@ BTCollectable::BTCollectable(
 //--------------------------------------------------------------------
 BTCollectable::~BTCollectable()
 {
-  delete f_name;
+  free(f_name);
   delete value;
 }

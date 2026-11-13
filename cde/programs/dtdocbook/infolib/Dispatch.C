@@ -171,7 +171,7 @@ void
 Dispatch::file(const char *f)
 {
   int len = strlen(f);
-  delete f_file;
+  delete [] f_file;
   f_file = new char[len + 1];
   *((char *) memcpy(f_file, f, len) + len) = '\0';
 

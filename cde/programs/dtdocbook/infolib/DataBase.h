@@ -67,7 +67,7 @@ public:
    *      assert(strcmp(db->path(), dir) == 0);
    */
   DB(const char *name); /* a directory, for now */
-  ~DB() { if ( f_name ) delete f_name; }
+  ~DB() { if ( f_name ) delete [] f_name; }
   const char *path(void) { return f_name; };
 
 

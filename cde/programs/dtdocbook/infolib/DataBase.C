@@ -129,7 +129,7 @@ DBTable::DBTable(DB *database, int schema_code, int cols, const char *name)
 DBTable::~DBTable()
 {
   if(f_file && strcmp(f_name, DATABASE_STDIO) != 0) fclose(f_file);
-  delete f_name; 
+  delete [] f_name;
 }
 
 

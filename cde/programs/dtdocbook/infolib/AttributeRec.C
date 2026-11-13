@@ -78,7 +78,7 @@ AttributeRec::AttributeRec( const char *name,
 //---------------------------------------------------------------------
 AttributeRec::~AttributeRec()
 {
-  delete copy;
+  delete [] copy;
 }
 
 //---------------------------------------------------------------------
