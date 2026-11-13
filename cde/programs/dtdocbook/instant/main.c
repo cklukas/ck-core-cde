@@ -460,6 +460,7 @@ HandleArgs(
     extern int	 optind;
     char       **thisopt;
     int          count;
+    char       **grown;
 
     while ((c=getopt(ac, av, "t:vc:s:o:L:huSxIl:bHVWi:D:Z")) != EOF) {
 	switch (c) {
@@ -472,8 +473,14 @@ HandleArgs(
 		    count = 0;
 		    while (*thisopt++)
 			count++;
-		    sdatafile = (char **)
-			realloc(sdatafile, (count+2)*sizeof(char *));
+		    grown = (char **)
+			reallocarray(sdatafile, (size_t)count + 2, sizeof(char *));
+		    if (grown == nullptr)
+			{
+			fprintf(stderr, "Error: Out of memory.\n");
+			exit(1);
+			}
+		    sdatafile = grown;
 		    sdatafile[count+1] = 0;
 		    thisopt = sdatafile + count;
 		    }
@@ -492,8 +499,14 @@ HandleArgs(
 		    count = 0;
 		    while (*thisopt++)
 			count++;
-		    cmapfile = (char **)
-			realloc(cmapfile, (count+2)*sizeof(char *));
+		    grown = (char **)
+			reallocarray(cmapfile, (size_t)count + 2, sizeof(char *));
+		    if (grown == nullptr)
+			{
+			fprintf(stderr, "Error: Out of memory.\n");
+			exit(1);
+			}
+		    cmapfile = grown;
 		    cmapfile[count+1] = 0;
 		    thisopt = cmapfile + count;
 		    }
