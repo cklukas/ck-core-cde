@@ -35,7 +35,14 @@ CC_String::hash() const
 
 CC_String::CC_String (const CC_String& x)
 {
-   f_string = strdup(x.f_string);
+   if ( x.f_string == NULL ) {
+      f_string = NULL;
+      return;
+   }
+
+   size_t len = strlen(x.f_string);
+   f_string = new char[len + 1];
+   memcpy(f_string, x.f_string, len + 1);
 }
 
 //-----------------------------------------------------
