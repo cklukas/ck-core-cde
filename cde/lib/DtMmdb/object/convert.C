@@ -66,5 +66,5 @@ cout << "***\n";
        }
    }
 
-   delete buf;
+   delete [] buf;
 }

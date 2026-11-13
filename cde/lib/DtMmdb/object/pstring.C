@@ -105,7 +105,7 @@ void pstring::_init(const char* x, int leng)
 pstring::~pstring()
 {
    if ( get_mode(PERSISTENT) == false && NULL != v_str_ptr.p ) 
-      delete v_str_ptr.p;
+      delete [] v_str_ptr.p;
 }
 
 
@@ -376,7 +376,7 @@ for (int i=0; i<new_value_sz; i++)
    } else  {
 
       if ( old_sz < new_value_sz ) {
-         delete v_str_ptr.p;
+         delete [] v_str_ptr.p;
          v_str_ptr.p = new char[v_sz+1];
       } 
       memcpy(v_str_ptr.p, new_value, v_sz);

@@ -76,7 +76,7 @@ const char* random_gen::get_random_string(int low, int high)
  
    if ( buf_len < x ) {
       buf_len = x;
-      delete buf;
+      delete [] buf;
       buf = new char[buf_len+1];
    }
    int i;
