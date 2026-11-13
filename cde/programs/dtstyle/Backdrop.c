@@ -226,7 +226,7 @@ build_dirList(char * dirStr,
    if (i == 0)
        return (nullptr);
 
-   dirList = (char **) XtCalloc(1, i * sizeof(char *));
+   dirList = (char **) XtCalloc(i, sizeof(char *));
    if( dirList )
      {
        strcpy(tmpStr, dirStr); 

@@ -317,7 +317,7 @@ build_saverList(char * str,
    if (i == 0)
        return (nullptr);
 
-   saverList = (SaverSub *) XtCalloc(1, i * sizeof(SaverSub));
+   saverList = (SaverSub *) XtCalloc(i, sizeof(SaverSub));
    if( saverList )
      {
        strcpy(tmpStr, str); 
@@ -392,7 +392,7 @@ build_selsaverList(char * envStr,
    if (i == 0)
        return (nullptr);
 
-   saverList = (char **) XtCalloc(1, i * sizeof(char *));
+   saverList = (char **) XtCalloc(i, sizeof(char *));
    if( saverList )
      {
        strcpy(tmpStr, envStr); 
