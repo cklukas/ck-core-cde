@@ -207,10 +207,18 @@ add_charset(
         variant->charsetCapacity = newCap;
     }
 
+    char *registryCopy = strdup(registry ? registry : "*");
+    char *encodingCopy = strdup(encoding ? encoding : "*");
+    if (!registryCopy || !encodingCopy) {
+        free(registryCopy);
+        free(encodingCopy);
+        return nullptr;
+    }
+
     VariantCharsetEntry *entry = &variant->charsets[variant->charsetCount++];
-    entry->registry = strdup(registry ? registry : "*");
-    entry->encoding = strdup(encoding ? encoding : "*");
-    entry->raw = raw ? strdup(raw) : nullptr;
+    entry->registry = registryCopy;
+    entry->encoding = encodingCopy;
+    entry->raw = XtNewString(raw);
     entry->sizes = nullptr;
     entry->sizeCount = 0;
     entry->sizeCapacity = 0;
@@ -249,7 +257,7 @@ variant_add_size(
     }
 
     charset->sizes[charset->sizeCount].size = size;
-    charset->sizes[charset->sizeCount].raw = strdup(raw);
+    charset->sizes[charset->sizeCount].raw = XtNewString(raw);
     charset->sizeCount++;
 }
 
@@ -376,9 +384,8 @@ add_alias_descriptor(
         return;
 
     if (descriptor->scalable) {
-        if (charset->raw)
-            free(charset->raw);
-        charset->raw = descriptor->raw ? strdup(descriptor->raw) : nullptr;
+        XtFree(charset->raw);
+        charset->raw = XtNewString(descriptor->raw);
         variant->scalable = True;
     } else {
         int size = descriptor->pixelSize > 0 ? descriptor->pixelSize : descriptor->pointSize;
@@ -472,6 +479,51 @@ load_alias_font_sizes(
 }
 
 
+static void
+free_variant_entry(VariantEntry *variant)
+{
+    if (!variant)
+        return;
+    free(variant->key);
+    free(variant->labelText);
+    if (variant->label)
+        XmStringFree(variant->label);
+    FreeFontDescriptor(variant->base);
+    for (int c = 0; c < variant->charsetCount; c++) {
+        VariantCharsetEntry *charset = &variant->charsets[c];
+        if (charset->label)
+            XmStringFree(charset->label);
+        free(charset->registry);
+        free(charset->encoding);
+        XtFree(charset->raw);
+        for (int s = 0; s < charset->sizeCount; s++)
+            XtFree(charset->sizes[s].raw);
+        free(charset->sizes);
+    }
+    free(variant->charsets);
+}
+
+static void
+free_variant_pool(VariantEntry *variantPool, int variantCount)
+{
+    for (int i = 0; i < variantCount; i++)
+        free_variant_entry(&variantPool[i]);
+    free(variantPool);
+}
+
+static void
+free_families(FamilyEntry *families, int familyCount)
+{
+    for (int i = 0; i < familyCount; i++) {
+        FamilyEntry *family = &families[i];
+        free(family->familyName);
+        if (family->label)
+            XmStringFree(family->label);
+        free(family->variants);
+    }
+    free(families);
+}
+
 FontFaceCatalog *
 FontFaceCatalogLoad(Display *display)
 {
@@ -539,16 +591,15 @@ FontFaceCatalogLoad(Display *display)
 
         if (desc && charset) {
             if (desc->scalable) {
-                if (charset->raw)
-                    free(charset->raw);
-                charset->raw = strdup(font_names[i]);
+                XtFree(charset->raw);
+                charset->raw = XtNewString(font_names[i]);
             } else {
                 int size = desc->pixelSize > 0 ? desc->pixelSize : desc->pointSize;
                 variant_add_size(charset, size, font_names[i]);
             }
         }
         if (variant->scalable && charset && !charset->raw)
-            charset->raw = strdup(font_names[i]);
+            charset->raw = XtNewString(font_names[i]);
 
         if (desc)
             FreeFontDescriptor(desc);
@@ -574,27 +625,7 @@ FontFaceCatalogLoad(Display *display)
 
     FamilyEntry *families = calloc(variantCount, sizeof(FamilyEntry));
     if (!families) {
-        for (int i = 0; i < variantCount; i++) {
-            VariantEntry *variant = &variantPool[i];
-            free(variant->key);
-            free(variant->labelText);
-            if (variant->label)
-                XmStringFree(variant->label);
-            FreeFontDescriptor(variant->base);
-            for (int c = 0; c < variant->charsetCount; c++) {
-                VariantCharsetEntry *charset = &variant->charsets[c];
-                if (charset->label)
-                    XmStringFree(charset->label);
-                free(charset->registry);
-                free(charset->encoding);
-                free(charset->raw);
-                for (int s = 0; s < charset->sizeCount; s++)
-                    free(charset->sizes[s].raw);
-                free(charset->sizes);
-            }
-            free(variant->charsets);
-        }
-        free(variantPool);
+        free_variant_pool(variantPool, variantCount);
         return nullptr;
     }
 
@@ -606,15 +637,28 @@ FontFaceCatalogLoad(Display *display)
         if (!entry) {
             entry = &families[familyCount++];
             entry->familyName = strdup(family);
+            if (!entry->familyName) {
+                free_families(families, familyCount);
+                free_variant_pool(variantPool, variantCount);
+                return nullptr;
+            }
             entry->label = XmStringCreateLocalized(entry->familyName);
+            entry->variants = calloc(4, sizeof(VariantEntry *));
+            if (!entry->variants) {
+                free_families(families, familyCount);
+                free_variant_pool(variantPool, variantCount);
+                return nullptr;
+            }
             entry->variantCapacity = 4;
-            entry->variants = calloc(entry->variantCapacity, sizeof(VariantEntry *));
         }
         if (entry->variantCount >= entry->variantCapacity) {
             int newCap = entry->variantCapacity * 2;
             VariantEntry **newArr = reallocarray(entry->variants, newCap, sizeof(VariantEntry *));
-            if (!newArr)
-                continue;
+            if (!newArr) {
+                free_families(families, familyCount);
+                free_variant_pool(variantPool, variantCount);
+                return nullptr;
+            }
             entry->variants = newArr;
             entry->variantCapacity = newCap;
         }
@@ -631,35 +675,8 @@ FontFaceCatalogLoad(Display *display)
 
     FontFaceCatalog *catalog = calloc(1, sizeof(FontFaceCatalog));
     if (!catalog) {
-        for (int i = 0; i < familyCount; i++) {
-            FamilyEntry *entry = &families[i];
-            free(entry->familyName);
-            if (entry->label)
-                XmStringFree(entry->label);
-            free(entry->variants);
-        }
-        free(families);
-        for (int i = 0; i < variantCount; i++) {
-            VariantEntry *variant = &variantPool[i];
-            free(variant->key);
-            free(variant->labelText);
-            if (variant->label)
-                XmStringFree(variant->label);
-            FreeFontDescriptor(variant->base);
-            for (int c = 0; c < variant->charsetCount; c++) {
-                VariantCharsetEntry *charset = &variant->charsets[c];
-                if (charset->label)
-                    XmStringFree(charset->label);
-                free(charset->registry);
-                free(charset->encoding);
-                free(charset->raw);
-                for (int s = 0; s < charset->sizeCount; s++)
-                    free(charset->sizes[s].raw);
-                free(charset->sizes);
-            }
-            free(variant->charsets);
-        }
-        free(variantPool);
+        free_families(families, familyCount);
+        free_variant_pool(variantPool, variantCount);
         return nullptr;
     }
 
@@ -670,49 +687,14 @@ FontFaceCatalogLoad(Display *display)
     return catalog;
 }
 
-static void
-free_variant_entry(VariantEntry *variant)
-{
-    if (!variant)
-        return;
-    free(variant->key);
-    free(variant->labelText);
-    if (variant->label)
-        XmStringFree(variant->label);
-    FreeFontDescriptor(variant->base);
-    for (int c = 0; c < variant->charsetCount; c++) {
-        VariantCharsetEntry *charset = &variant->charsets[c];
-        if (charset->label)
-            XmStringFree(charset->label);
-        free(charset->registry);
-        free(charset->encoding);
-        free(charset->raw);
-        for (int s = 0; s < charset->sizeCount; s++)
-            free(charset->sizes[s].raw);
-        free(charset->sizes);
-    }
-    free(variant->charsets);
-}
-
 void
 FontFaceCatalogFree(FontFaceCatalog *catalog)
 {
     if (!catalog)
         return;
 
-    for (int i = 0; i < catalog->familyCount; i++) {
-        FamilyEntry *family = &catalog->families[i];
-        free(family->familyName);
-        if (family->label)
-            XmStringFree(family->label);
-        free(family->variants);
-    }
-    free(catalog->families);
-
-    for (int i = 0; i < catalog->variantCount; i++)
-        free_variant_entry(&catalog->variantPool[i]);
-    free(catalog->variantPool);
-
+    free_families(catalog->families, catalog->familyCount);
+    free_variant_pool(catalog->variantPool, catalog->variantCount);
     free(catalog);
 }
 

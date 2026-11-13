@@ -462,7 +462,7 @@ ProcessComponentList(
    XtSetArg(args[n], XmNshadowType, XmSHADOW_OUT); n++;
    n2 = 3;    /* number of preset args for creating Icons */
 
-   resString = strdup (style.xrdb.componentList);
+   resString = XtNewString (style.xrdb.componentList);
    resString2 = resString;
    len = strlen(resString);
    string = strtok(resString, " ");

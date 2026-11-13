@@ -144,21 +144,23 @@ FontCatalogLoad(
         if (!current_family || strcasecmp(current_family->name, family_name) != 0) {
             current_family = &catalog->families[family_count++];
             current_family->name = strdup(family_name);
+            if (!current_family->name)
+                goto family_failed;
             current_family->label = XmStringCreateLocalized(current_family->name);
+            current_family->styles = calloc(4, sizeof(FontCatalogEntry *));
+            if (!current_family->styles)
+                goto family_failed;
             current_family->styleCapacity = 4;
-            current_family->styles = calloc(current_family->styleCapacity,
-                                            sizeof(FontCatalogEntry *));
             current_family->styleCount = 0;
         }
 
-        if (!current_family)
-            continue;
-
         if (current_family->styleCount >= current_family->styleCapacity) {
-            current_family->styleCapacity *= 2;
-            FontCatalogEntry **new_array = reallocarray(current_family->styles, current_family->styleCapacity, sizeof(FontCatalogEntry *));
-            if (new_array)
-                current_family->styles = new_array;
+            int new_capacity = current_family->styleCapacity * 2;
+            FontCatalogEntry **new_array = reallocarray(current_family->styles, new_capacity, sizeof(FontCatalogEntry *));
+            if (!new_array)
+                goto family_failed;
+            current_family->styles = new_array;
+            current_family->styleCapacity = new_capacity;
         }
 
         current_family->styles[current_family->styleCount++] = &catalog->entries[i];
@@ -166,6 +168,11 @@ FontCatalogLoad(
 
     catalog->familyCount = family_count;
     return catalog;
+
+family_failed:
+    catalog->familyCount = family_count;
+    FontCatalogFree(catalog);
+    return nullptr;
 }
 
 void

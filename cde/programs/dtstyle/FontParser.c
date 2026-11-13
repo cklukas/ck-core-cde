@@ -6,18 +6,24 @@
 #include <string.h>
 #include <strings.h>
 
-static char *duplicate_field(const char *value)
+/* Copies a non-wildcard field into *out; returns false if allocation fails. */
+static bool duplicate_field(const char *value, char **out)
 {
+    *out = nullptr;
     if (!value || *value == '\0' || strcmp(value, "*") == 0)
-        return nullptr;
-    return strdup(value);
+        return true;
+    *out = strdup(value);
+    return *out != nullptr;
 }
 
-static char *keep_field(const char *value)
+/* Copies any present field into *out; returns false if allocation fails. */
+static bool keep_field(const char *value, char **out)
 {
+    *out = nullptr;
     if (!value)
-        return nullptr;
-    return strdup(value);
+        return true;
+    *out = strdup(value);
+    return *out != nullptr;
 }
 
 static int parse_size_field(const char *value)
@@ -186,23 +192,31 @@ FontDescriptor *ParseXLFD(const char *xlfd)
     for (int i = 0; i < 14; i++)
         descriptor->fields[i] = nullptr;
 
-    descriptor->foundry = duplicate_field(fields[0]);
-    descriptor->family = duplicate_field(fields[1]);
-    descriptor->weight = duplicate_field(fields[2]);
-    descriptor->slant = duplicate_field(fields[3]);
-    descriptor->setWidth = duplicate_field(fields[4]);
-    descriptor->addStyle = duplicate_field(fields[5]);
-    descriptor->registry = duplicate_field(fields[12]);
-    descriptor->encoding = duplicate_field(fields[13]);
+    bool ok = duplicate_field(fields[0], &descriptor->foundry) &&
+              duplicate_field(fields[1], &descriptor->family) &&
+              duplicate_field(fields[2], &descriptor->weight) &&
+              duplicate_field(fields[3], &descriptor->slant) &&
+              duplicate_field(fields[4], &descriptor->setWidth) &&
+              duplicate_field(fields[5], &descriptor->addStyle) &&
+              duplicate_field(fields[12], &descriptor->registry) &&
+              duplicate_field(fields[13], &descriptor->encoding);
     descriptor->pixelSize = parse_size_field(fields[6]);
     descriptor->pointSize = parse_size_field(fields[7]);
     descriptor->scalable = (descriptor->pixelSize == 0 || descriptor->pointSize == 0);
-    descriptor->raw = strdup(xlfd);
-    for (int i = 0; i < 14; i++)
-        descriptor->fields[i] = keep_field(fields[i]);
-    descriptor->displayName = build_display_name(descriptor);
+    if (ok)
+        ok = keep_field(xlfd, &descriptor->raw);
+    for (int i = 0; ok && i < 14; i++)
+        ok = keep_field(fields[i], &descriptor->fields[i]);
+    if (ok) {
+        descriptor->displayName = build_display_name(descriptor);
+        ok = descriptor->displayName != nullptr;
+    }
 
     free(copy);
+    if (!ok) {
+        FreeFontDescriptor(descriptor);
+        return nullptr;
+    }
     return descriptor;
 }
 
@@ -276,23 +290,29 @@ DuplicateFontDescriptor(
     if (!copy)
         return nullptr;
 
-    for (int i = 0; i < 14; i++) {
-        copy->fields[i] = keep_field(source->fields[i]);
+    bool ok = true;
+    for (int i = 0; ok && i < 14; i++)
+        ok = keep_field(source->fields[i], &copy->fields[i]);
+
+    ok = ok &&
+         keep_field(source->foundry, &copy->foundry) &&
+         keep_field(source->family, &copy->family) &&
+         keep_field(source->weight, &copy->weight) &&
+         keep_field(source->slant, &copy->slant) &&
+         keep_field(source->setWidth, &copy->setWidth) &&
+         keep_field(source->addStyle, &copy->addStyle) &&
+         keep_field(source->registry, &copy->registry) &&
+         keep_field(source->encoding, &copy->encoding) &&
+         keep_field(source->raw, &copy->raw) &&
+         keep_field(source->displayName, &copy->displayName);
+    if (!ok) {
+        FreeFontDescriptor(copy);
+        return nullptr;
     }
 
-    copy->foundry = keep_field(source->foundry);
-    copy->family = keep_field(source->family);
-    copy->weight = keep_field(source->weight);
-    copy->slant = keep_field(source->slant);
-    copy->setWidth = keep_field(source->setWidth);
-    copy->addStyle = keep_field(source->addStyle);
-    copy->registry = keep_field(source->registry);
-    copy->encoding = keep_field(source->encoding);
     copy->pixelSize = source->pixelSize;
     copy->pointSize = source->pointSize;
     copy->scalable = source->scalable;
-    copy->raw = keep_field(source->raw);
-    copy->displayName = keep_field(source->displayName);
 
     return copy;
 }
