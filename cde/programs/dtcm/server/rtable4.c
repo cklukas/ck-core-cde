@@ -1342,7 +1342,12 @@ _DtCm_rtable_get_access_4_svc(Access_Args_4 *args, struct svc_req *svcrq)
 			_DtCmsShowAccessList (res.access_list);
 	}
 
-	res.target = strdup(args->target); 
+	res.target = strdup(args->target);
+	if (res.target == nullptr) {
+		if (res.access_list)
+			_DtCm_free_access_list4(res.access_list);
+		res.access_list = (Access_Entry_4 *) nullptr;
+	}
 
 	return (&res);
 }
