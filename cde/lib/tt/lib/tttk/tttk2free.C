@@ -123,7 +123,7 @@ _TttkList2Free::_TttkList2Free(
 		_max = 0;
 	}
 #else
-	_items = (_TttkItem2Free **)malloc( maxElems * sizeof(_TttkItem2Free *));
+	_items = (_TttkItem2Free **)calloc(maxElems, sizeof(_TttkItem2Free *));
 	if (_items == 0) {
 		_max = 0;
 	}

@@ -188,7 +188,7 @@ pats_create(
 	if (processRequests != 0) {
 		numPats++;
 	}
-	Tt_pattern *pats = (Tt_pattern *)malloc(numPats * sizeof(Tt_pattern));
+	Tt_pattern *pats = (Tt_pattern *)calloc(numPats, sizeof(Tt_pattern));
 	if (pats == 0) {
 		return (Tt_pattern *)tt_error_pointer( TT_ERR_NOMEM );
 	}

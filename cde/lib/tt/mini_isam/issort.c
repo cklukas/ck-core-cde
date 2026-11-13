@@ -36,6 +36,8 @@
  * Description:
  *	ISAM sort package (sort in memory)
  */
+#include <limits.h>
+#include <stdckdint.h>
 #include <stdlib.h>
 
 #include "isam_impl.h"
@@ -50,6 +52,11 @@ Issort *
 _issort_create(int reclen, int nrecs, int (*compfunc)(const void *, const void *))
 {	
     Issort	*p;
+    size_t	arraysize;
+
+    if (ckd_mul(&arraysize, (size_t) reclen, (size_t) nrecs) ||
+	arraysize > UINT_MAX)
+	_isfatal_error("sort array too large");
 
     p = (Issort *)_ismalloc(sizeof(*p));     /* Allocate new sorter */
     memset((char *)p, 0,sizeof(*p));
@@ -61,7 +68,7 @@ _issort_create(int reclen, int nrecs, int (*compfunc)(const void *, const void *
     p->ist_currec = 0;			     /* Current position */
     p->ist_compf = compfunc;		     /* Comparison function */
 
-    p->ist_array = _ismalloc((unsigned)(reclen * nrecs)); /* Allocate array */
+    p->ist_array = _ismalloc((unsigned) arraysize); /* Allocate array */
 					     /* for storing records */
 
     return(p);

@@ -208,7 +208,7 @@ void _tt_set_rpc_strings (const _Tt_string_list_ptr &strings,
     int strings_count = strings->count ();
 
     rpc_strings.values_val = (_tt_string *)
-                             malloc(sizeof(_tt_string) * strings_count);
+                             calloc(strings_count, sizeof(_tt_string));
     rpc_strings.values_len = strings_count;
 
     int i = 0;
@@ -234,8 +234,7 @@ void _tt_set_rpc_property (const _Tt_db_property_ptr &prop,
     rpc_prop.name = strdup((char *)prop->name);
     rpc_prop.values.values_len = prop_values_count;
     rpc_prop.values.values_val = (_tt_property_value *)
-			         malloc (sizeof(_tt_property_value) *
-				         prop_values_count);
+			         calloc(prop_values_count, sizeof(_tt_property_value));
 
     int i = 0;
     _Tt_string_list_cursor values_cursor(prop->values);
@@ -269,7 +268,7 @@ void _tt_set_rpc_properties (const _Tt_db_property_list_ptr &props,
     }
     else {
       rpc_props.properties_val = (_tt_property *)
-			         malloc(sizeof(_tt_property) * props_count);
+			         calloc(props_count, sizeof(_tt_property));
 
       int i = 0;
       _Tt_db_property_list_cursor props_cursor(props);
