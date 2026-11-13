@@ -315,12 +315,23 @@ abio_get_handler(FILE * inFile, ISTRING * stringOutPtr)
     else
     {
 	string = (STRING) malloc(len = INC);
+	if (string == nullptr)
+	    return FALSE;
 	string[c++] = fgetc(inFile);
 	while (((ch = fgetc(inFile)) != EOF) &&
 	       (ch != *abio_string_end_string()))
 	{
 	    if (c + 2 == len)
-		string = (STRING) realloc(string, len += INC);
+	    {
+		STRING grown = (STRING) realloc(string, len += INC);
+
+		if (grown == nullptr)
+		{
+		    free(string);
+		    return FALSE;
+		}
+		string = grown;
+	    }
 	    if (ch == '\\')
 		ch = fgetc(inFile);
 	    string[c++] = (char) ch;
@@ -438,16 +449,28 @@ abio_get_list(FILE * inFile, ISTRING *stringOutPtr)
     }
 
     string = (STRING) malloc(len = INC);
+    if (string == nullptr)
+	return FALSE;
     for (c = 0; (ch = fgetc(inFile)) != *abio_list_end_string(); c++)
     {
 	if (c + 1 == len)
-	    string = (STRING) realloc(string, len += INC);
+	{
+	    STRING grown = (STRING) realloc(string, len += INC);
+
+	    if (grown == nullptr)
+	    {
+		free(string);
+		return FALSE;
+	    }
+	    string = grown;
+	}
 	if (ch == '\\')
 	    ch = fgetc(inFile);
 	string[c] = (char) ch;
     }
     string[c] = '\0';
     stringOut = istr_create(string);
+    util_free(string);
     return TRUE;
 #undef INC
 #undef stringOut
@@ -928,10 +951,21 @@ abio_get_string(FILE * inFile, ISTRING *istringOutPtr)
     }
 
     string = (STRING)malloc(len = INC);
+    if (string == nullptr)
+	return FALSE;
     while (((ch = fgetc(inFile)) != EOF) && (ch != *abio_string_end_string()))
     {
 	if (c + 1 == len)
-	    string = (STRING)realloc(string, len += INC);
+	{
+	    STRING grown = (STRING)realloc(string, len += INC);
+
+	    if (grown == nullptr)
+	    {
+		free(string);
+		return FALSE;
+	    }
+	    string = grown;
+	}
 	if (ch == '\\')
 	{
 	    ch = fgetc(inFile);
@@ -1102,47 +1136,48 @@ abio_check_bil_version(
     STRING	fileName = nullptr;
 
     fileName = name? name : CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 35, "NoName");
-    fileName = strdup(fileName);
 
     if (ver > Util_major_version)
     {
-	errmsg = strdup(CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 32,
-		"Incompatible BIL version"));
+	errmsg = CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 32,
+		"Incompatible BIL version");
 
 	help_msg = CATGETS(UTIL_MESSAGE_CATD,
                 UTIL_MESSAGE_SET, 33,
                 "The version of the BIL file %s (%3.2f)\nis not supported in this version of App Builder.");
 
 	help_buf = (STRING)util_malloc(strlen(help_msg) + strlen(fileName) + MAXVER +1);
-	sprintf(help_buf, help_msg, fileName, ver);
-	util_set_help_data(help_buf, nullptr, nullptr);
+	if (help_buf != nullptr)
+	{
+	    sprintf(help_buf, help_msg, fileName, ver);
+	    util_set_help_data(help_buf, nullptr, nullptr);
+	}
     }
     else if (ver == 0.0)
     {
-	errmsg = strdup(CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 30,
-			"Unrecognized file format"));
+	errmsg = CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 30,
+			"Unrecognized file format");
 
 	help_msg = CATGETS(UTIL_MESSAGE_CATD,
                 UTIL_MESSAGE_SET, 31,
                 "The file %s does not appear to be in BIL\nformat.  Either a BIL header (:bil-version) was\nnot found or the header is corrupt.");
 
 	help_buf = (STRING)util_malloc(strlen(help_msg) + strlen(fileName) + 1);
-	sprintf(help_buf, help_msg, fileName);
-	util_set_help_data(help_buf, nullptr, nullptr);
+	if (help_buf != nullptr)
+	{
+	    sprintf(help_buf, help_msg, fileName);
+	    util_set_help_data(help_buf, nullptr, nullptr);
+	}
     }
     
     if (errmsg)
     {
 	sprintf(Buf, "%s: %s", fileName, errmsg);
-	free(errmsg);
 	errmsg = Buf;
     }
 
     if (help_buf)
 	util_free(help_buf);
-
-    if (fileName)
-	free(fileName);
 
     return errmsg;
 }
@@ -1746,6 +1781,8 @@ abio_put_handler(FILE * outFile, STRING s)
 	(s[strlen(s) - 1] == *abio_string_end_string()))
     {
 	newstr = (STRING) malloc(strlen(s) + 1);
+	if (newstr == nullptr)
+	    return -1;
 	strcpy(newstr, s);
 	newstr[strlen(s) - 1] = '\0';
 
@@ -2424,51 +2461,54 @@ abio_project_string(void)
  * Write an escaped string to a buffer.
  * Assumes space has been allocated for outBuf.
  * size is the size allocated for the buffer.
+ * Returns 0 if successful, -1 if the escaped string does not fit in size
+ * bytes; outBuf then holds a terminated, truncated string.
  */
 int
 abio_put_string_to_buffer(STRING string, STRING outBuf, int size)
 {
-#define INC             32
     STRING     ptr;
     char		strEndChar = *(abio_string_end_string());
     char		curChar = 0;
     int			i = 0;
 
+    if (size < 1)
+	return -1;
     *outBuf = 0;
     if (string != nullptr)
     {
 	for (ptr = string, i = 0; (*ptr != 0); ++ptr, ++i)
 	{
-	    /* If we've run out of space, allocate more.
-	     */
-	    if (i == (size - 1))
-	    {
-		outBuf = (STRING) realloc(outBuf, size += INC);
-	    }
-
 	    curChar = *ptr;
 
 	    /* Escape backslashes, double-quotes, 
 	     * newlines, and tabs. 
 	     */
 	    if (   (curChar == strEndChar) 
-		|| (curChar == '\\') )
+		|| (curChar == '\\') 
+		|| (curChar == '\n')
+		|| (curChar == '\t') )
 	    {
+		if (i + 2 >= size)
+		{
+		    outBuf[i] = '\0';
+		    return -1;
+		}
 		outBuf[i] = '\\'; i++;
-		outBuf[i] = curChar;
-	    }
-	    else if (curChar == '\n')
-	    {
-		outBuf[i] = '\\'; i++;
-		outBuf[i] = 'n';
-	    }
-	    else if (curChar == '\t')
-	    {
-		outBuf[i] = '\\'; i++;
-		outBuf[i] = 't';
+		if (curChar == '\n')
+		    outBuf[i] = 'n';
+		else if (curChar == '\t')
+		    outBuf[i] = 't';
+		else
+		    outBuf[i] = curChar;
 	    }
 	    else
 	    {
+		if (i + 1 >= size)
+		{
+		    outBuf[i] = '\0';
+		    return -1;
+		}
 		outBuf[i] = curChar;
 	    }
 	}
@@ -2497,7 +2537,8 @@ util_set_help_data(
     if (msg)
     {
 	help_text = (STRING)util_malloc(strlen(msg)+1);
-	strcpy(help_text, msg);
+	if (help_text != nullptr)
+	    strcpy(help_text, msg);
     }
 
     if (help_volume)
@@ -2508,7 +2549,8 @@ util_set_help_data(
     if (vol)
     {
 	help_volume = (STRING)util_malloc(strlen(vol)+1);
-	strcpy(help_volume, vol);
+	if (help_volume != nullptr)
+	    strcpy(help_volume, vol);
     }
 
     if (help_locID)
@@ -2519,7 +2561,8 @@ util_set_help_data(
     if (locID)
     {
 	help_locID = (STRING)util_malloc(strlen(locID)+1);
-	strcpy(help_locID, locID);
+	if (help_locID != nullptr)
+	    strcpy(help_locID, locID);
     } 
 }
 

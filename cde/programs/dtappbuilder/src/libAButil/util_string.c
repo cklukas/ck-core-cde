@@ -189,14 +189,15 @@ util_strip_white_space(
     if (index != nullptr)
     {
 	newString = strdup(index);
+	if (newString == nullptr)
+	    return nullptr;
  	index = newString;
-	while ((index != nullptr) && !(isspace(*index)))
+	while (!(isspace(*index)) && (*index != '\0'))
 	{
 	    index++;
 	}
 	/* Strip off any ending blanks */
-	if (index != nullptr)
-	    *index = '\0';
+	*index = '\0';
     }
     return (newString);
 }

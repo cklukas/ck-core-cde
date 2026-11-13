@@ -384,7 +384,6 @@ abio_get_bil_version(
     long                first_char;
     float               version = 0.0;
     char		*tok = nullptr;
-    char		*s1 = nullptr;
  
     rewind(fp);
     *pLinesRead = 0;
@@ -395,9 +394,8 @@ abio_get_bil_version(
         /* Skip any leading white space.
          * Ignore lines until a BIL prefix is found.
          */
-	s1 = strdup(Buf);
-	tok = strtok(s1, " \t");
-        if (tok && (strncmp(tok, ":bil-version", len) == 0))
+	tok = Buf + strspn(Buf, " \t");
+        if (strncmp(tok, ":bil-version", len) == 0)
         {
             /* Prefix matched.  Point to the version number 
 	     * and convert it to a float.
@@ -438,14 +436,7 @@ abio_get_bil_version(
             break;
         }
 #endif                          /* BOGUS */
-
-	/* Need to free space allocated by strdup() above */
-        if (s1) { 
-	    free(s1);  
-	    s1 = nullptr;
-	}
     }
-    if (s1) free(s1);
  
     return version;
 }

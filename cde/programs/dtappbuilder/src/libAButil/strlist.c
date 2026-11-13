@@ -586,7 +586,11 @@ strlistP_shrink_array(StringList list, int sizeDiff)
 	{
 	    istr_destroy(list->strings[i]);
 	}
-	list->user_datas[i] = nullptr;
+	list->strings[i] = nullptr;
+	if (list->user_datas != nullptr)
+	{
+	    list->user_datas[i] = nullptr;
+	}
     }
 
     if (new_strings_size > 0)
@@ -603,6 +607,15 @@ strlistP_shrink_array(StringList list, int sizeDiff)
     if (   (new_strings_size > 0) 
 	&& ((new_strings == nullptr) || (new_user_datas == nullptr)) )
     {
+	/* A successful reallocarray has released the old block. */
+	if (new_strings != nullptr)
+	{
+	    list->strings = new_strings;
+	}
+	if (new_user_datas != nullptr)
+	{
+	    list->user_datas = new_user_datas;
+	}
 	return_value = -1;
 	goto epilogue;
     }
@@ -636,9 +649,16 @@ strlistP_grow_array(StringList list, int sizeDiff)
     new_user_datas = (void **)reallocarray(list->user_datas, new_strings_size, sizeof(void *));
     if ((new_strings == nullptr) || (new_user_datas == nullptr))
     {
+	/* A successful reallocarray has released the old block. */
+	if (new_strings != nullptr)
+	{
+	    list->strings = new_strings;
+	}
+	if (new_user_datas != nullptr)
+	{
+	    list->user_datas = new_user_datas;
+	}
 	return_value = -1;
-	free(new_strings);
-	free(new_user_datas);
 	goto epilogue;
     }
     else
@@ -669,7 +689,7 @@ strlistP_build_user_data_array(StringList list, int index, void *data)
     {
 	return -1;
     }
-    list->user_datas = (void **)calloc(sizeof(void*), list->strings_size);
+    list->user_datas = (void **)calloc(list->strings_size, sizeof(void*));
     if (list->user_datas == nullptr)
     {
 	return -1;

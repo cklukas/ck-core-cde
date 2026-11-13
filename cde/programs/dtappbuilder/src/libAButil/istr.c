@@ -772,16 +772,17 @@ istrP_destroy_impl(
         }
         else  /* need more freelist space */
         { 
-            free_num++;
-            freelist = (long *)reallocarray(freelist, (ARRAYSIZE * free_num), sizeof(long));
-	    assert(freelist != nullptr);
-            if (freelist == nullptr)
+            long *grown = (long *)reallocarray(freelist, (ARRAYSIZE * (free_num + 1)), sizeof(long));
+
+            if (grown == nullptr)
             {
                 fprintf(stderr, "%s",
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
 		    "ISTR: error in allocating memory\n") );
                 return 0 ;
             }  
+            free_num++;
+            freelist = grown;
             freelist[freecount] = istring;
             freecount++;
         }
@@ -928,7 +929,7 @@ insert_array(
     char *string
 )
 {
-    char *str;
+    char *str = nullptr;
     static int array_num =0;
 
     if(hash_count == 0)
@@ -939,60 +940,48 @@ insert_array(
             fprintf(stderr, "%s",
 		CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
 		"ISTR: error in allocating memory\n") );
-            return 0 ;
+            return -1 ;
         }  
         array_num = 1;
     }
-    if(val < (ARRAYSIZE * array_num)) /* insert into array */
-    {
-        int_array[val].refcount =1;
-        if (flag == 1)
-        {                   /* read only */
-           str = strdup(string);
-           int_array[val].read_const = 0;
-           int_array[val].str = str; 
-        }
-        else if (flag == 2)
-        {                  /* const */
-           int_array[val].read_const = 1;
-           int_array[val].str = string; 
-        }
-        else               /* flag == 3 */
-        {                  /* allocated */
-           int_array[val].read_const = 0;
-           int_array[val].str = string; 
-        }
-    }
-    else  /* need more array space */
+    if(val >= (ARRAYSIZE * array_num)) /* need more array space */
     { 
-        array_num++;
-        int_array_set((STRN *)reallocarray(int_array, (ARRAYSIZE * array_num), sizeof(STRN)));
-	assert(int_array != nullptr);
-        if (int_array == nullptr)
+        STRN *grown = (STRN *)reallocarray(int_array, (ARRAYSIZE * (array_num + 1)), sizeof(STRN));
+
+        if (grown == nullptr)
         {
             fprintf(stderr, "%s",
 		CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
 		"ISTR: error in allocating memory\n") );
-            return 0 ;
+            return -1 ;
         }  
-        int_array[val].refcount =1;
-        if (flag == 1)
-        {                   /* read only */
-           str = strdup(string);
-           int_array[val].read_const = 0;
-           int_array[val].str = str; 
-        }
-        else if(flag == 2)   /* const */
-        {
-           int_array[val].read_const = 1;
-           int_array[val].str = string; 
-        }
-        else                /*flag == 3*/  
-        {                   /* allocated */
-           int_array[val].read_const = 0;
-           int_array[val].str = string; 
-        }
+        array_num++;
+        int_array_set(grown);
     }
+    if (flag == 1)
+    {                   /* read only */
+       str = strdup(string);
+       if (str == nullptr)
+       {
+           fprintf(stderr, "%s",
+		CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
+		"ISTR: error in allocating memory\n") );
+           return -1 ;
+       }
+       int_array[val].read_const = 0;
+       int_array[val].str = str; 
+    }
+    else if (flag == 2)
+    {                  /* const */
+       int_array[val].read_const = 1;
+       int_array[val].str = string; 
+    }
+    else               /* flag == 3 */
+    {                  /* allocated */
+       int_array[val].read_const = 0;
+       int_array[val].str = string; 
+    }
+    int_array[val].refcount =1;
     return 1;
 }
 

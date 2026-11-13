@@ -556,14 +556,13 @@ util_derive_name_from_path(
          * Check return value of strrchr before adding 1 to it
          */
         if (filename = strrchr(fullpath, '/'))
-            name = (STRING)strdup(filename + 1);        
+            name = filename + 1;
 	else
-            name = (STRING)strdup(fullpath);
+            name = fullpath;
  
         len = strlen(name) - (AB_EXT_LENGTH + 1);
         strncpy(objname, name, len);
         objname[len] = '\0';
-        free(name);
     }
     else
     {
