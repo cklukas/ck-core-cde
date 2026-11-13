@@ -52,6 +52,7 @@
  ****************************************************************************
  ************************************<+>*************************************/
 
+#include <Dt/DtSigP.h>
 #include <limits.h>
 #include <stddef.h>
 #include <Dt/MsgCatP.h>
@@ -180,7 +181,7 @@ main(
     XtSetLanguageProc(nullptr, nullptr, nullptr);
 
     /*  Initialize the toolkit and open the display  */
-   (void) signal(SIGCLD, (void (*)())SIG_IGN);
+   (void) _DtSignal(SIGCLD, (void (*)())SIG_IGN);
    toplevel = XtAppInitialize(&appContext , "Dtaction", option_list, 
 	sizeof(option_list)/sizeof(XrmOptionDescRec), &argc, argv,
 	fallback_resources, (ArgList) NULL, (Cardinal) NULL);  

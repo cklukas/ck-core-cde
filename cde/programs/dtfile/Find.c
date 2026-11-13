@@ -74,6 +74,7 @@
  ************************************<+>*************************************/
 
 
+#include <Dt/DtSigP.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>
@@ -1925,9 +1926,9 @@ ExecuteFind(
 
    /* Start the 'find' process */
 
-   oldSig = signal(SIGCHLD, SIG_DFL);
+   oldSig = _DtSignal(SIGCHLD, SIG_DFL);
    find_rec->popenId = findpopen(command, "r",&(find_rec->childpid));
-   signal (SIGCHLD, oldSig);
+   _DtSignal(SIGCHLD, oldSig);
 
    if (find_rec->popenId == nullptr)
    {

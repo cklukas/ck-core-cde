@@ -1,4 +1,12 @@
 2026-11-13
+- Signals: 132 calls of `signal()` in 26 C sources use `_DtSignal()`, a
+  header-only wrapper over `sigaction()` in the new `Dt/DtSigP.h`. It keeps the
+  behaviour of the `signal()` of glibc and the BSD systems (the handler stays
+  installed, interrupted calls restart, no other signal is blocked), which the
+  C standard leaves open for `signal()`. The calls in files that tests name are
+  not converted yet.
+
+2026-11-13
 - Allocation sizes: 545 allocations of the form `n * sizeof(T)` in 187 C
   sources no longer multiply unchecked. `malloc()` and `XtMalloc()` become
   `calloc()` and `XtCalloc()`, and `realloc()` becomes `reallocarray()`, which

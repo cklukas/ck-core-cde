@@ -105,6 +105,7 @@
  * Revision 1.18  1995/07/18  22:05:10  miker
  * Set OE_sitecnfg_fname to arg passed to ausapi_init().
  */
+#include <Dt/DtSigP.h>
 #include "SearchE.h"
 #include <ctype.h>
 #include <signal.h>
@@ -331,17 +332,17 @@ int             DtSearchInit (
      */
     if (switches & DtSrInSIGNAL) {
 	if (!(switches & DtSrInENAB_NOHUP))
-	    signal (SIGHUP, signal_abort);	/* trap hangups */
-	signal (SIGINT, signal_abort);	/* interrupt, ctrl-c */
-	signal (SIGQUIT, signal_abort);	/* quit, ctrl-d */
-	signal (SIGKILL, signal_abort);	/* (kill -9, cannot be trapped) */
-	signal (SIGTERM, signal_abort);	/* kill [-15], sfwr terminate */
+	    _DtSignal(SIGHUP, signal_abort);	/* trap hangups */
+	_DtSignal(SIGINT, signal_abort);	/* interrupt, ctrl-c */
+	_DtSignal(SIGQUIT, signal_abort);	/* quit, ctrl-d */
+	_DtSignal(SIGKILL, signal_abort);	/* (kill -9, cannot be trapped) */
+	_DtSignal(SIGTERM, signal_abort);	/* kill [-15], sfwr terminate */
 #ifdef SIGPWR
-	signal (SIGPWR, signal_abort);	/* power failure imminent */
+	_DtSignal(SIGPWR, signal_abort);	/* power failure imminent */
 #endif
 #ifdef _AIX
-	signal (SIGXCPU, signal_abort);	/* cpu time limit exceeded */
-	signal (SIGDANGER, signal_abort);  /* imminent paging space crash */
+	_DtSignal(SIGXCPU, signal_abort);	/* cpu time limit exceeded */
+	_DtSignal(SIGDANGER, signal_abort);  /* imminent paging space crash */
 #endif
     }
 

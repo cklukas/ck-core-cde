@@ -62,6 +62,7 @@
  * Included Files:
  */
 
+#include <Dt/DtSigP.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -649,7 +650,7 @@ main (int argc, char **argv)
     /* 
      * set up the timeout
      */
-    signal (SIGALRM, CatchAlarm);
+    _DtSignal(SIGALRM, CatchAlarm);
     alarm (atoi(timeArg));
 
     /*

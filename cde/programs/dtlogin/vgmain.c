@@ -55,6 +55,7 @@
  *
  ***************************************************************************/
 
+#include <Dt/DtSigP.h>
 #include <string.h>
 #include	<stdio.h>
 #include        <setjmp.h>
@@ -370,7 +371,7 @@ main( int argc, char **argv )
      *  set TERM signal handler...
      */
      
-     (void) signal(SIGTERM, Terminate);
+     (void) _DtSignal(SIGTERM, Terminate);
 
     /*
      *  check some environment variables...
@@ -669,7 +670,7 @@ InitToolKit( int argc, char **argv )
      *  is grabbed.
      */
 
-    signal (SIGALRM, syncTimeout);
+    _DtSignal(SIGALRM, syncTimeout);
     if (sigsetjmp (syncJump, 1)) {
 	LogError(
 		ReadCatalog(MC_LOG_SET,MC_LOG_NO_DPYINIT,MC_DEF_LOG_NO_DPYINIT),
@@ -688,7 +689,7 @@ InitToolKit( int argc, char **argv )
  
 
     alarm (0);
-    signal (SIGALRM, SIG_DFL);
+    _DtSignal(SIGALRM, SIG_DFL);
 
     return(root);
 }

@@ -29,6 +29,7 @@
  */
 
 
+#include <Dt/DtSigP.h>
 #include 	<stdio.h>
 #include 	<locale.h>
 #include	<fcntl.h>
@@ -365,10 +366,10 @@ int main(int argc, char *argv[])
 	COMM_SBFNT_CONVCODETOGI( char_set, ReadSnf ) ;
 	COMM_SBFNT_CONVCODETOGI( char_set, ReadGpf ) ;
 
-	signal( SIGHUP , (void(*)())sigint_out );
-	signal( SIGINT , (void(*)())sigint_out );
-	signal( SIGQUIT, (void(*)())sigint_out );
-	signal( SIGTERM, (void(*)())sigint_out );
+	_DtSignal(SIGHUP, (void(*)())sigint_out);
+	_DtSignal(SIGINT, (void(*)())sigint_out);
+	_DtSignal(SIGQUIT, (void(*)())sigint_out);
+	_DtSignal(SIGTERM, (void(*)())sigint_out);
 
 
 	/*
@@ -453,10 +454,10 @@ int main(int argc, char *argv[])
 					    FATAL_ERROR, argv[0] );
 	}
 #endif
-	signal( SIGHUP , SIG_IGN );
-	signal( SIGINT , SIG_IGN );
-	signal( SIGQUIT, SIG_IGN );
-	signal( SIGTERM, SIG_IGN );
+	_DtSignal(SIGHUP, SIG_IGN);
+	_DtSignal(SIGINT, SIG_IGN);
+	_DtSignal(SIGQUIT, SIG_IGN);
+	_DtSignal(SIGTERM, SIG_IGN);
 
 	if ( ( stat( WriteSnf.out_file, &statbuf ) ) ||
 	     ( statbuf.st_size == 0 )

@@ -35,6 +35,7 @@
  * (c) Copyright 1993, 1994 Novell, Inc. 				*
  */
 
+#include <Dt/DtSigP.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -270,7 +271,7 @@ main(int argc, char **argv)
 
   XtSetLanguageProc(nullptr, nullptr, nullptr);
   _DtEnvControl(DT_ENV_SET);
-  signal (SIGHUP, SIG_IGN);
+  _DtSignal(SIGHUP, SIG_IGN);
 
   X       = (XVars) LINT_CAST(calloc(1, sizeof(XObject))) ;
   X->home = getenv("HOME") ;

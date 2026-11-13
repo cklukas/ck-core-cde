@@ -22,6 +22,7 @@
  */
 /* @(#)$TOG: start.c /main/9 1998/04/06 13:36:49 mgreess $ */
 
+#include <Dt/DtSigP.h>
 #include	"xims.h"
 #include	<signal.h>
 #include	<sys/wait.h>
@@ -217,7 +218,7 @@ int	is_waiting(void)
 void	set_sig_chld(int enable)
 {
     DPR(("set_sig_chld(%s)\n", enable ? "Enabled" : "Disabled"));
-    signal(SIGCHLD, enable ? on_sig_chld : SIG_IGN);
+    _DtSignal(SIGCHLD, enable ? on_sig_chld : SIG_IGN);
 }
 
 int	im_mod_available(RunEnv *renv)
@@ -618,7 +619,7 @@ static void	on_sig_chld(int sig)
     if (pid == -1)
 	return;
 
-    signal(SIGCHLD, on_sig_chld);
+    _DtSignal(SIGCHLD, on_sig_chld);
 
     if (WIFEXITED(wait_status)) {
 	cause = ErrImsAborted;

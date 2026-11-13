@@ -95,6 +95,7 @@
  * Remove -m option and max_totrecs; select bit vector
  * size from maxdba, not reccount.
  */
+#include <Dt/DtSigP.h>
 #include "SearchP.h"
 #include <stdlib.h>
 #include <ctype.h>
@@ -1010,19 +1011,19 @@ int             main (int argc, char *argv[])
 	"%s Version %s.  Run %s.\n") ,
 	aa_argv0, AUSAPI_VERSION, dbfpath);
 
-    signal (SIGHUP, signal_shutdown);
-    signal (SIGINT, signal_shutdown);
-    signal (SIGQUIT, signal_shutdown);
-    signal (SIGTRAP, signal_shutdown);
-    signal (SIGKILL, signal_shutdown);	/* this cannot be trapped */
-    signal (SIGALRM, signal_shutdown);
-    signal (SIGTERM, signal_shutdown);
+    _DtSignal(SIGHUP, signal_shutdown);
+    _DtSignal(SIGINT, signal_shutdown);
+    _DtSignal(SIGQUIT, signal_shutdown);
+    _DtSignal(SIGTRAP, signal_shutdown);
+    _DtSignal(SIGKILL, signal_shutdown);	/* this cannot be trapped */
+    _DtSignal(SIGALRM, signal_shutdown);
+    _DtSignal(SIGTERM, signal_shutdown);
 #ifdef SIGPWR
-    signal (SIGPWR, signal_shutdown);
+    _DtSignal(SIGPWR, signal_shutdown);
 #endif
 #ifdef _AIX
-    signal (SIGXCPU, signal_shutdown);
-    signal (SIGDANGER, signal_shutdown);
+    _DtSignal(SIGXCPU, signal_shutdown);
+    _DtSignal(SIGDANGER, signal_shutdown);
 #endif
 
     user_args_processor (argc, argv);

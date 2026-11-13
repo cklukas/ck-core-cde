@@ -31,6 +31,7 @@
  * (c) Copyright 1996 Hitachi.
  */
 
+#include <Dt/DtSigP.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -584,8 +585,8 @@ doBuild(int argc, char *argv[])
 	if (argsProcessed >= argc)
 	    printUsage(EXEC_NAME ": no bookcases given\n", -1);
 
-	signal(SIGINT, sigHandler);
-	signal(SIGTERM, sigHandler);
+	_DtSignal(SIGINT, sigHandler);
+	_DtSignal(SIGTERM, sigHandler);
 
 	for ( ; argsProcessed < argc; argsProcessed++)
 	{
@@ -647,8 +648,8 @@ doTocgen(int argc, char *argv[])
 	if (!gStruct->outFile)
 	    printUsage(EXEC_NAME ": -f required for tocgen\n", -1);
 
-	signal(SIGINT, sigHandler);
-	signal(SIGTERM, sigHandler);
+	_DtSignal(SIGINT, sigHandler);
+	_DtSignal(SIGTERM, sigHandler);
 
 	buildTOC(argc - argsProcessed, &argv[argsProcessed]);
 

@@ -40,6 +40,7 @@
  ****************************************************************************
  ************************************<+>*************************************/
 
+#include <Dt/DtSigP.h>
 #include <sys/param.h>
 #include <sys/types.h>
 
@@ -105,13 +106,13 @@ RunFileCommand(
   
    /* prepare to catch the command termination */
 
-   oldSig = signal (SIGCHLD, SIG_DFL);
+   oldSig = _DtSignal(SIGCHLD, SIG_DFL);
 
    /* fork a process to run command */
 
    if ((child = fork ()) < 0)	/* fork failed */
    {
-      (void) signal (SIGCHLD, oldSig);
+      (void) _DtSignal(SIGCHLD, oldSig);
       return (-1);
    }
 
@@ -124,7 +125,7 @@ RunFileCommand(
          wait_return = wait (&exit_value);
       } while (wait_return != child);
 
-      (void) signal (SIGCHLD, oldSig); /* child stopped or terminated */
+      (void) _DtSignal(SIGCHLD, oldSig); /* child stopped or terminated */
 
       return (exit_value);      /* if exit_value == 0 then success */
    }

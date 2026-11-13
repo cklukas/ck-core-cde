@@ -83,6 +83,7 @@
  * Removed password requirement.  DtSearch header file and function
  * name changes.  Made usrblk universal global.
  */
+#include <Dt/DtSigP.h>
 #include "SearchE.h"
 #include <string.h>
 #include <ctype.h>
@@ -708,16 +709,16 @@ static void     deleter (char *infname)
     records_deleted = 0L;
     time (&start_time);
 
-    signal (SIGINT, kill_delete);
-    signal (SIGQUIT, kill_delete);
-    signal (SIGTRAP, kill_delete);
-    signal (SIGTERM, kill_delete);
+    _DtSignal(SIGINT, kill_delete);
+    _DtSignal(SIGQUIT, kill_delete);
+    _DtSignal(SIGTRAP, kill_delete);
+    _DtSignal(SIGTERM, kill_delete);
 #ifdef SIGPWR
-    signal (SIGPWR, kill_delete);
+    _DtSignal(SIGPWR, kill_delete);
 #endif
 #ifdef _AIX
-    signal (SIGXCPU, kill_delete);	/* cpu time limit exceeded */
-    signal (SIGDANGER, kill_delete);	/* imminent paging space
+    _DtSignal(SIGXCPU, kill_delete);	/* cpu time limit exceeded */
+    _DtSignal(SIGDANGER, kill_delete);	/* imminent paging space
 					 * crash */
 #endif
 
@@ -811,8 +812,8 @@ int             main (int argc, char *argv[])
 	aa_argv0, timebuf);
     austext_exit_last = print_exit_code;
 
-    signal (SIGINT, DtSearchExit);
-    signal (SIGTERM, DtSearchExit);
+    _DtSignal(SIGINT, DtSearchExit);
+    _DtSignal(SIGTERM, DtSearchExit);
 /****memset (&usrblk, 0, sizeof(USRBLK));****/
 
     /* Validate program number argument */

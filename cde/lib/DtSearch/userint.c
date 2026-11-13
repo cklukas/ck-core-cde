@@ -72,6 +72,7 @@
  * Revision 1.2  1995/09/05  19:18:14  miker
  * Minor name changes for DtSearch.
  */
+#include <Dt/DtSigP.h>
 #include "SearchP.h"
 #include <signal.h>
 
@@ -99,19 +100,19 @@ static void     flag_shutdown (int sig)
 /************************************************/
 void            init_user_interrupt (void)
 {
-    signal (SIGINT, flag_shutdown);	/* interrupt (ctrl-c) */
-    signal (SIGQUIT, flag_shutdown);	/* quit (ctrl-d) */
-    signal (SIGTRAP, flag_shutdown);	/* trace trap */
-    signal (SIGKILL, flag_shutdown);	/* kill -9, cannot be trapped */
-    signal (SIGALRM, flag_shutdown);	/* called alarm() polling timer */
-    signal (SIGTERM, flag_shutdown);	/* kill [-15], sfwr terminate */
+    _DtSignal(SIGINT, flag_shutdown);	/* interrupt (ctrl-c) */
+    _DtSignal(SIGQUIT, flag_shutdown);	/* quit (ctrl-d) */
+    _DtSignal(SIGTRAP, flag_shutdown);	/* trace trap */
+    _DtSignal(SIGKILL, flag_shutdown);	/* kill -9, cannot be trapped */
+    _DtSignal(SIGALRM, flag_shutdown);	/* called alarm() polling timer */
+    _DtSignal(SIGTERM, flag_shutdown);	/* kill [-15], sfwr terminate */
 #ifdef SIGPWR
-    signal (SIGPWR, flag_shutdown);	/* power failure imminent */
+    _DtSignal(SIGPWR, flag_shutdown);	/* power failure imminent */
 #endif
-    signal (SIGUSR1, flag_shutdown);	/* kill -30, "pings" OE */
+    _DtSignal(SIGUSR1, flag_shutdown);	/* kill -30, "pings" OE */
 #ifdef _AIX
-    signal (SIGXCPU, flag_shutdown);	/* cpu time limit exceeded */
-    signal (SIGDANGER, flag_shutdown);	/* out of paging space,
+    _DtSignal(SIGXCPU, flag_shutdown);	/* cpu time limit exceeded */
+    _DtSignal(SIGDANGER, flag_shutdown);	/* out of paging space,
 					 * crash immin */
 #endif
     return;

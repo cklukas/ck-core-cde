@@ -28,6 +28,7 @@
  *  This is unpublished proprietary source code of FUJITSU LIMITED
  */
 
+#include <Dt/DtSigP.h>
 #include 	<stdio.h>
 #include	<fcntl.h>
 #include	<signal.h>
@@ -274,10 +275,10 @@ int main(int argc, char *argv[])
 		exit( 1 );
 	}
 
-	signal( SIGHUP , (void(*)())sigint_out );
-	signal( SIGINT , (void(*)())sigint_out );
-	signal( SIGQUIT, (void(*)())sigint_out );
-	signal( SIGTERM, (void(*)())sigint_out );
+	_DtSignal(SIGHUP, (void(*)())sigint_out);
+	_DtSignal(SIGINT, (void(*)())sigint_out);
+	_DtSignal(SIGQUIT, (void(*)())sigint_out);
+	_DtSignal(SIGTERM, (void(*)())sigint_out);
 
 	if ( !(code_area & SYSTM ) ) {
 
@@ -413,10 +414,10 @@ int main(int argc, char *argv[])
 	}
 	wait(0);
 	fclose( Head.input );
-	signal( SIGHUP,  SIG_IGN );
-	signal( SIGINT,  SIG_IGN );
-	signal( SIGQUIT, SIG_IGN );
-	signal( SIGTERM, SIG_IGN );
+	_DtSignal(SIGHUP, SIG_IGN);
+	_DtSignal(SIGINT, SIG_IGN);
+	_DtSignal(SIGQUIT, SIG_IGN);
+	_DtSignal(SIGTERM, SIG_IGN);
 	if ( Head.text_file ) {
 		fclose( Head.output );
 		Link_NewFile( Head.out_file, Head.text_file );

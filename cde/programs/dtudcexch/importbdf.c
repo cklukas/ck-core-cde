@@ -34,6 +34,7 @@
 
 
 
+#include <Dt/DtSigP.h>
 #include 	<stdio.h>
 #include	<fcntl.h>
 #include	<signal.h>
@@ -246,10 +247,10 @@ int	*bdf_codelist
 	*/
 	WriteGpf.snf_file = targ_file;
 
-	signal( SIGHUP , (void(*)())sigint_out );
-	signal( SIGINT , (void(*)())sigint_out );
-	signal( SIGQUIT, (void(*)())sigint_out );
-	signal( SIGTERM, (void(*)())sigint_out );
+	_DtSignal(SIGHUP, (void(*)())sigint_out);
+	_DtSignal(SIGINT, (void(*)())sigint_out);
+	_DtSignal(SIGQUIT, (void(*)())sigint_out);
+	_DtSignal(SIGTERM, (void(*)())sigint_out);
 
 	/*
 	 * impFileConvInit()
@@ -334,10 +335,10 @@ int	*bdf_codelist
 		UNLINK_TMPFILE( WriteGpf.out_file );
 		return(-1) ;
 	}
-	signal( SIGHUP , SIG_IGN );
-	signal( SIGINT , SIG_IGN );
-	signal( SIGQUIT, SIG_IGN );
-	signal( SIGTERM, SIG_IGN );
+	_DtSignal(SIGHUP, SIG_IGN);
+	_DtSignal(SIGINT, SIG_IGN);
+	_DtSignal(SIGQUIT, SIG_IGN);
+	_DtSignal(SIGTERM, SIG_IGN);
 
 	sleep( 1 );
 	if ( ( stat( WriteGpf.out_file, &statbuf ) ) || ( statbuf.st_size == 0 )

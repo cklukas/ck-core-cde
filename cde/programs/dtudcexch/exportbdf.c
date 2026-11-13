@@ -30,6 +30,7 @@
  *  Authors: Seiya Miyazaki     FUJITSU LIMITED
  *           Hiroyuki Chiba     FUJITSU LIMITED
  */
+#include <Dt/DtSigP.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -124,10 +125,10 @@ ExpGpftoBDF(
 	    return -1 ;
 	}
 
-	signal( SIGHUP , (void(*)())sigint_out );
-	signal( SIGINT , (void(*)())sigint_out );
-	signal( SIGQUIT, (void(*)())sigint_out );
-	signal( SIGTERM, (void(*)())sigint_out );
+	_DtSignal(SIGHUP, (void(*)())sigint_out);
+	_DtSignal(SIGINT, (void(*)())sigint_out);
+	_DtSignal(SIGQUIT, (void(*)())sigint_out);
+	_DtSignal(SIGTERM, (void(*)())sigint_out);
 
 	if( (rtn = writeBdfHeader(&w_bdf, comment_num, comment_list)) ){
 	    fprintf(stderr, "\"%s\" cannot write header.\n", bdf_name ) ;
@@ -175,10 +176,10 @@ ExpGpftoBDF(
 	}
 	fclose(w_bdf.output) ;
 
-	signal( SIGHUP , SIG_IGN );
-	signal( SIGINT , SIG_IGN );
-	signal( SIGQUIT, SIG_IGN );
-	signal( SIGTERM, SIG_IGN );
+	_DtSignal(SIGHUP, SIG_IGN);
+	_DtSignal(SIGINT, SIG_IGN);
+	_DtSignal(SIGQUIT, SIG_IGN);
+	_DtSignal(SIGTERM, SIG_IGN);
 
 	/*
 	 * free memories

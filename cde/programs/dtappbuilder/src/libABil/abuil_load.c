@@ -43,6 +43,7 @@
  * This file contains the implementation of the uil load
  * component
  */
+#include <Dt/DtSigP.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -1173,12 +1174,12 @@ parse_uil(
     * Disable Uil specified signal handlers, grrr!
     */
 #ifdef SIGBUS
-   signal( SIGBUS, SIG_DFL);
+   _DtSignal(SIGBUS, SIG_DFL);
 #endif
 #ifdef SIGSYS
-   signal( SIGSYS, SIG_DFL);
+   _DtSignal(SIGSYS, SIG_DFL);
 #endif
-   signal( SIGFPE, SIG_DFL);
+   _DtSignal(SIGFPE, SIG_DFL);
 
    return((sym_entry_type *)ret_val);
 }

@@ -30,6 +30,7 @@
  */
 
 
+#include <Dt/DtSigP.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -1407,7 +1408,7 @@ int		*err)		/* errors : 			*/
 	sprintf(code_set, "3");
 
     /* signal set */
-    signal( SIGPIPE, sig_receive );
+    _DtSignal(SIGPIPE, sig_receive);
     sig_flg = 0;
 
     if( restart == 0 ) {

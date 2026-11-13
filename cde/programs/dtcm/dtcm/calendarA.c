@@ -51,6 +51,7 @@
 static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsystems, Inc.";
 #endif
 
+#include <Dt/DtSigP.h>
 #include <EUSCompat.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2811,7 +2812,7 @@ init_calendar(int argc, char **argv)
 		calendar->general->version = calendar->my_cal_version;
 	}
 
-	signal(SIGINT, sig_int_handler);
+	_DtSignal(SIGINT, sig_int_handler);
 
 	/* A cache will be allocated if error dialog has been displayed
 	 * this call is to clear the cache so that the main view

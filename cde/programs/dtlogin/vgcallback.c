@@ -53,6 +53,7 @@
  *
  ***************************************************************************/
 
+#include <Dt/DtSigP.h>
 #include <string.h>
 #include	<stdio.h>
 #include	<unistd.h>
@@ -969,7 +970,7 @@ PingServer( void )
 
     oldError = XSetIOErrorHandler (PingLost);
     oldAlarm = alarm (0);
-    oldSig = signal (SIGALRM, PingBlocked);
+    oldSig = _DtSignal(SIGALRM, PingBlocked);
     alarm (pingTimeout * 60);
     if (!sigsetjmp (pingTime, 1))
     {
@@ -982,13 +983,13 @@ PingServer( void )
                                  MC_LOG_SET,MC_LOG_DEADSRV,MC_DEF_LOG_DEADSRV),
 		dpyinfo.name);
 	    alarm (0);
-	    signal (SIGALRM, SIG_DFL);
+	    _DtSignal(SIGALRM, SIG_DFL);
 	    XSetIOErrorHandler (oldError);
 	    return 0;
 	}
     }
     alarm (0);
-    signal (SIGALRM, oldSig);
+    _DtSignal(SIGALRM, oldSig);
     alarm (oldAlarm);
     XSetIOErrorHandler (oldError);
     return 1;

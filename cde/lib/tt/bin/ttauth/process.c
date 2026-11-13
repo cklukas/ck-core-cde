@@ -47,6 +47,7 @@ in this Software without prior written authorization from The Open Group.
  * Modified into "ttauth"     : Mitch Greess, Solutions Atlantic
  */
 
+#include <Dt/DtSigP.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -494,7 +495,7 @@ static void
 catchsig(int sig)
 {
 #ifdef SYSV
-    if (sig > 0) signal (sig, die);	/* re-establish signal handler */
+    if (sig > 0) _DtSignal(sig, die);	/* re-establish signal handler */
 #endif
     if (verbose && ttauth_modified) printf ("\r\n");
     die (sig);
@@ -504,10 +505,10 @@ catchsig(int sig)
 static void
 register_signals(void)
 {
-    signal (SIGINT, catchsig);
-    signal (SIGTERM, catchsig);
+    _DtSignal(SIGINT, catchsig);
+    _DtSignal(SIGTERM, catchsig);
 #ifdef SIGHUP
-    signal (SIGHUP, catchsig);
+    _DtSignal(SIGHUP, catchsig);
 #endif
     return;
 }

@@ -29,6 +29,7 @@
  */
 
 
+#include <Dt/DtSigP.h>
 #include 	<stdio.h>
 #include 	<signal.h>
 #include	<string.h>
@@ -106,10 +107,10 @@ int main( int argc, char *argv[])
 		}
 	}
 
-	signal( SIGHUP, (void(*)())sigint_out );
-	signal( SIGINT, (void(*)())sigint_out );
-	signal( SIGQUIT, (void(*)())sigint_out );
-	signal( SIGTERM, (void(*)())sigint_out );
+	_DtSignal(SIGHUP, (void(*)())sigint_out);
+	_DtSignal(SIGINT, (void(*)())sigint_out);
+	_DtSignal(SIGQUIT, (void(*)())sigint_out);
+	_DtSignal(SIGTERM, (void(*)())sigint_out);
 
 	if ( Head.bdf_file == nullptr ) {
 		if ( Head.snf_file == nullptr ) {
@@ -169,10 +170,10 @@ int main( int argc, char *argv[])
 	}
 	if ( Head.out_file != nullptr ) {
 		fclose( Head.output );
-		signal( SIGHUP, SIG_IGN );
-		signal( SIGINT, SIG_IGN );
-		signal( SIGQUIT, SIG_IGN );
-		signal( SIGTERM, SIG_IGN );
+		_DtSignal(SIGHUP, SIG_IGN);
+		_DtSignal(SIGINT, SIG_IGN);
+		_DtSignal(SIGQUIT, SIG_IGN);
+		_DtSignal(SIGTERM, SIG_IGN);
 		if ( Head.bdf_file != nullptr ) {
 			Link_NewFile( Head.out_file, Head.bdf_file );
 			unlink( Head.out_file );

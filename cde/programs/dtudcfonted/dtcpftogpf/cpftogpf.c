@@ -29,6 +29,7 @@
  */
 
 
+#include <Dt/DtSigP.h>
 #include	<stdlib.h>
 #include 	<stdio.h>
 #include 	<fcntl.h>
@@ -298,10 +299,10 @@ int main(int argc, char *argv[])
 		put_error_and_exit( &Head, PIPE_ERROR, argv[0] );
 	}
 
-	signal( SIGHUP , (void(*)())sigint_out );
-	signal( SIGINT , (void(*)())sigint_out );
-	signal( SIGQUIT, (void(*)())sigint_out );
-	signal( SIGTERM, (void(*)())sigint_out );
+	_DtSignal(SIGHUP, (void(*)())sigint_out);
+	_DtSignal(SIGINT, (void(*)())sigint_out);
+	_DtSignal(SIGQUIT, (void(*)())sigint_out);
+	_DtSignal(SIGTERM, (void(*)())sigint_out);
 
 	switch ( chld_pid = fork() ) {
 	case	0:
@@ -368,10 +369,10 @@ int main(int argc, char *argv[])
 		exit( 1 );
 	}
 	fclose( Head.input );
-	signal( SIGHUP , SIG_IGN );
-	signal( SIGINT , SIG_IGN );
-	signal( SIGQUIT, SIG_IGN );
-	signal( SIGTERM, SIG_IGN );
+	_DtSignal(SIGHUP, SIG_IGN);
+	_DtSignal(SIGINT, SIG_IGN);
+	_DtSignal(SIGQUIT, SIG_IGN);
+	_DtSignal(SIGTERM, SIG_IGN);
 
 	sleep(1) ;
 	if ( (stat( Head.out_file,&statbuf ) ) ||

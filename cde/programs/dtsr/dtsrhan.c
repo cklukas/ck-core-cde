@@ -99,6 +99,7 @@
  * 2.1.5f: Bug fix.  Segfault if constant string not enclosed in quotes.
  * Enable negative field offsets.
  */
+#include <Dt/DtSigP.h>
 #include "SearchP.h"
 #include <limits.h>
 #include <string.h>
@@ -2398,8 +2399,8 @@ int             main (int argc, char **argv)
 
     process_profile ();
     if (warnings && !bad_profile) {
-	signal (SIGINT, flag_shutdown);
-	signal (SIGTERM, flag_shutdown);
+	_DtSignal(SIGINT, flag_shutdown);
+	_DtSignal(SIGTERM, flag_shutdown);
 	open_outfile ();
 	printf ( CATGETS(dtsearch_catd, MS_chandel, 89,
 		"\nInterrupt with CTRL-C to exit gracefully "
