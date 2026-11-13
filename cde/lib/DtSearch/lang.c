@@ -684,6 +684,25 @@ int	is_concordable (char *word, int *charmap)
 
 /************************************************/
 /*						*/
+/*              add_nomem_message		*/
+/*						*/
+/************************************************/
+/* Queues an out-of-memory message for a failed allocation of 'size'
+ * bytes at 'location', to be returned with the caller's failure status.
+ */
+static void	add_nomem_message (const char *location, size_t size)
+{
+    char	msgbuf [256];
+
+    snprintf (msgbuf, sizeof(msgbuf), CATGETS(dtsearch_catd, MS_misc, 3,
+	"*** %sOut of Memory at %s asking for %lu bytes! ***\n"),
+	(aa_argv0 != nullptr)? aa_argv0 : "", location, (unsigned long) size);
+    DtSearchAddMessage (msgbuf);
+}  /* add_nomem_message() */
+
+
+/************************************************/
+/*						*/
 /*                 load_wordtree		*/
 /*						*/
 /************************************************/
@@ -944,8 +963,13 @@ static int	load_include_list (DBLK *dblk, DBLK *dblist)
 		    "No inclist because neither fname nor dbname provided.\n");
 	    return TRUE;
 	}
-	if (dblk->path == nullptr)
+	if (dblk->path == nullptr) {
 	    dblk->path = strdup("");
+	    if (dblk->path == nullptr) {
+		add_nomem_message (PROGNAME"1186", 1);
+		return FALSE;
+	    }
+	}
 	dblk->fname_inc = austext_malloc (strlen(dblk->path) + 36,
 	     PROGNAME"1187", nullptr);
 	strcpy (dblk->fname_inc, dblk->path);
@@ -1038,8 +1062,13 @@ static int	load_stop_list (DBLK *dblk, DBLK *dblist)
      * dblk's path, language, and default extension.
      */
     if (dblk->fname_stp == nullptr) {
-	if (dblk->path == nullptr)
+	if (dblk->path == nullptr) {
 	    dblk->path = strdup("");
+	    if (dblk->path == nullptr) {
+		add_nomem_message (PROGNAME"918", 1);
+		return FALSE;
+	    }
+	}
 	dblk->fname_stp = austext_malloc (strlen(dblk->path) + 36,
 	     PROGNAME"919", nullptr);
 
@@ -1178,8 +1207,13 @@ static int      load_paice_suffixes (DBLK *dblk, DBLK *dblist)
      * dblk's path, language, and default extension.
      */
     if (dblk->fname_sfx == nullptr) {
-	if (dblk->path == nullptr)
+	if (dblk->path == nullptr) {
 	    dblk->path = strdup("");
+	    if (dblk->path == nullptr) {
+		add_nomem_message (PROGNAME"1112", 1);
+		return FALSE;
+	    }
+	}
 	dblk->fname_sfx = austext_malloc (strlen(dblk->path) + 36,
 	     PROGNAME"1113", nullptr);
 
@@ -1323,6 +1357,12 @@ BAD_RULE:
 	prule = austext_malloc (sizeof(PRULE), PROGNAME"1252", nullptr);
 	memset (prule, 0, sizeof(PRULE));
 	prule->suffix =		(UCHAR *) strdup ((char*)suffix);
+	if (prule->suffix == nullptr) {
+	    add_nomem_message (PROGNAME"1253", strlen ((char*)suffix) + 1);
+	    free (prule);
+	    errcount++;
+	    continue;
+	}
 	prule->suflen =		strlen ((char*)suffix);
 	prule->must_be_intact =	must_be_intact;
 	prule->remove_count =	remove_count;
@@ -1331,6 +1371,14 @@ BAD_RULE:
 	    len = mbstowcs (nullptr, (char *)apndstr, 0);
 	    if (len != -1) {
 		prule->apndstr =	(UCHAR *) strdup ((char*)apndstr);
+		if (prule->apndstr == nullptr) {
+		    add_nomem_message (PROGNAME"1254",
+			strlen ((char*)apndstr) + 1);
+		    free (prule->suffix);
+		    free (prule);
+		    errcount++;
+		    continue;
+		}
 		prule->aplen =		len;
 	    }
 	}

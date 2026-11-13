@@ -190,8 +190,17 @@ BAD_INPUT:
     db = *dblist;
     lastlink = dblist;
     while (db != nullptr) {
-	if (db->path == nullptr)
+	if (db->path == nullptr) {
 	    db->path = strdup ("");
+	    if (db->path == nullptr) {
+		sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_misc, 3,
+		    "*** %sOut of Memory at %s asking for %lu bytes! ***\n"),
+		    (aa_argv0 != nullptr)? aa_argv0 : "", PROGNAME "130",
+		    (unsigned long) 1);
+		DtSearchAddMessage (sprintbuf);
+		goto DELETE_DB;
+	    }
+	}
 	strcpy (temp_file_name, db->path);
 	strcat (temp_file_name, db->name);
 	strcat (temp_file_name, EXT_DTBS);

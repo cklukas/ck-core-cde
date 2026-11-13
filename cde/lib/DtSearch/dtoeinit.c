@@ -260,10 +260,18 @@ INIT_FAILED:
 	 * files.  If no gui label was provided, set it to the
 	 * database name.  Then increment pointers and continue. 
 	 */
-	if (db->label == nullptr)
-	    db->label = strdup (db->name);
-	else if (db->label[0] == 0)
-	    db->label = strdup (db->name);
+	if (db->label == nullptr || db->label[0] == 0) {
+	    char *label = strdup (db->name);
+	    if (label == nullptr) {
+		sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_misc, 3,
+		    "*** %sOut of Memory at %s asking for %lu bytes! ***\n"),
+		    (aa_argv0 != nullptr)? aa_argv0 : "", PROGNAME"267",
+		    (unsigned long) strlen (db->name) + 1);
+		DtSearchAddMessage (sprintbuf);
+		goto DELETE_DB;
+	    }
+	    db->label = label;
+	}
 
 	good_dblk_count++;
 	lastlink = &db->link;

@@ -218,8 +218,16 @@ MAIN_LOOP:
 	readbuf = nullptr;
     }
     fsize = statbuf.st_size;
-    if (readbuf == nullptr)
+    if (readbuf == nullptr) {
 	readbuf = malloc (fsize + 64L);
+	if (readbuf == nullptr) {
+	    printf ("Can't allocate %lu bytes: %s\n",
+		(unsigned long) (fsize + 64L), strerror (errno));
+	    fclose (f);
+	    fsize = 0L;
+	    goto MAIN_LOOP;
+	}
+    }
 
     fread (readbuf, fsize, 1L, f);
     fclose (f);
