@@ -340,7 +340,7 @@ RFCTransport::format(DtMailEnv & error, DtMail::Message * dtmsg, DtMailBoolean l
       }
 
       closeLogFiles(log_files, log_count);
-      delete log_files;
+      delete [] log_files;
     }
 
     delete logFmt;

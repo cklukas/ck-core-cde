@@ -401,7 +401,7 @@ SendMsgDialog::~SendMsgDialog()
         delete _auto_save_file;
     }
     if (_dead_letter_buf) {
-        delete _dead_letter_buf;
+        delete [] _dead_letter_buf;
     }
 
     delete _attachmentMenuList;
@@ -3135,6 +3135,7 @@ SendMsgDialog::parseNplace(const char * path)
     if (SafeRead(fd, _dead_letter_buf, 
 		 (unsigned int) buf.st_size) != buf.st_size) {
 	delete [] _dead_letter_buf;
+	_dead_letter_buf = NULL;
 	close(fd);
 	return;
     }

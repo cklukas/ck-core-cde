@@ -154,7 +154,7 @@ MsgScrollingList::~MsgScrollingList()
             _header_info.header_name[i] = NULL;
         }
     }
-    delete _header_info.header_name;
+    delete [] _header_info.header_name;
 
     for (i=0, length=_deleted_messages->length(); i<length; i++)
     {
@@ -2292,7 +2292,7 @@ MsgScrollingList::checkDisplayProp(void)
     for (int fr = 0; fr < _msgs->length(); fr++) {
 	XmStringFree(normal_list[fr]);
     }
-    delete normal_list;
+    delete [] normal_list;
 
     UndelFromListDialog * del_dialog = _parent->get_undel_dialog();
     if (del_dialog) {
@@ -2318,7 +2318,7 @@ MsgScrollingList::checkDisplayProp(void)
 	for (int fr2 = 0; fr2 < _deleted_messages->length(); fr2++) {
 	    XmStringFree(del_list[fr2]);
 	}
-	delete del_list;
+	delete [] del_list;
     }
 }
 
@@ -2431,7 +2431,7 @@ MsgScrollingList::updateListItems(int current,
 
     XtVaSetValues (_w, XmNselectionPolicy, XmEXTENDED_SELECT, NULL);
     XtVaSetValues (_w, XmNselectionMode, XmNORMAL_MODE, NULL);
-    delete newList;
+    delete [] newList;
 }
 
 XmString
@@ -2709,7 +2709,7 @@ MsgScrollingList::formatHeader(DtMailHeaderLine & info,
       free((void*) value);
 
     delete addr_seq;
-    delete subject;
+    delete [] subject;
     
     delete [] buf;
     delete [] date;

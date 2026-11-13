@@ -430,7 +430,7 @@ DmxMsg::display (
     buf = getPrintedHeaders(header_format);
     print_proc(stream, buf);
     print_proc(stream, newline);
-    delete buf;
+    delete [] buf;
 
     //
     // Print out the message body.

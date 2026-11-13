@@ -71,7 +71,7 @@ HashTableImpl::~HashTableImpl(void)
       }
     }
   }
-  delete _hash_table;
+  delete [] _hash_table;
 }
 
 void *

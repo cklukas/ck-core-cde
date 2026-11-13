@@ -87,7 +87,7 @@ DmxMailbox::DmxMailbox (char *filename)
 
 DmxMailbox::~DmxMailbox (void)
 {
-    delete(_fileName);
+    delete [] _fileName;
     if (_mbox)
       delete (_mbox);
 }

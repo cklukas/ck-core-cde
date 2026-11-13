@@ -82,7 +82,7 @@ FindDialog::clear()
 	free(_text_labels[offset]);
       }
     }
-    delete _text_labels;
+    delete [] _text_labels;
   }
 
   //
@@ -92,7 +92,7 @@ FindDialog::clear()
 	free(_text_values[offset]);
       }
     }
-    delete _text_values;
+    delete [] _text_values;
   }
 
   //
@@ -102,7 +102,7 @@ FindDialog::clear()
 	free(_text_abstract_name[offset]);
       }
     }
-    delete _text_abstract_name;
+    delete [] _text_abstract_name;
   }
 
 
@@ -113,15 +113,15 @@ FindDialog::clear()
 	free(_buttonData[offset].label);
       }
     }
-    delete _buttonData;
+    delete [] _buttonData;
   }
 
   if (_text_fields != NULL) {
-    delete _text_fields;
+    delete [] _text_fields;
   }
 
   if (_text_names != NULL) {
-    delete _text_names;
+    delete [] _text_names;
   }
 }
 
@@ -630,7 +630,7 @@ FindDialog::findMatching(Boolean findAll)
       }
 
       // Clean up.
-      delete matchList;
+      delete [] matchList;
       matchList = NULL;
     }
   }

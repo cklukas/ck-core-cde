@@ -91,7 +91,7 @@ XmTextEditor::XmTextEditor(
 XmTextEditor::~XmTextEditor() 
 {
     if (_buffer) {
-	delete _buffer;
+	delete [] _buffer;
 	_buffer = NULL;
     }
 

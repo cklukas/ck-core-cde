@@ -99,7 +99,7 @@ CDEM_DtWidgetEditor::~CDEM_DtWidgetEditor()
 	XtDestroyWidget(my_text);
     }
     if (_buffer) {
-	delete _buffer;
+	delete [] _buffer;
 	_buffer = NULL;
     }
 

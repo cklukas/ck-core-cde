@@ -105,7 +105,7 @@ MailSession::~MailSession(void)
     for (int mb = 0; mb < _open_mailboxes.length(); mb++)
     {
 	delete _open_mailboxes[mb]->handle;
-	delete _open_mailboxes[mb]->path;
+	delete [] _open_mailboxes[mb]->path;
     }
 
     delete _app_session;
@@ -221,7 +221,7 @@ MailSession::close(DtMailEnv & error, const DtMail::MailBox * mb)
         if (! _open_mailboxes[slot]->is_active) _num_deactivated--;
 
 	delete mbi->handle;
-	delete mbi->path;
+	delete [] mbi->path;
 
 	_open_mailboxes.remove(slot);
 	delete mbi;
