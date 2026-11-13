@@ -391,7 +391,7 @@ RFCMailBox::~RFCMailBox(void)
 	_files = NULL;
 
 	if (_buffer) { // Option 2
-	    delete [] _buffer;
+	    free(_buffer);
 	}
 
 	//

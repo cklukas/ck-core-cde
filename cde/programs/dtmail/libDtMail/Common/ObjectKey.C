@@ -43,6 +43,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 #include <DtMail/ObjectKey.hh>
 
 ObjectKey::ObjectKey(ObjectKeyType type)
@@ -58,7 +59,7 @@ ObjectKey::ObjectKey(ObjectKey & key)
 
 ObjectKey::~ObjectKey(void)
 {
-    delete _type;
+    free(_type);
 }
 
 HashVal

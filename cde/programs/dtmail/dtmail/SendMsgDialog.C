@@ -398,7 +398,7 @@ SendMsgDialog::~SendMsgDialog()
     //
     free(_auto_save_path);
     if (_auto_save_file) {
-        delete _auto_save_file;
+        free(_auto_save_file);
     }
     if (_dead_letter_buf) {
         delete [] _dead_letter_buf;
