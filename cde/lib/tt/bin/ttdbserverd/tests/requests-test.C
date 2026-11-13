@@ -2649,7 +2649,7 @@ case_move_file(void)
 {
 	std::string file = start_partition("move-file");
 	std::string moved = "localhost:" + g_dir + "/moved";
-	std::string elsewhere = "localhost:/nowhere/at/all";
+	std::string elsewhere = "localhost:" + g_dir + "/nowhere/at/all";
 	std::string objid = make_objid(g_mount);
 
 	put(g_dir + "/file", "the file");
