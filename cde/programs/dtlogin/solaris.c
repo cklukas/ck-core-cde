@@ -912,13 +912,24 @@ solaris_reset_utmp_mgmt(
 					endutxent();
 					return (0);
 				}
+				*user = nullptr;
+				*ttyn = nullptr;
+				*rhost = nullptr;
 				if ((*user = (char *) strdup (up->ut_user))
 							== nullptr ||
 				    (*ttyn = (char *) strdup (up->ut_line))
 							== nullptr ||
 				    (*rhost = (char *) strdup (up->ut_host))
-							== nullptr)
+							== nullptr) {
+					free (*user);
+					free (*ttyn);
+					free (*rhost);
+					*user = nullptr;
+					*ttyn = nullptr;
+					*rhost = nullptr;
+					endutxent();
 					return (PAM_BUF_ERR);
+				}
 
 				up->ut_type = DEAD_PROCESS;
 				up->ut_exit.e_termination = status & 0xff;
