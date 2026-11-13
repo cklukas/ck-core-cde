@@ -71,32 +71,89 @@ extern String unpost_monitor_arrow_image;
 
 /************************************************************************
  *
- *  SessionFileGetName
- *	Generate the name of the session file to be used to read and
- *	write the front panel session information.
+ *  SessionHomeDirectory
+ *	Find the home directory the session files live under.
  *
  ************************************************************************/
  
-static char *
-SessionFileGetName (void)
+static const char *
+SessionHomeDirectory (void)
 {
-   char * home_dir;
-   char * file_name;
+   const char * home_dir = getenv ("HOME");
    struct passwd * pw_info;
-   
 
-   /*  Get the home directory used to build the path to the session file.  */
+   /*  HOME wins when it is set and not empty; otherwise ask the password  */
+   /*  database.  Returns nullptr when neither names a directory.          */
 
-   if ((home_dir = (char *)getenv("HOME")) != nullptr || strlen (home_dir) == 0)
+   if (home_dir == nullptr || *home_dir == '\0')
    {
       pw_info = getpwuid (getuid());
+      if (pw_info == nullptr || pw_info->pw_dir == nullptr ||
+          *pw_info->pw_dir == '\0')
+         return (nullptr);
       home_dir = pw_info->pw_dir;
    }
 
+   return (home_dir);
+}
+
+
+/************************************************************************
+ *
+ *  SessionFileGetName
+ *	Generate the name of the session file to be used to read and
+ *	write the front panel session information.  Returns nullptr when
+ *	there is no home directory to put it in.
+ *
+ ************************************************************************/
+
+static char *
+SessionFileGetName (void)
+{
+   const char * home_dir;
+   char * file_name;
+
+   if ((home_dir = SessionHomeDirectory ()) == nullptr)
+      return (nullptr);
+
    file_name = XtMalloc (strlen (home_dir) + strlen (SESSION_FILE) + 1);
+   if (file_name == nullptr)
+      return (nullptr);
    sprintf (file_name, "%s%s", home_dir, SESSION_FILE);
    
    return (file_name);
+}
+
+
+
+
+/*  Largest record count accepted from a session file.  A front panel     */
+/*  has a few dozen subpanels and the dynamic list holds one record per    */
+/*  user-installed control, so real files stay far below this; a larger    */
+/*  count means a damaged file and is ignored instead of driving the       */
+/*  loops and the allocation sized by it.                                  */
+
+#define SESSION_MAX_RECORDS 10000
+
+
+/************************************************************************
+ *
+ *  SessionReadCount
+ *	Read a record count.  A count that is missing, negative or larger
+ *	than SESSION_MAX_RECORDS is 0 records.
+ *
+ ************************************************************************/
+
+static int
+SessionReadCount (FILE * fd)
+{
+   int count;
+
+   if (fscanf (fd, "%d", &count) != 1 || count < 0 ||
+       count > SESSION_MAX_RECORDS)
+      return (0);
+
+   return (count);
 }
 
 
@@ -159,6 +216,8 @@ SessionRestoreData (void)
 
    
    session_file = SessionFileGetName ();
+   if (session_file == nullptr)
+      return;
 
 
    if ((fd = fopen (session_file, "r")) != nullptr)
@@ -181,6 +240,12 @@ SessionRestoreData (void)
 		  subpanel_data = (SubpanelData **)
 		    XtRealloc ((char *) subpanel_data, 
 		               sizeof (SubpanelData *) * max_subpanel_count);
+		  if (subpanel_data == nullptr)
+		  {
+		     fclose (fd);
+		     XtFree (session_file);
+		     return;
+		  }
 	       }
 
 	       subpanel_data[subpanel_count] = control_data->subpanel_data;
@@ -192,7 +257,7 @@ SessionRestoreData (void)
 
       /*  Get the count of the number of subpanels to be posted.  */
 
-      fscanf (fd, "%d", &subpanel_posted_count);	 
+      subpanel_posted_count = SessionReadCount (fd);
 
 
       /*  If the count is greater than 0, read in the list of subpanel  */
@@ -201,8 +266,10 @@ SessionRestoreData (void)
 	 
       for (i = 0; i < subpanel_posted_count; i++)
       {
-         fscanf (fd, "%255s%d%d%d", 
-                 name_buffer1, &subpanel_x, &subpanel_y, &subpanel_torn);
+         if (fscanf (fd, "%255s%d%d%d", 
+                     name_buffer1, &subpanel_x, &subpanel_y, 
+                     &subpanel_torn) != 4)
+            break;
 	    
          for (j = 0; j < subpanel_count; j++)
          {
@@ -258,7 +325,7 @@ SessionRestoreData (void)
       /*  Get the count of the number of subpanel controls to be  */
       /*  toggled into the main panel.                            */
 	 
-      fscanf (fd, "%d", &subpanel_default_count);
+      subpanel_default_count = SessionReadCount (fd);
 
 
       /*  If the count is greater than 0, read in the list of subpanel  */
@@ -267,7 +334,8 @@ SessionRestoreData (void)
 
       for (i = 0; i < subpanel_default_count; i++)
       {
-         fscanf (fd, "%255s%255s", name_buffer1, name_buffer2);
+         if (fscanf (fd, "%255s%255s", name_buffer1, name_buffer2) != 2)
+            break;
 	    
          for (j = 0; j < subpanel_count; j++)
          {
@@ -305,12 +373,14 @@ SessionRestoreData (void)
    
       /*  Read in the count of the number of dynamic component records  */
       
-      fscanf (fd, "%d", &panel.dynamic_data_count);
+      panel.dynamic_data_count = SessionReadCount (fd);
       panel.max_dynamic_data_count = panel.dynamic_data_count;
 
       if (panel.dynamic_data_count > 0) {
 	panel.dynamic_data_list = (DynamicComponent **)
 	  XtMalloc (sizeof (DynamicComponent *) * panel.max_dynamic_data_count);
+	if (panel.dynamic_data_list == nullptr)
+	  panel.dynamic_data_count = panel.max_dynamic_data_count = 0;
       }
 
       dynamic_data_count = 0;
@@ -320,8 +390,10 @@ SessionRestoreData (void)
       
       for (i = 0; i < panel.dynamic_data_count; i++)
       {
-         fscanf(fd, "%255s%255s%d%255s%d%d", name_buffer1, name_buffer2, &component_type,
-	        name_buffer3, &parent_component_type, &delete_value);
+         if (fscanf(fd, "%255s%255s%d%255s%d%d", name_buffer1, name_buffer2,
+	            &component_type, name_buffer3, &parent_component_type,
+	            &delete_value) != 6)
+            break;
 
 
          /*  Stat the file name to see if it still exists.  If not,    */
@@ -421,6 +493,13 @@ SessionRestoreData (void)
             {
                panel.dynamic_data_list[dynamic_data_count] = 
                   (DynamicComponent *) XtMalloc (sizeof (DynamicComponent));
+               if (panel.dynamic_data_list[dynamic_data_count] == nullptr)
+               {
+                  /*  Out of memory: keep what was read so far and stop.  */
+
+                  i = panel.dynamic_data_count;
+                  break;
+               }
 
                panel.dynamic_data_list[dynamic_data_count]->file_name = XtNewString (name_buffer1);
                panel.dynamic_data_list[dynamic_data_count]->component_name = XtNewString (name_buffer2);
@@ -500,6 +579,8 @@ WmFrontPanelSessionSaveData (void)
    /*  Set the session file name and open the file  */
 
    session_file = SessionFileGetName ();
+   if (session_file == nullptr)
+      return;
 
    if ((fd = fopen (session_file, "w")) != nullptr)
    {
@@ -783,19 +864,15 @@ SessionDeleteAll(void)
    struct dirent *entry;          /* directory entry */
    char srcname[MAX_PATH];
    int srclen;
-   char * home_dir;
+   const char * home_dir;
    char * fp_dir;
-   struct passwd * pw_info;
    int i;
 
 
    /*  Get the home directory used to build the path to the session file.  */
 
-   if ((home_dir = (char *)getenv("HOME")) != nullptr || strlen (home_dir) == 0)
-   {
-      pw_info = getpwuid (getuid());
-      home_dir = pw_info->pw_dir;
-   }
+   if ((home_dir = SessionHomeDirectory ()) == nullptr)
+      return;
 
   /* Add path to fp_dynamic directory */
    fp_dir = XtMalloc (strlen(home_dir) + strlen(TYPES_DIR) + 1);

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Run the production front panel session reader on over-long words.
 
-SessionFileGetName and SessionRestoreData are extracted verbatim from
+SessionHomeDirectory, SessionFileGetName, SessionReadCount and
+SessionRestoreData are extracted verbatim from
 Session.c (or from a revision named by --source-revision, to run the
 negative control against the unfixed reader) and compiled with ASan/UBSan
 against the stand-ins in check-session-word-width.c.
@@ -32,8 +33,16 @@ else:
 
 start = text.index("static char * SESSION_FILE")
 functions = [text[start:text.index(";", start) + 1]]
-for signature in ("static char *\nSessionFileGetName (void)",
+# Pieces that only the fixed source has; --source-revision of an older one lacks them.
+start = text.find("#define SESSION_MAX_RECORDS")
+if start >= 0:
+    functions.append(text[start:text.index("\n", start)])
+for signature in ("static const char *\nSessionHomeDirectory (void)",
+                  "static char *\nSessionFileGetName (void)",
+                  "static int\nSessionReadCount (FILE * fd)",
                   "void\nSessionRestoreData (void)"):
+    if signature not in text:
+        continue
     start = text.index(signature)
     opening = text.index("{", start)
     depth, end = 1, opening + 1

@@ -7,12 +7,14 @@ EXTRA_DIST = tests/check-environment.py tests/check-session-path.py \
 	tests/check-xdmcp.py tests/check-authorization.py tests/check-manager.py \
 	tests/check-chooser.py tests/check-displays.py tests/check-config.py \
 	tests/check-password.py tests/check-session-signals.py \
-	tests/check-greeter-request.py tests/check-x-timeouts.py tests/scenarios.py
+	tests/check-greeter-request.py tests/check-x-timeouts.py tests/scenarios.py \
+	tests/check-forward-port.py tests/check-forward-port.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-environment.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-path.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-xdmcp.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-forward-port.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-authorization.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-manager.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-chooser.py

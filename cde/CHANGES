@@ -1,4 +1,25 @@
 2026-11-13
+- dtwm: the session file reader ignored `HOME`, and crashed when it was unset:
+  the test `(home_dir = getenv("HOME")) != NULL || strlen(home_dir) == 0` was
+  inverted, so it asked the password database whenever `HOME` was set and read
+  a null pointer when it was not. It uses `HOME` when it is set and non-empty,
+  asks the password database otherwise, and gives up if that has no home
+  directory either. The counts at the top of the session file were not
+  checked: a damaged file spun the reader on end of file, or made it request
+  gigabytes. A count must now be readable and not above 10,000, and each
+  record loop stops at the first record that cannot be read. Found by the
+  `dtwm-session` fuzz target. Test: `programs/dtwm/tests/check-session-counts.py`.
+- dtlogin: the port of a forwarded XDMCP request was computed over an array of
+  any length in a signed `int`, which overflows. It is computed from its first
+  two bytes in an unsigned type. Found by the `dtlogin-xdmcp` fuzz target.
+  Test: `programs/dtlogin/tests/check-forward-port.py`.
+- dtsession: reading a palette file that has too few colors for the display
+  leaked the palette and its name, and called `unlink()` on the directory of
+  the file. It frees the palette and no longer calls `unlink()`; the palette
+  file stays, because it can suit another display (the warning text that says
+  the file is removed describes what the code never did).
+
+2026-11-13
 - Fuzzing: `cde/fuzz` holds libFuzzer targets for six parsers: the dtspcd
   protocol requests (`spc-proto.c`), the XDMCP request handlers of dtlogin, the
   session file readers of dtwm and dtsession, the palette reader of dtsession

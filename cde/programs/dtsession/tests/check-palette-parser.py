@@ -12,8 +12,8 @@ directories separated by blanks, more colors than the table has, lines without
 a newline and a palette with fewer colors than a low color display needs.
 Every scenario runs in its own process and gets ten seconds.
 
-DTSESSION_SOURCE names another copy of the sources to test, for example an
-older revision.
+DTSESSION_SOURCE names another copy of the sources to test; --source-revision
+REV reads the two sources from a git revision (the negative control).
 """
 import os
 from pathlib import Path
@@ -23,9 +23,24 @@ import subprocess
 import sys
 import tempfile
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--source-revision", metavar="REV",
+                    help="read SrvFile_io.c and Srv.h from this git revision instead of the working tree")
+args = parser.parse_args()
+
 source = Path(os.environ.get("DTSESSION_SOURCE") or Path(__file__).resolve().parents[1])
-text = (source / "SrvFile_io.c").read_text()
-header = (source / "Srv.h").read_text()
+if args.source_revision:
+    top = subprocess.run(["git", "-C", str(source), "rev-parse", "--show-toplevel"],
+                         check=True, capture_output=True, text=True).stdout.strip()
+    show = lambda name: subprocess.run(
+        ["git", "-C", top, "show", f"{args.source_revision}:{(source / name).resolve().relative_to(top)}"],
+        check=True, capture_output=True, text=True).stdout
+    text, header = show("SrvFile_io.c"), show("Srv.h")
+else:
+    text = (source / "SrvFile_io.c").read_text()
+    header = (source / "Srv.h").read_text()
 
 
 def function(signature):
@@ -62,9 +77,15 @@ enum { XmCO_BLACK_WHITE, XmCO_LOW_COLOR, XmCO_MEDIUM_COLOR, XmCO_HIGH_COLOR };
 #define DtWarning 1
 #define XmSCOLOR_SRV_NAME "colorserver"
 #define GETMESSAGE(set, n, s) (s)
-#define SRV_MALLOC(n) malloc(n)
-#define SRV_REALLOC(p, n) realloc(p, n)
-#define SRV_FREE(p) free(p)
+/* The color server's allocations are counted: a path that gives up on a
+ * palette must give back everything it took. */
+static long live_blocks;
+static void *counted_malloc(size_t n) { void *p = malloc(n); if (p) ++live_blocks; return p; }
+static void *counted_realloc(void *p, size_t n) { void *q = realloc(p, n); if (q && !p) ++live_blocks; return q; }
+static void counted_free(void *p) { if (p) { --live_blocks; free(p); } }
+#define SRV_MALLOC(n) counted_malloc(n)
+#define SRV_REALLOC(p, n) counted_realloc(p, n)
+#define SRV_FREE(p) counted_free(p)
 ''' + srv_defines + types + r'''
 typedef struct {
    int TypeOfMonitor[MAX_NUM_SCREENS];
@@ -225,11 +246,28 @@ static int low_color_needs_four(void)
     CHECK(load("Two.dp") == NULL);
     return 0;
 }
+static int bad_palette_is_freed_and_kept(void)
+{
+    char *dir = under("home/.dt/palettes"), file[PATH_MAX * 2];
+    put(dir, "Bad.dp", "#111111\n#222222\n!\n", 17);   /* too few colors for a low color display */
+    put(dir, "Good.dp", eight, strlen(eight));
+    setenv("HOME", under("home"), 1);
+    colorSrv.TypeOfMonitor[0] = XmCO_LOW_COLOR;
+    CHECK(load("Bad.dp") == NULL);
+    CHECK(live_blocks == 0);                               /* the half built palette is freed */
+    snprintf(file, sizeof file, "%s/Bad.dp", dir);
+    CHECK(access(file, F_OK) == 0);                        /* the palette is kept: it may suit another display */
+    CHECK(access(dir, F_OK) == 0);
+    snprintf(file, sizeof file, "%s/Good.dp", dir);
+    CHECK(access(file, F_OK) == 0);
+    return 0;
+}
 
 static struct { const char *name; int (*run)(void); } scenarios[] = {
     {"normal_palette", normal_palette}, {"blank_separated_directories", blank_separated_directories},
     {"long_directory_names", long_directory_names}, {"more_colors_than_the_table", more_colors_than_the_table},
     {"line_without_newline", line_without_newline}, {"low_color_needs_four", low_color_needs_four},
+    {"bad_palette_is_freed_and_kept", bad_palette_is_freed_and_kept},
     {NULL, NULL}
 };
 

@@ -604,12 +604,13 @@ forward_respond (struct sockaddr *from, int fromlen, int length)
 	    expectedLen += 2 + authenticationNames.data[i].length;
 	if (length == expectedLen)
 	{
-	    int	j;
+	    unsigned int j;
 
+	    /* A port is 16 bits; the array of a hostile request may be longer. */
 	    j = 0;
-	    for (i = 0; i < (int)clientPort.length; i++)
+	    for (i = 0; i < (int)clientPort.length && i < 2; i++)
 		j = j * 256 + clientPort.data[i];
-	    Debug ("Forward client address (port %d)", j);
+	    Debug ("Forward client address (port %u)", j);
 	    for (i = 0; i < (int)clientAddress.length; i++)
 		Debug (" %d", clientAddress.data[i]);
 	    Debug ("\n");

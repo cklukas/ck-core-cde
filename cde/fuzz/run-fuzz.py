@@ -135,7 +135,9 @@ def build_dtwm_session(wt):
     src = "Session.c"
     start = text.index("static char * SESSION_FILE")
     prod = text[start:text.index(";", start) + 1] + "\n"
-    prod += functions(text, ["SessionFileGetName", "SessionRestoreData"], src)
+    prod += defines(text, ["SESSION_MAX_RECORDS"], src)
+    prod += functions(text, ["SessionHomeDirectory", "SessionFileGetName", "SessionReadCount",
+                             "SessionRestoreData"], src)
     return {"types.h": "", "production.h": prod}, {}
 
 

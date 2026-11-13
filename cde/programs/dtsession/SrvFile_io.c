@@ -383,7 +383,11 @@ ReadPaletteFile(
          SRV_FREE(tmpStr);
          SRV_FREE(tmpStr2);
          error_value = 1;
-         unlink(palettePath);
+         /* The file is kept: a palette that has too few colors for this display
+            can be a good palette for another one.  (The call that stood here
+            named the directory of the palette, which unlink() cannot remove.) */
+         SRV_FREE(new_palette->name);
+         SRV_FREE((char *) new_palette);
          SRV_FREE(fullPath);
          close(fd);
          return((struct _palette *) nullptr);

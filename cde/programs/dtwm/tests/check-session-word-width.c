@@ -96,7 +96,7 @@ static Boolean CheckOtherMonitorsOn(SubpanelData *s) { (void)s; return False; }
 static void ToggleDefaultControl(ControlData *p, SubpanelData *s, ControlData *c)
 { (void)p; ++toggle_calls; toggled_subpanel = s; toggled_control = c; }
 
-/* The reader locates the session file under the passwd home directory. */
+/* HOME names the home directory; the password database is the fallback. */
 #define getpwuid stub_getpwuid
 static struct passwd *stub_getpwuid(uid_t u)
 { static struct passwd pw; (void)u; pw.pw_dir = (char *)home_dir; return &pw; }
@@ -135,6 +135,7 @@ int main(int argc, char **argv)
 {
     assert(argc == 2);
     home_dir = argv[1];
+    assert(setenv("HOME", home_dir, 1) == 0);
     assert(chdir(home_dir) == 0);
 
     /* One subpanel "a*255" with one control "a*45" (the tail of a 300 word). */
@@ -161,13 +162,15 @@ int main(int argc, char **argv)
     WidgetRec shell = { 0, nullptr };
     panel.shell = &shell;
 
-    /* 1. Posted-subpanel record: the name is cut at 255 characters, so it
-     *    still matches the 255 character subpanel and posts it. */
+    /* 1. Posted-subpanel record: the name is cut at 255 characters and the
+     *    45 character tail is read where the x coordinate belongs, so the
+     *    record is malformed.  It must be dropped (no subpanel is posted and
+     *    the rest of the section is not read), not overrun the buffer. */
     reset();
     write_session(home_dir, "1\n", " 5 6 0\n0\n0\n1\n");
     SessionRestoreData();
     assert(live == 0);
-    assert(manage_calls == 2);  /* form and shell of the matched subpanel */
+    assert(manage_calls == 0);
 
     /* 2. Default-control record: the first word is cut at 255 characters and
      *    its 45 character tail is read as the control name. */
