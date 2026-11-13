@@ -61,6 +61,8 @@
 #include        <setjmp.h>
 #include	<stdlib.h>
 #include	<unistd.h>
+#include	<errno.h>
+#include	<signal.h>
 #include        <sys/signal.h>
 #include        <sys/stat.h>
 #include        <sys/param.h>
@@ -135,6 +137,8 @@ static void xtErrorHandler( String msg ) _X_NORETURN;
 static void xtWarningHandler( String msg ) ;
 static void MakeOptionsProc( XtPointer data, XtIntervalId *id) ;
 static SIGVAL Terminate( int arg ) ;
+static void TerminateSignalProc( XtPointer clientData, XtSignalId *id ) ;
+static XtSignalId terminateSignalId ;	/* defined with Terminate() below */
 static char * GetLangName( char * label );
 static void MakeAltDtButtons( void );	
 static void DebugWidgetResources(Widget w);
@@ -682,6 +686,8 @@ InitToolKit( int argc, char **argv )
 
     root = XtInitialize("dtlogin", "Dtlogin", nullptr, 0, 
     			 &argc, argv);
+    terminateSignalId = XtAppAddSignal(XtWidgetToApplicationContext(root),
+                                       TerminateSignalProc, nullptr);
     /* Disable Drag and Drop  RK 11.02.93 */
     XtVaSetValues(XmGetXmDisplay(XtDisplay(root)),
                 XmNdragInitiatorProtocolStyle, XmDRAG_NONE,
@@ -2121,13 +2127,45 @@ MakeOptionsProc( XtPointer data, XtIntervalId *id )
  *  Catch a SIGTERM and unmanage display
  ***************************************************************************/
 
+static XtSignalId terminateSignalId = 0;
+static volatile sig_atomic_t terminateRequested = 0;
+
+/* Registered once the toolkit exists; Xt runs it from the event loop after
+ * the handler called XtNoticeSignal(), so the display is closed outside of
+ * signal context.
+ */
+static void
+TerminateSignalProc( XtPointer clientData, XtSignalId *id )
+
+{
+    (void) clientData;
+    (void) id;
+    CleanupAndExit(nullptr, NOTIFY_ABORT);
+}
+
 static SIGVAL
 Terminate( int arg )
 
 {
-    if(-1 == write(1, "terminate", 9)) {
-        perror(strerror(errno));
+    int savedErrno = errno;
+    ssize_t written;
+
+    (void) arg;
+    if (terminateSignalId != 0) {
+        if (terminateRequested) {
+            _exit(NOTIFY_ABORT);
+        }
+        terminateRequested = 1;
+        XtNoticeSignal(terminateSignalId);
+        errno = savedErrno;
+        return;
     }
+    /* The early window before the toolkit exists: the program is single
+     * threaded and no X connection state is shared yet, so the sequence
+     * runs here as it always did.
+     */
+    written = write(1, "terminate", 9);
+    (void) written;
     CleanupAndExit(nullptr, NOTIFY_ABORT);
 }
 

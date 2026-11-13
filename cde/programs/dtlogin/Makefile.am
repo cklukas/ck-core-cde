@@ -8,7 +8,8 @@ EXTRA_DIST = tests/check-environment.py tests/check-session-path.py \
 	tests/check-chooser.py tests/check-displays.py tests/check-config.py \
 	tests/check-password.py tests/check-session-signals.py \
 	tests/check-greeter-request.py tests/check-x-timeouts.py tests/scenarios.py \
-	tests/check-forward-port.py tests/check-forward-port.c
+	tests/check-forward-port.py tests/check-forward-port.c \
+	tests/check-greeter-terminate.py tests/check-greeter-terminate.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-environment.py
@@ -25,6 +26,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-greeter-request.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-x-timeouts.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-greeter-catalog.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-greeter-terminate.py
 
 XDMDIR = $(CDE_LOGFILES_TOP)
 

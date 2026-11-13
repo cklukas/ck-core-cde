@@ -1,4 +1,14 @@
 2026-11-13
+- dtlogin: the greeter ran its whole shutdown (closing the message catalog,
+  restoring the bell, unsecuring the display, `XSync()`, closing the display)
+  inside the SIGTERM handler, which can interrupt an X request in flight and
+  corrupt the connection or deadlock. The handler now calls only
+  `XtNoticeSignal()`, and `XtAppAddSignal()` runs the shutdown from the event
+  loop; a second signal exits at once with `_exit()`. Before the toolkit exists
+  the old sequence stays, since nothing else runs yet. Test:
+  `programs/dtlogin/tests/check-greeter-terminate.py`.
+
+2026-11-13
 - dtwm: the session file reader ignored `HOME`, and crashed when it was unset:
   the test `(home_dir = getenv("HOME")) != NULL || strlen(home_dir) == 0` was
   inverted, so it asked the password database whenever `HOME` was set and read
