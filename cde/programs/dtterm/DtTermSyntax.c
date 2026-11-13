@@ -112,10 +112,10 @@ static void GetUsage(void)
         ** allocate the next entry...
         */
         if (!optHead) {
-            optHead = (struct _options *) malloc(sizeof(struct _options));
+            optHead = (struct _options *) XtMalloc(sizeof(struct _options));
             optPtr = optHead;
         } else {
-            optPtr->next = (struct _options *) malloc(sizeof(struct _options));
+            optPtr->next = (struct _options *) XtMalloc(sizeof(struct _options));
             optPtr = optPtr->next;
         }
 
@@ -183,10 +183,10 @@ static void GetUsage(void)
         ** allocate the next entry...
         */
         if (!messageHead) {
-            messageHead = (struct _options *) malloc(sizeof(struct _options));
+            messageHead = (struct _options *) XtMalloc(sizeof(struct _options));
             optPtr = messageHead;
         } else {
-            optPtr->next = (struct _options *) malloc(sizeof(struct _options));
+            optPtr->next = (struct _options *) XtMalloc(sizeof(struct _options));
             optPtr = optPtr->next;
         }
 

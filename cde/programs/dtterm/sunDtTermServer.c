@@ -269,7 +269,7 @@ dttermNewHandler(
     if (!displayString) {
 	/* This tt message is part of an action dtterm -server startup.  */
 	displayString = newDisplayString;
-	displayEnv = (char *)malloc(strlen("DISPLAY=") +
+	displayEnv = (char *)XtMalloc(strlen("DISPLAY=") +
 				    strlen(displayString) + 2);
 	displayEnv[0]=0;
 	strcat(displayEnv, "DISPLAY=");

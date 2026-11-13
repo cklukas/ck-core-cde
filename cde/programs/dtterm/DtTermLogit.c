@@ -239,10 +239,18 @@ doLog(int noFork, char *msg)
     int doRead;
 
     sbuffer = malloc(2*BUFSIZ);
+    if (sbuffer == nullptr) {
+	/* logging is best effort */
+	return;
+    }
     if (!id) {
 	(void) time(&now);
-	(void) sprintf(sbuffer, "%ld.%ld", now, (long)getpid());
+	(void) snprintf(sbuffer, 2*BUFSIZ, "%ld.%ld", now, (long)getpid());
 	id = strdup(sbuffer);
+	if (id == nullptr) {
+	    free(sbuffer);
+	    return;
+	}
     }
 	
     /* bump the sequence number before we fork()...  */
