@@ -76,12 +76,12 @@ _DtTermWriteEscSeq(Widget w, char *transmitString)
 	(void) _DtTermPrimBell(w);
     } else 
         if ( td->S8C1TMode ) {
-           char *cbuf =malloc(strlen(transmitString)+1);
+           char *cbuf = XtMalloc(strlen(transmitString)+1);
            strcpy(cbuf,transmitString) ;
            cbuf[1] = 0x9B ;
            (void) _DtTermPrimSendInput(w, (unsigned char *) (cbuf+1),
                 strlen(cbuf+1));
-           free(cbuf) ;
+           XtFree(cbuf) ;
          }
         else {
 	   (void) _DtTermPrimSendInput(w, (unsigned char *) transmitString,

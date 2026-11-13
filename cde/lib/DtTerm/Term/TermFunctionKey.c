@@ -119,8 +119,8 @@ _DtTermFunctionKeyStringStore(       /* store the label for the given key number
        default: ukey = -1 ; break;
      }
     if (ukey == -1) return ;
-    if (td->userKeyString[ukey])  free(td->userKeyString[ukey]) ;
-    td->userKeyString[ukey] = malloc(strlen(string)+1) ;
+    if (td->userKeyString[ukey])  XtFree((char *)td->userKeyString[ukey]) ;
+    td->userKeyString[ukey] = (unsigned char *) XtMalloc(strlen(string)+1) ;
     strcpy((char *)td->userKeyString[ukey],string) ;
 }
 
@@ -135,7 +135,7 @@ _DtTermFunctionKeyClear(
 
     for (i=0; i<=NO_USER_KEY_STRINGS ; i++)  {
       if (td->userKeyString[i]) {
-         free(td->userKeyString[i]) ;
+         XtFree((char *)td->userKeyString[i]) ;
          td->userKeyString[i] = 0;
        }
     }

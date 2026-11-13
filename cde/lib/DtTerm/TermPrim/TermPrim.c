@@ -1217,8 +1217,8 @@ Initialize(Widget ref_w, Widget w, Arg *args, Cardinal *num_args)
 		&tw->core.background_pixel);
     }
 
-    /* malloc terminalData dataspace... */
-    tw->term.tpd = (DtTermPrimData) malloc(sizeof(DtTermPrimDataRec));
+    /* allocate terminalData dataspace... */
+    tw->term.tpd = (DtTermPrimData) XtMalloc(sizeof(DtTermPrimDataRec));
     tpd = tw->term.tpd;
 
     /* clear malloc'ed memory... */
