@@ -919,7 +919,7 @@ hash_and_lookupstr(
 
 /* 
  * Insert the given string into the given array location.
- * Return 1 if successful, else return NULL if error.
+ * Return 1 if successful, else return -1 if error.
  * Note: int_array[0] unused 
  */
 static int 
