@@ -226,7 +226,9 @@ int
 _DtShmProtoDestroyStrtab(DtShmProtoStrtab strlist)
 {
   strlist_t * ptr = (strlist_t *) strlist;
-  
+
+  if(!ptr)
+    return(0);
   _DtUtilDestroyHash(ptr->sl_hash, nullptr, nullptr);
   _DtUtilDestroyHash(ptr->sl_bosons, free_hash_data, nullptr);
   free(ptr);
@@ -239,15 +241,26 @@ _DtShmProtoAddStrtab(DtShmProtoStrtab strlist, const char * string, int * isnew)
   strlist_t * ptr = (strlist_t *) strlist;
 
   intptr_t * bucket = (intptr_t *) _DtUtilGetHash(ptr->sl_hash, (const unsigned char *)string);
-  
-  intptr_t ret = *bucket;
+
+  intptr_t ret;
+
+  if(!bucket)
+    return(0);  /* 0 is never a boson: out of memory */
+  ret = *bucket;
 
   if(*bucket == 0) /* new */ {
     unsigned char ** sptr;
-    *isnew = 1;
-    *bucket = ret = ptr->sl_charcount;
+    ret = ptr->sl_charcount;
     sptr = (unsigned char**)_DtUtilGetHash(ptr->sl_bosons, (const unsigned char *)ret);
-    *sptr = (unsigned char*)strdup(string);
+    if(!sptr)
+      return(0);
+    if(!*sptr) {
+      *sptr = (unsigned char*)strdup(string);
+      if(!*sptr)
+	return(0);
+    }
+    *isnew = 1;
+    *bucket = ret;
     ptr->sl_charcount += strlen(string) + 1;
   } 
 

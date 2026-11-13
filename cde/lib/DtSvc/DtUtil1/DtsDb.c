@@ -168,6 +168,29 @@ _DtDtsDbCompareFieldNames(const void *a, const void *b)
 
 #include <Dt/Dts.h>
 
+/*
+ * Allocates a database with the given name.  Returns nullptr when memory
+ * is exhausted.
+ */
+static DtDtsDbDatabase *
+_DtDtsDbNewDatabase(const char *name)
+{
+	DtDtsDbDatabase	*db = (DtDtsDbDatabase *)calloc(1, sizeof(DtDtsDbDatabase));
+
+	if (db == nullptr)
+	{
+		return(nullptr);
+	}
+	db->databaseName = strdup(name);
+	if (db->databaseName == nullptr)
+	{
+		free(db);
+		return(nullptr);
+	}
+	db->ActionSequenceNumber = 0;
+	return(db);
+}
+
 DtDtsDbDatabase **
 _DtDtsDbInit(void)
 {
@@ -175,16 +198,32 @@ _DtDtsDbInit(void)
 
 	_DtSvcProcessLock();
 	num_db = 0;
-	db = db_list = (DtDtsDbDatabase **)calloc(num_db+3, sizeof(DtDtsDbDatabase *));
-	db_list[0] = (DtDtsDbDatabase *)calloc(1, sizeof(DtDtsDbDatabase));
-	db_list[0]->databaseName = (char *)strdup(DtDTS_DC_NAME);
-	db_list[0]->ActionSequenceNumber = 0;
-	num_db++;
-
-	db_list[1] = (DtDtsDbDatabase *)calloc(1, sizeof(DtDtsDbDatabase));
-	db_list[1]->databaseName = (char *)strdup(DtDTS_DA_NAME);
-	db_list[1]->ActionSequenceNumber = 0;
-	num_db++;
+	db = (DtDtsDbDatabase **)calloc(num_db+3, sizeof(DtDtsDbDatabase *));
+	if (db == nullptr)
+	{
+		_DtSvcProcessUnlock();
+		return(nullptr);
+	}
+	db[0] = _DtDtsDbNewDatabase(DtDTS_DC_NAME);
+	db[1] = _DtDtsDbNewDatabase(DtDTS_DA_NAME);
+	if (db[0] == nullptr || db[1] == nullptr)
+	{
+		if (db[0])
+		{
+			free(db[0]->databaseName);
+			free(db[0]);
+		}
+		if (db[1])
+		{
+			free(db[1]->databaseName);
+			free(db[1]);
+		}
+		free(db);
+		_DtSvcProcessUnlock();
+		return(nullptr);
+	}
+	db_list = db;
+	num_db = 2;
 
 	_DtSvcProcessUnlock();
 	return(db);
@@ -197,14 +236,23 @@ _DtsDbListDb(void)
 	char	**list = 0;
 
 	_DtSvcProcessLock();
-	for ( i = 0; db_list[i]; i++ );
+	for ( i = 0; db_list && db_list[i]; i++ );
 
 	if(i > 0)
 	{
 		list = (char **)calloc(i+1, sizeof(char *));
-		for ( i = 0; db_list[i]; i++ )
+		for ( i = 0; list && db_list[i]; i++ )
 		{
 			list[i] = (char *)strdup(db_list[i]->databaseName);
+			if (list[i] == nullptr)
+			{
+				while (i-- > 0)
+				{
+					free(list[i]);
+				}
+				free(list);
+				list = nullptr;
+			}
 		}
 	}
 	_DtSvcProcessUnlock();
@@ -222,7 +270,12 @@ _DtDtsDbAddDatabase( char *db_name )
 	if ( !db_list )
 	{
 		_DtDtsDbInit();
+		if ( !db_list )
+		{
+		 _DtSvcProcessUnlock();
+		 return nullptr;
 	}
+       }
 	for ( i = 0; db_list[i]; i++ )
 	{
 		if ( !strcmp(db_list[i]->databaseName,db_name) )
@@ -244,11 +297,19 @@ _DtDtsDbAddDatabase( char *db_name )
 	 */
 
 	new_db_list = (DtDtsDbDatabase **)calloc(i+2,sizeof(DtDtsDbDatabase *));
-
+	if ( new_db_list == nullptr )
+	{
+	 _DtSvcProcessUnlock();
+	 return nullptr;
+	}
+	new_db_list[i] = _DtDtsDbNewDatabase(db_name);
+	if ( new_db_list[i] == nullptr )
+	{
+		free(new_db_list);
+	 _DtSvcProcessUnlock();
+	 return nullptr;
+	}
 	memmove(new_db_list,db_list,sizeof(DtDtsDbDatabase *) * i );
-	new_db_list[i] = (DtDtsDbDatabase *)calloc(1, sizeof(DtDtsDbDatabase));
-	new_db_list[i]->databaseName = strdup(db_name);
-	new_db_list[i]->ActionSequenceNumber = 0;
 	free(db_list);
 	db_list = new_db_list;
 	num_db++;
@@ -440,6 +501,7 @@ DtDtsDbRecord *
 _DtDtsDbAddRecord(DtDtsDbDatabase *db)
 {
 	DtDtsDbRecord	**newlist;
+	DtDtsDbRecord	*newrec;
 	int		rec = db->recordCount;
 
 	db->compare = (_DtDtsDbRecordCompare)NULL;
@@ -447,6 +509,10 @@ _DtDtsDbAddRecord(DtDtsDbDatabase *db)
 	{
 		newlist = (DtDtsDbRecord **)calloc(rec+PADMEM,
 				sizeof(DtDtsDbRecord *));
+		if(newlist == nullptr)
+		{
+			return(nullptr);
+		}
 		if(db->recordList)
 		{
 			memmove(newlist, db->recordList,
@@ -455,10 +521,15 @@ _DtDtsDbAddRecord(DtDtsDbDatabase *db)
 		}
 		db->recordList = newlist;
 	}
-	db->recordList[rec] = (DtDtsDbRecord *)calloc(1, sizeof(DtDtsDbRecord));
+	newrec = (DtDtsDbRecord *)calloc(1, sizeof(DtDtsDbRecord));
+	if(newrec == nullptr)
+	{
+		return(nullptr);
+	}
+	db->recordList[rec] = newrec;
 	db->recordCount++;
 
-	return(db->recordList[rec]);
+	return(newrec);
 }
 
 int
@@ -504,12 +575,17 @@ DtDtsDbField *
 _DtDtsDbAddField(DtDtsDbRecord *rec)
 {
 	DtDtsDbField	**newlist;
+	DtDtsDbField	*newfld;
 	int		flds = rec->fieldCount;
 
 	if(flds%PADMEM == 0)
 	{
 		newlist = (DtDtsDbField **)calloc(flds+PADMEM,
 				sizeof(DtDtsDbField *));
+		if(newlist == nullptr)
+		{
+			return(nullptr);
+		}
 		if(rec->fieldList)
 		{
 			memmove(newlist, rec->fieldList,
@@ -518,10 +594,15 @@ _DtDtsDbAddField(DtDtsDbRecord *rec)
 		}
 		rec->fieldList = newlist;
 	}
-	rec->fieldList[flds] = (DtDtsDbField *)calloc(1, sizeof(DtDtsDbField));
+	newfld = (DtDtsDbField *)calloc(1, sizeof(DtDtsDbField));
+	if(newfld == nullptr)
+	{
+		return(nullptr);
+	}
+	rec->fieldList[flds] = newfld;
 	rec->fieldCount++;
 
-	return(rec->fieldList[flds]);
+	return(newfld);
 }
 
 int

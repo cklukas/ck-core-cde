@@ -104,6 +104,28 @@ char **_DtsDbListDb(void);
 
 int      use_in_memory_db = False;
 
+/*
+ * Adds a field with a private copy of the value (none for a null value)
+ * to the record.  Returns 0, or -1 when memory is exhausted.
+ */
+static int
+_DtOAAddField(DtDtsDbRecord *rec, const char *name, const char *value)
+{
+	DtDtsDbField *fld = _DtDtsDbAddField(rec);
+
+	if (fld == nullptr)
+	{
+		return -1;
+	}
+	fld->fieldName = XrmStringToQuark(name);
+	if (value == nullptr)
+	{
+		return 0;
+	}
+	fld->fieldValue = strdup(value);
+	return fld->fieldValue ? 0 : -1;
+}
+
 static Boolean
 _DtOAConverter(DtDtsDbField * fields,
 	       DtDbPathId pathId,
@@ -114,7 +136,6 @@ _DtOAConverter(DtDtsDbField * fields,
 	DtDtsDbDatabase *da_db;
 	DtDtsDbRecord  *dc_rec;
 	DtDtsDbRecord  *da_rec;
-	DtDtsDbField   *fld;
 
 	_DtSvcProcessLock();    
 	dc_db = _DtDtsDbGet(DtDTS_DC_NAME);
@@ -131,61 +152,61 @@ _DtOAConverter(DtDtsDbField * fields,
 	/*
 	 * Synthesize criteria record -- for this action
 	 */
-	dc_rec = _DtDtsDbAddRecord(_DtDtsDbGet(DtDTS_DC_NAME));
+	dc_rec = _DtDtsDbAddRecord(dc_db);
+	if (dc_rec == nullptr)
+	{
+		_DtSvcProcessUnlock();
+		return True;
+	}
 	dc_rec->recordName = XrmStringToQuark(fields[0].fieldValue);
 	dc_rec->seq = _DtDtsNextDCSeq();
 	dc_rec->pathId = (int)pathId;
-	fld = _DtDtsDbAddField(dc_rec);
-	fld->fieldName = XrmStringToQuark(DtDTS_NAME_PATTERN);
-	fld->fieldValue = strdup(fields[0].fieldValue);
-	fld = _DtDtsDbAddField(dc_rec);
-	fld->fieldName = XrmStringToQuark(DtDTS_MODE);
-	fld->fieldValue = strdup("fx");
-	fld = _DtDtsDbAddField(dc_rec);
-	fld->fieldName = XrmStringToQuark(DtDTS_DATA_ATTRIBUTES_NAME);
-	fld->fieldValue = strdup(fields[0].fieldValue);
-	/*
-	 * Mark the criteria record as synthetic.
-	 */
-	fld = _DtDtsDbAddField(dc_rec);
-	fld->fieldName = XrmStringToQuark(DtDTS_DA_IS_SYNTHETIC);
-	fld->fieldValue = strdup("True");
+	if (_DtOAAddField(dc_rec, DtDTS_NAME_PATTERN, fields[0].fieldValue) ||
+	    _DtOAAddField(dc_rec, DtDTS_MODE, "fx") ||
+	    _DtOAAddField(dc_rec, DtDTS_DATA_ATTRIBUTES_NAME,
+			  fields[0].fieldValue) ||
+	    /*
+	     * Mark the criteria record as synthetic.
+	     */
+	    _DtOAAddField(dc_rec, DtDTS_DA_IS_SYNTHETIC, "True"))
+	{
+		_DtDtsDbDeleteRecord(dc_rec, dc_db);
+		_DtSvcProcessUnlock();
+		return True;
+	}
 
 	/*
 	 * Synthesize attribute record -- for this action
 	 */
-	da_rec = _DtDtsDbAddRecord(_DtDtsDbGet(DtDTS_DA_NAME));
+	da_rec = _DtDtsDbAddRecord(da_db);
+	if (da_rec == nullptr)
+	{
+		_DtDtsDbDeleteRecord(dc_rec, dc_db);
+		_DtSvcProcessUnlock();
+		return True;
+	}
 	da_rec->recordName = XrmStringToQuark(fields[0].fieldValue);
 	da_rec->seq = _DtDtsNextDASeq();
 	da_rec->pathId = (int)pathId;
-	fld = _DtDtsDbAddField(da_rec);
-	fld->fieldName = XrmStringToQuark(DtDTS_DA_ACTION_LIST);
-	fld->fieldValue = strdup(fields[0].fieldValue);
-	fld = _DtDtsDbAddField(da_rec);
-	fld->fieldName = XrmStringToQuark(DtDTS_DA_DATA_HOST);
-	fld->fieldValue = strdup(hostPrefix);
-
-	/*
-	 * Mark the attribute record as synthetic.
-	 */
-	fld = _DtDtsDbAddField(da_rec);
-	fld->fieldName = XrmStringToQuark(DtDTS_DA_IS_SYNTHETIC);
-	fld->fieldValue = strdup("True");
-
-	fld = _DtDtsDbAddField(da_rec);
-	fld->fieldName = XrmStringToQuark(DtDTS_DA_IS_ACTION);
-	fld->fieldValue = strdup("True");
-
-	fld = _DtDtsDbAddField(da_rec);
-	fld->fieldName = XrmStringToQuark(DtDTS_DA_IS_TEXT);
-	fld->fieldValue = strdup("False");
-
-        /*
-         * Use the action name as the default copy_to action
-         */
-	fld = _DtDtsDbAddField(da_rec);
-	fld->fieldName = XrmStringToQuark(DtDTS_DA_COPY_TO_ACTION);
-	fld->fieldValue = strdup(fields[0].fieldValue);
+	if (_DtOAAddField(da_rec, DtDTS_DA_ACTION_LIST, fields[0].fieldValue) ||
+	    _DtOAAddField(da_rec, DtDTS_DA_DATA_HOST, hostPrefix) ||
+	    /*
+	     * Mark the attribute record as synthetic.
+	     */
+	    _DtOAAddField(da_rec, DtDTS_DA_IS_SYNTHETIC, "True") ||
+	    _DtOAAddField(da_rec, DtDTS_DA_IS_ACTION, "True") ||
+	    _DtOAAddField(da_rec, DtDTS_DA_IS_TEXT, "False") ||
+	    /*
+	     * Use the action name as the default copy_to action
+	     */
+	    _DtOAAddField(da_rec, DtDTS_DA_COPY_TO_ACTION,
+			  fields[0].fieldValue))
+	{
+		_DtDtsDbDeleteRecord(da_rec, da_db);
+		_DtDtsDbDeleteRecord(dc_rec, dc_db);
+		_DtSvcProcessUnlock();
+		return True;
+	}
 	_DtSvcProcessUnlock();
 	return False;
 }

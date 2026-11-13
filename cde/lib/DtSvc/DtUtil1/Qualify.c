@@ -89,6 +89,11 @@ FILE * f;
     /* allocate space and create the qualified filename */
 
     chance = (char *)malloc(strlen(paths) + strlen(filename) + 2);
+    if (chance == nullptr) {
+      if (path)                         /* restore the colon and give up */
+	*path = ':';
+      return nullptr;
+    }
     if (filename[0] == '/')
       sprintf(chance,"%s%s",paths,filename);
     else

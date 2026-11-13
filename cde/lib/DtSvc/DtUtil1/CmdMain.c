@@ -1385,6 +1385,21 @@ _DtInitializeCommandInvoker(
 
 /*****************************************************************************
  *
+ * _DtCmdCopyMessage - returns a private copy of an error message, or the
+ *   message itself when memory is exhausted.  The result is never freed.
+ *
+ *****************************************************************************/
+
+static char *
+_DtCmdCopyMessage( const char *message )
+{
+   char *copy = strdup (message);
+
+   return copy ? copy : (char *) message;
+}
+
+/*****************************************************************************
+ *
  * _DtCmdInitializeErrorMessages - initializes all of the command invoker's
  *   error messages.
  *
@@ -1401,23 +1416,23 @@ _DtCmdInitializeErrorMessages( void )
    /* 
     * Non-Fatal -> Abort the request
     */
-   errorChdir = strdup (((char *)Dt11GETMESSAGE(3, 2, "An attempt to change to the following directory:\n\n  %s\n\nfrom host \"%s\" failed.\n\nCheck the spelling and permissions and make sure the directory exists.")));
+   errorChdir = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 2, "An attempt to change to the following directory:\n\n  %s\n\nfrom host \"%s\" failed.\n\nCheck the spelling and permissions and make sure the directory exists."));
 
-   errorSpawn = strdup (((char *)Dt11GETMESSAGE(3, 5, "An attempt to execute the following command on host\n\"%s\" failed:\n\n  %s\n\nCheck that the program exists, has the correct\npermissions and is executable.")));
+   errorSpawn = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 5, "An attempt to execute the following command on host\n\"%s\" failed:\n\n  %s\n\nCheck that the program exists, has the correct\npermissions and is executable."));
 
-   errorExec = strdup (((char *)Dt11GETMESSAGE(3, 6, "An attempt to execute the following command failed:\n\n  %s\n\nCheck that the program exists, has the correct\npermissions and is executable.")));
+   errorExec = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 6, "An attempt to execute the following command failed:\n\n  %s\n\nCheck that the program exists, has the correct\npermissions and is executable."));
 
-   cmd_Globals.error_terminal = strdup (((char *)Dt11GETMESSAGE(3, 7, "This action cannot be started because the following\nterminal emulator cannot be executed:\n\n  %s\n\nCheck that the program exists, has the correct permissions\nand is executable.  This problem may have occurred because the\nprogram is not in your \"PATH\".")));
+   cmd_Globals.error_terminal = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 7, "This action cannot be started because the following\nterminal emulator cannot be executed:\n\n  %s\n\nCheck that the program exists, has the correct permissions\nand is executable.  This problem may have occurred because the\nprogram is not in your \"PATH\"."));
 
-   errorLength = strdup (((char *)Dt11GETMESSAGE(3, 9, "The total number of characters in this action exceeds the limit of \"%d\".\n\nYou may need to break the action into more than one action.")));
+   errorLength = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 9, "The total number of characters in this action exceeds the limit of \"%d\".\n\nYou may need to break the action into more than one action."));
 
-   errorFork = strdup (((char *)Dt11GETMESSAGE(3, 11, "An attempt to start a new process on host \"%s\" failed.\n\nTo continue, you may need to stop an unneeded process on this host.")));
+   errorFork = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 11, "An attempt to start a new process on host \"%s\" failed.\n\nTo continue, you may need to stop an unneeded process on this host."));
 
-   errorRequest = strdup (((char *)Dt11GETMESSAGE(3, 17, "This action's WINDOW_TYPE \"%s\" is un-recognized.\n\nThe WINDOW_TYPE should be one of the following:\n\n  %s, %s, %s,\n   %s, %s, or %s\n")));
+   errorRequest = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 17, "This action's WINDOW_TYPE \"%s\" is un-recognized.\n\nThe WINDOW_TYPE should be one of the following:\n\n  %s, %s, %s,\n   %s, %s, or %s\n"));
 
-   cmd_Globals.error_subprocess = strdup (((char *)Dt11GETMESSAGE(3, 18, "This action cannot be started because the DT subprocess program:\n\n   %s\n\ncannot be executed.  Check that the program has the correct\npermissions and is executable.")));
+   cmd_Globals.error_subprocess = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 18, "This action cannot be started because the DT subprocess program:\n\n   %s\n\ncannot be executed.  Check that the program has the correct\npermissions and is executable."));
 
-   errorRemoteSubprocess = strdup (((char *)Dt11GETMESSAGE(3, 20, "This action cannot be executed on host \"%s\"\nbecause the following required program either\ndoes not exist or it is not executable:\n\n   %s\n")));
+   errorRemoteSubprocess = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 20, "This action cannot be executed on host \"%s\"\nbecause the following required program either\ndoes not exist or it is not executable:\n\n   %s\n"));
 
 	/*
 	 * The following errors may occur when a SPC
@@ -1445,10 +1460,10 @@ _DtCmdInitializeErrorMessages( void )
     * Do not post a dialog, write to the error log file only.
     */
 
-   errorSpcTerminator = strdup (((char *)Dt11GETMESSAGE(3, 15, "An attempt to register the output log from a remote host failed.\n\nTo continue, you may need to stop an existing process.")));
+   errorSpcTerminator = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 15, "An attempt to register the output log from a remote host failed.\n\nTo continue, you may need to stop an existing process."));
 
-   successHost = strdup (((char *)Dt11GETMESSAGE(3, 21, "The action \"%s\" was successfully executed on host \"%s\".")));
+   successHost = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 21, "The action \"%s\" was successfully executed on host \"%s\"."));
 
-   cmd_Globals.error_directory_name_map = strdup (((char *)Dt11GETMESSAGE(3, 22, "The directory \"%s\" on host \"%s\"\ncould not be converted to a network path.\n(%s)")));
+   cmd_Globals.error_directory_name_map = _DtCmdCopyMessage (Dt11GETMESSAGE(3, 22, "The directory \"%s\" on host \"%s\"\ncould not be converted to a network path.\n(%s)"));
 
 }

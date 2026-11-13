@@ -118,30 +118,35 @@ typedef struct hash {
 } hash;
 
 
-DtHashTbl _DtUtilMakeHash(int size)
+static DtHashTbl make_hash(int size, enum hash_type type)
 {
   hash * ptr;
 
+  if(size < 1)
+    size = 1;
   ptr        = (hash *) malloc(sizeof(*ptr));
+  if(ptr == nullptr)
+    return(nullptr);
   ptr->size  =   size;
-  ptr->table = (hash_entry **) malloc( (unsigned) (sizeof(hash_entry *) * size) );
-  (void)memset((char *) ptr->table, (char) 0, sizeof(hash_entry *)*size);
+  ptr->table = (hash_entry **) calloc((size_t) size, sizeof(hash_entry *));
+  if(ptr->table == nullptr)
+    {
+      free(ptr);
+      return(nullptr);
+    }
   ptr->start = nullptr;
-  ptr->hash_type = String_Key;
+  ptr->hash_type = type;
   return((DtHashTbl)ptr);
+}
+
+DtHashTbl _DtUtilMakeHash(int size)
+{
+  return(make_hash(size, String_Key));
 }
 
 DtHashTbl _DtUtilMakeIHash(int size)
 {
-  hash * ptr;
-
-  ptr        = (hash *) malloc(sizeof(*ptr));
-  ptr->size  =   size;
-  ptr->table = (hash_entry **) malloc( (unsigned) (sizeof(hash_entry *) * size) );
-  (void)memset((char *) ptr->table, (char) 0, sizeof(hash_entry *)*size);
-  ptr->start = nullptr;
-  ptr->hash_type = Integer_Key;
-  return((DtHashTbl) ptr);
+  return(make_hash(size, Integer_Key));
 }
 
   
@@ -178,7 +183,14 @@ void ** _DtUtilGetHash(DtHashTbl t, const unsigned char * key)
     */
 
   new = (hash_entry *) malloc(sizeof(*new));
+  if(new == nullptr)
+    return(nullptr);
   new->key = (unsigned char *)((tbl->hash_type == String_Key)?(unsigned char *)strdup((char*)key):key);
+  if(new->key == nullptr)
+    {
+      free(new);
+      return(nullptr);
+    }
   /*
     hook into chain from tbl...
     */

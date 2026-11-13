@@ -105,6 +105,21 @@ _DtDtsSeqReset(void)
 	cur_da_count = 0;
 	_DtSvcProcessUnlock();
 }
+/*
+ * Drops the partially built record and reports it as rejected.
+ * The caller holds the process lock; it is released here.
+ */
+static Boolean
+_DtDtsRejectRecord(DtDtsDbDatabase *db, DtDtsDbRecord *rec)
+{
+	if (rec)
+	{
+		_DtDtsDbDeleteRecord(rec, db);
+	}
+	_DtSvcProcessUnlock();
+	return True;
+}
+
 Boolean
 _DtDtsDCConverter(DtDtsDbField * fields,
 	       DtDbPathId pathId,
@@ -142,6 +157,10 @@ _DtDtsDCConverter(DtDtsDbField * fields,
 				}
 			}
 			rec = _DtDtsDbAddRecord(db);
+			if (rec == nullptr)
+			{
+				return _DtDtsRejectRecord(db, nullptr);
+			}
 			rec->recordName = XrmStringToQuark(fields[i].fieldValue);
 			rec->seq = _DtDtsNextDCSeq();
 			rec->pathId = (int)pathId;
@@ -149,8 +168,16 @@ _DtDtsDCConverter(DtDtsDbField * fields,
 		else
 		{
 			fld = _DtDtsDbAddField(rec);
+			if (fld == nullptr)
+			{
+				return _DtDtsRejectRecord(db, rec);
+			}
 			fld->fieldName = fields[i].fieldName;
 			fld->fieldValue = strdup(fields[i].fieldValue);
+			if (fld->fieldValue == nullptr)
+			{
+				return _DtDtsRejectRecord(db, rec);
+			}
 		}
 		i++;
 	}
@@ -196,18 +223,38 @@ _DtDtsDAConverter(DtDtsDbField * fields,
 				}
 			}
 			rec = _DtDtsDbAddRecord(db);
+			if (rec == nullptr)
+			{
+				return _DtDtsRejectRecord(db, nullptr);
+			}
 			rec->recordName = XrmStringToQuark(fields[i].fieldValue);
 			rec->seq = _DtDtsNextDASeq();
 			fld = _DtDtsDbAddField(rec);
+			if (fld == nullptr)
+			{
+				return _DtDtsRejectRecord(db, rec);
+			}
 			fld->fieldName = XrmStringToQuark(DtDTS_DA_DATA_HOST);
 			fld->fieldValue = hostPrefix?strdup(hostPrefix):(char *) 0;
+			if (hostPrefix && fld->fieldValue == nullptr)
+			{
+				return _DtDtsRejectRecord(db, rec);
+			}
 			rec->pathId = (int)pathId;
 		}
 		else
 		{
 			fld = _DtDtsDbAddField(rec);
+			if (fld == nullptr)
+			{
+				return _DtDtsRejectRecord(db, rec);
+			}
 			fld->fieldName = fields[i].fieldName;
 			fld->fieldValue = strdup(fields[i].fieldValue);
+			if (fld->fieldValue == nullptr)
+			{
+				return _DtDtsRejectRecord(db, rec);
+			}
 		}
 		i++;
 	}

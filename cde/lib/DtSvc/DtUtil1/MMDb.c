@@ -66,7 +66,7 @@ static int build_file_list(DtShmProtoIntList, DtDirPaths *,
 extern	int	cde_dc_field_compare(const void *, const void *);
 extern	int	cde_dc_compare(const void *, const void *);
 static void	_DtMMSortDataTypes(DtShmProtoStrtab str_handle);
-static void	_DtMMAddActionsToDataAttribute(DtDtsDbDatabase *db_ptr);
+static int	_DtMMAddActionsToDataAttribute(DtDtsDbDatabase *db_ptr);
 static int	write_db(DtDtsMMHeader *header, void *index, int size,
 			 const char *CacheFile);
 static int	build_new_db(DtShmProtoStrtab, DtShmProtoIntList, int, DtDtsDbDatabase **);
@@ -97,7 +97,8 @@ _MMWriteDb(DtDirPaths *dirs, int num_db, DtDtsDbDatabase **db_list,
 	int_handle = _DtShmProtoInitIntLst(50000);
 	shm_handle = _DtShmProtoInitStrtab(10000);
 
-	if (!build_file_list(int_handle, dirs, &header, suffix))
+	if (!int_handle || !shm_handle ||
+	    !build_file_list(int_handle, dirs, &header, suffix))
 	{
 		returnCode = 0;
 		goto done;
@@ -105,12 +106,21 @@ _MMWriteDb(DtDirPaths *dirs, int num_db, DtDtsDbDatabase **db_list,
 
 	_DtMMSortDataTypes(shm_handle);
 	db = (DtDtsDbDatabase	*) _DtDtsDbGet(DtDTS_DA_NAME);
-	_DtMMAddActionsToDataAttribute(db);
+	if (_DtMMAddActionsToDataAttribute(db) < 0)
+	{
+		returnCode = 0;
+		goto done;
+	}
 
 	header.pathhash = _DtDtsMMPathHash(dirs);
 	header.num_db = num_db;
 	header.db_offset = build_new_db(shm_handle, int_handle, num_db,
-db_list);
+	db_list);
+	if (header.db_offset < 0)
+	{
+		returnCode = 0;
+		goto done;
+	}
 	db = (DtDtsDbDatabase	*) _DtDtsDbGet("DATA_CRITERIA");
 	if (build_name_list(db, int_handle, &header) < 0)
 	{
@@ -121,12 +131,21 @@ db_list);
 	tbl_size = _DtShmProtoSizeStrtab(shm_handle);
 	tbl_data = (void *) _DtShmProtoAddIntLst(int_handle,
 				tbl_size/sizeof(int), &header.str_tbl_offset);
+	if (tbl_data == nullptr)
+	{
+		returnCode = 0;
+		goto done;
+	}
 	_DtShmProtoCopyStrtab(shm_handle, tbl_data);
 
 
 	tbl_size = _DtShmProtoSizeIntLst(int_handle);
-	tbl_data = (void *)malloc(tbl_size);
-	memset(tbl_data, '\0', tbl_size);
+	tbl_data = calloc(1, tbl_size);
+	if (tbl_data == nullptr)
+	{
+		returnCode = 0;
+		goto done;
+	}
 	tbl_data = (void *)_DtShmProtoCopyIntLst(int_handle, tbl_data);
 
 	returnCode = write_db(&header, tbl_data, tbl_size, CacheFile);
@@ -204,9 +223,10 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 
 	/* Theses here to make sure it gets into the string tables
 	   because actions uses it in its "types" field. */
-	_DtShmProtoAddStrtab(shm_handle, DtDTS_DT_UNKNOWN, &isnew);
-	_DtShmProtoAddStrtab(shm_handle, DtDTS_DT_RECURSIVE_LINK, &isnew);
-	_DtShmProtoAddStrtab(shm_handle, DtDTS_DT_BROKEN_LINK, &isnew);
+	if (!_DtShmProtoAddStrtab(shm_handle, DtDTS_DT_UNKNOWN, &isnew) ||
+	    !_DtShmProtoAddStrtab(shm_handle, DtDTS_DT_RECURSIVE_LINK, &isnew) ||
+	    !_DtShmProtoAddStrtab(shm_handle, DtDTS_DT_BROKEN_LINK, &isnew))
+		return 0;
 
 	if (getcwd(cur_path, sizeof(cur_path)) == nullptr)
 		return 0;
@@ -223,6 +243,8 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 
 		mtime_list[count-1] = buf.st_mtime;
 		boson_list[count-1] = _DtShmProtoAddStrtab(shm_handle, dirs->paths[i], &isnew);
+		if (boson_list[count-1] == 0)
+			goto fail;
 		dirp = opendir(".");
 		if (dirp == nullptr)
 			continue;
@@ -231,19 +253,17 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 			char	*c = strrchr(result->d_name, suffix[0]);
 			if(c && strcmp(c, suffix) == 0)
 			{
-	                        char	*pathname = malloc(MAXPATHLEN+1);
-				sprintf(pathname, "%s/%s", dirs->paths[i], result->d_name);
+				char	pathname[MAXPATHLEN+1];
+				snprintf(pathname, sizeof(pathname), "%s/%s", dirs->paths[i], result->d_name);
 				stat(result->d_name, &buf);
 				count++;
 				if (!grow_file_lists(&boson_list, &mtime_list, count))
-				{
-					free(pathname);
 					goto fail;
-				}
 				mtime_list[count-1] = buf.st_mtime;
 				boson_list[count-1] = _DtShmProtoAddStrtab(shm_handle,
 					pathname, &isnew);
-				free(pathname);
+				if (boson_list[count-1] == 0)
+					goto fail;
 				continue;
 			}
 		}
@@ -253,8 +273,12 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 	if (chdir(cur_path) != 0)
 		goto fail;
 	data = _DtShmProtoAddIntLst(int_handle, count, &header->files_offset);
+	if (data == nullptr)
+		goto fail;
 	memcpy(data, boson_list, count*sizeof(int));
 	data = _DtShmProtoAddIntLst(int_handle, count*sizeof(time_t)/sizeof(int), &header->mtimes_offset);
+	if (data == nullptr)
+		goto fail;
 	memcpy(data, mtime_list, count*sizeof(time_t));
 	header->files_count = count;
 	free(boson_list);
@@ -334,7 +358,8 @@ _DtMMSortDataTypes(DtShmProtoStrtab str_handle)
 	_DtSvcProcessUnlock();
 }
 
-static void
+/* Returns 0, or -1 when memory is exhausted. */
+static int
 add_if_missing(DtDtsDbRecord *rec_ptr, XrmQuark name, char *value)
 {
 	DtDtsDbField	*fld_ptr;
@@ -352,18 +377,23 @@ add_if_missing(DtDtsDbRecord *rec_ptr, XrmQuark name, char *value)
 	}
 	if(found)
 	{
-		return;
+		return 0;
 	}
 
 	fld_ptr = _DtDtsDbAddField(rec_ptr);
+	if(fld_ptr == nullptr)
+	{
+		return -1;
+	}
 	fld_ptr->fieldName = name;
 	fld_ptr->fieldValue = value;
 	_DtDtsDbFieldSort(rec_ptr, 0);
 
-	return;
+	return 0;
 }
 
-static void
+/* Returns 0, or -1 when memory is exhausted. */
+static int
 _DtMMAddActionsToDataAttribute(DtDtsDbDatabase *db_ptr)
 {
 	int		rec;
@@ -392,13 +422,18 @@ _DtMMAddActionsToDataAttribute(DtDtsDbDatabase *db_ptr)
 		{
 			continue;
 		}
-		add_if_missing(rec_ptr, desc_qrk, 
-				DtActionDescription(obj_type));
-		add_if_missing(rec_ptr, icon_qrk, DtActionIcon(obj_type));
-		add_if_missing(rec_ptr, label_qrk, DtActionLabel(obj_type));
+		if (add_if_missing(rec_ptr, desc_qrk,
+				DtActionDescription(obj_type)) < 0 ||
+		    add_if_missing(rec_ptr, icon_qrk, DtActionIcon(obj_type)) < 0 ||
+		    add_if_missing(rec_ptr, label_qrk, DtActionLabel(obj_type)) < 0)
+		{
+			return -1;
+		}
 	}
+	return 0;
 }
 
+/* Returns the index of the database list, or -1 when memory is exhausted. */
 static int
 build_new_db(DtShmProtoStrtab shm_handle, DtShmProtoIntList int_handle, int num_db, DtDtsDbDatabase **db_list)
 {
@@ -418,16 +453,18 @@ build_new_db(DtShmProtoStrtab shm_handle, DtShmProtoIntList int_handle, int num_
 	int			db_index;
 	int			isnew;
 	char			*tmp;
+	DtShmProtoInttab	nameIndex = 0;
 
 	/* create a space to hold the list of database structures */
 	new_db_list = (DtDtsMMDatabase *)_DtShmProtoAddIntLst(int_handle,
 			num_db*sizeof(DtDtsMMDatabase)/sizeof(int),
 			&db_index);
+	if (new_db_list == nullptr)
+		return(-1);
 	for(db = 0; db < num_db; db++)
 	{
 		int	last_boson = -1;
 		int	list_count = 0;
-		DtShmProtoInttab	nameIndex;
 		int		size;
 		int		*idx;
 
@@ -435,25 +472,34 @@ build_new_db(DtShmProtoStrtab shm_handle, DtShmProtoIntList int_handle, int num_
 		db_ptr = db_list[db];
 
 		new_db_ptr->databaseName = _DtShmProtoAddStrtab(shm_handle, db_ptr->databaseName, &isnew);
+		if (new_db_ptr->databaseName == 0)
+			goto fail;
 		new_db_ptr->recordCount = db_ptr->recordCount;
 		/* create space to hold record list */
 		new_rec_ptr_list = (DtDtsMMRecord *)_DtShmProtoAddIntLst(int_handle,
 				db_ptr->recordCount*sizeof(DtDtsMMRecord)/sizeof(int),
 				&index);
+		if (new_rec_ptr_list == nullptr)
+			goto fail;
 
 		new_db_ptr->recordList = index;
 		/* create index to names list */
 		nameIndex = _DtShmProtoInitInttab(db_ptr->recordCount);
+		if (nameIndex == nullptr)
+			goto fail;
 		for(rec = 0; rec < db_ptr->recordCount; rec++)
 		{
 			new_rec_ptr = &new_rec_ptr_list[rec];
 			rec_ptr = db_ptr->recordList[rec];
 			new_rec_ptr->recordName = QtB(rec_ptr->recordName);
+			if (new_rec_ptr->recordName == 0)
+				goto fail;
 
 			if(new_rec_ptr->recordName != last_boson)
 			{
 				/* save name position */
-				_DtShmProtoAddInttab(nameIndex, new_rec_ptr->recordName, rec);
+				if (_DtShmProtoAddInttab(nameIndex, new_rec_ptr->recordName, rec) != 0)
+					goto fail;
 
 				last_boson = new_rec_ptr->recordName;
 			}
@@ -461,6 +507,8 @@ build_new_db(DtShmProtoStrtab shm_handle, DtShmProtoIntList int_handle, int num_
 				tmp = _DtDbPathIdToString(rec_ptr->pathId),
 						 &isnew);
 			XtFree(tmp);
+			if (new_rec_ptr->pathId == 0)
+				goto fail;
 			new_rec_ptr->seq = rec_ptr->seq;
 			new_rec_ptr->fieldCount = rec_ptr->fieldCount;
 
@@ -468,6 +516,8 @@ build_new_db(DtShmProtoStrtab shm_handle, DtShmProtoIntList int_handle, int num_
 			new_fld_ptr_list = (DtDtsMMField *)_DtShmProtoAddIntLst(int_handle,
 				rec_ptr->fieldCount*sizeof(DtDtsMMField)/sizeof(int),
 				&index);
+			if (new_fld_ptr_list == nullptr)
+				goto fail;
 
 			new_rec_ptr->fieldList = index;
 			for(fld = 0; fld < rec_ptr->fieldCount; fld++)
@@ -476,17 +526,28 @@ build_new_db(DtShmProtoStrtab shm_handle, DtShmProtoIntList int_handle, int num_
 				fld_ptr = rec_ptr->fieldList[fld];
 
 				new_fld_ptr->fieldName  = QtB(fld_ptr->fieldName);
+				if (new_fld_ptr->fieldName == 0)
+					goto fail;
 				new_fld_ptr->fieldValue = fld_ptr->fieldValue?_DtShmProtoAddStrtab(shm_handle,
 					fld_ptr->fieldValue, &isnew):0;
+				if (fld_ptr->fieldValue && new_fld_ptr->fieldValue == 0)
+					goto fail;
 			}
 		}
 		/* create table for index and save it */
 		size = _DtShmProtoSizeInttab(nameIndex);
 		idx = _DtShmProtoAddIntLst(int_handle, size/sizeof(int), &new_db_ptr->nameIndex);
+		if (idx == nullptr)
+			goto fail;
 		_DtShmProtoCopyInttab(nameIndex, (void *)idx);
 		_DtShmProtoDestroyInttab(nameIndex);
+		nameIndex = 0;
 	}
 	return(db_index);
+
+fail:
+	_DtShmProtoDestroyInttab(nameIndex);
+	return(-1);
 }
 
 struct  list
@@ -557,9 +618,11 @@ build_name_list(DtDtsDbDatabase *db,
 	void		*space;
 
 	/* create tmp space for two lists */
-	name_index = (struct list *)calloc(db->recordCount*2,
+	name_index = (struct list *)calloc(db->recordCount*2 + 1,
 					sizeof(struct list));
-	other = (struct list *)calloc(db->recordCount, sizeof(struct list));
+	other = (struct list *)calloc(db->recordCount + 1, sizeof(struct list));
+	if (name_index == nullptr || other == nullptr)
+		goto fail;
 
 	/* step through all records */
 	for(i = 0; i < db->recordCount; i++)
@@ -620,6 +683,8 @@ build_name_list(DtDtsDbDatabase *db,
 			name_index[next].boson = 
 				_DtShmProtoAddStrtab(shm_handle,
 					(const char *)attr, &isnew);
+			if (name_index[next].boson == 0)
+				goto fail;
 			name_index[next++].rec = i;
 			continue; /* next record */
 		}
@@ -643,6 +708,8 @@ build_name_list(DtDtsDbDatabase *db,
 			name_index[next].boson = 
 			_DtShmProtoAddStrtab(shm_handle,
 					(const char *)attr, &isnew);
+			if (name_index[next].boson == 0)
+				goto fail;
 			name_index[next++].rec = i;
 		}
 		else
@@ -668,6 +735,8 @@ printf("head->buffer_start_index = %d\n", head->buffer_start_index);
 	   duplicates need to be in separate lists.
 	*/
 	indexList = _DtShmProtoInitInttab(next+3);
+	if (indexList == nullptr)
+		goto fail;
 	for(i = 0; i <= next; i++)
 	{
 		if(i != next && (last_boson == -1 || name_index[i].boson == last_boson))
@@ -687,8 +756,9 @@ printf("head->buffer_start_index = %d\n", head->buffer_start_index);
 			if(list_count == 1)
 			{
 				/* if just one just add it in the index */
-				_DtShmProtoAddInttab(indexList,
-						last_boson, list_of_recs[0]);
+				if (_DtShmProtoAddInttab(indexList,
+						last_boson, list_of_recs[0]) != 0)
+					goto fail;
 			}
 			else
 			{
@@ -697,14 +767,18 @@ printf("head->buffer_start_index = %d\n", head->buffer_start_index);
 				int	*list = _DtShmProtoAddIntLst(int_handle,
 						list_count, &index);
 
+				if (list == nullptr)
+					goto fail;
+
 				/* write the list to the to the table */
 				memcpy(list, list_of_recs,
 						list_count*sizeof(int));
 
 				/* then index on the negative of the boson
 				   so that we know it is a list */
-				_DtShmProtoAddInttab(indexList,
-						last_boson, -index);
+				if (_DtShmProtoAddInttab(indexList,
+						last_boson, -index) != 0)
+					goto fail;
 				/* only one record is kept from here on; if
 				   the block cannot shrink, the larger one
 				   stays valid */
@@ -728,6 +802,9 @@ printf("head->buffer_start_index = %d\n", head->buffer_start_index);
 		int	*list = _DtShmProtoAddIntLst(int_handle,
 				other_break, &head->no_name_offset);
 
+		if (list == nullptr)
+			goto fail;
+
 		/* copy it into the list */
 		for(i = 0; i < other_break; i++)
 		{
@@ -743,6 +820,8 @@ printf("head->buffer_start_index = %d\n", head->buffer_start_index);
 	size = _DtShmProtoSizeInttab(indexList);
 	space = _DtShmProtoAddIntLst(int_handle, size/sizeof(int), 
 				&head->name_list_offset);
+	if (space == nullptr)
+		goto fail;
 	_DtShmProtoCopyInttab(indexList, space);
 	_DtShmProtoDestroyInttab(indexList);
 	free(name_index);

@@ -141,8 +141,14 @@ DtShmProtoInttab
 _DtShmProtoInitInttab(int sizeguess)
 {
   intlist_t * ptr = (intlist_t *)malloc(sizeof(*ptr));
-  
-  ptr->tbl = _DtUtilMakeIHash(sizeguess);;
+
+  if(!ptr)
+    return(nullptr);
+  ptr->tbl = _DtUtilMakeIHash(sizeguess);
+  if(!ptr->tbl) {
+    free(ptr);
+    return(nullptr);
+  }
   ptr->num_entries = 0;
 
   return((void*)ptr);
@@ -155,9 +161,13 @@ int _DtShmProtoAddInttab(DtShmProtoInttab intlist, unsigned int keyin,
   int ** data;
 
   data = (int**)_DtUtilGetHash(ptr->tbl, (unsigned char *) (intptr_t) keyin);
+  if(!data)
+    return(-1);
 
   if(!*data) /* new */ {
     *data = (int *) malloc(sizeof(int));
+    if(!*data)
+      return(-1);
     ptr->num_entries++;
   }
 
@@ -195,6 +205,8 @@ int
 _DtShmProtoDestroyInttab(DtShmProtoInttab intlist)
 {
   intlist_t * ptr = (intlist_t *)intlist;
+  if(!ptr)
+    return(0);
   _DtUtilDestroyHash(ptr->tbl, free_hash_data, nullptr);
   free(intlist);
   return(0);

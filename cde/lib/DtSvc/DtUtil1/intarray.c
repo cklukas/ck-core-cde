@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include "DtHash.h"
 #include "DtShmDb.h"
@@ -48,19 +49,37 @@ void *
 _DtShmProtoInitIntLst(int estimated_entries)
 {
   intarray_t * ptr = (intarray_t *) malloc(sizeof(*ptr));
+  if(!ptr)
+    return(nullptr);
   ptr->first = (intent_t*)malloc(sizeof(intent_t));
+  if(!ptr->first) {
+    free(ptr);
+    return(nullptr);
+  }
   ptr->next = &ptr->first->next;
+  ptr->first->next = nullptr;
   ptr->first->size = 1;
   ptr->first->data[0] = 0;
   ptr->num_ints = 2;
   return((void*)ptr);
 }
 
+/* Returns nullptr, with the list unchanged, when memory is exhausted. */
 int * 
 _DtShmProtoAddIntLst(DtShmProtoIntList handle, int size, int * index)
 {
   intarray_t * ptr = (intarray_t *) handle;
-  intent_t * e = (intent_t *) calloc((size-1), sizeof(intent_t) + sizeof(int));
+  intent_t * e;
+  size_t extra;
+
+  if(size < 0)
+    return(nullptr);
+  extra = size > 1 ? (size_t)(size - 1) : 0;
+  if(extra > (SIZE_MAX - sizeof(intent_t)) / sizeof(int))
+    return(nullptr);
+  e = (intent_t *) calloc(1, sizeof(intent_t) + extra * sizeof(int));
+  if(!e)
+    return(nullptr);
   e->size = size;
   e->next = nullptr;
   *index = ptr->num_ints + 1;
@@ -99,8 +118,12 @@ int
 _DtShmProtoDestroyIntLst(DtShmProtoIntList handle)
 {
   intarray_t * ptr = (intarray_t *) handle;
-  intent_t * a= ptr->first;
+  intent_t * a;
   intent_t * b;
+
+  if(!ptr)
+    return(0);
+  a = ptr->first;
 
   while(a) {
     b = a->next;

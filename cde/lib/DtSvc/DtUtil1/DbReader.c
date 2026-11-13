@@ -1885,6 +1885,18 @@ FreeDbField(
 }
 
 
+/*
+ * Returns a private copy of a localized message, or the message itself
+ * when memory is exhausted.  The result is never freed.
+ */
+static char *
+CopyMessage ( const char *message )
+{
+   char *copy = strdup (message);
+
+   return copy ? copy : (char *) message;
+}
+
 /*********************
  *
  * Function Name:  InitializeLocalizedStrings
@@ -1915,22 +1927,22 @@ static
 void
 InitializeLocalizedStrings ( void )
 {
-   incompleteDefn = strdup (((char *) Dt11GETMESSAGE (4, 8, "The definition \"%s\" in the file\n  \"%s\"\n  is incomplete. The definition may be missing\n  the \"}\" field.\n")));
+   incompleteDefn = CopyMessage (((char *) Dt11GETMESSAGE (4, 8, "The definition \"%s\" in the file\n  \"%s\"\n  is incomplete. The definition may be missing\n  the \"}\" field.\n")));
    
-   multiLineDefn = strdup (((char *) Dt11GETMESSAGE (4, 3, "A multi-line field in the definition \"%s\"\n  in the file\n  \"%s\"\n  is incomplete.  A \"\\\" character may be missing\n  in the multi-line field.\n")));
+   multiLineDefn = CopyMessage (((char *) Dt11GETMESSAGE (4, 3, "A multi-line field in the definition \"%s\"\n  in the file\n  \"%s\"\n  is incomplete.  A \"\\\" character may be missing\n  in the multi-line field.\n")));
 
-   tooManyFields = strdup (((char *) Dt11GETMESSAGE (4, 4, "The definition \"%s\" in the file\n  \"%s\"\n  has too many fields.\n")));
+   tooManyFields = CopyMessage (((char *) Dt11GETMESSAGE (4, 4, "The definition \"%s\" in the file\n  \"%s\"\n  has too many fields.\n")));
 
-   emptyTypesDirs = strdup (((char *) Dt11GETMESSAGE (4, 5, "An attempt to read the action and filetypes databases failed.\n  This may be caused by the resource \"Dt.TypesDirs\" being incorrectly set.\n")));
+   emptyTypesDirs = CopyMessage (((char *) Dt11GETMESSAGE (4, 5, "An attempt to read the action and filetypes databases failed.\n  This may be caused by the resource \"Dt.TypesDirs\" being incorrectly set.\n")));
 
-   noStartSymbol = strdup (((char *) Dt11GETMESSAGE (4, 6, "The definition \"%s\" in the file\n  \"%s\"\n  has an end symbol '}' with no start symbol '{'.\n")));
+   noStartSymbol = CopyMessage (((char *) Dt11GETMESSAGE (4, 6, "The definition \"%s\" in the file\n  \"%s\"\n  has an end symbol '}' with no start symbol '{'.\n")));
 
-   invalidStartSymbol = strdup (((char *) Dt11GETMESSAGE (4, 7, "The definition \"%s\" in the file\n  \"%s\"\n  has an unexpected start symbol '{'.\n")));
+   invalidStartSymbol = CopyMessage (((char *) Dt11GETMESSAGE (4, 7, "The definition \"%s\" in the file\n  \"%s\"\n  has an unexpected start symbol '{'.\n")));
 
-   missingStartSymbol = strdup (((char *) Dt11GETMESSAGE (4, 9, "The definition \"%s\" in the file\n  \"%s\"\n  is missing a start symbol '{'.\n")));
+   missingStartSymbol = CopyMessage (((char *) Dt11GETMESSAGE (4, 9, "The definition \"%s\" in the file\n  \"%s\"\n  is missing a start symbol '{'.\n")));
 
-   cantSetVersion = strdup (((char *) Dt11GETMESSAGE (4, 10, "The DtDbVersion variable can only be set\nat the beginning of the file.  The remainder of the file\n'%s' is being ignored.\n")));
+   cantSetVersion = CopyMessage (((char *) Dt11GETMESSAGE (4, 10, "The DtDbVersion variable can only be set\nat the beginning of the file.  The remainder of the file\n'%s' is being ignored.\n")));
 
-   invalidVersion = strdup (((char *) Dt11GETMESSAGE (4, 11, "The file '%s'\ncontains an invalid DtDbVersion identifier.\n")));
+   invalidVersion = CopyMessage (((char *) Dt11GETMESSAGE (4, 11, "The file '%s'\ncontains an invalid DtDbVersion identifier.\n")));
 
 }

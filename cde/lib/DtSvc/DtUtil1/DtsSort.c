@@ -219,30 +219,60 @@ bool(int i)
 
 #endif
 
+struct content_fields
+{
+	const char	*loc;		/* first token, nullptr when there is none */
+	const char	*type;		/* second token, not terminated */
+	size_t		type_len;
+	const char	*cnt;		/* the text after the second token */
+};
+
+/* Splits "<location> <type> <content>" without modifying or copying it. */
+static void split_content(const char *val, struct content_fields *f)
+{
+	const char	*p = val + strspn(val, "\t \n");
+
+	f->loc = *p ? p : nullptr;
+	p += strcspn(p, "\t \n");
+	p += strspn(p, "\t \n");
+	f->type = p;
+	f->type_len = strcspn(p, "\t \n");
+	p += f->type_len;
+	if (*p)
+	{
+		p++;
+	}
+	while (isspace((u_char)*p))
+	{
+		p++;
+	}
+	f->cnt = p;
+}
+
 static int check_content(char *val1, char *val2)
 {
-	char	*v1 = strdup(val1);
-	char	*v2 = strdup(val2);
-	char	*loc1;
-	char	*loc2;
-	char	*type1;
-	char	*type2;
-	char	*cnt1;
-	char	*cnt2;
+	struct content_fields	c1;
+	struct content_fields	c2;
+	const char	*loc1;
+	const char	*loc2;
+	const char	*cnt1;
+	const char	*cnt2;
+	size_t	common;
 	int	ret = 0;
-	_Xstrtokparams	strtok_buf;
 
-	loc1 = _XStrtok(v1, "\t \n", strtok_buf);
-	type1 = _XStrtok(nullptr, "\t \n", strtok_buf);
-	cnt1 = &type1[strlen(type1)+1];
-	while(isspace((u_char)*cnt1))cnt1++;
+	split_content(val1, &c1);
+	split_content(val2, &c2);
+	loc1 = c1.loc;
+	loc2 = c2.loc;
+	cnt1 = c1.cnt;
+	cnt2 = c2.cnt;
 
-	loc2 = _XStrtok(v2, "\t \n", strtok_buf);
-	type2 = _XStrtok(nullptr, "\t \n", strtok_buf);
-	cnt2 = &type2[strlen(type2)+1];
-	while(isspace((u_char)*cnt2))cnt2++;
-
-	ret = strcmp(type1, type2);
+	common = c1.type_len < c2.type_len ? c1.type_len : c2.type_len;
+	ret = strncmp(c1.type, c2.type, common);
+	if(ret == 0)
+	{
+		ret = (c1.type_len > c2.type_len) - (c1.type_len < c2.type_len);
+	}
 	if(loc1 && loc2 && ret == 0)
 	{
 		int	l1 = atoi(loc1);
@@ -272,8 +302,6 @@ static int check_content(char *val1, char *val2)
 		printf("cc (%d,%d) for \"%s\" %c \"%s\"\n", l1, l2, cnt1, sym, cnt2);
 #endif
 	}
-	free(v1);
-	free(v2);
 	return(ret);
 }
 
