@@ -277,10 +277,10 @@ page_storage::~page_storage()
    delete v_buf;
    delete storage_ptr;
 
-   delete data_version;
+   delete [] data_version;
    data_version = 0;
 
-   delete db_version;
+   delete [] db_version;
    db_version = 0;
 
    f_local_pcache.quit_heap(this);
