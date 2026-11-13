@@ -1,4 +1,14 @@
 2026-11-13
+- dtspcd: the exit timer ran in the SIGALRM handler. The handler took the log
+  lock, wrote to the log with stdio, closed the log and called `exit()`, from
+  a signal that can arrive while the daemon is in the middle of any of those,
+  which can deadlock the daemon or corrupt its output. The handler now only
+  writes one byte to a pipe, and the daemon's event loop waits on the other
+  end and runs the former handler body outside signal context. The pipe is
+  non-blocking and close-on-exec, so no sub-process inherits it. Test:
+  `programs/dtspcd/tests/check-exit-timer-signal.py`.
+
+2026-11-13
 - Signals: 132 calls of `signal()` in 26 C sources use `_DtSignal()`, a
   header-only wrapper over `sigaction()` in the new `Dt/DtSigP.h`. It keeps the
   behaviour of the `signal()` of glibc and the BSD systems (the handler stays

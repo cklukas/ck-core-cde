@@ -110,11 +110,7 @@ int Client_Enhanced_Spawn(protocol_request_ptr prot);
 
 int conditional_putenv(XeString env_str);
 void SPCD_Reply(SPC_Connection_Ptr connection, protocol_request_ptr prot, int retval, int errval );
-#ifdef SA_HANDLER_INT_ARG
 void SPCD_Alarm_Handler (int);
-#else
-void SPCD_Alarm_Handler (void);
-#endif /* SA_HANDLER_INT_ARG */
 
 /* Global data */
 
@@ -188,6 +184,10 @@ static int exit_timeout = SPCD_DEFAULT_TIMEOUT;
  * daemon will continue.
  */
 static int request_pending = SPCD_NO_REQUEST_PENDING;
+/* Pipe from the SIGALRM handler to the event loop. */
+static int SPCD_alarm_pipe[2] = {-1, -1};
+int SPCD_Alarm_Pipe_Open(void);
+void SPCD_Alarm_Work(void *data, int *fd, SbInputId *id);
 
 /*----------------------------------------------------------------------+*/
 int main(int argc, XeString *argv)
@@ -317,6 +317,12 @@ int main(int argc, XeString *argv)
 		 SPC_Client);
   
   if (exit_timeout != SPCD_NO_TIMER) {
+    if (SPCD_Alarm_Pipe_Open() == -1) {
+      SPC_Format_Log((XeString)"+++> FAILURE: cannot create the exit timer pipe: %s",
+		     strerror(errno));
+      SPCD_Exit(1);
+    }
+    SPCD_AddInput(SPCD_alarm_pipe[0], SPCD_Alarm_Work, nullptr);
     memset(&alarm_vector, 0, sizeof(struct sigaction));
     alarm_vector.sa_handler = SPCD_Alarm_Handler;
     alarm_vector.sa_flags = 0;
@@ -1371,18 +1377,65 @@ void SPCD_Reply(SPC_Connection_Ptr connection,
 
 /*----------------------------------------------------------------------+*/
   /*
-   * This function is invoked when the exit timer expires.
-   * If sub-processes are running, return to select; 
+   * The exit timer expires: a signal handler may call only functions that
+   * are safe to call from one, so it writes a byte to a pipe whose read end
+   * the event loop waits on, and SPCD_Alarm_Work() does the rest in the loop.
+   */
+void SPCD_Alarm_Handler(int not_used)
+/*----------------------------------------------------------------------+*/
+{
+  int saved_errno = errno;
+
+  (void) not_used;
+  if (SPCD_alarm_pipe[1] != -1)
+    (void) write(SPCD_alarm_pipe[1], "a", 1);
+  errno = saved_errno;
+}
+
+/*----------------------------------------------------------------------+*/
+  /*
+   * Create the pipe of the exit timer; both ends do not block and are not
+   * inherited by the sub-processes.
+   */
+int SPCD_Alarm_Pipe_Open(void)
+/*----------------------------------------------------------------------+*/
+{
+  int i, flags;
+
+  if (pipe(SPCD_alarm_pipe) == -1)
+    return -1;
+  for (i = 0; i < 2; i++) {
+    flags = fcntl(SPCD_alarm_pipe[i], F_GETFL);
+    if (flags == -1 ||
+	fcntl(SPCD_alarm_pipe[i], F_SETFL, flags | O_NONBLOCK) == -1 ||
+	fcntl(SPCD_alarm_pipe[i], F_SETFD, FD_CLOEXEC) == -1) {
+      int saved_errno = errno;
+
+      (void) close(SPCD_alarm_pipe[0]);
+      (void) close(SPCD_alarm_pipe[1]);
+      SPCD_alarm_pipe[0] = SPCD_alarm_pipe[1] = -1;
+      errno = saved_errno;
+      return -1;
+    }
+  }
+  return 0;
+}
+
+/*----------------------------------------------------------------------+*/
+  /*
+   * This function is invoked by the event loop when the exit timer has
+   * expired.  If sub-processes are running, return to select;
    * otherwise exit.
    */
-#ifdef SA_HANDLER_INT_ARG
-void SPCD_Alarm_Handler(int not_used)
-#else
-void SPCD_Alarm_Handler()
-#endif /* SA_HANDLER_INT_ARG */
+void SPCD_Alarm_Work(void *data, int *fd, SbInputId *id)
 /*----------------------------------------------------------------------+*/
 {
   int i;
+  char drain[16];
+
+  (void) data; (void) fd; (void) id;
+  while (read(SPCD_alarm_pipe[0], drain, sizeof(drain)) > 0)
+    ;
 
   if (exit_timeout == SPCD_NO_TIMER) 
     return;
