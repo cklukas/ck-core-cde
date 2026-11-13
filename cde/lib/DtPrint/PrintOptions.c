@@ -412,7 +412,7 @@ _DtPrintHdrFtrFrameMenuWidgets(
     if (menu_buttons != nullptr)
     {
 	if (*menu_buttons == nullptr)
-          *menu_buttons = (Widget *) XtMalloc( info->nspecs * sizeof(Widget) );
+          *menu_buttons = (Widget *) XtCalloc(info->nspecs, sizeof(Widget));
     
         for (i=0; i<info->nspecs; i++)
 	  (*menu_buttons)[i] = info->specs[i].button;
