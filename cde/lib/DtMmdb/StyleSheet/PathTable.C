@@ -466,7 +466,7 @@ PathTable::~PathTable()
     f_lastSymIndex[i] -> clear();
     delete f_lastSymIndex[i];
    }
-   delete f_lastSymIndex;
+   delete [] f_lastSymIndex;
 }
 
 LetterType PathTable::findIndex(SSPath& p)

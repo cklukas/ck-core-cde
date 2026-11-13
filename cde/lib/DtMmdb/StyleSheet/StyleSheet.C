@@ -39,18 +39,14 @@ StyleSheet::StyleSheet(const char* nm)
 : f_GI_CASE_SENSITIVE(false),
   f_TopOfStack(0,new FeatureSet(),new FeatureSet())
 {
-  if (nm==0) {
-     f_name = new char[1];
-     f_name[0] = 0;
-  } else
-     f_name = strdup(nm);
+  f_name = strdup(nm == 0 ? "" : nm);
 
   use();
 }
 
 StyleSheet::~StyleSheet()
 {
-   delete f_name;
+   free(f_name);
 }
 
 void

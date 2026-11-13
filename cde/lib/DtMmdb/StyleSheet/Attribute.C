@@ -35,7 +35,7 @@ Attribute::Attribute(const Symbol &name, char *value)
 
 Attribute::~Attribute()
 {
-  delete f_value ;
+  free(f_value);
 }
 
 bool

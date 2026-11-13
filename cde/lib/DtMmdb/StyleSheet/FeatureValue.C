@@ -2364,7 +2364,7 @@ FeatureValueArray::~FeatureValueArray()
    for ( unsigned int i=0; i<length(); i++ )
      delete (*this)[i];
 
-   delete f_name;
+   free(f_name);
 }
 
 FeatureValue *
