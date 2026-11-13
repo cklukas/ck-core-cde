@@ -2251,8 +2251,7 @@ GetValuesFromDataType (char *	       data_type,
    char * ptr;
    int i;
 
-   *element_values = (ElementValue *) XtMalloc (sizeof(ElementValue) *
-                                                       CONTROL_KEYWORD_COUNT);
+   *element_values = (ElementValue *) XtCalloc (CONTROL_KEYWORD_COUNT, sizeof(ElementValue));
 
    for (i = 0; i < CONTROL_KEYWORD_COUNT; i++)
    {

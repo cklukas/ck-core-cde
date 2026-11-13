@@ -34,6 +34,8 @@
  * Included Files:
  */
 
+#include <limits.h>
+#include <stdckdint.h>
 #include "WmGlobal.h"
 #include "WmICCC.h"
 
@@ -152,7 +154,7 @@ void SetupWmICCC (void)
 
     wmGD.xa_COMPOUND_TEXT = atoms[XA_COMPOUND_TEXT];
 
-    if (!(xa_WM_QUERY = (Atom *) XtMalloc (wmGD.numScreens * (sizeof (Atom)))))
+    if (!(xa_WM_QUERY = (Atom *) XtCalloc (wmGD.numScreens, sizeof (Atom))))
     {
 	Warning (((char *)GETMESSAGE(56, 2, "Insufficient memory to XInternAtom _MOTIF_WM_QUERY_nn")));
     }
@@ -1028,11 +1030,13 @@ static void
 wmq_bump_xids ( void )
 {
     XID *px;
+    size_t bytes;
 
     if (pXids)
     {
-	if (!(px = (XID *) 
-	  XtRealloc ((char *) pXids, (numXids + 32) * (sizeof (XID)))))
+	if (ckd_mul(&bytes, (size_t)numXids + 32, sizeof (XID)) ||
+	    bytes > UINT_MAX ||
+	    !(px = (XID *) XtRealloc ((char *) pXids, bytes)))
 	{
 	  Warning (((char *)GETMESSAGE(56, 5, "Insufficient memory to convert _MOTIF_WM_QUERY_nn selection")));
 	}

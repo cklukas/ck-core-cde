@@ -42,6 +42,8 @@
 #include "WmCEvent.h"
 #include "WmResource.h"
 #include "WmResParse.h"
+#include <limits.h>
+#include <stdckdint.h>
 #include <stdio.h>
 
 #include <X11/Shell.h>
@@ -745,10 +747,15 @@ static Boolean SavePBInfo (MenuSpec *topMenuSpec, MenuItem *menuItem,
     else if (topMenuSpec->menuButtonCount == topMenuSpec->menuButtonSize)
     /* need larger array */
     {
+        size_t bytes;
+
         topMenuSpec->menuButtonSize += MENU_BUTTON_INC;
-        topMenuSpec->menuButtons = (MenuButton *) 
-	    XtRealloc ((char*)topMenuSpec->menuButtons,
-		     topMenuSpec->menuButtonSize * sizeof(MenuButton));
+        if (ckd_mul(&bytes, (size_t)topMenuSpec->menuButtonSize,
+                    sizeof(MenuButton)) || bytes > UINT_MAX)
+            topMenuSpec->menuButtons = nullptr;
+        else
+            topMenuSpec->menuButtons = (MenuButton *)
+	        XtRealloc ((char*)topMenuSpec->menuButtons, bytes);
     }
 
     if (topMenuSpec->menuButtons == nullptr)

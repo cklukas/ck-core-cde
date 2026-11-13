@@ -38,6 +38,8 @@
  * Included Files:
  */
 
+#include <limits.h>
+#include <stdckdint.h>
 #include "WmGlobal.h"
 
 /*
@@ -1116,8 +1118,11 @@ void RestackTransients (ClientData *pcd)
 	 * Expand the (static) windows buffer that is used in restacking.
 	 */
 
-	if (!(windows =
-		(Window *)WmMalloc ((char*)windows, (count + 5) * sizeof (Window))))
+	size_t bytes;
+
+	if (ckd_mul(&bytes, (size_t)count + 5, sizeof (Window)) ||
+	    bytes > UINT_MAX ||
+	    !(windows = (Window *)WmMalloc ((char*)windows, bytes)))
 	{
 	    /* cannot get memory space */
 	    size = 0;
@@ -2512,8 +2517,11 @@ LowestWindowInTransientFamily (ClientData *pcdLeader)
 	 * Expand the (static) windows buffer
 	 */
 
-	if (!(windows =
-		(Window *)WmMalloc ((char*)windows, (count + 5) * sizeof (Window))))
+	size_t bytes;
+
+	if (ckd_mul(&bytes, (size_t)count + 5, sizeof (Window)) ||
+	    bytes > UINT_MAX ||
+	    !(windows = (Window *)WmMalloc ((char*)windows, bytes)))
 	{
 	    /* cannot get memory space */
 	    size = 0;

@@ -35,6 +35,8 @@
  * Included Files:
  */
 
+#include <limits.h>
+#include <stdckdint.h>
 #include "WmGlobal.h"
 #include "WmICCC.h"
 /*
@@ -2779,8 +2781,18 @@ UpdateEmbeddedClientsProperty(
 	    }
 	    else
 	    {
-		pClients = (Window *) XtRealloc ((char *)pClients,
-		    (numClients * (sizeof(Window))));
+		size_t bytes;
+
+		if (ckd_mul(&bytes, (size_t)numClients, sizeof(Window)) ||
+		    bytes > UINT_MAX)
+		{
+		    XtFree ((char *)pClients);
+		    pClients = nullptr;
+		}
+		else
+		{
+		    pClients = (Window *) XtRealloc ((char *)pClients, bytes);
+		}
 	    }
 
 	    if (!pClients)

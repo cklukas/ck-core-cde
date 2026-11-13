@@ -32,6 +32,8 @@
  * Included Files:
  */
 
+#include <limits.h>
+#include <stdckdint.h>
 #include "WmGlobal.h"
 #include "WmHelp.h"
 #include "WmResNames.h"
@@ -370,8 +372,11 @@ UpdateWorkspacePresenceProperty(
     if (cPresence < pCD->numInhabited)
     {
 	/* allocate bigger list */
-	if (!(pPresence = (Atom *) 
-		XtRealloc ((char *)pPresence, pCD->numInhabited * sizeof(Atom))))
+	size_t bytes;
+
+	if (ckd_mul(&bytes, (size_t)pCD->numInhabited, sizeof(Atom)) ||
+	    bytes > UINT_MAX ||
+	    !(pPresence = (Atom *) XtRealloc ((char *)pPresence, bytes)))
 	{
 	    Warning (((char *)GETMESSAGE(76, 2, "Insufficient memory for workspace presence property")));
 	}
@@ -1149,8 +1154,12 @@ ConvertNamesToIDs(
 	    {
 		/* list too small */
 		numLocalIDs += WS_ALLOC_AMOUNT;
-		if ((pLocalIDs = (WorkspaceID *) XtRealloc ((char *)pLocalIDs,
-			    numLocalIDs * sizeof(WorkspaceID))) == nullptr)
+		size_t bytes;
+
+		if (ckd_mul(&bytes, (size_t)numLocalIDs, sizeof(WorkspaceID)) ||
+		    bytes > UINT_MAX ||
+		    (pLocalIDs = (WorkspaceID *) XtRealloc ((char *)pLocalIDs,
+			    bytes)) == nullptr)
 		{
 		    Warning (((char *)GETMESSAGE(76, 6, "Insufficient Memory (ConvertNamesToIDs)")));
 		    ExitWM (WM_ERROR_EXIT_VALUE);
