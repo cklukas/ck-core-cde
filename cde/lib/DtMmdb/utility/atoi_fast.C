@@ -81,7 +81,7 @@ void atoi_fast::init(int r, int, pm_random& rdm_generator)
 
 atoi_fast::~atoi_fast()
 {
-   delete v_tbl;
+   delete [] v_tbl;
 }
 
 struct reg_t {

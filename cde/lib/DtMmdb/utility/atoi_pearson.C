@@ -103,7 +103,7 @@ MESSAGE(cerr, "atoi_pearson::init()");
 atoi_pearson::~atoi_pearson()
 {
    if ( v_shared == false )
-      delete v_tbl;
+      delete [] v_tbl;
 }
 
 struct reg_t {
