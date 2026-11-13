@@ -96,6 +96,18 @@ SetNoBlock(int fd)
     return;
 }
 
+// Close both ends of a pipe that was created; an unused pair is { -1, -1 }.
+//
+static void
+ClosePipePair(int * pipe_fds)
+{
+    for (int i = 0; i < 2; i++) {
+	if (pipe_fds[i] >= 0) {
+	    close(pipe_fds[i]);
+	}
+    }
+}
+
 int
 RunProg(const char * program,
 	char *const * argv,
@@ -108,25 +120,34 @@ RunProg(const char * program,
 {
     // See if we are supposed to do I/O with the child.
     //
-    int stdin_fd[2];
-    int stdout_fd[2];
-    int stderr_fd[2];
+    int stdin_fd[2] = { -1, -1 };
+    int stdout_fd[2] = { -1, -1 };
+    int stderr_fd[2] = { -1, -1 };
 
     size_t stdout_bufsize = 0;
     unsigned long stderr_bufsize = 0;
 
     if (stdin_data) {
-	pipe(stdin_fd);
+	if (pipe(stdin_fd) != 0) {
+	    return(-1);
+	}
 	SetNoBlock(stdin_fd[1]);
     }
 
     if (stdout_data) {
-	pipe(stdout_fd);
+	if (pipe(stdout_fd) != 0) {
+	    ClosePipePair(stdin_fd);
+	    return(-1);
+	}
 	SetNoBlock(stdout_fd[0]);
     }
 
     if (stderr_data) {
-	pipe(stderr_fd);
+	if (pipe(stderr_fd) != 0) {
+	    ClosePipePair(stdin_fd);
+	    ClosePipePair(stdout_fd);
+	    return(-1);
+	}
 	SetNoBlock(stderr_fd[0]);
     }
 
@@ -141,6 +162,9 @@ RunProg(const char * program,
 #endif
 
     if (child < 0) {
+	ClosePipePair(stdin_fd);
+	ClosePipePair(stdout_fd);
+	ClosePipePair(stderr_fd);
 	return(child);
     }
 

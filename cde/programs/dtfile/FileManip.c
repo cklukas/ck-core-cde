@@ -268,48 +268,11 @@ CheckAccess(
         const char *fname,
         int what)
 {
-    int access_priv;
-    uid_t save_ruid;
-    gid_t save_rgid;
-
-#ifdef BLS
-/*--------------------------------------------------------------------
- * access code for BLS
- *------------------------------------------------------------------*/
-
-      setresuid(geteuid(),-1,-1);
-      return access (fname, what);
-
-#else /* the rest of the OS's */
-
-   save_ruid = getuid();
-
-#ifdef _AIX
-   setreuid(geteuid(),-1);
-#else
-   setuid(geteuid());
-#endif /* _AIX */
-
-   save_rgid = getgid();
-
-#ifdef _AIX
-   setregid(getegid(),-1);
-#else
-   setgid(getegid());
-#endif /* _AIX */
-
-   access_priv = access (fname, what);
-
-#ifdef _AIX
-   setreuid(save_ruid,-1);
-   setregid(save_rgid,-1);
-#else
-   setuid(save_ruid);
-   setgid(save_rgid);
-#endif /* _AIX */
-
-   return access_priv;
-#endif /* BLS */
+    /* access() tests with the real IDs.  This test is wanted with the
+     * effective ones, which faccessat() applies directly; the IDs of the
+     * process are not touched, so there is nothing that can fail halfway or
+     * stay changed. */
+    return faccessat(AT_FDCWD, fname, what, AT_EACCESS);
 }
 
 
@@ -1552,7 +1515,10 @@ FileManip(
 
    /* Replacement, including the old target's ownership policy, belongs to
     * the worker. This function only creates an unoccupied destination. */
-   (void) chown(to, getuid(), getgid());
+   if (chown(to, getuid(), getgid()) != 0)
+   {
+      /* the destination keeps the owner it was created with */
+   }
 
    free(filename);
    return (True);

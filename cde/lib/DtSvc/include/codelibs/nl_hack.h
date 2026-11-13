@@ -75,7 +75,7 @@
 # define CHARADV(p)	(__NLH_CHAR(p),	\
 			 (p) += __NLH_WIDTH(p), __nlh_char[0])
 
-# define WCHAR(c, p)	(wctomb(p, (wchar_t)c), c)
+# define WCHAR(c, p)	((void)(wctomb(p, (wchar_t)c) < 0), c)
 
 # define WCHARADV(c, p)	(WCHAR(c, p), ADVANCE(p))
 

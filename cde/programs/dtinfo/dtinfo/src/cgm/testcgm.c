@@ -115,14 +115,16 @@ int main(int argc, char **argv)
 
   /* wait for some tty input before we copy the pixmap  */
   fprintf(stderr, "hit return to see Pixmap!");
-  scanf("%*c");
+  if (scanf("%*c") == EOF)
+    exit(0);	/* no terminal input left */
   /* display the Pixmap */
   XCopyArea(display, myPixmap, win, myGC, 0, 0, ret_width, ret_height,
 	    0, 0);
   XFlush(display);
   /* wait for some tty input before we terminate */
   fprintf(stderr, "hit return to terminate!");
-  scanf("%*c");
+  if (scanf("%*c") == EOF)
+    exit(0);	/* no terminal input left */
 }
 
 

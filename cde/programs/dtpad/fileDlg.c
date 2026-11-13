@@ -485,7 +485,8 @@ GetFileName(
                    if (dirbuf[strlen(dirbuf) - 1] != (char)'/')
                        strcat(dirbuf, "/");
                } else {
-                   getcwd(dirbuf, MAX_DIR_PATH_LEN - 16);
+                   if (getcwd(dirbuf, MAX_DIR_PATH_LEN - 16) == nullptr)
+                       dirbuf[0] = '\0';	/* unknown: use the root of the mask */
                    strcat(dirbuf, "/");
                }
 

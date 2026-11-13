@@ -248,7 +248,8 @@ query_user(void *client_data) {
 			"time earlier than its begin time.  Do you\n"));
 	fprintf(stdout, "%s", CATGETS(catd_global, 1, 1050,
 			"want to schedule it into the next day? [Y/N]  "));
-	fgets(ans, sizeof(ans)-1, stdin);
+	if (fgets(ans, sizeof(ans)-1, stdin) == nullptr)
+		ans[0] = '\0';			/* end of input: answer no */
 	fprintf(stdout, "\n");
 	if (*ans == 'y' || *ans == 'Y')
 		return B_TRUE;
@@ -321,7 +322,8 @@ cm_tty_delete(
 		fprintf(stdout, "%s", CATGETS(catd, 1, 1055, "\n\t3.  Delete forward"));
 		fprintf(stdout, "%s", CATGETS(catd, 1, 1056, "\n\t4.  Cancel"));
 		fprintf(stdout, "%s", CATGETS(catd, 1, 1057, "\n\tOption [1-4]: "));
-		fgets(ans, sizeof(ans)-1, stdin);
+		if (fgets(ans, sizeof(ans)-1, stdin) == nullptr)
+			ans[0] = '\0';		/* end of input: cancel */
 		fprintf(stdout, "\n");
 	}
 

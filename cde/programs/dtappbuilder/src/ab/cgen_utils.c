@@ -598,9 +598,12 @@ send_output_to_term(void)
         return rc;
     }
 
+    if (freopen(istr_string(termSlaveDeviceName), "w", stdout) == nullptr ||
+        freopen(istr_string(termSlaveDeviceName), "w", stderr) == nullptr)
+    {
+        return -1;
+    }
     done = TRUE;
-    freopen(istr_string(termSlaveDeviceName), "w", stdout);
-    freopen(istr_string(termSlaveDeviceName), "w", stderr);
 
     return 0;
 }
@@ -1773,9 +1776,17 @@ write_to_status_pipe(
 
     /*printf("write to pipe: %d %d %d\n", 
 		(int)status_code, (int)cmd_code, (int)status_data);*/
-    write(status_pipe_write, (void*)&int_status_code, sizeof(int));
-    write(status_pipe_write, (void*)&int_cmd_code, sizeof(int));
-    write(status_pipe_write, (void*)&status_data, sizeof(void*));
+    /* one record, so the reader never sees half of it */
+    unsigned char	record[2 * sizeof(int) + sizeof(void*)];
+
+    memcpy(record, &int_status_code, sizeof(int));
+    memcpy(record + sizeof(int), &int_cmd_code, sizeof(int));
+    memcpy(record + 2 * sizeof(int), &status_data, sizeof(void*));
+    if (write(status_pipe_write, record, sizeof(record)) !=
+	(ssize_t)sizeof(record))
+    {
+        return -1;
+    }
 
     /*
      * The parent always keeps the write file descriptor open, and

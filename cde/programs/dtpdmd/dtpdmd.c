@@ -221,7 +221,8 @@ handle_SIGCLD(int sigNum)
 		    /*
 		     * Tickle our "Xt Signal Pipe".
 		     */
-		    write( xtkick_pipeG[1], (char *) "", 1 );
+		    ssize_t kicked = write( xtkick_pipeG[1], (char *) "", 1 );
+		    (void) kicked;	/* a full pipe already wakes the loop */
 		}
 
 		break;

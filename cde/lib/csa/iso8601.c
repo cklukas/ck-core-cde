@@ -358,7 +358,10 @@ _csa_duration_to_iso8601(time_t sec, char *buf)
 {
     char *s;
 
-    asprintf(&s, "%cPT%dS", (sec < 0) ? '-': '+', abs(sec));
+    if (asprintf(&s, "%cPT%dS", (sec < 0) ? '-': '+', abs(sec)) < 0) {
+	buf[0] = '\0';
+	return(-1);
+    }
     strcpy(buf, s);
     free(s);
 

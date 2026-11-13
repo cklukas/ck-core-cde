@@ -385,7 +385,8 @@ if ( *fnp == CSEP )
 else
     {
     f = popen("/bin/pwd", "r");
-    fscanf(f, "%s", gp);
+    if (fscanf(f, "%s", gp) != 1)
+	*gp = '\0';
     pclose(f);
     if (strlen(gp) >= (size_t) roomleft)
 	{
@@ -1240,7 +1241,10 @@ xrf = fopen(helpbase, "r");
 if (! xrf) rebuild = TRUE;
 else
     {
-    fscanf(xrf, "\\gobble\001");
+    {
+    int gobbled = fscanf(xrf, "\\gobble\001");
+    (void) gobbled;			/* a short file is caught by the signon check */
+    }
     for (p = m_signon; *p ; p++)
 	{
 	ic = getc(xrf);

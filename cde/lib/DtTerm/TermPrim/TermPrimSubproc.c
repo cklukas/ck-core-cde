@@ -507,14 +507,17 @@ _DtTermPrimSubprocExec(Widget		  w,
 
 #ifdef	MOVE_FDS
 	/* that should have open'ed into fd 0.  Dup it into fd's 1 and 2... */
-	(void) dup(pty);
-	(void) dup(pty);
+	if (dup(pty) < 0 || dup(pty) < 0) {
+	    _exit(1);		/* the shell would not be on the terminal */
+	}
 #else	/* MOVE_FDS */
 	/* dup pty into fd's 0, 1, and 2... */
 	for (i = 0; i < 3; i++) {
 	    if (i != pty) {
 		(void) close(i);
-		(void) dup(pty);
+		if (dup(pty) < 0) {
+		    _exit(1);	/* the shell would not be on the terminal */
+		}
 	    }
 	}
 	if (pty >= 3) {
@@ -582,7 +585,9 @@ _DtTermPrimSubprocExec(Widget		  w,
 
 	/* change to the requested directory... */
 	if (cwd && *cwd) {
-	    (void) chdir(cwd);
+	    if (chdir(cwd) != 0) {
+		/* the program starts in the directory of the terminal */
+	    }
 	}
 
 #ifdef	BBA
@@ -596,7 +601,9 @@ _DtTermPrimSubprocExec(Widget		  w,
 	err = errno;
 	/* restore stderr... */
 	(void) close(2);
-	(void) dup(savedStderr);
+	if (dup(savedStderr) < 0) {
+	    /* no stderr to report on; the exit status tells the failure */
+	}
 	/* restore errno... */
 	errno = err;
 	(void) perror(cmd);

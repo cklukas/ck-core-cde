@@ -1396,7 +1396,9 @@ UnlockPidFile( void )
 {
     if (lockPidFile)
 #if defined(SYSV) || defined(SVR4) || defined(__linux__)
-	lockf (pidFd, F_ULOCK, 0);
+	if (lockf (pidFd, F_ULOCK, 0) != 0) {
+	    /* the lock is released when the descriptor closes */
+	}
 #else
 	flock (pidFd, LOCK_UN);
 #endif

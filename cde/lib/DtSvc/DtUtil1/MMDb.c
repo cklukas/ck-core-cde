@@ -208,11 +208,15 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 	_DtShmProtoAddStrtab(shm_handle, DtDTS_DT_RECURSIVE_LINK, &isnew);
 	_DtShmProtoAddStrtab(shm_handle, DtDTS_DT_BROKEN_LINK, &isnew);
 
-	getcwd(cur_path, sizeof(cur_path));
+	if (getcwd(cur_path, sizeof(cur_path)) == nullptr)
+		return 0;
 	for(i = 0; dirs->paths[i]; i++)
 	{
-		chdir(dirs->paths[i]);
-		stat(".", &buf);
+		/* a directory that cannot be entered has no files to list */
+		if (chdir(dirs->paths[i]) != 0)
+			continue;
+		if (stat(".", &buf) != 0)
+			continue;
 		count++;
 		if (!grow_file_lists(&boson_list, &mtime_list, count))
 			goto fail;
@@ -220,6 +224,8 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 		mtime_list[count-1] = buf.st_mtime;
 		boson_list[count-1] = _DtShmProtoAddStrtab(shm_handle, dirs->paths[i], &isnew);
 		dirp = opendir(".");
+		if (dirp == nullptr)
+			continue;
 		while ((result = _XReaddir(dirp, dirEntryBuf)) != nullptr)
 		{
 			char	*c = strrchr(result->d_name, suffix[0]);
@@ -244,7 +250,8 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 		(void)closedir( dirp );
 		dirp = nullptr;
 	}
-	chdir(cur_path);
+	if (chdir(cur_path) != 0)
+		goto fail;
 	data = _DtShmProtoAddIntLst(int_handle, count, &header->files_offset);
 	memcpy(data, boson_list, count*sizeof(int));
 	data = _DtShmProtoAddIntLst(int_handle, count*sizeof(time_t)/sizeof(int), &header->mtimes_offset);
@@ -257,7 +264,10 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 fail:
 	if (dirp)
 		(void)closedir(dirp);
-	chdir(cur_path);
+	if (chdir(cur_path) != 0)
+	{
+		/* nothing more can be done; the list is dropped anyway */
+	}
 	free(boson_list);
 	free(mtime_list);
 	return 0;

@@ -504,6 +504,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
     XtToolkitInitialize();
 
     wmGD.mwmAppContext = XtCreateApplicationContext();
+    SetupWmSignalDeferral (wmGD.mwmAppContext);
     AddWmResourceConverters ();
     wmGD.display = XtOpenDisplay (wmGD.mwmAppContext,
 				  nullptr,

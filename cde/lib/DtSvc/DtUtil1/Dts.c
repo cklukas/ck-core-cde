@@ -1321,9 +1321,11 @@ _DtDtsGetDataType(const char *file)
 		if(fstat(fd, &file_stat) == 0)
 		{
 			buff = (u_char *)calloc((size_t)1, file_stat.st_size+1);
-			if(buff)
+			if(buff && read(fd, buff, file_stat.st_size) !=
+							file_stat.st_size)
 			{
-				read(fd, buff, file_stat.st_size);
+				free(buff);
+				buff = nullptr;
 			}
 		}
 		if(buff && dir_datatype_extent(buff, &start, &end))
@@ -2453,9 +2455,11 @@ DtDtsSetDataType(const char *filename, const char *datatype_in, const int overid
 		if(fstat(fd, &file_stat) == 0)
 		{
 			buff = (u_char *)calloc((size_t)1, file_stat.st_size+1);
-			if(buff)
+			if(buff && read(fd, buff, file_stat.st_size) !=
+							file_stat.st_size)
 			{
-				read(fd, buff, file_stat.st_size);
+				free(buff);
+				buff = nullptr;
 			}
 		}
 		if(!buff)
@@ -2506,8 +2510,16 @@ DtDtsSetDataType(const char *filename, const char *datatype_in, const int overid
 			else
 			{
 				total = file_stat.st_size-(end-start)+dtsize;
-				ftruncate(fd, total);
-				datatype = strdup(datatype_in);
+				if(ftruncate(fd, total) != 0)
+				{
+				    _DtSimpleError(
+						DtProgName, DtError, nullptr,
+						"%s", (char*) file);
+				}
+				else
+				{
+					datatype = strdup(datatype_in);
+				}
 			}
 		}
 		free(buff);

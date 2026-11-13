@@ -416,7 +416,10 @@ int main(int argc, char **argv)
 	// will then print that out and then exit. (see SIGTERM case
 	// in sig_handler below).
 	if (print_sessid) {
-		pipe(ds_fds);
+		if (pipe(ds_fds) != 0) {
+			_tt_syslog( errstr, LOG_ERR, "pipe(): %m");
+			exit(1);
+		}
 	}
 
 	if (!background_mode || (forked_pid=fork())==0) {
@@ -460,7 +463,9 @@ int main(int argc, char **argv)
 
 				sprintf(session_buf,"%s\n",
 					(char *)(_tt_mp->initial_session->address_string()));
-				write(ds_fds[1], session_buf, 255);
+				// the parent prints an empty id if this fails
+				ssize_t written = write(ds_fds[1], session_buf, 255);
+				(void) written;
 			}
 
 			// initialize ptypes/otypes 
@@ -994,7 +999,9 @@ sig_handler(int sig)
 		if ((background_mode) && (forked_pid > 0)) {
 			if (print_sessid) {
                                 memset(session_buf, 0, 255);
-				read(ds_fds[0], session_buf, 255 - 1);
+				// session_buf is cleared: a failed read prints nothing
+				ssize_t got = read(ds_fds[0], session_buf, 255 - 1);
+				(void) got;
 				printf("%s", session_buf);
 			}
 			// this is the signal from the forked

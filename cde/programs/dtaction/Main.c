@@ -388,30 +388,49 @@ main(
 }
 
 
-static void
-SetGidUid ( unsigned short rgid, unsigned short ruid )
+/*
+ * Make the real and the effective group and user ID those of GID and UID.
+ * USER, when it is not nullptr, is the account whose supplementary groups
+ * replace the ones the process has.  The group is changed first and the user
+ * ID last, because the rights for the other steps go with the user ID.
+ *
+ * Returns 0, or -1 when a step failed.  The process must not go on then: it
+ * would start the action with the identity of the caller or of root instead
+ * of the requested one.
+ */
+static int
+SetGidUid ( gid_t rgid, uid_t ruid, const char *user )
 {
-
-	/* fix process gid */
 #if defined(SVR4) || defined(_AIX)
-    setgid(rgid);
-#elif defined(__linux__) || defined(CSRG_BASED)
-    if(-1 == setregid(rgid, rgid)) {
-        fprintf(stderr, "SetGidUid: setregid failed on %d\n", rgid);
+    if (setgid(rgid) != 0) {
+        fprintf(stderr, "SetGidUid: setgid failed on %d\n", (int) rgid);
+        return -1;
     }
-    setregid(rgid, rgid);
+#elif defined(__linux__) || defined(CSRG_BASED)
+    if (setregid(rgid, rgid) != 0) {
+        fprintf(stderr, "SetGidUid: setregid failed on %d\n", (int) rgid);
+        return -1;
+    }
 #endif
 
-	/* fix process uid */
+    if (user != nullptr && initgroups(user, rgid) != 0) {
+        fprintf(stderr, "SetGidUid: initgroups failed for %s\n", user);
+        return -1;
+    }
+
 #if defined (SVR4) || defined (_AIX)
-    setuid(ruid);
-#elif defined(__linux__) || defined(CSRG_BASED)
-    if(-1 == setreuid(ruid, ruid)) {
-        fprintf(stderr, "SetGidUid: setreuid failed on %d\n", ruid);
+    if (setuid(ruid) != 0) {
+        fprintf(stderr, "SetGidUid: setuid failed on %d\n", (int) ruid);
+        return -1;
     }
-    setreuid(ruid, ruid);
+#elif defined(__linux__) || defined(CSRG_BASED)
+    if (setreuid(ruid, ruid) != 0) {
+        fprintf(stderr, "SetGidUid: setreuid failed on %d\n", (int) ruid);
+        return -1;
+    }
 #endif
 
+    return 0;
 }
 
 
@@ -446,7 +465,8 @@ CheckUserRequest( void )
       /* See if the user wants to run as himself */
    if (appArgs.user == nullptr)
    {
-      SetGidUid(rgid,ruid);
+      if (SetGidUid(rgid, ruid, nullptr) != 0)
+         exit(EXIT_FAILURE);
       return;
    }
 
@@ -464,7 +484,8 @@ CheckUserRequest( void )
              * We are already running as the
              *  requested user.  So return now.
              */
-	     SetGidUid(rgid,ruid);
+	     if (SetGidUid(rgid, ruid, nullptr) != 0)
+	        exit(EXIT_FAILURE);
              return;
           }
 
@@ -985,8 +1006,8 @@ LogSuccess( void )
    }
 
    /* Set up the user's new id's */
-   SetGidUid(basegid,newuid);
-   initgroups(appArgs.user, basegid);
+   if (SetGidUid(basegid, newuid, appArgs.user) != 0)
+      exit(EXIT_FAILURE);
 
 }
 

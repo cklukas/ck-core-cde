@@ -1418,7 +1418,8 @@ void DtApp::UpdateQueues()
     {
       window->status_line->Name(MESSAGE(UpdatingActionsL));
       window->Refresh();
-      system("/usr/dt/bin/dtaction ReloadActions&");
+      int status = system("/usr/dt/bin/dtaction ReloadActions&");
+      (void) status;	// started in the background; nothing to act on
     }
    UpdateStatusLine();
    window->container->EndUpdate();

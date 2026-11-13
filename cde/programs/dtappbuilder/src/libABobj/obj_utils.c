@@ -1612,7 +1612,8 @@ sig_fault_handler(int signal_number)
 	/* If not, then something has gone haywire */
         static STRING msg = nullptr;
 	msg = "MEMORY ACCESS VIOLATION OCCURRED. ABORTING.\n";
-	write(2, msg, strlen(msg));
+	ssize_t	written = write(2, msg, strlen(msg));
+	(void) written;		/* about to abort; nothing else to do */
 	abort();
     }
     mem_fault_occurred = TRUE;

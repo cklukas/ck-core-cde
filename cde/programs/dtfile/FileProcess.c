@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
+#include <string.h>
 #include <unistd.h>
 
 typedef struct {
@@ -88,6 +89,14 @@ DtfileProcessWriteAll(int descriptor, const void *bytes, size_t length)
         length -= (size_t)written;
     }
     return ProcessWriteEnd(&scope, result);
+}
+
+int
+DtfileProcessWriteString(int descriptor, const char *text)
+{
+    if (text == nullptr)
+    { errno = EINVAL; return -1; }
+    return DtfileProcessWriteAll(descriptor, text, strlen(text));
 }
 
 void

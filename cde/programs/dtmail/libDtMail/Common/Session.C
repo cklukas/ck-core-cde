@@ -139,7 +139,12 @@ DtMail::Session::Session(DtMailEnv & error, const char * app_name)
     // call our event routine when there is activity (either from XtMainLoop,
     // or through some other method).
     //
-    pipe(_event_fd);
+    if (pipe(_event_fd) != 0) {
+	// Without the pipe no asynchronous event can be delivered; the
+	// descriptors are marked unused so nothing touches a stale number.
+	_event_fd[0] = -1;
+	_event_fd[1] = -1;
+    }
 
     _app_name = strdup(app_name);
 

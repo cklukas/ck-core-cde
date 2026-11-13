@@ -2793,7 +2793,8 @@ static void SearchIndex(
                              curVol->indexEntriesList[0], True, &hit);
 
           /* topicIdList is set but not allocated & need not be freed */
-          hit->topicCnt = _DtHelpCeFindKeyword(curVol->volHandle,
+          if (hit != nullptr)
+             hit->topicCnt = _DtHelpCeFindKeyword(curVol->volHandle,
                                    hit->indexEntry,&topicIdList);
        }
 

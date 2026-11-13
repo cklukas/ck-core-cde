@@ -82,10 +82,12 @@ agent.h:
 # The XDR routines of the protocols are tested with hand-made messages under
 # AddressSanitizer and UndefinedBehaviorSanitizer; the test compiles the
 # routines it checks, so it runs the code that is shipped.
-EXTRA_DIST = tests/check-xdr.py tests/xdr-test.c cmlimits.h cmxdrlist.h
+EXTRA_DIST = tests/check-xdr.py tests/xdr-test.c cmlimits.h cmxdrlist.h \
+             tests/check-duration-iso8601.py tests/duration-iso8601.c
 
 check-local:
 	CSA_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcsa_la_CFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
 	CSA_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
 	CSA_LIBS='$(TIRPCLIB)' \
 	python3 $(srcdir)/tests/check-xdr.py $(srcdir)
+	CC="$(CC)" python3 $(srcdir)/tests/check-duration-iso8601.py

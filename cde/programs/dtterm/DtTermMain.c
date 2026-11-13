@@ -99,6 +99,31 @@
 #include <Dt/Wsm.h>
 #include <Dt/EnvControlP.h>
 #include <Dt/Session.h>
+
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+
+/* Write all of TEXT to the session file; -1 when that failed.  Most callers
+ * go on: the next session save writes the file again. */
+static int
+WriteSessionText(int fd, const char *text)
+{
+    size_t left = strlen(text);
+
+    while (left > 0)
+    {
+        ssize_t written = write(fd, text, left);
+
+        if (written < 0 && errno == EINTR)
+            continue;
+        if (written <= 0)
+            return -1;
+        text += written;
+        left -= (size_t) written;
+    }
+    return 0;
+}
 #endif  /* HPVUE */ 
 
 /* From Xm/BaseClassI.h */
@@ -1553,7 +1578,7 @@ main(int argc, char **argv)
 	    char buffer[BUFSIZ];
 
 	    (void) sprintf(buffer, "%lx\n", XtWindow(topLevel));
-	    (void) write(ptyMasterFd, buffer, strlen(buffer));
+	    WriteSessionText(ptyMasterFd, buffer);
 	}
 #ifdef sun
 	sunSetupIA(topLevel);
@@ -1615,14 +1640,14 @@ SaveSessionCB(
     }
 
     sprintf(bufr, "*dtterm.numClonedTerms: %d\n", InstanceCount);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
 
     for(i = 0; i < InstanceCount; i++)
         SaveTerm(instance_list[i], i, fd);
 
     sprintf(bufr,
           "*dtterm.sessionFileVersionId: dttermSessionFileVersion.1.0.0\n");
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
 
     close(fd);
 
@@ -1720,13 +1745,13 @@ SaveTerm(
     height = XtHeight(XtParent(dtvw));
 
     sprintf(bufr, "*dtterm_%d.x: %d\n", cloneNum, x);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
     sprintf(bufr, "*dtterm_%d.y: %d\n", cloneNum, y);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
     sprintf(bufr, "*dtterm_%d.width: %d\n", cloneNum, width);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
     sprintf(bufr, "*dtterm_%d.height: %d\n", cloneNum, height);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
 
     /* Write out iconic state...
      */
@@ -1752,7 +1777,7 @@ SaveTerm(
 	} else {
 	    sprintf(bufr, "*dtterm_%d.iconify: %s\n", cloneNum, "False");
 	}
-	write (fd, bufr, strlen(bufr));
+	WriteSessionText(fd, bufr);
     }
 	
     if(DtWsmGetWorkspacesOccupied(XtDisplay(dtvw), 
@@ -1761,23 +1786,23 @@ SaveTerm(
     {
 	int i;
 	sprintf(bufr, "*dtterm_%d.workspaceList: ", cloneNum);
-	write (fd, bufr, strlen(bufr));
+	WriteSessionText(fd, bufr);
 	for(i = 0; i < numInfo; i++)
 	{
 	    char *name =  XGetAtomName(XtDisplay(dtvw),
 				       pWsPresence[i]);
 	    sprintf(bufr, " %s", name);
-	    write (fd, bufr, strlen(bufr));
+	    WriteSessionText(fd, bufr);
 	    XtFree(name);
 	}
 	sprintf(bufr, "\n");
-	write (fd, bufr, strlen(bufr));
+	WriteSessionText(fd, bufr);
 	XtFree((char *)pWsPresence);
     }
 
     sprintf(bufr, "*dtterm_%d.userFontListIndex: %d\n", cloneNum,
 	    _DtTermViewGetUserFontListIndex((Widget )dtvw));
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
 
     /* get the current widget values... */
     ac = 0;
@@ -1819,19 +1844,19 @@ SaveTerm(
     }
 
     (void) sprintf(bufr, "*dtterm_%d*rows: %d\n", cloneNum, rows);
-    (void) write(fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
     (void) sprintf(bufr, "*dtterm_%d*columns: %d\n", cloneNum, columns);
-    (void) write(fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
 
     if(menuBar == False)
     {
 	sprintf(bufr, "*dtterm_%d*menuBar: False\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(scrollBar == False)
     {
 	sprintf(bufr, "*dtterm_%d*scrollBar: False\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if (_DtTermPrimGetCursorVisible((Widget )dtw))
     {
@@ -1842,74 +1867,74 @@ SaveTerm(
     }
     else 
         sprintf(bufr, "*dtterm_%d*charCursorStyle: CHARCURSOR_INVISIBLE\n", cloneNum);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
     
 
     sprintf(bufr, "*dtterm_%d*blinkRate: %d\n", cloneNum,blinkRate);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
 
     if(jumpScroll == False)
     {
 	sprintf(bufr, "*dtterm_%d*jumpScroll: False\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(marginBell == True)
     {
 	sprintf(bufr, "*dtterm_%d*marginBell: True\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
 	sprintf(bufr, "*dtterm_%d*nMarginBell: %d\n", cloneNum,nMarginBell);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(visualBell == True)
     {
 	sprintf(bufr, "*dtterm_%d*visualBell: True\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(reverseVideo == True)
     {
 	sprintf(bufr, "*dtterm_%d*reverseVideo: True\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(cursorMode == True)
     {
 	sprintf(bufr, "*dtterm_%d*appCursorDefault: True\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(keypadMode == True)
     {
 	sprintf(bufr, "*dtterm_%d*appKeypadDefault: True\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(autoWrap == False)
     {
 	sprintf(bufr, "*dtterm_%d*autoWrap: False\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(reverseWrap == True)
     {
 	sprintf(bufr, "*dtterm_%d*reverseWrap: True\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(c132 == True)
     {
 	sprintf(bufr, "*dtterm_%d*c132: True\n", cloneNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(lockState == False)
 	sprintf(bufr, "*dtterm_%d*userKeyLock: False\n", cloneNum);
     else
     	sprintf(bufr, "*dtterm_%d*userKeyLock: True\n", cloneNum);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
     if(autoLineFeed == False)
 	sprintf(bufr, "*dtterm_%d*autoLineFeed: False\n", cloneNum);
     else
     	sprintf(bufr, "*dtterm_%d*autoLineFeed: True\n", cloneNum);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
 
     if (cwd && *cwd) {
 	(void) sprintf(bufr, "*dtterm_%d*currentWorkingDirectory: %s\n",
 		cloneNum, cwd);
-	(void) write(fd, bufr, strlen(bufr));
+	WriteSessionText(fd, bufr);
     }
     free(bufr);
 }

@@ -7119,17 +7119,27 @@ DoAdjust(
 
             fixLeftMarginAndNewlines( editor, adjRec.infp, leftMargin, 
 				      rightMargin, (int)start, (int)end );
-            freopen(nullptr, "r", adjRec.infp);
+            if (freopen(nullptr, "r", adjRec.infp) == nullptr) {
+              /*
+               * A failed freopen() has closed the stream, so there is
+               * nothing to format.
+               */
+              unlink(tempName1);
+              fclose(adjRec.outfp);
+              unlink(tempName2);
+              returnVal = DtEDITOR_NO_TMP_FILE;
+            }
+            else {
+              FormatText(&adjRec);
 
-            FormatText(&adjRec);
+              fclose(adjRec.infp);
+              unlink(tempName1);
 
-            fclose(adjRec.infp);
-            unlink(tempName1);
-
-            fclose(adjRec.outfp);
-            returnVal =
-	      DtEditorReplaceFromFile( (Widget)editor, start, end, tempName2 );
-            unlink(tempName2);
+              fclose(adjRec.outfp);
+              returnVal =
+                DtEditorReplaceFromFile( (Widget)editor, start, end, tempName2 );
+              unlink(tempName2);
+            }
 
          } 
 	 else {

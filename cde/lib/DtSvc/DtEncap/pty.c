@@ -571,7 +571,9 @@ int post_fork_pty_channel_object(SPC_Channel_Ptr channel,
   
   if (parentp) {		/* Master process */
     close(channel->sync_pipe[WRITE_SIDE]);
-    read(channel->sync_pipe[READ_SIDE], &c, 1);
+    /* wait for the sync byte; the byte itself carries no information */
+    while (read(channel->sync_pipe[READ_SIDE], &c, 1) < 0 && errno == EINTR)
+      ;
     close(channel->sync_pipe[READ_SIDE]);
     channel->sync_pipe[READ_SIDE] = -1;
     channel->sync_pipe[WRITE_SIDE] = -1;
@@ -630,7 +632,11 @@ int post_fork_pty_channel_object(SPC_Channel_Ptr channel,
     /* The pty trapping stuff handles EOF for us.  Use the "sync" pipe */
     /* to inform the other side when we don't have that code.          */
     c=040;
-    write(channel->sync_pipe[WRITE_SIDE], &c, 1);
+    {
+      /* the byte only wakes the other side; a closed pipe needs no report */
+      ssize_t written = write(channel->sync_pipe[WRITE_SIDE], &c, 1);
+      (void) written;
+    }
     close(channel->sync_pipe[READ_SIDE]);
     close(channel->sync_pipe[WRITE_SIDE]);
 

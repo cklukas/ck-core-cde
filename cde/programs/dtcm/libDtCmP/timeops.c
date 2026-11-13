@@ -961,7 +961,7 @@ set_timezone(char *tzname)
         /* I don't like using 'system', but this does the right
 	 * thing according to tha man pages
 	 */
-	if (tzname==nullptr) system("unset TZ\n");
+	if (tzname==nullptr) unsetenv("TZ");
 #else
 	if (tzname==nullptr) tzsetwall();
 #endif /* SVR4 */

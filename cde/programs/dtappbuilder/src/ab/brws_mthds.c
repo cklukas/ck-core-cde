@@ -929,7 +929,7 @@ free_prop(
     Vwr	v
 )
 {
-    if (!v && !v->properties)
+    if (!v || !v->properties)
 	return;
 
     free(v->properties);

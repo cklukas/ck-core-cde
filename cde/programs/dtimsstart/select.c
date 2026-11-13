@@ -109,7 +109,7 @@ void	ximsSelect(void)
 
     if (sel->iconic == -1) {
 	sel->iconic = fsel ? fsel->iconic : 0;
-    } else if (sel->iconic != fsel->iconic) { /* this should never happen ! */
+    } else if (fsel != nullptr && sel->iconic != fsel->iconic) { /* this should never happen ! */
 	sel->flag |= F_SELECT_CHANGED;
     }
 

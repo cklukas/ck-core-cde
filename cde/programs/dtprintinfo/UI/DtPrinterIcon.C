@@ -83,13 +83,19 @@ DtPrinterIcon::DtPrinterIcon(DtMainW *mainW, AnyUI *parent, Queue *que,
       if (stat(buf, &statbuff) < 0)
        {
          sprintf(buf, "mkdir -p %s/%s", homeDir, PRINTERS_PERSONAL_DIR);
-         system(buf);
+         if (system(buf) != 0)
+          {
+            // the file or directory is created below; its error is reported there
+          }
        }
       sprintf(buf, "%s/.dt/types", homeDir);
       if (stat(buf, &statbuff) < 0)
        {
          sprintf(buf, "mkdir -p %s/.dt/types", homeDir);
-         system(buf);
+         if (system(buf) != 0)
+          {
+            // the file or directory is created below; its error is reported there
+          }
        }
       DtDbReloadNotify(&DtPrinterIcon::ReloadNotifyCB, this);
     }
@@ -274,7 +280,10 @@ char *DtPrinterIcon::CreateActionFile()
       if (stat(filename, &statbuff) < 0)
        {
          snprintf(buf, MAXPATHLEN, "/bin/mkdir -p %s", filename);
-         system(buf);
+         if (system(buf) != 0)
+          {
+            // the file or directory is created below; its error is reported there
+          }
        }
       snprintf(filename, MAXPATHLEN, "/etc/dt/appconfig/types/%s/%s.dt", lang,
 	      queue->Name());
@@ -293,7 +302,10 @@ char *DtPrinterIcon::CreateActionFile()
 	  {
             snprintf(buf, MAXPATHLEN, "/bin/cp /etc/dt/appconfig/types/%s/%s.dt %s/.dt/types",
 		    lang, queue->Name(), homeDir);
-	    system(buf);
+	    if (system(buf) != 0)
+	     {
+	       // the file or directory is created below; its error is reported there
+	     }
 	    create_file = false;
 	  }
 	 else

@@ -705,7 +705,8 @@ _DtOpen(
     cmd << "( unset TT_TRACE_SCRIPT; if dtaction Open " << file
 	<< "; then :; else textedit " << file << "; fi; sleep 600; rm -f "
 	<< file << " ) &" << ends;
-    system( cmd.str().c_str() );
+    int status = system( cmd.str().c_str() );
+    (void) status;	// the command runs in the background; no result to use
 }
 
 void
@@ -765,7 +766,8 @@ _DtMan(
     std::ostringstream cmd;
     cmd << "unset TT_TRACE_SCRIPT; if dtaction Dtmanpageview " << topic
 	<< "; then :; else cmdtool -c man " << topic << "; fi &" << ends;
-    system( cmd.str().c_str() );
+    int status = system( cmd.str().c_str() );
+    (void) status;	// the command runs in the background; no result to use
 }
 
 Boolean

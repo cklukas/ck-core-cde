@@ -170,6 +170,7 @@
 #include <Dt/SharedProcs.h>
 
 #include "Encaps.h"
+#include "FileProcess.h"
 #include "SharedProcs.h"
 
 #include <Tt/tttk.h>
@@ -2503,13 +2504,13 @@ SaveDefaultOkCB(
 
    /*  Write out the general information  */
 
-   (void) write (fd, "*", strlen ("*"));
-   (void) write (fd, DTFILE_CLASS_NAME,strlen (DTFILE_CLASS_NAME));
-   (void) write (fd, "*view_count:      ", strlen ("*view_count:      "));
+   (void) DtfileProcessWriteString (fd, "*");
+   (void) DtfileProcessWriteString (fd, DTFILE_CLASS_NAME);
+   (void) DtfileProcessWriteString (fd, "*view_count:      ");
 
    (void) sprintf (view_number, "%d", 1);
-   (void) write (fd, view_number, strlen (view_number));
-   (void) write (fd, "\n#\n", strlen ("\n#\n"));
+   (void) DtfileProcessWriteString (fd, view_number);
+   (void) DtfileProcessWriteString (fd, "\n#\n");
 
    name_list[1] = view_number;
 
@@ -2530,7 +2531,7 @@ SaveDefaultOkCB(
 
    (void) sprintf (view_number, "%d", 0);
    _DtWriteDialogData (dialog_data, fd, name_list);
-   (void) write (fd, "#\n", strlen ("#\n"));
+   (void) DtfileProcessWriteString (fd, "#\n");
 
    /* Restore the data that was temporarily removed */
 
@@ -2702,9 +2703,9 @@ SaveSession(
    /*  Write out the general information  */
 
    /* Number of dtfile views */
-   (void) write (fd, "*", strlen ("*"));
-   (void) write (fd, DTFILE_CLASS_NAME, strlen (DTFILE_CLASS_NAME));
-   (void) write (fd, "*view_count:	", strlen ("*view_count:	"));
+   (void) DtfileProcessWriteString (fd, "*");
+   (void) DtfileProcessWriteString (fd, DTFILE_CLASS_NAME);
+   (void) DtfileProcessWriteString (fd, "*view_count:	");
 
    if (trashFileMgrData)
    {
@@ -2717,38 +2718,38 @@ SaveSession(
    {
       (void) snprintf (view_number, sizeof(view_number), "%d", view_count);
    }
-   (void) write (fd, view_number, strlen (view_number));
-   (void) write (fd, "\n#\n", strlen ("\n#\n"));
+   (void) DtfileProcessWriteString (fd, view_number);
+   (void) DtfileProcessWriteString (fd, "\n#\n");
 
-   (void) write (fd, "*", strlen ("*"));
-   (void) write (fd, DTFILE_CLASS_NAME, strlen (DTFILE_CLASS_NAME));
-   (void) write (fd, "*showFilesystem:	", strlen ("*showFilesystem:	"));
+   (void) DtfileProcessWriteString (fd, "*");
+   (void) DtfileProcessWriteString (fd, DTFILE_CLASS_NAME);
+   (void) DtfileProcessWriteString (fd, "*showFilesystem:	");
 
    if(showFilesystem)
-      (void) write (fd, "True", strlen ("True"));
+      (void) DtfileProcessWriteString (fd, "True");
    else
-      (void) write (fd, "False", strlen ("False"));
-   (void) write (fd, "\n#\n", strlen ("\n#\n"));
+      (void) DtfileProcessWriteString (fd, "False");
+   (void) DtfileProcessWriteString (fd, "\n#\n");
 
-   (void) write (fd, "*", strlen ("*"));
-   (void) write (fd, DTFILE_CLASS_NAME, strlen (DTFILE_CLASS_NAME));
-   (void) write (fd, "*restrictMode:	", strlen ("*restrictMode:	"));
+   (void) DtfileProcessWriteString (fd, "*");
+   (void) DtfileProcessWriteString (fd, DTFILE_CLASS_NAME);
+   (void) DtfileProcessWriteString (fd, "*restrictMode:	");
 
    if(restrictMode)
-      (void) write (fd, "True", strlen ("True"));
+      (void) DtfileProcessWriteString (fd, "True");
    else
-      (void) write (fd, "False", strlen ("False"));
-   (void) write (fd, "\n#\n", strlen ("\n#\n"));
+      (void) DtfileProcessWriteString (fd, "False");
+   (void) DtfileProcessWriteString (fd, "\n#\n");
 
-   (void) write (fd, "*", strlen ("*"));
-   (void) write (fd, DTFILE_CLASS_NAME, strlen (DTFILE_CLASS_NAME));
-   (void) write (fd, "*openFolder:	", strlen ("*openFolder:	"));
+   (void) DtfileProcessWriteString (fd, "*");
+   (void) DtfileProcessWriteString (fd, DTFILE_CLASS_NAME);
+   (void) DtfileProcessWriteString (fd, "*openFolder:	");
 
    if(openDirType == NEW)
-      (void) write (fd, "NEW", strlen ("NEW"));
+      (void) DtfileProcessWriteString (fd, "NEW");
    else
-      (void) write (fd, "CURRENT", strlen ("CURRENT"));
-   (void) write (fd, "\n#\n", strlen ("\n#\n"));
+      (void) DtfileProcessWriteString (fd, "CURRENT");
+   (void) DtfileProcessWriteString (fd, "\n#\n");
 
    view_index = 0;
    name_list[1] = view_number;
@@ -2801,18 +2802,18 @@ SaveSession(
 
       /* Write out if iconified our not */
 
-      write (fd, "*", strlen ("*"));
-      write (fd, DTFILE_CLASS_NAME, strlen (DTFILE_CLASS_NAME));
+      (void) DtfileProcessWriteString (fd, "*");
+      (void) DtfileProcessWriteString (fd, DTFILE_CLASS_NAME);
       sprintf (view_number, "%d", view_index);
-      write (fd, ".", strlen ("."));
-      write (fd, view_number, strlen (view_number));
+      (void) DtfileProcessWriteString (fd, ".");
+      (void) DtfileProcessWriteString (fd, view_number);
 
-      (void) write (fd, ".iconify:      ", strlen (".iconify:   "));
+      (void) DtfileProcessWriteString (fd, ".iconify:      ");
 
       if (wm_state->state == IconicState)
-        write (fd, "True\n", strlen ("True\n"));
+        (void) DtfileProcessWriteString (fd, "True\n");
       else
-        write (fd, "False\n", strlen ("False\n"));
+        (void) DtfileProcessWriteString (fd, "False\n");
 
 
       /*  Get the workspaces for this dt by accessing the property.  */
@@ -2820,23 +2821,23 @@ SaveSession(
       if (DtWsmGetWorkspacesOccupied (display, XtWindow (file_mgr_rec->shell),
                                   &ws_presence, &num_workspaces) == Success)
       {
-         write (fd, "*", strlen ("*"));
-         write (fd, DTFILE_CLASS_NAME, strlen (DTFILE_CLASS_NAME));
-         (void) write (fd, ".", strlen ("."));
-         (void) write (fd, view_number, strlen (view_number));
-         (void) write (fd, ".workspace: ", strlen (".workspace: "));
+         (void) DtfileProcessWriteString (fd, "*");
+         (void) DtfileProcessWriteString (fd, DTFILE_CLASS_NAME);
+         (void) DtfileProcessWriteString (fd, ".");
+         (void) DtfileProcessWriteString (fd, view_number);
+         (void) DtfileProcessWriteString (fd, ".workspace: ");
 
 
          for (j = 0; j < num_workspaces; j++)
          {
-            if (j != 0) (void) write (fd, "*", strlen ("*"));
+            if (j != 0) (void) DtfileProcessWriteString (fd, "*");
             workspace_name = XGetAtomName (display, ws_presence[j]);
-            (void) write (fd, workspace_name, strlen (workspace_name));
+            (void) DtfileProcessWriteString (fd, workspace_name);
             XtFree ((char *) workspace_name);
          }
 
 
-         (void) write (fd, "\n", strlen ("\n"));
+         (void) DtfileProcessWriteString (fd, "\n");
          XFree((char *)ws_presence);
       }
 
@@ -2848,7 +2849,7 @@ SaveSession(
       else
          _DtWriteDialogData ((DialogData *)view_set[i]->dialog_data,
 			     fd, name_list);
-      (void) write (fd, "#\n", strlen ("#\n"));
+      (void) DtfileProcessWriteString (fd, "#\n");
 
       view_index++;
       if(saveTitle)
@@ -2874,15 +2875,15 @@ SaveSession(
        * Save number of secondary help dialogs in format:
        *     *Dtfile.Workspace.<WS#>.secondaryHelpDialogCount:  <#>
        */
-      write(fd, "*", strlen("*"));
-      write(fd, DTFILE_CLASS_NAME, strlen(DTFILE_CLASS_NAME));
-      write(fd, WS_RES_HEADER, strlen(WS_RES_HEADER));
+      (void) DtfileProcessWriteString (fd, "*");
+      (void) DtfileProcessWriteString (fd, DTFILE_CLASS_NAME);
+      (void) DtfileProcessWriteString (fd, WS_RES_HEADER);
       sprintf(workspaceNumber, "%d", i);
-      write(fd, workspaceNumber, strlen(workspaceNumber));
-      write(fd, SEC_HELP_RES_HEADER, strlen(SEC_HELP_RES_HEADER));
+      (void) DtfileProcessWriteString (fd, workspaceNumber);
+      (void) DtfileProcessWriteString (fd, SEC_HELP_RES_HEADER);
       sprintf(view_number, "%d", workspaceInfo->secondaryHelpDialogCount);
-      write(fd, view_number, strlen(view_number));
-      write (fd, "\n#\n", strlen ("\n#\n"));
+      (void) DtfileProcessWriteString (fd, view_number);
+      (void) DtfileProcessWriteString (fd, "\n#\n");
 
       /* Save each of the secondary help dialogs */
       for (j = 0; j < workspaceInfo->secondaryHelpDialogCount; j++)
@@ -2899,7 +2900,7 @@ SaveSession(
          _DtWriteDialogData(workspaceInfo->primaryHelpDialog,
                            fd, name_list);
       }
-      write (fd, "#\n", strlen ("#\n"));
+      (void) DtfileProcessWriteString (fd, "#\n");
    }
    (void) close (fd);
 

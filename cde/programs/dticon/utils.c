@@ -125,6 +125,31 @@ extern XmWidgetExtData _XmGetWidgetExtData(
 
 #include "bitmaps/q_mark.xbm"
 
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+
+/* Write all of TEXT to the session file; -1 when that failed.  Most callers
+ * go on: the next session save writes the file again. */
+static int
+WriteSessionText(int fd, const char *text)
+{
+    size_t left = strlen(text);
+
+    while (left > 0)
+    {
+        ssize_t written = write(fd, text, left);
+
+        if (written < 0 && errno == EINTR)
+            continue;
+        if (written <= 0)
+            return -1;
+        text += written;
+        left -= (size_t) written;
+    }
+    return 0;
+}
+
 extern Widget  color_pb1, color_pb2, color_pb3, color_pb4,
                color_pb5, color_pb6, color_pb7, color_pb8;
 extern Widget  grey_pb1, grey_pb2, grey_pb3, grey_pb4,
@@ -2321,7 +2346,7 @@ SaveSession( void )
         sprintf(bufr, "*iconic: True\n");
     else
         sprintf(bufr, "*iconic: False\n");
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
 
     /*** Get and write out the geometry info for our Window ***/
 
@@ -2339,19 +2364,19 @@ SaveSession( void )
     y -= vendorExt->vendor.yOffset;
 
     snprintf(bufr, sizeof(bufr), "*x: %d\n", x);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
     snprintf(bufr, sizeof(bufr), "*y: %d\n", y);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
     snprintf(bufr, sizeof(bufr), "*width: %d\n", width);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
     snprintf(bufr, sizeof(bufr), "*height: %d\n", height);
     if (last_fname[0] != '\0')
     {
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
         snprintf(bufr, sizeof(bufr), "*file: %s\n", last_fname);
     }
 
-    if(-1 == write (fd, bufr, strlen(bufr))) {
+    if(-1 == WriteSessionText(fd, bufr)) {
 	fprintf(stderr, "write() to session failed\n");
         XtFree ((char *)path);
         XtFree ((char *)name);

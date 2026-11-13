@@ -29,4 +29,7 @@ void DtfileProcessClosePipe(int descriptors[2]);
  */
 int DtfileProcessWriteAll(int descriptor, const void *bytes, size_t length);
 
+/* Write the text without its terminator, as DtfileProcessWriteAll does. */
+int DtfileProcessWriteString(int descriptor, const char *text);
+
 #endif

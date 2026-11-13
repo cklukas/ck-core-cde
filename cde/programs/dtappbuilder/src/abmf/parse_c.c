@@ -861,8 +861,7 @@ grab_string_from_file(
 	bfile_save_state(file, &fileState);
         string = (STRING)util_malloc((size_t)(stringLen + 1));
         bfile_set_off(file, stringOff);
-        fread(string, 1, (size_t)stringLen, file->stream);
-        string[stringLen]= 0;
+        string[fread(string, 1, (size_t)stringLen, file->stream)]= 0;
 	bfile_restore_state(file, &fileState);
     }
 

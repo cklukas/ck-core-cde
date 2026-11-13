@@ -803,6 +803,12 @@ show_appt(Widget widget, XtPointer client_data, XtPointer call_data)
 	for (ptr = (Tick_list*)f->ticks, i = 1; ptr != nullptr && i < *pos_list; i++)
 		ptr = ptr->next;
 
+	if (ptr == nullptr) {
+		/* the selected position is beyond the list of ticks */
+		XtFree((XtPointer)pos_list);
+		return;
+	}
+
 	c->view->date = ptr->tick;
 	c->view->nwks = numwks(c->view->date);
 	XtFree((XtPointer)pos_list);

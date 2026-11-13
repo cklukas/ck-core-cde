@@ -2246,7 +2246,8 @@ logP_read(GenLog log)
 	next_entry = &(log->entries[(log->num_entries)]);
 
 	*line_buf = 0;
-	fgets(line_buf, MAXPATHLEN, file);
+	if (fgets(line_buf, MAXPATHLEN, file) == nullptr)
+	    *line_buf = 0;
 	line_ptr = line_buf;
 
 	/*

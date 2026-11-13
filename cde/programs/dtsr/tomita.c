@@ -91,6 +91,7 @@
 #include <sys/stat.h>
 #include <locale.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define PRINT_MESSAGES \
     { puts (DtSearchGetMessages()); DtSearchFreeMessages(); }
@@ -104,7 +105,7 @@
 /*------------------ GLOBALS ------------------*/
 static int	debug_mode =	FALSE;
 static int	prog =		'B';	/* 'D' = deleting, 'B' = browsing */
-static int	shutdown_now =	FALSE;
+static volatile sig_atomic_t	shutdown_signal = 0;	/* signal number, 0 = none */
 static int	yesarg =	FALSE;
 static int	retncode =	0;
 static int	max_dbacount =	DBACOUNT;
@@ -136,22 +137,37 @@ static void     print_exit_code (int exit_code)
 
 /************************************************/
 /*						*/
-/*		   kill_delete			*/
+/*		flag_shutdown_signal		*/
 /*						*/
 /************************************************/
-/* Interrupt handler for all termination signals
- * in Delete mode.  Just sets global flag so we
- * can come down gracefully between deletions.
+/* Interrupt handler for all termination signals.  It calls no function
+ * that is unsafe in a signal handler: it only records the signal number.
+ * The program stops from its main flow at the next check, between two
+ * batches of deletions or when the pending read of the browser returns
+ * (INT and TERM are installed without SA_RESTART for that reason), and
+ * the engine shutdown, the exit callbacks and the messages run there.
+ * A second signal before that ends the process at once with _exit().
  */
-static void	kill_delete (int sig)
+static void	flag_shutdown_signal (int sig)
 {
-    shutdown_now = TRUE;
-    printf ( CATGETS(dtsearch_catd, MS_tomita, 1,
-	"\n%s Received interrupt %d.\n"
-	"  Program will stop after current batch of deletions.\n") ,
-	PROGNAME"069", sig);
-    return;
-}  /* kill_delete() */
+    if (shutdown_signal)
+	_exit (sig);
+    shutdown_signal = sig;
+}  /* flag_shutdown_signal() */
+
+
+/* Installs flag_shutdown_signal() for sig; with restart FALSE a blocked read
+ * returns with EINTR so that the main flow notices the signal at once.
+ */
+static void	catch_shutdown_signal (int sig, int restart)
+{
+    struct sigaction action = {};
+
+    action.sa_handler = flag_shutdown_signal;
+    sigemptyset (&action.sa_mask);
+    action.sa_flags = restart ? SA_RESTART : 0;
+    sigaction (sig, &action, nullptr);
+}  /* catch_shutdown_signal() */
 
 
 /************************************************/
@@ -301,6 +317,8 @@ static int      browser (void)
 
     /* Main menu loop */
     while (!done) {
+	if (shutdown_signal)
+	    break;
 	if (DtSearchHasMessages ()) {
 	    putchar ('\n');
 	    PRINT_MESSAGES
@@ -478,6 +496,8 @@ DISPLAY_RECORD:
 
 		    *userbuf = '\0';
 		    if(nullptr == fgets (userbuf, sizeof (userbuf), stdin)) {
+			if (shutdown_signal)
+			    return 0;
 			fprintf(stderr, "Failed to read from stdin\n");
 			exit(EXIT_FAILURE);    
 		    }
@@ -510,6 +530,8 @@ DISPLAY_RECORD:
 
 		            *userbuf = '\0';
 		            if(nullptr == fgets (userbuf, sizeof (userbuf), stdin)) {
+				if (shutdown_signal)
+				    return 0;
 				fprintf(stderr, "Failed to read from stdin 2\n");
 				exit(EXIT_FAILURE);    
 			    }
@@ -709,17 +731,16 @@ static void     deleter (char *infname)
     records_deleted = 0L;
     time (&start_time);
 
-    _DtSignal(SIGINT, kill_delete);
-    _DtSignal(SIGQUIT, kill_delete);
-    _DtSignal(SIGTRAP, kill_delete);
-    _DtSignal(SIGTERM, kill_delete);
+    /* INT and TERM are caught since main(); the batch loop checks the flag */
+    catch_shutdown_signal (SIGQUIT, TRUE);
+    catch_shutdown_signal (SIGTRAP, TRUE);
 #ifdef SIGPWR
-    _DtSignal(SIGPWR, kill_delete);
+    catch_shutdown_signal (SIGPWR, TRUE);
 #endif
 #ifdef _AIX
-    _DtSignal(SIGXCPU, kill_delete);	/* cpu time limit exceeded */
-    _DtSignal(SIGDANGER, kill_delete);	/* imminent paging space
-					 * crash */
+    catch_shutdown_signal (SIGXCPU, TRUE);	/* cpu time limit exceeded */
+    catch_shutdown_signal (SIGDANGER, TRUE);	/* imminent paging space
+						 * crash */
 #endif
 
     /* MAIN LOOP */
@@ -728,8 +749,13 @@ static void     deleter (char *infname)
 	 * Stop now if we have exceeded user specified time limit
 	 * or if user sent termination or interrupt signal. 
 	 */
-	if (shutdown_now)
+	if (shutdown_signal) {
+	    printf ( CATGETS(dtsearch_catd, MS_tomita, 1,
+		"\n%s Received interrupt %d.\n"
+		"  Program will stop after current batch of deletions.\n") ,
+		PROGNAME"069", (int) shutdown_signal);
 	    break;
+	}
 	elapsed = time (nullptr) - start_time;
 	if (maxtime > 0L && elapsed >= maxtime)
 	    break;
@@ -812,8 +838,9 @@ int             main (int argc, char *argv[])
 	aa_argv0, timebuf);
     austext_exit_last = print_exit_code;
 
-    _DtSignal(SIGINT, DtSearchExit);
-    _DtSignal(SIGTERM, DtSearchExit);
+    /* Stop from the main flow, not from the handler; see flag_shutdown_signal() */
+    catch_shutdown_signal (SIGINT, FALSE);
+    catch_shutdown_signal (SIGTERM, FALSE);
 /****memset (&usrblk, 0, sizeof(USRBLK));****/
 
     /* Validate program number argument */
@@ -927,13 +954,19 @@ BAD_ARGS:
 	retncode_abort (733);
 
     PRINT_MESSAGES
+    if (!shutdown_signal) {
 	if (prog == 'B')
-	browser ();
-    else
-	deleter (infname);
+	    browser ();
+	else
+	    deleter (infname);
+    }
 
     usrblk.request = OE_SHUTDOWN;
     Opera_Engine ();
+    if (shutdown_signal && prog == 'B') {
+	/* interrupted browsing ends with the signal number, as it always did */
+	DtSearchExit (shutdown_signal);
+    }
     printf ( "%s", CATGETS(dtsearch_catd, MS_tomita, 36,
 	"Normal engine shutdown.\n") );
     DtSearchExit (0);

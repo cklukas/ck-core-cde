@@ -1040,7 +1040,10 @@ _DtCmdCommandInvokerExecute (
       /*
        * Restore the pre-fork environment.
        */
-      (void) chdir (tmpDir);
+      if (chdir (tmpDir) != 0)
+      {
+	 /* the client keeps the working directory of the child setup */
+      }
       (void) _DtEnvControl (DT_ENV_RESTORE_POST_DT);
    }
 

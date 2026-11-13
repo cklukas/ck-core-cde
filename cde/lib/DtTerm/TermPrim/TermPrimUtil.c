@@ -450,7 +450,9 @@ _DtTermPrimStartLog(Widget w)
 
             (void) close(p[1]);
             (void) close(0);
-            (void) dup(p[0]);
+            if (dup(p[0]) < 0) {
+                _exit(1);	/* the command would not read the log */
+            }
             (void) close(p[0]);
             /*
             ** set close on exec flag on all other fd's
@@ -497,7 +499,11 @@ _DtTermPrimStartLog(Widget w)
             return;
         }
 	(void) AddLogFileEntry(tpd->logStream);
-        (void) chown(tw->term.logFile, getuid(), getgid());
+        /* A file the user does not own cannot be given to the user; the log
+         * is still written to it, so a refusal here is not an error. */
+        if (chown(tw->term.logFile, getuid(), getgid()) != 0) {
+            /* keep the log on the existing file */
+        }
     }
     tw->term.log_on = True ;
 }

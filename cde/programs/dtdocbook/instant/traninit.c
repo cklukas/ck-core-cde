@@ -127,7 +127,8 @@ ReadTransSpec(
 		ungetc(c, fp);		/* put back non-whitespace */
 		i = strlen(buf);
 		fn = buf + i;		/* point to end of string in buffer */
-		fgets(fn, LINESIZE-i, fp);	/* read and append to buf */
+		if (fgets(fn, LINESIZE-i, fp) == nullptr)	/* read and append to buf */
+		    *fn = '\0';
 		lineno++;
 		stripNL(buf);
 	    }

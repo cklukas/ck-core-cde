@@ -1968,13 +1968,17 @@ static enum _DtGrLoadStatus processGIF(
     }
     else
     {
-       if (stream->source.file.uncompressed_filename != nullptr)
-           stat (stream->source.file.uncompressed_filename, &stbuf);
-       else
-           stat (stream->source.file.filename, &stbuf);
+       if (stat ((stream->source.file.uncompressed_filename != nullptr) ?
+                 stream->source.file.uncompressed_filename :
+                 stream->source.file.filename, &stbuf) != 0)
+           return(_DtGrCONVERT_FAILURE);
        size = stbuf.st_size;
        buffer = XtMalloc(size);
-       fread (buffer, 1, size, stream->source.file.fileptr);  
+       if (fread (buffer, 1, size, stream->source.file.fileptr) != (size_t) size)
+       {
+           XtFree(buffer);
+           return(_DtGrCONVERT_FAILURE);
+       }
     }
 
     /* Initialize the gif object */

@@ -37,7 +37,8 @@ dtsrkdump_SOURCES = dtsrkdump.c MsgCat.c
 # the language files of programs/dtdocbook/dtsr, and query it through the
 # DtSrAPI in a program of their own, which runs under the sanitizers when the
 # compiler has them.
-EXTRA_DIST = tests/check-dtsearch.py tests/dtsearch-api-test.c
+EXTRA_DIST = tests/check-dtsearch.py tests/dtsearch-api-test.c \
+	     tests/check-shutdown-signal.py tests/check-shutdown-signal.c
 
 check-local: all
 	$(MAKE) -C $(top_builddir)/programs/dtdocbook/dtsr dtsearch.dbd
@@ -45,3 +46,4 @@ check-local: all
 	DTSR_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(DEFS) $(DEFAULT_INCLUDES) $(AM_CFLAGS) $(CPPFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
 	DTSR_LIBS='../../lib/DtSearch/libDtSearch.la $(LIBS)' \
 	python3 $(srcdir)/tests/check-dtsearch.py . $(top_builddir) $(top_srcdir) $(srcdir)
+	CC="$(CC)" python3 $(srcdir)/tests/check-shutdown-signal.py

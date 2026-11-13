@@ -173,7 +173,10 @@ abio_close_output_impl(FILE ** pOutFile)
     if ((outFile != nullptr) && (outFile != stdout))
     {
 	fflush(outFile);
-	ftruncate(fileno(outFile), (size_t)ftell(outFile));
+	if (ftruncate(fileno(outFile), (size_t)ftell(outFile)) != 0)
+	{
+	    /* the file keeps its old tail; the output itself is written */
+	}
 	util_fclose(outFile);
     }
     return 0;

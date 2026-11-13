@@ -794,7 +794,8 @@ util_ftruncate(FILE *file, off_t length, const char *accessType)
     /*
      *  Associate the stream with the file descriptor fildes.
      */
-    fdopen(fd, accessType);
+    FILE	*reopened = fdopen(fd, accessType);
+    (void) reopened;
 
     /*
      * Perform a seek on the stream, just to make sure it's in sync.

@@ -1198,6 +1198,11 @@ gap_list_select_proc(Widget w, XtPointer client_data, XtPointer data) {
 		step = step->next;
 		++item_cnt;
 	}
+	if (step == nullptr) {
+		/* the selected position is beyond the access list */
+		XtFree((XtPointer)item_list);
+		return;
+	}
 	XmTextSetString(p->gap_user_text, step->user->user_name);
 
 	/*

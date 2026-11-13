@@ -90,13 +90,15 @@ void MotifThread::CreateThread(MotifUI *_obj, const char *cmd, int _pid,
        {
          close(m_stdout[0]);
          close(1);
-         dup(m_stdout[1]);
+         if (dup(m_stdout[1]) < 0)
+	    _exit(EXIT_FAILURE);
          close(m_stdout[1]);
 
          execlp(KORNSHELL, "ksh", "-c", cmd, NULL);
 
          char *msg = strerror(errno);
-         write(1, msg, strlen(msg));
+         ssize_t written = write(1, msg, strlen(msg));
+         (void) written;	// the child exits with the failure status next
          exit(-1);
        } 
       else if (pid == -1)

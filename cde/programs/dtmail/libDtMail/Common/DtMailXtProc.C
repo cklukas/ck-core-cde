@@ -59,7 +59,10 @@ DtMailXtInputProc(XtPointer client_data,
     //
     DtMailEventPacket	packet;
 
-    read(*file_desc, &packet, sizeof(DtMailEventPacket));
+    if (read(*file_desc, &packet, sizeof(DtMailEventPacket)) !=
+	(ssize_t)sizeof(DtMailEventPacket)) {
+	return;
+    }
 
     if (session->validObjectKey(packet.key) == DTM_FALSE) {
 	return;

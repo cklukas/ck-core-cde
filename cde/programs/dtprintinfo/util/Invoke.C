@@ -29,6 +29,7 @@
  */
 
 #include "Invoke.h"
+#include "Privilege.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -122,14 +123,16 @@ Invoke::Invoke(const char *command,   // Command to Run
    if ((c_pid = fork()) == 0)
     { // ------------------------ child process --------------------------
 
-      if (_uid != (uid_t)-1)
-	 setuid(_uid);
+      // do not start the program with an identity other than the requested
+      if (_uid != (uid_t)-1 && BecomeUser(_uid) != 0)
+	 _exit(EXIT_FAILURE);
 
       if (trap_out)
        { // duplicate stdout
          close(m_stdout[0]);
          close(1);
-         dup(m_stdout[1]);
+         if (dup(m_stdout[1]) < 0)
+	    _exit(EXIT_FAILURE);
          close(m_stdout[1]);
        }
 
@@ -137,7 +140,8 @@ Invoke::Invoke(const char *command,   // Command to Run
        { // duplicate stderr
          close(m_stderr[0]);
          close(2);
-         dup(m_stderr[1]);
+         if (dup(m_stderr[1]) < 0)
+	    _exit(EXIT_FAILURE);
          close(m_stderr[1]);
        }
 

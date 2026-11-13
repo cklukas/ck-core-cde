@@ -35,6 +35,7 @@
  */
 
 #include "WmGlobal.h" /* This should be the first include */
+#include <errno.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -62,13 +63,47 @@
 
 /*************************************<->*************************************
  *
+ *  Signal handling in the window manager
+ *
+ *  The signals fall into two groups.
+ *
+ *  Termination signals (INT, HUP, QUIT, TERM): the process is healthy, but
+ *  the shutdown (the confirmation dialog, Xlib requests, saving the
+ *  resources, closing the display) is not async-signal-safe and may
+ *  interrupt Xlib or the toolkit half way.  QuitWmSignalHandler() therefore
+ *  calls only XtNoticeSignal(); QuitWmSignalProc() runs from the event loop.
+ *  A second signal while the first is still pending leaves at once with
+ *  _exit().  Until SetupWmSignalDeferral() has registered the procedure, which
+ *  happens right after the application context is created and before the
+ *  display is opened, the handler has nothing to clean up and calls _exit().
+ *
+ *  Fatal signals (ILL, FPE, BUS, SEGV, SYS): the process state is already
+ *  damaged and an event loop may never run again, so the work cannot be
+ *  deferred.  AbortWmSignalHandler() keeps the best-effort reset of the
+ *  keyboard focus, which is not async-signal-safe, so that the user is not
+ *  left without a focus window.  To limit the risk, it is installed with
+ *  SA_RESETHAND (the disposition is the default on entry, so a fault in the
+ *  handler ends the process with the default action instead of recursing) and
+ *  SA_NODEFER (the signal is not blocked, so that such a fault is delivered
+ *  instead of being held back), and a second entry leaves with _exit().
+ *
+ *************************************<->***********************************/
+
+static XtSignalId quitSignalId = 0;
+static volatile sig_atomic_t quitRequested = 0;
+static volatile sig_atomic_t abortEntered = 0;
+
+
+/*************************************<->*************************************
+ *
  *  AbortWmSignalHandler ()
  *
  *
  *  Description:
  *  -----------
  *  This function is called on receipt of a fatal signal. We reset
- *  the keyboard focus to pointer root before aborting.
+ *  the keyboard focus to pointer root before aborting.  See the comment
+ *  above for why this best effort stays in the handler.
  *
  *************************************<->***********************************/
 static void
@@ -76,12 +111,21 @@ AbortWmSignalHandler (int sig)
 {
     struct sigaction sa;
 
+    if (abortEntered)
+    {
+	_exit (1);
+    }
+    abortEntered = 1;
+
     /*
      * Set input focus back to pointer root
      */
-    XSetInputFocus(DISPLAY, PointerRoot, RevertToPointerRoot, CurrentTime);
-    XSync (DISPLAY, False);
-    XCloseDisplay (DISPLAY);
+    if (DISPLAY)
+    {
+	XSetInputFocus(DISPLAY, PointerRoot, RevertToPointerRoot, CurrentTime);
+	XSync (DISPLAY, False);
+	XCloseDisplay (DISPLAY);
+    }
 
     /*
      * Invoke the default handler
@@ -95,7 +139,7 @@ AbortWmSignalHandler (int sig)
 
 } /* END OF FUNCTION AbortSignalHandler */
 
-
+
 /*************************************<->*************************************
  *
  *  RestoreDefaultSignalHandlers ()
@@ -202,7 +246,9 @@ void SetupWmSignalHandlers (int dummy)
     /* 
      * Catch other fatal signals so we can reset the 
      * keyboard focus to pointer root before aborting
+     * (best effort; see the comment at the top of the signal handling)
      */
+    sa.sa_flags = SA_RESETHAND | SA_NODEFER;
     sa.sa_handler = AbortWmSignalHandler;
 
     (void) sigaction (SIGILL, &sa, (struct sigaction *) 0);
@@ -218,18 +264,25 @@ void SetupWmSignalHandlers (int dummy)
 
 /*************************************<->*************************************
  *
- *  QuitWmSignalHandler ()
+ *  QuitWmSignalProc ()
  *
  *
  *  Description:
  *  -----------
- *  This function is called on receipt of a signal that is to terminate the
- *  window manager.
+ *  Runs from the event loop after QuitWmSignalHandler() called
+ *  XtNoticeSignal(): asks for confirmation or quits the window manager.
  *
  *************************************<->***********************************/
 
-void QuitWmSignalHandler (int dummy)
+static void
+QuitWmSignalProc (XtPointer clientData, XtSignalId *id)
 {
+    (void) clientData;
+    (void) id;
+
+    /* a signal that arrives from now on is a new request */
+    quitRequested = 0;
+
     if (wmGD.showFeedback & WM_SHOW_FB_KILL)
     {
 	ConfirmAction (ACTIVE_PSD, QUIT_MWM_ACTION);
@@ -239,5 +292,57 @@ void QuitWmSignalHandler (int dummy)
     {
 	Do_Quit_Mwm(False);
     }
+
+} /* END OF FUNCTION QuitWmSignalProc */
+
+
+/*************************************<->*************************************
+ *
+ *  SetupWmSignalDeferral ()
+ *
+ *
+ *  Description:
+ *  -----------
+ *  Registers the procedure that runs the quit request with the application
+ *  context; from now on QuitWmSignalHandler() defers to the event loop.
+ *
+ *************************************<->***********************************/
+
+void SetupWmSignalDeferral (XtAppContext appContext)
+{
+    quitSignalId = XtAppAddSignal (appContext, QuitWmSignalProc, nullptr);
+
+} /* END OF FUNCTION SetupWmSignalDeferral */
+
+
+/*************************************<->*************************************
+ *
+ *  QuitWmSignalHandler ()
+ *
+ *
+ *  Description:
+ *  -----------
+ *  This function is called on receipt of a signal that is to terminate the
+ *  window manager.  It calls only async-signal-safe functions.
+ *
+ *************************************<->***********************************/
+
+void QuitWmSignalHandler (int dummy)
+{
+    int savedErrno = errno;
+
+    (void) dummy;
+    if (quitSignalId == 0)
+    {
+	/* before the application context exists nothing needs cleaning up */
+	_exit (0);
+    }
+    if (quitRequested)
+    {
+	_exit (0);
+    }
+    quitRequested = 1;
+    XtNoticeSignal (quitSignalId);
+    errno = savedErrno;
 
 } /* END OF FUNCTION QuitWmSignalHandler */

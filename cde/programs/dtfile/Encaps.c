@@ -94,6 +94,7 @@
 #include <Dt/DtNlUtils.h>
 
 #include "Encaps.h"
+#include "FileProcess.h"
 #include "Desktop.h"
 #include "Filter.h"
 #include "FileMgr.h"
@@ -1795,7 +1796,7 @@ _DtXmStringToString(
        {
            if (strlen (out_value) != 0)
            {
-               (void) write (fd, out_value, strlen (out_value));
+               (void) DtfileProcessWriteString (fd, out_value);
                _DtStringToString( fd, &out_value, out_buf );
 
                XtFree ((char *) out_value);
@@ -1829,13 +1830,13 @@ _DtXmStringTableToString(
           {
               if (first)
               {
-                  (void) write (fd, out_buf, strlen (out_buf));
+                  (void) DtfileProcessWriteString (fd, out_buf);
                   first = False;
               }
               else
-                  (void) write (fd, ", ", strlen (", "));
+                  (void) DtfileProcessWriteString (fd, ", ");
 
-              (void) write (fd, out_value, strlen (out_value));
+              (void) DtfileProcessWriteString (fd, out_value);
 
               XtFree ((char *) out_value);
               out_value = nullptr;
@@ -1845,7 +1846,7 @@ _DtXmStringTableToString(
       }
 
       if (first == False)
-          (void) write (fd, "\n", strlen ("\n"));
+          (void) DtfileProcessWriteString (fd, "\n");
    }
 }
 
@@ -1863,9 +1864,9 @@ _DtStringToString(
       ;
    else
    {
-      (void) write (fd, out_buf, strlen (out_buf));
-      (void) write (fd, *value, strlen (*value));
-      (void) write (fd, "\n", strlen ("\n"));
+      (void) DtfileProcessWriteString (fd, out_buf);
+      (void) DtfileProcessWriteString (fd, *value);
+      (void) DtfileProcessWriteString (fd, "\n");
    }
 }
 

@@ -58,6 +58,31 @@
  */
 #include <Xm/VendorSEP.h>
 
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+
+/* Write all of TEXT to the session file; -1 when that failed.  Most callers
+ * go on: the next session save writes the file again. */
+static int
+WriteSessionText(int fd, const char *text)
+{
+    size_t left = strlen(text);
+
+    while (left > 0)
+    {
+        ssize_t written = write(fd, text, left);
+
+        if (written < 0 && errno == EINTR)
+            continue;
+        if (written <= 0)
+            return -1;
+        text += written;
+        left -= (size_t) written;
+    }
+    return 0;
+}
+
 /* Copied from BaseClassI.h */
 extern XmWidgetExtData _XmGetWidgetExtData( 
                         Widget widget,
@@ -115,7 +140,7 @@ SaveMain(
         if(XtIsRealized(pPad->mainWindow))
         {
 	    sprintf(bufr,"*mainWindow%d.ismapped: True\n", padNum);
-	    write (fd, bufr, strlen(bufr));
+	    WriteSessionText(fd, bufr);
         }
 
         /* Get and write out the geometry info for our Window */
@@ -135,13 +160,13 @@ SaveMain(
 	height = XtHeight(XtParent(pPad->mainWindow));
 
         snprintf(bufr, sizeof(bufr), "*mainWindow%d.x: %d\n", padNum, x);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
         snprintf(bufr, sizeof(bufr), "*mainWindow%d.y: %d\n", padNum, y);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
         snprintf(bufr, sizeof(bufr), "*mainWindow%d.width: %d\n", padNum, width);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
         snprintf(bufr, sizeof(bufr), "*mainWindow%d.height: %d\n", padNum, height);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
 
         wm_state_atom = XmInternAtom (XtDisplay(pPad->app_shell), "WM_STATE", 
                                       False);
@@ -154,13 +179,13 @@ SaveMain(
 
         /* Write out if iconified our not */
         snprintf(bufr, sizeof(bufr), "*mainWindow%d.iconify: ", padNum);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
 
         if (wm_state->state == IconicState)
           snprintf(bufr, sizeof(bufr), "True\n");
         else
           snprintf(bufr, sizeof(bufr), "False\n");
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
 
 	if(DtWsmGetWorkspacesOccupied(XtDisplay(pPad->app_shell), 
 				  XtWindow(pPad->app_shell), &pWsPresence,
@@ -168,27 +193,27 @@ SaveMain(
 	{
 	    int i;
 	    snprintf(bufr, sizeof(bufr), "*mainWindow%d.workspaceList: ", padNum);
-	    write (fd, bufr, strlen(bufr));
+	    WriteSessionText(fd, bufr);
 	    for(i = 0; i < numInfo; i++)
 	    {
 	        char *name =  XGetAtomName(XtDisplay(pPad->app_shell),
 					   pWsPresence[i]);
 		snprintf(bufr, sizeof(bufr), " %s", name);
-		write (fd, bufr, strlen(bufr));
+		WriteSessionText(fd, bufr);
 		XtFree(name);
 	    }
 	    snprintf(bufr, sizeof(bufr), "\n");
-	    write (fd, bufr, strlen(bufr));
+	    WriteSessionText(fd, bufr);
 	    XtFree((char *)pWsPresence);
 	}
 
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
     if(pPad->fileStuff.fileName != (char *)nullptr)
     {
 	sprintf(bufr, "*mainWindow%d.fileName: %s\n", padNum, 
 		pPad->fileStuff.fileName);
-        write (fd, bufr, strlen(bufr));
+        WriteSessionText(fd, bufr);
     }
 }
 
@@ -240,14 +265,15 @@ SaveSessionCB(
     {
         tmpStr = (char *)malloc(strlen(MSG2) + strlen(longpath)+ 1);
         sprintf(tmpStr, MSG2, longpath);
-        _DtSimpleErrnoError(pPad->progname, DtError, MSG1, tmpStr, nullptr);
+        /* pPad is null after the loop above; the first pad names the program */
+        _DtSimpleErrnoError(pPadList->progname, DtError, MSG1, tmpStr, nullptr);
         free(tmpStr);
         XtFree ((char *)longpath);
         return;
     }
 
     sprintf(bufr, "*pads.numActivePads: %d\n", numPadsToSave);
-    write (fd, bufr, strlen(bufr));
+    WriteSessionText(fd, bufr);
 
     for(pPad = pPadList, i = 0; pPad != (Editor *)nullptr; 
 	pPad = pPad->pNextPad, i++)

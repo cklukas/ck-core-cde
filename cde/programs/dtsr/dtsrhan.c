@@ -293,7 +293,7 @@ static long	rec_count =		0L;	/* for err msgs */
 struct rec     *record_head =		nullptr;
 struct tm       rectm;
 int             screen_width =		79;
-static int      shutdown_now =		FALSE;
+static volatile sig_atomic_t	shutdown_now =	FALSE;
 int             started =		FALSE;
 int             textflag =		INCLUDE;
 int             textmode =		INCLUDE;
@@ -2365,7 +2365,8 @@ static void	user_arg_processor (int argc, char **argv)
 ****************************************************************************/
 static void     flag_shutdown (int sig)
 {
-                    shutdown_now = TRUE;
+    (void) sig;
+    shutdown_now = TRUE;
 }
 
 /****************************************************************************

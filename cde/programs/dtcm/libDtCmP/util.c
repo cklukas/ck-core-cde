@@ -449,6 +449,8 @@ extern void
 expand_esc_chars(char *string) {
 	char	*from, *to;
 
+	if (string == nullptr)
+		return;
 	from = to = string;
 	while (from && *from) {
 		int	len = mblen(from, MB_CUR_MAX);

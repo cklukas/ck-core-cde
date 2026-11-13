@@ -545,6 +545,7 @@ FileWindowInputCallback(
                {
                  ObjectPtr top;
                  FileViewData ** selection_list;
+                 FileViewData * topView;
 
                   top = GetTopOfStack(file_mgr_data);
                   if(top != nullptr && top->file_view_data != fileViewData)
@@ -586,11 +587,12 @@ FileWindowInputCallback(
                   selection_list = (FileViewData **)XtCalloc((file_mgr_data->selected_file_count + 1), sizeof(FileViewData *));
 
                   i = 0;
-                  if(top->file_view_data != nullptr)
-                     selection_list[i++] = top->file_view_data;
+                  topView = (top != nullptr) ? top->file_view_data : nullptr;
+                  if(topView != nullptr)
+                     selection_list[i++] = topView;
                   for(j = 0;i < file_mgr_data->selected_file_count; j++,i++)
                   {
-                      if(top->file_view_data != 
+                      if(topView != 
 					file_mgr_data->selection_list[j])
                          selection_list[i] = file_mgr_data->selection_list[j];
                       else
@@ -722,7 +724,8 @@ FileWindowInputCallback(
                         break;
                       }
                     }
-                    XmProcessTraversal( focusIcon->widget, XmTRAVERSE_CURRENT );
+                    if( focusIcon != nullptr )
+                      XmProcessTraversal( focusIcon->widget, XmTRAVERSE_CURRENT );
                   }
                 }
                 break;
@@ -768,7 +771,8 @@ FileWindowInputCallback(
                         break;
                       }
                     }
-                    XmProcessTraversal( focusIcon->widget, XmTRAVERSE_CURRENT );
+                    if( focusIcon != nullptr )
+                      XmProcessTraversal( focusIcon->widget, XmTRAVERSE_CURRENT );
                   }
                 }
                 break;

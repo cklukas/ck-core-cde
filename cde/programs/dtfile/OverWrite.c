@@ -85,6 +85,8 @@
 #include "sharedFuncs.h"
 #include "fsrtns.h"
 
+#include "FileProcess.h"
+
 
 /* defines */
 #define VERTICAL_SPACING  5
@@ -107,6 +109,17 @@
 /* global variables */
 Boolean G_initImages          = True;
 int     G_filop_confirm_fd    = -1;
+
+/* The reply the background process waits for. When that process is gone there
+ * is nobody left to answer, so a failed write has nothing to report to. */
+static void
+SendConfirmReply(int value)
+{
+   if (DtfileProcessWriteAll(G_filop_confirm_fd, &value, sizeof(value)) != 0)
+   {
+      /* the peer has closed the pipe */
+   }
+}
 char    G_directory[MAX_PATH];
 char    G_file[MAX_PATH];
 String  *G_fileList           = nullptr;
@@ -299,7 +312,7 @@ replace_rename_ok_callback(
    G_dialogShell = nullptr;
 
    /* send return code through the pipe to the background proc */
-   write(G_filop_confirm_fd, &rc, sizeof(int));
+   SendConfirmReply(rc);
    G_filop_confirm_fd = -1;
 
 }  /*  end replace_rename_ok_callback */
@@ -398,7 +411,7 @@ buffer_replace_rename_ok_callback(
    G_dialogShell = nullptr;
 
    /* send return code through the pipe to the background proc */
-   write(G_filop_confirm_fd, &rc, sizeof(int));
+   SendConfirmReply(rc);
 
    /* write the the new name on the pipe if rename is selected */
    if (XmToggleButtonGetState(G_rename_toggle))
@@ -425,7 +438,7 @@ replace_rename_cancel_callback(
    G_dialogShell = nullptr;
 
    /* send negative return code through the pipe to the background proc */
-   write(G_filop_confirm_fd, &rc, sizeof(int));
+   SendConfirmReply(rc);
    G_filop_confirm_fd = -1;
 
 }  /*  end replace_rename_cancel_callback */
@@ -521,7 +534,7 @@ must be closed before a folder can be moved or renamed.");
    G_dialogShell = nullptr;
 
    /* send return code through the pipe to the background proc */
-   write(G_filop_confirm_fd, &rc, sizeof(int));
+   SendConfirmReply(rc);
    G_filop_confirm_fd = -1;
 
 }  /*  end replace_merge_ok_callback */
@@ -541,7 +554,7 @@ replace_merge_cancel_callback(
    G_dialogShell = nullptr;
 
    /* send negative return code through the pipe to the background proc */
-   write(G_filop_confirm_fd, &rc, sizeof(int));
+   SendConfirmReply(rc);
    G_filop_confirm_fd = -1;
 
 }  /*  end replace_merge_cancel_callback */
@@ -568,7 +581,7 @@ multicollide_cancel_callback(
    G_fileList = nullptr;
 
    /* send return code through the pipe to the background proc */
-   write(G_filop_confirm_fd, &rc, sizeof(int));
+   SendConfirmReply(rc);
    G_filop_confirm_fd = -1;
 
 }  /*  end multicollide_cancel_callback */
@@ -601,7 +614,7 @@ multicollide_ok_callback(
       char *names = nullptr;
       title = XtNewString(GETMESSAGE(9, 37, "Object Rename - Error"));
 
-      write(G_filop_confirm_fd, &rc, sizeof(int));
+      SendConfirmReply(rc);
       /* Auto rename was selected */
       for ( i = 0; i < G_nCollisions; i++)
       {
@@ -625,14 +638,14 @@ multicollide_ok_callback(
          }
          else
            saveError = 0;
-         write(G_filop_confirm_fd, &saveError, sizeof(int));
+         SendConfirmReply(saveError);
          XtFree(destinationPath);
       }
 
           else
           {
               saveError = 0;
-              write(G_filop_confirm_fd, &saveError, sizeof(int));
+              SendConfirmReply(saveError);
           }
       }
 
@@ -656,7 +669,7 @@ multicollide_ok_callback(
       char *names = nullptr;
 
       title = XtNewString(GETMESSAGE(9, 40, "Object Replace - Error"));
-      write(G_filop_confirm_fd, &rc, sizeof(int));
+      SendConfirmReply(rc);
 
       /* Replace was selected ... remove the offending targets */
       for ( i = 0; i < G_nCollisions; i++)
@@ -682,7 +695,7 @@ multicollide_ok_callback(
 	 }
          else
            saveError = -1;
-         write(G_filop_confirm_fd, &saveError, sizeof(int));
+         SendConfirmReply(saveError);
 	 if(saveError != 0)
 	 {
            if(!names)
@@ -723,7 +736,7 @@ multicollide_ok_callback(
 
    /* send return code through the pipe to the background proc */
 /*
-   write(G_filop_confirm_fd, &rc, sizeof(int));
+   SendConfirmReply(rc);
 */
    G_filop_confirm_fd = -1;
 }  /*  end multicollide_ok_callback */
@@ -750,7 +763,7 @@ buffer_multicollide_ok_callback(
    {
      /* send return code through the pipe to the background proc */
       rc = PIPEMSG_RENAME_BUFFER;
-      write(G_filop_confirm_fd, &rc, sizeof(int));
+      SendConfirmReply(rc);
 
       /* Auto rename was selected */
       for ( i = 0; i < G_nCollisions; i++)
@@ -819,7 +832,7 @@ buffer_multicollide_ok_callback(
 
          /* send return code through the pipe to the background proc */
          rc = PIPEMSG_REPLACE_BUFFER;
-	 write(G_filop_confirm_fd, &rc, sizeof(int));
+	 SendConfirmReply(rc);
 
          XtFree(destinationPath);
       }

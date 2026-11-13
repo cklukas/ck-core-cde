@@ -349,9 +349,9 @@ char *Application::Restore(char *attribute)
 	 if (fp1 = fopen(session_path, "r"))
 	  {
 	    session_info = new char[statbuff.st_size + 1];
-	    fread(session_info, (unsigned int)statbuff.st_size, 1, fp1);
+	    size_t got = fread(session_info, 1, (size_t)statbuff.st_size, fp1);
 	    fclose(fp1);
-	    session_info[statbuff.st_size] = '\0';
+	    session_info[got] = '\0';
             char *s, *s1 = session_info;
             s = s1;
             while (s && (s = strchr(s1, '\n')))

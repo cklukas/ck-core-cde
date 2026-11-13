@@ -13,7 +13,7 @@ AM_CPPFLAGS = \
 
 dtprintinfo_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB)
 
-UTIL_SRC = util/Invoke.C util/Invoke.h util/Process.C util/Process.h
+UTIL_SRC = util/Invoke.C util/Invoke.h util/Privilege.h util/Process.C util/Process.h
 
 LIBUI_SRC = libUI/BaseUI.C libUI/BaseUI.h libUI/MotifUI/Application.C	\
 	libUI/MotifUI/LabelObj.C libUI/MotifUI/Application.h		\
@@ -79,4 +79,10 @@ dtprintinfo.msg: $(srcdir)/dtprintinfo.msg.src
 dtprintinfo_cat.h: $(srcdir)/dtprintinfo.msg.src
 	$(RM) dtprintinfo_cat.h
 	$(AWK) -f $(srcdir)/msg.awk $(srcdir)/dtprintinfo.msg.src > dtprintinfo_cat.h
+
+# The changes of the user ID are tested against a fake kernel.
+EXTRA_DIST = tests/check-privilege.py tests/check-privilege.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-privilege.py
 

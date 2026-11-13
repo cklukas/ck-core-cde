@@ -5,7 +5,8 @@ bin_PROGRAMS = dtwm dtfplist
 EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-desktop-requests.py tests/check-session-word-width.py tests/check-session-word-width.c \
              tests/check-config-temp-file.py tests/check-config-temp-file.c \
-             tests/check-session-counts.py tests/check-session-counts.c
+             tests/check-session-counts.py tests/check-session-counts.c \
+             tests/check-quit-signal.py tests/check-quit-signal.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-property-readers.py
@@ -13,6 +14,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-word-width.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-session-counts.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-config-temp-file.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-quit-signal.py
 
 configdir = $(CDE_INSTALLATION_TOP)/config/C
 dist_config_DATA = sys.dtwmrc

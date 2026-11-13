@@ -2031,7 +2031,8 @@ DtMail::MailRc::expand(char *name)
 			Shell = "/bin/sh";
 		close(pivec[0]);
 		close(1);
-		dup(pivec[1]);
+		if (dup(pivec[1]) < 0)
+			_exit(1);
 		close(pivec[1]);
 		close(2);
 		execlp(Shell, Shell, "-c", cmdbuf, (char *)0);

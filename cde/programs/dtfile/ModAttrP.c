@@ -296,13 +296,13 @@ AttrChangeProcess(
     path = ResolveLocalPathName(host, directory, file, home_host_name, &tt_status);
     if( TT_OK == tt_status )
     {
-      if (chmod(path, mode) == 0)
-      {
-        rc = 0;
-        chown(path, uid, gid);
-      }
-      else
+      /* The owner first: changing it clears the set-ID bits of the mode. */
+      if (chown(path, uid, gid) != 0)
         rc = errno;
+      else if (chmod(path, mode) != 0)
+        rc = errno;
+      else
+        rc = 0;
       XtFree (path);
     }
   }
@@ -491,7 +491,13 @@ ModAttrChange(
    DirectoryBeginModify(cb_data->host, cb_data->directory);
 
    /* create a pipe */
-   pipe(pipe_fd);
+   if (pipe(pipe_fd) != 0)
+   {
+       DirectoryAbortModify(cb_data->host, cb_data->directory);
+       fprintf(stderr, "%s:  pipe failed: error %d=%s\n",
+		pname, errno, strerror(errno));
+       return;
+   }
 
    /* fork the process that does the actual work */
    pid = fork();

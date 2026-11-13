@@ -457,7 +457,8 @@ WriteOutChar(
 	ptr = "\\\\";
     else
       {
-	(void) wctomb (temp, last_wc);
+	if (wctomb (temp, last_wc) < 0)
+	    last_len = 0;		/* not representable: write nothing */
 	temp[last_len] = '\0';
 	ptr            = temp;
       }

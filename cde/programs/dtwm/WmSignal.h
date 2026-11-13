@@ -32,4 +32,5 @@
 
 extern void SetupWmSignalHandlers (int);
 extern void QuitWmSignalHandler (int);
+extern void SetupWmSignalDeferral (XtAppContext);
 extern void RestoreDefaultSignalHandlers (void);

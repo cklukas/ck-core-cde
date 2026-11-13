@@ -3575,7 +3575,10 @@ VacationCmd::handleForwardFile()
     SafeClose(bkup_fd);
     SafeClose(fwd_fd);
 
-    system("/usr/bin/vacation -I");
+    // Initializing the vacation database is best effort; the forward
+    // file is already written.
+    int vacation_status = system("/usr/bin/vacation -I");
+    (void) vacation_status;
 
     delete [] buf;
     delete [] messagefile;

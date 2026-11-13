@@ -383,8 +383,17 @@ int	put_new_environ(OutEnv *oenv)
 
     DPR3(("put_new_environ(len=%d):\t%s\n", len, tmpbuf));
 
-    if (len > 0)
-	write(1, tmpbuf, len);
+    /* the shell evaluates this text, so all of it has to arrive */
+    for (bp = tmpbuf; len > 0; ) {
+	ssize_t written = write(1, bp, len);
+
+	if (written < 0 && errno == EINTR)
+	    continue;
+	if (written <= 0)
+	    return ErrFileCreate;	/* standard output cannot be written */
+	bp += written;
+	len -= written;
+    }
 
     return NoError;
 }

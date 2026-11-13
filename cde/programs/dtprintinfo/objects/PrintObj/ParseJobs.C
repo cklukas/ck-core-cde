@@ -70,13 +70,10 @@ extern "C" in_addr_t inet_addr(const char *);
 extern "C" { int rresvport(int *); }
 #endif
 
-#if defined(aix)
-  extern "C" { extern int seteuid(uid_t); }
-#endif
-#define SETEUID(id) seteuid((uid_t)id)
 
 #include "ParseJobs.h"
 #include "Invoke.h"
+#include "Privilege.h"
 
 static int G_AIX_LOCAL = 0;
 
@@ -191,7 +188,7 @@ int ConnectToPrintServer(const char *rhost, int timeout)
    sin.sin_port = sp->s_port;
 
    // run as user's UID, but with privileges from root
-   SETEUID(0);
+   (void) RaiseToRoot();
 
    // Try connecting to the server from a privileged port.
    /* FIXME: Test for the presence of rresvport and provide a substitute
@@ -215,7 +212,7 @@ int ConnectToPrintServer(const char *rhost, int timeout)
       s = -1;
     }
    alarm(0);
-   SETEUID(getuid());
+   RestoreUserEuid();
    return s;
 }
 
@@ -326,11 +323,11 @@ void LocalPrintJobs(char *printer, char **job_list, int *n_jobs)
    Invoke *_thread = new Invoke(cmd, &output);
 
    // run as user's UID, but with privileges from root
-   SETEUID(0);
+   (void) RaiseToRoot();
    G_AIX_LOCAL = 1;
    ParseAIXv3PrintJobs(printer, output, job_list, n_jobs);
    G_AIX_LOCAL = 0;
-   SETEUID(getuid());
+   RestoreUserEuid();
 
    delete [] cmd;
    delete output;
@@ -395,7 +392,7 @@ void LocalPrintJobs(char *printer, char **return_job_list, int *return_n_jobs)
    *return_n_jobs = 0;
 	
    // run as user's UID, but with privileges from root
-   SETEUID(0);
+   (void) RaiseToRoot();
 
    getcwd(oldpwd, 300);
    if (getenv("TMP_DIR"))
@@ -407,7 +404,7 @@ void LocalPrintJobs(char *printer, char **return_job_list, int *return_n_jobs)
       *return_job_list = NULL;
       *return_n_jobs = 0;
       chdir(oldpwd);
-      SETEUID(getuid());
+      RestoreUserEuid();
       return;
     }
 
@@ -442,7 +439,7 @@ void LocalPrintJobs(char *printer, char **return_job_list, int *return_n_jobs)
    *return_job_list = job_list1;
    *return_n_jobs = n_jobs;
    chdir(oldpwd);
-   SETEUID(getuid());
+   RestoreUserEuid();
 }
 
 // JET - this whole function is atrocious and should be re-written in C++

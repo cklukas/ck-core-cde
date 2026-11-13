@@ -444,7 +444,8 @@ static int tail_pipe(int fd, _Tt_string& pipenm, pid_t child_pid, int sink)
 					while ((nbytes = read(fd,
 							      buf,
 							      bufsize)) > 0) {
-						write(sink, buf, nbytes);
+						ssize_t copied = write(sink, buf, nbytes);
+						(void) copied;	// the copy to the sink is best effort
 					}
 					quit = 1;
 				}
@@ -472,7 +473,8 @@ static int tail_pipe(int fd, _Tt_string& pipenm, pid_t child_pid, int sink)
 				else {
 					nbytes = read(fd, buf, bufsize);
 					if (nbytes > 0) {
-						write(sink, buf, nbytes);
+						ssize_t copied = write(sink, buf, nbytes);
+						(void) copied;	// the copy to the sink is best effort
 					}
 				}
 			}

@@ -2343,7 +2343,7 @@ aob_destroy_ui_obj
     Vwr		v
 )
 {
-    if (!v && !v->ui_handle)
+    if (!v || !v->ui_handle)
 	return;
 
     free(v->ui_handle);

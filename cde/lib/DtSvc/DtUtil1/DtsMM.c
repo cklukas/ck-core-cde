@@ -288,7 +288,10 @@ _DtDtsMMPrint(FILE *org_fd)
 		db_ptr = &db_list[db];
 		if(fd == 0)
 		{
-			chdir("/tmp");
+			if (chdir("/tmp") != 0)
+			{
+				/* the dump goes to the current directory */
+			}
 			tmp = _DtDtsMMBosonToString(db_ptr->databaseName);
 			if((fd = fopen(tmp, "w")) == nullptr)
 			{
@@ -531,6 +534,10 @@ _DtDtsMMPathHash(DtDirPaths *dirs)
 			continue;
 		}
 		dirp = opendir (".");
+		if (dirp == nullptr)
+		{
+			continue;
+		}
 		while ((result = _XReaddir(dirp, dirEntryBuf)) != nullptr)
 		{
 			if ((int)strlen (result->d_name) >= (int)strlen(suffix))
@@ -556,7 +563,10 @@ _DtDtsMMPathHash(DtDirPaths *dirs)
 		}
 		closedir(dirp);
 	}
-	chdir(cur_dir);
+	if (cur_dir != nullptr && chdir(cur_dir) != 0)
+	{
+		/* the hash is complete; only the working directory stays moved */
+	}
 	free(cur_dir);
 	return(pathhash);
 }

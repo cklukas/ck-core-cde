@@ -160,7 +160,8 @@ prompt_for_line(char *prompt, char *defval, char *buffer)
 	printf(prompt, defval);
 
         *input_buf = '\0';
-        fgets (input_buf, sizeof(input_buf), stdin);
+        if (fgets (input_buf, sizeof(input_buf), stdin) == nullptr)
+          *input_buf = '\0';
         if (strlen(input_buf) && input_buf[strlen(input_buf)-1] == '\n')
           input_buf[strlen(input_buf)-1] = '\0';
 
@@ -229,7 +230,8 @@ prompt_for_insert(Props *p) {
 	for (index = 0; index < 5; index++)
 	{
         	*what_buffer = '\0';
-        	fgets (what_buffer, sizeof(what_buffer), stdin);
+        	if (fgets (what_buffer, sizeof(what_buffer), stdin) == nullptr)
+          	  *what_buffer = '\0';
         	if (strlen(what_buffer) &&
 		    what_buffer[strlen(what_buffer)-1] == '\n')
           	  what_buffer[strlen(what_buffer)-1] = '\0';

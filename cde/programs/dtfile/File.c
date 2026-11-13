@@ -2117,13 +2117,24 @@ NewConvertFileName(
          directoryName = ((DirectorySet *)fileViewData->directory_set)->name;
          fileName = fileViewData->file_data->file_name;
       }
-      else
+      else if (fileMgrData != nullptr)
       {
          directoryName = fileMgrData->current_directory;
          fileName = nullptr;
       }
-      path = (char *)XtMalloc(strlen(directoryName) + strlen(fileName) + 2);
-      sprintf(path,"%s/%s", directoryName, fileName);
+      else
+      {
+         /* no file and no view to take a directory from */
+         *numFiles = 0;
+         return;
+      }
+      if (fileName != nullptr)
+      {
+         path = (char *)XtMalloc(strlen(directoryName) + strlen(fileName) + 2);
+         sprintf(path,"%s/%s", directoryName, fileName);
+      }
+      else
+         path = XtNewString(directoryName);
 
       if ((!desktopRec) && (fileMgrData->toolbox))
          path = _DtResolveAppManPath(path, fileMgrData->restricted_directory);
@@ -4173,13 +4184,17 @@ RepositionUpInStack (
    ptr = GetTopOfStack(file_mgr_data);
 
    /* Find where item is to be inserted */
-   while (ptr->stacking_order != newPos)
+   while (ptr != nullptr && ptr->stacking_order != newPos)
       ptr = ptr->next;
+   if (ptr == nullptr)
+      return;
 
    /* Find where item currently is */
    ptr2 = ptr;
-   while (ptr2->stacking_order != oldPos)
+   while (ptr2 != nullptr && ptr2->stacking_order != oldPos)
       ptr2 = ptr2->next;
+   if (ptr2 == nullptr)
+      return;
 
    savePtr = ptr2;
 
@@ -8967,9 +8982,12 @@ GetPositionalData (
          {
             if(top == nullptr)
                top = GetTopOfStack(file_mgr_data);
-            top->next = (ObjectPtr)entry;
+            if (top != nullptr)
+            {
+               top->next = (ObjectPtr)entry;
+               entry->prev = (ObjectPtr)top;
+            }
             entry->next = (ObjectPtr)file_mgr_data->object_positions[i];
-            entry->prev = (ObjectPtr)top;
             file_mgr_data->object_positions[i]->prev = (ObjectPtr)entry;
          }
          file_mgr_data->object_positions[i]->stacking_order++;

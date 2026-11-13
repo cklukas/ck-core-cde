@@ -5672,13 +5672,31 @@ ScheduleDirectoryActivity(
       /* Need to fork a new background process */
 
       /* create a pipe for reading data from the background proc */
-      pipe(pipe_s2m_fd);
+      if (pipe(pipe_s2m_fd) != 0)
+      {
+          fprintf(stderr,
+		"%s:  pipe failed, activity %d: error %d=%s\n",
+		pname, activity, errno, strerror(errno));
+          directory->activity = activity_idle;
+          directory->last_check = save_last_check;
+          return;
+      }
 
       /* creating a new sticky proc? */
       if (sticky)
       {
          /* also need a pipe for sending msgs to the sticky proc */
-         pipe(pipe_m2s_fd);
+         if (pipe(pipe_m2s_fd) != 0)
+         {
+             fprintf(stderr,
+		"%s:  pipe failed, activity %d: error %d=%s\n",
+		pname, activity, errno, strerror(errno));
+             close(pipe_s2m_fd[0]);
+             close(pipe_s2m_fd[1]);
+             directory->activity = activity_idle;
+             directory->last_check = save_last_check;
+             return;
+         }
 
          /* add entry to the list of sticky procs */
          p = (StickyProcDesc *) XtMalloc(sizeof(StickyProcDesc));

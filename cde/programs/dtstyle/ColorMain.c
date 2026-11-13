@@ -834,7 +834,8 @@ selectPaletteCB(
 	     tmp_palette = tmp_palette->next;
 	}
 
-	if(tmp_palette->item_position == selected_position)
+	if(tmp_palette != nullptr &&
+	   tmp_palette->item_position == selected_position)
 	{
 	    pOldPalette = pCurrentPalette;
 	    pCurrentPalette = tmp_palette;
@@ -2018,6 +2019,9 @@ DeletePaletteFromLinkList(
            && selected_palette->item_position != selected_position ) {
 	 selected_palette = selected_palette->next;
     }
+
+    if (selected_palette == nullptr)
+        return;		/* no palette at the selected position */
 
     XmListDeletePos (list, selected_palette->item_position);
 

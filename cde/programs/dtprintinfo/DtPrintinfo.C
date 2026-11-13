@@ -25,6 +25,7 @@
 #include "DtApp.h"
 #include "DtPrinterIcon.h"
 #include "Invoke.h"
+#include "Privilege.h"
 
 #ifndef NO_CDE
 extern "C" {
@@ -56,7 +57,7 @@ int main(int argc, char **argv)
 #endif
 
 // run as user's UID
-   seteuid(getuid());
+   RestoreUserEuid();
 
    setlocale(LC_ALL, "");
 

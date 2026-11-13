@@ -1366,7 +1366,8 @@ _DtHelpCeGetCcdfVolLocale (
 	if (mLang != nullptr && *mLang != '\0') lang = mLang;
       }
 
-    asprintf(&locale, "%s.%s", lang, resStr);
+    if (asprintf(&locale, "%s.%s", lang, resStr) < 0)
+	locale = nullptr;		/* the pointer is undefined after a failure */
 
 done:
     free(mLang);

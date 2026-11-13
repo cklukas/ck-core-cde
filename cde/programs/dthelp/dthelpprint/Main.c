@@ -109,7 +109,8 @@ int main(
    if (options.debugHelpPrint)
    {
       XrmPutFileDatabase(appDB,"db.dthelpprint"); /* dump rsrc for debug */
-      system("/bin/cat db.dthelpprint|/bin/fgrep -i print");
+      int dump_status = system("/bin/cat db.dthelpprint|/bin/fgrep -i print");
+      (void) dump_status;		/* debug output only */
    }
 
    /****************************************

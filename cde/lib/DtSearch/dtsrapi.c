@@ -113,6 +113,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #define PROGNAME	"DTSRAPI"
 #define SPRINTBUFSZ	1024
@@ -141,20 +142,60 @@ extern int	db_oflag;
 /*		  signal_abort			*/
 /*						*/
 /************************************************/
-/* Interrupt handler for all common 'abort' signals.
- * Shuts down gracefully by ensuring database properly closed.
- * The database close and write to the audit log occur in OE.
+/* Interrupt handler for all common 'abort' signals, installed by
+ * DtSearchInit() only when the caller asks for it with DtSrInSIGNAL.
+ *
+ * The handler may call only async-signal-safe functions: the previous
+ * version wrote the message list and the catalog message with stdio and ran
+ * the exit callbacks (database close, user exit) and exit(), all of which
+ * take locks and allocate.  The caller of this library has no event loop of
+ * its own that the library could use to defer the work, and the library has
+ * no safe point that is reached regularly (a query can run for a long time
+ * and the caller may be outside the library altogether), so a flag that is
+ * checked later would leave a signalled process alive and unreported.  The
+ * handler therefore writes one fixed line with write(2) and ends the process
+ * with _exit(100 + sig), the same exit status as before.
+ *
+ * Trade-off: the exit callbacks no longer run.  The databases are opened
+ * read-only unless the caller asks for DtSrInRDWR, so for the usual client
+ * there is nothing to flush; a client that opens them for writing and needs
+ * the close must call DtSearchExit() from its own handler or loop.  The
+ * message list and the localized text are not written.  A second signal
+ * while the first handler runs ends the process at once.
  */
+static volatile sig_atomic_t abort_entered = 0;
+static int      abort_fd = 2;	/* the descriptor of aa_stderr, set at init */
+
 static void     signal_abort (int sig)
 {
-    fputs (DtSearchGetMessages (), aa_stderr);
-    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_ausapi, 216,
-	"\n%s %s Caught signal %d.\n"),
-	PROGNAME"216",
-	(aa_argv0) ? aa_argv0 : OE_prodname,
-	sig);
-    fflush (aa_stderr);
-    DtSearchExit (100 + sig);
+    char            line[256];
+    size_t          n = 0;
+    const char     *name = (aa_argv0) ? aa_argv0 : OE_prodname;
+    char            digits[12];
+    int             nd = 0;
+    unsigned        v = (sig > 0) ? (unsigned) sig : 0;
+
+    if (abort_entered)
+	_exit (100 + sig);
+    abort_entered = 1;
+
+    /* the "\n%s %s Caught signal %d.\n" line of the message catalog */
+    for (const char *p = "\n" PROGNAME "216 "; *p != 0; p++)
+	line[n++] = *p;
+    for (; name != nullptr && *name != 0 && n < sizeof line - 40; name++)
+	line[n++] = *name;
+    for (const char *p = " Caught signal "; *p != 0; p++)
+	line[n++] = *p;
+    do {
+	digits[nd++] = (char) ('0' + v % 10);
+	v /= 10;
+    } while (v != 0 && nd < (int) sizeof digits);
+    while (nd > 0)
+	line[n++] = digits[--nd];
+    line[n++] = '.';
+    line[n++] = '\n';
+    (void) !write (abort_fd, line, n);
+    _exit (100 + sig);
 }  /* signal_abort() */
 
 
@@ -317,6 +358,7 @@ int             DtSearchInit (
 	aa_stderr = err_file;
     else
 	aa_stderr = stderr;
+    abort_fd = fileno (aa_stderr);
 
     sprintbuf = austext_malloc (SPRINTBUFSZ, PROGNAME "135", nullptr);
 

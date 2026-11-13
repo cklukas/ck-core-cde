@@ -553,6 +553,8 @@ xm_instantiate_obj(
             parentobj = temp_parent;
         }
  
+        if (parentobj == nullptr)
+            return ERROR;	/* nothing to attach the widget to */
         parent = (Widget)parentobj->ui_handle;
     }
 

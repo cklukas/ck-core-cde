@@ -647,7 +647,8 @@ AccumElemInfo(
     na = 0;
     while (1) {
 	if ((c = getc(fp)) == EOF) break;
-	fgets(buf, LINESIZE, fp);
+	if (fgets(buf, LINESIZE, fp) == nullptr)
+		buf[0] = '\0';
 	stripNL(buf);
 	switch (c) {
 	    case EOF:		/* End of input */
@@ -788,7 +789,8 @@ ReadESIS(
 		break;
 
 	    case CMD_DATA:	/* -data */
-		fgets(buf, LINESIZE, fp);
+		if (fgets(buf, LINESIZE, fp) == nullptr)
+			buf[0] = '\0';
 		stripNL(buf);
 		cont[ncont].ch.data = strdup(buf);
 		cont[ncont].type = CMD_DATA;
@@ -796,7 +798,8 @@ ReadESIS(
 		break;
 
 	    case CMD_PI:	/* ?pi */
-		fgets(buf, LINESIZE, fp);
+		if (fgets(buf, LINESIZE, fp) == nullptr)
+			buf[0] = '\0';
 		stripNL(buf);
 		cont[ncont].type = CMD_PI;
 		cont[ncont].ch.data = strdup(buf);
@@ -804,7 +807,8 @@ ReadESIS(
 		break;
 
 	    case CMD_CLOSE:	/* )gi */
-		fgets(buf, LINESIZE, fp);
+		if (fgets(buf, LINESIZE, fp) == nullptr)
+			buf[0] = '\0';
 		stripNL(buf);
 		if (ncont) {
 		    e->ncont = ncont;
@@ -835,7 +839,8 @@ ReadESIS(
 		break;
 
 	    case CMD_LINE:	/* Llineno */
-		fgets(buf, LINESIZE, fp);
+		if (fgets(buf, LINESIZE, fp) == nullptr)
+			buf[0] = '\0';
 		break;		/* ignore these here */
 
 	    case CMD_SUBDOC:	/* Sename */
@@ -845,7 +850,8 @@ ReadESIS(
 	    case CMD_APPINFO:	/* #text */
 	    case CMD_CONFORM:	/* C */
 	    default:
-		fgets(buf, LINESIZE, fp);
+		if (fgets(buf, LINESIZE, fp) == nullptr)
+			buf[0] = '\0';
 		fprintf(stderr, "Error: Unexpected input at %d: '%c%s'\n",
 			e->lineno, c, buf);
 		exit(1);

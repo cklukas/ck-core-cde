@@ -1,4 +1,71 @@
 2026-11-13
+- Compiler warnings of the hardened gcc 14 build, second pass: ignored return
+  values (-Wunused-result) and null dereferences (-Wnull-dereference) outside
+  dtwm, DtSearch and dtsr. Privilege changes: `SetGidUid()` of dtaction
+  checked the group change but then repeated it unchecked, ignored the user
+  change, and called `initgroups()` after the user ID was already given up,
+  where it could only fail; it now returns a result, sets the group,
+  the supplementary groups and the user in that order, stops at the first
+  refusal, and every caller ends the process. `CheckAccess()` of dtfile
+  swapped the real IDs for the effective ones and back, ignoring every
+  refusal (the real ID of an unprivileged effective user could not be
+  restored); it now uses `faccessat()` with `AT_EACCESS` and changes nothing.
+  dtprintinfo has one header, `util/Privilege.h`, for raising root, giving it
+  up (the process ends if that did not happen) and starting a program as a
+  user (the child ends if the change failed); it replaces the unchecked
+  `seteuid()` and `setuid()` calls. `ModAttrP.c` of dtfile now changes the
+  owner before the mode (the owner change clears the set-ID bits) and reports
+  a refused owner change. Short reads and failed calls whose result was used:
+  `Dts.c` (data type of a directory and the type rewrite), `MMDb.c`,
+  `DtsMM.c` (directory changes while building the file list), `Graphics.c`
+  and `AccessCCDF.c` of DtHelp, `iso8601.c` and `lutil.c` of libcsa
+  (`asprintf()` and `getdomainname()`), `Editor.c` of DtWidget (a failed
+  `freopen()` closed the stream that was then used), `DtMailXtProc.C`,
+  `Process.C` and `Session.C` of dtmail (event packet, pipes), the pipes of
+  dtfile (`Directory.c`, `ModAttrP.c`) and ttsession, the file read of
+  dtcreate and dtprintinfo, the line readers of dtcm and dtdocbook, the
+  helptag parsers and dtappbuilder (status pipe, terminal redirection, log
+  reader). The session files of dtterm, dtpad, dticon and dtfile are written
+  completely or the failure is noticed. The remaining ignored results are
+  best-effort (a wake-up byte, a final newline, a debug dump, a restore of
+  the working directory) and are now explicit. Null dereferences:
+  `SaveSessionCB()` of dtpad passed a null `pPad` to the error message,
+  `NewConvertFileName()` and the stacking-order code of dtfile (`File.c`,
+  `IconWindow.c`), `DeletePaletteFromLinkList()` and the
+  palette lookup of dtstyle, the typo `!v && !v->...` in two dtappbuilder
+  browser functions (now `||`), `GlobSearch.c` of DtHelp, `ximsSelect()`, and the
+  find, access-list and escape-character code of dtcm and the parent lookup
+  of dtappbuilder `objxm_inst.c`. The null warnings of `FormatCCDF.c`
+  (`CheckSegList()` makes the list), the DtDnd transfer methods, the dtcm
+  server list tail and the dtappbuilder project data are false positives.
+  Tests: `dtaction/tests/check-setgid-uid.py`, `dtfile/tests/check-access-ids.py`,
+  `dtprintinfo/tests/check-privilege.py`, `lib/csa/tests/check-duration-iso8601.py`.
+
+2026-11-13
+- dtwm, DtSearch, dtsr: five signal handlers did Xlib, Xt, stdio or exit work
+  inside the signal. The termination handler of dtwm (INT, HUP, QUIT, TERM) now
+  calls only `XtNoticeSignal()`; the confirmation or the shutdown runs from an
+  `XtAppAddSignal()` procedure that is registered right after the application
+  context is created, a second signal and the time before that exit with
+  `_exit()`. The handler of the fatal signals (ILL, FPE, BUS, SEGV, SYS) keeps
+  its best-effort reset of the keyboard focus, which cannot be deferred, and is
+  now installed with `SA_RESETHAND | SA_NODEFER` and leaves with `_exit()` when
+  entered twice. `signal_abort()` of libDtSearch (installed with `DtSrInSIGNAL`)
+  wrote the message list and a catalog message with stdio and ran the exit
+  callbacks; the library has no event loop and no regularly reached safe point,
+  so it now writes one fixed line with `write()` and calls `_exit(100 + sig)`;
+  the exit callbacks (database close) no longer run, which matters only for a
+  client that opens the databases for writing. `dtsrdelete` (tomita.c) installed
+  `DtSearchExit()` and a handler that called `printf()`; the handler now only
+  sets a `volatile sig_atomic_t`, INT and TERM interrupt the pending read, and
+  the engine shutdown, the exit callbacks and the message run from the main flow
+  at the next check (a second signal calls `_exit()`). The shutdown flag of
+  `dtsrhan.c` is a `volatile sig_atomic_t`. Tests:
+  `programs/dtwm/tests/check-quit-signal.py`,
+  `lib/DtSearch/tests/check-signal-abort.py` and
+  `programs/dtsr/tests/check-shutdown-signal.py`.
+
+2026-11-13
 - Compiler warnings of the hardened gcc 14 build, triaged; the real defects
   are fixed. Missing return values: the fifteen XDraw/XCopyArea/XFill command
   wrappers of dtksh returned garbage as their exit status

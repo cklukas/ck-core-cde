@@ -103,11 +103,14 @@ _DtCmGetLocalDomain(char *hostname)
 	CLIENT		*cl;
 
 	if (domain == nullptr) {
-		domain = (char *)malloc(BUFSIZ);
+		domain = (char *)calloc(BUFSIZ, 1);
+		if (domain == nullptr)
+			return (nullptr);
 #if defined(sun)
 		sysinfo(SI_SRPC_DOMAIN, domain, BUFSIZ - 1);
 #else
-		getdomainname(domain, BUFSIZ - 1);
+		if (getdomainname(domain, BUFSIZ - 1) != 0)
+			domain[0] = '\0';	/* no domain name known */
 #endif /* sun */
 
 		/* check domain name */

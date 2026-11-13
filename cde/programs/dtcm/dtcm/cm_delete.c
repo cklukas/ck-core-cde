@@ -188,7 +188,8 @@ int main(int argc, char **argv)
 		}
 		fprintf(stdout, "%s", CATGETS(DT_catd, 1, 190,
 				       "Item to delete (number)? "));
-		fgets(index, 9, stdin);
+		if (fgets(index, 9, stdin) == nullptr)
+			index[0] = '\0';	/* end of input: no valid number */
 		fprintf(stdout,"\n\n");
 		if (*index < '0' || *index > '9') {
 			csa_free(list);

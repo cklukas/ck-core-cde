@@ -1215,7 +1215,10 @@ void UxDoEditPixmap(Widget wid, char *fname)
         /*************************************************************/
         /* Read first few bytes to determine what kind of file it is */
         /*************************************************************/
-        read(fd1, tmpbuf, 10);
+        memset(tmpbuf, 0, 10);
+        if (read(fd1, tmpbuf, 10) < 0) {
+           memset(tmpbuf, 0, 10);	/* unreadable: not an XPM file */
+        }
         (void) lseek(fd1, 0, SEEK_SET);
 
         /******************************************************************/

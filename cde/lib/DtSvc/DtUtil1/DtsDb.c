@@ -124,7 +124,10 @@ _DtDtsDbPrint(FILE *org_fd)
 		db_ptr = db_list[db];
 		if(fd == 0)
 		{
-			chdir("/tmp");
+			if (chdir("/tmp") != 0)
+			{
+				/* the dump goes to the current directory */
+			}
 			if((fd = fopen(db_ptr->databaseName, "w")) == nullptr)
 			{
 			    _DtSimpleError(
