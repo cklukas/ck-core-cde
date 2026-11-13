@@ -266,7 +266,7 @@ check_parents_first(ABObj root)
     int			iRet= 0;
     BOOL		*visited= nullptr;
 
-    visited= (BOOL *)util_malloc(objArraySize * sizeof(BOOL));
+    visited= (BOOL *)calloc(objArraySize, sizeof(BOOL));
     for (i= 0; i < objArraySize; ++i)
     {
 	visited[i]= FALSE;

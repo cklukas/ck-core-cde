@@ -2915,9 +2915,9 @@ strings_exist_in_file(StringList strings, FILE *file)
     /*
      * Convert strings list to arrays, to avoid 750,000 calls to istr_string()
      */
-    stringsArray = (STRING*)util_malloc(numStrings * sizeof(STRING));
-    stringsLenArray = (int*)util_malloc(numStrings * sizeof(int));
-    stringExists = (BOOL*)util_malloc(numStrings * sizeof(BOOL));
+    stringsArray = (STRING*)calloc(numStrings, sizeof(STRING));
+    stringsLenArray = (int*)calloc(numStrings, sizeof(int));
+    stringExists = (BOOL*)calloc(numStrings, sizeof(BOOL));
     if (   (stringsArray == nullptr) 
 	|| (stringsLenArray == nullptr) 
 	|| (stringExists == nullptr) )

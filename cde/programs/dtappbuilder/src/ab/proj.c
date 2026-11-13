@@ -502,7 +502,7 @@ enable_proj_actions(
 	if (AB_btn1_transfer == True) /* Button2 can be used for ADJUST */
             len += strlen(btn2_adjust_translations);
 
-        translations = (String)util_malloc(len*sizeof(char));
+        translations = (String)calloc(len, sizeof(char));
         if (translations == nullptr)
             return; /* yikes */
 

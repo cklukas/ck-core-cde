@@ -338,7 +338,7 @@ prop_item_editor_load(
     	/* Store an array of copies of the items in the
      	 * list's userData
      	 */  
-    	iobj_list = (ABObj *)util_malloc(num_items*sizeof(ABObj));
+    	iobj_list = (ABObj *)calloc(num_items, sizeof(ABObj));
 	activate_item_settings(pis, True);
 
     	for (trav_open(&trav, pobj, AB_TRAV_ITEMS_FOR_OBJ), i = 0;
@@ -480,7 +480,7 @@ prop_item_editor_apply(
      */
     if (num_items > 0)
     {
-    	real_iobj = (ABObj *)util_malloc(num_items*sizeof(ABObj));
+    	real_iobj = (ABObj *)calloc(num_items, sizeof(ABObj));
 
 	/* NOTE: don't need to store widgets for Menu Items since they 
 	 *       are not instantiated during build-mode
@@ -490,11 +490,11 @@ prop_item_editor_apply(
 	    case AB_ITEM_FOR_LIST:
 	    case AB_ITEM_FOR_COMBO_BOX:
 	    case AB_ITEM_FOR_SPIN_BOX:
-		real_pos = (int*)util_malloc(num_items*sizeof(int));
+		real_pos = (int*)calloc(num_items, sizeof(int));
 		break;
 	    case AB_ITEM_FOR_MENUBAR:
 	    case AB_ITEM_FOR_CHOICE:
-		real_widget = (Widget*)util_malloc(num_items*sizeof(Widget));
+		real_widget = (Widget*)calloc(num_items, sizeof(Widget));
 	}
     }
 
@@ -945,7 +945,7 @@ prop_item_insert(
     ui_list_add_item(pis->item_list, obj_get_label(iobj), pos);
     num_items++;
 
-    new_iobj_list = (ABObj *)util_malloc(num_items * sizeof(ABObj));
+    new_iobj_list = (ABObj *)calloc(num_items, sizeof(ABObj));
 
     for (i = j = 0; i < num_items; i++)
     {
@@ -1046,7 +1046,7 @@ delete_selected_item(
       	XtVaGetValues(pis->item_list, XmNitemCount, &num_items, nullptr);
 	if (num_items > 1)
 	{
-            new_iobj_list = (ABObj *)util_malloc((num_items - 1) * sizeof(ABObj));
+            new_iobj_list = (ABObj *)calloc((num_items - 1), sizeof(ABObj));
 	    if (new_iobj_list == nullptr)
 	    {
 		util_dprintf(1, "delete_selected_item: malloc failed\n");

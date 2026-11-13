@@ -1170,7 +1170,7 @@ load_enum_table(void)
 
 #define ALLOC_ENUM_TBL(tbl_, n_) \
 		{ (tbl_).count = (n_); \
-		  (tbl_).enums = (ObjxmEnum*)util_malloc((n_)*sizeof(ObjxmEnum)); }
+		  (tbl_).enums = (ObjxmEnum*)calloc((n_), sizeof(ObjxmEnum)); }
     int n;
 
     n = 0;

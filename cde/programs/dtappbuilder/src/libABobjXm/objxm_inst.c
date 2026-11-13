@@ -424,7 +424,7 @@ xm_manage_tree(
     {
 	/* Build list of valid widget children */
 	num_children = obj_get_num_children(root);
-	wchildren = (WidgetList)util_malloc(num_children*sizeof(Widget));
+	wchildren = (WidgetList)calloc(num_children, sizeof(Widget));
 	for (i=0; i < num_children; i++)
 	{
 	    childobj = obj_get_child(root, i);
@@ -1771,7 +1771,7 @@ objxm_destroy_menus(
 
 		/* Destroy Temporary Item objs created ONLY for Test-mode */
 		num_items = obj_get_num_children(menu_ref);
-		item_array = (ABObj*)util_malloc(num_items*sizeof(ABObj));
+		item_array = (ABObj*)calloc(num_items, sizeof(ABObj));
 		for (i=0; i < num_items; i++)
 		    item_array[i] = obj_get_child(menu_ref, i);
 

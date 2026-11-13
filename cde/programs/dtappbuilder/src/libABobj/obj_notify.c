@@ -1128,7 +1128,7 @@ add_to_callback_list(NamedCallbackList *ppsList,
 
     if (list == nullptr)
     {
-	list= (NamedCallbackList)util_malloc(1 * sizeof(NAMED_CALLBACK));
+	list= (NamedCallbackList)calloc(1, sizeof(NAMED_CALLBACK));
 	if (list == nullptr)
 	{
 	    return ERR_NO_MEMORY;

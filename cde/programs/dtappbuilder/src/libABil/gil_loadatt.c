@@ -437,7 +437,14 @@ load_events(FILE * inFile, AB_WHEN ** p)
     for (c = 0; !abio_get_list_end(inFile); c++)
     {
         if (c + 1 == lth)
-            *p = (AB_WHEN *) realloc(*p, (lth += INC) * SIZE);
+        {
+            AB_WHEN *grown = (AB_WHEN *) reallocarray(*p, lth + INC, SIZE);
+
+            if (grown == nullptr)
+                return -1;
+            *p = grown;
+            lth += INC;
+        }
         if (!abio_get_keyword(inFile, &s))
         {
             abil_print_load_err(ERR_WANT_KEYWORD);

@@ -486,7 +486,7 @@ abobjP_enable_build_actions(
 	    /* Button2 can be used for ADJUST */
 	    len += strlen(btn2_adjust_translations);
 
-	build_translations = (String)util_malloc(len*sizeof(char));
+	build_translations = (String)calloc(len, sizeof(char));
 	if (build_translations == nullptr)
 	    return; /* ouch */
 
@@ -1386,7 +1386,7 @@ object_mselect(
 
     pobj = objxm_comp_get_subobj(obj, AB_CFG_PARENT_OBJ);
     num_controls = obj_get_num_children(pobj);
-    new_sel.list = (ABObj*)util_malloc(num_controls*sizeof(ABObj));
+    new_sel.list = (ABObj*)calloc(num_controls, sizeof(ABObj));
     new_sel.count = 0;
 
     abobj_get_selected(obj_get_window(pobj), True, False, &old_sel);

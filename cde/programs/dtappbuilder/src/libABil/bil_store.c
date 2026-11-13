@@ -2989,7 +2989,7 @@ create_bil_file_list(
     STRING		file = nullptr;
     int			name_len = 0;
 
-    bil_list = util_malloc(MAXPATHLEN * sizeof(char));
+    bil_list = calloc(MAXPATHLEN, sizeof(char));
     if (bil_list == nullptr)
 	return bil_list;
 

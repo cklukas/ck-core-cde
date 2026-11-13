@@ -967,7 +967,7 @@ create_children_list(
          * Alloc new array to store child objects. This will be stored
          * as user data on the list.
          */
-        child_list = (ABObj *)util_malloc(child_count*sizeof(ABObj));
+        child_list = (ABObj *)calloc(child_count, sizeof(ABObj));
 
 	/*
 	 * For all direct children of 'parent'.:
@@ -1733,9 +1733,9 @@ populate_obj_menu(
      */
     if (num_items_needed > 0)
     {
-        item_list = (Widget *)util_malloc(num_items_needed * sizeof(Widget));
+        item_list = (Widget *)calloc(num_items_needed, sizeof(Widget));
         item_val_list = (XtPointer *)
-        util_malloc(num_items_needed * sizeof(XtPointer));
+        calloc(num_items_needed, sizeof(XtPointer));
     }
 
     /*

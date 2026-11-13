@@ -81,7 +81,7 @@ travP_open_safe(
     objArraySize= trav_count_cond(root, unsafeTravType, testFunc);
     if (objArraySize > 0)
     {
-        objArray= (ABObj *)util_malloc(objArraySize * sizeof(ABObj*));
+        objArray= (ABObj *)calloc(objArraySize, sizeof(ABObj*));
         if (objArray == nullptr)
         {
 	    return -1;

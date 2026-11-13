@@ -432,7 +432,7 @@ populate_when_menu(
     labels = connP_get_when_labels(&num_labels);
     if (num_labels > 0)
     {
-	w_list = (Widget *)XtMalloc(sizeof(Widget) * (num_labels + 1));
+	w_list = (Widget *)XtCalloc((num_labels + 1), sizeof(Widget));
 	for (i = 0; i < num_labels; i++)
 	{
 	    Widget	w;
@@ -468,7 +468,7 @@ populate_action_menu(
     labels = connP_get_act_labels(&num_labels);
     if (num_labels > 0)
     {
-	w_list = (Widget *)XtMalloc(sizeof(Widget) * (num_labels + 1));
+	w_list = (Widget *)XtCalloc((num_labels + 1), sizeof(Widget));
 	for (i = 0; i < num_labels; i++)
 	{
 	    Widget	w;
@@ -792,7 +792,7 @@ populate_connection_list(
 	XtSetSensitive(connection_list, TRUE);
     }
 
-    obj_list = (ABObj *)XtMalloc(sizeof(ABObj) * (count+1));
+    obj_list = (ABObj *)XtCalloc((count+1), sizeof(ABObj));
     if (obj_list == (ABObj *)NULL)
 	return;
 

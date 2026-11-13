@@ -531,8 +531,8 @@ add_win_menu_cache_entry(
 	/* if win_menu_cache_count == 0, then it's our first time...*/
 	old_cache = win_menu_cache;
 	win_menu_cache_max+=EDIT_MENU_CACHE_BLOCK;
-	new_cache = (WinMenuCache*)util_malloc(
-		    win_menu_cache_max*sizeof(WinMenuCache));
+	new_cache = (WinMenuCache*)calloc(
+		    win_menu_cache_max, sizeof(WinMenuCache));
 
 	/* Copy old cache into new cache...
 	 * NOTE: this would ONLY happen if the number of Window objects
@@ -568,8 +568,8 @@ add_browser_menu_cache_entry(
         /* if browser_menu_cache_count == 0, then it's our first time...*/
         old_cache = browser_menu_cache;
         browser_menu_cache_max+=EDIT_MENU_CACHE_BLOCK;
-        new_cache = (BrowserMenuCache*)util_malloc(
-                    browser_menu_cache_max*sizeof(BrowserMenuCache));
+        new_cache = (BrowserMenuCache*)calloc(
+                    browser_menu_cache_max, sizeof(BrowserMenuCache));
 
         /* Copy old cache into new cache...
          * NOTE: this would ONLY happen if the number of Browser Widgets 
@@ -739,7 +739,7 @@ set_item_flags(
     /* Store Select info */
     sel.count = target->count;
     util_free(sel.list);
-    sel.list  = (ABObj*)util_malloc(sel.count*sizeof(ABObj));
+    sel.list  = (ABObj*)calloc(sel.count, sizeof(ABObj));
     for(i = 0; i < sel.count; i++)
         sel.list[i] = target->list[i];
 

@@ -1200,7 +1200,7 @@ abobj_build_menus_array(
     if (*menu_count_ptr > 0)
     {
         /* Store Menus in an array */
-        *menus_ptr = (ABObj*)util_malloc(*menu_count_ptr*sizeof(ABObj));
+        *menus_ptr = (ABObj*)calloc(*menu_count_ptr, sizeof(ABObj));
         k = 0;
 
 	for(i = 0; i < num_modules; i++)

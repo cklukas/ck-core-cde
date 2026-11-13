@@ -237,7 +237,7 @@ create_color_palette(
 		Num_colors,Rows,Cols);
 
     /* Create the swatch array */
-    Swatch = (Widget *) XtMalloc(sizeof(Widget)*Num_colors);
+    Swatch = (Widget *) XtCalloc(Num_colors, sizeof(Widget));
 
     Panel = XtVaCreateWidget("color_panel",
 	xmFormWidgetClass,

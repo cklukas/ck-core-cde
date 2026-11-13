@@ -2224,8 +2224,8 @@ logP_read(GenLog log)
     }
 
     log->entries_size = num_lines;
-    log->entries = (GenLogEntry) util_malloc(
-				log->entries_size * sizeof(GenLogEntryRec));
+    log->entries = (GenLogEntry) calloc(
+				log->entries_size, sizeof(GenLogEntryRec));
     if (log->entries == nullptr)
     {
 	log->entries_size = 0;

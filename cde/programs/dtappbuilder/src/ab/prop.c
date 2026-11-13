@@ -2463,7 +2463,7 @@ propP_changebar_init(
     if (changebar_top_att != XmATTACH_FORM)
 	return;
 
-    wlist = (Widget*)util_malloc(2*sizeof(Widget));
+    wlist = (Widget*)calloc(2, sizeof(Widget));
     if (wlist == nullptr)
 	return;
 

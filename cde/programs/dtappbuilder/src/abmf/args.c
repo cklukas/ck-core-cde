@@ -1170,7 +1170,7 @@ fmt_strval_for_res_file(STRING string)
     }
     else
     {
-	if ((newStr = (STRING)util_malloc((newStrLen+1)*sizeof(char))) == nullptr)
+	if ((newStr = (STRING)calloc((newStrLen+1), sizeof(char))) == nullptr)
 	{
 	    return nullptr;
 	}
