@@ -508,8 +508,8 @@ initlife(perwindow *pwin)
     XWindowAttributes xgwa;
     lifestruct *lp;
 
-    if (pwin->data) free(pwin->data);
-    pwin->data = (void *)malloc(sizeof(lifestruct));
+    if (pwin->data) XtFree(pwin->data);
+    pwin->data = (void *)XtMalloc(sizeof(lifestruct));
     memset(pwin->data, '\0', sizeof(lifestruct));
     lp = (lifestruct *)pwin->data;
     lp->generation = 0;

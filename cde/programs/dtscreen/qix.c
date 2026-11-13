@@ -83,14 +83,14 @@ initqix(perwindow *pwin)
     XWindowAttributes xgwa;
     qixstruct  *qp;
 
-    if (pwin->data) free(pwin->data);
-    pwin->data = (void *)malloc(sizeof(qixstruct));
+    if (pwin->data) XtFree(pwin->data);
+    pwin->data = (void *)XtMalloc(sizeof(qixstruct));
     memset(pwin->data, '\0', sizeof(qixstruct));
     qp = (qixstruct *)pwin->data;
     qp->startTime = seconds();
     qp->nlines = (batchcount + 1) * 2;
 
-    qp->lineq = (point *) calloc(qp->nlines, sizeof(point));
+    qp->lineq = (point *) XtCalloc(qp->nlines, sizeof(point));
     memset(qp->lineq, '\0', qp->nlines * sizeof(point));
 
     XGetWindowAttributes(dsp, pwin->w, &xgwa);

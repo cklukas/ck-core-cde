@@ -86,8 +86,8 @@ initflame(perwindow *pwin)
     XWindowAttributes xwa;
     flamestruct *fs;
 
-    if (pwin->data) free(pwin->data);
-    pwin->data = (void *)malloc(sizeof(flamestruct));
+    if (pwin->data) XtFree(pwin->data);
+    pwin->data = (void *)XtMalloc(sizeof(flamestruct));
     memset(pwin->data, '\0', sizeof(flamestruct));
     fs = (flamestruct *)pwin->data;
 

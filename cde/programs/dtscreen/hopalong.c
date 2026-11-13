@@ -78,8 +78,8 @@ inithop(perwindow *pwin)
     XWindowAttributes xgwa;
     hopstruct  *hp;
 
-    if (pwin->data) free(pwin->data);
-    pwin->data = (void *)malloc(sizeof(hopstruct));
+    if (pwin->data) XtFree(pwin->data);
+    pwin->data = (void *)XtMalloc(sizeof(hopstruct));
     memset(pwin->data, '\0', sizeof(hopstruct));
     hp = (hopstruct *)pwin->data;
     XGetWindowAttributes(dsp, pwin->w, &xgwa);
@@ -100,7 +100,7 @@ inithop(perwindow *pwin)
     hp->i = hp->j = 0.0;
 
     if (!pointBuffer)
-	pointBuffer = (XPoint *) calloc(batchcount, sizeof(XPoint));
+	pointBuffer = (XPoint *) XtCalloc(batchcount, sizeof(XPoint));
 
     XSetForeground(dsp, pwin->gc, BlackPixelOfScreen(pwin->perscreen->screen));
     XFillRectangle(dsp, pwin->w, pwin->gc, 0, 0,

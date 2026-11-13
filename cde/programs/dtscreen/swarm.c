@@ -78,8 +78,8 @@ initswarm(perwindow *pwin)
     swarmstruct *sp;
     int         b;
 
-    if (pwin->data) free(pwin->data);
-    pwin->data = (void *)malloc(sizeof(swarmstruct));
+    if (pwin->data) XtFree(pwin->data);
+    pwin->data = (void *)XtMalloc(sizeof(swarmstruct));
     memset(pwin->data, '\0', sizeof(swarmstruct));
     sp = (swarmstruct *)pwin->data;
     sp->startTime = seconds();
@@ -95,12 +95,12 @@ initswarm(perwindow *pwin)
 
     /* Allocate memory. */
 
-    sp->segs = (XSegment *) calloc(sp->beecount, sizeof(XSegment));
-    sp->old_segs = (XSegment *) calloc(sp->beecount, sizeof(XSegment));
-    sp->x = (short *) malloc(sizeof(short) * sp->beecount * TIMES);
-    sp->y = (short *) malloc(sizeof(short) * sp->beecount * TIMES);
-    sp->xv = (short *) calloc(sp->beecount, sizeof(short));
-    sp->yv = (short *) calloc(sp->beecount, sizeof(short));
+    sp->segs = (XSegment *) XtCalloc(sp->beecount, sizeof(XSegment));
+    sp->old_segs = (XSegment *) XtCalloc(sp->beecount, sizeof(XSegment));
+    sp->x = (short *) XtCalloc(sp->beecount * TIMES, sizeof(short));
+    sp->y = (short *) XtCalloc(sp->beecount * TIMES, sizeof(short));
+    sp->xv = (short *) XtCalloc(sp->beecount, sizeof(short));
+    sp->yv = (short *) XtCalloc(sp->beecount, sizeof(short));
 
     /* Initialize point positions, velocities, etc. */
 

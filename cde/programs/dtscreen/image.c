@@ -110,8 +110,8 @@ initimage(perwindow *pwin)
     XWindowAttributes xgwa;
     imagestruct *ip;
 
-    if (pwin->data) free(pwin->data);
-    pwin->data = (void *)malloc(sizeof(imagestruct));
+    if (pwin->data) XtFree(pwin->data);
+    pwin->data = (void *)XtMalloc(sizeof(imagestruct));
     memset(pwin->data, '\0', sizeof(imagestruct));
     ip = (imagestruct *)pwin->data;
     ip->startTime = seconds();

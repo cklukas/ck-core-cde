@@ -109,8 +109,8 @@ initrotor(perwindow *pwin)
     struct elem *pelem;
     Boolean     wassmall;
 
-    if (pwin->data) free(pwin->data);
-    pwin->data = (void *)malloc(sizeof(flightstruct));
+    if (pwin->data) XtFree(pwin->data);
+    pwin->data = (void *)XtMalloc(sizeof(flightstruct));
     memset(pwin->data, 0, sizeof(flightstruct));
     fs = (flightstruct *)pwin->data;
     XGetWindowAttributes(dsp, pwin->w, &xgwa);

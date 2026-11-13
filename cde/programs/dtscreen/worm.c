@@ -129,8 +129,8 @@ initworm(perwindow *pwin)
     wormstruct *wp;
     XWindowAttributes xwa;
 
-    if (pwin->data) free(pwin->data);
-    pwin->data = (void *)malloc(sizeof(wormstruct));
+    if (pwin->data) XtFree(pwin->data);
+    pwin->data = (void *)XtMalloc(sizeof(wormstruct));
     memset(pwin->data, '\0', sizeof(wormstruct));
     wp = (wormstruct *)pwin->data;
     wp->nc = pwin->perscreen->npixels;

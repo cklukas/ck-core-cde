@@ -151,8 +151,8 @@ initpyro(perwindow *pwin)
     XGCValues   xgcv;
     int         rockn, starn, bsize;
 
-    if (pwin->data) free(pwin->data);
-    pwin->data = (pyrostruct *)malloc(sizeof(pyrostruct));
+    if (pwin->data) XtFree(pwin->data);
+    pwin->data = (pyrostruct *)XtMalloc(sizeof(pyrostruct));
     memset(pwin->data, '\0', sizeof(pyrostruct));
     pp = (pyrostruct *)pwin->data;
     XGetWindowAttributes(dsp, pwin->w, &xwa);
@@ -162,7 +162,7 @@ initpyro(perwindow *pwin)
 	orig_p_ignite = 1;
     pp->p_ignite = orig_p_ignite;
 
-    pp->rockq = (rocket *) calloc(batchcount, sizeof(rocket));
+    pp->rockq = (rocket *) XtCalloc(batchcount, sizeof(rocket));
 
     pp->nflying = pp->fusilcount = 0;
 

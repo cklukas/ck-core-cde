@@ -278,7 +278,7 @@ main(int argc, char *argv[])
         exit(1);
       }
 
-      Win = (perwindow *)calloc(nitems, sizeof(perwindow));
+      Win = (perwindow *)XtCalloc(nitems, sizeof(perwindow));
       windows = nitems;
       for (window = 0; window < windows; window++)
       {
@@ -291,7 +291,7 @@ main(int argc, char *argv[])
     {
       Screen     *scr = ScreenOfDisplay(dsp, 0);
 
-      Win = (perwindow *)malloc(sizeof(perwindow));
+      Win = (perwindow *)XtMalloc(sizeof(perwindow));
       windows = 1;
       xswa.override_redirect = True;
       xswa.background_pixel = BlackPixelOfScreen(scr);
@@ -330,7 +330,7 @@ main(int argc, char *argv[])
         Colormap cmap;
         perscreen *pscreen;
 
-        pscreen = (perscreen *)malloc(sizeof(perscreen));
+        pscreen = (perscreen *)XtMalloc(sizeof(perscreen));
         Win[window].perscreen = pscreen;
 
         pscreen->screen = attr.screen;
