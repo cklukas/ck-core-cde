@@ -414,8 +414,8 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                 {
                      /* New filetypedata started so allocate a new filetypedata ptr */
                      if( (ppnewFiletypeData =
-                        (FiletypeData **)realloc((FiletypeData *)ppFiletypeData,
-                        nfiletypes+2 * sizeof(FiletypeData *)))
+                        (FiletypeData **)reallocarray((FiletypeData *)ppFiletypeData,
+                        nfiletypes+2, sizeof(FiletypeData *)))
                                               == nullptr )
                      {
                           printf("\n Cannot allocate memory\n");
