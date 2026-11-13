@@ -32,6 +32,7 @@
  */
 
 #include <EUSCompat.h>
+#include <stdckdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -980,14 +981,17 @@ cm_load_font(CMGraphicsInfo *gInfo, CMFontEnum fontEnum,
 	     char *fontPattern)
 {
   int i;
+  size_t fontInfoSize;
   CMFontInfo *fInfo = cm_find_font(gInfo, fontEnum);
 
   if (fInfo != (CMFontInfo *)nullptr)
     /* It's a no-no to try to load a font more than once! */
     return False;
 
-  fInfo = (CMFontInfo *)XtRealloc((char *)gInfo->fontInfo,
-				  sizeof(CMFontInfo) * (gInfo->nFonts + 1));
+  if (ckd_mul(&fontInfoSize, (size_t)gInfo->nFonts + 1, sizeof(CMFontInfo)) ||
+      fontInfoSize > UINT_MAX)
+    return False;
+  fInfo = (CMFontInfo *)XtRealloc((char *)gInfo->fontInfo, fontInfoSize);
   if (fInfo == (CMFontInfo *)nullptr)
     return False;
   gInfo->fontInfo = fInfo;
