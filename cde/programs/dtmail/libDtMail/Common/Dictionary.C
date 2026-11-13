@@ -51,7 +51,7 @@ DtMailDictionaryImpl::DtMailDictionaryImpl(int size)
 {
     _hash_size = size;
 
-    _hash_table = (HashTable_t *)malloc(sizeof(HashTable_t) * _hash_size);
+    _hash_table = (HashTable_t *)calloc(_hash_size, sizeof(HashTable_t));
 
     for (int h = 0; h < _hash_size; h++) {
 	_hash_table[h] = NULL;

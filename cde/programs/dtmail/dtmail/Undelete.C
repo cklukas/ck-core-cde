@@ -178,7 +178,7 @@ UndelMsgScrollingList::loadMsgs(
     DtMail::Message * msg;
 
 
-    msg_hdrs = (XmString *)malloc(sizeof(XmString) * count);
+    msg_hdrs = (XmString *)calloc(count, sizeof(XmString));
     memset(msg_hdrs, 0, sizeof(XmString) * count);    
 
     DtMail::MailBox * mbox = this->parent()->mailbox();

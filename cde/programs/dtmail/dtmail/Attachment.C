@@ -450,7 +450,7 @@ Attachment::invokeAction(int index)
     }
 
     // Passing a buffer
-    actionArg = (DtActionArg *) malloc(sizeof(DtActionArg) * 1);
+    actionArg = (DtActionArg *) calloc(1, sizeof(DtActionArg));
     memset(actionArg, 0, sizeof(DtActionArg));
     actionArg->argClass = 2;
     actionArg->u.buffer = bufArg;

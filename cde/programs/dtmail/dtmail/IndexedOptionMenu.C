@@ -102,13 +102,13 @@ IndexedOptionMenu::IndexedOptionMenu (
     _nmenu_items = nmenu_items;
     if (nmenu_items && strings != NULL)
     {
-	_strings = (char **) XtMalloc(nmenu_items * sizeof(char*));
+	_strings = (char **) XtCalloc(nmenu_items, sizeof(char*));
 	for (int i=0; i<nmenu_items; i++)
 	  _strings[i] = strings[i];
     }
     if (nmenu_items && data != NULL)
     {
-	_data = (void **) XtMalloc(nmenu_items * sizeof(void*));
+	_data = (void **) XtCalloc(nmenu_items, sizeof(void*));
 	for (int i=0; i<nmenu_items; i++)
 	  _data[i] = data[i];
     }
@@ -120,7 +120,7 @@ IndexedOptionMenu::IndexedOptionMenu (
      * the button labels to the buttons as userData.
      */
     menu = XmCreatePulldownMenu(parent, "Menu", NULL, 0);
-    _buttons = (Widget *) XtMalloc( _nmenu_items * sizeof(Widget) );
+    _buttons = (Widget *) XtCalloc(_nmenu_items, sizeof(Widget));
     for (int i=0; i<_nmenu_items; i++)
     {
 	static char	button_label[32];
@@ -162,19 +162,19 @@ IndexedOptionMenu::IndexedOptionMenu (
 
     if (nmenu_items && strings != NULL)
     {
-	_strings = (char **) XtMalloc(nmenu_items * sizeof(char*));
+	_strings = (char **) XtCalloc(nmenu_items, sizeof(char*));
 	for (int i=0; i<nmenu_items; i++)
 	  _strings[i] = strings[i];
     }
     if (nmenu_items && data != NULL)
     {
-	_data = (void **) XtMalloc(nmenu_items * sizeof(void*));
+	_data = (void **) XtCalloc(nmenu_items, sizeof(void*));
 	for (int i=0; i<nmenu_items; i++)
 	  _data[i] = data[i];
     }
     if (nmenu_items && buttons != NULL)
     {
-        _buttons = (Widget *) XtMalloc( _nmenu_items * sizeof(Widget) );
+        _buttons = (Widget *) XtCalloc(_nmenu_items, sizeof(Widget));
         for (int i=0; i<nmenu_items; i++)
           _buttons[i] = buttons[i];
     }

@@ -200,7 +200,7 @@ void AliasListUiItem::writeFromSourceToUi()
   if (list_len)
   {
       prop_pairs =
-	(PropStringPair**) XtMalloc(list_len * sizeof(PropStringPair*));
+	(PropStringPair**) XtCalloc(list_len, sizeof(PropStringPair*));
 
       for (i = 0; i < list_len; i++)
       {

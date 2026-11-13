@@ -246,8 +246,8 @@ DmxPrintOptions::DmxPrintOptions (
     //  Create GUI for the Header/Footer options
     //
     nitems = DMX_ARRAY_SIZE(hdrftr_values);;
-    strings = (char **) XtMalloc( nitems * sizeof(char*) );
-    data = (void **) XtMalloc( nitems * sizeof(void*) );
+    strings = (char **) XtCalloc(nitems, sizeof(char*));
+    data = (void **) XtCalloc(nitems, sizeof(void*));
     for (i=0; i<nitems; i++)
     {
         data[i] = (void*) hdrftr_values[i].prop_string;
@@ -333,8 +333,8 @@ DmxPrintOptions::DmxPrintOptions (
     //  Create GUI for the Printed Headers option
     //
     nitems = DMX_ARRAY_SIZE(prthdr_values);;
-    strings = (char **) XtMalloc( nitems * sizeof(char*) );
-    data = (void **) XtMalloc( nitems * sizeof(void*) );
+    strings = (char **) XtCalloc(nitems, sizeof(char*));
+    data = (void **) XtCalloc(nitems, sizeof(void*));
     for (i=0; i<nitems; i++)
     {
         data[i] = (void*) prthdr_values[i].prop_string;
@@ -382,8 +382,8 @@ DmxPrintOptions::DmxPrintOptions (
     //  Create GUI for the Message Separator option
     //
     nitems = DMX_ARRAY_SIZE(msgsep_values);;
-    strings = (char **) XtMalloc( nitems * sizeof(char*) );
-    data = (void **) XtMalloc( nitems * sizeof(void*) );
+    strings = (char **) XtCalloc(nitems, sizeof(char*));
+    data = (void **) XtCalloc(nitems, sizeof(void*));
     for (i=0; i<nitems; i++)
     {
         data[i] = (void*) msgsep_values[i].prop_string;

@@ -1000,7 +1000,7 @@ dtb_session_save(
     /*
      * Allocate vector
      */
-    new_argv = (char **)XtMalloc((sizeof(char **) * new_argc));
+    new_argv = (char **)XtCalloc(new_argc, sizeof(char **));
 
     /*
      * Set new_argv[0] to be the application name
@@ -2297,7 +2297,7 @@ align_labels(
     get_group_row_col(parent, group_info, &num_rows, &num_columns);
 
     if (num_rows > 0)
-	one_col = (WidgetList)XtMalloc(num_rows * sizeof(WidgetList));
+	one_col = (WidgetList)XtCalloc(num_rows, sizeof(WidgetList));
 
     for (i = 0; i < num_columns; i++)
     {

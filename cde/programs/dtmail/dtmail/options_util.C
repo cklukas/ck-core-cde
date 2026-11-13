@@ -424,7 +424,7 @@ options_list_init(Widget list,
   num_items = item_list->length();
   if (0 == num_items) return;
 
-  str_list = (XmStringTable)XtMalloc(num_items * sizeof(XmString *));
+  str_list = (XmStringTable)XtCalloc(num_items, sizeof(XmString *));
 
   for(i = 0; i < num_items; i++)
     str_list[i] = XmStringCreateLocalized((*item_list)[i]);

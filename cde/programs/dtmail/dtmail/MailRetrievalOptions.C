@@ -396,8 +396,8 @@ MailRetrievalOptions::MailRetrievalOptions (
     //  Create GUI for the MailServerProtocol Option
     //
     nitems = MR_ARRAY_SIZE(serverprotocol_values);
-    strings = (char**) XtMalloc(nitems*sizeof(char*));
-    data = (void**) XtMalloc(nitems*sizeof(void*));
+    strings = (char**) XtCalloc(nitems, sizeof(char*));
+    data = (void**) XtCalloc(nitems, sizeof(void*));
     for (int i=0; i<nitems; i++)
     {
         data[i] = (void*) serverprotocol_values[i].prop_value_string;

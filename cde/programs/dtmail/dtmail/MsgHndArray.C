@@ -160,7 +160,7 @@ MsgHndArray::insert(
 	    _size += (_size >> 2);
 	    _contents = (MsgStruct **)realloc(_contents, 
 					      _size * sizeof(MsgStruct *));
-	    memset(_contents+orig_size, 0, sizeof(MsgStruct *)*_size);
+	    memset(_contents+orig_size, 0, sizeof(MsgStruct *)*(_size - orig_size));
 	}
 
 	for (j = i + 1; j < _length; j++) {

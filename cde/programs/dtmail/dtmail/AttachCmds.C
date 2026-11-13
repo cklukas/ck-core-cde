@@ -387,7 +387,7 @@ void AttachDeleteCmd::doit()
 //    int i, j;
     WidgetList deleteList;
 
-    deleteList = (WidgetList)XtMalloc(sizeof(Widget)*_attachArea->getIconCount());
+    deleteList = (WidgetList)XtCalloc(_attachArea->getIconCount(), sizeof(Widget));
 //     Attachment **list = _attachArea->getList();
 //     for(i=0, j=0;i<_attachArea->getIconCount();i++)
 // 	if(list[i]->getIcon()->isSelected() == TRUE) {

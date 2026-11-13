@@ -416,7 +416,7 @@ MenuBar::addCommands(
 	XmNnumChildren, &num_children,
 	NULL);
     
-    children = (WidgetList)XtMalloc(sizeof(Widget) * num_children);
+    children = (WidgetList)XtCalloc(num_children, sizeof(Widget));
     
     XtVaGetValues(pulldown,
 	XmNchildren, &children,
@@ -512,7 +512,7 @@ MenuBar::removeOnlyCommands(
 	XmNnumChildren, &num_children,
 	NULL);
     
-    children = (WidgetList)XtMalloc(sizeof(Widget) * num_children);
+    children = (WidgetList)XtCalloc(num_children, sizeof(Widget));
     
     XtVaGetValues(pulldown,
 	XmNchildren, &children,
@@ -555,7 +555,7 @@ MenuBar::removeCommands(
 	XmNnumChildren, &num_children,
 	NULL);
     
-    children = (WidgetList)XtMalloc(sizeof(Widget) * num_children);
+    children = (WidgetList)XtCalloc(num_children, sizeof(Widget));
     
     XtVaGetValues(pulldown,
 	XmNchildren, &children,
@@ -628,7 +628,7 @@ MenuBar::changeLabel(
 	XmNnumChildren, &num_children,
 	NULL);
 
-    children = (WidgetList)XtMalloc(sizeof(Widget) * num_children);
+    children = (WidgetList)XtCalloc(num_children, sizeof(Widget));
 
     XtVaGetValues(pulldown,
 	XmNchildren, &children,
@@ -719,7 +719,7 @@ MenuBar::rotateLabels(
     if (num_children < num_to_change || num_to_change == 0) 
 	return;
 
-    children = (WidgetList)XtMalloc(sizeof(Widget) * num_children);
+    children = (WidgetList)XtCalloc(num_children, sizeof(Widget));
 
     XtVaGetValues(pulldown,
 	XmNchildren, &children,
@@ -803,7 +803,7 @@ MenuBar::removeCommand(
         XmNnumChildren, &num_children,
         NULL);
 
-    children = (WidgetList)XtMalloc(sizeof(Widget) * num_children);
+    children = (WidgetList)XtCalloc(num_children, sizeof(Widget));
 
     XtVaGetValues(pulldown,
         XmNchildren, &children,

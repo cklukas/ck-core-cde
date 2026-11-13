@@ -51,7 +51,7 @@ DtVirtArrayImpl::DtVirtArrayImpl(const int size)
 {
     _size = size;
     _count = 0;
-    _elements = (void **)malloc(sizeof(void *) * _size);
+    _elements = (void **)calloc(_size, sizeof(void *));
 
     _mutex = MutexInit();
 }

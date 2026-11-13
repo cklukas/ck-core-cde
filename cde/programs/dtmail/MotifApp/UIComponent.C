@@ -64,6 +64,7 @@
 #include <Dt/Wsm.h>
 #include "UIComponent.h"
 #include <assert.h>
+#include <limits.h>
 #include <stdio.h>
 
 UIComponent::UIComponent ( const char *name ) : BasicComponent ( name )
@@ -148,8 +149,8 @@ UIComponent::displayInCurrentWorkspace(Widget shell)
 		for (k = 0; k < num; k++)
 		  if (ws[k] == pCurrent) break;
 
-		/* Add to the workspace */
-		if (k >= num)
+		/* Add to the workspace; XtRealloc takes a Cardinal byte count */
+		if (k >= num && num < UINT_MAX / sizeof(Atom) - 1)
 		{
 		    size_t nbytes = sizeof(Atom) * (num+1);
 		    ws = (Atom*) XtRealloc((char*) ws, nbytes);
