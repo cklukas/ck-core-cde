@@ -69,6 +69,8 @@
  */
 
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <ctype.h>
 #include <string.h>
@@ -1703,6 +1705,42 @@ PrintCmd::actioncb(
     return;
 }
 
+// Create the empty file "<dir>/<prefix>XXXXXX" with mkstemp(3) and return its
+// name in malloc'ed storage, or NULL if no file can be made.  The file exists
+// (mode 0600, owned by the caller) when this returns, so no other user can
+// plant a file or a symbolic link at the name before it is opened.  If dir is
+// NULL, empty or not writable, $TMPDIR or the system default directory is
+// used.
+static char *
+create_temp_file(const char *dir, const char *prefix)
+{
+    const char	*dirs[3];
+    char	path[MAXPATHLEN];
+    char	*name;
+    int		fd;
+
+    dirs[0] = dir;
+    dirs[1] = getenv("TMPDIR");
+    dirs[2] = P_tmpdir;
+
+    for (int i = 0; i < 3; i++) {
+	if (dirs[i] == NULL || *dirs[i] == '\0')
+	    continue;
+	int len = snprintf(path, sizeof(path), "%s/%sXXXXXX", dirs[i], prefix);
+	if (len < 0 || (size_t) len >= sizeof(path))
+	    continue;
+	fd = mkstemp(path);
+	if (fd == -1)
+	    continue;
+	close(fd);
+	name = strdup(path);
+	if (name == NULL)
+	    unlink(path);
+	return name;
+    }
+    return NULL;
+}
+
 void
 PrintCmd::printjobcb( Widget w, XtPointer client_data, XtPointer )
 {
@@ -1727,7 +1765,7 @@ PrintCmd::printit( int silent )
     
     // Create tmp file.
     snprintf(tmpdir, MAXPATHLEN+1, "%s/%s", getenv("HOME"), DtPERSONAL_TMP_DIRECTORY);
-    if ((p = tempnam(tmpdir, "dtmail")) == NULL) {
+    if ((p = create_temp_file(tmpdir, "dtmail")) == NULL) {
 	delete [] tmpdir;
 	return;
     }
@@ -1741,10 +1779,15 @@ PrintCmd::printit( int silent )
     if (mail_error.isSet())
     {
 	_parent->postErrorDialog(mail_error);
+	unlink(p);
 	free(p);
 	return;
     }
-    if (0 != status) return;
+    if (0 != status) {
+	unlink(p);
+	free(p);
+	return;
+    }
     
 
     DmxPrintJob *pjob = new DmxPrintJob(p,
@@ -2230,7 +2273,7 @@ SaveAsTextCmd::writeTextFromScrolledList(int fd)
     //
     char *tmpdir = new char[MAXPATHLEN+1];
     snprintf(tmpdir, MAXPATHLEN+1, "%s/%s", getenv("HOME"), DtPERSONAL_TMP_DIRECTORY);
-    if ((tmppath = tempnam(tmpdir, "dtmail")) == NULL) {
+    if ((tmppath = create_temp_file(tmpdir, "dtmail")) == NULL) {
 	snprintf(buf, sizeof(buf), CATGETS(DT_catd, 3, 51, "Unable to create %s."), tmpdir);
 	_genDialog->setToErrorDialog(CATGETS(DT_catd, 3, 52, "Mailer"), buf);
         helpId = DTMAILHELPNOCREATE;        
@@ -2249,10 +2292,15 @@ SaveAsTextCmd::writeTextFromScrolledList(int fd)
     int status = list->copySelected(mail_error, tmppath, FALSE, TRUE);
     if (mail_error.isSet()) {
         _roam_menu_window->postErrorDialog(mail_error);
+        unlink(tmppath);
         free(tmppath);
         return;
     }
-    if (0 != status) return;
+    if (0 != status) {
+        unlink(tmppath);
+        free(tmppath);
+        return;
+    }
 
     mailbox = new DmxMailbox(tmppath);
     mailbox->loadMessages();

@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -79,47 +80,62 @@ main(int argc, char **argv)
 	verbosity = tttar->verbosity();
 
 	if (tttar->should_tar()) {
-		char *tempnam_result;
+		const char *tmpdir = getenv("TMPDIR");
+		char tmpl[MAXPATHLEN];
 		/*
 		 * Create a temporary directory to which we can
 		 * chdir() in order to create or extract the
-		 * tttarfile for or from the tarfile.
+		 * tttarfile for or from the tarfile.  mkdtemp()
+		 * makes it (mode 0700), so no other user can have
+		 * planted a file or a symbolic link at its name.
 		 */
-		tttardir = tempnam_result = tempnam(NULL, "tttardir");
-		free(tempnam_result);
-		if (mkdir( (char *)tttardir, S_IRWXU ) == 0) {
-			tttarfile_name = tttardir.cat( "/tttarfile" );
-			should_tttar = TRUE;
-			if (    (tttar->mode() == EXTRACT)
-			     || (tttar->mode() == LIST))
-			{
-				tttar->do_tar( tttardir, FALSE );
+		if ((tmpdir == NULL) || (*tmpdir == '\0')) {
+			tmpdir = P_tmpdir;
+		}
+		int tmpl_len = snprintf( tmpl, sizeof(tmpl),
+					 "%s/tttardirXXXXXX", tmpdir );
+		if ((tmpl_len < 0) || ((size_t)tmpl_len >= sizeof(tmpl))) {
+			fprintf( stderr, "%s: %s: %s\n", our_process_name,
+				 tmpdir, strerror(ENAMETOOLONG) );
+			exit(1);
+		}
+		if (mkdtemp( tmpl ) == NULL) {
+			fprintf( stderr, "%s: %s: %s\n", our_process_name,
+				 tmpl, strerror(errno) );
+			exit(1);
+		}
+		tttardir = tmpl;
+		tttarfile_name = tttardir.cat( "/tttarfile" );
+		should_tttar = TRUE;
+		if (    (tttar->mode() == EXTRACT)
+		     || (tttar->mode() == LIST))
+		{
+			tttar->do_tar( tttardir, FALSE );
+			/*
+			 * Extract the tttarfile silently
+			 */
+			int old_verbosity = tttar->verbosity();
+			Archive_mode old_mode = tttar->mode();
+			tttar->verbosity_set( 0 );
+			tttar->mode_set( EXTRACT );
+			/*
+			 * If we're not extracting from stdin, we
+			 * can invoke tar(1) again.  Otherwise,
+			 * do_tar() was smart enough to extract
+			 * the tttarfile into the cwd the first
+			 * time we called it.
+			 */
+			if (! tttar->only_1_look_at_tarfile()) {
+				tttar->do_tar( tttardir, TRUE );
+			} else if (tttar->mode() == EXTRACT) {
 				/*
-				 * Extract the tttarfile silently
+				 * The tttarfile was already
+				 * extracted into cwd.
 				 */
-				int old_verbosity = tttar->verbosity();
-				Archive_mode old_mode = tttar->mode();
-				tttar->verbosity_set( 0 );
-				tttar->mode_set( EXTRACT );
-				/*
-				 * If we're not extracting from stdin, we
-				 * can invoke tar(1) again.  Otherwise,
-				 * do_tar() was smart enough to extract
-				 * the tttarfile into the cwd the first
-				 * time we called it.
-				 */
-				if (! tttar->only_1_look_at_tarfile()) {
-					tttar->do_tar( tttardir, TRUE );
-				} else if (tttar->mode() == EXTRACT) {
-					/*
-					 * The tttarfile was already
-					 * extracted into cwd.
-					 */
-					tttarfile_name = "tttarfile";
-				}
-				tttar->verbosity_set( old_verbosity );
-				tttar->mode_set( old_mode );
+				tttarfile_name = "tttarfile";
 			}
+			tttar->verbosity_set( old_verbosity );
+			tttar->mode_set( old_mode );
 		}
 	} else {
 		tttarfile_name = tttar->tarfile_arg();

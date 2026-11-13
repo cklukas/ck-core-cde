@@ -38,6 +38,9 @@
  ************************************<+>*************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -748,30 +751,41 @@ fileStoreBuffer(
 {
         char            path[MAXPATHLEN];
 	char		*dir = fileGetDirectoryName(DropDirectory);
-	struct stat	statInfo;
+	int		fd;
         FILE            *fp;
 
 	if (name == NULL)
 		name = "unnamed";
 
-        sprintf(path, "%s/%s", dir, name);
-
-	if (stat(path, &statInfo) == 0) {
-		char	*tPath;
-		
-		if ((tPath = tempnam(dir, name)) == NULL)
-			return (char *)NULL;
-		strcpy(path, tPath);
-		free(tPath);
-	}
-
-        if ((fp = fopen(path, "w")) == NULL) {
-                printf("Cannot create file \"%s\"\n", path);
+        if (snprintf(path, sizeof(path), "%s/%s", dir, name) >=
+	    (int) sizeof(path))
 		return (char *)NULL;
-        }
+
+	/*
+	 * O_EXCL makes the creation fail instead of following a symbolic
+	 * link or reusing a file that exists at the name.  Then the file
+	 * is made under a unique name by mkstemp(3), which creates it
+	 * (mode 0600), so no other user can plant a file or a link there.
+	 */
+	fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0666);
+	if (fd == -1 && errno == EEXIST) {
+		if (snprintf(path, sizeof(path), "%s/%sXXXXXX", dir, name) >=
+		    (int) sizeof(path))
+			return (char *)NULL;
+		fd = mkstemp(path);
+	}
+	if (fd == -1 || (fp = fdopen(fd, "w")) == NULL) {
+		if (fd != -1) {
+			close(fd);
+			unlink(path);
+		}
+		printf("Cannot create file \"%s\"\n", path);
+		return (char *)NULL;
+	}
 
         if (fwrite(buf, len, 1, fp) != 1) {
                 printf("Cannot write to file \"%s\".\n", path);
+		fclose(fp);
 		return (char *)NULL;
         }
 

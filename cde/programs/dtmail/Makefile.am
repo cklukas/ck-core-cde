@@ -7,7 +7,10 @@ SUBDIRS = dtmailspool libDtMail MotifApp dtmail dtmailpr
 # tests/check-spool-helper.py.
 EXTRA_DIST = tests/check-spool-helper.py tests/check-message-text.py \
              tests/check-local-input.py tests/check-tooltalk-handlers.py \
-             tests/check-mail-servers.py tests/check-mail-messages.py
+             tests/check-mail-servers.py tests/check-mail-messages.py \
+             tests/check-dtmailpr-input-create.py tests/check-dtmailpr-input-create.cc \
+             tests/check-roam-temp-file-create.py tests/check-roam-temp-file-create.cc \
+             tests/check-session-file-create.py tests/check-session-file-create.cc
 
 check-local:
 	DTMAIL_CC='$(CC) $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
@@ -17,3 +20,6 @@ check-local:
 	CXX="$(CXX)" python3 $(srcdir)/tests/check-tooltalk-handlers.py
 	CXX="$(CXX)" python3 $(srcdir)/tests/check-mail-servers.py
 	CXX="$(CXX)" python3 $(srcdir)/tests/check-mail-messages.py
+	CXX="$(CXX)" python3 $(srcdir)/tests/check-dtmailpr-input-create.py
+	CXX="$(CXX)" python3 $(srcdir)/tests/check-roam-temp-file-create.py
+	CXX="$(CXX)" python3 $(srcdir)/tests/check-session-file-create.py

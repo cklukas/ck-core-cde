@@ -40,6 +40,8 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <time.h>
@@ -706,6 +708,44 @@ SendMsgDialog::restoreSession(char *buf)
 }
 
 /*
+ * Create the empty file "<dir>/sessionXXXXXX" with mkstemp(3) and return its
+ * name in malloc'ed storage, or NULL if no file can be made.  The file exists
+ * (mode 0600, owned by the caller) when this returns, so no other user can
+ * plant a file or a symbolic link at the name before it is written.  If dir is
+ * NULL, empty or not writable, $TMPDIR or the system default directory is
+ * used.
+ */
+static char *
+create_session_file(const char *dir)
+{
+    const char	*dirs[3];
+    char	path[MAXPATHLEN];
+    char	*name;
+    int		fd;
+
+    dirs[0] = dir;
+    dirs[1] = getenv("TMPDIR");
+    dirs[2] = P_tmpdir;
+
+    for (int i = 0; i < 3; i++) {
+	if (dirs[i] == NULL || *dirs[i] == '\0')
+	    continue;
+	int len = snprintf(path, sizeof(path), "%s/sessionXXXXXX", dirs[i]);
+	if (len < 0 || (size_t) len >= sizeof(path))
+	    continue;
+	fd = mkstemp(path);
+	if (fd == -1)
+	    continue;
+	close(fd);
+	name = strdup(path);
+	if (name == NULL)
+	    unlink(path);
+	return name;
+    }
+    return NULL;
+}
+
+/*
  * This method implements the save yourself operation for
  * SendMsgDialog object. The steps involved are:
  *	1. Get the session file pointer from theRoamApp.
@@ -740,15 +780,10 @@ SendMsgDialog::smpSaveSessionLocal(void)
 	return;
     
     // Create a dead letter if this one is currently in use
-    if ((save_filename = tempnam(_auto_save_path, "session")) == NULL) 
-    {
-        for (int suffix = 1; ; suffix++) {
-            save_filename = (char*) malloc((size_t) MAXPATHLEN + 1);
-	    sprintf(save_filename, "%s/session.%d", _auto_save_path, suffix);
-	    if (SafeAccess(save_filename, F_OK) != 0)
-	      break;
-        }
-    }
+    // The file is created here (mode 0600) and doAutoSave() rewrites it.
+    // Without a file this window is not saved with the session.
+    if ((save_filename = create_session_file(_auto_save_path)) == NULL)
+	return;
     doAutoSave(save_filename);
     
     wm_state = XmInternAtom(display, "WM_STATE", False);

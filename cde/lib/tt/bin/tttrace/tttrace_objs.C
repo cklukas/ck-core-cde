@@ -34,11 +34,81 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include "tttrace_objs.h"
 #include "util/tt_trace.h"
+
+// The FIFO that carries the trace output lives in a private directory made
+// with mkdtemp(3) (mode 0700), because mkstemp(3) cannot create a FIFO and a
+// FIFO made at a name from tempnam(3) can be pre-empted by another user.
+// Both are removed when the program exits, but not in the forked command's
+// process if its exec fails and it exits.
+
+static const char	pipe_leaf[] = "/pipe";
+static char*		pipe_dir = 0;
+static char*		pipe_path = 0;
+static pid_t		pipe_owner = 0;
+
+static void
+remove_pipe_dir()
+{
+	if (getpid() != pipe_owner) {
+		return;
+	}
+	if (pipe_path != 0) {
+		(void) unlink(pipe_path);
+	}
+	if (pipe_dir != 0) {
+		(void) rmdir(pipe_dir);
+	}
+}
+
+// Create the private directory and the FIFO in it and return the FIFO's
+// path in pipenm.  Return 0 on success, or -1 after an error message.
+
+static int
+make_pipe(_Tt_string& pipenm)
+{
+	const char *tmpdir = getenv("TMPDIR");
+	if ((tmpdir == 0) || (*tmpdir == '\0')) {
+		tmpdir = P_tmpdir;
+	}
+
+	static const char dir_leaf[] = "/traceXXXXXX";
+	pipe_dir = (char *) malloc(strlen(tmpdir) + sizeof(dir_leaf));
+	pipe_path = (char *) malloc(strlen(tmpdir) + sizeof(dir_leaf) +
+				    sizeof(pipe_leaf));
+	if ((pipe_dir == 0) || (pipe_path == 0)) {
+		fprintf(stderr, "tttrace: %s\n", strerror(ENOMEM));
+		return -1;
+	}
+	sprintf(pipe_dir, "%s%s", tmpdir, dir_leaf);
+	if (mkdtemp(pipe_dir) == 0) {
+		fprintf(stderr, "tttrace: mkdtemp(\"%s/traceXXXXXX\"): %s\n",
+			tmpdir, strerror(errno));
+		free(pipe_dir);
+		free(pipe_path);
+		pipe_dir = pipe_path = 0;
+		return -1;
+	}
+	// from here on, remove_pipe_dir() cleans up
+	pipe_owner = getpid();
+	(void) atexit(remove_pipe_dir);
+
+	sprintf(pipe_path, "%s%s", pipe_dir, pipe_leaf);
+	if (mkfifo(pipe_path, S_IWUSR|S_IRUSR) == -1) {
+		fprintf(stderr, "tttrace: mkfifo(\"%s\"): %s\n",
+			pipe_path, strerror(errno));
+		return -1;
+	}
+	pipenm = pipe_path;
+	return 0;
+}
 
 _Tt_trace_optobj::_Tt_trace_optobj()
 {
@@ -222,10 +292,7 @@ _Tt_trace_optobj::getopts(int argc, char** argv)
 		// We need to set up a FIFO to stuff the output
 		// into, and give the FIFO name to the command/session
 				
-		_pipenm = tempnam(NULL, "trace");
-		if (mkfifo(_pipenm, S_IWUSR|S_IRUSR) == -1) {
-			fprintf(stderr, "tttrace: mkfifo(\"%s\"): %s\n",
-				(char *)_pipenm, strerror(errno));
+		if (make_pipe(_pipenm) != 0) {
 			exit(2);
 		}
        	}

@@ -26,7 +26,9 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #include <iostream>
@@ -269,19 +271,20 @@ DtSR_SearchEngine::~DtSR_SearchEngine()
 DtSR_SearchEngine::DtSR_SearchEngine()
     : f_dbnames(NULL), f_dbcount(0), f_valid_bc_map(0)
 {
-    string ocf_tmpl = "/tmp/.DtSR_XXXXXX";
-    int len = ocf_tmpl.size();
-    char* ocf_path = new char [len + 1];
-    *((char *) memcpy(ocf_path, ocf_tmpl.c_str(), len) + len) = '\0';
-    ocf_path = mktemp(ocf_path);
+    // mkstemp creates the file (mode 0600, owned by the caller), so no other
+    // user can have planted a file or a symbolic link at the name.
+    char ocf_path[] = "/tmp/.DtSR_XXXXXX";
+    int fd = mkstemp(ocf_path);
+    if (fd == -1)
+	throw(CASTEXCEPT Exception());
+    close(fd);
     f_config_path = ocf_path;
 
-    if (ocf_path)
-	free(ocf_path);
-
     ofstream dtiocf((char*)f_config_path, ios::out);  // TODO
-    if (! dtiocf) // could not open ocf_path in specified mode
+    if (! dtiocf) { // could not open ocf_path in specified mode
+	unlink(ocf_path);
 	throw(CASTEXCEPT Exception());
+    }
 
     f_oql_parser = new DtSR_Parser();
 }

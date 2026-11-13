@@ -23,6 +23,7 @@
 /* $TOG: main.C /main/7 1998/10/26 17:19:37 mgreess $ */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <locale.h>
 #include "dmx.hh"
@@ -38,6 +39,48 @@ extern "C" {
 #endif
 #include <Dt/EnvControlP.h>
 #include <Dt/DtPStrings.h>
+
+/*
+ * Create the empty file "<dir>/<name_template>" with mkstemp(3) and return its
+ * open descriptor (mode 0600, owned by the caller), with the name in malloc'ed
+ * storage in *name.  The file exists when this returns, so no other user can
+ * plant a file or a symbolic link at the name before it is opened.  If dir is
+ * NULL, empty or not writable, $TMPDIR or the system default directory is
+ * used.  name_template ends in "XXXXXX".  Returns -1 if no file can be made.
+ */
+static int
+create_temp_file (const char *dir, const char *name_template, char **name)
+{
+	const char	*dirs[3];
+	char		path[MAXPATHLEN];
+	int		i, len, fd;
+
+	dirs[0] = dir;
+	dirs[1] = getenv ("TMPDIR");
+	dirs[2] = P_tmpdir;
+
+	for (i = 0; i < 3; i++)
+	{
+		if (dirs[i] == NULL || *dirs[i] == '\0')
+			continue;
+		len = snprintf (path, sizeof (path), "%s/%s", dirs[i],
+				name_template);
+		if (len < 0 || (size_t) len >= sizeof (path))
+			continue;
+		fd = mkstemp (path);
+		if (fd == -1)
+			continue;
+		*name = strdup (path);
+		if (*name == NULL)
+		{
+			close (fd);
+			unlink (path);
+			return -1;
+		}
+		return fd;
+	}
+	return -1;
+}
 
 int
 main (int argc, char **argv)
@@ -122,16 +165,22 @@ main (int argc, char **argv)
 
 	if (ffile == NULL)
 	{
-                static char *tmpdir = new char[MAXPATHLEN+1];
+		char	tmpdir[MAXPATHLEN+1];
+		char	*home = getenv("HOME");
+		int	fd;
 
-                sprintf(
-			tmpdir,
-			"%s/%s",
-			getenv("HOME"),
-			DtPERSONAL_TMP_DIRECTORY);
+		if (home != NULL && *home != '\0')
+			snprintf(
+				tmpdir,
+				sizeof (tmpdir),
+				"%s/%s",
+				home,
+				DtPERSONAL_TMP_DIRECTORY);
+		else
+			tmpdir[0] = '\0';
 
-	        name = tempnam(tmpdir, "dtmpr");
-		if ((msgFile = fopen (name, "w+")) == NULL)
+		fd = create_temp_file (tmpdir, "dtmprXXXXXX", &name);
+		if (fd == -1 || (msgFile = fdopen (fd, "w+")) == NULL)
 		{
 			perror ("tmpfile");
 			exit (1);
@@ -152,7 +201,6 @@ main (int argc, char **argv)
 		}
 	
 	        fclose (msgFile);
-		delete [] tmpdir;
 
 	} else {
 		name = ffile;

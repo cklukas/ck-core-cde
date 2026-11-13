@@ -1,3 +1,15 @@
+2026-11-13
+- tt, dtinfo, dtmail and the drag and drop example: seven more places made a
+  temporary name with `tempnam()` or `mktemp()` and used it later. They now
+  create the file with `mkstemp()` (mode 0600) or, where the name stands for a
+  directory (`tttar`) or holds a FIFO (`tttrace`), the directory with
+  `mkdtemp()` (mode 0700). A failed creation is reported instead of using the
+  predictable name; `tttar` now exits with an error where it used to fail later
+  at `rmdir`, and the saved session of dtmail is no longer stored under a
+  predictable `session.N` name. Tests plant a link at the old name and fail on
+  the previous code: `lib/tt/bin/tests`, `programs/dtmail/tests`,
+  `programs/dtinfo/dtinfo/src/UAS/DtSR/tests` and `examples/dtdnd/tests`.
+
 2026-11-12
 - DtWidget, DtHelp, dtcm, dtstyle, dticon, dtpad, dtcreate and dtudcfonted:
   twelve more places made a temporary file name with `tmpnam()`, `tempnam()`
