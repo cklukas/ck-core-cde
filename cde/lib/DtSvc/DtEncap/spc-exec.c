@@ -35,6 +35,7 @@
 #include <bms/sbport.h> /* NOTE: sbport.h must be the first include. */
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/param.h>
@@ -66,6 +67,9 @@ static char *get_path_from_context (
 	char            *context );
 static int remove_variable(
   	char		*string );
+static int SPC_child_pipe[2] = {-1, -1};
+static void SPC_Reap_Children(void *data, int *fd, SbInputId *id);
+static void SPC_Reap_Terminated_Children(void);
 static void resolve_variable_reference(
   	char		**string );
 
@@ -249,11 +253,77 @@ SPC_MakeSystemCommand(SPC_Channel_Ptr channel)
  */
 
 /*----------------------------------------------------------------------+*/
-/* This is the right way according to the Spec 1170 */
+/* The SIGCHLD handler of the daemon.  Reaping a child takes the process lock,
+   reports errors and calls the termination handler of the channel, none of
+   which may run in a signal handler, so the handler writes one byte to a pipe
+   and the event loop of the daemon reaps the children (SPC_Reap_Children). */
 void SPC_Child_Terminated(int i)
 /*----------------------------------------------------------------------+*/
 {
-  /* This catches signals for sub-process termination */
+  int saved_errno = errno;
+  ssize_t written;
+
+  (void) i;
+  if (SPC_child_pipe[1] != -1) {
+    /* A full pipe already holds a wake-up, so the result does not matter. */
+    written = write(SPC_child_pipe[1], "c", 1);
+    (void) written;
+  }
+  errno = saved_errno;
+}
+
+/*----------------------------------------------------------------------+*/
+/* Create the pipe of the SIGCHLD handler (once) and wait for it in the event
+   loop.  Both ends do not block and are not inherited by sub-processes. */
+int SPC_Child_Pipe_Open(void)
+/*----------------------------------------------------------------------+*/
+{
+  int i, flags;
+
+  if (SPC_child_pipe[0] != -1)
+    return 0;
+  if (SbAddInput_hookfn == nullptr) {
+    errno = EINVAL;
+    return -1;
+  }
+  if (pipe(SPC_child_pipe) == -1)
+    return -1;
+  for (i = 0; i < 2; i++) {
+    flags = fcntl(SPC_child_pipe[i], F_GETFL);
+    if (flags == -1 ||
+	fcntl(SPC_child_pipe[i], F_SETFL, flags | O_NONBLOCK) == -1 ||
+	fcntl(SPC_child_pipe[i], F_SETFD, FD_CLOEXEC) == -1) {
+      int saved_errno = errno;
+
+      (void) close(SPC_child_pipe[0]);
+      (void) close(SPC_child_pipe[1]);
+      SPC_child_pipe[0] = SPC_child_pipe[1] = -1;
+      errno = saved_errno;
+      return -1;
+    }
+  }
+  (void) (*SbAddInput_hookfn)(SPC_child_pipe[0], SPC_Reap_Children, nullptr);
+  return 0;
+}
+
+/*----------------------------------------------------------------------+*/
+/* Called by the event loop of the daemon after a SIGCHLD. */
+static void SPC_Reap_Children(void *data, int *fd, SbInputId *id)
+/*----------------------------------------------------------------------+*/
+{
+  char drain[16];
+
+  (void) data; (void) fd; (void) id;
+  while (read(SPC_child_pipe[0], drain, sizeof(drain)) > 0)
+    ;
+  SPC_Reap_Terminated_Children();
+}
+
+/*----------------------------------------------------------------------+*/
+static void SPC_Reap_Terminated_Children(void)
+/*----------------------------------------------------------------------+*/
+{
+  /* This reaps the sub-processes that terminated */
   int type, cause, status;
   pid_t wait_pid, pid;
   SPC_Channel_Ptr channel;

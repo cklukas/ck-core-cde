@@ -1,4 +1,17 @@
 2026-11-13
+- dtspcd: the SIGCHLD handler of the daemon reaped the children itself. It took
+  the process lock, reported errors and called the termination handler of the
+  channel from the signal, which can deadlock the daemon when the signal
+  interrupts a thread of control that holds the lock or the log. The handler
+  now writes one byte to a non-blocking, close-on-exec pipe that the event loop
+  waits on, and the loop reaps the children (`SPC_Child_Pipe_Open()`,
+  `SPC_Reap_Children()` in `lib/DtSvc/DtEncap/spc-exec.c`). A daemon must
+  install its event loop hooks before it opens a channel; the request test
+  does so now. The handlers of both pipes read the result of `write()` without
+  using it, as a full pipe already holds a wake-up. Test:
+  `lib/DtSvc/DtEncap/tests/check-spc-child-signal.py`.
+
+2026-11-13
 - dtspcd: the exit timer ran in the SIGALRM handler. The handler took the log
   lock, wrote to the log with stdio, closed the log and called `exit()`, from
   a signal that can arrive while the daemon is in the middle of any of those,

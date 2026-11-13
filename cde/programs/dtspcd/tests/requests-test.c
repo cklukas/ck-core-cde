@@ -552,6 +552,15 @@ static const struct {
 #endif
 };
 
+/* The daemon installs the hooks of its event loop before it opens a channel;
+   the test has no event loop and only needs the registrations to succeed. */
+static SbInputId test_add_input(int fd, SbInputCallbackProc proc, void *data)
+{
+  (void) proc;
+  (void) data;
+  return(fd);
+}
+
 int main(int argc, char **argv)
 {
   size_t i;
@@ -566,6 +575,7 @@ int main(int argc, char **argv)
     return(2);
   }
 
+  SbAddInput_hookfn = test_add_input;
   SPC_who_am_i = SPC_I_AM_A_DAEMON;
   XeProgName = SPCD_PROG_NAME;
   signal(SIGPIPE, SIG_IGN);

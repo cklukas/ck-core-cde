@@ -129,12 +129,18 @@ SPC_ResetTerminator(void)
 
   _DtSvcProcessLock();
   if (SPC_who_am_i == SPC_I_AM_A_DAEMON) {
+    if (SPC_Child_Pipe_Open() == -1) {
+      SPC_Error(SPC_No_Signal_Handler);
+      _DtSvcProcessUnlock();
+      return(SPC_ERROR);
+    }
     svect.sa_handler = SPC_Child_Terminated;
     sigemptyset(&svect.sa_mask);
     svect.sa_flags = 0;
 
     if(sigaction(SIGCHLD, &svect, (struct sigaction *)nullptr)==ERROR) {
       SPC_Error(SPC_No_Signal_Handler);
+      _DtSvcProcessUnlock();
       return(SPC_ERROR);
     }
   }

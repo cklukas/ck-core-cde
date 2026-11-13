@@ -478,6 +478,7 @@ SPC_Connection_Ptr SPC_Channel_Terminator_Connection (SPC_Channel_Ptr channel);
 void SPC_Close_Unused (void);
 int SPC_MakeSystemCommand (SPC_Channel_Ptr channel);
 void SPC_Child_Terminated(int);
+int SPC_Child_Pipe_Open(void);
 int exec_proc_local_channel_object (SPC_Channel_Ptr channel);
 
 

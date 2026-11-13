@@ -1385,10 +1385,14 @@ void SPCD_Alarm_Handler(int not_used)
 /*----------------------------------------------------------------------+*/
 {
   int saved_errno = errno;
+  ssize_t written;
 
   (void) not_used;
-  if (SPCD_alarm_pipe[1] != -1)
-    (void) write(SPCD_alarm_pipe[1], "a", 1);
+  if (SPCD_alarm_pipe[1] != -1) {
+    /* A full pipe already holds a wake-up, so the result does not matter. */
+    written = write(SPCD_alarm_pipe[1], "a", 1);
+    (void) written;
+  }
   errno = saved_errno;
 }
 
