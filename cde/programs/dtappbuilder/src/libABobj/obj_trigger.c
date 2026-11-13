@@ -59,6 +59,8 @@ trigger_create(void)
 	ABTrigger	trigger= nullptr;
 
 	trigger= (ABTrigger)malloc(sizeof(*trigger));
+	if (trigger == nullptr)
+		return nullptr;
 	trigger_init(trigger);
 	return trigger;
 }

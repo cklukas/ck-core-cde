@@ -498,6 +498,7 @@ objlistP_shrink_array(ABObjList list, int sizeDiff)
     ABObj	*new_objs = nullptr;
     void	**new_user_datas = nullptr;
     int		i = 0;
+    BOOL	user_datas_valid = (list->user_datas != nullptr);
 	
     for (i= new_objs_size; i < list->objs_size; ++i)
     {
@@ -511,7 +512,7 @@ objlistP_shrink_array(ABObjList list, int sizeDiff)
     if (new_objs_size > 0)
     {
         new_objs = (ABObj*) reallocarray(list->objs, new_objs_size, sizeof(ABObj));
-	if (new_user_datas != nullptr)
+	if (user_datas_valid)
 	{
 	    new_user_datas = (void **) reallocarray(list->user_datas, new_objs_size, sizeof(void*));
 	}
@@ -523,8 +524,17 @@ objlistP_shrink_array(ABObjList list, int sizeDiff)
     }
 
     if (   (new_objs_size > 0) 
-	&& ((new_objs == nullptr) || (new_user_datas == nullptr)) )
+	&& ((new_objs == nullptr) || (user_datas_valid && (new_user_datas == nullptr))) )
     {
+	/* A successful reallocarray has released the old block. */
+	if (new_objs != nullptr)
+	{
+	    list->objs = new_objs;
+	}
+	if (new_user_datas != nullptr)
+	{
+	    list->user_datas = new_user_datas;
+	}
 	return_value = ERR_NO_MEMORY;
 	goto epilogue;
     }
@@ -563,8 +573,15 @@ objlistP_grow_array(ABObjList list, int sizeDiff)
     if (   (new_objs == nullptr) 
 	|| (user_datas_valid && (new_user_datas == nullptr)) )
     {
-	free(new_objs);
-	free(new_user_datas);
+	/* A successful reallocarray has released the old block. */
+	if (new_objs != nullptr)
+	{
+	    list->objs = new_objs;
+	}
+	if (new_user_datas != nullptr)
+	{
+	    list->user_datas = new_user_datas;
+	}
 	return_value = ERR_NO_MEMORY;
 	goto epilogue;
     }
