@@ -2277,7 +2277,7 @@ prop_submenu_name_ok(
 	    /* Build list of any menus in the ancestory of "owner" menu
 	     * since these are not valid submenus
 	     */
-            ineligible_menus = (ABObj*)util_malloc(menu_count*sizeof(ABObj));
+            ineligible_menus = (ABObj*)XtCalloc(menu_count, sizeof(ABObj));
             ineligible_menus[ineligible_count++] = owner;
             find_submenu_owners(owner, menus, menu_count,
                 	ineligible_menus, &ineligible_count);
@@ -2296,9 +2296,11 @@ prop_submenu_name_ok(
 
 		help_buf = (STRING) util_malloc(strlen(fmtStr) +
 		    strlen(obj_get_name(owner)) + strlen(menu_name) +1);
-		sprintf(help_buf, fmtStr, obj_get_name(owner), menu_name);
-
-		util_set_help_data(help_buf, nullptr, nullptr);
+		if (help_buf != nullptr)
+		{
+		    sprintf(help_buf, fmtStr, obj_get_name(owner), menu_name);
+		    util_set_help_data(help_buf, nullptr, nullptr);
+		}
 		sprintf(msgbuf, CATGETS(Dtb_project_catd, 100, 131,
 		    "Menu \"%s\" is an ancestor of \"%s\"\ntherefore it cannot be attached as a Sub-menu."), menu_name, obj_get_name(owner));
         	propP_popup_message(field, msgbuf, False);
@@ -2307,7 +2309,7 @@ prop_submenu_name_ok(
 		util_free(help_buf);
 	    }
 	    util_free(menus);
-	    util_free(ineligible_menus);
+	    XtFree((char *)ineligible_menus);
 	    util_free(menu_name);
         }
     }
@@ -3118,7 +3120,7 @@ handle_auto_apply(
 	changing_types = TRUE;
 
 
-    help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
+    help_data = (DtbObjectHelpData) XtCalloc(1, sizeof(DtbObjectHelpDataRec));
     help_data->help_volume = nullptr;
     help_data->help_locationID = nullptr;
 
@@ -3173,7 +3175,7 @@ handle_auto_apply(
 	answer = dtb_show_modal_message(pstate->objlist,
 		&dtb_revolv_prop_pend_msg, xm_buf, help_data, nullptr);
 
-	util_free(help_data);
+	XtFree((char *)help_data);
 	XmStringFree(xm_buf);
     }
 
@@ -3239,7 +3241,7 @@ init_prop_state_info(
 {
     PropStateInfo *pstate;
 
-    pstate = (PropStateInfo*)util_malloc(sizeof(PropStateInfo));
+    pstate = (PropStateInfo*)XtCalloc(1, sizeof(PropStateInfo));
 
     pstate->palitem = palitem;
     pstate->objlist = objlist;
@@ -4085,8 +4087,14 @@ menu_newCB(
 
     module = obj_get_module(*(pms->current_obj_ptr));
     name = (base? ab_ident_from_name_and_label(base, "menu") : "menu");
-    menu_name = strdup(name);
+    menu_name = XtNewString(name);
     unique_name = obj_alloc_unique_name_for_child(module, menu_name, -1);
+    if (unique_name == nullptr)
+    {
+	XtFree(menu_name);
+	util_free(base);
+	return;
+    }
 
     /* We want to create/load the new menu in a separate editor if
      * possible so that the user can view both the new menu AND the
@@ -4132,7 +4140,7 @@ menu_newCB(
         ui_field_set_string(pms->field, unique_name);
 
     util_free(base);
-    util_free(menu_name);
+    XtFree(menu_name);
     util_free(unique_name);
 }
 
@@ -4237,7 +4245,7 @@ menulist_buildCB(
 	     * ancestory (if it's a submenu) - these menus will not be eligible
 	     * for selection as a submenu off the current menu.
 	     */
-	    ineligible_menus = (ABObj*)util_malloc(num_menus*sizeof(ABObj));
+	    ineligible_menus = (ABObj*)XtCalloc(num_menus, sizeof(ABObj));
 	    ineligible_menus[ineligible_count++] = current_obj;
 	    find_submenu_owners(current_obj, menus, num_menus,
 		ineligible_menus, &ineligible_count);
@@ -4270,7 +4278,7 @@ menulist_buildCB(
         XtVaSetValues(submenu, XmNuserData, (XtArgVal)menus_menu, nullptr);
 
 	util_free(menus);
-	util_free(ineligible_menus);
+	XtFree((char *)ineligible_menus);
     }
     else /* No Menus - inactivate the item */
     {
@@ -4386,9 +4394,11 @@ menu_editCB(
 
             help_buf = (STRING) util_malloc(strlen(fmtStr) +
 		strlen(current_menuname) + strlen(obj_get_name(module)) +1);
-            sprintf(help_buf, fmtStr, current_menuname, obj_get_name(module));
-
-            util_set_help_data(help_buf, nullptr, nullptr);
+            if (help_buf != nullptr)
+	    {
+                sprintf(help_buf, fmtStr, current_menuname, obj_get_name(module));
+                util_set_help_data(help_buf, nullptr, nullptr);
+	    }
             sprintf(Buf, CATGETS(Dtb_project_catd, 100, 134,
             	"Could not find menu \"%s\" in module \"%s\"."),
 		current_menuname, obj_get_name(module));

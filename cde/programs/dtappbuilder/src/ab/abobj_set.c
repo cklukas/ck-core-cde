@@ -207,7 +207,7 @@ abobj_set_name(
  	}
 
 	if (oldname)
-	    oldname_copy = strdup(oldname);
+	    oldname_copy = XtNewString(oldname);
 	obj_set_name(obj, name);
         abobj_set_save_needed(module, TRUE);
 
@@ -281,7 +281,7 @@ abobj_set_name(
 	if (oldname_copy != nullptr)
 	{
  	    abobj_comp_rename(obj, oldname_copy, obj_get_name(obj));
-	    util_free(oldname_copy);
+	    XtFree(oldname_copy);
 	}
     }
 }
@@ -308,9 +308,9 @@ abobj_construct_item_name(
 
     if (suffix != nullptr)
     {
-     	itemname = strdup(name);
+     	itemname = XtNewString(name);
 	full_itemname = ab_ident_from_name_and_label(itemname, suffix);
-	util_free(itemname);
+	XtFree(itemname);
     }
     else
 	full_itemname = name;

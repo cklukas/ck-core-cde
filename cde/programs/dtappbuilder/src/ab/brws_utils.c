@@ -703,9 +703,9 @@ brws_set_module_name
              * Check return value of strrchr before adding 1 to it
              */
 	    if (filename = strrchr(fullpath, '/'))
-	        module_name = (STRING)strdup(filename + 1);
+	        module_name = filename + 1;
 	    else
-	        module_name = (STRING)strdup(fullpath);
+	        module_name = fullpath;
 
 	}
 	else

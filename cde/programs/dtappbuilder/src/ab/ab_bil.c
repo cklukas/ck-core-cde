@@ -174,6 +174,10 @@ ab_load_bil_file(
 		    /* Now create a new buffer of the proper size */
 		    len = strlen(init_msg) + strlen(modfile) + 3;
 		    errmsg = (STRING) util_malloc(len);
+		    if (errmsg == nullptr)
+		    {
+			continue;
+		    }
  
 		    /*
 		    ** Put the general text plus name of the first 
@@ -183,7 +187,13 @@ ab_load_bil_file(
 	        }
 	        else
                 {
-		    errmsg = (STRING) realloc(errmsg, len);
+		    STRING grown = (STRING) realloc(errmsg, len);
+
+		    if (grown == nullptr)
+		    {
+			continue;
+		    }
+		    errmsg = grown;
 		    strcat(errmsg, "\n");
 		    strcat(errmsg, modfile);
 	        }
@@ -432,7 +442,8 @@ ab_check_and_open_bip(
     BOOL                read_OK, write_OK;
     int			iRet = 0;
     XmString		xm_buf = (XmString) NULL;
-    DtbObjectHelpData   help_data = nullptr;
+    DtbObjectHelpDataRec help_data_rec = {};
+    DtbObjectHelpData   help_data = &help_data_rec;
 
     abio_access_file(fileName, &read_OK, &write_OK);
     if (read_OK)
@@ -450,7 +461,6 @@ ab_check_and_open_bip(
 	    dtb_palette_open_ro_proj_msg_initialize(
 			&dtb_palette_open_ro_proj_msg);
 
-            help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
             help_data->help_text = CATGETS(Dtb_project_catd, 100, 90,
 		"Opening a read-only project means that any changes that\naffect the project (.bip) file, such as creation of a\nnew module or creation of a cross-module connection,\ncannot be saved, unless you save the project to a\ndifferent file name. You have the option of continuing\nwith the open operation or cancelling it.");
             help_data->help_volume = "";
@@ -459,7 +469,6 @@ ab_check_and_open_bip(
             answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
                 &dtb_palette_open_ro_proj_msg, xm_buf, help_data, nullptr);
 
-	    util_free(help_data);
 	    XmStringFree(xm_buf);
 	    switch (answer)
 	    {
@@ -530,7 +539,8 @@ ab_check_and_import_bil(
     ABObj       	project = proj_get_project();
     int			iRet = 0;
     XmString		xm_buf = (XmString) NULL;
-    DtbObjectHelpData	help_data = nullptr;
+    DtbObjectHelpDataRec help_data_rec = {};
+    DtbObjectHelpData	help_data = &help_data_rec;
 
     abio_access_file(fileName, &read_OK, &write_OK);
     if (read_OK)
@@ -559,7 +569,6 @@ ab_check_and_import_bil(
 		dtb_palette_import_ro_msg_initialize(
 				&dtb_palette_import_ro_msg);
 
-                help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
                 help_data->help_text = CATGETS(Dtb_project_catd, 100, 91,
 		    "Importing a read-only module means that any changes\nthat affect the module cannot be saved, unless you\nsave the module to a different file name. You have\nthe option of continuing with the import operation\nor cancelling it.");
 
@@ -569,7 +578,6 @@ ab_check_and_import_bil(
         	answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
 			&dtb_palette_import_ro_msg, xm_buf, help_data, nullptr);
 
-		util_free(help_data);
 		XmStringFree(xm_buf);
 		switch (answer)
 		{

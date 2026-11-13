@@ -644,11 +644,25 @@ projP_remove_proc(
                 /* Now create a new buffer of the proper size */
                 len = strlen(init_msg) + strlen(name) + 2;
                 wrnmsg = (STRING) util_malloc(len);
+		if (wrnmsg == nullptr)
+		{
+		    /* Without the confirmation, nothing is removed. */
+		    answer = DTB_ANSWER_CANCEL;
+		    break;
+		}
                 sprintf(wrnmsg, "%s\n\n%s", init_msg, name);
 	    }
 	    else
 	    {
-                wrnmsg = (STRING) realloc(wrnmsg, len);
+                STRING	grown = (STRING) realloc(wrnmsg, len);
+
+		if (grown == nullptr)
+		{
+		    util_free(wrnmsg);
+		    answer = DTB_ANSWER_CANCEL;
+		    break;
+		}
+                wrnmsg = grown;
                 strcat(wrnmsg, "\n");
                 strcat(wrnmsg, name);
 	    }
@@ -694,6 +708,7 @@ projP_remove_proc(
 	projP_update_menu_items(0, 0);
     }
     
+    util_free(selected_nodes);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     

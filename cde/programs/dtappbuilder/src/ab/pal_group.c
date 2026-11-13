@@ -501,7 +501,7 @@ ungroup_objects(
 	    oobj = objxm_comp_get_subobj(group, AB_CFG_OBJECT_OBJ);
 	    num_children = obj_get_num_children(oobj);
 
-	    member_list = (ABObj *)util_malloc(num_children * sizeof(ABObj*));
+	    member_list = (ABObj *)XtCalloc(num_children, sizeof(ABObj));
 
 	    /*
 	     * Group members are all direct children of the AB_CFG_OBJECT_OBJ
@@ -581,7 +581,7 @@ ungroup_objects(
 	        abobj_show_tree(member_list[cur_member], TRUE);
 	    }
 
-	    util_free(member_list);
+	    XtFree((char *)member_list);
 
 	    obj_destroy(group);
 
@@ -1464,7 +1464,7 @@ undo_ungroup(
     if (!undo_rec)
 	return;
 
-    new_list = (ABObj *)calloc(undo_rec->count, sizeof(ABObj));
+    new_list = (ABObj *)XtCalloc(undo_rec->count, sizeof(ABObj));
 
     project = proj_get_project();
 
@@ -1505,8 +1505,7 @@ undo_ungroup(
 
     abobj_set_undo(new_list, undo_rec->count, undo_group, AB_UNDO_GROUP);
 
-    if (new_list)
-	free(new_list);
+    XtFree((char *)new_list);
 }
 
 void
@@ -1543,7 +1542,7 @@ set_new_group_size(
         abobj_set_pixel_width(obj, width, 0);
         abobj_set_pixel_height(obj, rect.height, 0);
     }
-    util_free(member_list);
+    XtFree((char *)member_list);
 }
 
 void
@@ -2224,7 +2223,7 @@ group_align_labels(
     get_widest_label_obj(child_list, num_children, &child, &max_label_width);
     get_widest_value_obj(child_list, num_children, &child, &max_value_width);
 
-    util_free(child_list);
+    XtFree((char *)child_list);
 
     if (cell_width < max_label_width + max_value_width)
 	cell_width = max_label_width + max_value_width;
@@ -2232,7 +2231,7 @@ group_align_labels(
     get_row_col(obj, &num_rows, &num_columns);
 
     if (num_rows > 0)
-        one_col = (ABObj *)util_malloc(num_rows * sizeof(ABObj));
+        one_col = (ABObj *)XtCalloc(num_rows, sizeof(ABObj));
 
     for (i = 0; i < num_columns; i++)
     {
@@ -2283,6 +2282,7 @@ group_align_labels(
 
 	previous_ref_obj = ref_obj;
     }
+    XtFree((char *)one_col);
 }
 
 static void
@@ -2475,7 +2475,7 @@ create_member_list(
     *member_count = trav_count(cobj,
 		AB_TRAV_SALIENT_CHILDREN | AB_TRAV_MOD_SAFE);
 
-    *member_list = (ABObj *)malloc(*member_count * sizeof(ABObj));
+    *member_list = (ABObj *)XtCalloc(*member_count, sizeof(ABObj));
 
     /*
      * Create list of members.
@@ -2603,7 +2603,7 @@ get_cell_size(
                 cell_width, cell_height,
                 (ABObj *) nullptr, (ABObj *) nullptr);
 
-	util_free(member_list);
+	XtFree((char *)member_list);
     }
     else
 	*cell_width = *cell_height = -1;

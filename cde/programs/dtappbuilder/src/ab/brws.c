@@ -711,7 +711,7 @@ browser_rband(
 	return;
     }
 
-    new_sel.list = (ABObj *)util_malloc(num_selected * sizeof(ABObj));
+    new_sel.list = (ABObj *)XtCalloc(num_selected, sizeof(ABObj));
     new_sel.count = 0;
 
     /*
@@ -844,7 +844,7 @@ browser_rband(
     /*
      * Free list of new selected objects
      */
-    util_free(new_sel.list);
+    XtFree((char *)new_sel.list);
 
     /*
      * Free up node list if it contained anything
@@ -1682,7 +1682,7 @@ create_browser_ui_handles
      * Create the browser widgets
      */
 
-    instance = (DtbBrwsMainwindowInfo)malloc(sizeof(DtbBrwsMainwindowInfoRec));
+    instance = (DtbBrwsMainwindowInfo)XtCalloc(1, sizeof(DtbBrwsMainwindowInfoRec));
     (void)dtbBrwsMainwindowInfo_clear(instance);
 
     (void)dtb_brws_mainwindow_initialize(instance, AB_toplevel);
@@ -1809,7 +1809,7 @@ destroy_browser_ui_handles(
     /*
      * Free the ip structure
      */
-    free(instance);
+    XtFree((char *)instance);
 }
 
 
@@ -2170,7 +2170,7 @@ create_browser_struct(void)
     /*
      * Create AB browser struct
      */
-    b = (ABBrowser)malloc(sizeof(AB_BROWSER));
+    b = (ABBrowser)XtCalloc(1, sizeof(AB_BROWSER));
 
     /*
      * Create browser structs for project/module windows
@@ -2220,7 +2220,7 @@ destroy_browser_struct(
     /*
      * Free browser
      */
-    free(b);
+    XtFree((char *)b);
 }
 
 
@@ -2297,7 +2297,7 @@ BrowserUiObj aob_create_ui_obj(void)
 {
     BrowserUiObj	ui;
 
-    ui = (BrowserUiObj)malloc(sizeof(BrowserUiObjects));
+    ui = (BrowserUiObj)XtCalloc(1, sizeof(BrowserUiObjects));
 
     ui->ip = nullptr;
     ui->shell = nullptr;
@@ -2321,7 +2321,7 @@ aob_create_props(void)
 {
     BrowserProps	props;
 
-    props = (BrowserProps)malloc(sizeof(BrowserProperties));
+    props = (BrowserProps)XtCalloc(1, sizeof(BrowserProperties));
 
     props->elements_shown = 0;
     props->initial_state = 0;
@@ -2346,7 +2346,7 @@ aob_destroy_ui_obj
     if (!v || !v->ui_handle)
 	return;
 
-    free(v->ui_handle);
+    XtFree((char *)v->ui_handle);
 
     v->ui_handle = (void *)nullptr;
 }
@@ -2360,10 +2360,10 @@ aob_destroy_props
     Vwr		b
 )
 {
-    if (!b && !b->properties)
+    if (!b || !b->properties)
 	return;
 
-    free(b->properties);
+    XtFree((char *)b->properties);
 }
 
 /*

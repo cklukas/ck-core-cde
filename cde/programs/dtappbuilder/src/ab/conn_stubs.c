@@ -3410,9 +3410,8 @@ connP_exec_code_okCB(
     code_frag = XmTextGetString(exec_code_textpane);
     if (!util_strempty(code_frag))
     {
-	if (CodeFragBuf)
-	    util_free(CodeFragBuf);
-	CodeFragBuf = strdup(code_frag);
+	XtFree(CodeFragBuf);
+	CodeFragBuf = XtNewString(code_frag);
 
 	newline = strchr(code_frag, '\n');
 	if (newline)
@@ -3430,10 +3429,9 @@ connP_exec_code_okCB(
     }
     else
     {
-	if (CodeFragBuf)
-	    util_free(CodeFragBuf);
+	XtFree(CodeFragBuf);
 	if (code_frag)
-	    CodeFragBuf = strdup(code_frag);
+	    CodeFragBuf = XtNewString(code_frag);
 	else
 	    CodeFragBuf = NULL;
 	XmTextFieldSetString(arg_field, "");
@@ -3466,9 +3464,8 @@ connP_exec_code_applyCB(
     code_frag = XmTextGetString(exec_code_textpane);
     if (!util_strempty(code_frag))
     {
-        if (CodeFragBuf)
-            util_free(CodeFragBuf);
-        CodeFragBuf = strdup(code_frag);
+        XtFree(CodeFragBuf);
+        CodeFragBuf = XtNewString(code_frag);
 
     	newline = strchr(code_frag, '\n'); 
 	if (newline)
@@ -3486,10 +3483,9 @@ connP_exec_code_applyCB(
     }  
     else
     {
-        if (CodeFragBuf)
-            util_free(CodeFragBuf);
+        XtFree(CodeFragBuf);
         if (code_frag)
-            CodeFragBuf = strdup(code_frag);
+            CodeFragBuf = XtNewString(code_frag);
         else 
             CodeFragBuf = NULL; 
 	XmTextFieldSetString(arg_field, "");

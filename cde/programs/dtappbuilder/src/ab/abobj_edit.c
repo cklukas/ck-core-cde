@@ -405,7 +405,7 @@ init_clipboard(void)
 {
     if (!ABClipboard)
     {
-	ABClipboard = (ABClipboardRec)malloc(sizeof(AB_CLIPBOARD_REC));
+	ABClipboard = (ABClipboardRec)XtCalloc(1, sizeof(AB_CLIPBOARD_REC));
 	ABClipboard->list = nullptr;
 	ABClipboard->info_list = nullptr;
 	ABClipboard->count = 0;
@@ -425,6 +425,8 @@ verify_clipboard_space(
 )
 {
     int		num_nodes;
+    ABObj	*new_list;
+    ABClipbInfo	new_info_list;
 
     init_clipboard();
 
@@ -443,34 +445,24 @@ verify_clipboard_space(
     /*
      * Realloc space for new count
      */
-    ABClipboard->list = (ABObj *)reallocarray((void *)ABClipboard->list, num_nodes, sizeof(ABObj));
-    ABClipboard->info_list = (ABClipbInfo)reallocarray(ABClipboard->info_list, num_nodes, sizeof(AB_CLIPB_INFO));
-
+    new_list = (ABObj *)XtCalloc(num_nodes, sizeof(ABObj));
+    new_info_list = (ABClipbInfo)XtCalloc(num_nodes, sizeof(AB_CLIPB_INFO));
 
     /*
-     * If realloc went OK
+     * Existing nodes are kept; the new blocks are zeroed by the allocator.
      */
-    if (ABClipboard->list)
+    if (ABClipboard->count > 0)
     {
-	int	remainder = num_nodes - ABClipboard->count;
-
-	/*
-	 * Set 'new' blocks to zero. Leave existing
-	 * blocks untouched.
-	 */
-        memset((void *)&ABClipboard->list[ABClipboard->count], 
-			0, 
-			(remainder * sizeof(ABObj)));
-
-        memset((void *)&ABClipboard->info_list[ABClipboard->count], 
-			0, 
-			(remainder * sizeof(AB_CLIPB_INFO)));
-
-	/*
-	 * Set new size to new node count
-	 */
-        ABClipboard->size = num_nodes;
+        memcpy((void *)new_list, (void *)ABClipboard->list,
+			(ABClipboard->count * sizeof(ABObj)));
+        memcpy((void *)new_info_list, (void *)ABClipboard->info_list,
+			(ABClipboard->count * sizeof(AB_CLIPB_INFO)));
     }
+    XtFree((char *)ABClipboard->list);
+    XtFree((char *)ABClipboard->info_list);
+    ABClipboard->list = new_list;
+    ABClipboard->info_list = new_info_list;
+    ABClipboard->size = num_nodes;
 }
 
 /*
@@ -714,7 +706,7 @@ resolve_clipboard_attachments(
      * objects. It is used to resolve object type attachments
      */
     if (count > 0)
-        new_list = (ABObj *)util_malloc(count * sizeof(ABObj));
+        new_list = (ABObj *)XtCalloc(count, sizeof(ABObj));
 
     /*
      * Populate the new list of objects
@@ -790,8 +782,7 @@ resolve_clipboard_attachments(
     /*
      * Free new list if it was allocated
      */
-    if (new_list)
-	util_free(new_list);
+    XtFree((char *)new_list);
 }
 
 /*
@@ -1332,7 +1323,7 @@ resolve_undo_rec_attachments(
      * objects. It is used to resolve object type attachments
      */
     if (count > 0)
-        new_list = (ABObj *)util_malloc(count * sizeof(ABObj));
+        new_list = (ABObj *)XtCalloc(count, sizeof(ABObj));
 
     /*
      * Populate the new list of objects
@@ -1413,8 +1404,7 @@ resolve_undo_rec_attachments(
     /*
      * Free new list if it was allocated
      */
-    if (new_list)
-	util_free(new_list);
+    XtFree((char *)new_list);
 }
 
 
@@ -1433,7 +1423,7 @@ init_undo_rec(
 
     if (!(*undo_rec_ptr))
     {
-	undo_rec = (ABUndoRec)malloc(sizeof(AB_UNDO_REC));
+	undo_rec = (ABUndoRec)XtCalloc(1, sizeof(AB_UNDO_REC));
 	undo_rec->list = nullptr;
 	undo_rec->info_list = nullptr;
 	undo_rec->undo_func = nullptr;
@@ -1467,6 +1457,8 @@ verify_undo_rec_space(
 {
     ABUndoRec	undo_rec;
     int		num_nodes;
+    ABObj	*new_list;
+    ABUndoInfo	new_info_list;
 
     init_undo_rec(undo_rec_ptr);
 
@@ -1483,31 +1475,24 @@ verify_undo_rec_space(
     /*
      * Realloc space for new count
      */
-    undo_rec->list = (ABObj *)reallocarray((void *)undo_rec->list, num_nodes, sizeof(ABObj));
-    undo_rec->info_list = (ABUndoInfo)reallocarray(undo_rec->info_list, num_nodes, sizeof(AB_UNDO_INFO));
+    new_list = (ABObj *)XtCalloc(num_nodes, sizeof(ABObj));
+    new_info_list = (ABUndoInfo)XtCalloc(num_nodes, sizeof(AB_UNDO_INFO));
 
-
-    if (undo_rec->list)
+    /*
+     * Existing nodes are kept; the new blocks are zeroed by the allocator.
+     */
+    if (undo_rec->count > 0)
     {
-	int	remainder = num_nodes - undo_rec->count;
-
-	/*
-	 * Set 'new' blocks to zero. Leave existing
-	 * blocks untouched.
-	 */
-        memset((void *)&undo_rec->list[undo_rec->count], 
-			0, 
-			(remainder * sizeof(ABObj)));
-
-        memset((void *)&undo_rec->info_list[undo_rec->count], 
-			0, 
-			(remainder * sizeof(AB_UNDO_INFO)));
-
-	/*
-	 * Set new size to new node count
-	 */
-        undo_rec->size = num_nodes;
+        memcpy((void *)new_list, (void *)undo_rec->list,
+			(undo_rec->count * sizeof(ABObj)));
+        memcpy((void *)new_info_list, (void *)undo_rec->info_list,
+			(undo_rec->count * sizeof(AB_UNDO_INFO)));
     }
+    XtFree((char *)undo_rec->list);
+    XtFree((char *)undo_rec->info_list);
+    undo_rec->list = new_list;
+    undo_rec->info_list = new_info_list;
+    undo_rec->size = num_nodes;
 }
 
 static void
@@ -1946,7 +1931,7 @@ set_undo_rec(
 	    member_count = trav_count(obj[j], 
 			AB_TRAV_SALIENT_CHILDREN | AB_TRAV_MOD_SAFE);
 	    
-	    member_list = (ABObj *)calloc(member_count, sizeof(ABObj));
+	    member_list = (ABObj *)XtCalloc(member_count, sizeof(ABObj));
 
 	    for (trav_open(&trav, obj[j], AB_TRAV_SALIENT_CHILDREN |
 	                AB_TRAV_MOD_SAFE), member_index = 0;
@@ -2086,7 +2071,7 @@ clear_undo_rec(
 
 	    if (undo_info->info.ungroup.member_list)
 	    {
-	        free(undo_info->info.ungroup.member_list);
+	        XtFree((char *)undo_info->info.ungroup.member_list);
 		undo_info->info.ungroup.member_list = nullptr;
 	    }
 
@@ -2269,11 +2254,7 @@ abobj_paste(
                         i18n_msg = CATGETS(Dtb_project_catd, 100, 37,
 				"Menubar can be pasted to a Main Window only.");
 
-                        if (errmsg != (STRING) NULL)
-			    util_free(errmsg);
-   
-                        errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);
-                        strcpy(errmsg, i18n_msg);
+                        errmsg = i18n_msg;
 		    }
 		    else 
 		     /* Check to make sure there isn't already a Menubar for
@@ -2288,11 +2269,7 @@ abobj_paste(
 			        Err = True;
 	                        i18n_msg = CATGETS(Dtb_project_catd, 100, 27,
 				"There is already a Menubar for the selected window.");
-				if (errmsg != (STRING) NULL)
-				    util_free(errmsg);  
-   
-				errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);  
-				strcpy(errmsg, i18n_msg); 
+				errmsg = i18n_msg;
 			    }
 			}
 		    }
@@ -2308,11 +2285,7 @@ abobj_paste(
                         i18n_msg = CATGETS(Dtb_project_catd, 100, 28,
 				"Containers must be pasted to\na Main Window or Custom Dialog.");
 
-                        if (errmsg != (STRING) NULL)
-                            util_free(errmsg);
-
-                        errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);
-                        strcpy(errmsg, i18n_msg);
+                        errmsg = i18n_msg;
 		    }
         	}
 		else if (obj_is_group(obj))
@@ -2324,11 +2297,7 @@ abobj_paste(
                         i18n_msg = CATGETS(Dtb_project_catd, 100, 57,
 				"Groups must be pasted to\na group or control panel.");
 
-                        if (errmsg != (STRING) NULL)
-                            util_free(errmsg);
-
-                        errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);
-                        strcpy(errmsg, i18n_msg);
+                        errmsg = i18n_msg;
 		    }
 		}
 		else if (obj_is_pane(obj))
@@ -2408,11 +2377,7 @@ abobj_paste(
 
                             /* If we have an old buffer lying around, free it */
  
-                            if (errmsg != (STRING) NULL)
-                                util_free(errmsg);
-  
-                            errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);
-                            strcpy(errmsg, i18n_msg); 
+                            errmsg = i18n_msg;
 		        }
 		        else
 		        {
@@ -2440,11 +2405,7 @@ abobj_paste(
                         i18n_msg = CATGETS(Dtb_project_catd, 100, 29,
 				"Panes must be pasted to\na Main Window, Custom Dialog or Container.");
 
-                        if (errmsg != (STRING) NULL)
-                            util_free(errmsg);
-
-                        errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);
-                        strcpy(errmsg, i18n_msg);
+                        errmsg = i18n_msg;
 		    }
         	}  /* End if obj_is_pane() */
 		else if (obj_is_control(obj))
@@ -2459,11 +2420,7 @@ abobj_paste(
                         i18n_msg = CATGETS(Dtb_project_catd, 100, 30,
 				"Controls must be pasted to\na Control Panel or Group."); 
 
-                        if (errmsg != (STRING) NULL) 
-                            util_free(errmsg); 
- 
-                        errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1); 
-                        strcpy(errmsg, i18n_msg); 
+                        errmsg = i18n_msg;
 		    }
         	}
 	    } /* End for loop */
@@ -2494,6 +2451,15 @@ abobj_paste(
 
 	    if (ABClipboard->action_count)
 	        new_action_list = (ABObj *)calloc(ABClipboard->action_count, sizeof(ABObj));
+
+	    if ((new_list == nullptr) 
+		|| ((ABClipboard->action_count > 0) && (new_action_list == nullptr)))
+	    {
+		free(new_list);
+		free(new_action_list);
+		XtFree((char *)sel.list);
+		return -1;
+	    }
 
             abobj_deselect_all(project);
 
@@ -3257,7 +3223,7 @@ undo_cut(
     /*
      * List to remember what new objects were created
      */
-    new_list = (ABObj *)calloc(undo_rec->count, sizeof(ABObj));
+    new_list = (ABObj *)XtCalloc(undo_rec->count, sizeof(ABObj));
 
     if (undo_rec->action_count > 0)
     {
@@ -3267,8 +3233,8 @@ undo_cut(
 	 * traversing the lists yet again to figure out how much we need
 	 * exactly for each list.
 	 */
-        new_from_action_list = (ABObj *)calloc(undo_rec->action_count, sizeof(ABObj));
-        new_to_action_list = (ABObj *)calloc(undo_rec->action_count, sizeof(ABObj));
+        new_from_action_list = (ABObj *)XtCalloc(undo_rec->action_count, sizeof(ABObj));
+        new_to_action_list = (ABObj *)XtCalloc(undo_rec->action_count, sizeof(ABObj));
     }
 
     /*
@@ -3682,14 +3648,9 @@ undo_cut(
     (void)abobj_set_undo(new_list, undo_rec->count, 
 				undo_paste, AB_UNDO_PASTE);
     
-    if (new_list)
-	free(new_list);
-
-    if (new_from_action_list)
-	free(new_from_action_list);
-
-    if (new_to_action_list)
-	free(new_to_action_list);
+    XtFree((char *)new_list);
+    XtFree((char *)new_from_action_list);
+    XtFree((char *)new_to_action_list);
 }
 
 static void

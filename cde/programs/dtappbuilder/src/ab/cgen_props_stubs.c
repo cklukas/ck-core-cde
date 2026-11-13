@@ -372,13 +372,13 @@ cgenP_apply_propsCB(
     
     if (CodeGenOptions.make_args != NULL)
     {
-	free(CodeGenOptions.make_args);
+	XtFree(CodeGenOptions.make_args);
 	CodeGenOptions.make_args = NULL;
     }
 
     if (CodeGenOptions.run_args != NULL)
     {
-	free(CodeGenOptions.run_args);
+	XtFree(CodeGenOptions.run_args);
 	CodeGenOptions.run_args = NULL;
     }
 
@@ -397,11 +397,11 @@ cgenP_apply_propsCB(
     
     make_args = XmTextFieldGetString(props_dlg->make_textf);
     if (!util_strempty(make_args))
-	CodeGenOptions.make_args = strdup(make_args);
+	CodeGenOptions.make_args = XtNewString(make_args);
 
     run_args = XmTextFieldGetString(props_dlg->run_time_textf);
     if (!util_strempty(run_args))
-	CodeGenOptions.run_args = strdup(run_args);
+	CodeGenOptions.run_args = XtNewString(run_args);
 
     if (CodeGenCmd == CG_GEN_SPECIFIC_FILES_FLAG ||
 	CodeGenCmd == CG_GEN_SPECIFIC_FILES_AND_MAIN_FLAG)

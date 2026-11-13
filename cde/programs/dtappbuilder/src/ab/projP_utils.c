@@ -145,7 +145,7 @@ projP_show_save_as_bil_chooser(
                 (ArgList) NULL,
                 (Cardinal) 0);
 
-        info = (ChooserInfo)calloc(sizeof(ChooserInfoRec), 1);
+        info = (ChooserInfo)XtCalloc(1, sizeof(ChooserInfoRec));
         XtVaSetValues(AB_generic_chooser,
                         XmNuserData, (XtPointer) info,
                         nullptr);
@@ -242,7 +242,7 @@ save_as_bil_okCB(
         xm_buf = XmStringCreateLocalized(Buf);
         dtb_proj_error_msg_initialize(&dtb_proj_error_msg);
 
-	help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
+	help_data = (DtbObjectHelpData) XtCalloc(1, sizeof(DtbObjectHelpDataRec));
 	help_data->help_text = CATGETS(Dtb_project_catd, 100, 87,
 	    "The file name you specified for saving the\nmodule is a directory. Type another file name\nfor the module.");
 	help_data->help_volume = "";
@@ -251,7 +251,7 @@ save_as_bil_okCB(
         (void)dtb_show_modal_message(widget,
                         &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
-	util_free(help_data);
+	XtFree((char *)help_data);
         XmStringFree(xm_buf);
         return;
     }
@@ -280,7 +280,7 @@ save_as_bil_okCB(
 	    xm_buf = XmStringCreateLocalized(Buf);
 	    dtb_proj_error_msg_initialize(&dtb_proj_error_msg);
 
-            help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
+            help_data = (DtbObjectHelpData) XtCalloc(1, sizeof(DtbObjectHelpDataRec));
             help_data->help_text = CATGETS(Dtb_project_catd, 100, 88,
 		"The directory you specified for saving is not\nwritable by you. Therefore, the module cannot\nbe saved. Try saving the module to another\ndirectory.");
             help_data->help_volume = ""; 
@@ -289,7 +289,7 @@ save_as_bil_okCB(
 	    (void)dtb_show_modal_message(widget,
                         &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
-	    util_free(help_data);
+	    XtFree((char *)help_data);
 	    XmStringFree(xm_buf);
 	}
     }  
@@ -428,7 +428,8 @@ projP_write_out_bil_file(
 			obj_get_file(proj_get_project()));
  
 	if (util_strempty(rel_path) || util_strempty(name)
-	    || util_strempty(old_name))
+	    || util_strempty(old_name)
+	    || ((obj_get_file(obj) != nullptr) && (old_file == nullptr)))
 	{
 	    rc = -1;
 	}

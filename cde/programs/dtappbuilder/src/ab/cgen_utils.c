@@ -401,12 +401,20 @@ build_dtcodegen_cmd_list(STRING *cmdList)
     {
         sprintf(exeDirCmd, "%s/dtcodegen", exeDir);
         cmdList[0] = strdup(exeDirCmd);
+	if (cmdList[0] == nullptr)
+	{
+	    return ERR_NO_MEMORY;
+	}
     }
 
     if (*(cmdList[1]) == 0)
     {
         sprintf(exeDirCmd, "%s/../abmf/dtcodegen", exeDir);
         cmdList[1] = strdup(exeDirCmd);
+	if (cmdList[1] == nullptr)
+	{
+	    return ERR_NO_MEMORY;
+	}
     }
 
     return 0;
@@ -718,12 +726,20 @@ term_execute_command(CG_SUBCOMMAND cmd_code, STRING cmd, STRING argv[])
 	            putenv_var_size = strlen(var_name) + strlen(var_value) + 2;
 						/* +2 for "=" and NULL */
 	            putenv_var = (STRING)util_malloc(putenv_var_size);
+		    if (putenv_var == nullptr)
+		    {
+			subprocess_exit(1);
+		    }
 	            sprintf(putenv_var, "%s=%s", var_name, var_value);
 		}
 	 	else
 		{
 		    putenv_var_size = strlen(var_name) + 2;
 	            putenv_var = (STRING)util_malloc(putenv_var_size);
+		    if (putenv_var == nullptr)
+		    {
+			subprocess_exit(1);
+		    }
 	            sprintf(putenv_var, "%s=", var_name);
 		}
 	        util_putenv(putenv_var);
@@ -1029,9 +1045,11 @@ exec_generate_specific_files(void)
 
     num_mods = strlist_get_num_strs(CodeGenOptions.module_list);
     argv_size += num_mods;
-    argv = (STRING *)util_malloc(argv_size * sizeof(STRING));
-    for (i = 0; i < argv_size; i++)
-	argv[i] = nullptr;
+    argv = (STRING *)calloc(argv_size, sizeof(STRING));
+    if (argv == nullptr)
+    {
+	return ERR_NO_MEMORY;
+    }
  
     arg_count = 0;
     if ((rc = build_dtcodegen_arg_list(argv, &arg_count)) < 0)
@@ -1080,9 +1098,11 @@ exec_generate_specific_files_and_main(void)
 
     num_mods = strlist_get_num_strs(CodeGenOptions.module_list);
     argv_size += num_mods;
-    argv = (STRING *)util_malloc(argv_size * sizeof(STRING));
-    for (i = 0; i < argv_size; i++) 
-        argv[i] = nullptr;
+    argv = (STRING *)calloc(argv_size, sizeof(STRING));
+    if (argv == nullptr)
+    {
+	return ERR_NO_MEMORY;
+    }
 
     arg_count = 0;
     if ((rc = build_dtcodegen_arg_list(argv, &arg_count)) < 0)
@@ -2527,6 +2547,16 @@ cgenP_put_env_var(STRING varName, STRING varValue)
     if (user_env_vars == nullptr)
     {
 	user_env_vars = strlist_create();
+	if (user_env_vars == nullptr)
+	{
+	    return ERR_NO_MEMORY;
+	}
+    }
+
+    newValue = strdup(varValue);
+    if (newValue == nullptr)
+    {
+	return ERR_NO_MEMORY;
     }
 
     strIndex = strlist_get_str_index(user_env_vars, varName);
@@ -2540,7 +2570,6 @@ cgenP_put_env_var(STRING varName, STRING varValue)
 	strlist_remove_index(user_env_vars, strIndex); strIndex = -1;
     }
 
-    newValue = strdup(varValue);
     strlist_add_str(user_env_vars, varName, newValue);
     return 0;
 }

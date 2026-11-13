@@ -79,7 +79,7 @@ vwr_create(
 {
     Vwr	v;
 
-    v = (Viewer *) calloc(1, sizeof(Viewer));
+    v = (Viewer *) XtCalloc(1, sizeof(Viewer));
 
     v->obj_data = nullptr;
     v->methods = m;
@@ -118,7 +118,7 @@ vwr_destroy(
     if (m && m->free_prop)
 	(*m->free_prop)(v);
 
-    free(v);
+    XtFree((char *)v);
 }
 
 
@@ -165,7 +165,7 @@ vwr_create_node(void)
 {
     VNode	bnode;
 
-    bnode = (VNode) malloc(sizeof(ViewerNode));
+    bnode = (VNode) XtCalloc(1, sizeof(ViewerNode));
     
     bnode->browser = nullptr;
     bnode->obj_data = nullptr;
@@ -193,8 +193,8 @@ vwr_destroy_node
     ViewerNode	*node
 )
 {
-    free(node->elements);
-    free(node);
+    XtFree((char *)node->elements);
+    XtFree((char *)node);
 }
 
 void
@@ -439,7 +439,7 @@ vwr_num_cond(
  * Returns the nodes satisfying the passed condition/function
  * in the passed array of nodes.
  * Returns the number of nodes satisfying the condition in
- * 'num'.
+ * 'num'.  If the array cannot be allocated, no nodes are returned.
  * Space for the array is allocated. This space must be free'd
  * by the caller of this function.
  */
@@ -518,8 +518,15 @@ vwr_get_cond(
 		 * We need to allocate a bigger array
 		 * and copy everything into it
 		 */
-	        new_array = (VNode *)calloc(sizeof(VNode), 
-				cur_num + child_num);
+	        new_array = (VNode *)calloc(cur_num + child_num, sizeof(VNode));
+		if (new_array == nullptr)
+		{
+		    free((char *)cur_array);
+		    free((char *)child_array);
+		    *num = 0;
+		    *array = nullptr;
+		    return;
+		}
 
 		/*
 		 * Copying the current nodes list
@@ -579,8 +586,14 @@ vwr_get_cond(
 	/*
 	 * Allocate new array to add one extra node
 	 */
-        new_array = (VNode *)calloc(sizeof(VNode), 
-                                cur_num + 1);
+        new_array = (VNode *)calloc(cur_num + 1, sizeof(VNode));
+	if (new_array == nullptr)
+	{
+	    free((char *)cur_array);
+	    *num = 0;
+	    *array = nullptr;
+	    return;
+	}
 
 	/*
 	 * If we have nodes accumulated from before,

@@ -413,7 +413,7 @@ proj_show_save_proj_as_chooser(
                 (ArgList) NULL,
                 (Cardinal) 0);
 
-        info = (ChooserInfo) calloc(sizeof(ChooserInfoRec), 1);
+        info = (ChooserInfo) XtCalloc(1, sizeof(ChooserInfoRec));
         XtVaSetValues(AB_generic_chooser,
                         XmNuserData, (XtPointer) info,
                         nullptr);
@@ -544,7 +544,7 @@ save_proj_as_okCB(
 
 	dtb_proj_error_msg_initialize(&dtb_proj_error_msg);
 
-        help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
+        help_data = (DtbObjectHelpData) XtCalloc(1, sizeof(DtbObjectHelpDataRec));
         help_data->help_text = CATGETS(Dtb_project_catd, 100, 85,
                 "The file name you specified for saving the project\nis a directory. Type another file name for the project.");
         help_data->help_volume = ""; 
@@ -553,7 +553,7 @@ save_proj_as_okCB(
 	(void)dtb_show_modal_message(widget,
                         &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
-	util_free(help_data);
+	XtFree((char *)help_data);
         XmStringFree(xm_buf);
 	return;
     }
@@ -839,7 +839,7 @@ proj_show_name_dlg(
     }
  
 
-    help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
+    help_data = (DtbObjectHelpData) XtCalloc(1, sizeof(DtbObjectHelpDataRec));
     help_data->help_text = XtNewString(CATGETS(Dtb_project_catd, 100, 41,
                         "Type in a name for the new module. A valid name\ncan consist of letters, underscore (_), and digits,\nhowever the name must begin with either a letter or\nan underscore."));
     help_data->help_volume = "";
@@ -862,7 +862,7 @@ proj_show_name_dlg(
     XtFree(btn2_lbl);
     XtFree(btn3_lbl);
     XtFree(help_data->help_text);
-    util_free(help_data);
+    XtFree((char *)help_data);
  
     switch (answer)
     {
@@ -923,7 +923,7 @@ proj_show_export_bil_chooser(
                 (ArgList) NULL,
                 (Cardinal) 0);
 
-        info = (ChooserInfo) util_malloc(sizeof(ChooserInfoRec));
+        info = (ChooserInfo) XtCalloc(1, sizeof(ChooserInfoRec));
         XtVaSetValues(AB_generic_chooser,
                         XmNuserData, (XtPointer) info,
                         nullptr);
@@ -1020,7 +1020,7 @@ export_bil_okCB(
         xm_buf = XmStringCreateLocalized(Buf);
         dtb_proj_error_msg_initialize(&dtb_proj_error_msg);
 
-	help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
+	help_data = (DtbObjectHelpData) XtCalloc(1, sizeof(DtbObjectHelpDataRec));
 	help_data->help_text = CATGETS(Dtb_project_catd, 100, 84,
 		"The file name you specified for exporting the\nmodule is a directory. Type another file name\nfor the module.");
 	help_data->help_volume = "";
@@ -1029,7 +1029,7 @@ export_bil_okCB(
         (void)dtb_show_modal_message(widget,
                         &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
-	util_free(help_data);
+	XtFree((char *)help_data);
         XmStringFree(xm_buf);
         return;
     }
@@ -1082,7 +1082,7 @@ export_bil_okCB(
             xm_buf = XmStringCreateLocalized(Buf);
 	    dtb_proj_error_msg_initialize(&dtb_proj_error_msg);
 
-            help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
+            help_data = (DtbObjectHelpData) XtCalloc(1, sizeof(DtbObjectHelpDataRec));
             help_data->help_text = CATGETS(Dtb_project_catd, 100, 86,
 		"The directory you specified for exporting is not\nwritable by you. Therefore, the module cannot be\nexported. Try exporting the module to another\ndirectory.");
             help_data->help_volume = "";
@@ -1091,7 +1091,7 @@ export_bil_okCB(
             (void)dtb_show_modal_message(widget,
                         &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
-	    util_free(help_data);
+	    XtFree((char *)help_data);
             XmStringFree(xm_buf);
         }
     }
@@ -1435,13 +1435,24 @@ proj_save_exploded(
     if (obj_get_name(project) != nullptr)
     {  
         old_name = (STRING) util_malloc(strlen(obj_get_name(project))+1);
+	if (old_name == nullptr)
+	{
+	    return ERR;
+	}
         strcpy( old_name, obj_get_name(project) );
     }
     if (obj_get_file(project) != nullptr)
     {
         old_file = (STRING) util_malloc(strlen(obj_get_file(project))+1);
-        strcpy( old_file, obj_get_file(project) );
         old_proj_dir = (STRING) util_malloc(strlen(obj_get_file(project)));
+	if ((old_file == nullptr) || (old_proj_dir == nullptr))
+	{
+	    util_free(old_name);
+	    util_free(old_file);
+	    util_free(old_proj_dir);
+	    return ERR;
+	}
+        strcpy( old_file, obj_get_file(project) );
         util_get_dir_name_from_path(obj_get_file(project),
                 old_proj_dir, strlen(obj_get_file(project)));
     }
@@ -1852,7 +1863,7 @@ proj_name_proj(void)
     STRING		btn2_lbl = nullptr;
     STRING		btn3_lbl = nullptr;
 
-    help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
+    help_data = (DtbObjectHelpData) XtCalloc(1, sizeof(DtbObjectHelpDataRec));
     help_data->help_text = XtNewString(CATGETS(Dtb_project_catd, 100, 42,
                         "Type in a name for the new project. A valid\nname can consist of letters, underscore (_),\nand digits, however the name must begin with\neither a letter or an underscore."));
     help_data->help_volume = "";
@@ -1878,7 +1889,7 @@ proj_name_proj(void)
     XtFree(btn2_lbl);
     XtFree(btn3_lbl);
     XtFree(help_data->help_text);
-    util_free(help_data);
+    XtFree((char *)help_data);
     switch (answer)
     {
         case UI_ANSWER_OK:
@@ -2340,18 +2351,30 @@ proj_cvt_mod_file_to_rel_path(
     if (util_streq(rel_dir, "."))
     {
 	rel_path = (char *) util_malloc(strlen(mod_name) + 5);
+	if (rel_path == nullptr)
+	{
+	    return nullptr;
+	}
 	sprintf(rel_path, "%s.bil", mod_name);
     }
     else if (util_streq(rel_dir, "/"))
     {
 	rel_path = (char *) util_malloc(strlen(mod_name) +
 				strlen(rel_dir) + 5);
+	if (rel_path == nullptr)
+	{
+	    return nullptr;
+	}
 	sprintf(rel_path, "%s%s.bil", rel_dir, mod_name);
     }
     else
     {
 	rel_path = (char *) util_malloc(strlen(mod_name) +
 				strlen(rel_dir) + 6);
+	if (rel_path == nullptr)
+	{
+	    return nullptr;
+	}
 	sprintf(rel_path, "%s/%s.bil", rel_dir, mod_name);
     }
 

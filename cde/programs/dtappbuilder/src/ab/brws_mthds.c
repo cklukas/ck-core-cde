@@ -706,7 +706,7 @@ init_name_elm(
      * Object name
      */
     if (elm->data)
-	free(elm->data);
+	XtFree((char *)elm->data);
 #ifdef BRWS_NO_FILE_NAMES
     if (obj_is_module(obj) && (obj->info.module.file != nullptr))
     {
@@ -718,13 +718,13 @@ init_name_elm(
          * Check return value of strrchr before adding 1 to it
          */
 	if (filename = strrchr(fullpath, '/'))
-	    tmp = strdup(filename + 1);
+	    tmp = XtNewString(filename + 1);
 	else
-	    tmp = strdup(fullpath);
+	    tmp = XtNewString(fullpath);
     }
     else
 #else
-        tmp = strdup(util_strsafe(obj_get_name(obj)));
+        tmp = XtNewString(util_strsafe(obj_get_name(obj)));
 #endif /* BRWS_NO_FILE_NAMES */
     elm->data = (void *)tmp;
     elm->x = elm->y = elm->width = elm->height = -1;
@@ -749,7 +749,7 @@ init_class_elm(
      * Free Object class/type string if it exists
      */
     if (elm->data)
-	free(elm->data);
+	XtFree((char *)elm->data);
 
     /*
      * Get subtype
@@ -838,7 +838,7 @@ init_class_elm(
     if (!tmp)
         tmp = util_object_type_to_browser_string(obj->type);
 
-    tmp = strdup(tmp);
+    tmp = XtNewString(tmp);
 
     elm->data = (void *)tmp;
     elm->x = elm->y = elm->width = elm->height = -1;
@@ -858,8 +858,8 @@ init_wclass_elm(
      * Widget class
      */
     if (elm->data)
-	free(elm->data);
-    tmp = strdup(util_strsafe(obj_get_class_name(obj)));
+	XtFree((char *)elm->data);
+    tmp = XtNewString(util_strsafe(obj_get_class_name(obj)));
     elm->data = (void *)tmp;
     elm->x = elm->y = elm->width = elm->height = -1;
 }
@@ -875,7 +875,7 @@ free_str_elm(
      */
     if (elm->data)
     {
-	free(elm->data);
+	XtFree((char *)elm->data);
 	elm->data = nullptr;
     }
     elm->x = elm->y = elm->width = elm->height = -1;
@@ -898,7 +898,7 @@ init_elements(
 
     if (!vnode->elements)
     {
-	elm = (ViewerNodeElm *)calloc(BRWS_NUM_ELM, sizeof(ViewerNodeElm));
+	elm = (ViewerNodeElm *)XtCalloc(BRWS_NUM_ELM, sizeof(ViewerNodeElm));
         vnode->num_elements = BRWS_NUM_ELM;
 	vnode->elements = elm;
 
@@ -932,7 +932,7 @@ free_prop(
     if (!v || !v->properties)
 	return;
 
-    free(v->properties);
+    XtFree((char *)v->properties);
 
     v->properties = nullptr;
 }
@@ -981,7 +981,7 @@ free_node(
         next->previous = vnode->previous;
     }
 
-    free(vnode);
+    XtFree((char *)vnode);
 }
 
 static void
@@ -1009,7 +1009,7 @@ free_elements(
             (*(elm_methods[i]->free))(vnode, &elm[i]);
     }
 
-    free(elm);
+    XtFree((char *)elm);
 
     vnode->elements = nullptr;
     vnode->num_elements = 0;
@@ -1022,7 +1022,7 @@ init_proj_props(
 {
     BrowserProps	props;
 
-    props = (BrowserProps)malloc(sizeof(BrowserProperties));
+    props = (BrowserProps)XtCalloc(1, sizeof(BrowserProperties));
 
     /*
      * Possible values for bit vector:
@@ -1050,7 +1050,7 @@ init_mod_props(
 {
     BrowserProps	props;
 
-    props = (BrowserProps)malloc(sizeof(BrowserProperties));
+    props = (BrowserProps)XtCalloc(1, sizeof(BrowserProperties));
 
     /*
      * Possible values for bit vector:
