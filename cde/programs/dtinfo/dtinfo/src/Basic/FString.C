@@ -69,5 +69,5 @@ FString::FString(const char *string)
 
 FString::~FString()
 {
-  delete f_string ;
+  delete [] f_string ;
 }

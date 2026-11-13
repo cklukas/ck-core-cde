@@ -61,7 +61,7 @@ UAS_SearchScope::~UAS_SearchScope()
   static ScopeDeleted delete_msg;
   delete_msg.f_search_scope = this;
   send_message (delete_msg, 0);
-  delete f_name;
+  delete [] f_name;
   for (int i = 0; i < f_bcases.numItems(); i++)
     delete f_bcases[i]; 
 
@@ -81,7 +81,7 @@ UAS_SearchScope::bookcases(UAS_PtrList<UAS_BookcaseEntry> &bcases)
 const char *
 UAS_SearchScope::name(const char *newname)
 {
-  delete f_name ;
+  delete [] f_name;
   u_int len = strlen(newname);
   f_name = new char[len + 1] ;
   *((char *) memcpy(f_name, newname, len) + len) = '\0';
@@ -91,7 +91,7 @@ UAS_SearchScope::name(const char *newname)
 void
 UAS_SearchScope::set_name (const char *name)
 {
-  delete f_name;
+  delete [] f_name;
   int len = strlen(name);
   f_name = new char[len + 1];
   *((char *) memcpy(f_name, name, len) + len) = '\0';

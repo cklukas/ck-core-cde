@@ -40,7 +40,7 @@ UAS_StringRep::UAS_StringRep (const char *data,int data_size,UAS_Owner owner) {
 
 UAS_StringRep::~UAS_StringRep () {
     if (fOwner == UAS_OWNER)
-	delete fData;
+	delete [] fData;
 }
 
 void

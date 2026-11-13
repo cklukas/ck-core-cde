@@ -190,7 +190,7 @@ WArgList::Grow (Cardinal n)
 
       // Delete existing args if allocated
       if (alloc_args) {
-	 delete args;
+	 delete [] args;
       }
    }
 

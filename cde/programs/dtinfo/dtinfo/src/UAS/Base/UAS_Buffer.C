@@ -65,7 +65,7 @@ UAS_Buffer::~UAS_Buffer()
 
   if (f_reference_count == 0)
     {
-      delete f_start;
+      delete [] f_start;
       f_start = NULL;
       f_point = NULL;
       f_end = NULL;
@@ -90,7 +90,7 @@ UAS_Buffer::check_space (unsigned int size)
 	memcpy (new_block, f_start, f_point - f_start);
       // Compute the point in the new buffer. 
       f_point = new_block + (f_point - f_start);
-      delete f_start;
+      delete [] f_start;
       // Update start and end relative to new buffer. 
       f_start = new_block;
       f_end = f_start + size;

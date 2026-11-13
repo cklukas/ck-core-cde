@@ -81,8 +81,8 @@ UAS_BookcaseEntry::UAS_BookcaseEntry(UAS_Pointer<UAS_Common> &bookcase,
 
 UAS_BookcaseEntry::~UAS_BookcaseEntry()
 {
-    if (f_name) delete f_name;
-    if (f_path) delete f_path;
+    if (f_name) delete [] f_name;
+    if (f_path) delete [] f_path;
 }
 
 

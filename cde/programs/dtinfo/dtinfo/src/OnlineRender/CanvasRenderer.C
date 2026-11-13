@@ -2123,7 +2123,7 @@ ColFormat::ColFormat()
 ColFormat::~ColFormat()
 {
   if (f_name)
-    delete f_name ;
+    free(f_name);
 }
 
 const char *

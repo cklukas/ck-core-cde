@@ -86,7 +86,7 @@ HashObject::~HashObject()
 {
     // NOTE: this is virtual, don't make it inline
     assert(f_key != NULL);
-    delete f_key ;
+    delete [] f_key ;
     delete f_object ;		// delete the object 
 }
 

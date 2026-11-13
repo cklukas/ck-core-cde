@@ -2192,7 +2192,7 @@ NodeWindowAgent::do_search_selection (const char* value, unsigned long)
           int len = buflen - 1;
 	  *((char *) memcpy(newbuf, buffer, len) + len) = '\0';
 	  int depth = dest - buffer ;
-	  delete buffer ;
+	  delete [] buffer ;
 	  buffer = newbuf ;
 	  dest = buffer + depth ;
 	}
