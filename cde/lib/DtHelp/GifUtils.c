@@ -67,6 +67,7 @@
 /* include files */
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdckdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -187,14 +188,23 @@ _gif_allocarray( int cols, int rows, int size )
     char** its;
     int i;
 
+    size_t bytes;
+
     its = (char**) calloc(rows, sizeof(char*));
     if ( its == (char**) 0 )
         _gif_error( "out of memory allocating an array", 0 );
-    its[0] = (char*) malloc( rows * cols * size );
+    if ( ckd_mul( &bytes, (size_t) rows, (size_t) cols ) ||
+         ckd_mul( &bytes, bytes, (size_t) size ) )
+    {
+        _gif_error( "array too large", 0 );
+        free( its );
+        return nullptr;
+    }
+    its[0] = (char*) malloc( bytes );
     if ( its[0] == (char*) 0 )
         _gif_error( "out of memory allocating an array", 0 );
     for ( i = 1; i < rows; ++i )
-        its[i] = &(its[0][i * cols * size]);
+        its[i] = &(its[0][(size_t) i * cols * size]);
     return (pixel **)its;
 }
 
@@ -470,7 +480,10 @@ ReadImage(byte **inbuf, int len, int height, unsigned char cmap[3][MAXCOLORMAPSI
     }
 
     if ((image = _gif_allocarray(len, height, sizeof(pixel))) == nullptr)
+    {
         _gif_error("couldn't alloc space for image", 0 );
+        return nullptr;
+    }
 
 #ifdef DEBUG
     _gif_message("reading %d by %d%s GIF image",
@@ -1050,10 +1063,13 @@ create_pixmap( GifObj *g, pixel **image, int width, int height, Pixel fg, Pixel 
   Pixmap pm;
   int scaledWidth, scaledHeight;
 
-  if ( g->f_nplanes > 8 )
-     ximData = (byte *) malloc(ximWidth * height * 4 );
+  size_t ximSize;
+
+  if (ckd_mul(&ximSize, (size_t) ximWidth, (size_t) height) ||
+      (g->f_nplanes > 8 && ckd_mul(&ximSize, ximSize, (size_t) 4)))
+     ximData = nullptr;
   else
-     ximData = (byte *) malloc(ximWidth * height );
+     ximData = (byte *) malloc(ximSize);
 
   if (!ximData) {
     fprintf(stderr, "Could not allocate ximage data\n");

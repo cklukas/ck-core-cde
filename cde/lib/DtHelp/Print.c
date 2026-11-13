@@ -433,7 +433,7 @@ static void StartPrintingCB(
 	      len = strlen(newTxt);
 	      if (len > 0)
 		{
-	          topicTitle = XtRealloc(topicTitle, len + 1);
+	          topicTitle = XtRealloc(topicTitle, newLen + len + 1);
 	          if (topicTitle != nullptr)
 		    {
 	              strcpy(&topicTitle[newLen], newTxt);

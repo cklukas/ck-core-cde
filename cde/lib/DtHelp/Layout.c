@@ -44,6 +44,7 @@
 /*
  * system includes
  */
+#include <stdckdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -2214,7 +2215,12 @@ ProcessTable(
       }
     if (maxRows != 1 || maxCols != 1)
       {
-        cellInfo = (CellInfo *) malloc (sizeof(CellInfo) * maxCols * maxRows);
+        size_t cellCount;
+
+        if (ckd_mul(&cellCount, (size_t) maxCols, (size_t) maxRows))
+	    cellInfo = nullptr;
+	else
+	    cellInfo = (CellInfo *) calloc (cellCount, sizeof(CellInfo));
 	if (cellInfo == nullptr)
 	  {
 	    if (maxCols > 1)

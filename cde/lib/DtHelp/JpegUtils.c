@@ -42,6 +42,7 @@
 */
 
 #include <stdio.h>
+#include <stdckdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -476,6 +477,7 @@ enum _DtGrLoadStatus jpeg_to_ximage (
     ximg_dest_ptr dest;
     int i, num_scanlines, nullCount, ximWidth;
     unsigned char *ximData = nullptr;
+    size_t ximSize;
     Display *display = DisplayOfScreen(screen);
     int nplanes = DisplayPlanes(display,XScreenNumberOfScreen(screen));
     XColor *colors = nullptr;
@@ -557,11 +559,11 @@ enum _DtGrLoadStatus jpeg_to_ximage (
     nullCount = (4 - (cinfo.output_width % 4)) & 0x03;
     ximWidth = cinfo.output_width + nullCount;
 
-    if (nplanes > 8 )
-        ximData = (unsigned char *) malloc(ximWidth * 
-                                           cinfo.output_height * 4 );
+    if (ckd_mul(&ximSize, (size_t) ximWidth, (size_t) cinfo.output_height) ||
+        (nplanes > 8 && ckd_mul(&ximSize, ximSize, (size_t) 4)))
+        ximData = nullptr;
     else
-        ximData = (unsigned char *) malloc(ximWidth * cinfo.output_height );
+        ximData = (unsigned char *) malloc(ximSize);
 
     if (!ximData) 
     {
@@ -606,8 +608,8 @@ enum _DtGrLoadStatus jpeg_to_ximage (
 
     if (cinfo.actual_number_of_colors) 
     {
-        colors = (XColor *) malloc((unsigned) sizeof(XColor) * 
-                                   cinfo.actual_number_of_colors);
+        colors = (XColor *) calloc(cinfo.actual_number_of_colors,
+                                   sizeof(XColor));
 	if (!colors)
 	{
             XDestroyImage (*ximage);

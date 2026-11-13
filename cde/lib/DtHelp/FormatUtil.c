@@ -814,7 +814,7 @@ _DtHelpLoadMultiInfo (
 	 */
 	ptr = CATGETS(cat_fd, 1, 1, "");
 	len = strlen (ptr) + 1;
-	*cant_begin_chars = (wchar_t *) malloc (len * sizeof (wchar_t));
+	*cant_begin_chars = (wchar_t *) calloc (len, sizeof (wchar_t));
 	if (nullptr != *cant_begin_chars &&
 				mbstowcs(*cant_begin_chars, ptr, len) == -1)
 	  {
@@ -827,7 +827,7 @@ _DtHelpLoadMultiInfo (
 	 */
 	ptr = CATGETS(cat_fd, 1, 2, "");
 	len = strlen (ptr) + 1;
-	*cant_end_chars = (wchar_t *) malloc (len * sizeof (wchar_t));
+	*cant_end_chars = (wchar_t *) calloc (len, sizeof (wchar_t));
 	if (*cant_end_chars != nullptr &&
 				mbstowcs(*cant_end_chars, ptr, len) == -1)
 	  {

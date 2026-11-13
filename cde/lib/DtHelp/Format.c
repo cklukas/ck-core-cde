@@ -956,7 +956,7 @@ _DtHelpFormatIndexEntries(
 	if (*ret_cnt > 0)
 	  {
 
-	    *ret_words = (XmString *) malloc (sizeof(XmString) * (*ret_cnt+1));
+	    *ret_words = (XmString *) calloc (*ret_cnt+1, sizeof(XmString));
 	    if (*ret_words == nullptr)
 		return -1;
 

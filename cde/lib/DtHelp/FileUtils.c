@@ -210,8 +210,14 @@ _DtHelpFileTraceLinks (
 	    * only increase the memory if needed.
 	    */
            if ( strlen (*pPathName) < strlen(filePath) )
-                *pPathName = (char *)realloc((void *)*pPathName, (sizeof(char)
-                                * (strlen(filePath) +1)));
+           {
+                char *grown = (char *)realloc((void *)*pPathName,
+                                              strlen(filePath) + 1);
+
+                if ( nullptr == grown )
+                     return False;      /* RETURN */
+                *pPathName = grown;
+           }
 
            strcpy(*pPathName, filePath);
         }
