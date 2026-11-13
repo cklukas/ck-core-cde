@@ -79,7 +79,7 @@ g_carrier += alloc_sz;
 
 chunk_carrier::~chunk_carrier()
 {
-   delete carrier_ptr;
+   delete [] carrier_ptr;
 }
 
 dlist* chunk_carrier::init_ptrs()

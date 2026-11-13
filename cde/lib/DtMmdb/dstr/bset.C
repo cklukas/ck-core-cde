@@ -468,8 +468,8 @@ bset_test(unsigned int in_cts, unsigned int out_cts, pm_random& rand_gen, unsign
          ok |= out_bset_test(bst, ins, in_cts, outs, out_cts, rand_gen);
    }
 
-   delete ins; 
-   delete outs; 
+   delete [] ins;
+   delete [] outs;
 
    return ok;
 }
